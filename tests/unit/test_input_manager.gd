@@ -14,6 +14,7 @@ func run_tests() -> Dictionary:
 	test_mouse_capture()
 	test_input_helpers()
 	test_unhandled_input()
+	test_game_context()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -23,7 +24,8 @@ func get_coverage_entries() -> Array:
 			"_ready", "setup_default_actions", "load_input_settings",
 			"capture_mouse", "get_move_vector", "get_look_vector",
 			"add_action_if_missing", "add_action_key",
-			"add_action_key_or_mouse", "_unhandled_input"
+			"add_action_key_or_mouse", "_unhandled_input",
+			"set_game_context"
 		]
 	]]
 
@@ -88,3 +90,20 @@ func test_unhandled_input() -> void:
 	var lv = im.get_look_vector(0.016)
 	assert_true(lv.length() > 0.0, "Look vector must update on mouse motion")
 	im.queue_free()
+
+func test_game_context() -> void:
+	var im = InputManagerScript.new()
+	im._ready()
+	im.set_game_context("arena_fps")
+	assert_true(im.active_game_context == "arena_fps", "Context must update to arena_fps")
+	assert_true(not InputMap.action_get_events("fire").is_empty(), "fire must have events in arena_fps")
+	assert_true(InputMap.action_get_events("boost").is_empty(), "boost must be disabled in arena_fps")
+	im.set_game_context("rocket_car")
+	assert_true(not InputMap.action_get_events("boost").is_empty(), "boost must have events in rocket_car")
+	assert_true(InputMap.action_get_events("fire").is_empty(), "fire must be disabled in rocket_car")
+	im.set_game_context("")
+	assert_true(InputMap.action_get_events("fire").is_empty(), "fire must be disabled in launcher")
+	assert_true(not InputMap.action_get_events("pause").is_empty(), "pause must be enabled in launcher")
+	im.set_game_context("all")
+	im.queue_free()
+

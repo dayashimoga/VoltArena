@@ -1,7 +1,8 @@
 class_name Launcher
 extends Control
 
-var game_cards_container: HBoxContainer
+var game_cards_container: GridContainer
+var main_vbox: VBoxContainer
 var loading_overlay: PanelContainer
 var loading_bar: ProgressBar
 var loading_status_label: Label
@@ -85,7 +86,7 @@ func setup_launcher_ui() -> void:
 	add_child(grid_overlay)
 
 	# Main Vertical Layout
-	var main_vbox = VBoxContainer.new()
+	main_vbox = VBoxContainer.new()
 	main_vbox.anchor_right = 1.0
 	main_vbox.anchor_bottom = 1.0
 	main_vbox.offset_left = 32
@@ -123,16 +124,20 @@ func setup_launcher_ui() -> void:
 	spacer1.custom_minimum_size = Vector2(0, 20)
 	main_vbox.add_child(spacer1)
 
-	# Game Selection Scroll / Cards Container
+	# Game Selection Scroll / Cards Container (Vertical scroll only)
 	var scroll = ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	main_vbox.add_child(scroll)
 
-	game_cards_container = HBoxContainer.new()
+	game_cards_container = GridContainer.new()
 	game_cards_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	game_cards_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	game_cards_container.add_theme_constant_override("separation", 20)
+	game_cards_container.add_theme_constant_override("h_separation", 20)
+	game_cards_container.add_theme_constant_override("v_separation", 20)
+	game_cards_container.columns = 4
 	scroll.add_child(game_cards_container)
 
 	for meta in games_meta:
@@ -359,6 +364,11 @@ func connect_loader_signals() -> void:
 		)
 		loader.load_completed.connect(func(g_id, success, _scene):
 			loading_overlay.visible = false
+			if not success:
+				var bus = GameConstants.get_autoload(self, "EventBus")
+				if bus:
+					bus.show_toast_requested.emit("Failed to load %s assets" % g_id, Color(1.0, 0.3, 0.3))
+				return
 			var bus = GameConstants.get_autoload(self, "EventBus")
 			if success and bus:
 				bus.game_selected.emit(g_id)
@@ -371,7 +381,28 @@ func _notification(what: int) -> void:
 func update_responsive_layout(viewport_size: Vector2) -> void:
 	if viewport_size.x <= 0:
 		return
-	var is_narrow = viewport_size.x < 800.0 or (viewport_size.y > 0 and viewport_size.x / viewport_size.y < 1.2)
+
+	# Responsive safe-area insets
+	var safe_left = 32.0
+	var safe_right = 32.0
+	var safe_top = 24.0
+	var safe_bottom = 24.0
+	var safe_area = DisplayServer.get_display_safe_area()
+	if safe_area.size.x > 0 and safe_area.size.y > 0:
+		safe_left = maxf(32.0, float(safe_area.position.x))
+		safe_top = maxf(24.0, float(safe_area.position.y))
+		var screen_sz = DisplayServer.screen_get_size()
+		if screen_sz.x > 0:
+			safe_right = maxf(32.0, float(screen_sz.x - (safe_area.position.x + safe_area.size.x)))
+		if screen_sz.y > 0:
+			safe_bottom = maxf(24.0, float(screen_sz.y - (safe_area.position.y + safe_area.size.y)))
+
+	if main_vbox:
+		main_vbox.offset_left = safe_left
+		main_vbox.offset_top = safe_top
+		main_vbox.offset_right = -safe_right
+		main_vbox.offset_bottom = -safe_bottom
+
 	if settings_dialog:
 		var dialog_w = min(viewport_size.x * 0.9, 500.0)
 		var dialog_h = min(viewport_size.y * 0.8, 400.0)
@@ -381,7 +412,27 @@ func update_responsive_layout(viewport_size: Vector2) -> void:
 		settings_dialog.offset_bottom = dialog_h * 0.5
 
 	if game_cards_container:
-		var card_w = 260.0 if not is_narrow else clampf(viewport_size.x - 80.0, 220.0, 340.0)
+		var cols = 4
+		if viewport_size.x < 700.0:
+			cols = 1 # Mobile portrait
+		elif viewport_size.x < 1200.0:
+			cols = 2 # Tablet / compact desktop (2x2 grid)
+		else:
+			cols = 4 # Desktop 4 columns
+
+		game_cards_container.columns = cols
+
+		var padding = safe_left + safe_right + 40.0
+		var available_w = maxf(280.0, viewport_size.x - padding)
+		var sep = 20.0
+		var card_w = maxf(220.0, (available_w - float(cols - 1) * sep) / float(cols))
 		for c in game_cards_container.get_children():
 			if c is Control:
 				c.custom_minimum_size.x = card_w
+				c.custom_minimum_size.y = 360.0 if cols == 1 else 420.0
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("pause") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
+		if settings_dialog and settings_dialog.visible:
+			settings_dialog.visible = false
+			get_viewport().set_input_as_handled()

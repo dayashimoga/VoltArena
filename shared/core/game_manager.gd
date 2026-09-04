@@ -52,6 +52,9 @@ func start_game(game_id: String) -> void:
 		if packed:
 			switch_to_scene(packed)
 			set_state(STATE_PLAYING)
+			var im = GameConstants.get_autoload(self, "InputManager")
+			if im and im.has_method("set_game_context"):
+				im.set_game_context(game_id)
 			if event_bus:
 				event_bus.game_loaded.emit(game_id)
 	else:
@@ -60,10 +63,11 @@ func start_game(game_id: String) -> void:
 func switch_to_scene(packed_scene: PackedScene) -> void:
 	if is_instance_valid(active_game_instance):
 		active_game_instance.queue_free()
-	active_game_instance = packed_scene.instantiate()
+		active_game_instance = null
 	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
-	if tree and tree.root:
-		tree.root.add_child(active_game_instance)
+	if tree:
+		tree.paused = false
+		tree.change_scene_to_packed(packed_scene)
 
 func restart_current_game() -> void:
 	if not active_game_id.is_empty():
@@ -75,6 +79,22 @@ func return_to_launcher() -> void:
 		active_game_instance = null
 	active_game_id = ""
 	set_state(STATE_MENU)
+
+	# Stop all audio during scene transition to return cleanly
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am and am.has_method("stop_all"):
+		am.stop_all()
+
+	# Release mouse cursor and reset input context
+	var im = GameConstants.get_autoload(self, "InputManager")
+	if im:
+		im.capture_mouse(false)
+		if im.has_method("set_game_context"):
+			im.set_game_context("")
+	else:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
 	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
 	if tree:
+		tree.paused = false
 		tree.change_scene_to_file("res://launcher/launcher.tscn")

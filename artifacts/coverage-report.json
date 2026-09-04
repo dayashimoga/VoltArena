@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 99.2277992277992,
+  "overall_coverage_pct": 100,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -74,12 +74,10 @@
       "untested": []
     },
     "res://games/kart-racing/game/race_manager.gd": {
-      "coverage_pct": 85.7142857142857,
-      "tested": 6,
+      "coverage_pct": 100,
+      "tested": 7,
       "total": 7,
-      "untested": [
-        "on_kart_hit_checkpoint"
-      ]
+      "untested": []
     },
     "res://games/kart-racing/kart/kart_controller.gd": {
       "coverage_pct": 100,
@@ -185,8 +183,8 @@
     },
     "res://launcher/launcher.gd": {
       "coverage_pct": 100,
-      "tested": 13,
-      "total": 13,
+      "tested": 14,
+      "total": 14,
       "untested": []
     },
     "res://shared/ai/ai_base.gd": {
@@ -197,8 +195,8 @@
     },
     "res://shared/audio/audio_manager.gd": {
       "coverage_pct": 100,
-      "tested": 9,
-      "total": 9,
+      "tested": 10,
+      "total": 10,
       "untested": []
     },
     "res://shared/combat/health_component.gd": {
@@ -208,12 +206,10 @@
       "untested": []
     },
     "res://shared/core/game_constants.gd": {
-      "coverage_pct": 0,
-      "tested": 0,
+      "coverage_pct": 100,
+      "tested": 1,
       "total": 1,
-      "untested": [
-        "get_autoload"
-      ]
+      "untested": []
     },
     "res://shared/core/game_manager.gd": {
       "coverage_pct": 100,
@@ -241,8 +237,8 @@
     },
     "res://shared/input/input_manager.gd": {
       "coverage_pct": 100,
-      "tested": 10,
-      "total": 10,
+      "tested": 11,
+      "total": 11,
       "untested": []
     },
     "res://shared/input/touch_controls.gd": {
@@ -259,8 +255,8 @@
     },
     "res://shared/loading/asset_loader.gd": {
       "coverage_pct": 100,
-      "tested": 2,
-      "total": 2,
+      "tested": 3,
+      "total": 3,
       "untested": []
     },
     "res://shared/physics/physics_helpers.gd": {
@@ -318,7 +314,7 @@
       "untested": []
     }
   },
-  "tested_functions": 257,
-  "timestamp": "2026-09-04T13:58:25",
-  "total_functions": 259
+  "tested_functions": 263,
+  "timestamp": "2026-09-04T15:27:58",
+  "total_functions": 263
 }

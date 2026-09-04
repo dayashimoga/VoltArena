@@ -20,7 +20,8 @@ func get_coverage_entries() -> Array:
 		[
 			"_ready", "setup_players", "generate_all_procedural_sounds",
 			"play_sound", "play_sound_3d", "create_synth_sound",
-			"create_noise_burst", "create_two_tone_sound", "create_click_sound"
+			"create_noise_burst", "create_two_tone_sound", "create_click_sound",
+			"stop_all"
 		]
 	]]
 
@@ -71,5 +72,6 @@ func test_sound_playback() -> void:
 	am.generate_all_procedural_sounds()
 	am.play_sound("laser_fire")
 	am.play_sound_3d("laser_fire", Vector3.ZERO)
-	assert_true(true, "Sound playback calls must succeed")
+	am.stop_all()
+	assert_true(true, "Sound playback calls and stop_all must succeed")
 	am.queue_free()

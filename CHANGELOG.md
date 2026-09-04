@@ -200,3 +200,32 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Differentiated between genuine application-level crashes (`FATAL EXCEPTION`, Java exceptions, `ANR` in `org.voltarena.gamesuite`) and hypervisor-level CPU instruction limitations (`Fatal signal 4 (SIGILL), code 2 (ILL_ILLOPN)`) in `tests/android/test_android.sh`.
   - Classified emulated CPU instruction faults from missing host vector extensions (AVX/FMA) in QEMU as `PLATFORM_REQUIRED` (requires hardware GPU / physical device), matching `scripts/certifier.py` Gate 10 classification.
   - Added `disable-animations: true` and explicit `-no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim` emulator options in `.github/workflows/ci.yml`.
+
+## [2.1.5-production-blockers] - 2026-09-04
+### Fixed
+- **Launcher-to-Game Scene Navigation & Single Scene Lifecycle**:
+  - Replaced raw `root.add_child()` with `get_tree().change_scene_to_packed()` in `GameManager.switch_to_scene()`.
+  - Guaranteed clean unloading of launcher scene and destruction of previous CanvasLayer/HUD hierarchies, preventing mixed HUDs and duplicate cameras.
+- **Scene Return & Audio Cleanup**:
+  - Added `stop_all()` method to `AudioManager` stopping BGM, engine audio, and all 2D/3D SFX players.
+  - In `GameManager.return_to_launcher()`, unpaused tree (`tree.paused = false`), released mouse cursor (`Input.mouse_mode = Input.MOUSE_MODE_VISIBLE`), and called `AudioManager.stop_all()`.
+- **Responsive Cross-Device Launcher Layout**:
+  - Converted launcher cards container from `HBoxContainer` to an adaptive `GridContainer` inside a vertically-scrolling `ScrollContainer` (horizontal scrolling disabled).
+  - Implemented responsive column breakpoints: 4 columns on desktop (>=1200px), 2x2 grid on tablet/compact (700-1200px), and 1 column on mobile (<700px).
+  - Integrated safe-area insets (`DisplayServer.get_display_safe_area()`) to prevent notch/cutout clipping on mobile/tablet devices.
+  - Added ESC/Back button handling to dismiss settings dialog.
+- **Game-Context Input Isolation**:
+  - Added `set_game_context(game_id)` to `InputManager` caching baseline action mappings and dynamically enabling only relevant action sets per game.
+  - In launcher context: gameplay actions disabled, pause/ESC preserved.
+  - In FPS context (`arena_fps`, `subway_survival`): weapons/movement active, vehicle boost/drift disabled.
+  - In vehicle context (`rocket_car`, `kart_racing`): boost/drift active, weapon controls disabled.
+- **Loading Pipeline Resilience**:
+  - Optimized `AssetLoader` to disable processing when idle (`set_process(false)`).
+  - Added 10-second timeout with fallback to synchronous `load()` to prevent permanent hangs.
+  - Handled load failure in launcher by hiding overlay and showing error toast notification.
+- **CI/CD Workflow Deprecation Warning**:
+  - Updated Node runner version to `node-version: 22` in `browser-e2e` job in `.github/workflows/ci.yml`.
+- **Test Suite & Coverage Completeness**:
+  - Added unit test cases for input context switching, audio stop_all, asset loader readiness, race checkpoint hit callbacks, launcher ESC handling, and game constants autoload lookup.
+  - Result: 670/670 passing assertions (100% pass rate) and 100.0% function coverage (263/263 functions across all 35 test suites).
+

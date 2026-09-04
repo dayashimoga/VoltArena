@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 99.2277992277992,
-  "coverage_tested_functions": 257,
-  "coverage_total_functions": 259,
-  "execution_seconds": 0.217,
+  "coverage_percent": 100,
+  "coverage_tested_functions": 263,
+  "coverage_total_functions": 263,
+  "execution_seconds": 0.338,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -52,7 +52,7 @@
     },
     "GameManager & Loader Unit": {
       "failed": 0,
-      "passed": 5,
+      "passed": 6,
       "status": "PASS"
     },
     "HealthComponent Unit": {
@@ -62,7 +62,7 @@
     },
     "Input Manager Unit": {
       "failed": 0,
-      "passed": 16,
+      "passed": 23,
       "status": "PASS"
     },
     "Iron Crucible E2E": {
@@ -77,7 +77,7 @@
     },
     "Launcher E2E": {
       "failed": 0,
-      "passed": 58,
+      "passed": 60,
       "status": "PASS"
     },
     "Map Generators Unit": {
@@ -181,8 +181,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-04T13:58:25",
+  "timestamp": "2026-09-04T15:27:58",
   "total_failed": 0,
-  "total_passed": 660,
+  "total_passed": 670,
   "total_suites": 35
 }

@@ -11,10 +11,16 @@ var virtual_move_vector: Vector2 = Vector2.ZERO
 var virtual_look_vector: Vector2 = Vector2.ZERO
 
 var is_mouse_captured: bool = false
+var active_game_context: String = "all"
+var _action_events_cache: Dictionary = {}
 
 func _ready() -> void:
 	setup_default_actions()
 	load_input_settings()
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.game_loaded.connect(func(g_id): set_game_context(g_id))
+		bus.return_to_launcher_requested.connect(func(): set_game_context(""))
 
 func setup_default_actions() -> void:
 	add_action_if_missing("move_forward", [KEY_W, KEY_UP], JOY_BUTTON_DPAD_UP, JOY_AXIS_LEFT_Y, -1.0)
@@ -31,6 +37,42 @@ func setup_default_actions() -> void:
 	add_action_key("boost", KEY_SPACE, JOY_BUTTON_B)
 	add_action_key("drift", KEY_SHIFT, JOY_BUTTON_X)
 	add_action_key("pause", KEY_ESCAPE, JOY_BUTTON_START)
+	_cache_all_action_events()
+
+func _cache_all_action_events() -> void:
+	var standard_actions = [
+		"move_forward", "move_back", "move_left", "move_right",
+		"fire", "alt_fire", "jump", "sprint", "crouch", "reload",
+		"boost", "drift", "pause"
+	]
+	for a in standard_actions:
+		if InputMap.has_action(a):
+			_action_events_cache[a] = InputMap.action_get_events(a).duplicate()
+
+func set_game_context(game_id: String) -> void:
+	active_game_context = game_id
+	if _action_events_cache.is_empty():
+		_cache_all_action_events()
+
+	var allowed: Array = []
+	match game_id:
+		"":
+			allowed = ["pause"]
+		"arena_fps", "subway_survival":
+			allowed = ["move_forward", "move_back", "move_left", "move_right", "fire", "alt_fire", "reload", "jump", "sprint", "crouch", "pause"]
+		"rocket_car", "kart_racing":
+			allowed = ["move_forward", "move_back", "move_left", "move_right", "boost", "drift", "jump", "pause"]
+		_:
+			allowed = _action_events_cache.keys()
+
+	for action in _action_events_cache.keys():
+		if action in allowed:
+			if InputMap.action_get_events(action).is_empty():
+				for ev in _action_events_cache[action]:
+					InputMap.action_add_event(action, ev)
+		else:
+			InputMap.action_erase_events(action)
+
 
 func add_action_if_missing(action_name: String, keys: Array, joy_btn: int, joy_axis: int, axis_dir: float) -> void:
 	if not InputMap.has_action(action_name):

@@ -105,6 +105,19 @@ func play_sound_3d(sound_name: String, global_pos: Vector3, pitch_scale: float =
 	p.volume_db = volume_db
 	p.play()
 
+func stop_all() -> void:
+	if is_instance_valid(bgm_player) and bgm_player.playing:
+		bgm_player.stop()
+	if is_instance_valid(engine_sfx_player) and engine_sfx_player.playing:
+		engine_sfx_player.stop()
+	for p in sfx_pool:
+		if is_instance_valid(p) and p.playing:
+			p.stop()
+	for p3 in sfx_3d_pool:
+		if is_instance_valid(p3) and p3.playing:
+			p3.stop()
+
+
 # Procedural Sound Synthesis Utilities (Zero External Audio Files Required)
 func create_synth_sound(start_freq: float, end_freq: float, duration: float, volume: float, waveform: String) -> AudioStreamWAV:
 	var sample_rate: int = 22050

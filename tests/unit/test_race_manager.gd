@@ -18,7 +18,7 @@ func run_tests() -> Dictionary:
 func get_coverage_entries() -> Array:
 	return [[
 		"res://games/kart-racing/game/race_manager.gd",
-		["_ready", "_process", "start_race", "update_race_positions", "finish_race"]
+		["_ready", "_process", "start_race", "update_race_positions", "finish_race", "on_kart_hit_checkpoint"]
 	]]
 
 func assert_true(cond: bool, msg: String) -> void:
@@ -53,7 +53,7 @@ func test_checkpoint_progression() -> void:
 	assert_true(kart.total_checkpoints_hit == 0, "Invalid checkpoint hit should be ignored")
 
 	# Test valid sequential hit
-	rm._on_checkpoint_hit(kart, 0)
+	rm.on_kart_hit_checkpoint(kart, 0)
 	assert_true(kart.total_checkpoints_hit == 1, "Valid checkpoint should increment hit count")
 	assert_true(kart.next_checkpoint_index == 1, "Next checkpoint should advance to 1")
 

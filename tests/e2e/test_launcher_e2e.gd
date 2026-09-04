@@ -17,11 +17,12 @@ func run_tests() -> Dictionary:
 	test_settings_dialog()
 	test_career_stats_formatting()
 	test_game_selection_flow()
+	test_unhandled_input_esc()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
 	return [
-		["res://launcher/launcher.gd", ["_ready", "setup_launcher_ui", "create_game_card", "get_game_career_stats", "setup_loading_overlay", "setup_settings_dialog", "show_settings", "set_quality", "toggle_audio", "on_play_game_pressed", "connect_loader_signals"]],
+		["res://launcher/launcher.gd", ["_ready", "setup_launcher_ui", "create_game_card", "get_game_career_stats", "setup_loading_overlay", "setup_settings_dialog", "show_settings", "set_quality", "toggle_audio", "on_play_game_pressed", "connect_loader_signals", "_unhandled_input"]],
 	]
 
 func assert_true(cond: bool, msg: String) -> void:
@@ -130,3 +131,18 @@ func test_game_selection_flow() -> void:
 	assert_eq(launcher.current_target_game, meta["id"], "Target game must be set")
 
 	launcher.queue_free()
+
+func test_unhandled_input_esc() -> void:
+	var launcher = LauncherScript.new()
+	launcher.setup_launcher_ui()
+	launcher.show_settings()
+	assert_true(launcher.settings_dialog.visible, "Settings dialog must be visible after show_settings")
+
+	var ev = InputEventKey.new()
+	ev.pressed = true
+	ev.keycode = KEY_ESCAPE
+	launcher._unhandled_input(ev)
+	assert_true(not launcher.settings_dialog.visible, "Settings dialog must close on ESC")
+
+	launcher.queue_free()
+

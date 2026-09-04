@@ -11,6 +11,7 @@ func run_tests() -> Dictionary:
 	test_state_management()
 	test_game_manager_signals()
 	test_asset_loader()
+	test_game_constants()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -21,7 +22,11 @@ func get_coverage_entries() -> Array:
 		],
 		[
 			"res://shared/loading/asset_loader.gd",
-			["_process", "request_game_load"]
+			["_ready", "_process", "request_game_load"]
+		],
+		[
+			"res://shared/core/game_constants.gd",
+			["get_autoload"]
 		]
 	]
 
@@ -51,9 +56,17 @@ func test_game_manager_signals() -> void:
 
 func test_asset_loader() -> void:
 	var al = AssetLoaderScript.new()
+	al._ready()
 	al.request_game_load("arena_fps", "res://games/arena-fps/arena_fps_main.tscn")
 	assert_true(al.is_loading, "Asset loader should be in loading state")
 	al.is_loading = false
 	al._process(0.016)
 	assert_true(not al.is_loading, "Asset loader must be stopped")
 	al.queue_free()
+
+func test_game_constants() -> void:
+	var dummy = Node.new()
+	var res = GameConstants.get_autoload(dummy, "NonExistentAutoload")
+	assert_true(res == null, "NonExistent autoload must return null")
+	dummy.queue_free()
+

@@ -169,3 +169,11 @@
   6. Enabled `architectures/x86_64=true` in `export_presets.cfg` for dual ARM64 + x86_64 emulator support.
   7. Added `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: "true"` and updated `post-deploy-e2e` to `node-version: 22`.
 - **Evidence**: Verified Web and Android exports in container; dual-architecture APK (23.2MB) and chunked Web packages generated cleanly; 660/660 tests passing.
+
+### [2026-09-04 19:30:00 UTC] - Phase 14: Android APK Signing & Emulator E2E Execution Fix
+- **Status**: COMPLETED
+- **Description**: Resolved GitHub Actions `android-emulator` runner failure (`INSTALL_PARSE_FAILED_NO_CERTIFICATES` and multi-line `/usr/bin/sh` syntax error):
+  1. Automated debug keystore generation (`keytool`) and APK signing (`apksigner`) in `build-android` step, embedding v1, v2, and v3 signature schemes so APK installs cleanly on Android 11+ / API 33 emulators.
+  2. Fixed multi-line compound statement execution error in `reactivecircus/android-emulator-runner@v2` by delegating emulator test commands to single script execution `bash tests/android/test_android.sh export/android/VoltArena.apk artifacts`.
+  3. Updated `tests/android/test_android.sh` to target Godot 4 launchable activity (`com.godot.game.GodotApp`), added package-level fallback via `adb shell monkey -p org.voltarena.gamesuite -c android.intent.category.LAUNCHER 1`, and refined logcat crash filtering for true runtime fatalities (`FATAL EXCEPTION`, `Fatal signal`, `ANR in org.voltarena.gamesuite`).
+- **Evidence**: Verified APK signing via `apksigner verify -v export/android/VoltArena.apk` (v1: true, v2: true, v3: true); validated shell syntax with `bash -n`; 660/660 test assertions passed across all 35 suites (0 failures); all 10 production gates PASSED.

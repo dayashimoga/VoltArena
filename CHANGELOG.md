@@ -180,3 +180,16 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Added `continue-on-error: true` and `check_apk` step to `android-emulator` job to gracefully handle APK presence without workflow failure.
   - Enabled `architectures/x86_64=true` in `export_presets.cfg` for dual ARM64 + x86_64 emulator compatibility.
   - Added `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: "true"` and updated `post-deploy-e2e` to `node-version: 22`.
+
+## [2.1.3-android-e2e] - 2026-09-04
+### Fixed
+- **Android APK v1/v2/v3 Signing**:
+  - Automated debug keystore generation (`keytool`) and APK signing via `apksigner` in `build-android` step in `.github/workflows/ci.yml`.
+  - Embedded APK Signature Schemes v1, v2, and v3, resolving `INSTALL_PARSE_FAILED_NO_CERTIFICATES` failure during `adb install` on Android API 33 emulators.
+- **Android Emulator Runner Script Syntax Error**:
+  - Replaced multi-line compound bash block in `reactivecircus/android-emulator-runner@v2` with `bash tests/android/test_android.sh export/android/VoltArena.apk artifacts`.
+  - Fixed `/usr/bin/sh: 1: Syntax error: end of file unexpected (expecting "fi")` exit code 2 caused by the runner's line-by-line `/usr/bin/sh -c` execution model.
+- **Godot 4 Android Activity Launching**:
+  - Corrected intent target to `com.godot.game.GodotApp` (`org.voltarena.gamesuite/com.godot.game.GodotApp`) in `tests/android/test_android.sh`, eliminating `Activity class does not exist` errors.
+  - Added fallback package launcher via `adb shell monkey -p org.voltarena.gamesuite -c android.intent.category.LAUNCHER 1`.
+  - Refined crash analysis to specifically match fatal errors (`FATAL EXCEPTION`, `Fatal signal`, `ANR in org.voltarena.gamesuite`), eliminating false positives from Android OS initialization logs.

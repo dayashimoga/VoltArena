@@ -277,7 +277,17 @@ jobs:
             cp /root/.local/share/godot/export_templates/4.3.stable/android_debug.apk export/android/VoltArena.apk 2>/dev/null || true
           )
           if [ -f export/android/VoltArena.apk ]; then
-            echo "Android APK generated: $(ls -lh export/android/VoltArena.apk)" > export/android/BUILD_INFO.txt
+            echo "Signing Android APK with debug keystore..."
+            KEYSTORE="/tmp/debug.keystore"
+            keytool -genkeypair -v -keystore "$KEYSTORE" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=AndroidDebug,O=Android,C=US" 2>&1 || true
+            APKSIGNER=$(find /usr -name apksigner -type f 2>/dev/null | head -1)
+            if [ -n "$APKSIGNER" ]; then
+              "$APKSIGNER" sign --ks "$KEYSTORE" --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android export/android/VoltArena.apk
+              "$APKSIGNER" verify -v export/android/VoltArena.apk
+            else
+              jarsigner -keystore "$KEYSTORE" -storepass android -keypass android export/android/VoltArena.apk androiddebugkey
+            fi
+            echo "Android APK generated and signed: $(ls -lh export/android/VoltArena.apk)" > export/android/BUILD_INFO.txt
           else
             echo "Android export template not available — PLATFORM_REQUIRED" > export/android/BUILD_INFO.txt
           fi
@@ -322,20 +332,7 @@ jobs:
         with:
           api-level: 33
           arch: x86_64
-          script: |
-            adb install export/android/VoltArena.apk || echo "APK install skipped / non-x86 ABI — PLATFORM_REQUIRED"
-            adb shell am start -n org.voltarena.gamesuite/.GodotApp || echo "Launch failed — PLATFORM_REQUIRED"
-            sleep 15
-            mkdir -p artifacts
-            adb shell screencap -p /sdcard/screen_launcher.png || true
-            adb pull /sdcard/screen_launcher.png artifacts/ || true
-            adb logcat -d > artifacts/logcat.txt 2>&1 || true
-            # Check for crashes
-            if grep -q "FATAL\|ANR" artifacts/logcat.txt 2>/dev/null; then
-              echo "FAIL: Crash/ANR detected in logcat"
-              exit 1
-            fi
-            echo "PASS: Android emulator test completed"
+          script: bash tests/android/test_android.sh export/android/VoltArena.apk artifacts
       - name: Upload Android test artifacts
         uses: actions/upload-artifact@v4
         if: always() && steps.check_apk.outputs.apk_exists == 'true'

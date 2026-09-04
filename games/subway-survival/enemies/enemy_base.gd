@@ -37,6 +37,9 @@ func setup_visuals() -> void:
 	pass
 
 func _physics_process(delta: float) -> void:
+	if not is_inside_tree():
+		return
+
 	if not is_on_floor():
 		velocity.y -= 20.0 * delta
 
@@ -80,13 +83,18 @@ func perform_attack() -> void:
 	if target_player and is_instance_valid(target_player):
 		if target_player.has_node("HealthComponent"):
 			target_player.get_node("HealthComponent").take_damage(attack_damage, self)
-		if get_node_or_null("/root/AudioManager"):
-			get_node("/root/AudioManager").play_sound_3d("hit", global_position)
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am:
+			var pos = global_position if is_inside_tree() else position
+			am.play_sound_3d("hit", pos)
 
 func _on_died(_source: Node) -> void:
-	if get_node_or_null("/root/AudioManager"):
-		get_node("/root/AudioManager").play_sound_3d("explosion", global_position, 1.2)
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").enemy_died.emit(enemy_name, score_value)
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		var pos = global_position if is_inside_tree() else position
+		am.play_sound_3d("explosion", pos, 1.2)
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.enemy_died.emit(enemy_name, score_value)
 	enemy_died.emit(enemy_name, score_value)
 	queue_free()

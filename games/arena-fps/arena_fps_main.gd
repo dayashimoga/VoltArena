@@ -75,7 +75,7 @@ func setup_scene() -> void:
 		bots.append(bot)
 
 func connect_events() -> void:
-	var bus = get_node_or_null("/root/EventBus")
+	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.enemy_died.connect(_on_enemy_killed)
 		bus.player_died.connect(_on_player_died)
@@ -85,29 +85,33 @@ func _process(delta: float) -> void:
 		return
 
 	time_remaining -= delta
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").round_timer_updated.emit(max(0.0, time_remaining))
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.round_timer_updated.emit(max(0.0, time_remaining))
 
 	if time_remaining <= 0.0:
 		end_match()
 
 func _on_enemy_killed(_type: String, score_val: int) -> void:
 	player_score += score_val
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").score_updated.emit(0, player_score)
-		get_node("/root/EventBus").show_toast_requested.emit("ELIMINATION! +%d PTS" % score_val, Color(0.0, 1.0, 0.5))
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.score_updated.emit(0, player_score)
+		bus.show_toast_requested.emit("ELIMINATION! +%d PTS" % score_val, Color(0.0, 1.0, 0.5))
 
 	if player_score >= target_kills_to_win * 100:
 		end_match()
 
 func _on_player_died(_killer: String) -> void:
 	bot_score += 100
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").show_toast_requested.emit("YOU WERE ELIMINATED! RESPAWNING...", Color(1.0, 0.2, 0.2))
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.show_toast_requested.emit("YOU WERE ELIMINATED! RESPAWNING...", Color(1.0, 0.2, 0.2))
 
 	# Respawn player after 2.5s
-	if get_tree():
-		get_tree().create_timer(2.5).timeout.connect(func():
+	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree:
+		tree.create_timer(2.5).timeout.connect(func():
 			if is_instance_valid(player_node):
 				player_node.position = Vector3(randf_range(-15, 15), 1.0, 25.0)
 				player_node.health_component.reset()
@@ -116,8 +120,9 @@ func _on_player_died(_killer: String) -> void:
 func end_match() -> void:
 	match_active = false
 	var won = player_score > bot_score
-	if get_node_or_null("/root/SaveManager"):
-		get_node("/root/SaveManager").record_arena_match(player_score / 100, bot_score / 100, player_score, won)
+	var sm = GameConstants.get_autoload(self, "SaveManager")
+	if sm:
+		sm.record_arena_match(player_score / 100, bot_score / 100, player_score, won)
 
 	results_screen.display_results(won, {
 		"Player Score": player_score,
@@ -128,13 +133,16 @@ func end_match() -> void:
 	})
 
 func _on_resume() -> void:
-	if is_instance_valid(player_node) and get_node_or_null("/root/InputManager"):
-		get_node("/root/InputManager").capture_mouse(true)
+	var im = GameConstants.get_autoload(self, "InputManager")
+	if is_instance_valid(player_node) and im:
+		im.capture_mouse(true)
 
 func _on_restart() -> void:
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").game_restart_requested.emit()
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.game_restart_requested.emit()
 
 func _on_quit_to_launcher() -> void:
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").return_to_launcher_requested.emit()
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.return_to_launcher_requested.emit()

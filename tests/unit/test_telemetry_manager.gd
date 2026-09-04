@@ -40,7 +40,8 @@ func test_process_and_history() -> void:
 
 func test_calculate_stats() -> void:
 	var tm = TelemetryManagerScript.new()
-	tm.fps_history = [30.0, 60.0, 90.0]
+	var history: Array[float] = [30.0, 60.0, 90.0]
+	tm.fps_history = history
 	tm.calculate_stats()
 	assert_true(tm.min_fps == 30.0, "Min FPS must be 30")
 	assert_true(tm.max_fps == 90.0, "Max FPS must be 90")

@@ -73,14 +73,16 @@ func setup_ui() -> void:
 
 func show_pause() -> void:
 	visible = true
-	if get_tree():
-		get_tree().paused = true
+	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree:
+		tree.paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func hide_pause() -> void:
 	visible = false
-	if get_tree():
-		get_tree().paused = false
+	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree:
+		tree.paused = false
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause"):

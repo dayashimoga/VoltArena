@@ -19,7 +19,6 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-GameConstants="*res://shared/core/game_constants.gd"
 EventBus="*res://shared/core/event_bus.gd"
 SettingsManager="*res://shared/settings/settings_manager.gd"
 SaveManager="*res://shared/save/save_manager.gd"

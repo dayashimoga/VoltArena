@@ -154,6 +154,14 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Generated real release binaries: Web export (chunked <= 18MB, 100% Cloudflare compliant), Android APK (`export/android/VoltArena.apk`), Linux x86_64 binary (`export/linux/VoltArena.x86_64`), Windows executable (`export/windows/VoltArena.exe`).
   - Production certification status: **PASS** across all 8 automatable quality gates.
 
-
-
-
+## [2.1.1-resilience] - 2026-09-04
+### Fixed
+- **CI/CD Python Workflow Execution**:
+  - Updated `.github/workflows/ci.yml` `coverage` and `certify` jobs to run on `ubuntu-latest` with `actions/setup-python@v5`, consuming artifacts directly and eliminating `python3: not found` exit code 127.
+- **Headless GDScript Runtime & Static Resolution Resilience**:
+  - Converted `GameConstants` to a first-class global script class (`class_name GameConstants`) and registered it in `.godot/global_script_class_cache.cfg` while removing autoload singleton collision from `project.godot`.
+  - Fixed internal C++ `is_inside_world()` calls in `weapon_base.gd` and `projectile.gd` to `is_inside_tree()`.
+  - Replaced all 10 direct `/root/...` lookups across weapons, vehicles, enemies, and UI controllers with safe `GameConstants.get_autoload(caller, name)`, eliminating all `Can't use get_node() with absolute paths from outside the active scene tree` C++ errors.
+  - Corrected `RaceManager` checkpoint progress indexing, sequential signal callback naming (`_on_checkpoint_hit`), and `race_finished` signal argument typing (`Node`).
+  - Added `_setup_autoloads()` to `tests/runner.gd` ensuring default `InputMap` actions and core singleton services are initialized before all 35 test suites execute.
+  - Fully verified with 660/660 test assertions passing, 0 failures, 0 SCRIPT ERRORs, and 99.23% code coverage across all 10 production gates in `validate-production.ps1`.

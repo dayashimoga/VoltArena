@@ -113,8 +113,9 @@ func _process(delta: float) -> void:
 
 	if not is_kickoff_pause:
 		time_left -= delta
-		if get_node_or_null("/root/EventBus"):
-			get_node("/root/EventBus").round_timer_updated.emit(max(0.0, time_left))
+		var bus = GameConstants.get_autoload(self, "EventBus")
+		if bus:
+			bus.round_timer_updated.emit(max(0.0, time_left))
 
 		if time_left <= 0.0:
 			end_match()
@@ -126,30 +127,38 @@ func update_chase_camera(delta: float) -> void:
 		return
 
 	# Smooth third-person chase camera behind car
-	var car_pos = player_car.global_position
-	var car_fwd = -player_car.global_transform.basis.z
+	var car_pos = player_car.global_position if player_car.is_inside_tree() else player_car.position
+	var car_fwd = -player_car.global_transform.basis.z if player_car.is_inside_tree() else -player_car.transform.basis.z
 
 	var target_cam_pos = car_pos - car_fwd * 7.5 + Vector3(0, 3.2, 0)
-	camera.global_position = camera.global_position.lerp(target_cam_pos, delta * 8.0)
+	if camera.is_inside_tree():
+		camera.global_position = camera.global_position.lerp(target_cam_pos, delta * 8.0)
+	else:
+		camera.position = camera.position.lerp(target_cam_pos, delta * 8.0)
 
 	# Look slightly above car towards ball or forward
 	var look_target = car_pos + Vector3(0, 1.2, 0)
 	if is_instance_valid(ball):
-		look_target = look_target.lerp(ball.global_position, 0.25)
-	camera.look_at(look_target, Vector3.UP)
+		var b_pos = ball.global_position if ball.is_inside_tree() else ball.position
+		look_target = look_target.lerp(b_pos, 0.25)
+	if camera.is_inside_tree():
+		camera.look_at(look_target, Vector3.UP)
+	else:
+		camera.look_at_from_position(camera.position, look_target, Vector3.UP)
 
 func reset_kickoff() -> void:
 	is_kickoff_pause = true
 	# Reset ball
 	ball.reset_to_center()
 
-	# Position player on Blue side
-	player_car.global_position = Vector3(0, 0.5, 25.0)
-	player_car.rotation = Vector3(0, deg_to_rad(180), 0)
-	player_car.velocity = Vector3.ZERO
-	player_car.forward_speed = 0.0
+	# Reset player car
+	if is_instance_valid(player_car):
+		player_car.global_position = Vector3(0, 0.5, 25.0)
+		player_car.rotation = Vector3.ZERO
+		player_car.velocity = Vector3.ZERO
+		player_car.forward_speed = 0.0
 
-	# Position AI on Orange side
+	# Reset AI cars
 	if ai_cars.size() >= 2:
 		ai_cars[0].global_position = Vector3(-8.0, 0.5, -25.0)
 		ai_cars[0].rotation = Vector3.ZERO
@@ -161,8 +170,9 @@ func reset_kickoff() -> void:
 		ai_cars[1].velocity = Vector3.ZERO
 		ai_cars[1].forward_speed = 0.0
 
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").show_toast_requested.emit("KICKOFF!", Color(0.0, 1.0, 1.0))
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.show_toast_requested.emit("KICKOFF!", Color(0.0, 1.0, 1.0))
 
 	# Unpause driving after short countdown
 	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
@@ -175,27 +185,30 @@ func _on_goal_scored(scoring_team: int) -> void:
 	if not match_active or is_kickoff_pause:
 		return
 
+	var bus = GameConstants.get_autoload(self, "EventBus")
 	if scoring_team == 0:
 		blue_score += 1
-		if get_node_or_null("/root/EventBus"):
-			get_node("/root/EventBus").show_toast_requested.emit("BLUE GOAL SCORED!", Color(0.0, 0.9, 1.0))
-			get_node("/root/EventBus").score_updated.emit(0, blue_score)
+		if bus:
+			bus.show_toast_requested.emit("BLUE GOAL SCORED!", Color(0.0, 0.9, 1.0))
+			bus.score_updated.emit(0, blue_score)
 	else:
 		orange_score += 1
-		if get_node_or_null("/root/EventBus"):
-			get_node("/root/EventBus").show_toast_requested.emit("ORANGE GOAL SCORED!", Color(1.0, 0.45, 0.0))
-			get_node("/root/EventBus").score_updated.emit(1, orange_score)
+		if bus:
+			bus.show_toast_requested.emit("ORANGE GOAL SCORED!", Color(1.0, 0.45, 0.0))
+			bus.score_updated.emit(1, orange_score)
 
-	if get_node_or_null("/root/AudioManager"):
-		get_node("/root/AudioManager").play_sound("goal")
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		am.play_sound("goal")
 
 	reset_kickoff()
 
 func end_match() -> void:
 	match_active = false
 	var won = blue_score > orange_score
-	if get_node_or_null("/root/SaveManager"):
-		get_node("/root/SaveManager").record_rocket_match(blue_score, 0, won)
+	var sm = GameConstants.get_autoload(self, "SaveManager")
+	if sm:
+		sm.record_rocket_match(blue_score, 0, won)
 
 	results_screen.display_results(won, {
 		"Blue Score": blue_score,
@@ -204,9 +217,11 @@ func end_match() -> void:
 	})
 
 func _on_restart() -> void:
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").game_restart_requested.emit()
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.game_restart_requested.emit()
 
 func _on_quit_to_launcher() -> void:
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").return_to_launcher_requested.emit()
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.return_to_launcher_requested.emit()

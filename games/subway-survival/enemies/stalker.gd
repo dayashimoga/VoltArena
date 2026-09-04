@@ -56,9 +56,14 @@ func perform_attack() -> void:
 	proj.speed = 24.0
 	proj.damage = attack_damage
 	proj.shooter = self
-	proj.lifetime = 3.0
-	get_tree().root.add_child(proj)
-	proj.global_position = global_position + Vector3.UP * 1.0 + dir * 0.8
+	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree and tree.root:
+		tree.root.add_child(proj)
+		proj.global_position = global_position + Vector3.UP * 1.0 + dir * 0.8
+	else:
+		proj.queue_free()
 
-	if get_node_or_null("/root/AudioManager"):
-		get_node("/root/AudioManager").play_sound_3d("laser_fire", global_position, 0.7)
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		var pos = global_position if is_inside_tree() else position
+		am.play_sound_3d("laser_fire", pos, 0.7)

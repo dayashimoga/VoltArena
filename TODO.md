@@ -148,5 +148,12 @@
 - **Description**: Closed all testing gaps across all 4 games and launcher. Achieved **100.0% function coverage (257/257 project functions tested)** and **100% test pass rate (654/654 assertions passed across 35 test suites)** with zero unexplained skips or flakes. Executed full 10-gate production certification pipeline (`scripts/validate-production.ps1` via Podman container `barichello/godot-ci:4.3`). Produced verified real build artifacts: Web export with client-side chunk reassembly (<18MB), Android APK (`export/android/VoltArena.apk`), Linux binary (`export/linux/VoltArena.x86_64`), and Windows binary (`export/windows/VoltArena.exe`).
 - **Evidence**: `artifacts/test-results.json` (654 passed, 0 failed, 35 suites), `artifacts/coverage-report.json` (100.0%), `artifacts/benchmark-results.json` (ALL GATES PASSED), `artifacts/production-certification.json` (Overall Status: PASS, 8 Automatable Passes, 0 Failures).
 
-
-
+### [2026-09-04 18:30:00 UTC] - Phase 12: CI/CD Pipeline & Headless Script Resilience
+- **Status**: COMPLETED
+- **Description**: Resolved CI/CD GitHub Actions workflow failure in coverage job by updating `.github/workflows/ci.yml` to run on `ubuntu-latest` with `actions/setup-python@v5` consuming the uploaded `coverage-report.json` artifact. Eliminated all GDScript headless scene-tree warnings and script compilation errors:
+  1. Converted `GameConstants` to a first-class global script class (`class_name GameConstants`) and registered it in `global_script_class_cache.cfg` to ensure deterministic parser resolution during headless test runner execution without autoload singleton collisions.
+  2. Fixed invalid C++ internal method calls (`is_inside_world()` -> `is_inside_tree()`) in `weapon_base.gd` and `projectile.gd`.
+  3. Eliminated all 10 occurrences of `/root/...` lookups across the codebase, standardizing on safe `GameConstants.get_autoload(caller, name)` using `Engine.get_main_loop().root.get_node_or_null()`.
+  4. Resolved `RaceManager` checkpoint count bounds, checkpoint signal signature (`Node`), and sequential hit callback naming.
+  5. Initialized `_setup_autoloads()` in `tests/runner.gd` configuring default `InputMap` actions and test runner singletons.
+- **Evidence**: Executed `scripts/validate-production.ps1` in Podman container (`docker.io/barichello/godot-ci:4.3`): 660/660 test assertions passed across all 35 suites (0 failures, 0 SCRIPT ERRORs), 99.23% function coverage (>90% threshold), all 10 production certification gates PASSED.

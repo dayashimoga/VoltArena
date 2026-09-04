@@ -9,8 +9,13 @@ var current_state: int = STATE_INITIALIZING
 var active_game_id: String = ""
 var active_game_instance: Node = null
 
-@onready var event_bus: Node = get_node_or_null("/root/EventBus")
-@onready var asset_loader: Node = get_node_or_null("/root/AssetLoader")
+var event_bus: Node:
+	get:
+		return GameConstants.get_autoload(self, "EventBus")
+
+var asset_loader: Node:
+	get:
+		return GameConstants.get_autoload(self, "AssetLoader")
 
 func _ready() -> void:
 	if event_bus:
@@ -56,7 +61,9 @@ func switch_to_scene(packed_scene: PackedScene) -> void:
 	if is_instance_valid(active_game_instance):
 		active_game_instance.queue_free()
 	active_game_instance = packed_scene.instantiate()
-	get_tree().root.add_child(active_game_instance)
+	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree and tree.root:
+		tree.root.add_child(active_game_instance)
 
 func restart_current_game() -> void:
 	if not active_game_id.is_empty():
@@ -68,4 +75,6 @@ func return_to_launcher() -> void:
 		active_game_instance = null
 	active_game_id = ""
 	set_state(STATE_MENU)
-	get_tree().change_scene_to_file("res://launcher/launcher.tscn")
+	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree:
+		tree.change_scene_to_file("res://launcher/launcher.tscn")

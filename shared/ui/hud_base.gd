@@ -141,7 +141,7 @@ func setup_hud_layout() -> void:
 	add_child(toast_container)
 
 func connect_bus_signals() -> void:
-	var bus = get_node_or_null("/root/EventBus")
+	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.player_health_changed.connect(update_health)
 		bus.player_armor_changed.connect(update_armor)
@@ -223,8 +223,10 @@ func show_toast(msg: String, col: Color = Color.WHITE) -> void:
 			tw.tween_interval(2.0)
 			tw.tween_property(lbl, "modulate:a", 0.0, 0.3)
 			tw.tween_callback(lbl.queue_free)
-	elif get_tree():
-		get_tree().create_timer(2.5).timeout.connect(func():
-			if is_instance_valid(lbl):
-				lbl.queue_free()
-		)
+	else:
+		var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+		if tree:
+			tree.create_timer(2.5).timeout.connect(func():
+				if is_instance_valid(lbl):
+					lbl.queue_free()
+			)

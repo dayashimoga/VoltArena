@@ -57,7 +57,10 @@ func _on_body_entered(body: Node3D) -> void:
 		# Apply powerup to kart
 		body.apply_item_boost(3.0)
 
-		if get_node_or_null("/root/AudioManager"):
-			get_node("/root/AudioManager").play_sound_3d("pickup", global_position)
-		if get_node_or_null("/root/EventBus") and body.is_player:
-			get_node("/root/EventBus").show_toast_requested.emit("TURBO BOOST ACQUIRED!", Color(1.0, 0.8, 0.0))
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am:
+			var pos = global_position if is_inside_tree() else position
+			am.play_sound_3d("pickup", pos)
+		var bus = GameConstants.get_autoload(self, "EventBus")
+		if bus and body.is_player:
+			bus.show_toast_requested.emit("TURBO BOOST ACQUIRED!", Color(1.0, 0.8, 0.0))

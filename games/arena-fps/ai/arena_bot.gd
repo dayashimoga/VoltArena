@@ -73,6 +73,9 @@ func setup_weapon() -> void:
 	weapon.position = Vector3(0.3, 0.9, -0.4)
 
 func _physics_process(delta: float) -> void:
+	if not is_inside_tree():
+		return
+
 	if not is_on_floor():
 		velocity.y -= 20.0 * delta
 
@@ -130,15 +133,19 @@ func pick_random_patrol() -> void:
 	)
 
 func _on_died(killer: Node) -> void:
-	if get_node_or_null("/root/AudioManager"):
-		get_node("/root/AudioManager").play_sound_3d("explosion", global_position)
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").enemy_died.emit("Arena Bot", 100)
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		var pos = global_position if is_inside_tree() else position
+		am.play_sound_3d("explosion", pos)
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.enemy_died.emit("Arena Bot", 100)
 	# Hide and queue respawn in 4 seconds
 	visible = false
 	collision_layer = 0
-	if get_tree():
-		get_tree().create_timer(4.0).timeout.connect(respawn)
+	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree:
+		tree.create_timer(4.0).timeout.connect(respawn)
 
 func respawn() -> void:
 	pick_random_patrol()

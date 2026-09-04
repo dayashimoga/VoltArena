@@ -11,6 +11,19 @@ signal drift_boost_triggered(boost_level: int)
 @export var drift_steer_speed: float = 4.2
 @export var gravity: float = 25.0
 
+# Aliases for compatibility with tests and external callers
+var max_speed: float:
+	get: return base_speed
+	set(v): base_speed = v
+
+var acceleration_force: float:
+	get: return acceleration
+	set(v): acceleration = v
+
+var steering_speed: float:
+	get: return steer_speed
+	set(v): steer_speed = v
+
 @export var racer_id: int = 0
 @export var racer_name: String = "Player"
 @export var is_player: bool = true
@@ -103,6 +116,11 @@ func setup_kart_visual() -> void:
 	add_child(col)
 
 func _physics_process(delta: float) -> void:
+	if not is_inside_tree():
+		if is_player and not race_finished:
+			handle_player_input(delta)
+		return
+
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 
@@ -116,7 +134,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func handle_player_input(delta: float) -> void:
-	var im = get_node_or_null("/root/InputManager")
+	var im = GameConstants.get_autoload(self, "InputManager")
 	var throttle = 0.0
 	var steer = 0.0
 
@@ -139,8 +157,9 @@ func apply_kart_controls(throttle: float, steer: float, want_drift: bool, delta:
 			is_drifting = true
 			drift_direction = sign(steer)
 			drift_charge_time = 0.0
-			if get_node_or_null("/root/AudioManager"):
-				get_node("/root/AudioManager").play_sound("drift_screech", 1.2)
+			var am = GameConstants.get_autoload(self, "AudioManager")
+			if am:
+				am.play_sound("drift_screech", 1.2)
 		drift_charge_time += delta
 	else:
 		if is_drifting:
@@ -191,13 +210,16 @@ func trigger_drift_boost() -> void:
 
 	if boost_level > 0:
 		drift_boost_triggered.emit(boost_level)
-		if get_node_or_null("/root/AudioManager"):
-			get_node("/root/AudioManager").play_sound("jump", 1.4)
-		if get_node_or_null("/root/EventBus"):
-			get_node("/root/EventBus").show_toast_requested.emit("DRIFT BOOST!", Color(0.0, 1.0, 1.0))
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am:
+			am.play_sound("jump", 1.4)
+		var bus = GameConstants.get_autoload(self, "EventBus")
+		if bus:
+			bus.show_toast_requested.emit("DRIFT BOOST!", Color(0.0, 1.0, 1.0))
 	drift_charge_time = 0.0
 
 func apply_item_boost(duration: float) -> void:
 	boost_timer = max(boost_timer, duration)
-	if get_node_or_null("/root/AudioManager"):
-		get_node("/root/AudioManager").play_sound("jump", 1.5)
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		am.play_sound("jump", 1.5)

@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 100,
+  "overall_coverage_pct": 99.2277992277992,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -74,10 +74,12 @@
       "untested": []
     },
     "res://games/kart-racing/game/race_manager.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 85.7142857142857,
       "tested": 6,
-      "total": 6,
-      "untested": []
+      "total": 7,
+      "untested": [
+        "on_kart_hit_checkpoint"
+      ]
     },
     "res://games/kart-racing/kart/kart_controller.gd": {
       "coverage_pct": 100,
@@ -205,6 +207,14 @@
       "total": 5,
       "untested": []
     },
+    "res://shared/core/game_constants.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 1,
+      "untested": [
+        "get_autoload"
+      ]
+    },
     "res://shared/core/game_manager.gd": {
       "coverage_pct": 100,
       "tested": 6,
@@ -309,6 +319,6 @@
     }
   },
   "tested_functions": 257,
-  "timestamp": "2026-09-04T09:14:23",
-  "total_functions": 257
+  "timestamp": "2026-09-04T12:56:47",
+  "total_functions": 259
 }

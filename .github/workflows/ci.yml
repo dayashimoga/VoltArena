@@ -50,7 +50,9 @@ jobs:
         if: always()
         with:
           name: test-results
-          path: artifacts/test-results.json
+          path: |
+            artifacts/test-results.json
+            artifacts/coverage-report.json
 
   # ============================================
   # STAGE 3: COVERAGE ANALYSIS
@@ -59,28 +61,32 @@ jobs:
     name: Coverage Analysis (>90% required)
     runs-on: ubuntu-latest
     needs: tests
-    container:
-      image: barichello/godot-ci:4.3
     steps:
       - uses: actions/checkout@v4
-      - name: Import project
-        run: godot --headless --import 2>&1 || true
-      - name: Run tests with coverage
-        run: godot --headless -s res://tests/runner.gd
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download test artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results
+          path: artifacts/
       - name: Verify coverage threshold
         run: |
           if [ -f artifacts/coverage-report.json ]; then
-            COV=$(python3 -c "import json; d=json.load(open('artifacts/coverage-report.json')); print(d.get('overall_coverage_pct', 0))")
-            echo "Coverage: ${COV}%"
             python3 -c "
           import json, sys
           d = json.load(open('artifacts/coverage-report.json'))
           pct = d.get('overall_coverage_pct', 0)
+          print(f'Overall Function Coverage: {pct:.1f}%')
           if pct < 90.0:
               print(f'FAIL: Coverage {pct:.1f}% is below 90% threshold')
               sys.exit(1)
-          print(f'PASS: Coverage {pct:.1f}% meets threshold')
+          print(f'PASS: Coverage {pct:.1f}% meets >90% requirement')
           "
+          else
+            echo 'FAIL: artifacts/coverage-report.json not found'
+            exit 1
           fi
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -417,6 +423,9 @@ jobs:
     if: always()
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:

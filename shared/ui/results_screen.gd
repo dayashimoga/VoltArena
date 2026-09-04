@@ -59,8 +59,9 @@ func setup_ui() -> void:
 	btn_restart.text = "PLAY AGAIN"
 	btn_restart.pressed.connect(func():
 		visible = false
-		if get_tree():
-			get_tree().paused = false
+		var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+		if tree:
+			tree.paused = false
 		restart_pressed.emit()
 	)
 	btn_box.add_child(btn_restart)
@@ -69,37 +70,44 @@ func setup_ui() -> void:
 	btn_launcher.text = "LAUNCHER"
 	btn_launcher.pressed.connect(func():
 		visible = false
-		if get_tree():
-			get_tree().paused = false
+		var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+		if tree:
+			tree.paused = false
 		launcher_pressed.emit()
 	)
 	btn_box.add_child(btn_launcher)
 
 func display_results(won: bool, stats_dict: Dictionary) -> void:
+	if not title_label or not stats_vbox:
+		setup_ui()
+
 	visible = true
-	if get_tree():
-		get_tree().paused = true
+	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree:
+		tree.paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-	if won:
-		title_label.text = "VICTORY!"
-		title_label.modulate = Color(0.0, 1.0, 0.5)
-	else:
-		title_label.text = "DEFEAT"
-		title_label.modulate = Color(1.0, 0.2, 0.3)
+	if title_label:
+		if won:
+			title_label.text = "VICTORY!"
+			title_label.modulate = Color(0.0, 1.0, 0.5)
+		else:
+			title_label.text = "DEFEAT"
+			title_label.modulate = Color(1.0, 0.2, 0.3)
 
 	# Clear old stats
-	for child in stats_vbox.get_children():
-		child.queue_free()
+	if stats_vbox:
+		for child in stats_vbox.get_children():
+			child.queue_free()
 
-	for k in stats_dict.keys():
-		var row = HBoxContainer.new()
-		var lbl_name = Label.new()
-		lbl_name.text = str(k).capitalize() + ":"
-		lbl_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var lbl_val = Label.new()
-		lbl_val.text = str(stats_dict[k])
-		lbl_val.modulate = Color(0.0, 0.9, 1.0)
-		row.add_child(lbl_name)
-		row.add_child(lbl_val)
-		stats_vbox.add_child(row)
+		for k in stats_dict.keys():
+			var row = HBoxContainer.new()
+			var lbl_name = Label.new()
+			lbl_name.text = str(k).capitalize() + ":"
+			lbl_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var lbl_val = Label.new()
+			lbl_val.text = str(stats_dict[k])
+			lbl_val.modulate = Color(0.0, 0.9, 1.0)
+			row.add_child(lbl_name)
+			row.add_child(lbl_val)
+			stats_vbox.add_child(row)

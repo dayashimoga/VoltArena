@@ -94,6 +94,11 @@ func setup_car_visual() -> void:
 	add_child(col)
 
 func _physics_process(delta: float) -> void:
+	if not is_inside_tree():
+		if is_player_controlled:
+			handle_player_input(delta)
+		return
+
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 
@@ -109,14 +114,14 @@ func _physics_process(delta: float) -> void:
 		if collider and collider.is_in_group("balls"):
 			var hit_speed = velocity.length()
 			var push_dir = -col.get_normal()
-			var impulse = push_dir * max(14.0, hit_speed * 1.6)
-			if collider.has_method("apply_ball_impulse"):
-				collider.apply_ball_impulse(impulse)
-				if get_node_or_null("/root/AudioManager"):
-					get_node("/root/AudioManager").play_sound_3d("hit", global_position, 1.2)
+			var force = max(hit_speed * 1.5, 12.0)
+			collider.apply_impulse(push_dir, force)
+			var am = GameConstants.get_autoload(self, "AudioManager")
+			if am:
+				am.play_sfx("car_hit_ball")
 
 func handle_player_input(delta: float) -> void:
-	var im = get_node_or_null("/root/InputManager")
+	var im = GameConstants.get_autoload(self, "InputManager")
 	var throttle = 0.0
 	var steer = 0.0
 
@@ -132,29 +137,33 @@ func handle_player_input(delta: float) -> void:
 	apply_driving_controls(throttle, steer, delta)
 
 	# Jump
-	if Input.is_action_just_pressed("jump") and is_on_floor():
+	var on_floor = is_on_floor() if is_inside_tree() else true
+	if Input.is_action_just_pressed("jump") and on_floor:
 		velocity.y = jump_impulse
-		if get_node_or_null("/root/AudioManager"):
-			get_node("/root/AudioManager").play_sound("jump", 0.9)
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am:
+			am.play_sound("jump", 0.9)
 
 	# Boost
 	is_boosting = Input.is_action_pressed("boost") and current_boost > 0.0
+	var bus = GameConstants.get_autoload(self, "EventBus")
 	if is_boosting:
 		current_boost = max(0.0, current_boost - boost_consumption_rate * delta)
 		forward_speed = lerpf(forward_speed, boost_speed, delta * 5.0)
-		if get_node_or_null("/root/EventBus"):
-			get_node("/root/EventBus").boost_amount_changed.emit(current_boost, max_boost)
+		if bus:
+			bus.boost_amount_changed.emit(current_boost, max_boost)
 	else:
 		current_boost = min(max_boost, current_boost + boost_recharge_rate * delta)
-		if get_node_or_null("/root/EventBus"):
-			get_node("/root/EventBus").boost_amount_changed.emit(current_boost, max_boost)
+		if bus:
+			bus.boost_amount_changed.emit(current_boost, max_boost)
 
 	boost_updated.emit(current_boost, max_boost)
 
 func apply_driving_controls(throttle: float, steer: float, delta: float) -> void:
 	# Steering rotates vehicle around Y axis
 	if abs(forward_speed) > 0.5:
-		var steer_dir = sign(forward_speed) if is_on_floor() else 1.0
+		var on_floor = is_on_floor() if is_inside_tree() else true
+		var steer_dir = sign(forward_speed) if on_floor else 1.0
 		rotate_y(steer * steer_speed * delta * steer_dir)
 
 	# Acceleration / Braking
@@ -174,5 +183,6 @@ func apply_driving_controls(throttle: float, steer: float, delta: float) -> void
 func replenish_boost(amount: float) -> void:
 	current_boost = min(max_boost, current_boost + amount)
 	boost_updated.emit(current_boost, max_boost)
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").boost_amount_changed.emit(current_boost, max_boost)
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.boost_amount_changed.emit(current_boost, max_boost)

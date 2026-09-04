@@ -39,19 +39,28 @@ func _physics_process(delta: float) -> void:
 
 	# Rotate ball mesh proportionally to speed
 	var speed = velocity.length()
-	if speed > 0.1:
+	if speed > 0.1 and is_instance_valid(ball_mesh):
 		var rot_axis = Vector3(-velocity.z, 0, velocity.x).normalized()
 		ball_mesh.rotate(rot_axis, (speed / radius) * delta)
+
+	if not is_inside_tree():
+		return
 
 	var collision = move_and_collide(velocity * delta)
 	if collision:
 		velocity = velocity.bounce(collision.get_normal()) * bounciness
-		if speed > 4.0 and get_node_or_null("/root/AudioManager"):
-			get_node("/root/AudioManager").play_sound_3d("hit", global_position, clampf(speed / 20.0, 0.6, 1.4))
+		if speed > 4.0:
+			var am = GameConstants.get_autoload(self, "AudioManager")
+			if am:
+				var pos = global_position if is_inside_tree() else position
+				am.play_sound_3d("hit", pos, clampf(speed / 20.0, 0.6, 1.4))
 
 func apply_ball_impulse(impulse: Vector3) -> void:
 	velocity += impulse
 
 func reset_to_center() -> void:
-	global_position = Vector3(0, radius + 0.5, 0)
+	if is_inside_tree():
+		global_position = Vector3(0, radius + 0.5, 0)
+	else:
+		position = Vector3(0, radius + 0.5, 0)
 	velocity = Vector3.ZERO

@@ -64,8 +64,9 @@ func create_action_button(text: String, action_name: String, color: Color) -> Bu
 
 func _on_move_joystick_updated(vec: Vector2) -> void:
 	# Map normalized 2D vector to virtual move vector
-	if get_node_or_null("/root/InputManager"):
-		get_node("/root/InputManager").virtual_move_vector = vec
+	var im = GameConstants.get_autoload(self, "InputManager")
+	if im:
+		im.virtual_move_vector = vec
 
 func _gui_input(event: InputEvent) -> void:
 	# Right half screen acts as swipe-to-look touch zone
@@ -79,5 +80,6 @@ func _gui_input(event: InputEvent) -> void:
 	elif event is InputEventScreenDrag and event.index == look_touch_id:
 		var delta = event.position - last_look_pos
 		last_look_pos = event.position
-		if get_node_or_null("/root/InputManager"):
-			get_node("/root/InputManager").virtual_look_vector = delta * 2.0
+		var im = GameConstants.get_autoload(self, "InputManager")
+		if im:
+			im.virtual_look_vector = delta * 2.0

@@ -113,18 +113,23 @@ func update_camera(delta: float) -> void:
 	if not is_instance_valid(player_kart) or not is_instance_valid(camera):
 		return
 
-	var k_pos = player_kart.global_position
-	var k_fwd = -player_kart.global_transform.basis.z
+	var k_pos = player_kart.global_position if player_kart.is_inside_tree() else player_kart.position
+	var k_fwd = -player_kart.global_transform.basis.z if player_kart.is_inside_tree() else -player_kart.transform.basis.z
 
 	var target_cam = k_pos - k_fwd * 6.5 + Vector3(0, 2.8, 0)
-	camera.global_position = camera.global_position.lerp(target_cam, delta * 10.0)
-	camera.look_at(k_pos + Vector3(0, 1.0, 0), Vector3.UP)
+	if camera.is_inside_tree():
+		camera.global_position = camera.global_position.lerp(target_cam, delta * 10.0)
+		camera.look_at(k_pos + Vector3(0, 1.0, 0), Vector3.UP)
+	else:
+		camera.position = camera.position.lerp(target_cam, delta * 10.0)
+		camera.look_at_from_position(camera.position, k_pos + Vector3(0, 1.0, 0), Vector3.UP)
 
 func _on_race_finished(winner: Node) -> void:
 	var won = (winner == player_kart)
 	var best_lap = player_kart.best_lap_time
-	if get_node_or_null("/root/SaveManager"):
-		get_node("/root/SaveManager").record_kart_race("canyon", best_lap, won)
+	var sm = GameConstants.get_autoload(self, "SaveManager")
+	if sm:
+		sm.record_kart_race("canyon", best_lap, won)
 
 	results_screen.display_results(won, {
 		"Position": "1st Place (WINNER!)" if won else "Finished",
@@ -133,9 +138,11 @@ func _on_race_finished(winner: Node) -> void:
 	})
 
 func _on_restart() -> void:
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").game_restart_requested.emit()
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.game_restart_requested.emit()
 
 func _on_quit_to_launcher() -> void:
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").return_to_launcher_requested.emit()
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.return_to_launcher_requested.emit()

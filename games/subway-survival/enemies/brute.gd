@@ -49,5 +49,7 @@ func setup_visuals() -> void:
 func perform_attack() -> void:
 	# Heavy slam attack
 	super.perform_attack()
-	if get_node_or_null("/root/AudioManager"):
-		get_node("/root/AudioManager").play_sound_3d("explosion", global_position, 0.8)
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		var pos = global_position if is_inside_tree() else position
+		am.play_sound_3d("explosion", pos, 0.8)

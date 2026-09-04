@@ -114,8 +114,9 @@ func create_boost_pad(pos: Vector3) -> void:
 	pad.body_entered.connect(func(body: Node3D):
 		if body.has_method("replenish_boost"):
 			body.replenish_boost(100.0)
-			if get_node_or_null("/root/AudioManager"):
-				get_node("/root/AudioManager").play_sound_3d("pickup", pos)
+			var am = GameConstants.get_autoload(pad, "AudioManager")
+			if am:
+				am.play_sound_3d("pickup", pos)
 	)
 	add_child(pad)
 
@@ -156,8 +157,7 @@ func setup_stadium_lighting() -> void:
 	# Stadium floodlights
 	for p in [Vector3(-20, 14, -35), Vector3(20, 14, -35), Vector3(-20, 14, 35), Vector3(20, 14, 35)]:
 		var spot = SpotLight3D.new()
-		spot.position = p
-		spot.look_at(Vector3(0, 0, 0))
+		spot.look_at_from_position(p, Vector3.ZERO)
 		spot.spot_range = 65.0
 		spot.spot_angle = 55.0
 		spot.light_energy = 2.5

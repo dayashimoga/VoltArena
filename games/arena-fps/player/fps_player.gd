@@ -34,8 +34,9 @@ func _ready() -> void:
 	setup_weapons()
 	connect_health()
 
-	if get_node_or_null("/root/InputManager"):
-		get_node("/root/InputManager").capture_mouse(true)
+	var im = GameConstants.get_autoload(self, "InputManager")
+	if im:
+		im.capture_mouse(true)
 
 var health_connected: bool = false
 
@@ -100,21 +101,24 @@ func select_weapon(index: int) -> void:
 	var active_w = weapons[current_weapon_index]
 	active_w.visible = true
 
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").player_weapon_switched.emit(active_w.weapon_name, "")
-		get_node("/root/EventBus").player_ammo_changed.emit(active_w.current_clip_ammo, active_w.max_clip_ammo, active_w.current_reserve_ammo)
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.player_weapon_switched.emit(active_w.weapon_name, "")
+		bus.player_ammo_changed.emit(active_w.current_clip_ammo, active_w.max_clip_ammo, active_w.current_reserve_ammo)
 
 func connect_health() -> void:
 	if health_connected or not health_component:
 		return
 	health_connected = true
 	health_component.health_changed.connect(func(cur, max_hp):
-		if get_node_or_null("/root/EventBus"):
-			get_node("/root/EventBus").player_health_changed.emit(cur, max_hp)
+		var bus = GameConstants.get_autoload(self, "EventBus")
+		if bus:
+			bus.player_health_changed.emit(cur, max_hp)
 	)
 	health_component.armor_changed.connect(func(cur, max_arm):
-		if get_node_or_null("/root/EventBus"):
-			get_node("/root/EventBus").player_armor_changed.emit(cur, max_arm)
+		var bus = GameConstants.get_autoload(self, "EventBus")
+		if bus:
+			bus.player_armor_changed.emit(cur, max_arm)
 	)
 	health_component.died.connect(_on_player_died)
 
@@ -128,7 +132,7 @@ func _physics_process(delta: float) -> void:
 	update_view_bobbing(delta)
 
 func handle_look_and_recoil(delta: float) -> void:
-	var im = get_node_or_null("/root/InputManager")
+	var im = GameConstants.get_autoload(self, "InputManager")
 	if not im:
 		return
 	var look = im.get_look_vector(delta)
@@ -155,8 +159,9 @@ func handle_movement(delta: float) -> void:
 
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = jump_velocity
-		if get_node_or_null("/root/AudioManager"):
-			get_node("/root/AudioManager").play_sound("jump")
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am:
+			am.play_sound("jump")
 
 	is_crouching = Input.is_action_pressed("crouch")
 	var is_sprinting = Input.is_action_pressed("sprint") and not is_crouching
@@ -170,22 +175,24 @@ func handle_movement(delta: float) -> void:
 		if is_sprinting:
 			target_speed = sprint_speed
 
-	var im = get_node_or_null("/root/InputManager")
+	var im = GameConstants.get_autoload(self, "InputManager")
 	var input_vec = im.get_move_vector() if im else Vector2.ZERO
 	var wish_dir = (transform.basis * Vector3(input_vec.x, 0, input_vec.y)).normalized()
 
-	var accel = acceleration if is_on_floor() else (acceleration * air_control)
+	var on_floor = is_on_floor() if is_inside_tree() else true
+	var accel = acceleration if on_floor else (acceleration * air_control)
 	var target_vel_x = wish_dir.x * target_speed
 	var target_vel_z = wish_dir.z * target_speed
 	velocity.x = lerpf(velocity.x, target_vel_x, accel * delta)
 	velocity.z = lerpf(velocity.z, target_vel_z, accel * delta)
 
-	move_and_slide()
+	if is_inside_tree():
+		move_and_slide()
 
 func handle_weapons_input() -> void:
 	var active_w = weapons[current_weapon_index]
-	var ray_origin = camera.global_position
-	var ray_dir = -camera.global_transform.basis.z
+	var ray_origin = camera.global_position if camera.is_inside_tree() else camera.position
+	var ray_dir = -camera.global_transform.basis.z if camera.is_inside_tree() else -camera.transform.basis.z
 
 	if active_w.is_automatic:
 		if Input.is_action_pressed("fire"):
@@ -207,8 +214,9 @@ func handle_weapons_input() -> void:
 	elif Input.is_key_pressed(KEY_5): select_weapon(4)
 
 func notify_ammo_update(w: WeaponBase) -> void:
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").player_ammo_changed.emit(w.current_clip_ammo, w.max_clip_ammo, w.current_reserve_ammo)
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.player_ammo_changed.emit(w.current_clip_ammo, w.max_clip_ammo, w.current_reserve_ammo)
 
 func update_view_bobbing(delta: float) -> void:
 	var h_speed = Vector2(velocity.x, velocity.z).length()
@@ -227,5 +235,6 @@ func add_ammo(amount: int) -> void:
 	notify_ammo_update(active_w)
 
 func _on_player_died(_source: Node) -> void:
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").player_died.emit("Enemy Bot")
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.player_died.emit("Enemy Bot")

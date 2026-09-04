@@ -39,7 +39,10 @@ func _physics_process(delta: float) -> void:
 	if has_gravity:
 		velocity.y -= gravity_scale * delta
 
-	global_position += velocity * delta
+	if is_inside_tree():
+		global_position += velocity * delta
+	else:
+		position += velocity * delta
 
 func _on_body_entered(body: Node3D) -> void:
 	if body == shooter:
@@ -56,11 +59,13 @@ func _on_body_entered(body: Node3D) -> void:
 
 func explode_or_free() -> void:
 	if is_explosive:
-		if get_node_or_null("/root/AudioManager"):
-			get_node("/root/AudioManager").play_sound_3d("explosion", global_position)
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am:
+			var pos = global_position if is_inside_tree() else position
+			am.play_sound_3d("explosion", pos)
 
 		# Area damage query
-		var w3d = get_world_3d()
+		var w3d = get_world_3d() if is_inside_tree() else null
 		if w3d:
 			var space = w3d.direct_space_state
 			var shape = SphereShape3D.new()

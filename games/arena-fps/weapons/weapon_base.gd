@@ -77,8 +77,9 @@ func trigger_fire(camera_ray_origin: Vector3, camera_ray_dir: Vector3) -> bool:
 	ammo_updated.emit(current_clip_ammo, max_clip_ammo, current_reserve_ammo)
 	fired.emit()
 
-	if get_node_or_null("/root/AudioManager"):
-		get_node("/root/AudioManager").play_sound(sound_name)
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		am.play_sound(sound_name)
 
 	# Calculate spread
 	var spread_rad = deg_to_rad(spread_angle_deg)
@@ -92,7 +93,8 @@ func trigger_fire(camera_ray_origin: Vector3, camera_ray_dir: Vector3) -> bool:
 	if is_hitscan:
 		perform_hitscan(camera_ray_origin, final_dir)
 	else:
-		spawn_projectile(global_position, final_dir)
+		var spawn_p = global_position if is_inside_tree() else position
+		spawn_projectile(spawn_p, final_dir)
 
 	# Apply recoil kick to camera if owner is FPS Player
 	if owner_entity and owner_entity.has_method("apply_recoil"):
@@ -101,6 +103,8 @@ func trigger_fire(camera_ray_origin: Vector3, camera_ray_dir: Vector3) -> bool:
 	return true
 
 func perform_hitscan(origin: Vector3, dir: Vector3) -> void:
+	if not is_inside_tree():
+		return
 	var w3d = get_world_3d()
 	if not w3d:
 		return
@@ -145,13 +149,14 @@ func spawn_impact_fx(pos: Vector3, normal: Vector3) -> void:
 	box.size = Vector3(0.08, 0.08, 0.08)
 	spark.mesh = box
 	spark.material_override = MaterialGenerator.get_material("neon_orange")
-	if not get_tree():
+	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if not tree or not tree.root:
 		spark.free()
 		return
-	get_tree().root.add_child(spark)
+	tree.root.add_child(spark)
 	spark.global_position = pos + normal * 0.04
 	# Auto remove after 0.2s
-	get_tree().create_timer(0.2).timeout.connect(func():
+	tree.create_timer(0.2).timeout.connect(func():
 		if is_instance_valid(spark):
 			spark.queue_free()
 	)
@@ -161,8 +166,9 @@ func start_reload() -> void:
 		return
 	is_reloading = true
 	reload_timer = reload_time_sec
-	if get_node_or_null("/root/AudioManager"):
-		get_node("/root/AudioManager").play_sound("reload")
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		am.play_sound("reload")
 
 func finish_reload() -> void:
 	is_reloading = false

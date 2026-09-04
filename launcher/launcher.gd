@@ -59,8 +59,9 @@ func _ready() -> void:
 	setup_launcher_ui()
 	connect_loader_signals()
 
-	if is_inside_tree() and get_node_or_null("/root/InputManager"):
-		get_node("/root/InputManager").capture_mouse(false)
+	var im = GameConstants.get_autoload(self, "InputManager")
+	if im:
+		im.capture_mouse(false)
 
 func setup_launcher_ui() -> void:
 	# Dark Cyberpunk Background
@@ -143,8 +144,9 @@ func setup_launcher_ui() -> void:
 
 	var platform_info = Label.new()
 	var plat_name = "Desktop"
-	if get_node_or_null("/root/PlatformAdapter"):
-		plat_name = get_node("/root/PlatformAdapter").get_platform_name_string()
+	var pa = GameConstants.get_autoload(self, "PlatformAdapter")
+	if pa:
+		plat_name = pa.get_platform_name_string()
 	platform_info.text = "Platform: %s | Zero Host Packages Required | Cloudflare Pages Certified" % plat_name
 	platform_info.modulate = Color(0.4, 0.5, 0.65)
 	footer.add_child(platform_info)
@@ -210,7 +212,7 @@ func create_game_card(meta: Dictionary) -> void:
 	game_cards_container.add_child(card)
 
 func get_game_career_stats(game_id: String) -> String:
-	var sm = get_node_or_null("/root/SaveManager")
+	var sm = GameConstants.get_autoload(self, "SaveManager")
 	if not sm:
 		return ""
 	var stats = sm.save_data.get("statistics", {}).get(game_id, {})
@@ -323,8 +325,9 @@ func show_settings() -> void:
 	settings_dialog.visible = true
 
 func set_quality(preset: int) -> void:
-	if get_node_or_null("/root/QualityManager"):
-		get_node("/root/QualityManager").apply_preset(preset)
+	var qm = GameConstants.get_autoload(self, "QualityManager")
+	if qm:
+		qm.apply_preset(preset)
 
 func toggle_audio() -> void:
 	var master_bus = AudioServer.get_bus_index("Master")
@@ -337,16 +340,17 @@ func on_play_game_pressed(meta: Dictionary) -> void:
 	loading_status_label.text = "Preparing %s..." % meta["title"]
 	loading_bar.value = 0.0
 
-	var loader = get_node_or_null("/root/AssetLoader")
+	var loader = GameConstants.get_autoload(self, "AssetLoader")
 	if loader:
 		loader.request_game_load(meta["id"], meta["scene"])
 	else:
 		# Direct fallback
-		if get_node_or_null("/root/EventBus"):
-			get_node("/root/EventBus").game_selected.emit(meta["id"])
+		var bus = GameConstants.get_autoload(self, "EventBus")
+		if bus:
+			bus.game_selected.emit(meta["id"])
 
 func connect_loader_signals() -> void:
-	var loader = get_node_or_null("/root/AssetLoader")
+	var loader = GameConstants.get_autoload(self, "AssetLoader")
 	if loader:
 		loader.load_progress_updated.connect(func(_g_id, p, cur_b, tot_b, msg):
 			loading_bar.value = p
@@ -355,8 +359,9 @@ func connect_loader_signals() -> void:
 		)
 		loader.load_completed.connect(func(g_id, success, _scene):
 			loading_overlay.visible = false
-			if success and get_node_or_null("/root/EventBus"):
-				get_node("/root/EventBus").game_selected.emit(g_id)
+			var bus = GameConstants.get_autoload(self, "EventBus")
+			if success and bus:
+				bus.game_selected.emit(g_id)
 		)
 
 func _notification(what: int) -> void:

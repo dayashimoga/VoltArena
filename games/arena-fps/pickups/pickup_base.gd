@@ -83,10 +83,13 @@ func consume() -> void:
 	is_active = false
 	visible = false
 	respawn_timer = respawn_time_sec
-	if get_node_or_null("/root/AudioManager"):
-		get_node("/root/AudioManager").play_sound_3d("pickup", global_position)
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").pickup_collected.emit(str(pickup_type), amount)
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		var pos = global_position if is_inside_tree() else position
+		am.play_sound_3d("pickup", pos)
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.pickup_collected.emit(str(pickup_type), amount)
 
 func respawn() -> void:
 	is_active = true

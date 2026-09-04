@@ -63,7 +63,7 @@ func setup_scene() -> void:
 	add_child(wave_director)
 
 func connect_signals() -> void:
-	var bus = get_node_or_null("/root/EventBus")
+	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.enemy_died.connect(_on_enemy_killed)
 		bus.player_died.connect(_on_player_died)
@@ -72,19 +72,22 @@ func connect_signals() -> void:
 func _on_enemy_killed(_type: String, score_val: int) -> void:
 	total_kills += 1
 	total_score += score_val
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").score_updated.emit(0, total_score)
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.score_updated.emit(0, total_score)
 
 func _on_wave_completed(wave_num: int, bonus_score: int) -> void:
 	highest_wave = wave_num
 	total_score += bonus_score
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").score_updated.emit(0, total_score)
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.score_updated.emit(0, total_score)
 
 func _on_player_died(_killer: String) -> void:
 	is_game_active = false
-	if get_node_or_null("/root/SaveManager"):
-		get_node("/root/SaveManager").record_subway_run(highest_wave, total_kills, total_score)
+	var sm = GameConstants.get_autoload(self, "SaveManager")
+	if sm:
+		sm.record_subway_run(highest_wave, total_kills, total_score)
 
 	results_screen.display_results(false, {
 		"Final Score": total_score,
@@ -94,13 +97,16 @@ func _on_player_died(_killer: String) -> void:
 	})
 
 func _on_resume() -> void:
-	if is_instance_valid(player_node) and get_node_or_null("/root/InputManager"):
-		get_node("/root/InputManager").capture_mouse(true)
+	var im = GameConstants.get_autoload(self, "InputManager")
+	if is_instance_valid(player_node) and im:
+		im.capture_mouse(true)
 
 func _on_restart() -> void:
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").game_restart_requested.emit()
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.game_restart_requested.emit()
 
 func _on_quit_to_launcher() -> void:
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").return_to_launcher_requested.emit()
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.return_to_launcher_requested.emit()

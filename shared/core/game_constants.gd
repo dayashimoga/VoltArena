@@ -1,4 +1,15 @@
+class_name GameConstants
 extends Node
+
+static func get_autoload(caller: Node, name: String) -> Node:
+	var loop = Engine.get_main_loop()
+	if loop is SceneTree and loop.root:
+		return loop.root.get_node_or_null(name)
+	if caller and caller.is_inside_tree():
+		var tree = caller.get_tree()
+		if tree and tree.root:
+			return tree.root.get_node_or_null(name)
+	return null
 
 # Platform Game Identifiers
 const GAME_ARENA_FPS: String = "arena_fps"

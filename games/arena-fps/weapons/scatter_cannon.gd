@@ -28,8 +28,9 @@ func trigger_fire(camera_ray_origin: Vector3, camera_ray_dir: Vector3) -> bool:
 	ammo_updated.emit(current_clip_ammo, max_clip_ammo, current_reserve_ammo)
 	fired.emit()
 
-	if get_node_or_null("/root/AudioManager"):
-		get_node("/root/AudioManager").play_sound(sound_name)
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		am.play_sound(sound_name)
 
 	# Fire multiple pellets
 	for i in range(pellets_count):

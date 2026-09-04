@@ -52,9 +52,10 @@ func start_next_wave() -> void:
 	current_state = WaveState.IN_PROGRESS
 	build_wave_composition(current_wave)
 
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").wave_started.emit(current_wave, enemies_to_spawn.size())
-		get_node("/root/EventBus").show_toast_requested.emit("WAVE %d INCOMING!" % current_wave, Color(1.0, 0.2, 0.2))
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.wave_started.emit(current_wave, enemies_to_spawn.size())
+		bus.show_toast_requested.emit("WAVE %d INCOMING!" % current_wave, Color(1.0, 0.2, 0.2))
 
 	wave_started.emit(current_wave, enemies_to_spawn.size())
 
@@ -120,9 +121,10 @@ func finish_current_wave() -> void:
 	state_timer = intermission_duration
 
 	var bonus = current_wave * 250
-	if get_node_or_null("/root/EventBus"):
-		get_node("/root/EventBus").wave_completed.emit(current_wave, bonus)
-		get_node("/root/EventBus").show_toast_requested.emit("WAVE %d SURVIVED! +%d PTS" % [current_wave, bonus], Color(0.0, 1.0, 0.5))
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.wave_completed.emit(current_wave, bonus)
+		bus.show_toast_requested.emit("WAVE %d SURVIVED! +%d PTS" % [current_wave, bonus], Color(0.0, 1.0, 0.5))
 
 	wave_completed.emit(current_wave, bonus)
 
@@ -131,10 +133,15 @@ func finish_current_wave() -> void:
 	p_health.pickup_type = PickupBase.PickupType.HEALTH
 	p_health.amount = 50
 	p_health.position = Vector3(-5.0, 0.5, randf_range(-10, 10))
-	get_parent().add_child(p_health)
 
 	var p_ammo = PickupBase.new()
 	p_ammo.pickup_type = PickupBase.PickupType.AMMO
 	p_ammo.amount = 100
 	p_ammo.position = Vector3(-5.0, 0.5, randf_range(-10, 10))
-	get_parent().add_child(p_ammo)
+
+	if get_parent():
+		get_parent().add_child(p_health)
+		get_parent().add_child(p_ammo)
+	else:
+		p_health.queue_free()
+		p_ammo.queue_free()

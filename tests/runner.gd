@@ -60,6 +60,9 @@ func _init() -> void:
 	var total_failed: int = 0
 	var suite_results: Dictionary = {}
 
+	# Initialize project autoloads into root so /root/... paths and InputMap actions exist
+	_setup_autoloads()
+
 	# Initialize coverage tracking
 	var coverage = CoverageRegistryScript.new()
 	coverage.build_inventory()
@@ -175,3 +178,32 @@ func _init() -> void:
 	else:
 		push_error("\nTEST FAILURES DETECTED: %d assertions failed!" % total_failed)
 		quit(1)
+
+func _setup_autoloads() -> void:
+	# Ensure InputMap default actions are registered immediately for all suites
+	var im_script = load("res://shared/input/input_manager.gd")
+	if im_script:
+		var temp_im = im_script.new()
+		temp_im.setup_default_actions()
+		temp_im.free()
+
+	var autoloads = [
+		{"name": "EventBus", "path": "res://shared/core/event_bus.gd"},
+		{"name": "SettingsManager", "path": "res://shared/settings/settings_manager.gd"},
+		{"name": "SaveManager", "path": "res://shared/save/save_manager.gd"},
+		{"name": "AudioManager", "path": "res://shared/audio/audio_manager.gd"},
+		{"name": "InputManager", "path": "res://shared/input/input_manager.gd"},
+		{"name": "PlatformAdapter", "path": "res://shared/platform/platform_adapter.gd"},
+		{"name": "QualityManager", "path": "res://shared/graphics/quality_manager.gd"},
+		{"name": "TelemetryManager", "path": "res://shared/telemetry/telemetry_manager.gd"},
+		{"name": "AssetLoader", "path": "res://shared/loading/asset_loader.gd"},
+		{"name": "GameManager", "path": "res://shared/core/game_manager.gd"}
+	]
+	for al in autoloads:
+		if not root.has_node(al.name):
+			var script = load(al.path)
+			if script:
+				var node = script.new()
+				node.name = al.name
+				root.add_child(node)
+

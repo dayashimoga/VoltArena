@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 100,
+  "coverage_percent": 99.2277992277992,
   "coverage_tested_functions": 257,
-  "coverage_total_functions": 257,
-  "execution_seconds": 0.331,
+  "coverage_total_functions": 259,
+  "execution_seconds": 0.305,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -32,7 +32,7 @@
     },
     "Drift Storm E2E": {
       "failed": 0,
-      "passed": 28,
+      "passed": 31,
       "status": "PASS"
     },
     "Enemy Archetypes Unit": {
@@ -162,7 +162,7 @@
     },
     "Telemetry Manager Unit": {
       "failed": 0,
-      "passed": 12,
+      "passed": 15,
       "status": "PASS"
     },
     "UI Systems & Controls Unit": {
@@ -181,8 +181,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-04T09:14:23",
+  "timestamp": "2026-09-04T12:56:47",
   "total_failed": 0,
-  "total_passed": 654,
+  "total_passed": 660,
   "total_suites": 35
 }

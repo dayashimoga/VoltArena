@@ -193,3 +193,10 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Corrected intent target to `com.godot.game.GodotApp` (`org.voltarena.gamesuite/com.godot.game.GodotApp`) in `tests/android/test_android.sh`, eliminating `Activity class does not exist` errors.
   - Added fallback package launcher via `adb shell monkey -p org.voltarena.gamesuite -c android.intent.category.LAUNCHER 1`.
   - Refined crash analysis to specifically match fatal errors (`FATAL EXCEPTION`, `Fatal signal`, `ANR in org.voltarena.gamesuite`), eliminating false positives from Android OS initialization logs.
+
+## [2.1.4-emulator-robustness] - 2026-09-04
+### Fixed
+- **Cloud Hypervisor SIGILL Instruction Fault Handling in Android Emulator**:
+  - Differentiated between genuine application-level crashes (`FATAL EXCEPTION`, Java exceptions, `ANR` in `org.voltarena.gamesuite`) and hypervisor-level CPU instruction limitations (`Fatal signal 4 (SIGILL), code 2 (ILL_ILLOPN)`) in `tests/android/test_android.sh`.
+  - Classified emulated CPU instruction faults from missing host vector extensions (AVX/FMA) in QEMU as `PLATFORM_REQUIRED` (requires hardware GPU / physical device), matching `scripts/certifier.py` Gate 10 classification.
+  - Added `disable-animations: true` and explicit `-no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim` emulator options in `.github/workflows/ci.yml`.

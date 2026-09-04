@@ -332,6 +332,8 @@ jobs:
         with:
           api-level: 33
           arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           script: bash tests/android/test_android.sh export/android/VoltArena.apk artifacts
       - name: Upload Android test artifacts
         uses: actions/upload-artifact@v4

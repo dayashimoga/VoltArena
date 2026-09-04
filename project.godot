@@ -1,0 +1,58 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="VoltArena"
+config/description="VoltArena - High-Performance Cross-Platform 3D Game Suite"
+config/version="1.0.0"
+run/main_scene="res://launcher/launcher.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+GameConstants="*res://shared/core/game_constants.gd"
+EventBus="*res://shared/core/event_bus.gd"
+SettingsManager="*res://shared/settings/settings_manager.gd"
+SaveManager="*res://shared/save/save_manager.gd"
+AudioManager="*res://shared/audio/audio_manager.gd"
+InputManager="*res://shared/input/input_manager.gd"
+PlatformAdapter="*res://shared/platform/platform_adapter.gd"
+QualityManager="*res://shared/graphics/quality_manager.gd"
+TelemetryManager="*res://shared/telemetry/telemetry_manager.gd"
+AssetLoader="*res://shared/loading/asset_loader.gd"
+GameManager="*res://shared/core/game_manager.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=6
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.web="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
+
+[layer_names]
+
+3d_physics/layer_1="World"
+3d_physics/layer_2="Player"
+3d_physics/layer_3="Enemies"
+3d_physics/layer_4="Projectiles"
+3d_physics/layer_5="Pickups"
+3d_physics/layer_6="Ball"
+3d_physics/layer_7="Goals"
+3d_physics/layer_8="Checkpoints"

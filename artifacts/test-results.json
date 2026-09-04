@@ -1,0 +1,188 @@
+{
+  "coverage_percent": 100,
+  "coverage_tested_functions": 257,
+  "coverage_total_functions": 257,
+  "execution_seconds": 0.331,
+  "status": "PASS",
+  "suites": {
+    "AI Systems Unit": {
+      "failed": 0,
+      "passed": 8,
+      "status": "PASS"
+    },
+    "ArenaBot Unit": {
+      "failed": 0,
+      "passed": 8,
+      "status": "PASS"
+    },
+    "Audio Manager Unit": {
+      "failed": 0,
+      "passed": 10,
+      "status": "PASS"
+    },
+    "Ball Physics Unit": {
+      "failed": 0,
+      "passed": 8,
+      "status": "PASS"
+    },
+    "Car Physics Unit": {
+      "failed": 0,
+      "passed": 6,
+      "status": "PASS"
+    },
+    "Drift Storm E2E": {
+      "failed": 0,
+      "passed": 28,
+      "status": "PASS"
+    },
+    "Enemy Archetypes Unit": {
+      "failed": 0,
+      "passed": 12,
+      "status": "PASS"
+    },
+    "EventBus Unit": {
+      "failed": 0,
+      "passed": 34,
+      "status": "PASS"
+    },
+    "FXFactory & Particles Unit": {
+      "failed": 0,
+      "passed": 13,
+      "status": "PASS"
+    },
+    "GameManager & Loader Unit": {
+      "failed": 0,
+      "passed": 5,
+      "status": "PASS"
+    },
+    "HealthComponent Unit": {
+      "failed": 0,
+      "passed": 14,
+      "status": "PASS"
+    },
+    "Input Manager Unit": {
+      "failed": 0,
+      "passed": 16,
+      "status": "PASS"
+    },
+    "Iron Crucible E2E": {
+      "failed": 0,
+      "passed": 48,
+      "status": "PASS"
+    },
+    "KartController Unit": {
+      "failed": 0,
+      "passed": 12,
+      "status": "PASS"
+    },
+    "Launcher E2E": {
+      "failed": 0,
+      "passed": 58,
+      "status": "PASS"
+    },
+    "Map Generators Unit": {
+      "failed": 0,
+      "passed": 7,
+      "status": "PASS"
+    },
+    "MaterialGenerator Unit": {
+      "failed": 0,
+      "passed": 30,
+      "status": "PASS"
+    },
+    "Metro Siege E2E": {
+      "failed": 0,
+      "passed": 29,
+      "status": "PASS"
+    },
+    "Nitro Kick E2E": {
+      "failed": 0,
+      "passed": 29,
+      "status": "PASS"
+    },
+    "Physics Helpers Unit": {
+      "failed": 0,
+      "passed": 4,
+      "status": "PASS"
+    },
+    "Pickups & Powerups Unit": {
+      "failed": 0,
+      "passed": 11,
+      "status": "PASS"
+    },
+    "Platform Acceptance (Legacy)": {
+      "failed": 0,
+      "passed": 19,
+      "status": "PASS"
+    },
+    "Platform Adapter Unit": {
+      "failed": 0,
+      "passed": 8,
+      "status": "PASS"
+    },
+    "Projectiles & Weapons Unit": {
+      "failed": 0,
+      "passed": 17,
+      "status": "PASS"
+    },
+    "Quality Manager Unit": {
+      "failed": 0,
+      "passed": 10,
+      "status": "PASS"
+    },
+    "Race Manager Unit": {
+      "failed": 0,
+      "passed": 7,
+      "status": "PASS"
+    },
+    "Responsive UI Multi-Resolution": {
+      "failed": 0,
+      "passed": 95,
+      "status": "PASS"
+    },
+    "Save Corruption & Recovery": {
+      "failed": 0,
+      "passed": 21,
+      "status": "PASS"
+    },
+    "Save Manager Unit": {
+      "failed": 0,
+      "passed": 12,
+      "status": "PASS"
+    },
+    "Settings Manager Unit": {
+      "failed": 0,
+      "passed": 14,
+      "status": "PASS"
+    },
+    "Soak & Stability Lifecycle": {
+      "failed": 0,
+      "passed": 5,
+      "status": "PASS"
+    },
+    "Telemetry Manager Unit": {
+      "failed": 0,
+      "passed": 12,
+      "status": "PASS"
+    },
+    "UI Systems & Controls Unit": {
+      "failed": 0,
+      "passed": 23,
+      "status": "PASS"
+    },
+    "Wave Director Unit": {
+      "failed": 0,
+      "passed": 10,
+      "status": "PASS"
+    },
+    "Weapons System Unit": {
+      "failed": 0,
+      "passed": 11,
+      "status": "PASS"
+    }
+  },
+  "timestamp": "2026-09-04T09:14:23",
+  "total_failed": 0,
+  "total_passed": 654,
+  "total_suites": 35
+}

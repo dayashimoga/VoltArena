@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cxn60k7p591ja"]
+
+[ext_resource type="Script" path="res://games/kart-racing/kart_racing_main.gd" id="1_kart"]
+
+[node name="KartRacingMain" type="Node3D"]
+script = ExtResource("1_kart")

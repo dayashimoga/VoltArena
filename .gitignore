@@ -1,0 +1,36 @@
+# .gitignore for VoltArena (Godot 4.3+ Cross-Platform Game Platform)
+
+# Godot 4.x engine files
+.godot/
+*.translation
+
+# Build artifacts and exports
+export/
+build/
+bin/
+*.apk
+*.aab
+*.exe
+*.zip
+*.tar.gz
+*.pck
+
+# Package managers and container temps
+node_modules/
+.npm/
+.yarn/
+*.log
+test_*.txt
+.tmp/
+temp/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo

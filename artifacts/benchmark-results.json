@@ -1,0 +1,36 @@
+{
+  "arena_gen_ms": 0.951,
+  "avg_frame_time_ms": 0.00319666666666667,
+  "combat_10k_ms": 17.87,
+  "draw_calls": 0,
+  "gates": {
+    "combat_throughput": "PASS",
+    "frame_stability": "PASS",
+    "memory_budget": "PASS",
+    "procedural_gen": "PASS",
+    "quality_presets": "PASS",
+    "time_to_playable": "PASS"
+  },
+  "objects_in_frame": 0,
+  "overall_status": "PASS",
+  "p95_frame_time_ms": 0.004,
+  "p99_frame_time_ms": 0.011,
+  "preset_validation": {
+    "AUTO": "PASS",
+    "HIGH": "PASS",
+    "LOW": "PASS",
+    "MEDIUM": "PASS",
+    "ULTRA": "PASS"
+  },
+  "static_memory_mb": 17.1815757751465,
+  "stutter_count": 0,
+  "subway_gen_ms": 0.408,
+  "time_to_playable_ms": {
+    "ArenaFPS": 0.572,
+    "KartRacing": 0.431,
+    "RocketCar": 0.612,
+    "SubwaySurvival": 0.336
+  },
+  "timestamp": "2026-09-04T09:14:39",
+  "track_gen_ms": 0.774
+}

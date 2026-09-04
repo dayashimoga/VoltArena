@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c6fglg2vx6w8d"]
+
+[ext_resource type="Script" path="res://games/arena-fps/arena_fps_main.gd" id="1_main"]
+
+[node name="ArenaFPSMain" type="Node3D"]
+script = ExtResource("1_main")

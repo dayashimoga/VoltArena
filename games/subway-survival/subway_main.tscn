@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b7vyk9x428m1l"]
+
+[ext_resource type="Script" path="res://games/subway-survival/subway_main.gd" id="1_subway"]
+
+[node name="SubwayMain" type="Node3D"]
+script = ExtResource("1_subway")

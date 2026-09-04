@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dmk87p023k51q"]
+
+[ext_resource type="Script" path="res://games/rocket-car/rocket_car_main.gd" id="1_rocket"]
+
+[node name="RocketCarMain" type="Node3D"]
+script = ExtResource("1_rocket")

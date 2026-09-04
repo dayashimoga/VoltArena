@@ -1,0 +1,57 @@
+class_name RocketBall
+extends CharacterBody3D
+
+signal goal_scored(team_id: int)
+
+@export var radius: float = 1.4
+@export var gravity: float = 18.0
+@export var bounciness: float = 0.82
+@export var drag: float = 0.985
+
+var ball_mesh: MeshInstance3D
+
+func _ready() -> void:
+	add_to_group("balls")
+	collision_layer = GameConstants.LAYER_BALL
+	collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES
+
+	setup_visuals()
+
+func setup_visuals() -> void:
+	ball_mesh = MeshInstance3D.new()
+	var sphere = SphereMesh.new()
+	sphere.radius = radius
+	sphere.height = radius * 2.0
+	ball_mesh.mesh = sphere
+	ball_mesh.material_override = MaterialGenerator.get_material("energy_ball")
+	add_child(ball_mesh)
+
+	var col = CollisionShape3D.new()
+	var sphere_shape = SphereShape3D.new()
+	sphere_shape.radius = radius
+	col.shape = sphere_shape
+	add_child(col)
+
+func _physics_process(delta: float) -> void:
+	velocity.y -= gravity * delta
+	velocity.x *= drag
+	velocity.z *= drag
+
+	# Rotate ball mesh proportionally to speed
+	var speed = velocity.length()
+	if speed > 0.1:
+		var rot_axis = Vector3(-velocity.z, 0, velocity.x).normalized()
+		ball_mesh.rotate(rot_axis, (speed / radius) * delta)
+
+	var collision = move_and_collide(velocity * delta)
+	if collision:
+		velocity = velocity.bounce(collision.get_normal()) * bounciness
+		if speed > 4.0 and get_node_or_null("/root/AudioManager"):
+			get_node("/root/AudioManager").play_sound_3d("hit", global_position, clampf(speed / 20.0, 0.6, 1.4))
+
+func apply_ball_impulse(impulse: Vector3) -> void:
+	velocity += impulse
+
+func reset_to_center() -> void:
+	global_position = Vector3(0, radius + 0.5, 0)
+	velocity = Vector3.ZERO

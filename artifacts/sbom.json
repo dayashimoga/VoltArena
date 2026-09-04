@@ -1,0 +1,25 @@
+{
+    "bomFormat":  "CycloneDX",
+    "components":  [
+                       {
+                           "licenses":  [
+                                            {
+                                                "license":  {
+                                                                "id":  "MIT"
+                                                            }
+                                            }
+                                        ],
+                           "name":  "Godot Engine",
+                           "version":  "4.3",
+                           "type":  "framework"
+                       }
+                   ],
+    "specVersion":  "1.5",
+    "metadata":  {
+                     "component":  {
+                                       "name":  "VoltArena",
+                                       "version":  "2.0.0",
+                                       "type":  "application"
+                                   }
+                 }
+}

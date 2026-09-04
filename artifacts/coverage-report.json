@@ -1,0 +1,314 @@
+{
+  "overall_coverage_pct": 100,
+  "per_file": {
+    "res://games/arena-fps/ai/arena_bot.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://games/arena-fps/arena_fps_main.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/arena-fps/maps/arena_map_generator.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/arena-fps/pickups/pickup_base.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/arena-fps/player/fps_player.gd": {
+      "coverage_pct": 100,
+      "tested": 13,
+      "total": 13,
+      "untested": []
+    },
+    "res://games/arena-fps/weapons/grenade_launcher.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/arena-fps/weapons/plasma_cutter.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/arena-fps/weapons/projectile.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/arena-fps/weapons/rail_driver.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/arena-fps/weapons/scatter_cannon.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/arena-fps/weapons/weapon_base.gd": {
+      "coverage_pct": 100,
+      "tested": 11,
+      "total": 11,
+      "untested": []
+    },
+    "res://games/kart-racing/ai/kart_ai.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/kart-racing/game/race_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 6,
+      "total": 6,
+      "untested": []
+    },
+    "res://games/kart-racing/kart/kart_controller.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://games/kart-racing/kart_racing_main.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/kart-racing/powerups/powerup_item.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/kart-racing/tracks/checkpoint.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/kart-racing/tracks/track_generator.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/rocket-car/ai/car_ai.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/rocket-car/arena/rocket_arena.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://games/rocket-car/ball/ball.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/rocket-car/rocket_car_main.gd": {
+      "coverage_pct": 100,
+      "tested": 6,
+      "total": 6,
+      "untested": []
+    },
+    "res://games/rocket-car/vehicle/car_controller.gd": {
+      "coverage_pct": 100,
+      "tested": 6,
+      "total": 6,
+      "untested": []
+    },
+    "res://games/subway-survival/enemies/brute.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/subway-survival/enemies/crawler.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/subway-survival/enemies/enemy_base.gd": {
+      "coverage_pct": 100,
+      "tested": 6,
+      "total": 6,
+      "untested": []
+    },
+    "res://games/subway-survival/enemies/stalker.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/subway-survival/game/wave_director.gd": {
+      "coverage_pct": 100,
+      "tested": 8,
+      "total": 8,
+      "untested": []
+    },
+    "res://games/subway-survival/maps/subway_generator.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/subway-survival/subway_main.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://launcher/launcher.gd": {
+      "coverage_pct": 100,
+      "tested": 13,
+      "total": 13,
+      "untested": []
+    },
+    "res://shared/ai/ai_base.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://shared/audio/audio_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 9,
+      "total": 9,
+      "untested": []
+    },
+    "res://shared/combat/health_component.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://shared/core/game_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 6,
+      "total": 6,
+      "untested": []
+    },
+    "res://shared/graphics/fx_factory.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://shared/graphics/material_generator.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://shared/graphics/quality_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://shared/input/input_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 10,
+      "total": 10,
+      "untested": []
+    },
+    "res://shared/input/touch_controls.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://shared/input/virtual_joystick.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://shared/loading/asset_loader.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://shared/physics/physics_helpers.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://shared/platform/platform_adapter.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://shared/save/save_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 8,
+      "total": 8,
+      "untested": []
+    },
+    "res://shared/settings/settings_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 9,
+      "total": 9,
+      "untested": []
+    },
+    "res://shared/telemetry/telemetry_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://shared/ui/hud_base.gd": {
+      "coverage_pct": 100,
+      "tested": 12,
+      "total": 12,
+      "untested": []
+    },
+    "res://shared/ui/pause_menu.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://shared/ui/results_screen.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://shared/ui/theme_generator.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    }
+  },
+  "tested_functions": 257,
+  "timestamp": "2026-09-04T09:14:23",
+  "total_functions": 257
+}

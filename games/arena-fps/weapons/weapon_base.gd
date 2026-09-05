@@ -30,24 +30,31 @@ func _ready() -> void:
 	current_clip_ammo = max_clip_ammo
 	setup_weapon_visual()
 
+const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
+
 func setup_weapon_visual() -> void:
-	# Detailed multi-part procedural weapon model
-	var model: Node3D = null
-	match weapon_name:
-		"Pulse Rifle":
-			model = MeshBuilder.build_pulse_rifle()
-		"Scatter Cannon":
-			model = MeshBuilder.build_scatter_cannon()
-		"Rail Driver":
-			model = MeshBuilder.build_rail_driver()
-		"Grenade Launcher":
-			model = MeshBuilder.build_grenade_launcher()
-		"Plasma Cutter":
-			model = MeshBuilder.build_plasma_cutter()
-		_:
-			model = MeshBuilder.build_pulse_rifle()
+	for c in get_children():
+		if c is Node3D and c.name == "WeaponModel":
+			c.queue_free()
+
+	var model: Node3D = ModelCacheScript.get_weapon_model(weapon_name)
+	if not model:
+		match weapon_name:
+			"Pulse Rifle":
+				model = MeshBuilder.build_pulse_rifle()
+			"Scatter Cannon":
+				model = MeshBuilder.build_scatter_cannon()
+			"Rail Driver":
+				model = MeshBuilder.build_rail_driver()
+			"Grenade Launcher":
+				model = MeshBuilder.build_grenade_launcher()
+			"Plasma Cutter":
+				model = MeshBuilder.build_plasma_cutter()
+			_:
+				model = MeshBuilder.build_pulse_rifle()
 
 	if model:
+		model.name = "WeaponModel"
 		add_child(model)
 
 func _process(delta: float) -> void:
@@ -98,6 +105,13 @@ func trigger_fire(camera_ray_origin: Vector3, camera_ray_dir: Vector3) -> bool:
 	# Apply recoil kick to camera if owner is FPS Player
 	if owner_entity and owner_entity.has_method("apply_recoil"):
 		owner_entity.apply_recoil(recoil_kick_pitch, randf_range(-recoil_kick_yaw, recoil_kick_yaw))
+
+	# Physical weapon model recoil kick animation
+	var wm = get_node_or_null("WeaponModel")
+	if wm and is_inside_tree():
+		var tw = create_tween()
+		tw.tween_property(wm, "position:z", 0.06, 0.04)
+		tw.tween_property(wm, "position:z", 0.0, 0.08)
 
 	return true
 

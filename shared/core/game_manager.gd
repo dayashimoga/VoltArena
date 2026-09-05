@@ -210,39 +210,48 @@ func _handle_subway_cmd(scene: Node, cmd: String) -> void:
 		if results and results.has_method("display_results"):
 			results.display_results(true, {"Waves": "10 / 10 Complete", "Boss Defeated": "BioColossus", "Scrap": "1,450", "Status": "EVACUATED"})
 
+func _get_scene_cam(scene: Node) -> Camera3D:
+	if not scene:
+		return null
+	var cam = scene.find_child("*Camera*", true, false)
+	if not cam and scene.get_viewport():
+		cam = scene.get_viewport().get_camera_3d()
+	return cam as Camera3D
+
 func _handle_rocket_car_cmd(scene: Node, cmd: String) -> void:
 	var results = scene.get_node_or_null("ResultsScreen")
 	var hud = scene.get_node_or_null("HUD")
 	var p_list = scene.get_tree().get_nodes_in_group("players")
 	var player = p_list[0] if not p_list.is_empty() else null
+	var cam = _get_scene_cam(scene)
+	var ball = scene.get_node_or_null("RocketBall")
+	if not ball:
+		ball = scene.get_node_or_null("Ball")
+
+	if cmd.begins_with("cam_") or cmd == "goal_attack":
+		scene.set("camera_override", true)
 
 	if cmd == "cam_car_closeup":
-		var cam = scene.find_child("Camera3D", true, false)
 		if cam and player:
 			cam.top_level = true
 			cam.global_position = player.global_position + Vector3(1.2, 0.8, -3.2)
 			cam.look_at(player.global_position + Vector3(0, 0.3, 0), Vector3.UP)
 	elif cmd == "cam_stadium":
-		var cam = scene.find_child("Camera3D", true, false)
 		if cam:
 			cam.top_level = true
 			cam.global_position = Vector3(0, 24.0, -35.0)
 			cam.look_at(Vector3(0, 0, 10.0), Vector3.UP)
 	elif cmd == "cam_goal_objective":
-		var cam = scene.find_child("Camera3D", true, false)
 		if cam:
 			cam.top_level = true
 			cam.global_position = Vector3(0, 3.5, 20.0)
 			cam.look_at(Vector3(0, 4.0, 53.0), Vector3.UP)
 	elif cmd == "cam_ball":
-		var ball = scene.get_node_or_null("Ball")
-		var cam = scene.find_child("Camera3D", true, false)
 		if cam and ball:
 			cam.top_level = true
 			cam.global_position = ball.global_position + Vector3(2.5, 1.8, 3.5)
 			cam.look_at(ball.global_position, Vector3.UP)
 	elif cmd == "cam_ai_chase":
-		var cam = scene.find_child("Camera3D", true, false)
 		var ai_cars = scene.get_tree().get_nodes_in_group("ai_cars")
 		if cam and not ai_cars.is_empty():
 			var ai = ai_cars[0]
@@ -250,7 +259,6 @@ func _handle_rocket_car_cmd(scene: Node, cmd: String) -> void:
 			cam.global_position = ai.global_position + Vector3(1.2, 1.0, -3.5)
 			cam.look_at(ai.global_position + Vector3(0, 0.5, 2.0), Vector3.UP)
 	elif cmd == "cam_boost_pad":
-		var cam = scene.find_child("Camera3D", true, false)
 		if cam:
 			cam.top_level = true
 			cam.global_position = Vector3(18.0, 1.5, 12.0)
@@ -260,8 +268,6 @@ func _handle_rocket_car_cmd(scene: Node, cmd: String) -> void:
 			player.linear_velocity.y = 8.0
 			player.is_boosting = true
 	elif cmd == "goal_attack":
-		var ball = scene.get_node_or_null("Ball")
-		var cam = scene.find_child("Camera3D", true, false)
 		if ball:
 			ball.global_position = Vector3(2.0, 3.5, 42.0)
 			if ball is RigidBody3D:
@@ -271,7 +277,6 @@ func _handle_rocket_car_cmd(scene: Node, cmd: String) -> void:
 			cam.global_position = Vector3(0, 4.0, 30.0)
 			cam.look_at(Vector3(0, 4.0, 53.0), Vector3.UP)
 	elif cmd == "score_goal":
-		var ball = scene.get_node_or_null("Ball")
 		if ball:
 			ball.global_position = Vector3(0, 2.0, 53.0)
 	elif cmd == "match_progression":
@@ -289,15 +294,17 @@ func _handle_kart_cmd(scene: Node, cmd: String) -> void:
 	var hud = scene.get_node_or_null("HUD")
 	var p_list = scene.get_tree().get_nodes_in_group("players")
 	var player = p_list[0] if not p_list.is_empty() else null
+	var cam = _get_scene_cam(scene)
+
+	if cmd.begins_with("cam_"):
+		scene.set("camera_override", true)
 
 	if cmd == "cam_kart_closeup":
-		var cam = scene.find_child("Camera3D", true, false)
 		if cam and player:
 			cam.top_level = true
 			cam.global_position = player.global_position + Vector3(1.0, 0.7, -2.8)
 			cam.look_at(player.global_position + Vector3(0, 0.3, 0), Vector3.UP)
 	elif cmd == "cam_barriers_crowd":
-		var cam = scene.find_child("Camera3D", true, false)
 		if cam:
 			cam.top_level = true
 			cam.global_position = Vector3(14.0, 5.0, 10.0)
@@ -315,7 +322,6 @@ func _handle_kart_cmd(scene: Node, cmd: String) -> void:
 		if player and player.has_method("trigger_mini_turbo"):
 			player.trigger_mini_turbo(1.0)
 	elif cmd == "cam_item_box":
-		var cam = scene.find_child("Camera3D", true, false)
 		if cam:
 			cam.top_level = true
 			cam.global_position = Vector3(4.0, 1.5, 18.0)
@@ -327,7 +333,6 @@ func _handle_kart_cmd(scene: Node, cmd: String) -> void:
 			if player is RigidBody3D:
 				player.linear_velocity = Vector3.ZERO
 	elif cmd == "cam_canyon":
-		var cam = scene.find_child("Camera3D", true, false)
 		if cam:
 			cam.top_level = true
 			cam.global_position = Vector3(35.0, 8.0, -15.0)

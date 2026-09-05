@@ -12,78 +12,112 @@ var checkpoints: Array[RaceCheckpoint] = []
 func _ready() -> void:
 	build_circuit()
 
+const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
+
 func build_circuit() -> void:
 	var circuit_nodes: Array[Vector3] = []
-	match track_theme:
+	match track_theme.to_lower():
 		"canyon":
-			# Canyon Run: 14 Waypoints, ~520m closed canyon circuit
+			# Canyon Run: 18 Waypoints, ~720m expansive canyon circuit with elevation changes & mesa bridges
 			circuit_nodes = [
-				Vector3(0, 0, 0),          # 0: Start / Finish Line
-				Vector3(0, 0, -45),        # 1: Canyon Gorge Straight
-				Vector3(15, -0.5, -90),    # 2: Turn 1 Canyon Entry
-				Vector3(45, -1.0, -125),   # 3: Canyon Floor Sweep
-				Vector3(90, -1.5, -135),   # 4: Red Rock Curve
-				Vector3(140, -1.0, -120),  # 5: High Desert Straight
-				Vector3(175, 0.0, -80),    # 6: Turn 2 Uphill S-Curve
-				Vector3(180, 1.5, -30),    # 7: Ridge Apex
-				Vector3(160, 2.0, 20),     # 8: Sandstone Mesa Turn
-				Vector3(125, 1.5, 60),     # 9: Canyon Rim Hairpin
-				Vector3(85, 0.5, 75),      # 10: Downhill Chute
-				Vector3(45, 0.0, 60),      # 11: Final Gorge S-Bend
-				Vector3(20, 0.0, 35),      # 12: Chicane
-				Vector3(5, 0.0, 15)        # 13: Entry to Home Straight
+				Vector3(0, 0, 0),           # 0: Start / Finish Line in Gorge
+				Vector3(0, 0, -50),         # 1: Canyon Gorge Straight
+				Vector3(20, 1.2, -100),     # 2: Turn 1 Canyon Incline Entry
+				Vector3(60, 3.5, -145),     # 3: Climbing the Red Ridge
+				Vector3(110, 6.0, -165),    # 4: Mesa High Plains Crest
+				Vector3(170, 7.5, -150),    # 5: High Desert Mesa Straight
+				Vector3(220, 8.0, -105),    # 6: Canyon Rim Bridge Approach
+				Vector3(235, 7.5, -50),     # 7: Overlook Turn 2
+				Vector3(225, 6.0, 10),      # 8: Sandstone Ridge Descent
+				Vector3(190, 4.0, 60),      # 9: Hairpin Entry
+				Vector3(150, 2.5, 95),      # 10: Hairpin Apex at Monolith
+				Vector3(100, 1.0, 110),     # 11: Downhill Gorge Plunge
+				Vector3(55, 0.0, 90),       # 12: Valley S-Curve Left
+				Vector3(30, -0.5, 60),      # 13: Under Mesa Arch
+				Vector3(15, 0.0, 35),       # 14: Final Chicane Right
+				Vector3(5, 0.0, 18)         # 15: Exit to Home Straight
 			]
 			# Vast Red Rock Canyon Floor
-			create_box(Vector3(90.0, -0.8, -30.0), Vector3(450.0, 1.0, 450.0), "canyon_rock")
-			# Sandstone Mesa Formations
-			for p in [Vector3(-35, 15, -70), Vector3(65, 20, -165), Vector3(210, 18, -30), Vector3(70, 16, 110), Vector3(-25, 14, 50)]:
-				create_box(p, Vector3(45.0, 30.0, 45.0), "canyon_rock")
-		"frozen":
-			# Frozen Ridge: 14 Waypoints, ~500m high-speed glacial circuit
+			create_box(Vector3(110.0, -0.8, -25.0), Vector3(550.0, 1.0, 550.0), "canyon_rock")
+			# Sandstone Mesa Formations and Natural Rock Arches
+			for p in [Vector3(-45, 18, -80), Vector3(85, 24, -190), Vector3(260, 22, -40), Vector3(85, 20, 135), Vector3(-35, 16, 60), Vector3(175, 14, 25)]:
+				create_box(p, Vector3(52.0, 36.0, 52.0), "canyon_rock")
+
+		"skyline":
+			# Skyline Drift: 18 Waypoints, ~760m high-altitude metropolitan highway circuit
 			circuit_nodes = [
-				Vector3(0, 0, 0),          # 0: Start / Finish Line
-				Vector3(0, 0, -45),        # 1: Glacier Straight
-				Vector3(-25, 0.5, -90),    # 2: Turn 1 Ice Curve
-				Vector3(-40, 1.0, -135),   # 3: Frozen Fjord
-				Vector3(-10, 1.5, -170),   # 4: North Ice Apex
-				Vector3(35, 1.2, -160),    # 5: Crevasse Run
-				Vector3(80, 0.8, -125),    # 6: Glacier Descent
-				Vector3(115, 0.0, -75),    # 7: Snowfield Straight
-				Vector3(125, 0.0, -20),    # 8: South Hairpin Entry
-				Vector3(105, 0.0, 30),     # 9: Hairpin Apex
-				Vector3(70, 0.0, 55),      # 10: Ice Bridge
-				Vector3(35, 0.0, 45),      # 11: Chicane Left
-				Vector3(15, 0.0, 25)       # 12: Chicane Right into Straight
+				Vector3(0, 0, 0),           # 0: Start / Finish Line
+				Vector3(0, 0, -55),         # 1: Main Expressway Straight
+				Vector3(15, 1.0, -110),     # 2: Turn 1 Highway Ramp Incline
+				Vector3(45, 3.5, -160),     # 3: Rooftop Approach
+				Vector3(95, 6.0, -190),     # 4: High Flyover Curve
+				Vector3(155, 7.5, -195),    # 5: Skyline Flyover Straight
+				Vector3(210, 6.5, -170),    # 6: Downtown Corner Right
+				Vector3(240, 4.5, -115),    # 7: Descent to Tech Boulevard
+				Vector3(235, 2.0, -55),     # 8: Lower Boulevard Sector
+				Vector3(205, 0.5, 0),       # 9: Commercial Hairpin Entry
+				Vector3(165, 0.0, 45),      # 10: Hairpin Apex
+				Vector3(120, 0.0, 75),      # 11: Underpass Chute
+				Vector3(75, 0.0, 70),       # 12: Avenue S-Bend Left
+				Vector3(45, 0.0, 45),       # 13: Avenue S-Bend Right
+				Vector3(20, 0.0, 22)        # 14: Final Plaza Chicane
 			]
-			# Glacial Ice Floor
-			create_box(Vector3(45.0, -0.8, -50.0), Vector3(450.0, 1.0, 450.0), "snow_ice")
-			# Glacial Ice Spires
-			for p in [Vector3(-60, 18, -60), Vector3(25, 24, -195), Vector3(145, 20, -60), Vector3(40, 16, 80)]:
-				create_box(p, Vector3(36.0, 32.0, 36.0), "snow_ice")
-		_: # "metropolis" (Neon Circuit / Skyline Drift)
-			# Skyline Drift: 15 Waypoints, ~560m professional circuit
+			# Metropolis Asphalt Base
+			create_box(Vector3(115.0, -0.8, -55.0), Vector3(550.0, 1.0, 550.0), "asphalt")
+			# Production 3D Skyscrapers & Megastructure Towers
+			var building_coords = [
+				[Vector3(-45, 0, -75), "a", Vector3(5, 10, 5)],
+				[Vector3(75, 0, -210), "b", Vector3(6, 12, 6)],
+				[Vector3(175, 0, -215), "c", Vector3(5, 11, 5)],
+				[Vector3(265, 0, -60), "d", Vector3(6, 14, 6)],
+				[Vector3(155, 0, 95), "a", Vector3(5, 9, 5)],
+				[Vector3(-30, 0, 70), "garage", Vector3(4, 4, 4)]
+			]
+			for bc in building_coords:
+				var bld = ModelCacheScript.get_building(bc[1])
+				if bld:
+					bld.position = bc[0]
+					bld.scale = bc[2]
+					add_child(bld)
+				else:
+					create_box(bc[0] + Vector3(0, 25, 0), Vector3(40, 50, 40), "dark_concrete")
+
+		_: # "neon" / "metropolis" (Neon Circuit)
+			# Neon Circuit: 16 Waypoints, ~680m high-speed night stadium motorsport complex
 			circuit_nodes = [
-				Vector3(0, 0, 0),          # 0: Start / Finish Line
-				Vector3(0, 0, -40),        # 1: Main Straight past Pit Lane
-				Vector3(10, 0, -85),       # 2: Turn 1 (High-speed right sweeper)
-				Vector3(35, 0, -125),      # 3: Turn 1 Apex
-				Vector3(75, 0, -145),      # 4: Exit into Boulevard Straight
-				Vector3(130, 0, -145),     # 5: Long Neon Boulevard
-				Vector3(175, 0, -120),     # 6: Turn 2 Entry (Right curve)
-				Vector3(195, 0, -75),      # 7: Technical Sector 2
-				Vector3(185, 0, -25),      # 8: Hairpin Entry
-				Vector3(155, 0, 15),       # 9: Hairpin Apex
-				Vector3(115, 0, 35),       # 10: Expressway Flyover
-				Vector3(70, 0, 55),        # 11: S-Bend Left
-				Vector3(40, 0, 40),        # 12: S-Bend Right
-				Vector3(15, 0, 20)         # 13: Final Chicane to Main Straight
+				Vector3(0, 0, 0),           # 0: Start / Finish Line
+				Vector3(0, 0, -50),         # 1: Main Straight past Pit Lane
+				Vector3(12, 0, -100),       # 2: Turn 1 High-speed Right Sweeper
+				Vector3(42, 0.5, -145),     # 3: Banked Turn 1 Apex
+				Vector3(88, 1.0, -168),     # 4: Exit to Neon Boulevard
+				Vector3(145, 1.0, -168),    # 5: Long Neon Boulevard Straight
+				Vector3(195, 0.5, -140),    # 6: Turn 2 Entry (Right Curve)
+				Vector3(215, 0.0, -90),     # 7: Technical Arena Sector
+				Vector3(205, 0.0, -35),     # 8: Stadium Hairpin Entry
+				Vector3(170, 0.0, 15),      # 9: Stadium Hairpin Apex
+				Vector3(125, 0.0, 40),      # 10: Grandstand Flyover
+				Vector3(80, 0.0, 60),       # 11: S-Bend Left
+				Vector3(45, 0.0, 45),       # 12: S-Bend Right
+				Vector3(18, 0.0, 22)        # 13: Final Chicane to Main Straight
 			]
 			# Metropolis Ground Surface
-			create_box(Vector3(95.0, -0.8, -45.0), Vector3(450.0, 1.0, 450.0), "asphalt")
-			# Cyberpunk Skyscrapers with Digital Billboards
-			for p in [Vector3(-35, 20, -65), Vector3(65, 30, -180), Vector3(150, 32, -180), Vector3(225, 26, -50), Vector3(140, 24, 75), Vector3(-20, 20, 55)]:
-				create_box(p, Vector3(38.0, 48.0, 38.0), "dark_concrete")
-				create_box(p + Vector3(0, 5, 19.2), Vector3(22.0, 10.0, 0.4), "digital_signage_cyan")
+			create_box(Vector3(105.0, -0.8, -50.0), Vector3(500.0, 1.0, 500.0), "asphalt")
+			# Stadium Paddock, Pit Garages and High-Rise Facilities
+			var neon_props = [
+				[Vector3(-35, 0, -70), "garage", Vector3(4, 4, 4)],
+				[Vector3(70, 0, -190), "a", Vector3(5, 8, 5)],
+				[Vector3(160, 0, -190), "b", Vector3(5, 9, 5)],
+				[Vector3(235, 0, -55), "c", Vector3(5, 10, 5)],
+				[Vector3(150, 0, 80), "d", Vector3(5, 8, 5)]
+			]
+			for np in neon_props:
+				var b = ModelCacheScript.get_building(np[1])
+				if b:
+					b.position = np[0]
+					b.scale = np[2]
+					add_child(b)
+				else:
+					create_box(np[0] + Vector3(0, 20, 0), Vector3(36, 40, 36), "dark_concrete")
 
 	waypoints = circuit_nodes
 
@@ -93,28 +127,43 @@ func build_circuit() -> void:
 		var p2 = circuit_nodes[(i + 1) % circuit_nodes.size()]
 		build_track_segment(p1, p2, i)
 
-	# Start/Finish Overhead Gantry Truss
-	var gantry = MeshBuilder.build_start_gantry(track_width)
-	gantry.position = circuit_nodes[0] + Vector3(0, 0, -2.0)
-	add_child(gantry)
+	# Start/Finish Overhead Gantry (Production glTF Arch or Truss)
+	var finish_prop = ModelCacheScript.get_prop("track_finish")
+	if finish_prop:
+		finish_prop.position = circuit_nodes[0] + Vector3(0, 0, -1.0)
+		finish_prop.scale = Vector3(3.5, 3.5, 3.5)
+		add_child(finish_prop)
+	else:
+		var gantry = MeshBuilder.build_start_gantry(track_width)
+		gantry.position = circuit_nodes[0] + Vector3(0, 0, -2.0)
+		add_child(gantry)
+
+	# Production Road Lightposts along the straightaways
+	for wp_idx in [1, 5, 8, 11]:
+		if wp_idx < circuit_nodes.size():
+			var lp = ModelCacheScript.get_prop("road_lightposts")
+			if lp:
+				lp.position = circuit_nodes[wp_idx] + Vector3(-track_width * 0.5 - 2.5, 0, 0)
+				lp.scale = Vector3(2.0, 2.0, 2.0)
+				add_child(lp)
 
 	# Grandstands with Spectators along Main Straight (Left & Right)
-	var stand_left = MeshBuilder.build_stadium_grandstand(45.0, 8.0, 10.0)
-	stand_left.position = Vector3(-track_width * 0.5 - 6.0, 0.0, -20.0)
+	var stand_left = MeshBuilder.build_stadium_grandstand(55.0, 8.0, 10.0)
+	stand_left.position = Vector3(-track_width * 0.5 - 6.5, 0.0, -25.0)
 	add_child(stand_left)
 
-	var stand_right = MeshBuilder.build_stadium_grandstand(45.0, 8.0, 10.0)
-	stand_right.position = Vector3(track_width * 0.5 + 6.0, 0.0, -20.0)
+	var stand_right = MeshBuilder.build_stadium_grandstand(55.0, 8.0, 10.0)
+	stand_right.position = Vector3(track_width * 0.5 + 6.5, 0.0, -25.0)
 	stand_right.rotation_degrees.y = 180.0
 	add_child(stand_right)
 
 	# Stadium Floodlight Towers
-	var tower1 = MeshBuilder.build_stadium_floodlight_tower(22.0)
-	tower1.position = Vector3(-track_width * 0.5 - 12.0, 0.0, -42.0)
+	var tower1 = MeshBuilder.build_stadium_floodlight_tower(24.0)
+	tower1.position = Vector3(-track_width * 0.5 - 12.0, 0.0, -48.0)
 	add_child(tower1)
 
-	var tower2 = MeshBuilder.build_stadium_floodlight_tower(22.0)
-	tower2.position = Vector3(track_width * 0.5 + 12.0, 0.0, -42.0)
+	var tower2 = MeshBuilder.build_stadium_floodlight_tower(24.0)
+	tower2.position = Vector3(track_width * 0.5 + 12.0, 0.0, -48.0)
 	tower2.rotation_degrees.y = 180.0
 	add_child(tower2)
 
@@ -250,14 +299,40 @@ func create_box(pos: Vector3, size: Vector3, material_name: String) -> StaticBod
 func setup_racing_environment() -> void:
 	var env = WorldEnvironment.new()
 	var environment = Environment.new()
-
-	# Vibrant Coastal / Canyon Daylight Sky
 	var sky_mat = ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.22, 0.52, 0.95)
-	sky_mat.sky_horizon_color = Color(0.68, 0.80, 0.92)
-	sky_mat.ground_bottom_color = Color(0.22, 0.28, 0.20)
-	sky_mat.ground_horizon_color = Color(0.45, 0.55, 0.40)
-	sky_mat.sun_angle_max = 40.0
+
+	match track_theme.to_lower():
+		"canyon":
+			# High desert golden sun with sandstone dust atmosphere
+			sky_mat.sky_top_color = Color(0.20, 0.45, 0.85)
+			sky_mat.sky_horizon_color = Color(0.85, 0.65, 0.45)
+			sky_mat.ground_bottom_color = Color(0.35, 0.20, 0.12)
+			sky_mat.ground_horizon_color = Color(0.70, 0.45, 0.30)
+			environment.ambient_light_color = Color(0.75, 0.55, 0.40)
+			environment.ambient_light_energy = 1.2
+			environment.fog_enabled = true
+			environment.fog_light_color = Color(0.80, 0.60, 0.45)
+			environment.fog_density = 0.0015
+		"skyline":
+			# High-altitude sunset / twilight metropolitan horizon
+			sky_mat.sky_top_color = Color(0.12, 0.18, 0.42)
+			sky_mat.sky_horizon_color = Color(0.88, 0.40, 0.28)
+			sky_mat.ground_bottom_color = Color(0.08, 0.08, 0.15)
+			sky_mat.ground_horizon_color = Color(0.40, 0.22, 0.35)
+			environment.ambient_light_color = Color(0.45, 0.40, 0.65)
+			environment.ambient_light_energy = 1.1
+			environment.fog_enabled = true
+			environment.fog_light_color = Color(0.50, 0.30, 0.45)
+			environment.fog_density = 0.0012
+		_: # "neon" / "metropolis"
+			# Night motorsport complex under brilliant stadium floodlights & cyber ambient glow
+			sky_mat.sky_top_color = Color(0.12, 0.20, 0.42)
+			sky_mat.sky_horizon_color = Color(0.24, 0.38, 0.65)
+			sky_mat.ground_bottom_color = Color(0.10, 0.14, 0.22)
+			sky_mat.ground_horizon_color = Color(0.16, 0.24, 0.38)
+			environment.ambient_light_color = Color(0.60, 0.70, 0.90)
+			environment.ambient_light_energy = 1.6
+			environment.fog_enabled = false
 
 	var sky = Sky.new()
 	sky.sky_material = sky_mat
@@ -265,32 +340,38 @@ func setup_racing_environment() -> void:
 	environment.sky = sky
 
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	environment.ambient_light_color = Color(0.55, 0.62, 0.72)
-	environment.ambient_light_energy = 1.35
-
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	environment.tonemap_exposure = 1.35
 	environment.tonemap_white = 6.0
 
 	environment.glow_enabled = true
-	environment.glow_intensity = 0.35
-	environment.glow_bloom = 0.12
+	environment.glow_intensity = 0.45
+	environment.glow_bloom = 0.18
 
 	env.environment = environment
 	add_child(env)
 
-	# High-Energy Golden Daylight Sun
+	# Primary Track Lighting
 	var sun = DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-55, 45, 0)
-	sun.light_color = Color(1.0, 0.98, 0.92)
-	sun.light_energy = 2.2
+	if track_theme.to_lower() == "neon":
+		sun.rotation_degrees = Vector3(-65, 30, 0)
+		sun.light_color = Color(0.85, 0.92, 1.0)
+		sun.light_energy = 1.8
+	elif track_theme.to_lower() == "canyon":
+		sun.rotation_degrees = Vector3(-45, 55, 0)
+		sun.light_color = Color(1.0, 0.92, 0.80)
+		sun.light_energy = 2.4
+	else:
+		sun.rotation_degrees = Vector3(-50, 40, 0)
+		sun.light_color = Color(1.0, 0.88, 0.82)
+		sun.light_energy = 2.0
 	sun.shadow_enabled = true
 	add_child(sun)
 
-	# Cool Horizon Fill Light
+	# Fill Light
 	var fill = DirectionalLight3D.new()
-	fill.rotation_degrees = Vector3(45, -135, 0)
-	fill.light_color = Color(0.45, 0.65, 0.95)
-	fill.light_energy = 0.75
+	fill.rotation_degrees = Vector3(40, -140, 0)
+	fill.light_color = Color(0.35, 0.50, 0.80)
+	fill.light_energy = 0.7
 	fill.shadow_enabled = false
 	add_child(fill)

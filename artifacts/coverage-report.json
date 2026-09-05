@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 95.049504950495,
+  "overall_coverage_pct": 95.0354609929078,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -9,8 +9,8 @@
     },
     "res://games/arena-fps/arena_fps_main.gd": {
       "coverage_pct": 100,
-      "tested": 5,
-      "total": 5,
+      "tested": 7,
+      "total": 7,
       "untested": []
     },
     "res://games/arena-fps/maps/arena_map_generator.gd": {
@@ -34,14 +34,15 @@
       ]
     },
     "res://games/arena-fps/ui/arena_fps_hud.gd": {
-      "coverage_pct": 60,
+      "coverage_pct": 54.5454545454545,
       "tested": 6,
-      "total": 10,
+      "total": 11,
       "untested": [
         "update_layout_positions",
         "highlight_active_weapon",
         "_process",
-        "add_killfeed_entry"
+        "add_killfeed_entry",
+        "update_objective_label"
       ]
     },
     "res://games/arena-fps/weapons/grenade_launcher.gd": {
@@ -93,17 +94,17 @@
       "untested": []
     },
     "res://games/kart-racing/kart/kart_controller.gd": {
-      "coverage_pct": 88.8888888888889,
-      "tested": 8,
-      "total": 9,
+      "coverage_pct": 90,
+      "tested": 9,
+      "total": 10,
       "untested": [
         "recover_to_checkpoint"
       ]
     },
     "res://games/kart-racing/kart_racing_main.gd": {
       "coverage_pct": 100,
-      "tested": 4,
-      "total": 4,
+      "tested": 6,
+      "total": 6,
       "untested": []
     },
     "res://games/kart-racing/powerups/powerup_item.gd": {
@@ -153,8 +154,8 @@
     },
     "res://games/rocket-car/rocket_car_main.gd": {
       "coverage_pct": 100,
-      "tested": 6,
-      "total": 6,
+      "tested": 10,
+      "total": 10,
       "untested": []
     },
     "res://games/rocket-car/ui/nitro_kick_hud.gd": {
@@ -322,6 +323,12 @@
         "build_track_barrier"
       ]
     },
+    "res://shared/graphics/model_cache.gd": {
+      "coverage_pct": 100,
+      "tested": 9,
+      "total": 9,
+      "untested": []
+    },
     "res://shared/graphics/procedural_animator.gd": {
       "coverage_pct": 100,
       "tested": 7,
@@ -421,7 +428,7 @@
       "untested": []
     }
   },
-  "tested_functions": 384,
-  "timestamp": "2026-09-05T09:17:02",
-  "total_functions": 404
+  "tested_functions": 402,
+  "timestamp": "2026-09-05T11:54:08",
+  "total_functions": 423
 }

@@ -15,8 +15,11 @@ func _init() -> void:
 	attack_range = 16.0
 
 func setup_visuals() -> void:
-	var spitter_model = MeshBuilder.build_spitter_mesh()
-	add_child(spitter_model)
+	creature_model = ModelCacheScript.get_enemy("spitter")
+	if not creature_model:
+		creature_model = MeshBuilder.build_spitter_mesh()
+	add_child(creature_model)
+	ModelCacheScript.play_animation(creature_model, "Idle")
 
 	var col = CollisionShape3D.new()
 	var cap = CapsuleShape3D.new()

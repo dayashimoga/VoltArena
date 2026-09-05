@@ -14,8 +14,11 @@ func _init() -> void:
 	attack_range = 4.2
 
 func setup_visuals() -> void:
-	var boss_model = MeshBuilder.build_colossus_boss_mesh()
-	add_child(boss_model)
+	creature_model = ModelCacheScript.get_enemy("boss")
+	if not creature_model:
+		creature_model = MeshBuilder.build_colossus_boss_mesh()
+	add_child(creature_model)
+	ModelCacheScript.play_animation(creature_model, "Idle")
 
 	var col = CollisionShape3D.new()
 	var box = BoxShape3D.new()

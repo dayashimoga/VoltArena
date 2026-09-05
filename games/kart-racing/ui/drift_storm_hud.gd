@@ -458,6 +458,60 @@ func setup_onboarding_overlay() -> void:
 	obj_lbl.modulate = Color(1.0, 0.85, 0.2)
 	vbox.add_child(obj_lbl)
 
+	# Track Selection Row
+	var trk_box = HBoxContainer.new()
+	trk_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	trk_box.add_theme_constant_override("separation", 10)
+	vbox.add_child(trk_box)
+
+	var trk_lbl = Label.new()
+	trk_lbl.text = "TRACK:"
+	trk_lbl.modulate = Color(0.2, 0.9, 1.0)
+	trk_lbl.add_theme_font_size_override("font_size", 13)
+	trk_box.add_child(trk_lbl)
+
+	var tracks = [["NEON CIRCUIT", "neon"], ["CANYON RUN", "canyon"], ["SKYLINE DRIFT", "skyline"]]
+	for t in tracks:
+		var btn = Button.new()
+		btn.text = t[0]
+		btn.add_theme_font_size_override("font_size", 12)
+		btn.pressed.connect(func():
+			var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+			if tree:
+				var km = tree.root.find_child("KartRacingMain", true, false)
+				if km and km.has_method("select_track"):
+					km.select_track(t[1])
+					show_toast("TRACK SELECTED: " + t[0], Color(0.2, 0.9, 1.0))
+		)
+		trk_box.add_child(btn)
+
+	# Vehicle Selection Row
+	var veh_box = HBoxContainer.new()
+	veh_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	veh_box.add_theme_constant_override("separation", 10)
+	vbox.add_child(veh_box)
+
+	var veh_lbl = Label.new()
+	veh_lbl.text = "VEHICLE:"
+	veh_lbl.modulate = Color(1.0, 0.8, 0.2)
+	veh_lbl.add_theme_font_size_override("font_size", 13)
+	veh_box.add_child(veh_lbl)
+
+	var vehs = [["SPEED DEMON (Speeder)", "speeder"], ["TURBO TRUCK (Enforcer)", "enforcer"], ["PHANTOM DRIFT", "phantom"]]
+	for v in vehs:
+		var btn = Button.new()
+		btn.text = v[0]
+		btn.add_theme_font_size_override("font_size", 12)
+		btn.pressed.connect(func():
+			var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+			if tree:
+				var km = tree.root.find_child("KartRacingMain", true, false)
+				if km and km.has_method("select_kart"):
+					km.select_kart(v[1])
+					show_toast("VEHICLE SELECTED: " + v[0], Color(1.0, 0.85, 0.2))
+		)
+		veh_box.add_child(btn)
+
 	var sep = HSeparator.new()
 	vbox.add_child(sep)
 
@@ -485,12 +539,12 @@ func setup_onboarding_overlay() -> void:
 		a.add_theme_font_size_override("font_size", 13)
 		ctrl_grid.add_child(a)
 
-	var prompt_lbl = Label.new()
-	prompt_lbl.text = "RACE STARTING (PRESS ANY KEY OR SPACE TO START)"
-	prompt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt_lbl.add_theme_font_size_override("font_size", 12)
-	prompt_lbl.modulate = Color(0.7, 0.85, 0.95)
-	vbox.add_child(prompt_lbl)
+	var start_btn = Button.new()
+	start_btn.text = "START RACE (CLICK OR PRESS SPACE)"
+	start_btn.add_theme_font_size_override("font_size", 14)
+	start_btn.modulate = Color(0.2, 1.0, 0.5)
+	start_btn.pressed.connect(dismiss_onboarding)
+	vbox.add_child(start_btn)
 
 func dismiss_onboarding() -> void:
 	if not is_instance_valid(onboarding_overlay) or not onboarding_overlay.visible:

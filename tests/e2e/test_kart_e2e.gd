@@ -18,14 +18,15 @@ func run_tests() -> Dictionary:
 	test_drift_boost_mechanic()
 	test_kart_acceleration()
 	test_camera_follow()
+	test_track_and_vehicle_selection()
 	test_race_finish_flow()
 	test_pause_restart_quit()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
 	return [
-		["res://games/kart-racing/kart_racing_main.gd", ["_ready", "setup_scene", "update_camera", "_on_race_finished"]],
-		["res://games/kart-racing/kart/kart_controller.gd", ["trigger_drift_boost"]],
+		["res://games/kart-racing/kart_racing_main.gd", ["_ready", "setup_scene", "update_camera", "_on_race_finished", "select_track", "select_kart"]],
+		["res://games/kart-racing/kart/kart_controller.gd", ["trigger_drift_boost", "set_kart_type"]],
 		["res://games/kart-racing/game/race_manager.gd", ["initialize_race"]],
 		["res://games/kart-racing/tracks/track_generator.gd", ["_ready"]],
 		["res://games/kart-racing/ai/kart_ai.gd", ["_ready"]],
@@ -127,6 +128,34 @@ func test_camera_follow() -> void:
 	# Camera update should not crash
 	race.update_camera(0.016)
 	assert_true(race.camera != null, "Camera must still exist after update")
+
+	race.queue_free()
+
+func test_track_and_vehicle_selection() -> void:
+	var race = KartRacingMainScript.new()
+	race.setup_scene()
+
+	# Test track selection across all 3 production circuits
+	race.select_track("canyon")
+	assert_eq(race.selected_track, "canyon", "Track selection must update selected_track")
+	assert_true(race.track_generator.waypoints.size() >= 15, "Canyon track must have >= 15 waypoints")
+
+	race.select_track("skyline")
+	assert_eq(race.selected_track, "skyline", "Skyline selection must update selected_track")
+	assert_true(race.track_generator.waypoints.size() >= 15, "Skyline track must have >= 15 waypoints")
+
+	race.select_track("neon")
+	assert_eq(race.selected_track, "neon", "Neon selection must update selected_track")
+	assert_true(race.track_generator.waypoints.size() >= 14, "Neon track must have >= 14 waypoints")
+
+	# Test vehicle selection
+	race.select_kart("enforcer")
+	assert_eq(race.selected_kart, "enforcer", "Vehicle selection must update selected_kart")
+	assert_eq(race.player_kart.kart_type, "enforcer", "Player kart archetype must update to enforcer")
+
+	race.select_kart("phantom")
+	assert_eq(race.selected_kart, "phantom", "Vehicle selection must update to phantom")
+	assert_eq(race.player_kart.kart_type, "phantom", "Player kart archetype must update to phantom")
 
 	race.queue_free()
 

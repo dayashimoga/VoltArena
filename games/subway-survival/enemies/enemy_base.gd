@@ -27,12 +27,19 @@ func _ready() -> void:
 	setup_health()
 	setup_visuals()
 
+const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
+var creature_model: Node3D = null
+
 func setup_health() -> void:
 	if not health_component:
 		health_component = HealthComponent.new()
 		health_component.name = "HealthComponent"
 		add_child(health_component)
 	health_component.died.connect(_on_died)
+	health_component.health_changed.connect(func(_cur, _max_hp):
+		if not health_component.is_dead and creature_model:
+			ModelCacheScript.play_animation(creature_model, "Hit_A", 0.1)
+	)
 
 func setup_visuals() -> void:
 	# Default shape; subclasses customize
@@ -80,8 +87,12 @@ func steer_to_target(target_pos: Vector3, delta: float) -> void:
 		basis = basis.slerp(target_basis, turn_speed * delta)
 		velocity.x = dir.x * move_speed
 		velocity.z = dir.z * move_speed
+		if creature_model:
+			ModelCacheScript.play_animation(creature_model, "Walking_A")
 
 func perform_attack() -> void:
+	if creature_model:
+		ModelCacheScript.play_animation(creature_model, "1H_Melee_Attack_Chop", 0.1)
 	if target_player and is_instance_valid(target_player):
 		if target_player.has_node("HealthComponent"):
 			target_player.get_node("HealthComponent").take_damage(attack_damage, self)
@@ -91,6 +102,8 @@ func perform_attack() -> void:
 			am.play_sound_3d("hit", pos)
 
 func _on_died(_source: Node) -> void:
+	if creature_model:
+		ModelCacheScript.play_animation(creature_model, "Death_A", 0.1)
 	var drop_pos = global_position if is_inside_tree() else position
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am:

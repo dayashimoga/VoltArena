@@ -70,6 +70,8 @@ func setup_scene() -> void:
 	camera = Camera3D.new()
 	camera.name = "KartCamera"
 	camera.current = true
+	camera.global_position = Vector3(0.0, 3.3, 11.5)
+	camera.look_at(Vector3(0.0, 1.0, 5.0), Vector3.UP)
 	add_child(camera)
 
 	# 4 Competitive AI Racers
@@ -160,7 +162,11 @@ func _process(delta: float) -> void:
 				tier = 1
 			hud.update_drift_charge(player_kart.drift_charge_time, tier)
 
+var camera_override: bool = false
+
 func update_camera(delta: float) -> void:
+	if camera_override:
+		return
 	if not is_instance_valid(player_kart) or not is_instance_valid(camera):
 		return
 
@@ -197,3 +203,18 @@ func _on_quit_to_launcher() -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.return_to_launcher_requested.emit()
+
+func select_track(track_name: String) -> void:
+	selected_track = track_name
+	if track_generator and is_instance_valid(track_generator):
+		track_generator.track_theme = selected_track
+		track_generator.waypoints.clear()
+		track_generator.checkpoints.clear()
+		for child in track_generator.get_children():
+			child.queue_free()
+		track_generator.build_circuit()
+
+func select_kart(kart_name: String) -> void:
+	selected_kart = kart_name
+	if player_kart and is_instance_valid(player_kart) and player_kart.has_method("set_kart_type"):
+		player_kart.set_kart_type(selected_kart)

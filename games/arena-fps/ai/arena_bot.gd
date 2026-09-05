@@ -22,22 +22,29 @@ func _ready() -> void:
 
 @export var archetype: String = "assault" # "skirmisher", "assault", "sentinel"
 
+const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
+
+var character_model: Node3D = null
+
 func setup_bot_visual() -> void:
 	if get_node_or_null("BotCollision"):
 		return
 
-	var accent_color = Color(0.2, 0.6, 1.0)
-	match archetype:
-		"skirmisher":
-			accent_color = Color(1.0, 0.4, 0.1)
-		"sentinel":
-			accent_color = Color(0.8, 0.2, 0.9)
-		_:
-			accent_color = Color(0.2, 0.6, 1.0)
+	character_model = ModelCacheScript.get_character(archetype)
+	if not character_model:
+		var accent_color = Color(0.2, 0.6, 1.0)
+		match archetype:
+			"skirmisher":
+				accent_color = Color(1.0, 0.4, 0.1)
+			"sentinel":
+				accent_color = Color(0.8, 0.2, 0.9)
+			_:
+				accent_color = Color(0.2, 0.6, 1.0)
+		character_model = MeshBuilder.build_cyber_soldier(true, accent_color)
 
-	var soldier_model = MeshBuilder.build_cyber_soldier(true, accent_color)
-	soldier_model.position = Vector3(0, 0, 0)
-	add_child(soldier_model)
+	character_model.position = Vector3(0, 0, 0)
+	add_child(character_model)
+	ModelCacheScript.play_animation(character_model, "Idle")
 
 	var col = CollisionShape3D.new()
 	col.name = "BotCollision"
@@ -74,6 +81,10 @@ func setup_health() -> void:
 
 	add_child(health_component)
 	health_component.died.connect(_on_died)
+	health_component.health_changed.connect(func(_cur, _max_hp):
+		if not health_component.is_dead and character_model:
+			ModelCacheScript.play_animation(character_model, "Hit_A", 0.1)
+	)
 
 func setup_weapon() -> void:
 	if weapon:
@@ -128,11 +139,15 @@ func _physics_process(delta: float) -> void:
 	match current_state:
 		AIState.PATROL:
 			steer_towards(patrol_target, delta)
+			if character_model:
+				ModelCacheScript.play_animation(character_model, "Walking_A")
 			if global_position.distance_to(patrol_target) < 2.0:
 				pick_random_patrol()
 		AIState.SEEK:
 			if current_target:
 				steer_towards(current_target.global_position, delta)
+				if character_model:
+					ModelCacheScript.play_animation(character_model, "Running_A")
 		AIState.ATTACK:
 			if current_target:
 				var aim_point = current_target.global_position + Vector3.UP * 1.2
@@ -147,10 +162,15 @@ func _physics_process(delta: float) -> void:
 				velocity.x = side.x
 				velocity.z = side.z
 
+				if character_model:
+					ModelCacheScript.play_animation(character_model, "2H_Ranged_Aiming")
+
 				# Fire weapon
 				fire_cooldown -= delta
 				if fire_cooldown <= 0.0:
 					weapon.trigger_fire(global_position + Vector3.UP * 1.0, dir)
+					if character_model:
+						ModelCacheScript.play_animation(character_model, "2H_Ranged_Shoot", 0.08)
 					fire_cooldown = 60.0 / weapon.fire_rate_rpm + randf_range(0.05, 0.2)
 
 	move_and_slide()
@@ -170,11 +190,16 @@ func _on_died(killer: Node) -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.enemy_died.emit("Arena Bot", 100)
-	# Hide and queue respawn in 4 seconds
-	visible = false
+
+	if character_model:
+		ModelCacheScript.play_animation(character_model, "Death_A", 0.1)
 	collision_layer = 0
+
 	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
 	if tree:
+		tree.create_timer(1.2).timeout.connect(func():
+			visible = false
+		)
 		tree.create_timer(4.0).timeout.connect(respawn)
 
 func respawn() -> void:

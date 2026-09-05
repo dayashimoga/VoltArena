@@ -83,9 +83,40 @@ func setup_kart_archetype() -> void:
 			acceleration = 24.0
 			steer_speed = 3.2
 
+const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
+
+func set_kart_type(new_type: String) -> void:
+	kart_type = new_type
+	setup_kart_archetype()
+	setup_kart_visual()
+
 func setup_kart_visual() -> void:
-	var kart_col = Color(0.2, 1.0, 0.5) if is_player else (Color(1.0, 0.5, 0.0) if racer_id == 1 else (Color(0.8, 0.2, 1.0) if racer_id == 2 else Color(0.0, 0.85, 1.0)))
-	kart_visual = MeshBuilder.build_drift_kart(kart_col, kart_type)
+	if kart_visual and is_instance_valid(kart_visual):
+		kart_visual.queue_free()
+		front_wheels.clear()
+
+	var vehicle_key = "truck_green"
+	if is_player:
+		match kart_type:
+			"phantom": vehicle_key = "truck_purple"
+			"enforcer": vehicle_key = "truck_yellow"
+			_: vehicle_key = "truck_green"
+	else:
+		match racer_id:
+			1: vehicle_key = "truck_red"
+			2: vehicle_key = "truck_yellow"
+			3: vehicle_key = "truck_purple"
+			_: vehicle_key = "truck_red"
+
+	var prod_model = ModelCacheScript.get_vehicle(vehicle_key)
+	if prod_model:
+		kart_visual = prod_model
+		kart_visual.scale = Vector3(1.2, 1.2, 1.2)
+		kart_visual.position = Vector3(0, 0.05, 0)
+	else:
+		var kart_col = Color(0.2, 1.0, 0.5) if is_player else (Color(1.0, 0.5, 0.0) if racer_id == 1 else (Color(0.8, 0.2, 1.0) if racer_id == 2 else Color(0.0, 0.85, 1.0)))
+		kart_visual = MeshBuilder.build_drift_kart(kart_col, kart_type)
+
 	add_child(kart_visual)
 
 	for child in kart_visual.get_children():
@@ -93,12 +124,14 @@ func setup_kart_visual() -> void:
 			front_wheels.append(child)
 
 	# Collision
-	var col = CollisionShape3D.new()
-	var b_shape = BoxShape3D.new()
-	b_shape.size = Vector3(1.5, 0.8, 2.5)
-	col.shape = b_shape
-	col.position = Vector3(0, 0.45, 0)
-	add_child(col)
+	if not has_node("KartCollision"):
+		var col = CollisionShape3D.new()
+		col.name = "KartCollision"
+		var b_shape = BoxShape3D.new()
+		b_shape.size = Vector3(1.5, 0.8, 2.5)
+		col.shape = b_shape
+		col.position = Vector3(0, 0.45, 0)
+		add_child(col)
 
 func _physics_process(delta: float) -> void:
 	if not is_inside_tree():

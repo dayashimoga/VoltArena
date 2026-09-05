@@ -28,14 +28,14 @@ var enemies_to_spawn: Array[String] = []
 var active_enemies: Array[EnemyBase] = []
 var spawn_cooldown: float = 0.0
 
-# Spawn point coordinates along the subway tunnel ends
+# Spawn point coordinates along open platform corridors (Y=0.5)
 var spawn_positions = [
-	Vector3(6.0, -1.0, -26.0),
-	Vector3(4.0, -1.0, -26.0),
-	Vector3(7.5, -1.0, -26.0),
-	Vector3(6.0, -1.0, 26.0),
-	Vector3(4.0, -1.0, 26.0),
-	Vector3(7.5, -1.0, 26.0)
+	Vector3(-5.0, 0.5, -24.0),
+	Vector3(-5.0, 0.5, 24.0),
+	Vector3(-2.0, 0.5, -18.0),
+	Vector3(-8.0, 0.5, -18.0),
+	Vector3(-2.0, 0.5, 18.0),
+	Vector3(-8.0, 0.5, 18.0)
 ]
 
 func _ready() -> void:
@@ -160,8 +160,15 @@ func clean_dead_enemies() -> void:
 	var alive: Array[EnemyBase] = []
 	for e in active_enemies:
 		if is_instance_valid(e) and not e.is_queued_for_deletion():
-			alive.append(e)
+			if not (e.health_component and e.health_component.is_dead):
+				alive.append(e)
 	active_enemies = alive
+
+	var total_remaining = enemies_to_spawn.size() + active_enemies.size()
+	if get_parent():
+		var hud_node = get_parent().get_node_or_null("HUD")
+		if hud_node and hud_node.has_method("update_threats"):
+			hud_node.update_threats(total_remaining)
 
 func finish_current_wave() -> void:
 	var bonus = current_wave * 250

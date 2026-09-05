@@ -20,6 +20,8 @@ func build_arena() -> void:
 			_build_foundry_map()
 	setup_lighting()
 
+const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
+
 func _build_foundry_map() -> void:
 	var half_x = arena_size.x * 0.5
 	var half_z = arena_size.y * 0.5
@@ -34,6 +36,19 @@ func _build_foundry_map() -> void:
 	create_box(Vector3(0, wall_height - 1.5, half_z - 0.7), Vector3(22.0, 2.8, 0.2), "digital_signage_orange")
 	create_box(Vector3(-half_x, wall_height * 0.5, 0), Vector3(1.2, wall_height, arena_size.y), "dark_hull")
 	create_box(Vector3(half_x, wall_height * 0.5, 0), Vector3(1.2, wall_height, arena_size.y), "dark_hull")
+
+	# Heavy Military High/Low Walls from ModelCache
+	for wall_x in [-14.0, 14.0]:
+		var wh = ModelCacheScript.get_prop("wall_high")
+		if wh:
+			wh.position = Vector3(wall_x, 0, -10.0)
+			wh.scale = Vector3(2.5, 2.5, 2.5)
+			add_child(wh)
+		var wl = ModelCacheScript.get_prop("wall_low")
+		if wl:
+			wl.position = Vector3(wall_x, 0, 10.0)
+			wl.scale = Vector3(2.5, 2.5, 2.5)
+			add_child(wl)
 
 	# Upper Perimeter Catwalks
 	create_box(Vector3(0, 4.5, -half_z + 3.0), Vector3(arena_size.x - 8.0, 0.4, 4.0), "sci_fi_metal")
@@ -88,6 +103,14 @@ func _build_citadel_map() -> void:
 	create_box(Vector3(-half_x, 1.5, 0), Vector3(0.8, 3.0, arena_size.y), "dark_hull")
 	create_box(Vector3(half_x, 1.5, 0), Vector3(0.8, 3.0, arena_size.y), "dark_hull")
 
+	# Defense Walls
+	for wall_z in [-15.0, 15.0]:
+		var wl = ModelCacheScript.get_prop("wall_low")
+		if wl:
+			wl.position = Vector3(0, 0, wall_z)
+			wl.scale = Vector3(2.5, 2.5, 2.5)
+			add_child(wl)
+
 	# Twin Elevated Observation Terraces
 	create_box(Vector3(-18.0, 2.5, 0), Vector3(10.0, 5.0, 24.0), "sci_fi_metal")
 	create_box(Vector3(18.0, 2.5, 0), Vector3(10.0, 5.0, 24.0), "sci_fi_metal")
@@ -117,21 +140,41 @@ func _build_sektor_map() -> void:
 	# Asphalt Street Pavement
 	create_box(Vector3(0, -0.5, 0), Vector3(arena_size.x, 1.0, arena_size.y), "asphalt")
 
-	# Towering Cyberpunk Skyscraper Facades
-	create_box(Vector3(0, 10.0, -half_z), Vector3(arena_size.x, 20.0, 2.0), "dark_concrete")
-	create_box(Vector3(0, 10.0, half_z), Vector3(arena_size.x, 20.0, 2.0), "dark_concrete")
-	create_box(Vector3(-half_x, 10.0, 0), Vector3(2.0, 20.0, arena_size.y), "dark_concrete")
-	create_box(Vector3(half_x, 10.0, 0), Vector3(2.0, 20.0, arena_size.y), "dark_concrete")
+	# Real 3D Modular City Buildings from ModelCache
+	var b_configs = [
+		[Vector3(-22, 0, -22), "a", Vector3(3.2, 4.5, 3.2)],
+		[Vector3(22, 0, -22), "b", Vector3(3.2, 4.5, 3.2)],
+		[Vector3(-22, 0, 22), "c", Vector3(3.2, 4.5, 3.2)],
+		[Vector3(22, 0, 22), "d", Vector3(3.2, 4.5, 3.2)],
+		[Vector3(0, 0, -26), "garage", Vector3(2.5, 2.5, 2.5)]
+	]
+	for bc in b_configs:
+		var b = ModelCacheScript.get_building(bc[1])
+		if b:
+			b.position = bc[0]
+			b.scale = bc[2]
+			add_child(b)
 
-	# Giant Neon Billboards
-	create_box(Vector3(-14, 8.0, -half_z + 1.5), Vector3(16.0, 6.0, 0.3), "digital_signage_cyan")
-	create_box(Vector3(14, 8.0, half_z - 1.5), Vector3(16.0, 6.0, 0.3), "digital_signage_orange")
+	# Street Lightposts
+	for lp_pos in [Vector3(-8, 0, -12), Vector3(8, 0, -12), Vector3(-8, 0, 12), Vector3(8, 0, 12)]:
+		var lp = ModelCacheScript.get_prop("road_lightposts")
+		if lp:
+			lp.position = lp_pos
+			lp.scale = Vector3(1.8, 1.8, 1.8)
+			add_child(lp)
 
-	# Tight Alley Corridor Dividers & Cover Blocks
-	create_box(Vector3(0, 3.0, -10.0), Vector3(28.0, 6.0, 2.0), "dark_concrete")
-	create_box(Vector3(0, 3.0, 10.0), Vector3(28.0, 6.0, 2.0), "dark_concrete")
-	create_box(Vector3(-12.0, 2.0, 0), Vector3(2.0, 4.0, 16.0), "dark_hull")
-	create_box(Vector3(12.0, 2.0, 0), Vector3(2.0, 4.0, 16.0), "dark_hull")
+	# Tactical High and Low Wall Barricades
+	var wh1 = ModelCacheScript.get_prop("wall_high")
+	if wh1:
+		wh1.position = Vector3(0, 0, -10)
+		wh1.scale = Vector3(2.2, 2.2, 2.2)
+		add_child(wh1)
+
+	var wh2 = ModelCacheScript.get_prop("wall_high")
+	if wh2:
+		wh2.position = Vector3(0, 0, 10)
+		wh2.scale = Vector3(2.2, 2.2, 2.2)
+		add_child(wh2)
 
 	# Overhead Walkways
 	create_box(Vector3(0, 5.5, 0), Vector3(8.0, 0.4, 22.0), "sci_fi_metal")

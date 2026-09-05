@@ -421,3 +421,43 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - 53 / 53 screenshots passed all empirical semantic gates (Resolution >= 1280x720, Luminance in [40, 180], Contrast >= 25, Black% <= 12%).
   - Generated visual contact sheets (`visual_contact_sheet.png`, `contact_sheet_iron_crucible.png`, `contact_sheet_metro_siege.png`, `contact_sheet_nitro_kick.png`, `contact_sheet_drift_storm.png`, and `contact_sheet.html`).
   - Unresolved P0/P1 Blockers: 0 (ALL CLOSED).
+
+## [6.0.0-p0-art-gameplay-certified] - 2026-09-05
+### Added
+- **Production CC0 3D Asset System Integration**:
+  - Downloaded and integrated 27 CC0 1.0 Universal glTF 2.0 assets in `assets/models/` (characters, enemies, vehicles, weapons, props, modular architecture).
+  - Fully articulated humanoid models with skeletal rigs and blended animations (`Walking_A`, `Running_A`, `2H_Ranged_Aiming`, `2H_Ranged_Shoot`, `Hit_A`, `Death_A`).
+  - Non-geometric monster models (`Crawler`, `Spitter`, `Stalker`, `Brute`, `BioColossus`) with skeletal deformation.
+  - Production stylized vehicles with colormaps and wheels, oriented forward along Godot `-Z`.
+  - Scaled first-person energy weapons (`0.30 - 0.44`) positioned downrange without near-plane camera clipping.
+- **Nitro Kick Rebuild**:
+  - Ball converted to `RigidBody3D` with continuous collision detection (`continuous_cd = true`), mass 12.0, bounce 0.85.
+  - Front bumper impulse collision and slide collision momentum transfer from car to ball.
+  - Vehicle select and game mode select menus in UI and main flow.
+  - Automated kickoff-to-goal scoring verification in E2E tests.
+- **Drift Storm 3 Distinct Circuits**:
+  - Implemented 3 full circuits: Neon Circuit (night stadium with floodlights & cyber glow), Canyon Run (high desert mesas & red rock canyons), Skyline Drift (elevated metropolitan highway).
+  - Track & vehicle selection UI.
+  - 3 AI racers moving on 3-2-1-GO with pathfinding, minimap, and checkpoint recovery.
+- **Iron Crucible Full Scope**:
+  - 3 cybernetic character archetypes (Scout, Trooper, Heavy).
+  - 3 modular production maps (Industrial City, Orbital Station, Reactor Complex).
+  - 5 game modes (Frag Race, TDM, Control Point, Artifact Capture, Survival).
+- **Metro Siege Platform Architecture & Spawns**:
+  - Platform access stairs/ramps connecting sunken rail bed to platform.
+  - Enemies spawn on the platform floor (`Y=0.5`), engaging immediately on Wave 1.
+  - 10-wave story objective progression, physical scrap gear drops, and kiosk upgrades.
+- **Universal Launcher Responsive Overhaul**:
+  - Eliminated horizontal card overflow at 1280x720; all 4 cards fit cleanly with comfortable padding.
+  - Responsive breakpoints: `>=1200px: 4 cols`, `768–1199px: 2x2 grid`, `<768px: 1 col`.
+  - Utilized `HFlowContainer` for tags and word-wrapped labels.
+- **Web Export & Cloudflare Limits**:
+  - Split both `index.wasm` and `index.pck` into `<= 18MB` chunks (`part00`, `part01`).
+  - Browser fetch hook transparently reassembles streams on the fly.
+  - All deployable web files verified `<= 25MB`.
+- **Empirical Validation & Production Certification**:
+  - 41 test suites passed with 858/858 assertions (0 failures), 95.04% function coverage.
+  - 49 real packaged WebGL Chromium runtime screenshots captured.
+  - 53/53 visual screens passed all empirical quality gates (Resolution, Luminance, Contrast, Black%).
+  - `scripts/certifier.py` exited with status `PASS`.
+

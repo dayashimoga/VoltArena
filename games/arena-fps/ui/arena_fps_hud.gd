@@ -267,34 +267,93 @@ func show_countdown(seconds: int) -> void:
 				countdown_panel.visible = false
 		)
 
+func update_objective_label(text: String) -> void:
+	if objective_label:
+		objective_label.text = text
+
 func setup_onboarding_overlay() -> void:
 	onboarding_overlay = PanelContainer.new()
 	onboarding_overlay.anchor_left = 0.5
-	onboarding_overlay.anchor_top = 0.72
+	onboarding_overlay.anchor_top = 0.65
 	onboarding_overlay.anchor_right = 0.5
-	onboarding_overlay.anchor_bottom = 0.72
-	onboarding_overlay.offset_left = -220
-	onboarding_overlay.offset_top = -40
-	onboarding_overlay.offset_right = 220
-	onboarding_overlay.offset_bottom = 40
+	onboarding_overlay.anchor_bottom = 0.65
+	onboarding_overlay.offset_left = -300
+	onboarding_overlay.offset_top = -100
+	onboarding_overlay.offset_right = 300
+	onboarding_overlay.offset_bottom = 100
 	add_child(onboarding_overlay)
 
 	var vb = VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 6)
 	onboarding_overlay.add_child(vb)
 
+	var title = Label.new()
+	title.text = "IRON CRUCIBLE — TACTICAL COMBAT SUITE"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 14)
+	title.modulate = Color(0.2, 0.9, 1.0)
+	vb.add_child(title)
+
+	# Map Selection
+	var map_box = HBoxContainer.new()
+	map_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	map_box.add_theme_constant_override("separation", 8)
+	vb.add_child(map_box)
+
+	var m_lbl = Label.new()
+	m_lbl.text = "MAP:"
+	m_lbl.modulate = Color(0.2, 0.9, 1.0)
+	m_lbl.add_theme_font_size_override("font_size", 11)
+	map_box.add_child(m_lbl)
+
+	var maps = [["REACTOR COMPLEX", "foundry"], ["ORBITAL STATION", "citadel"], ["INDUSTRIAL CITY", "sektor"]]
+	for m in maps:
+		var btn = Button.new()
+		btn.text = m[0]
+		btn.add_theme_font_size_override("font_size", 10)
+		btn.pressed.connect(func():
+			var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+			if tree:
+				var af = tree.root.find_child("ArenaFPSMain", true, false)
+				if af and af.has_method("select_map"):
+					af.select_map(m[1])
+					show_toast("MAP SELECTED: " + m[0], Color(0.2, 0.9, 1.0))
+		)
+		map_box.add_child(btn)
+
+	# Mode Selection
+	var mode_box = HBoxContainer.new()
+	mode_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	mode_box.add_theme_constant_override("separation", 6)
+	vb.add_child(mode_box)
+
+	var md_lbl = Label.new()
+	md_lbl.text = "MODE:"
+	md_lbl.modulate = Color(1.0, 0.8, 0.2)
+	md_lbl.add_theme_font_size_override("font_size", 11)
+	mode_box.add_child(md_lbl)
+
+	var modes = [["FRAG RACE", "frag_race"], ["TDM", "tdm"], ["CONTROL POINT", "control_point"], ["ARTIFACT", "artifact"], ["SURVIVAL", "survival"]]
+	for md in modes:
+		var btn = Button.new()
+		btn.text = md[0]
+		btn.add_theme_font_size_override("font_size", 10)
+		btn.pressed.connect(func():
+			var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+			if tree:
+				var af = tree.root.find_child("ArenaFPSMain", true, false)
+				if af and af.has_method("select_game_mode"):
+					af.select_game_mode(md[1])
+					show_toast("MODE: " + md[0], Color(1.0, 0.8, 0.2))
+		)
+		mode_box.add_child(btn)
+
 	var t1 = Label.new()
-	t1.text = "WASD / Stick: Move | Mouse / Right-Stick: Aim | Left-Click: Fire"
+	t1.text = "WASD: Move | Mouse: Aim | Left-Click: Fire | 1-5: Switch Weapon"
 	t1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	t1.add_theme_font_size_override("font_size", 11)
 	t1.modulate = Color(0.85, 0.95, 1.0)
 	vb.add_child(t1)
-
-	var t2 = Label.new()
-	t2.text = "Keys 1-5 / Wheel: Switch Weapons | R: Reload | Space: Jump"
-	t2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	t2.add_theme_font_size_override("font_size", 11)
-	t2.modulate = Color(1.0, 0.85, 0.2)
-	vb.add_child(t2)
 
 func dismiss_onboarding() -> void:
 	if is_instance_valid(onboarding_overlay):

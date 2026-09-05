@@ -58,6 +58,10 @@ func _build_zone_1_platform() -> void:
 	train_zone1.position = Vector3(6.5, -1.4, 0.0)
 	add_child(train_zone1)
 
+	# Platform Access Stairs / Ramps (North and South) connecting track level to platform
+	create_box(Vector3(2.5, -0.7, -24.0), Vector3(3.0, 1.4, 6.0), "grimy_concrete")
+	create_box(Vector3(2.5, -0.7, 24.0), Vector3(3.0, 1.4, 6.0), "grimy_concrete")
+
 	# Interactive Holographic Upgrade Kiosk
 	var kiosk = MeshBuilder.build_upgrade_kiosk_mesh()
 	kiosk.position = Vector3(-10.5, 0.0, -4.0)

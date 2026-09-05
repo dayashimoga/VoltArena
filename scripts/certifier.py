@@ -531,11 +531,14 @@ def evaluate_gates():
 
     if web_dir:
         max_size = 0
-        has_chunks = os.path.exists(os.path.join(web_dir, "index.wasm.part00"))
+        has_wasm_chunks = os.path.exists(os.path.join(web_dir, "index.wasm.part00"))
+        has_pck_chunks = os.path.exists(os.path.join(web_dir, "index.pck.part00"))
         for root, dirs, files in os.walk(web_dir):
             for f in files:
                 if f.startswith("index.") or f == "_headers":
-                    if f == "index.wasm" and has_chunks:
+                    if f == "index.wasm" and has_wasm_chunks:
+                        continue
+                    if f == "index.pck" and has_pck_chunks:
                         continue
                     fpath = os.path.join(root, f)
                     size = os.path.getsize(fpath)

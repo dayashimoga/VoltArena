@@ -19,7 +19,7 @@ failed = False
 
 for root, _, files in os.walk(web_dir):
     for f in files:
-        if f == "index.wasm":
+        if f == "index.wasm" or f == "index.pck":
             continue
         fp = os.path.join(root, f)
         sz = os.path.getsize(fp)

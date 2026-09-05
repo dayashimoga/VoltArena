@@ -16,9 +16,11 @@ func _init() -> void:
 	attack_range = 3.0
 
 func setup_visuals() -> void:
-	# Detailed massive armored brute model
-	var brute_model = MeshBuilder.build_brute_mesh()
-	add_child(brute_model)
+	creature_model = ModelCacheScript.get_enemy("brute")
+	if not creature_model:
+		creature_model = MeshBuilder.build_brute_mesh()
+	add_child(creature_model)
+	ModelCacheScript.play_animation(creature_model, "Idle")
 
 	var col = CollisionShape3D.new()
 	var cap = BoxShape3D.new()

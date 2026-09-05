@@ -20,6 +20,7 @@ func run_tests() -> Dictionary:
 	test_bot_damage_and_kill()
 	test_player_damage_and_death()
 	test_score_tracking()
+	test_map_and_mode_selection()
 	test_match_timer_and_end()
 	test_results_display()
 	test_pause_and_resume()
@@ -28,7 +29,7 @@ func run_tests() -> Dictionary:
 
 func get_coverage_entries() -> Array:
 	return [
-		["res://games/arena-fps/arena_fps_main.gd", ["_ready", "_process", "setup_scene", "connect_events", "end_match"]],
+		["res://games/arena-fps/arena_fps_main.gd", ["_ready", "_process", "setup_scene", "connect_events", "end_match", "select_map", "select_game_mode"]],
 		["res://games/arena-fps/player/fps_player.gd", ["_ready", "_physics_process", "setup_default_nodes", "setup_weapons", "select_weapon", "connect_health", "apply_recoil", "add_ammo", "handle_look_and_recoil", "handle_movement", "handle_weapons_input", "notify_ammo_update", "update_view_bobbing"]],
 		["res://games/arena-fps/weapons/weapon_base.gd", ["can_fire", "trigger_fire", "start_reload", "finish_reload", "add_reserve_ammo", "setup_weapon_visual"]],
 		["res://shared/combat/health_component.gd", ["take_damage", "heal", "add_armor", "reset"]],
@@ -210,6 +211,32 @@ func test_score_tracking() -> void:
 
 	arena._on_player_died("Bot")
 	assert_eq(arena.bot_score, 100, "Bot score must increase on player death")
+
+	arena.queue_free()
+
+func test_map_and_mode_selection() -> void:
+	var arena = ArenaFPSMainScript.new()
+	arena.setup_scene()
+
+	# Map selection
+	arena.select_map("citadel")
+	assert_eq(arena.selected_map, "citadel", "Map selection must update to citadel")
+
+	arena.select_map("sektor")
+	assert_eq(arena.selected_map, "sektor", "Map selection must update to sektor")
+
+	arena.select_map("foundry")
+	assert_eq(arena.selected_map, "foundry", "Map selection must update to foundry")
+
+	# Game mode selection
+	arena.select_game_mode("tdm")
+	assert_eq(arena.selected_game_mode, "tdm", "Game mode must update to tdm")
+
+	arena.select_game_mode("control_point")
+	assert_eq(arena.selected_game_mode, "control_point", "Game mode must update to control_point")
+
+	arena.select_game_mode("survival")
+	assert_eq(arena.selected_game_mode, "survival", "Game mode must update to survival")
 
 	arena.queue_free()
 

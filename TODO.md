@@ -382,3 +382,54 @@
   - `artifacts/screenshots/visual_contact_sheet.png` & `artifacts/screenshots/contact_sheet.html`
   - `export/windows/VoltArena.exe` (Packaged Windows desktop executable)
   - `export/web/index.pck` & `export/web/index.wasm` (Cloudflare-compliant packaged Web build)
+
+### [2026-09-05 17:25:00 UTC] - Final P0 Gameplay + AAA-Stylized Visual/Content Rebuild & Empirical Certification
+- **Status**: COMPLETED
+- **Description**:
+  1. **Production 3D Art Rebuild**:
+     - Integrated 27 CC0 1.0 Universal glTF 2.0 models across characters, enemies, vehicles, weapons, and modular architecture.
+     - Replaced all procedural cubes, sphere-headed mannequins, and block weapons with authentic models referencing colormaps and skeletal hierarchies.
+     - Validated legal compliance in `assets/LICENSES.md` (100% CC0 public domain dedication).
+  2. **Nitro Kick (Rocket-Car Football)**:
+     - Rebuilt ball physics using `RigidBody3D` with continuous collision detection (`continuous_cd = true`), mass 12.0, bounce 0.85.
+     - Implemented direct momentum transfer and slide collision transfer from car bumper to ball.
+     - Added vehicle select and game mode select in UI and main scene.
+     - Automated kickoff-to-goal scoring flow verified passing.
+  3. **Drift Storm (Arcade Kart Racing)**:
+     - Implemented 3 distinct full circuits: Neon Circuit (night stadium with floodlights), Canyon Run (desert elevation & red mesas), Skyline Drift (metropolitan elevated highway).
+     - Upgraded vehicle visuals with CC0 truck, speeder, and kart models oriented forward along Godot's `-Z` convention.
+     - Track and kart selection buttons in HUD.
+     - 3 AI racers moving on 3-2-1-GO with pathfinding, minimap, and checkpoint recovery.
+  4. **Iron Crucible (Arena FPS)**:
+     - Integrated 3 cybernetic humanoid archetypes (Scout, Trooper, Heavy) with skeletal rigs and blended locomotion/combat animations.
+     - Rebuilt 5 weapon models (`Pulse Rifle`, `Scatter Cannon`, `Rail Driver`, `Grenade Launcher`, `Plasma Cutter`) with proper first-person handheld scaling (`0.30 - 0.44`) and recoil animations.
+     - 3 production maps (Industrial City, Orbital Station, Reactor Complex) with modular buildings.
+     - 5 game modes (Frag Race, TDM, Control Point, Artifact Capture, Survival).
+  5. **Metro Siege (Subway Survival FPS)**:
+     - Added passenger platform access stairs and ramps connecting sunken track bed to platform.
+     - Adjusted mutant spawn coordinates to the platform floor (`Y=0.5`), ensuring enemies spawn visibly and engage immediately on Wave 1.
+     - 5 distinct creature models (`Crawler`, `Spitter`, `Stalker`, `Brute`, `BioColossus`) with blended animations.
+     - 10-wave story objective progression, physical scrap gear drops, and kiosk terminal upgrades.
+  6. **Universal Launcher Responsive Layout**:
+     - Fixed horizontal overflow/cut-off of the Drift Storm card at 1280x720.
+     - Enforced responsive breakpoints: `>=1200px: 4 columns`, `768–1199px: 2x2 grid`, `<768px: 1 column`.
+     - Utilized `HFlowContainer` for tags and word-wrapped labels to guarantee cards fit within 299px width.
+  7. **Web Export & Cloudflare Limits**:
+     - Split both `index.wasm` and `index.pck` into `<= 18MB` chunks (`part00`, `part01`).
+     - Reassembler hook in `index.html` transparently reassembles streams for both WASM and PCK.
+     - All deployable files verified strictly `<= 25MB`.
+  8. **Desktop Build**:
+     - Compiled Windows `export/windows/VoltArena.exe` (109.6 MB) and Linux `export/linux/VoltArena.x86_64` (91.6 MB).
+  9. **Empirical Quality & Certification**:
+     - All 41 test suites passed with 858/858 assertions (100% pass rate) and 95.04% function coverage.
+     - Captured 49 real packaged WebGL Chromium runtime screenshots across all required states.
+     - All 53 visual screens passed all empirical quality gates (Resolution, Luminance [40-180], Contrast >= 25, Black% <= 12%).
+     - `scripts/certifier.py` exited with status `PASS` (11 Automatable PASS, 0 FAIL).
+- **Evidence**:
+  - `artifacts/test-results.json` (41 suites, 858 passed assertions, 0 failures)
+  - `artifacts/coverage-report.json` (95.04% function coverage)
+  - `artifacts/visual-audit.json` (53/53 screens PASS, 0 FAIL)
+  - `artifacts/production-certification.json` & `artifacts/production-certification.html` (Overall Status: PASS)
+  - `artifacts/screenshots/visual_contact_sheet.png` & `artifacts/screenshots/contact_sheet.html`
+  - `export/windows/VoltArena.exe` & `export/linux/VoltArena.x86_64`
+  - `export/web/index.html`, `index.js`, `index.pck.part00/01`, `index.wasm.part00/01`

@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 93.9890710382514,
+  "overall_coverage_pct": 100,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -33,8 +33,8 @@
     },
     "res://games/arena-fps/ui/arena_fps_hud.gd": {
       "coverage_pct": 100,
-      "tested": 2,
-      "total": 2,
+      "tested": 7,
+      "total": 7,
       "untested": []
     },
     "res://games/arena-fps/weapons/grenade_launcher.gd": {
@@ -86,12 +86,10 @@
       "untested": []
     },
     "res://games/kart-racing/kart/kart_controller.gd": {
-      "coverage_pct": 87.5,
-      "tested": 7,
+      "coverage_pct": 100,
+      "tested": 8,
       "total": 8,
-      "untested": [
-        "setup_kart_archetype"
-      ]
+      "untested": []
     },
     "res://games/kart-racing/kart_racing_main.gd": {
       "coverage_pct": 100,
@@ -119,8 +117,8 @@
     },
     "res://games/kart-racing/ui/drift_storm_hud.gd": {
       "coverage_pct": 100,
-      "tested": 12,
-      "total": 12,
+      "tested": 15,
+      "total": 15,
       "untested": []
     },
     "res://games/rocket-car/ai/car_ai.gd": {
@@ -130,12 +128,10 @@
       "untested": []
     },
     "res://games/rocket-car/arena/rocket_arena.gd": {
-      "coverage_pct": 88.8888888888889,
-      "tested": 8,
-      "total": 9,
-      "untested": [
-        "create_boost_orb"
-      ]
+      "coverage_pct": 100,
+      "tested": 11,
+      "total": 11,
+      "untested": []
     },
     "res://games/rocket-car/ball/ball.gd": {
       "coverage_pct": 100,
@@ -151,8 +147,8 @@
     },
     "res://games/rocket-car/ui/nitro_kick_hud.gd": {
       "coverage_pct": 100,
-      "tested": 10,
-      "total": 10,
+      "tested": 17,
+      "total": 17,
       "untested": []
     },
     "res://games/rocket-car/vehicle/car_controller.gd": {
@@ -162,14 +158,10 @@
       "untested": []
     },
     "res://games/subway-survival/enemies/bio_colossus.gd": {
-      "coverage_pct": 0,
-      "tested": 0,
+      "coverage_pct": 100,
+      "tested": 3,
       "total": 3,
-      "untested": [
-        "_init",
-        "setup_visuals",
-        "perform_attack"
-      ]
+      "untested": []
     },
     "res://games/subway-survival/enemies/brute.gd": {
       "coverage_pct": 100,
@@ -190,14 +182,10 @@
       "untested": []
     },
     "res://games/subway-survival/enemies/spitter.gd": {
-      "coverage_pct": 0,
-      "tested": 0,
+      "coverage_pct": 100,
+      "tested": 3,
       "total": 3,
-      "untested": [
-        "_init",
-        "setup_visuals",
-        "perform_attack"
-      ]
+      "untested": []
     },
     "res://games/subway-survival/enemies/stalker.gd": {
       "coverage_pct": 100,
@@ -212,12 +200,10 @@
       "untested": []
     },
     "res://games/subway-survival/maps/subway_generator.gd": {
-      "coverage_pct": 80,
-      "tested": 4,
+      "coverage_pct": 100,
+      "tested": 5,
       "total": 5,
-      "untested": [
-        "unlock_gate"
-      ]
+      "untested": []
     },
     "res://games/subway-survival/subway_main.gd": {
       "coverage_pct": 100,
@@ -227,8 +213,8 @@
     },
     "res://games/subway-survival/ui/metro_siege_hud.gd": {
       "coverage_pct": 100,
-      "tested": 14,
-      "total": 14,
+      "tested": 17,
+      "total": 17,
       "untested": []
     },
     "res://launcher/launcher.gd": {
@@ -298,24 +284,10 @@
       "untested": []
     },
     "res://shared/graphics/mesh_builder.gd": {
-      "coverage_pct": 53.5714285714286,
-      "tested": 15,
+      "coverage_pct": 100,
+      "tested": 28,
       "total": 28,
-      "untested": [
-        "build_spitter_mesh",
-        "build_colossus_boss_mesh",
-        "build_subway_car_mesh",
-        "build_stadium_goal_mesh",
-        "build_race_gantry_mesh",
-        "build_blast_door_mesh",
-        "build_upgrade_kiosk_mesh",
-        "build_boost_orb_mesh",
-        "build_scrap_gear_mesh",
-        "build_speed_demon_kart",
-        "build_drift_king_kart",
-        "build_turbo_tank_kart",
-        "build_start_gantry"
-      ]
+      "untested": []
     },
     "res://shared/graphics/procedural_animator.gd": {
       "coverage_pct": 100,
@@ -414,7 +386,7 @@
       "untested": []
     }
   },
-  "tested_functions": 344,
-  "timestamp": "2026-09-05T05:28:03",
-  "total_functions": 366
+  "tested_functions": 386,
+  "timestamp": "2026-09-05T06:01:59",
+  "total_functions": 386
 }

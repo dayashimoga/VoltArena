@@ -15,6 +15,8 @@ var intermission_label: Label
 var toast_container: VBoxContainer
 var crosshair: Control
 var touch_controls: TouchControls
+var onboarding_overlay: PanelContainer
+var objective_badge: Label
 
 var crosshair_spread: float = 8.0
 
@@ -24,6 +26,7 @@ func _ready() -> void:
 	mouse_filter = MOUSE_FILTER_IGNORE
 	theme = ThemeGenerator.get_theme()
 	setup_hud_layout()
+	setup_onboarding_overlay()
 	connect_bus_signals()
 	check_mobile_controls()
 
@@ -111,10 +114,10 @@ func setup_hud_layout() -> void:
 	var top_panel = PanelContainer.new()
 	top_panel.anchor_left = 0.5
 	top_panel.anchor_right = 0.5
-	top_panel.offset_left = -160
-	top_panel.offset_top = 20
-	top_panel.offset_right = 160
-	top_panel.offset_bottom = 76
+	top_panel.offset_left = -200
+	top_panel.offset_top = 18
+	top_panel.offset_right = 200
+	top_panel.offset_bottom = 102
 	add_child(top_panel)
 
 	var top_vbox = VBoxContainer.new()
@@ -132,7 +135,7 @@ func setup_hud_layout() -> void:
 	top_vbox.add_child(stats_hbox)
 
 	threats_label = Label.new()
-	threats_label.text = "THREATS: 0"
+	threats_label.text = "THREATS: 10 INCOMING"
 	threats_label.modulate = Color(1.0, 0.7, 0.7)
 	stats_hbox.add_child(threats_label)
 
@@ -145,14 +148,21 @@ func setup_hud_layout() -> void:
 	scrap_label.modulate = Color(0.4, 1.0, 0.6)
 	stats_hbox.add_child(scrap_label)
 
+	objective_badge = Label.new()
+	objective_badge.text = "OBJECTIVE: SURVIVE 10 WAVES & EXTRACT"
+	objective_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	objective_badge.add_theme_font_size_override("font_size", 12)
+	objective_badge.modulate = Color(0.9, 0.95, 1.0, 0.85)
+	top_vbox.add_child(objective_badge)
+
 	# Intermission Banner
 	intermission_panel = PanelContainer.new()
 	intermission_panel.anchor_left = 0.5
 	intermission_panel.anchor_right = 0.5
 	intermission_panel.offset_left = -220
-	intermission_panel.offset_top = 84
+	intermission_panel.offset_top = 106
 	intermission_panel.offset_right = 220
-	intermission_panel.offset_bottom = 124
+	intermission_panel.offset_bottom = 146
 	intermission_panel.visible = false
 	add_child(intermission_panel)
 
@@ -256,3 +266,92 @@ func show_toast(msg: String, col: Color = Color.WHITE) -> void:
 	var tween = create_tween()
 	tween.tween_property(lbl, "modulate:a", 0.0, 2.5).set_delay(1.5)
 	tween.tween_callback(lbl.queue_free)
+
+func setup_onboarding_overlay() -> void:
+	onboarding_overlay = PanelContainer.new()
+	onboarding_overlay.name = "OnboardingOverlay"
+	onboarding_overlay.anchor_left = 0.5
+	onboarding_overlay.anchor_top = 0.5
+	onboarding_overlay.anchor_right = 0.5
+	onboarding_overlay.anchor_bottom = 0.5
+	onboarding_overlay.offset_left = -330
+	onboarding_overlay.offset_top = -180
+	onboarding_overlay.offset_right = 330
+	onboarding_overlay.offset_bottom = 180
+	add_child(onboarding_overlay)
+
+	var vbox = VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 8)
+	onboarding_overlay.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "METRO SIEGE — SUBWAY SURVIVAL"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 22)
+	title.modulate = Color(1.0, 0.35, 0.25)
+	vbox.add_child(title)
+
+	var sub = Label.new()
+	sub.text = "UNDERGROUND STATION SURVIVAL OUTPOST"
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.add_theme_font_size_override("font_size", 15)
+	sub.modulate = Color(0.8, 0.85, 0.95)
+	vbox.add_child(sub)
+
+	var obj_lbl = Label.new()
+	obj_lbl.text = "OBJECTIVE: SURVIVE 10 ESCALATING WAVES & EXTRACT VIA THE TRAIN!"
+	obj_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	obj_lbl.add_theme_font_size_override("font_size", 14)
+	obj_lbl.modulate = Color(1.0, 0.85, 0.2)
+	vbox.add_child(obj_lbl)
+
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+
+	var ctrl_grid = GridContainer.new()
+	ctrl_grid.columns = 2
+	ctrl_grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	vbox.add_child(ctrl_grid)
+
+	var controls_data = [
+		["WASD", "Move & Strafe Locomotion"],
+		["MOUSE", "Aim / Look & Recoil Control"],
+		["LEFT CLICK", "Fire Equipped Weapon"],
+		["RIGHT CLICK", "Aim Down Sights (ADS)"],
+		["1 - 5 / WHEEL", "Switch Weapons (Pulse, Scatter, Rail, Grenade, Plasma)"],
+		["SPACE / SHIFT", "Jump / Sprint Locomotion"]
+	]
+	for c in controls_data:
+		var k = Label.new()
+		k.text = c[0] + "  "
+		k.modulate = Color(0.0, 1.0, 0.8)
+		k.add_theme_font_size_override("font_size", 13)
+		ctrl_grid.add_child(k)
+
+		var a = Label.new()
+		a.text = c[1]
+		a.modulate = Color.WHITE
+		a.add_theme_font_size_override("font_size", 13)
+		ctrl_grid.add_child(a)
+
+	var prompt_lbl = Label.new()
+	prompt_lbl.text = "WAVE 1 INCOMING (PRESS ANY KEY OR SPACE TO DISMISS)"
+	prompt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	prompt_lbl.add_theme_font_size_override("font_size", 12)
+	prompt_lbl.modulate = Color(0.7, 0.85, 0.95)
+	vbox.add_child(prompt_lbl)
+
+func dismiss_onboarding() -> void:
+	if not is_instance_valid(onboarding_overlay) or not onboarding_overlay.visible:
+		return
+	var tween = create_tween()
+	tween.tween_property(onboarding_overlay, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(func():
+		onboarding_overlay.visible = false
+	)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if is_instance_valid(onboarding_overlay) and onboarding_overlay.visible:
+		if (event is InputEventKey and event.pressed) or (event is InputEventMouseButton and event.pressed):
+			dismiss_onboarding()

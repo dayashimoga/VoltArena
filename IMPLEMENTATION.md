@@ -64,4 +64,24 @@ VoltArena was developed in a multi-phase engineering process adhering strictly t
 * Created 16 matched pairs of `.sh` and `.ps1` scripts for environment setup, building, testing, benchmarking, packaging, and deployment using Podman.
 
 ### Phase 10: Production Certification
-* Executed end-to-end certification pipeline validating all 6 gates and generating `production-certification.json` and `production-certification.html`.
+* Executed end-to-end certification pipeline validating all gates and generating `production-certification.json` and `production-certification.html`.
+
+### Phase 11: Final Production Gameplay & Visual/UX Overhaul
+* **Nitro Kick Sports Readability**:
+  - Rebuilt `setup_stadium_lighting()` with ACES tonemapping, dedicated sun `DirectionalLight3D` (energy 2.4), and 4 corner light towers, completely eliminating dark voids and crushed blacks.
+  - Implemented painted white pitch markings: center line, 24-segment center circle, center spot, penalty boxes, goal area boxes, penalty spots, and blue/orange half perimeter glow rings in `rocket_arena.gd`.
+  - Added off-screen screen-space ball tracker arrow with Euclidean distance in meters (`update_ball_tracker()`) in `nitro_kick_hud.gd`.
+  - Added 3-2-1 kickoff countdown and 3-goal win loop in `rocket_car_main.gd`.
+* **Metro Siege Escalation & Clear Threat State**:
+  - Wave 1 immediately communicates active threat count ("SURVIVE — 10 HOSTILES INCOMING"), eliminating unexplained idle states.
+  - Added sector unlock toasts (Wave 3 Maintenance Bay, Wave 7 Highline Junction, Wave 10 Extraction Train).
+  - Tested Spitter and BioColossus boss encounters.
+* **Iron Crucible Match Flow**:
+  - Added active match objective banner ("RACE TO 20 FRAGS") with live player vs. enemy score differential.
+  - Added 3-2-1-FIGHT countdown sequence before bot engagement.
+* **Drift Storm Race Readability**:
+  - Added starting lights countdown sequence and active race objective badge ("COMPLETE 3 LAPS — FINISH 1ST").
+  - Fixed safe area logic to ensure 4 cards are permanently visible in launcher.
+* **Quality & Test Coverage Gate**:
+  - Achieved **100.0% function coverage (386 / 386 functions)** and **810 passed assertions across 40 test suites (0 failures)**.
+  - Verified live in-browser on `http://localhost:8080/` with headless Chromium subagent.

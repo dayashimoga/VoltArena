@@ -18,17 +18,26 @@ Upon launching VoltArena, you are greeted by the 3D Holographic Menu:
 
 ---
 
-## 3. In-Game Interface (HUD)
+## 3. In-Game Interface (HUD) & Onboarding
 
-Each game shares a standardized, high-contrast neon HUD designed for maximum readability:
+Each game features an immediate pre-match onboarding sequence and high-contrast HUD:
+* **Pre-Match Onboarding Overlay**:
+  * On first launching any game, a dedicated modal presents the game premise, victory objective, and a 2-column controls guide.
+  * Dismisses automatically after a brief preview or immediately upon pressing any key, `Space`, or mouse button.
+* **Active Objective Badges (Top-Center)**:
+  * **Iron Crucible**: `RACE TO 20 FRAGS | YOU: X vs ENEMIES: Y`
+  * **Metro Siege**: `OBJECTIVE: SURVIVE 10 WAVES & EXTRACT` (with real-time threat count)
+  * **Nitro Kick**: `OBJECTIVE: SCORE 3 GOALS IN ORANGE GOAL`
+  * **Drift Storm**: `OBJECTIVE: COMPLETE 3 LAPS — FINISH 1ST`
+* **Off-Screen Ball Tracker (Nitro Kick)**:
+  * An intelligent screen-space arrow (`▲`, `▼`, `◄`, `►`) tracks the ball position around the screen border when out of view.
+  * Real-time distance label shows Euclidean distance (e.g. `BALL 28m`) for optimal positioning.
 * **Health & Armor Bars (Bottom-Left)**:
   * **Cyan / Red Bar**: Current health status ($0-100\%$). Turns red when in critical danger.
   * **Blue / Magenta Bar**: Shield armor status ($0-100\%$). Armor absorbs $65\%$ of incoming damage.
 * **Ammunition & Boost (Bottom-Right)**:
   * **FPS Games**: Shows current clip rounds and reserve ammo pool (e.g. `30 / 120`). Displays a blinking `RELOADING...` indicator during reload cycles.
   * **Vehicular Games**: Shows current nitrous boost reserves ($0-100\%$).
-* **Match Status (Top-Center)**:
-  * Shows remaining match time, current wave number, score, or lap countdown.
 * **Notification Toasts (Top-Left)**:
   * Displays dynamic messages such as `"WAVE 1 STARTED"`, `"KICKOFF!"`, `"LAP 2 / 3"`, and `"YOU WERE ELIMINATED!"`.
 

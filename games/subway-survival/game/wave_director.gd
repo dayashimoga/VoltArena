@@ -39,7 +39,7 @@ var spawn_positions = [
 ]
 
 func _ready() -> void:
-	state_timer = 3.0 # Initial preparation time
+	state_timer = 0.5 # Fast preparation time
 
 func _process(delta: float) -> void:
 	match current_state:
@@ -61,7 +61,12 @@ func start_next_wave() -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.wave_started.emit(current_wave, enemies_to_spawn.size())
-		bus.show_toast_requested.emit("WAVE %d INCOMING!" % current_wave, Color(1.0, 0.2, 0.2))
+		var wave_msg = "SURVIVE — %d HOSTILES INCOMING!" % enemies_to_spawn.size()
+		if current_wave == 10:
+			wave_msg = "WARNING: BIOGIGAS COLOSSUS DETECTED! FINAL WAVE!"
+		elif current_wave == 5:
+			wave_msg = "ALERT: ENRAGED MINIBOSSES INCOMING!"
+		bus.show_toast_requested.emit(wave_msg, Color(1.0, 0.25, 0.25))
 
 	wave_started.emit(current_wave, enemies_to_spawn.size())
 
@@ -151,9 +156,6 @@ func clean_dead_enemies() -> void:
 	active_enemies = alive
 
 func finish_current_wave() -> void:
-	current_state = WaveState.INTERMISSION
-	state_timer = intermission_duration
-
 	var bonus = current_wave * 250
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
@@ -161,6 +163,20 @@ func finish_current_wave() -> void:
 		bus.show_toast_requested.emit("WAVE %d SURVIVED! +%d PTS" % [current_wave, bonus], Color(0.0, 1.0, 0.5))
 
 	wave_completed.emit(current_wave, bonus)
+
+	if current_wave >= max_waves:
+		if bus:
+			bus.show_toast_requested.emit("ALL 10 WAVES DEFEATED — REACH EXTRACTION TRAIN!", Color(0.1, 1.0, 0.8))
+		all_waves_defeated.emit()
+		return
+
+	current_state = WaveState.INTERMISSION
+	state_timer = intermission_duration
+
+	if current_wave == 3 and bus:
+		bus.show_toast_requested.emit("SECTOR 2 (MAINTENANCE BAY) UNLOCKED! SUPPLY CRATE ARRIVED!", Color(0.2, 0.85, 1.0))
+	elif current_wave == 7 and bus:
+		bus.show_toast_requested.emit("SECTOR 3 (HIGHLINE JUNCTION) UNLOCKED! UPGRADE TERMINAL READY!", Color(1.0, 0.85, 0.2))
 
 	# Spawn intermission health & ammo drop on the platform
 	var p_health = PickupBase.new()

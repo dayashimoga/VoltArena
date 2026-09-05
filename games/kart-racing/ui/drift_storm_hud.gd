@@ -18,6 +18,8 @@ var finish_panel: PanelContainer
 var finish_label: Label
 var toast_container: VBoxContainer
 var touch_controls: TouchControls
+var objective_badge: Label
+var onboarding_overlay: PanelContainer
 
 func _ready() -> void:
 	anchor_right = 1.0
@@ -25,6 +27,7 @@ func _ready() -> void:
 	mouse_filter = MOUSE_FILTER_IGNORE
 	theme = ThemeGenerator.get_theme()
 	setup_hud_layout()
+	setup_onboarding_overlay()
 	check_mobile_controls()
 
 func setup_hud_layout() -> void:
@@ -56,6 +59,24 @@ func setup_hud_layout() -> void:
 	lap_label.add_theme_font_size_override("font_size", 18)
 	lap_label.modulate = Color(0.2, 0.9, 1.0)
 	pos_vbox.add_child(lap_label)
+
+	# Top Center: Active Race Objective Badge
+	var obj_panel = PanelContainer.new()
+	obj_panel.anchor_left = 0.5
+	obj_panel.anchor_right = 0.5
+	obj_panel.offset_left = -210
+	obj_panel.offset_top = 20
+	obj_panel.offset_right = 210
+	obj_panel.offset_bottom = 58
+	add_child(obj_panel)
+
+	objective_badge = Label.new()
+	objective_badge.text = "OBJECTIVE: COMPLETE 3 LAPS — FINISH 1ST"
+	objective_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	objective_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	objective_badge.add_theme_font_size_override("font_size", 13)
+	objective_badge.modulate = Color(0.9, 0.95, 1.0)
+	obj_panel.add_child(objective_badge)
 
 	# Top Right: Times & Powerup
 	var right_panel = PanelContainer.new()
@@ -282,6 +303,93 @@ func show_toast(msg: String, col: Color = Color.WHITE) -> void:
 	var tween = create_tween()
 	tween.tween_property(lbl, "modulate:a", 0.0, 2.5).set_delay(1.5)
 	tween.tween_callback(lbl.queue_free)
+
+func setup_onboarding_overlay() -> void:
+	onboarding_overlay = PanelContainer.new()
+	onboarding_overlay.name = "OnboardingOverlay"
+	onboarding_overlay.anchor_left = 0.5
+	onboarding_overlay.anchor_top = 0.5
+	onboarding_overlay.anchor_right = 0.5
+	onboarding_overlay.anchor_bottom = 0.5
+	onboarding_overlay.offset_left = -330
+	onboarding_overlay.offset_top = -180
+	onboarding_overlay.offset_right = 330
+	onboarding_overlay.offset_bottom = 180
+	add_child(onboarding_overlay)
+
+	var vbox = VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 8)
+	onboarding_overlay.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "DRIFT STORM — ARCADE KART RACING"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 22)
+	title.modulate = Color(0.2, 0.9, 1.0)
+	vbox.add_child(title)
+
+	var sub = Label.new()
+	sub.text = "HIGH-OCTANE DRIFT CIRCUIT"
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.add_theme_font_size_override("font_size", 15)
+	sub.modulate = Color(0.8, 0.85, 0.95)
+	vbox.add_child(sub)
+
+	var obj_lbl = Label.new()
+	obj_lbl.text = "OBJECTIVE: COMPLETE 3 LAPS — CROSS THE FINISH LINE 1ST!"
+	obj_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	obj_lbl.add_theme_font_size_override("font_size", 14)
+	obj_lbl.modulate = Color(1.0, 0.85, 0.2)
+	vbox.add_child(obj_lbl)
+
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+
+	var ctrl_grid = GridContainer.new()
+	ctrl_grid.columns = 2
+	ctrl_grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	vbox.add_child(ctrl_grid)
+
+	var controls_data = [
+		["W / S", "Accelerate / Reverse & Brake"],
+		["A / D", "Steering Left / Right"],
+		["SHIFT", "Drift (Hold through turns for Mini-Turbo Sparks)"],
+		["SPACE", "Activate Collected PowerUp (Boost/Shield/EMP)"]
+	]
+	for c in controls_data:
+		var k = Label.new()
+		k.text = c[0] + "  "
+		k.modulate = Color(0.0, 1.0, 0.8)
+		k.add_theme_font_size_override("font_size", 13)
+		ctrl_grid.add_child(k)
+
+		var a = Label.new()
+		a.text = c[1]
+		a.modulate = Color.WHITE
+		a.add_theme_font_size_override("font_size", 13)
+		ctrl_grid.add_child(a)
+
+	var prompt_lbl = Label.new()
+	prompt_lbl.text = "RACE STARTING (PRESS ANY KEY OR SPACE TO START)"
+	prompt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	prompt_lbl.add_theme_font_size_override("font_size", 12)
+	prompt_lbl.modulate = Color(0.7, 0.85, 0.95)
+	vbox.add_child(prompt_lbl)
+
+func dismiss_onboarding() -> void:
+	if not is_instance_valid(onboarding_overlay) or not onboarding_overlay.visible:
+		return
+	var tween = create_tween()
+	tween.tween_property(onboarding_overlay, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(func():
+		onboarding_overlay.visible = false
+	)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if is_instance_valid(onboarding_overlay) and onboarding_overlay.visible:
+		if (event is InputEventKey and event.pressed) or (event is InputEventMouseButton and event.pressed):
+			dismiss_onboarding()
 
 func _format_time(sec: float) -> String:
 	var mins = int(sec) / 60

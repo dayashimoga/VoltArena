@@ -227,6 +227,23 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.emission_enabled = true
 			mat.emission = Color(0.8, 0.2, 1.0)
 			mat.emission_energy_multiplier = 2.8
+		"pitch_line_white":
+			mat.albedo_color = Color(0.98, 0.98, 0.98)
+			mat.roughness = 0.8
+			mat.metallic = 0.0
+			mat.emission_enabled = true
+			mat.emission = Color(0.95, 0.95, 0.95)
+			mat.emission_energy_multiplier = 0.35
+		"pitch_blue_zone":
+			mat.albedo_color = Color(0.1, 0.6, 0.9)
+			mat.emission_enabled = true
+			mat.emission = Color(0.0, 0.7, 1.0)
+			mat.emission_energy_multiplier = 1.2
+		"pitch_orange_zone":
+			mat.albedo_color = Color(0.9, 0.45, 0.1)
+			mat.emission_enabled = true
+			mat.emission = Color(1.0, 0.45, 0.0)
+			mat.emission_energy_multiplier = 1.2
 		_:
 			mat.albedo_color = Color(0.7, 0.7, 0.7)
 			mat.metallic = 0.5

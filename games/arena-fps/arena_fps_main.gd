@@ -83,6 +83,36 @@ func setup_scene() -> void:
 		bot.setup_weapon()
 		bots.append(bot)
 
+	# Initialize HUD Objective & 3-2-1 Fight Countdown
+	if hud and hud.has_method("update_objective"):
+		hud.update_objective(0, 0, target_kills_to_win)
+	if hud and hud.has_method("show_countdown"):
+		hud.show_countdown(3)
+
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		am.play_sound("countdown_tick", 1.0)
+
+	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree:
+		tree.create_timer(1.0).timeout.connect(func():
+			if hud and hud.has_method("show_countdown"):
+				hud.show_countdown(2)
+			if am: am.play_sound("countdown_tick", 1.0)
+		)
+		tree.create_timer(2.0).timeout.connect(func():
+			if hud and hud.has_method("show_countdown"):
+				hud.show_countdown(1)
+			if am: am.play_sound("countdown_tick", 1.0)
+		)
+		tree.create_timer(3.0).timeout.connect(func():
+			if hud and hud.has_method("show_countdown"):
+				hud.show_countdown(0)
+			if hud and hud.has_method("dismiss_onboarding"):
+				hud.dismiss_onboarding()
+			if am: am.play_sound("countdown_go", 1.2)
+		)
+
 func connect_events() -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
@@ -104,8 +134,12 @@ func _process(delta: float) -> void:
 func _on_enemy_killed(_type: String, score_val: int) -> void:
 	player_score += score_val
 	var frags_count = player_score / 100
-	if hud and hud.has_method("update_frags"):
+	var enemy_frags = bot_score / 100
+	if hud and hud.has_method("update_objective"):
+		hud.update_objective(frags_count, enemy_frags, target_kills_to_win)
+	elif hud and hud.has_method("update_frags"):
 		hud.update_frags(frags_count, target_kills_to_win)
+
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.score_updated.emit(0, player_score)
@@ -125,9 +159,18 @@ func _on_enemy_killed(_type: String, score_val: int) -> void:
 
 func _on_player_died(_killer: String) -> void:
 	bot_score += 100
+	var frags_count = player_score / 100
+	var enemy_frags = bot_score / 100
+	if hud and hud.has_method("update_objective"):
+		hud.update_objective(frags_count, enemy_frags, target_kills_to_win)
+
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.show_toast_requested.emit("YOU WERE ELIMINATED! RESPAWNING...", Color(1.0, 0.2, 0.2))
+
+	if enemy_frags >= target_kills_to_win:
+		end_match()
+		return
 
 	# Respawn player after 2.5s
 	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)

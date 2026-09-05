@@ -15,15 +15,28 @@ The automated test runner is located at `tests/runner.gd`. When executed, it run
 
 ```
 tests/runner.gd
-├── 1. TestHealthComponent      (Unit Suite: 10 assertions)
-├── 2. TestWeapons              (Unit Suite: 11 assertions)
-├── 3. TestCarPhysics           (Unit Suite:  3 assertions)
-├── 4. TestRaceManager          (Unit Suite:  5 assertions)
-├── 5. TestSaveManager          (Unit Suite:  9 assertions)
-├── 6. TestWaveDirector         (Unit Suite:  6 assertions)
-└── 7. TestPlatformAcceptance   (Acceptance Suite: 19 assertions)
+├── Unit Test Suites (30 Suites, 483 assertions)
+│   ├── TestHealthComponent, TestWeapons, TestCarPhysics, TestRaceManager, TestSaveManager
+│   ├── TestWaveDirector, TestInputManager, TestAudioManager, TestQualityManager, TestEventBus
+│   ├── TestMaterialGenerator, TestArenaBot, TestEnemyBase, TestKartController, TestBallPhysics
+│   ├── TestSaveCorruption, TestSettingsManager, TestTelemetryManager, TestPlatformAdapter
+│   ├── TestPhysicsHelpers, TestAIBase, TestProjectile, TestPickupBase, TestMapGenerators
+│   ├── TestUISystems, TestGameManager, TestFXFactory, TestMeshBuilder, TestLauncherArt
+│   └── TestNodePool, TestProceduralAnimator
+├── Responsive & Soak Suites (2 Suites, 100 assertions)
+│   ├── TestResponsiveUI (95 assertions across 5 resolutions)
+│   └── TestSoak (5 full lifecycle clean runs)
+├── E2E Gameplay Test Suites (6 Suites, 208 assertions)
+│   ├── TestArenaE2E (48 assertions)
+│   ├── TestSubwayE2E (29 assertions)
+│   ├── TestRocketE2E (29 assertions)
+│   ├── TestKartE2E (31 assertions)
+│   ├── TestLauncherE2E (56 assertions)
+│   └── TestGameplayScreens (32 assertions)
+└── Legacy Acceptance Suite (1 Suite, 19 assertions)
+    └── TestPlatformAcceptance (19 assertions)
 ─────────────────────────────────────────────────────────────
-Total: 63 Assertions (100% Success, 94.4% Code Coverage)
+Total: 40 Suites, 810 Assertions (100% Success, 100.0% Function Coverage: 386/386)
 ```
 
 ---

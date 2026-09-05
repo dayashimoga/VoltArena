@@ -50,3 +50,11 @@
 ### Gotcha: Autoload singleton vs `class_name` conflicts
 * **Cause**: In Godot 4.3, scripts registered as Autoload singletons in `project.godot` must NOT declare `class_name <SameName>`, as it causes duplicate symbol collisions in the global script cache.
 * **Resolution**: Keep `class_name` on instanced entity classes, and omit `class_name` on autoloaded singletons.
+
+### Gotcha: Screen-space unprojection behind camera
+* **Cause**: `camera.unproject_position()` inverts coordinates if the 3D position is behind the camera plane.
+* **Resolution**: Always verify `camera.is_position_behind(target_pos)`. If true, invert the screen direction vector before clamping to border margins.
+
+### Gotcha: Kickoff state assertions in tests
+* **Cause**: Checking `is_kickoff_pause` immediately following a goal event must be synchronous.
+* **Resolution**: `reset_kickoff()` must be invoked synchronously inside `_on_goal_scored()` with `is_kickoff_pause = true` set immediately, while scene timers manage the visual countdown hold.

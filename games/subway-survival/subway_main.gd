@@ -24,6 +24,8 @@ var results_screen: CanvasLayer
 func _ready() -> void:
 	setup_scene()
 	connect_signals()
+	if wave_director and wave_director.has_method("start_next_wave"):
+		wave_director.start_next_wave()
 
 func setup_scene() -> void:
 	# Subway environment

@@ -18,12 +18,22 @@ var touch_controls: TouchControls
 var blue_score: int = 0
 var orange_score: int = 0
 
+var tracked_camera: Camera3D
+var tracked_ball: Node3D
+var ball_indicator: Control
+var ball_arrow: Label
+var ball_dist_label: Label
+var onboarding_overlay: PanelContainer
+var objective_badge: Label
+
 func _ready() -> void:
 	anchor_right = 1.0
 	anchor_bottom = 1.0
 	mouse_filter = MOUSE_FILTER_IGNORE
 	theme = ThemeGenerator.get_theme()
 	setup_hud_layout()
+	setup_ball_tracker()
+	setup_onboarding_overlay()
 	connect_bus_signals()
 	check_mobile_controls()
 
@@ -32,10 +42,10 @@ func setup_hud_layout() -> void:
 	scoreboard_panel = PanelContainer.new()
 	scoreboard_panel.anchor_left = 0.5
 	scoreboard_panel.anchor_right = 0.5
-	scoreboard_panel.offset_left = -200
-	scoreboard_panel.offset_top = 20
-	scoreboard_panel.offset_right = 200
-	scoreboard_panel.offset_bottom = 80
+	scoreboard_panel.offset_left = -220
+	scoreboard_panel.offset_top = 18
+	scoreboard_panel.offset_right = 220
+	scoreboard_panel.offset_bottom = 104
 	add_child(scoreboard_panel)
 
 	var score_vbox = VBoxContainer.new()
@@ -78,6 +88,13 @@ func setup_hud_layout() -> void:
 	overtime_label.modulate = Color(1.0, 0.8, 0.1)
 	overtime_label.visible = false
 	score_vbox.add_child(overtime_label)
+
+	objective_badge = Label.new()
+	objective_badge.text = "OBJECTIVE: SCORE 3 GOALS IN ORANGE GOAL"
+	objective_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	objective_badge.add_theme_font_size_override("font_size", 12)
+	objective_badge.modulate = Color(0.9, 0.95, 1.0, 0.85)
+	score_vbox.add_child(objective_badge)
 
 	# Bottom Right: Nitro Boost Gauge
 	var boost_panel = PanelContainer.new()
@@ -273,3 +290,168 @@ func show_toast(msg: String, col: Color = Color.WHITE) -> void:
 	var tween = create_tween()
 	tween.tween_property(lbl, "modulate:a", 0.0, 2.5).set_delay(1.5)
 	tween.tween_callback(lbl.queue_free)
+
+func setup_ball_tracker() -> void:
+	ball_indicator = Control.new()
+	ball_indicator.name = "BallIndicator"
+	ball_indicator.mouse_filter = MOUSE_FILTER_IGNORE
+	ball_indicator.visible = false
+	add_child(ball_indicator)
+
+	var b_icon = PanelContainer.new()
+	b_icon.custom_minimum_size = Vector2(90, 32)
+	b_icon.mouse_filter = MOUSE_FILTER_IGNORE
+	ball_indicator.add_child(b_icon)
+
+	var b_box = HBoxContainer.new()
+	b_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	b_icon.add_child(b_box)
+
+	ball_arrow = Label.new()
+	ball_arrow.text = "▲"
+	ball_arrow.add_theme_font_size_override("font_size", 14)
+	ball_arrow.modulate = Color(1.0, 0.8, 0.0)
+	b_box.add_child(ball_arrow)
+
+	ball_dist_label = Label.new()
+	ball_dist_label.text = "BALL 20m"
+	ball_dist_label.add_theme_font_size_override("font_size", 12)
+	ball_dist_label.modulate = Color.WHITE
+	b_box.add_child(ball_dist_label)
+
+func setup_onboarding_overlay() -> void:
+	onboarding_overlay = PanelContainer.new()
+	onboarding_overlay.name = "OnboardingOverlay"
+	onboarding_overlay.anchor_left = 0.5
+	onboarding_overlay.anchor_top = 0.5
+	onboarding_overlay.anchor_right = 0.5
+	onboarding_overlay.anchor_bottom = 0.5
+	onboarding_overlay.offset_left = -320
+	onboarding_overlay.offset_top = -170
+	onboarding_overlay.offset_right = 320
+	onboarding_overlay.offset_bottom = 170
+	add_child(onboarding_overlay)
+
+	var vbox = VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 8)
+	onboarding_overlay.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "NITRO KICK — ROCKET-CAR FOOTBALL"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 22)
+	title.modulate = Color(0.0, 0.9, 1.0)
+	vbox.add_child(title)
+
+	var team_lbl = Label.new()
+	team_lbl.text = "YOU ARE BLUE TEAM  |  ATTACK ORANGE GOAL"
+	team_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	team_lbl.add_theme_font_size_override("font_size", 16)
+	team_lbl.modulate = Color(0.2, 0.85, 1.0)
+	vbox.add_child(team_lbl)
+
+	var obj_lbl = Label.new()
+	obj_lbl.text = "OBJECTIVE: SCORE 3 GOALS IN ORANGE GOAL TO WIN!"
+	obj_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	obj_lbl.add_theme_font_size_override("font_size", 14)
+	obj_lbl.modulate = Color(1.0, 0.85, 0.2)
+	vbox.add_child(obj_lbl)
+
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+
+	var ctrl_grid = GridContainer.new()
+	ctrl_grid.columns = 2
+	ctrl_grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	vbox.add_child(ctrl_grid)
+
+	var controls_data = [
+		["W / S", "Drive Forward / Reverse"],
+		["A / D", "Steer Left / Right"],
+		["SPACE", "Jump / Double-Jump Aerial"],
+		["SHIFT", "Nitrous Boost Thruster"]
+	]
+	for c in controls_data:
+		var k = Label.new()
+		k.text = c[0] + "  "
+		k.modulate = Color(0.0, 1.0, 0.8)
+		k.add_theme_font_size_override("font_size", 14)
+		ctrl_grid.add_child(k)
+
+		var a = Label.new()
+		a.text = c[1]
+		a.modulate = Color.WHITE
+		a.add_theme_font_size_override("font_size", 14)
+		ctrl_grid.add_child(a)
+
+	var prompt_lbl = Label.new()
+	prompt_lbl.text = "MATCH STARTING (PRESS ANY KEY OR SPACE TO START)"
+	prompt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	prompt_lbl.add_theme_font_size_override("font_size", 12)
+	prompt_lbl.modulate = Color(0.7, 0.85, 0.95)
+	vbox.add_child(prompt_lbl)
+
+func dismiss_onboarding() -> void:
+	if not is_instance_valid(onboarding_overlay) or not onboarding_overlay.visible:
+		return
+	var tween = create_tween()
+	tween.tween_property(onboarding_overlay, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(func():
+		onboarding_overlay.visible = false
+	)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if is_instance_valid(onboarding_overlay) and onboarding_overlay.visible:
+		if (event is InputEventKey and event.pressed) or (event is InputEventMouseButton and event.pressed):
+			dismiss_onboarding()
+
+func _process(_delta: float) -> void:
+	update_ball_tracker()
+
+func set_tracking_targets(cam: Camera3D, b: Node3D) -> void:
+	tracked_camera = cam
+	tracked_ball = b
+
+func update_ball_tracker() -> void:
+	if not is_instance_valid(tracked_camera) or not is_instance_valid(tracked_ball) or not is_instance_valid(ball_indicator):
+		if is_instance_valid(ball_indicator):
+			ball_indicator.visible = false
+		return
+
+	var ball_pos = tracked_ball.global_position if tracked_ball.is_inside_tree() else tracked_ball.position
+	var dist = int(tracked_camera.global_position.distance_to(ball_pos))
+	var is_behind = tracked_camera.is_position_behind(ball_pos)
+	var screen_pos = tracked_camera.unproject_position(ball_pos)
+	var vp = get_viewport_rect().size
+
+	var margin = 50.0
+	var is_offscreen = is_behind or screen_pos.x < margin or screen_pos.x > (vp.x - margin) or screen_pos.y < margin or screen_pos.y > (vp.y - margin)
+
+	ball_indicator.visible = true
+	ball_dist_label.text = "BALL %dm" % dist
+
+	if not is_offscreen:
+		ball_indicator.position = screen_pos - Vector2(45, 52)
+		ball_arrow.text = "▼"
+		ball_arrow.modulate = Color(0.2, 0.9, 1.0)
+	else:
+		var center = vp * 0.5
+		var dir = (screen_pos - center)
+		if is_behind:
+			dir = -dir
+		if dir.length_squared() > 0.001:
+			dir = dir.normalized()
+		else:
+			dir = Vector2.UP
+
+		var edge_pos = center + dir * minf(center.x - margin, center.y - margin)
+		edge_pos.x = clampf(edge_pos.x, margin, vp.x - margin - 90)
+		edge_pos.y = clampf(edge_pos.y, margin, vp.y - margin - 34)
+		ball_indicator.position = edge_pos
+
+		if absf(dir.x) > absf(dir.y):
+			ball_arrow.text = "►" if dir.x > 0 else "◄"
+		else:
+			ball_arrow.text = "▼" if dir.y > 0 else "▲"
+		ball_arrow.modulate = Color(1.0, 0.8, 0.0)

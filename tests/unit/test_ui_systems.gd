@@ -61,7 +61,11 @@ func get_coverage_entries() -> Array:
 		],
 		[
 			"res://games/arena-fps/ui/arena_fps_hud.gd",
-			["setup_hud_layout", "update_frags"]
+			[
+				"setup_hud_layout", "update_frags", "update_objective",
+				"show_countdown", "setup_onboarding_overlay",
+				"dismiss_onboarding", "_unhandled_input"
+			]
 		],
 		[
 			"res://games/subway-survival/ui/metro_siege_hud.gd",
@@ -69,7 +73,8 @@ func get_coverage_entries() -> Array:
 				"_ready", "setup_hud_layout", "connect_bus_signals", "check_mobile_controls",
 				"set_crosshair_spread", "update_health", "update_armor", "update_ammo",
 				"update_weapon", "update_wave", "update_threats", "update_scrap",
-				"show_intermission", "show_toast"
+				"show_intermission", "show_toast", "setup_onboarding_overlay",
+				"dismiss_onboarding", "_unhandled_input"
 			]
 		],
 		[
@@ -77,7 +82,10 @@ func get_coverage_entries() -> Array:
 			[
 				"_ready", "setup_hud_layout", "connect_bus_signals", "check_mobile_controls",
 				"update_score", "update_clock", "update_boost",
-				"show_kickoff_countdown", "show_goal_celebration", "show_toast"
+				"show_kickoff_countdown", "show_goal_celebration", "show_toast",
+				"setup_ball_tracker", "setup_onboarding_overlay",
+				"dismiss_onboarding", "_unhandled_input", "_process",
+				"set_tracking_targets", "update_ball_tracker"
 			]
 		],
 		[
@@ -86,7 +94,8 @@ func get_coverage_entries() -> Array:
 				"_ready", "setup_hud_layout", "check_mobile_controls", "update_position",
 				"update_lap", "update_speed", "update_drift_charge",
 				"update_powerup", "update_lap_times", "show_countdown",
-				"show_finish_banner", "show_toast"
+				"show_finish_banner", "show_toast", "setup_onboarding_overlay",
+				"dismiss_onboarding", "_unhandled_input"
 			]
 		]
 	]
@@ -190,6 +199,17 @@ func test_arena_fps_hud() -> void:
 	assert_true(hud.frags_label != null, "ArenaFPSHUD must have frags_label")
 	hud.update_frags(5, 20)
 	assert_true(hud.frags_label.text.contains("5"), "Frags label must update")
+	hud.update_objective(8, 6, 20)
+	assert_true(hud.objective_label.text.contains("8"), "Objective label must show player frags")
+	hud.show_countdown(3)
+	assert_true(hud.countdown_panel.visible, "Countdown panel visible for 3")
+	hud.show_countdown(0)
+	assert_true(hud.countdown_label.text == "FIGHT!", "Countdown shows FIGHT at 0")
+	var key_ev = InputEventKey.new()
+	key_ev.pressed = true
+	key_ev.keycode = KEY_SPACE
+	hud._unhandled_input(key_ev)
+	hud.dismiss_onboarding()
 	hud.queue_free()
 
 func test_metro_siege_hud() -> void:
@@ -212,6 +232,11 @@ func test_metro_siege_hud() -> void:
 	assert_true(hud.intermission_panel.visible, "Intermission panel must be visible")
 	hud.set_crosshair_spread(10.0)
 	hud.show_toast("MUTANT ELIMINATED", Color.RED)
+	var key_ev = InputEventKey.new()
+	key_ev.pressed = true
+	key_ev.keycode = KEY_SPACE
+	hud._unhandled_input(key_ev)
+	hud.dismiss_onboarding()
 	hud.queue_free()
 
 func test_nitro_kick_hud() -> void:
@@ -230,6 +255,18 @@ func test_nitro_kick_hud() -> void:
 	hud.show_goal_celebration(0, 95.0)
 	assert_true(hud.goal_panel.visible, "Goal panel must show celebration")
 	hud.show_toast("SUPER SHOT!", Color.CYAN)
+	var cam = Camera3D.new()
+	var ball = Node3D.new()
+	hud.set_tracking_targets(cam, ball)
+	hud.update_ball_tracker()
+	hud._process(0.016)
+	var key_ev = InputEventKey.new()
+	key_ev.pressed = true
+	key_ev.keycode = KEY_SPACE
+	hud._unhandled_input(key_ev)
+	hud.dismiss_onboarding()
+	cam.queue_free()
+	ball.queue_free()
 	hud.queue_free()
 
 func test_drift_storm_hud() -> void:
@@ -257,5 +294,10 @@ func test_drift_storm_hud() -> void:
 	hud.show_finish_banner("1st Place")
 	assert_true(hud.finish_panel.visible, "Finish panel must show")
 	hud.show_toast("DRIFT BOOST!", Color.GREEN)
+	var key_ev = InputEventKey.new()
+	key_ev.pressed = true
+	key_ev.keycode = KEY_SPACE
+	hud._unhandled_input(key_ev)
+	hud.dismiss_onboarding()
 	hud.queue_free()
 

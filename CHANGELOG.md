@@ -352,3 +352,29 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - Linear wave pacing and missing boss encounters in Metro Siege.
 - Stadium lighting clarity and missing boost pads in Nitro Kick.
 - Lack of bot variety and map selection in Iron Crucible.
+
+## [5.1.0-final-production-overhaul] - 2026-09-05
+### Added
+- **Nitro Kick Sports Clarity Rebuild**:
+  - Painted white soccer pitch markings: center line, 24-segment center circle, center spot, penalty boxes, goal area boxes, penalty spots, and blue/orange half perimeters in `rocket_arena.gd`.
+  - Upgraded stadium lighting with dedicated sun `DirectionalLight3D` (energy 2.4) and 4 corner light towers, completely eliminating dark voids and crushed blacks.
+  - Off-screen screen-space ball tracker arrow with Euclidean distance in meters (`update_ball_tracker()`) in `nitro_kick_hud.gd`.
+  - 3-2-1 kickoff countdown sequence and 3-goal victory loop in `rocket_car_main.gd`.
+  - Pre-match onboarding overlay with controls mapping and goal objective.
+- **Metro Siege Clear Threat State & Pacing**:
+  - Wave 1 immediately communicates active threat count ("SURVIVE — 10 HOSTILES INCOMING"), eliminating unexplained idle states.
+  - Added sector unlock toasts (Wave 3 Maintenance Bay, Wave 7 Highline Junction, Wave 10 Extraction Train).
+  - Pre-match onboarding overlay explaining objectives and controls.
+  - Unit tests and coverage entries for Spitter and BioColossus boss.
+- **Iron Crucible Match Flow & Objective Tracking**:
+  - Active match objective banner ("RACE TO 20 FRAGS") with live player vs. enemy score differential.
+  - 3-2-1-FIGHT countdown sequence before bot engagement.
+  - Pre-match onboarding overlay with full controls mapping.
+- **Drift Storm Starting Sequence & Objective HUD**:
+  - Starting lights countdown sequence and active race objective badge ("COMPLETE 3 LAPS — FINISH 1ST").
+  - Pre-match onboarding overlay with controls mapping and drift mechanics.
+- **Quality Assurance & Verification**:
+  - 40 test suites passing, 810 passed assertions (0 failures, 100% pass rate).
+  - 100.0% project function coverage (386 / 386 functions covered) verified via `CoverageRegistry`.
+  - Re-exported and packaged Web, Linux, Windows, and Android release archives in `export/dist/`.
+  - Live in-browser verification on `http://localhost:8080/` with headless Chromium subagent.

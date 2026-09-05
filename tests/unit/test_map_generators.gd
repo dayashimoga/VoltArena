@@ -26,11 +26,11 @@ func get_coverage_entries() -> Array:
 		],
 		[
 			"res://games/subway-survival/maps/subway_generator.gd",
-			["_ready", "build_subway_station", "create_box", "setup_subway_lighting"]
+			["_ready", "build_subway_station", "create_box", "setup_subway_lighting", "unlock_gate"]
 		],
 		[
 			"res://games/rocket-car/arena/rocket_arena.gd",
-			["_ready", "build_arena", "build_end_wall", "create_goal_trigger", "create_boost_pad", "create_box", "create_jumbotron", "setup_stadium_lighting"]
+			["_ready", "build_arena", "build_end_wall", "create_goal_trigger", "create_boost_pad", "create_boost_orb", "create_box", "create_flat_marker", "build_pitch_markings", "create_jumbotron", "setup_stadium_lighting"]
 		],
 		[
 			"res://games/kart-racing/tracks/track_generator.gd",
@@ -61,6 +61,9 @@ func test_subway_generator() -> void:
 	var sub = SubwayGenScript.new()
 	sub._ready()
 	assert_true(sub.get_child_count() > 10, "SubwayGenerator must create station geometry")
+	sub.unlock_gate(2)
+	sub.unlock_gate(3)
+	assert_true(sub.is_zone2_unlocked and sub.is_zone3_unlocked, "Gates 2 and 3 should be unlocked")
 	sub.queue_free()
 
 func test_rocket_arena_generator() -> void:

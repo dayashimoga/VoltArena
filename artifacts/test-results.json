@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 93.9890710382514,
-  "coverage_tested_functions": 344,
-  "coverage_total_functions": 366,
-  "execution_seconds": 4.741,
+  "coverage_percent": 100,
+  "coverage_tested_functions": 386,
+  "coverage_total_functions": 386,
+  "execution_seconds": 3.44,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -37,7 +37,7 @@
     },
     "Enemy Archetypes Unit": {
       "failed": 0,
-      "passed": 12,
+      "passed": 16,
       "status": "PASS"
     },
     "EventBus Unit": {
@@ -77,7 +77,7 @@
     },
     "KartController Unit": {
       "failed": 0,
-      "passed": 12,
+      "passed": 14,
       "status": "PASS"
     },
     "Launcher E2E": {
@@ -92,7 +92,7 @@
     },
     "Map Generators Unit": {
       "failed": 0,
-      "passed": 8,
+      "passed": 9,
       "status": "PASS"
     },
     "MaterialGenerator Unit": {
@@ -102,7 +102,7 @@
     },
     "MeshBuilder 3D Assets Unit": {
       "failed": 0,
-      "passed": 15,
+      "passed": 28,
       "status": "PASS"
     },
     "Metro Siege E2E": {
@@ -192,7 +192,7 @@
     },
     "UI Systems & Controls Unit": {
       "failed": 0,
-      "passed": 47,
+      "passed": 50,
       "status": "PASS"
     },
     "Wave Director Unit": {
@@ -206,8 +206,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-05T05:28:03",
+  "timestamp": "2026-09-05T06:01:59",
   "total_failed": 0,
-  "total_passed": 787,
+  "total_passed": 810,
   "total_suites": 40
 }

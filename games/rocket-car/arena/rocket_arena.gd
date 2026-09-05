@@ -22,6 +22,9 @@ func build_arena() -> void:
 	var turf_material = "stadium_pitch_day" if stadium_theme == "day" else "stadium_pitch_cyber"
 	create_box(Vector3(0, -0.5, 0), Vector3(width, 1.0, length), turf_material)
 
+	# High-Readability Soccer Pitch Markings & Team Halves
+	build_pitch_markings(half_x, half_z)
+
 	# Invisible Collision Ceiling
 	var ceiling_body = StaticBody3D.new()
 	ceiling_body.collision_layer = GameConstants.LAYER_WORLD
@@ -266,33 +269,138 @@ func create_box(pos: Vector3, size: Vector3, material_name: String) -> StaticBod
 	add_child(body)
 	return body
 
+func create_flat_marker(pos: Vector3, size: Vector3, material_name: String) -> MeshInstance3D:
+	var mesh_inst = MeshInstance3D.new()
+	var box = BoxMesh.new()
+	box.size = size
+	mesh_inst.mesh = box
+	mesh_inst.position = pos
+	mesh_inst.material_override = MaterialGenerator.get_material(material_name)
+	add_child(mesh_inst)
+	return mesh_inst
+
+func build_pitch_markings(half_x: float, half_z: float) -> void:
+	var line_mat = "pitch_line_white"
+	var y_elev = 0.02
+	var line_w = 0.45
+
+	# Center Line dividing Blue and Orange Halves
+	create_flat_marker(Vector3(0, y_elev, 0), Vector3(width - 4.0, 0.02, line_w), line_mat)
+
+	# Center Spot (Kickoff Ball Point)
+	create_flat_marker(Vector3(0, y_elev + 0.01, 0), Vector3(1.6, 0.02, 1.6), line_mat)
+
+	# Center Circle (8.5m radius approximated with 24 segments)
+	var radius = 8.5
+	var segments = 24
+	for i in range(segments):
+		var angle1 = (float(i) / segments) * TAU
+		var angle2 = (float(i + 1) / segments) * TAU
+		var p1 = Vector3(cos(angle1) * radius, y_elev, sin(angle1) * radius)
+		var p2 = Vector3(cos(angle2) * radius, y_elev, sin(angle2) * radius)
+		var mid = (p1 + p2) * 0.5
+		var seg_len = p1.distance_to(p2)
+		var seg = MeshInstance3D.new()
+		var s_box = BoxMesh.new()
+		s_box.size = Vector3(line_w, 0.02, seg_len)
+		seg.mesh = s_box
+		seg.position = mid
+		seg.look_at_from_position(mid, p2, Vector3.UP)
+		seg.material_override = MaterialGenerator.get_material(line_mat)
+		add_child(seg)
+
+	# Outer Boundary Touchlines
+	create_flat_marker(Vector3(-half_x + 1.8, y_elev, 0), Vector3(line_w, 0.02, length - 3.6), line_mat)
+	create_flat_marker(Vector3(half_x - 1.8, y_elev, 0), Vector3(line_w, 0.02, length - 3.6), line_mat)
+	create_flat_marker(Vector3(0, y_elev, -half_z + 1.8), Vector3(width - 3.6, 0.02, line_w), line_mat)
+	create_flat_marker(Vector3(0, y_elev, half_z - 1.8), Vector3(width - 3.6, 0.02, line_w), line_mat)
+
+	# North Half (Orange Goal Territory, -Z)
+	create_flat_marker(Vector3(0, y_elev, -half_z + 18.0), Vector3(26.0, 0.02, line_w), line_mat)
+	create_flat_marker(Vector3(-13.0, y_elev, -half_z + 9.9), Vector3(line_w, 0.02, 16.2), line_mat)
+	create_flat_marker(Vector3(13.0, y_elev, -half_z + 9.9), Vector3(line_w, 0.02, 16.2), line_mat)
+	create_flat_marker(Vector3(0, y_elev, -half_z + 8.0), Vector3(18.0, 0.02, line_w), line_mat)
+	create_flat_marker(Vector3(-9.0, y_elev, -half_z + 4.9), Vector3(line_w, 0.02, 6.2), line_mat)
+	create_flat_marker(Vector3(9.0, y_elev, -half_z + 4.9), Vector3(line_w, 0.02, 6.2), line_mat)
+	create_flat_marker(Vector3(0, y_elev + 0.01, -half_z + 12.0), Vector3(1.0, 0.02, 1.0), line_mat)
+	create_flat_marker(Vector3(0, y_elev + 0.005, -half_z * 0.5), Vector3(0.2, 0.02, half_z - 3.0), "pitch_orange_zone")
+
+	# South Half (Blue Goal Territory, +Z)
+	create_flat_marker(Vector3(0, y_elev, half_z - 18.0), Vector3(26.0, 0.02, line_w), line_mat)
+	create_flat_marker(Vector3(-13.0, y_elev, half_z - 9.9), Vector3(line_w, 0.02, 16.2), line_mat)
+	create_flat_marker(Vector3(13.0, y_elev, half_z - 9.9), Vector3(line_w, 0.02, 16.2), line_mat)
+	create_flat_marker(Vector3(0, y_elev, half_z - 8.0), Vector3(18.0, 0.02, line_w), line_mat)
+	create_flat_marker(Vector3(-9.0, y_elev, half_z - 4.9), Vector3(line_w, 0.02, 6.2), line_mat)
+	create_flat_marker(Vector3(9.0, y_elev, half_z - 4.9), Vector3(line_w, 0.02, 6.2), line_mat)
+	create_flat_marker(Vector3(0, y_elev + 0.01, half_z - 12.0), Vector3(1.0, 0.02, 1.0), line_mat)
+	create_flat_marker(Vector3(0, y_elev + 0.005, half_z * 0.5), Vector3(0.2, 0.02, half_z - 3.0), "pitch_blue_zone")
+
 func setup_stadium_lighting() -> void:
 	var env = WorldEnvironment.new()
 	var environment = Environment.new()
 
 	var sky_mat = ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.08, 0.12, 0.25) # Night stadium deep navy
-	sky_mat.sky_horizon_color = Color(0.28, 0.38, 0.58) # Stadium floodlight glow haze
-	sky_mat.ground_bottom_color = Color(0.12, 0.15, 0.20)
-	sky_mat.ground_horizon_color = Color(0.22, 0.30, 0.42)
-	sky_mat.sun_angle_max = 20.0
+	if stadium_theme == "day":
+		# Volt Park Daylight Stadium: Crisp sunny clear atmosphere
+		sky_mat.sky_top_color = Color(0.25, 0.55, 0.92)
+		sky_mat.sky_horizon_color = Color(0.72, 0.85, 0.98)
+		sky_mat.ground_bottom_color = Color(0.20, 0.38, 0.18)
+		sky_mat.ground_horizon_color = Color(0.55, 0.72, 0.52)
+		sky_mat.sun_angle_max = 35.0
+
+		environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+		environment.ambient_light_color = Color(0.68, 0.78, 0.90)
+		environment.ambient_light_energy = 1.65
+
+		environment.tonemap_mode = Environment.TONE_MAPPER_ACES
+		environment.tonemap_exposure = 1.25
+		environment.tonemap_white = 6.0
+
+		environment.glow_enabled = true
+		environment.glow_intensity = 0.25
+		environment.glow_bloom = 0.10
+
+		# Dedicated Directional Sunlight
+		var sun = DirectionalLight3D.new()
+		sun.name = "StadiumSun"
+		sun.light_color = Color(1.0, 0.98, 0.92)
+		sun.light_energy = 2.4
+		sun.shadow_enabled = true
+		sun.rotation_degrees = Vector3(-55, 35, 0)
+		add_child(sun)
+	else:
+		# Cyber Dome Night Stadium: Electric floodlit arena
+		sky_mat.sky_top_color = Color(0.06, 0.10, 0.22)
+		sky_mat.sky_horizon_color = Color(0.20, 0.32, 0.50)
+		sky_mat.ground_bottom_color = Color(0.10, 0.14, 0.18)
+		sky_mat.ground_horizon_color = Color(0.20, 0.28, 0.40)
+		sky_mat.sun_angle_max = 20.0
+
+		environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+		environment.ambient_light_color = Color(0.50, 0.58, 0.70)
+		environment.ambient_light_energy = 1.45
+
+		environment.tonemap_mode = Environment.TONE_MAPPER_ACES
+		environment.tonemap_exposure = 1.35
+		environment.tonemap_white = 6.0
+
+		environment.glow_enabled = true
+		environment.glow_intensity = 0.35
+		environment.glow_bloom = 0.15
+
+		# Overhead Main Floodlight Key
+		var flood_key = DirectionalLight3D.new()
+		flood_key.name = "StadiumFloodKey"
+		flood_key.light_color = Color(0.95, 0.98, 1.0)
+		flood_key.light_energy = 1.8
+		flood_key.shadow_enabled = true
+		flood_key.rotation_degrees = Vector3(-80, 0, 0)
+		add_child(flood_key)
 
 	var sky = Sky.new()
 	sky.sky_material = sky_mat
 	environment.background_mode = Environment.BG_SKY
 	environment.sky = sky
-
-	environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	environment.ambient_light_color = Color(0.40, 0.48, 0.60)
-	environment.ambient_light_energy = 1.4
-
-	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	environment.tonemap_exposure = 1.35
-	environment.tonemap_white = 6.0
-
-	environment.glow_enabled = true
-	environment.glow_intensity = 0.35
-	environment.glow_bloom = 0.15
 
 	env.environment = environment
 	add_child(env)
@@ -305,20 +413,18 @@ func setup_stadium_lighting() -> void:
 		Vector3(width * 0.45, wall_height - 1.0, length * 0.45)
 	]
 	for p in towers:
-		# Directional Floodlight Spot
 		var spot = SpotLight3D.new()
 		spot.look_at_from_position(p, Vector3(0, 0, p.z * 0.2))
 		spot.spot_range = 80.0
 		spot.spot_angle = 60.0
 		spot.light_color = Color(0.98, 0.99, 1.0)
-		spot.light_energy = 2.8
-		spot.shadow_enabled = true
+		spot.light_energy = 2.2 if stadium_theme == "day" else 2.8
+		spot.shadow_enabled = (stadium_theme != "day")
 		add_child(spot)
 
-		# Omnidirectional Light Cluster Fill
 		var omni = OmniLight3D.new()
 		omni.position = p
 		omni.light_color = Color(0.85, 0.92, 1.0)
-		omni.light_energy = 1.8
+		omni.light_energy = 1.4 if stadium_theme == "day" else 1.8
 		omni.omni_range = 35.0
 		add_child(omni)

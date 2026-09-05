@@ -82,6 +82,8 @@ func setup_scene() -> void:
 	camera.name = "ChaseCamera"
 	camera.current = true
 	add_child(camera)
+	if hud and hud.has_method("set_tracking_targets"):
+		hud.set_tracking_targets(camera, ball)
 
 	# AI Opponents (Orange Team)
 	var ai1 = CarControllerScript.new()
@@ -184,17 +186,31 @@ func reset_kickoff() -> void:
 		ai_cars[1].velocity = Vector3.ZERO
 		ai_cars[1].forward_speed = 0.0
 
-	var bus = GameConstants.get_autoload(self, "EventBus")
-	if bus:
-		bus.show_toast_requested.emit("KICKOFF!", Color(0.0, 1.0, 1.0))
+	# Sequential 3-2-1-GO Kickoff countdown
 	var am = GameConstants.get_autoload(self, "AudioManager")
+	if hud and hud.has_method("show_kickoff_countdown"):
+		hud.show_kickoff_countdown(3)
 	if am:
-		am.play_sound("referee_whistle", 1.0, 1.5)
+		am.play_sound("referee_whistle", 0.9, 1.0)
 
-	# Unpause driving after short countdown
 	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
 	if tree:
-		tree.create_timer(1.5).timeout.connect(func():
+		tree.create_timer(1.0).timeout.connect(func():
+			if hud and hud.has_method("show_kickoff_countdown"):
+				hud.show_kickoff_countdown(2)
+			if am: am.play_sound("referee_whistle", 0.9, 1.0)
+		)
+		tree.create_timer(2.0).timeout.connect(func():
+			if hud and hud.has_method("show_kickoff_countdown"):
+				hud.show_kickoff_countdown(1)
+			if am: am.play_sound("referee_whistle", 0.9, 1.0)
+		)
+		tree.create_timer(3.0).timeout.connect(func():
+			if hud and hud.has_method("show_kickoff_countdown"):
+				hud.show_kickoff_countdown(0)
+			if hud and hud.has_method("dismiss_onboarding"):
+				hud.dismiss_onboarding()
+			if am: am.play_sound("referee_whistle", 1.2, 1.6)
 			is_kickoff_pause = false
 		)
 
@@ -221,7 +237,7 @@ func _on_goal_scored(scoring_team: int) -> void:
 	if hud and hud.has_method("show_goal_celebration"):
 		hud.show_goal_celebration(scoring_team, 88.0)
 
-	if is_overtime:
+	if is_overtime or blue_score >= 3 or orange_score >= 3:
 		end_match()
 		return
 

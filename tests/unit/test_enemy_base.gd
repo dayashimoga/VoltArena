@@ -5,6 +5,8 @@ const EnemyBaseScript = preload("res://games/subway-survival/enemies/enemy_base.
 const CrawlerScript = preload("res://games/subway-survival/enemies/crawler.gd")
 const StalkerScript = preload("res://games/subway-survival/enemies/stalker.gd")
 const BruteScript = preload("res://games/subway-survival/enemies/brute.gd")
+const SpitterScript = preload("res://games/subway-survival/enemies/spitter.gd")
+const BioColossusScript = preload("res://games/subway-survival/enemies/bio_colossus.gd")
 
 var assertions_passed: int = 0
 var assertions_failed: int = 0
@@ -14,6 +16,8 @@ func run_tests() -> Dictionary:
 	test_crawler()
 	test_stalker()
 	test_brute()
+	test_spitter()
+	test_bio_colossus()
 	test_enemy_ai_methods()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
@@ -33,6 +37,14 @@ func get_coverage_entries() -> Array:
 		],
 		[
 			"res://games/subway-survival/enemies/brute.gd",
+			["_init", "setup_visuals", "perform_attack"]
+		],
+		[
+			"res://games/subway-survival/enemies/spitter.gd",
+			["_init", "setup_visuals", "perform_attack"]
+		],
+		[
+			"res://games/subway-survival/enemies/bio_colossus.gd",
 			["_init", "setup_visuals", "perform_attack"]
 		]
 	]
@@ -72,6 +84,22 @@ func test_brute() -> void:
 	assert_true(b.enemy_type == "Brute", "Type must be Brute")
 	b.perform_attack()
 	b.queue_free()
+
+func test_spitter() -> void:
+	var s = SpitterScript.new()
+	s._ready()
+	assert_true(s.enemy_type == "Spitter", "Type must be Spitter")
+	assert_true(s.attack_range >= 10.0, "Spitter must have ranged attack")
+	s.perform_attack()
+	s.queue_free()
+
+func test_bio_colossus() -> void:
+	var boss = BioColossusScript.new()
+	boss._ready()
+	assert_true(boss.enemy_type == "Boss", "Type must be Boss")
+	assert_true(boss.health_component.max_health >= 1000.0, "Boss must have high health")
+	boss.perform_attack()
+	boss.queue_free()
 
 func test_enemy_ai_methods() -> void:
 	var e = EnemyBaseScript.new()

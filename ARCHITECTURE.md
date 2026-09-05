@@ -121,3 +121,22 @@ The top-level `Launcher` (`launcher/launcher.tscn`) acts as the master coordinat
 * Manages 3D holographic title screens, game selection carousels, and persistent settings dialogs.
 * Transitions between scenes seamlessly using `GameManager.load_game_scene()`.
 * Each game main scene includes a standardized `PauseMenu` that provides "Resume", "Restart Match", and "Quit to Launcher" with zero memory leaks.
+
+---
+
+## 7. Onboarding Overlay & Active Objective Architecture
+
+To guarantee player onboarding clarity across all 4 games, every HUD (`ArenaFPSHUD`, `MetroSiegeHUD`, `NitroKickHUD`, `DriftStormHUD`) implements a standardized onboarding and active objective system:
+* **Premise & Controls Overlay**: Instantiated at scene load (`setup_onboarding_overlay()`) presenting title, sub-genre, controls mapping grid, and primary win condition.
+* **Automatic & Input Dismissal**: Automatically transitions away via tween alpha fade on match start timer, or immediately on any key/mouse press via `_unhandled_input()`.
+* **Persistent Objective Badges**: Top-center pinned banners maintain persistent objective state throughout gameplay (e.g. "RACE TO 20 FRAGS", "SURVIVE 10 WAVES & EXTRACT", "SCORE 3 GOALS IN ORANGE GOAL", "COMPLETE 3 LAPS — FINISH 1ST").
+
+---
+
+## 8. Screen-Space Off-Screen Entity Tracking Architecture
+
+In fast-paced 3D arenas (specifically Nitro Kick for the soccer ball), keeping track of off-screen targets is critical:
+* **`set_tracking_targets(cam, ball)`**: Passes the active camera and target entity to the HUD.
+* **Camera Projection**: Converts `global_position` via `camera.unproject_position()` and tests `camera.is_position_behind(target_pos)`.
+* **Clamping & Direction Vectors**: When off-screen, projects from viewport center along normalized vector to screen border margins with directional arrow rotation (`▲`, `▼`, `◄`, `►`).
+* **Dynamic Distance Metric**: Calculates real-time Euclidean distance in meters, displaying e.g. `BALL 24m` directly on the screen-space tracker badge.

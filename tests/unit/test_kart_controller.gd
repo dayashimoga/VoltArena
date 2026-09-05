@@ -22,7 +22,7 @@ func get_coverage_entries() -> Array:
 		[
 			"_ready", "setup_kart_visual", "_physics_process",
 			"handle_player_input", "apply_kart_controls",
-			"trigger_drift_boost", "apply_item_boost"
+			"trigger_drift_boost", "apply_item_boost", "setup_kart_archetype"
 		]
 	]]
 
@@ -35,6 +35,12 @@ func test_initialization() -> void:
 	assert_true(kart.base_speed > 0.0, "Base speed must be positive")
 	assert_true(kart.acceleration > 0.0, "Acceleration must be positive")
 	assert_true(kart.steer_speed > 0.0, "Steering must be positive")
+	kart.kart_type = "phantom"
+	kart.setup_kart_archetype()
+	assert_true(kart.base_speed > 27.0, "Phantom kart must have high top speed")
+	kart.kart_type = "enforcer"
+	kart.setup_kart_archetype()
+	assert_true(kart.acceleration > 25.0, "Enforcer kart must have high acceleration")
 	kart.queue_free()
 
 func test_drift_charge() -> void:

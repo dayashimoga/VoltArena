@@ -115,6 +115,34 @@ func _on_track_built(waypoints: Array, checkpoints: Array) -> void:
 	# Initialize race manager with participants and checkpoints
 	race_manager.initialize_race(all_karts, checkpoints)
 
+	# Starting lights countdown sequence
+	if hud and hud.has_method("show_countdown"):
+		hud.show_countdown(3)
+
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		am.play_sound("countdown_tick", 1.0)
+
+	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree:
+		tree.create_timer(1.0).timeout.connect(func():
+			if hud and hud.has_method("show_countdown"):
+				hud.show_countdown(2)
+			if am: am.play_sound("countdown_tick", 1.0)
+		)
+		tree.create_timer(2.0).timeout.connect(func():
+			if hud and hud.has_method("show_countdown"):
+				hud.show_countdown(1)
+			if am: am.play_sound("countdown_tick", 1.0)
+		)
+		tree.create_timer(3.0).timeout.connect(func():
+			if hud and hud.has_method("show_countdown"):
+				hud.show_countdown(0)
+			if hud and hud.has_method("dismiss_onboarding"):
+				hud.dismiss_onboarding()
+			if am: am.play_sound("countdown_go", 1.2)
+		)
+
 func _process(delta: float) -> void:
 	update_camera(delta)
 	if hud and is_instance_valid(player_kart):

@@ -11,6 +11,7 @@ func run_tests() -> Dictionary:
 	test_characters()
 	test_vehicles()
 	test_props()
+	test_subway_and_stadium()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -21,8 +22,13 @@ func get_coverage_entries() -> Array:
 				"build_pulse_rifle", "build_scatter_cannon", "build_rail_driver",
 				"build_grenade_launcher", "build_plasma_cutter", "build_cyber_soldier",
 				"build_crawler_mesh", "build_stalker_mesh", "build_brute_mesh",
-				"build_rocket_car", "build_drift_kart", "build_energy_ball",
-				"build_item_box", "build_pickup_mesh", "build_cyber_crate"
+				"build_spitter_mesh", "build_colossus_boss_mesh",
+				"build_rocket_car", "build_drift_kart", "build_speed_demon_kart",
+				"build_drift_king_kart", "build_turbo_tank_kart",
+				"build_energy_ball", "build_item_box", "build_pickup_mesh",
+				"build_cyber_crate", "build_subway_car_mesh", "build_stadium_goal_mesh",
+				"build_race_gantry_mesh", "build_blast_door_mesh", "build_upgrade_kiosk_mesh",
+				"build_boost_orb_mesh", "build_scrap_gear_mesh", "build_start_gantry"
 			]
 		]
 	]
@@ -72,6 +78,14 @@ func test_characters() -> void:
 	assert_true(b != null and b.get_child_count() > 0, "Brute must have parts")
 	b.queue_free()
 
+	var sp = MeshBuilderScript.build_spitter_mesh()
+	assert_true(sp != null and sp.get_child_count() > 0, "Spitter must have parts")
+	sp.queue_free()
+
+	var boss = MeshBuilderScript.build_colossus_boss_mesh()
+	assert_true(boss != null and boss.get_child_count() > 0, "Boss must have parts")
+	boss.queue_free()
+
 func test_vehicles() -> void:
 	var car = MeshBuilderScript.build_rocket_car(0)
 	assert_true(car != null and car.get_child_count() > 0, "Rocket car must have wheels and chassis")
@@ -80,6 +94,18 @@ func test_vehicles() -> void:
 	var kart = MeshBuilderScript.build_drift_kart(Color.GREEN)
 	assert_true(kart != null and kart.get_child_count() > 0, "Drift kart must have wheels and chassis")
 	kart.queue_free()
+
+	var k1 = MeshBuilderScript.build_speed_demon_kart()
+	assert_true(k1 != null, "Speed demon kart must build")
+	k1.queue_free()
+
+	var k2 = MeshBuilderScript.build_drift_king_kart()
+	assert_true(k2 != null, "Drift king kart must build")
+	k2.queue_free()
+
+	var k3 = MeshBuilderScript.build_turbo_tank_kart()
+	assert_true(k3 != null, "Turbo tank kart must build")
+	k3.queue_free()
 
 func test_props() -> void:
 	var ball = MeshBuilderScript.build_energy_ball()
@@ -97,3 +123,36 @@ func test_props() -> void:
 	var crate = MeshBuilderScript.build_cyber_crate()
 	assert_true(crate != null and crate.get_child_count() > 0, "Cyber crate must have meshes")
 	crate.queue_free()
+
+	var orb = MeshBuilderScript.build_boost_orb_mesh()
+	assert_true(orb != null and orb.get_child_count() > 0, "Boost orb must have parts")
+	orb.queue_free()
+
+	var gear = MeshBuilderScript.build_scrap_gear_mesh()
+	assert_true(gear != null and gear.get_child_count() > 0, "Scrap gear must have parts")
+	gear.queue_free()
+
+	var kiosk = MeshBuilderScript.build_upgrade_kiosk_mesh()
+	assert_true(kiosk != null and kiosk.get_child_count() > 0, "Upgrade kiosk must have parts")
+	kiosk.queue_free()
+
+func test_subway_and_stadium() -> void:
+	var train = MeshBuilderScript.build_subway_car_mesh()
+	assert_true(train != null and train.get_child_count() > 0, "Subway car must have parts")
+	train.queue_free()
+
+	var goal = MeshBuilderScript.build_stadium_goal_mesh(0)
+	assert_true(goal != null and goal.get_child_count() > 0, "Goal mesh must have posts and net")
+	goal.queue_free()
+
+	var gantry = MeshBuilderScript.build_race_gantry_mesh()
+	assert_true(gantry != null and gantry.get_child_count() > 0, "Race gantry must have towers and lamps")
+	gantry.queue_free()
+
+	var door = MeshBuilderScript.build_blast_door_mesh()
+	assert_true(door != null and door.get_child_count() > 0, "Blast door must have frame and panel")
+	door.queue_free()
+
+	var start_g = MeshBuilderScript.build_start_gantry(14.0)
+	assert_true(start_g != null and start_g.get_child_count() > 0, "Start gantry must have bridge and banner")
+	start_g.queue_free()

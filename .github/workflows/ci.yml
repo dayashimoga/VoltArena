@@ -56,6 +56,8 @@ jobs:
           path: |
             artifacts/test-results.json
             artifacts/coverage-report.json
+            artifacts/responsive-results.json
+            artifacts/screenshots/
 
   # ============================================
   # STAGE 3: COVERAGE ANALYSIS
@@ -492,6 +494,21 @@ jobs:
         with:
           path: artifacts/
           merge-multiple: true
+      - name: Restore export directories from artifacts
+        run: |
+          mkdir -p export/web export/linux export/windows export/android
+          if [ -f artifacts/index.html ]; then
+            cp -r artifacts/index.* artifacts/_headers export/web/ 2>/dev/null || true
+          fi
+          if [ -f artifacts/VoltArena.x86_64 ]; then
+            cp artifacts/VoltArena.x86_64 export/linux/ 2>/dev/null || true
+          fi
+          if [ -f artifacts/VoltArena.exe ]; then
+            cp artifacts/VoltArena.exe export/windows/ 2>/dev/null || true
+          fi
+          if [ -f artifacts/VoltArena.apk ]; then
+            cp artifacts/VoltArena.apk export/android/ 2>/dev/null || true
+          fi
       - name: Run certifier
         run: python3 scripts/certifier.py
       - name: Upload certification

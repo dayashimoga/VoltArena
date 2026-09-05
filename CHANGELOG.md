@@ -260,4 +260,15 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Maintained **100.0% project function coverage (338/338 functions)** verified via `CoverageRegistry`.
   - Upgraded `scripts/certifier.py` to 15 quality gates: all 11 automatable gates certified **PASS**.
 
+## [3.0.1-ci-resilience] - 2026-09-05
+### Fixed
+- **CI/CD Certifier Multi-Runner Path Resolution**:
+  - Updated `scripts/certifier.py` to check both `export/` and runner-merged `artifacts/` directories for Web, Android, and Desktop build binaries.
+  - Resolved `export/web/index.html NOT FOUND` false failure in GitHub Actions CI where artifacts were downloaded into `artifacts/`.
+  - Gracefully categorized missing multi-platform binaries as `PLATFORM_REQUIRED` rather than failing the certifier when running on different runner architectures.
+- **CI Artifact Persistence**:
+  - Updated `.github/workflows/ci.yml` `tests` job to upload `artifacts/responsive-results.json` and `artifacts/screenshots/`.
+  - Added export directory restoration step in `ci.yml` `certify` job.
+
+
 

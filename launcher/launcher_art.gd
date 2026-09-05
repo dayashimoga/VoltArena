@@ -22,152 +22,213 @@ static func create_game_banner(game_id: String, width: int = 360, height: int = 
 	return ImageTexture.create_from_image(image)
 
 static func _paint_iron_crucible(img: Image, w: int, h: int) -> void:
-	# Cyberpunk deep navy to charcoal gradient with cyan & gold laser grid
+	# Tactical Arena FPS: Bright twilight dusk sky with sci-fi catwalks & laser arcs
 	for y in range(h):
 		var v: float = float(y) / float(h)
 		for x in range(w):
 			var u: float = float(x) / float(w)
-			var base_r = lerp(0.04, 0.08, v)
-			var base_g = lerp(0.06, 0.12, v)
-			var base_b = lerp(0.15, 0.22, v)
 
-			# Grid lines
-			var grid_x = (x % 30 == 0)
-			var grid_y = (y % 30 == 0) and (y > h * 0.4)
-			if grid_x or grid_y:
-				base_r += 0.08
-				base_g += 0.25
-				base_b += 0.35
+			# Sky and arena gradient (rich dusk blue to steel gray)
+			var base_r = lerp(0.20, 0.35, v)
+			var base_g = lerp(0.35, 0.45, v)
+			var base_b = lerp(0.55, 0.65, v)
 
-			# Neon cyan beam across center
-			var dist_to_beam = abs(float(y) - float(h) * 0.45 - (u - 0.5) * 40.0)
-			if dist_to_beam < 4.0:
-				var glow = 1.0 - (dist_to_beam / 4.0)
-				base_r += 0.2 * glow
-				base_g += 0.8 * glow
-				base_b += 1.0 * glow
+			# Catwalk silhouette structure
+			var is_catwalk = (y > h * 0.48 and y < h * 0.54)
+			var is_catwalk_support = (x % 50 == 0 and y > h * 0.48)
+			if is_catwalk or is_catwalk_support:
+				base_r = 0.15
+				base_g = 0.20
+				base_b = 0.28
+
+			# Floor platform
+			if y > h * 0.75:
+				base_r = 0.28
+				base_g = 0.32
+				base_b = 0.40
+				if (x % 30 == 0) or (y % 15 == 0):
+					base_r += 0.1
+					base_g += 0.15
+					base_b += 0.2
+
+			# Neon Cyan Laser Beam across center
+			var dist_to_beam = abs(float(y) - float(h) * 0.40 - (u - 0.5) * 45.0)
+			if dist_to_beam < 5.0:
+				var glow = 1.0 - (dist_to_beam / 5.0)
+				base_r = lerp(base_r, 0.3, glow)
+				base_g = lerp(base_g, 0.95, glow)
+				base_b = lerp(base_b, 1.0, glow)
+
+			# Crosshair reticle at center
+			var dist_cross = Vector2(x - w * 0.5, y - h * 0.40).length()
+			if (dist_cross >= 14.0 and dist_cross <= 16.0) or (abs(x - w * 0.5) < 2.0 and dist_cross < 22.0) or (abs(y - h * 0.40) < 2.0 and dist_cross < 22.0):
+				base_r = 0.1
+				base_g = 1.0
+				base_b = 1.0
 
 			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
 
 static func _paint_metro_siege(img: Image, w: int, h: int) -> void:
-	# Gritty dark subterranean tunnel with crimson emergency lights
+	# Metro Siege: High-contrast illuminated underground platform, vaulted ceiling & warning lines
 	for y in range(h):
 		var v: float = float(y) / float(h)
 		for x in range(w):
 			var u: float = float(x) / float(w)
-			var base_r = lerp(0.12, 0.03, v)
-			var base_g = lerp(0.04, 0.02, v)
-			var base_b = lerp(0.04, 0.02, v)
 
-			# Tunnel arch perspective
-			var dx = (u - 0.5) * 2.0
-			var dy = (v - 0.5) * 2.0
-			var dist = sqrt(dx * dx + dy * dy)
-			if dist > 0.7:
-				base_r *= 0.6
-				base_g *= 0.6
-				base_b *= 0.6
+			# Tiled wall and arched ceiling gradient
+			var base_r = lerp(0.40, 0.30, v)
+			var base_g = lerp(0.44, 0.32, v)
+			var base_b = lerp(0.50, 0.38, v)
 
-			# Crimson glowing eyes in distance
-			var d_eye1 = Vector2(x - w * 0.48, y - h * 0.52).length()
-			var d_eye2 = Vector2(x - w * 0.52, y - h * 0.52).length()
-			if d_eye1 < 5.0 or d_eye2 < 5.0:
-				base_r = 1.0
-				base_g = 0.15
-				base_b = 0.1
+			# Ceramic subway tile grout pattern
+			if (x % 24 == 0 or y % 16 == 0) and y < h * 0.65:
+				base_r *= 0.75
+				base_g *= 0.75
+				base_b *= 0.75
 
-			# Platform edge warning stripe
-			if y > h * 0.82 and y < h * 0.88:
-				if (x + y) % 18 < 9:
-					base_r = 0.85
-					base_g = 0.65
-					base_b = 0.05
+			# Overhead fluorescent light fixtures casting bright white beams
+			if y > h * 0.08 and y < h * 0.14:
+				if (x % 60) > 15:
+					base_r = 0.98
+					base_g = 0.98
+					base_b = 1.0
+
+			# Passenger Platform Floor (left side)
+			if y > h * 0.65:
+				if u < 0.65:
+					base_r = 0.52
+					base_g = 0.55
+					base_b = 0.60
+				else:
+					# Sunken tracks
+					base_r = 0.28
+					base_g = 0.30
+					base_b = 0.34
+
+			# Platform Edge Hazard Stripe (Yellow/Black)
+			if y > h * 0.64 and y < h * 0.68 and u >= 0.60 and u <= 0.66:
+				var stripe = ((x + y) / 8) % 2 == 0
+				base_r = 0.95 if stripe else 0.15
+				base_g = 0.85 if stripe else 0.15
+				base_b = 0.10 if stripe else 0.15
+
+			# Red Emergency Beacon Light at right
+			var dist_beacon = Vector2(x - w * 0.85, y - h * 0.45).length()
+			if dist_beacon < 25.0:
+				var glow = 1.0 - (dist_beacon / 25.0)
+				base_r = lerp(base_r, 1.0, glow * 0.8)
+				base_g = lerp(base_g, 0.2, glow * 0.8)
+				base_b = lerp(base_b, 0.2, glow * 0.8)
 
 			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
 
 static func _paint_nitro_kick(img: Image, w: int, h: int) -> void:
-	# Vibrant electric cobalt stadium with luminous hexagonal energy dome
+	# Nitro Kick: High-energy illuminated sports stadium, floodlights, turf & ball
 	for y in range(h):
 		var v: float = float(y) / float(h)
 		for x in range(w):
 			var u: float = float(x) / float(w)
-			var base_r = lerp(0.02, 0.08, v)
-			var base_g = lerp(0.12, 0.25, v)
-			var base_b = lerp(0.35, 0.60, v)
 
-			# Hex dome pattern
-			var hx = (x % 24) - 12
-			var hy = (y % 20) - 10
-			if abs(hx) + abs(hy) == 12:
-				base_r += 0.1
-				base_g += 0.35
-				base_b += 0.5
+			# Deep indigo stadium sky to cobalt bowl
+			var base_r = lerp(0.15, 0.25, v)
+			var base_g = lerp(0.25, 0.45, v)
+			var base_b = lerp(0.55, 0.75, v)
 
-			# Glowing supersonic ball in center
-			var dist_ball = Vector2(x - w * 0.5, y - h * 0.45).length()
+			# Floodlight illumination beams from top corners
+			var dist_tl = Vector2(x - 20, y - 10).length()
+			var dist_tr = Vector2(x - (w - 20), y - 10).length()
+			if dist_tl < 120.0:
+				var beam = (1.0 - dist_tl / 120.0) * 0.35
+				base_r += beam
+				base_g += beam
+				base_b += beam
+			if dist_tr < 120.0:
+				var beam = (1.0 - dist_tr / 120.0) * 0.35
+				base_r += beam
+				base_g += beam
+				base_b += beam
+
+			# Green Stadium Turf Pitch (bottom half)
+			if y > h * 0.58:
+				var stripe = ((y / 18) % 2 == 0)
+				base_r = 0.22 if stripe else 0.16
+				base_g = 0.65 if stripe else 0.52
+				base_b = 0.28 if stripe else 0.22
+
+				# Center circle chalk line
+				var dist_circle = Vector2(x - w * 0.5, (y - h * 0.75) * 2.5).length()
+				if dist_circle >= 42.0 and dist_circle <= 46.0:
+					base_r = 0.95
+					base_g = 0.98
+					base_b = 0.95
+
+			# Glowing Energy Ball in midair
+			var dist_ball = Vector2(x - w * 0.5, y - h * 0.48).length()
 			if dist_ball < 22.0:
-				var ball_glow = 1.0 - (dist_ball / 22.0)
-				base_r += 0.9 * ball_glow
-				base_g += 0.7 * ball_glow
-				base_b += 0.1 * ball_glow
+				var glow = 1.0 - (dist_ball / 22.0)
+				base_r = lerp(base_r, 1.0, glow)
+				base_g = lerp(base_g, 0.85, glow)
+				base_b = lerp(base_b, 0.2, glow)
 
-			# Speed streak lines
-			if y % 14 == 0 and x > w * 0.2 and x < w * 0.8:
-				base_r += 0.2
-				base_g += 0.4
-				base_b += 0.6
+			# Rocket boost orange flame trail
+			if x > w * 0.15 and x < w * 0.45 and abs(float(y) - float(h) * 0.55) < 8.0:
+				var flame_factor = 1.0 - abs(float(y) - float(h) * 0.55) / 8.0
+				base_r = lerp(base_r, 1.0, flame_factor * 0.85)
+				base_g = lerp(base_g, 0.5, flame_factor * 0.85)
+				base_b = lerp(base_b, 0.05, flame_factor * 0.85)
 
 			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
 
 static func _paint_drift_storm(img: Image, w: int, h: int) -> void:
-	# Synthwave sunset magenta & violet highway with neon horizon
+	# Drift Storm: Bright daylight coastal canyon circuit, red/white curbstones & sun
 	for y in range(h):
 		var v: float = float(y) / float(h)
 		for x in range(w):
 			var u: float = float(x) / float(w)
-			# Sky gradient (top half)
+
+			# Sky gradient (Azure blue to warm peach horizon)
 			var base_r: float
 			var base_g: float
 			var base_b: float
 
-			if v < 0.55:
-				base_r = lerp(0.15, 0.75, v / 0.55)
-				base_g = lerp(0.05, 0.15, v / 0.55)
-				base_b = lerp(0.35, 0.50, v / 0.55)
+			if v < 0.52:
+				base_r = lerp(0.35, 0.85, v / 0.52)
+				base_g = lerp(0.65, 0.80, v / 0.52)
+				base_b = lerp(0.98, 0.82, v / 0.52)
+
+				# Sun flare
+				var dist_sun = Vector2(x - w * 0.65, y - h * 0.28).length()
+				if dist_sun < 35.0:
+					var sun_glow = 1.0 - (dist_sun / 35.0)
+					base_r = lerp(base_r, 1.0, sun_glow)
+					base_g = lerp(base_g, 0.95, sun_glow)
+					base_b = lerp(base_b, 0.65, sun_glow)
 			else:
-				# Track asphalt
-				var tv = (v - 0.55) / 0.45
-				base_r = lerp(0.10, 0.04, tv)
-				base_g = lerp(0.08, 0.03, tv)
-				base_b = lerp(0.18, 0.08, tv)
+				# Asphalt Track Surface
+				base_r = 0.35
+				base_g = 0.38
+				base_b = 0.42
 
-			# Horizon neon sun
-			var dist_sun = Vector2(x - w * 0.5, y - h * 0.50).length()
-			if dist_sun < 32.0 and v <= 0.55:
-				# Sun slices
-				if (y % 6) < 4:
-					base_r = 1.0
-					base_g = 0.8
-					base_b = 0.2
+				# Center dashed line
+				var center_dist = abs(float(x) - float(w) * 0.5 + (v - 0.52) * 60.0)
+				if center_dist < 3.0 and (y % 20 < 12):
+					base_r = 0.95
+					base_g = 0.85
+					base_b = 0.15
 
-			# Perspective road lines
-			if v > 0.55:
-				var center_x = float(w) * 0.5
-				var road_spread = (v - 0.55) * float(w) * 0.8
-				if abs(float(x) - center_x) < 4.0:
-					base_r += 0.5
-					base_g += 0.8
-					base_b += 0.9
-				if abs(abs(float(x) - center_x) - road_spread) < 3.0:
-					base_r += 0.9
-					base_g += 0.2
-					base_b += 0.8
+				# Red & White Rumble Curbstones on left edge
+				var curb_dist = abs(float(x) - float(w) * 0.20 + (v - 0.52) * 40.0)
+				if curb_dist < 8.0:
+					var is_red = ((x + y) / 12) % 2 == 0
+					base_r = 0.92 if is_red else 0.96
+					base_g = 0.18 if is_red else 0.96
+					base_b = 0.18 if is_red else 0.96
 
 			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
 
 static func _paint_default_banner(img: Image, w: int, h: int) -> void:
 	for y in range(h):
 		for x in range(w):
-			var r = float(x) / float(w) * 0.3
-			var b = float(y) / float(h) * 0.5
-			img.set_pixel(x, y, Color(r, 0.1, b))
+			var r = float(x) / float(w) * 0.5 + 0.2
+			var b = float(y) / float(h) * 0.5 + 0.3
+			img.set_pixel(x, y, Color(r, 0.4, b))

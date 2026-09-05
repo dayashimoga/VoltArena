@@ -1,0 +1,73 @@
+{
+  "overall_status": "PASS",
+  "timestamp_utc": "2026-09-05 03:43:58 UTC",
+  "gates": {
+    "min_resolution": "1280x720",
+    "luminance_range": "[40.0, 180.0]",
+    "min_contrast": ">= 25.0",
+    "max_black_pct": "<= 12.0%"
+  },
+  "screens": [
+    {
+      "filename": "screenshot_launcher.png",
+      "title": "Universal Launcher",
+      "description": "Responsive 4->2x2->1, Isolated HUD",
+      "width": 1280,
+      "height": 720,
+      "mean_luminance": 45.2,
+      "contrast": 37.22,
+      "black_pixel_pct": 0.0,
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "filename": "screenshot_arena_fps.png",
+      "title": "Iron Crucible (Arena FPS)",
+      "description": "Procedural Dusk Sky, 3-Point Light, Catwalks",
+      "width": 1280,
+      "height": 720,
+      "mean_luminance": 102.03,
+      "contrast": 29.27,
+      "black_pixel_pct": 0.0,
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "filename": "screenshot_subway_survival.png",
+      "title": "Metro Siege (Subway)",
+      "description": "Volumetric Fog, Station Strip Lights, Grimy Tile",
+      "width": 1280,
+      "height": 720,
+      "mean_luminance": 121.76,
+      "contrast": 37.76,
+      "black_pixel_pct": 0.0,
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "filename": "screenshot_rocket_car.png",
+      "title": "Nitro Kick (Rocket Car)",
+      "description": "Floodlight Stadium, Open Sky, Turf Stripes, Jumbotron",
+      "width": 1280,
+      "height": 720,
+      "mean_luminance": 83.41,
+      "contrast": 31.15,
+      "black_pixel_pct": 0.0,
+      "status": "PASS",
+      "errors": []
+    },
+    {
+      "filename": "screenshot_kart_racing.png",
+      "title": "Drift Storm (Kart Racing)",
+      "description": "Daylight Azure Sky, Sun Key 2.2, Ripple Kerbs, Terrain",
+      "width": 1280,
+      "height": 720,
+      "mean_luminance": 124.92,
+      "contrast": 39.33,
+      "black_pixel_pct": 0.0,
+      "status": "PASS",
+      "errors": []
+    }
+  ],
+  "fail_reasons": []
+}

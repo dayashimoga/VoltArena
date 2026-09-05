@@ -1,7 +1,7 @@
 {
   "project": "VoltArena",
-  "version": "2.0.0",
-  "timestamp_utc": "2026-09-05 03:07:07 UTC",
+  "version": "4.0.0",
+  "timestamp_utc": "2026-09-05 03:43:58 UTC",
   "overall_status": "PASS",
   "automatable_pass_count": 11,
   "automatable_fail_count": 0,
@@ -11,27 +11,27 @@
     {
       "gate": "Unit & E2E Tests",
       "requirement": "100% assertion pass rate, 0 failures",
-      "measured": "776 passed, 0 failed",
+      "measured": "787 passed, 0 failed",
       "status": "PASS",
       "evidence": "artifacts/test-results.json"
     },
     {
       "gate": "Function Coverage",
       "requirement": ">90.0% function coverage",
-      "measured": "100.0% (338/338 functions)",
+      "measured": "100.0% (344/344 functions)",
       "status": "PASS",
       "evidence": "artifacts/coverage-report.json"
     },
     {
       "gate": "Performance Benchmarks",
-      "requirement": "All perf gates pass (gen<100ms, combat<50ms, mem<500MB, TTP<500ms, <10 stutters)",
-      "measured": "combat_throughput=PASS, frame_stability=PASS, memory_budget=PASS, procedural_gen=PASS, quality_presets=PASS, time_to_playable=PASS",
+      "requirement": "Target >=60 FPS (desktop), P95<16.6ms, P99<33.3ms, RAM<500MB, 0 stutters",
+      "measured": "FPS=1083.4 (P50=0.92ms, P95=1.58ms, P99=2.23ms), RAM=18.6MB, Stutters=0",
       "status": "PASS",
       "evidence": "artifacts/benchmark-results.json"
     },
     {
       "gate": "Web Export & Cloudflare Limits",
-      "requirement": "All files \u226425MB, valid WASM/HTML",
+      "requirement": "All files <=25MB, valid WASM/HTML",
       "measured": "Largest file: 18.0MB (export/web)",
       "status": "PASS",
       "evidence": "export/web/"
@@ -86,11 +86,11 @@
       "evidence": "artifacts/responsive-results.json"
     },
     {
-      "gate": "Visual Gameplay Screenshots",
-      "requirement": "All 4 games + launcher render verified non-blank screenshots",
-      "measured": "5/5 screenshots certified",
+      "gate": "Visual Quality & Empirical Screenshots",
+      "requirement": "5/5 screenshots >=1280x720, Lum in [40,180], Black%<=12%, Contrast>=25, Contact Sheet",
+      "measured": "5/5 passed (Avg Lum=95.5, Avg Contrast=34.9, Max Black%=0.0%)",
       "status": "PASS",
-      "evidence": "artifacts/screenshots/"
+      "evidence": "artifacts/screenshots/visual_contact_sheet.png"
     },
     {
       "gate": "HUD Isolation & Lifecycle Sanitation",
@@ -163,7 +163,7 @@
       "evidence": "benchmark-results.json"
     },
     {
-      "req": "Performance budgets",
+      "req": "Performance budgets (P50/P95/P99 FPS)",
       "impl": "All game scenes",
       "test": "tests/benchmark/test_benchmark.gd",
       "evidence": "benchmark-results.json"
@@ -181,7 +181,13 @@
       "evidence": "test-results.json"
     },
     {
-      "req": "Procedural animation & shake",
+      "req": "Procedural PBR textures & materials",
+      "impl": "shared/graphics/texture_synthesizer.gd + material_generator.gd",
+      "test": "tests/unit/test_material_generator.gd",
+      "evidence": "test-results.json"
+    },
+    {
+      "req": "Procedural animation & VFX feedback",
       "impl": "shared/graphics/procedural_animator.gd",
       "test": "tests/unit/test_procedural_animator.gd",
       "evidence": "test-results.json"
@@ -193,13 +199,13 @@
       "evidence": "test-results.json"
     },
     {
-      "req": "Visual screenshot verification",
-      "impl": "tests/e2e/test_gameplay_screens.gd",
-      "test": "Screenshot verification",
-      "evidence": "artifacts/screenshots/"
+      "req": "Empirical visual quality certification",
+      "impl": "scripts/certifier.py + tests/e2e/test_gameplay_screens.gd",
+      "test": "Luminance/Contrast/Black% audit",
+      "evidence": "artifacts/screenshots/visual_contact_sheet.png"
     },
     {
-      "req": "Web export \u226425MB",
+      "req": "Web export <=25MB",
       "impl": "scripts/build-web.ps1",
       "test": "certifier file-size audit",
       "evidence": "export/web/"

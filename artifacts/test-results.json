@@ -1,8 +1,8 @@
 {
   "coverage_percent": 100,
-  "coverage_tested_functions": 338,
-  "coverage_total_functions": 338,
-  "execution_seconds": 3.073,
+  "coverage_tested_functions": 344,
+  "coverage_total_functions": 344,
+  "execution_seconds": 3.45,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -57,7 +57,7 @@
     },
     "Gameplay Screens Certification E2E": {
       "failed": 0,
-      "passed": 33,
+      "passed": 32,
       "status": "PASS"
     },
     "HealthComponent Unit": {
@@ -92,12 +92,12 @@
     },
     "Map Generators Unit": {
       "failed": 0,
-      "passed": 7,
+      "passed": 8,
       "status": "PASS"
     },
     "MaterialGenerator Unit": {
       "failed": 0,
-      "passed": 30,
+      "passed": 37,
       "status": "PASS"
     },
     "MeshBuilder 3D Assets Unit": {
@@ -142,7 +142,7 @@
     },
     "Procedural Animator & Shake Unit": {
       "failed": 0,
-      "passed": 14,
+      "passed": 18,
       "status": "PASS"
     },
     "Projectiles & Weapons Unit": {
@@ -206,8 +206,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-05T03:07:19",
+  "timestamp": "2026-09-05T03:42:59",
   "total_failed": 0,
-  "total_passed": 776,
+  "total_passed": 787,
   "total_suites": 40
 }

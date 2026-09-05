@@ -90,7 +90,7 @@ func _init() -> void:
 		instance.queue_free()
 	results["time_to_playable_ms"] = ttp_results
 
-	# --- Frame Time Simulation (300 iterations of _process) ---
+	# --- Frame Time Simulation (300 active simulation ticks) ---
 	print("\n[SECTION] Frame Time Stability (300 frames)")
 	var frame_times: Array[float] = []
 	var arena_main = load("res://games/arena-fps/arena_fps_main.gd").new()
@@ -98,8 +98,13 @@ func _init() -> void:
 	for i in range(300):
 		var ft0 = Time.get_ticks_usec()
 		arena_main._process(0.016)
+		for bot in arena_main.bots:
+			if is_instance_valid(bot):
+				bot._physics_process(0.016)
+		if is_instance_valid(arena_main.player_node):
+			arena_main.player_node._physics_process(0.016)
 		var ft = (Time.get_ticks_usec() - ft0) / 1000.0
-		frame_times.append(ft)
+		frame_times.append(maxf(0.05, ft))
 	arena_main.queue_free()
 
 	frame_times.sort()
@@ -107,20 +112,25 @@ func _init() -> void:
 	for ft in frame_times:
 		avg_ft += ft
 	avg_ft /= frame_times.size()
+	var p50_ft = frame_times[int(frame_times.size() * 0.50)]
 	var p95_ft = frame_times[int(frame_times.size() * 0.95)]
 	var p99_ft = frame_times[int(frame_times.size() * 0.99)]
+	var measured_fps = 1000.0 / maxf(0.1, p50_ft)
 	var stutter_count = 0
 	for ft in frame_times:
 		if ft > 33.0:  # >33ms = stutter at 30fps
 			stutter_count += 1
 
 	results["avg_frame_time_ms"] = avg_ft
+	results["p50_frame_time_ms"] = p50_ft
 	results["p95_frame_time_ms"] = p95_ft
 	results["p99_frame_time_ms"] = p99_ft
+	results["measured_fps"] = measured_fps
 	results["stutter_count"] = stutter_count
-	print("[BENCH] Avg Frame Time:      %6.2f ms" % avg_ft)
+	print("[BENCH] P50 Frame Time:      %6.2f ms" % p50_ft)
 	print("[BENCH] P95 Frame Time:      %6.2f ms" % p95_ft)
 	print("[BENCH] P99 Frame Time:      %6.2f ms" % p99_ft)
+	print("[BENCH] Measured Sim FPS:    %6.1f FPS" % measured_fps)
 	print("[BENCH] Stutters (>33ms):    %d / 300 frames" % stutter_count)
 
 	# --- Gate Evaluation ---

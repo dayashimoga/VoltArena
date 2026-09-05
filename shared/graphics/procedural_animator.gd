@@ -130,3 +130,26 @@ static func calculate_weapon_bob(
 	var bob_x: float = cos(time_sec * 8.0) * bob_amount * factor
 	var bob_y: float = abs(sin(time_sec * 8.0)) * bob_amount * factor
 	return Vector3(bob_x, -bob_y, 0.0)
+
+static func calculate_weapon_recoil(
+	recoil_progress: float,
+	kick_back: float = 0.08,
+	kick_up: float = 0.05
+) -> Vector3:
+	var progress = clampf(recoil_progress, 0.0, 1.0)
+	var factor = sin(progress * PI)
+	return Vector3(0.0, factor * kick_up, factor * kick_back)
+
+static func create_muzzle_flash(parent: Node3D, pos: Vector3, flash_color: Color = Color(0.1, 0.95, 1.0)) -> Node3D:
+	var flash = Node3D.new()
+	flash.name = "MuzzleFlash"
+	flash.position = pos
+
+	var light = OmniLight3D.new()
+	light.light_color = flash_color
+	light.light_energy = 3.0
+	light.omni_range = 6.0
+	flash.add_child(light)
+
+	parent.add_child(flash)
+	return flash

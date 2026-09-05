@@ -14,12 +14,13 @@ func run_tests() -> Dictionary:
 	test_crawler_animation()
 	test_vehicle_suspension()
 	test_weapon_sway_and_bob()
+	test_weapon_recoil_and_flash()
 	test_camera_shake()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
 	return [
-		["res://shared/graphics/procedural_animator.gd", ["animate_biped", "animate_crawler", "animate_vehicle_suspension", "calculate_weapon_sway", "calculate_weapon_bob"]],
+		["res://shared/graphics/procedural_animator.gd", ["animate_biped", "animate_crawler", "animate_vehicle_suspension", "calculate_weapon_sway", "calculate_weapon_bob", "calculate_weapon_recoil", "create_muzzle_flash"]],
 		["res://shared/graphics/camera_shake.gd", ["add_trauma", "get_trauma", "update", "reset"]],
 	]
 
@@ -108,3 +109,14 @@ func test_camera_shake() -> void:
 
 	shake.reset()
 	assert_true(shake.get_trauma() == 0.0, "Trauma reset to 0")
+
+func test_weapon_recoil_and_flash() -> void:
+	var recoil = ProceduralAnimatorScript.calculate_weapon_recoil(0.5, 0.1, 0.05)
+	assert_true(recoil.z > 0.0, "Weapon recoil should kick back along Z")
+	assert_true(recoil.y > 0.0, "Weapon recoil should kick up along Y")
+
+	var parent = Node3D.new()
+	var flash = ProceduralAnimatorScript.create_muzzle_flash(parent, Vector3(0, 0, -1))
+	assert_true(flash != null, "Muzzle flash created")
+	assert_true(flash.has_node("OmniLight3D") or flash.get_child(0) is OmniLight3D, "Muzzle flash contains dynamic light")
+	parent.free()

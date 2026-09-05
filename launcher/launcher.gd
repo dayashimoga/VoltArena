@@ -59,12 +59,31 @@ func _ready() -> void:
 	anchor_right = 1.0
 	anchor_bottom = 1.0
 	theme = ThemeGen.get_theme()
+	_sanitize_root_scene()
 	setup_launcher_ui()
 	connect_loader_signals()
+	update_responsive_layout(get_viewport_rect().size)
 
 	var im = GameConstants.get_autoload(self, "InputManager")
 	if im:
 		im.capture_mouse(false)
+
+func _sanitize_root_scene() -> void:
+	var tree = get_tree()
+	if not tree or not tree.root:
+		return
+	var valid_autoloads = [
+		"EventBus", "SettingsManager", "SaveManager", "AudioManager",
+		"InputManager", "PlatformAdapter", "QualityManager", "TelemetryManager",
+		"AssetLoader", "GameManager"
+	]
+	for child in tree.root.get_children():
+		if child == self or child == tree.current_scene:
+			continue
+		if child.name in valid_autoloads:
+			continue
+		if child is CanvasLayer or child is Control or "HUD" in child.name or "Screen" in child.name:
+			child.queue_free()
 
 func setup_launcher_ui() -> void:
 	# Dark Cyberpunk Background
@@ -175,7 +194,7 @@ func setup_launcher_ui() -> void:
 
 func create_game_card(meta: Dictionary) -> void:
 	var card = PanelContainer.new()
-	card.custom_minimum_size = Vector2(275, 430)
+	card.custom_minimum_size = Vector2(210, 420)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
@@ -195,7 +214,7 @@ func create_game_card(meta: Dictionary) -> void:
 
 	# Stylized In-Engine Artwork Banner
 	var banner_rect = TextureRect.new()
-	banner_rect.custom_minimum_size = Vector2(250, 130)
+	banner_rect.custom_minimum_size = Vector2(200, 120)
 	banner_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	banner_rect.stretch_mode = TextureRect.STRETCH_SCALE
 	banner_rect.texture = LauncherArtScript.create_game_banner(meta["id"], 360, 190)
@@ -499,27 +518,32 @@ func update_responsive_layout(viewport_size: Vector2) -> void:
 		var cols = 4
 		if viewport_size.x < 700.0:
 			cols = 1 # Mobile portrait
-		elif viewport_size.x < 1200.0:
-			cols = 2 # Tablet / compact desktop (2x2 grid)
+		elif viewport_size.x < 1250.0:
+			cols = 2 # Tablet / 720p / compact desktop (2x2 grid)
 		else:
 			cols = 4 # Desktop 4 columns
 
 		game_cards_container.columns = cols
 
-		var padding = safe_left + safe_right + 40.0
+		var padding = safe_left + safe_right + 56.0
 		var available_w = maxf(280.0, viewport_size.x - padding)
-		var sep = 20.0
-		var card_w = maxf(220.0, (available_w - float(cols - 1) * sep) / float(cols))
+		var sep = 16.0
+		game_cards_container.add_theme_constant_override("h_separation", int(sep))
+		game_cards_container.add_theme_constant_override("v_separation", int(sep))
+		var card_w = floor((available_w - float(cols - 1) * sep) / float(cols)) - 2.0
 		for c in game_cards_container.get_children():
 			if c is Control:
-				c.custom_minimum_size.x = card_w
-				c.custom_minimum_size.y = 360.0 if cols == 1 else 430.0
+				c.custom_minimum_size.x = maxf(200.0, card_w)
+				c.custom_minimum_size.y = 350.0 if cols == 1 else 420.0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
+		var vp = get_viewport()
 		if settings_dialog and settings_dialog.visible:
 			settings_dialog.visible = false
-			get_viewport().set_input_as_handled()
+			if vp:
+				vp.set_input_as_handled()
 		elif controls_dialog and controls_dialog.visible:
 			controls_dialog.visible = false
-			get_viewport().set_input_as_handled()
+			if vp:
+				vp.set_input_as_handled()

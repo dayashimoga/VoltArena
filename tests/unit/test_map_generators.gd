@@ -30,11 +30,11 @@ func get_coverage_entries() -> Array:
 		],
 		[
 			"res://games/rocket-car/arena/rocket_arena.gd",
-			["_ready", "build_arena", "build_end_wall", "create_goal_trigger", "create_boost_pad", "create_box", "setup_stadium_lighting"]
+			["_ready", "build_arena", "build_end_wall", "create_goal_trigger", "create_boost_pad", "create_box", "create_jumbotron", "setup_stadium_lighting"]
 		],
 		[
 			"res://games/kart-racing/tracks/track_generator.gd",
-			["_ready", "build_circuit", "build_track_segment", "setup_racing_environment"]
+			["_ready", "build_circuit", "build_track_segment", "create_start_finish_gantry", "create_box", "setup_racing_environment"]
 		],
 		[
 			"res://games/kart-racing/tracks/checkpoint.gd",
@@ -67,6 +67,7 @@ func test_rocket_arena_generator() -> void:
 	var arena = RocketArenaScript.new()
 	arena._ready()
 	assert_true(arena.get_child_count() > 5, "RocketArena must create walls and floor")
+	arena.create_jumbotron()
 	arena.queue_free()
 
 func test_track_generator() -> void:
@@ -74,6 +75,9 @@ func test_track_generator() -> void:
 	track._ready()
 	assert_true(track.waypoints.size() >= 8, "Track must have at least 8 circuit waypoints")
 	assert_true(track.checkpoints.size() >= 8, "Track must have checkpoints")
+	var box = track.create_box(Vector3.ZERO, Vector3.ONE, "grass")
+	assert_true(box is StaticBody3D, "track.create_box must return StaticBody3D")
+	track.create_start_finish_gantry(Vector3.ZERO)
 	track.queue_free()
 
 func test_race_checkpoint() -> void:

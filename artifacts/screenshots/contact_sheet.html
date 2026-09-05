@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>VoltArena - Visual Acceptance Dossier</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0b0e14; color: #e1e7ec; margin: 0; padding: 2rem; }
+        .header { max-width: 1300px; margin: 0 auto 2rem auto; border-bottom: 2px solid #00f0ff; padding-bottom: 1rem; }
+        h1 { color: #00f0ff; margin: 0 0 0.5rem 0; font-size: 2rem; }
+        p.subtitle { color: #94a3b8; margin: 0; font-size: 1rem; }
+        .grid { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem; }
+        .screen-card { background: #131720; border: 1px solid #2d3748; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+        .screen-header { padding: 0.75rem 1rem; background: #1a202c; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d3748; }
+        .screen-header h3 { margin: 0; font-size: 1rem; color: #38bdf8; }
+        .screen-preview img { width: 100%; height: auto; display: block; background: #000; }
+        .screen-meta { padding: 1rem; flex-grow: 1; }
+        p.desc { color: #a0aec0; font-size: 0.85rem; margin: 0 0 0.75rem 0; }
+        .metrics-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        .metrics-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #2d3748; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; text-transform: uppercase; }
+        .badge.pass { background: #10b981; color: #000; }
+        .badge.fail { background: #ef4444; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>VOLTARENA -- VISUAL ACCEPTANCE DOSSIER</h1>
+        <p class="subtitle">Empirical validation: 1280x720 rendered frames, luminance calibration, contrast std dev, and zero dark voids.</p>
+    </div>
+    <div class="grid">
+        
+            <div class="screen-card">
+                <div class="screen-header">
+                    <h3>Universal Launcher</h3>
+                    <span class="badge pass">PASS</span>
+                </div>
+                <div class="screen-preview">
+                    <img src="screenshot_launcher.png" alt="Universal Launcher" loading="lazy" />
+                </div>
+                <div class="screen-meta">
+                    <p class="desc">Responsive 4->2x2->1, Isolated HUD</p>
+                    <table class="metrics-table">
+                        <tr><td>Resolution</td><td><strong>1280x720</strong></td></tr>
+                        <tr><td>Mean Luminance</td><td><strong>45.2</strong> (req: 40-180)</td></tr>
+                        <tr><td>Contrast (StdDev)</td><td><strong>37.22</strong> (req: &ge;25)</td></tr>
+                        <tr><td>Black Pixels</td><td><strong>0.0%</strong> (req: &le;12%)</td></tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="screen-card">
+                <div class="screen-header">
+                    <h3>Iron Crucible (Arena FPS)</h3>
+                    <span class="badge pass">PASS</span>
+                </div>
+                <div class="screen-preview">
+                    <img src="screenshot_arena_fps.png" alt="Iron Crucible (Arena FPS)" loading="lazy" />
+                </div>
+                <div class="screen-meta">
+                    <p class="desc">Procedural Dusk Sky, 3-Point Light, Catwalks</p>
+                    <table class="metrics-table">
+                        <tr><td>Resolution</td><td><strong>1280x720</strong></td></tr>
+                        <tr><td>Mean Luminance</td><td><strong>102.03</strong> (req: 40-180)</td></tr>
+                        <tr><td>Contrast (StdDev)</td><td><strong>29.27</strong> (req: &ge;25)</td></tr>
+                        <tr><td>Black Pixels</td><td><strong>0.0%</strong> (req: &le;12%)</td></tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="screen-card">
+                <div class="screen-header">
+                    <h3>Metro Siege (Subway)</h3>
+                    <span class="badge pass">PASS</span>
+                </div>
+                <div class="screen-preview">
+                    <img src="screenshot_subway_survival.png" alt="Metro Siege (Subway)" loading="lazy" />
+                </div>
+                <div class="screen-meta">
+                    <p class="desc">Volumetric Fog, Station Strip Lights, Grimy Tile</p>
+                    <table class="metrics-table">
+                        <tr><td>Resolution</td><td><strong>1280x720</strong></td></tr>
+                        <tr><td>Mean Luminance</td><td><strong>121.76</strong> (req: 40-180)</td></tr>
+                        <tr><td>Contrast (StdDev)</td><td><strong>37.76</strong> (req: &ge;25)</td></tr>
+                        <tr><td>Black Pixels</td><td><strong>0.0%</strong> (req: &le;12%)</td></tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="screen-card">
+                <div class="screen-header">
+                    <h3>Nitro Kick (Rocket Car)</h3>
+                    <span class="badge pass">PASS</span>
+                </div>
+                <div class="screen-preview">
+                    <img src="screenshot_rocket_car.png" alt="Nitro Kick (Rocket Car)" loading="lazy" />
+                </div>
+                <div class="screen-meta">
+                    <p class="desc">Floodlight Stadium, Open Sky, Turf Stripes, Jumbotron</p>
+                    <table class="metrics-table">
+                        <tr><td>Resolution</td><td><strong>1280x720</strong></td></tr>
+                        <tr><td>Mean Luminance</td><td><strong>83.41</strong> (req: 40-180)</td></tr>
+                        <tr><td>Contrast (StdDev)</td><td><strong>31.15</strong> (req: &ge;25)</td></tr>
+                        <tr><td>Black Pixels</td><td><strong>0.0%</strong> (req: &le;12%)</td></tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="screen-card">
+                <div class="screen-header">
+                    <h3>Drift Storm (Kart Racing)</h3>
+                    <span class="badge pass">PASS</span>
+                </div>
+                <div class="screen-preview">
+                    <img src="screenshot_kart_racing.png" alt="Drift Storm (Kart Racing)" loading="lazy" />
+                </div>
+                <div class="screen-meta">
+                    <p class="desc">Daylight Azure Sky, Sun Key 2.2, Ripple Kerbs, Terrain</p>
+                    <table class="metrics-table">
+                        <tr><td>Resolution</td><td><strong>1280x720</strong></td></tr>
+                        <tr><td>Mean Luminance</td><td><strong>124.92</strong> (req: 40-180)</td></tr>
+                        <tr><td>Contrast (StdDev)</td><td><strong>39.33</strong> (req: &ge;25)</td></tr>
+                        <tr><td>Black Pixels</td><td><strong>0.0%</strong> (req: &le;12%)</td></tr>
+                    </table>
+                </div>
+            </div>
+            
+    </div>
+</body>
+</html>

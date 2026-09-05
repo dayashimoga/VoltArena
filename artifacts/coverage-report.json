@@ -111,8 +111,8 @@
     },
     "res://games/kart-racing/tracks/track_generator.gd": {
       "coverage_pct": 100,
-      "tested": 4,
-      "total": 4,
+      "tested": 6,
+      "total": 6,
       "untested": []
     },
     "res://games/kart-racing/ui/drift_storm_hud.gd": {
@@ -129,8 +129,8 @@
     },
     "res://games/rocket-car/arena/rocket_arena.gd": {
       "coverage_pct": 100,
-      "tested": 7,
-      "total": 7,
+      "tested": 8,
+      "total": 8,
       "untested": []
     },
     "res://games/rocket-car/ball/ball.gd": {
@@ -279,14 +279,20 @@
     },
     "res://shared/graphics/procedural_animator.gd": {
       "coverage_pct": 100,
-      "tested": 5,
-      "total": 5,
+      "tested": 7,
+      "total": 7,
       "untested": []
     },
     "res://shared/graphics/quality_manager.gd": {
       "coverage_pct": 100,
       "tested": 3,
       "total": 3,
+      "untested": []
+    },
+    "res://shared/graphics/texture_synthesizer.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
       "untested": []
     },
     "res://shared/input/input_manager.gd": {
@@ -368,7 +374,7 @@
       "untested": []
     }
   },
-  "tested_functions": 338,
-  "timestamp": "2026-09-05T03:07:19",
-  "total_functions": 338
+  "tested_functions": 344,
+  "timestamp": "2026-09-05T03:42:59",
+  "total_functions": 344
 }

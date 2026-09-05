@@ -269,6 +269,9 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **CI Artifact Persistence**:
   - Updated `.github/workflows/ci.yml` `tests` job to upload `artifacts/responsive-results.json` and `artifacts/screenshots/`.
   - Added export directory restoration step in `ci.yml` `certify` job.
-
-
-
+## [3.0.2-android-logcat-scoping] - 2026-09-05
+### Fixed
+- **Android Emulator Logcat Scoping & Background OS Exception Isolation**:
+  - Scoped fatal crash detection in `tests/android/test_android.sh` specifically to target application package (`Process:.*org.voltarena.gamesuite` or `ANR in org.voltarena.gamesuite`).
+  - Scoped native signal crash detection to target application processes (`gamesuite|voltarena|godot`), eliminating false failures caused by unhandled exceptions in background emulator OS/Google Play services (such as `FATAL EXCEPTION: AsyncTask #5` in PID 2549).
+  - Maintained strict fail-fast error checking for true application crashes and proper `PLATFORM_REQUIRED` handling for cloud hypervisor CPU vector instruction limitations.

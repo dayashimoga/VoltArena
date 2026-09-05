@@ -70,28 +70,30 @@ CRASH_COUNT=0
 IS_HARDWARE_LIMITATION=false
 
 if [ -f "$ARTIFACTS_DIR/logcat.txt" ]; then
-    # Check for actual application fatal exceptions or ANRs
-    APP_CRASHES=$(grep -E "(FATAL EXCEPTION|ANR in ${PACKAGE_NAME})" "$ARTIFACTS_DIR/logcat.txt" 2>/dev/null || true)
+    # Check for crashes specific to our application package (Process: org.voltarena.gamesuite or ANR in org.voltarena.gamesuite)
+    APP_CRASHES=$(grep -B 2 -A 2 -E "Process:.*${PACKAGE_NAME}" "$ARTIFACTS_DIR/logcat.txt" 2>/dev/null | grep -E "FATAL EXCEPTION" || true)
+    ANR_CRASHES=$(grep -E "ANR in ${PACKAGE_NAME}" "$ARTIFACTS_DIR/logcat.txt" 2>/dev/null || true)
     
-    # Check for native signal crashes
-    SIGNAL_CRASHES=$(grep -E "Fatal signal [0-9]+" "$ARTIFACTS_DIR/logcat.txt" 2>/dev/null || true)
+    # Check for native signal crashes specific to our application process (gamesuite/voltarena/godot)
+    NATIVE_APP_CRASHES=$(grep -E "Fatal signal [0-9]+.*(gamesuite|voltarena|godot)" "$ARTIFACTS_DIR/logcat.txt" 2>/dev/null || true)
 
-    if [ -n "$APP_CRASHES" ]; then
-        CRASH_COUNT=$(echo "$APP_CRASHES" | wc -l)
-        echo "FAIL: Found $CRASH_COUNT application crashes/ANRs in logcat:"
+    if [ -n "$APP_CRASHES" ] || [ -n "$ANR_CRASHES" ]; then
+        CRASH_COUNT=$(( $(echo "$APP_CRASHES" | grep -c . || true) + $(echo "$ANR_CRASHES" | grep -c . || true) ))
+        echo "FAIL: Found $CRASH_COUNT application crashes/ANRs in logcat for $PACKAGE_NAME:"
         echo "$APP_CRASHES"
-    elif [ -n "$SIGNAL_CRASHES" ]; then
+        echo "$ANR_CRASHES"
+    elif [ -n "$NATIVE_APP_CRASHES" ]; then
         # Check if it's the known hypervisor instruction limitation (SIGILL/ILL_ILLOPN in cloud emulator)
-        if echo "$SIGNAL_CRASHES" | grep -q "Fatal signal 4 (SIGILL)"; then
+        if echo "$NATIVE_APP_CRASHES" | grep -q "Fatal signal 4 (SIGILL)"; then
             IS_HARDWARE_LIMITATION=true
             echo "NOTICE: Found Fatal signal 4 (SIGILL / ILL_ILLOPN) in logcat:"
-            echo "$SIGNAL_CRASHES"
+            echo "$NATIVE_APP_CRASHES"
             echo ">> This is a known cloud hypervisor virtualization limitation (missing host CPU vector extensions for 3D GLES emulation in QEMU)."
             echo ">> APK installed and launched successfully; hardware GPU / physical device required for full 3D rendering (PLATFORM_REQUIRED)."
         else
-            CRASH_COUNT=$(echo "$SIGNAL_CRASHES" | wc -l)
-            echo "FAIL: Found $CRASH_COUNT native signal crashes in logcat:"
-            echo "$SIGNAL_CRASHES"
+            CRASH_COUNT=$(echo "$NATIVE_APP_CRASHES" | grep -c . || true)
+            echo "FAIL: Found $CRASH_COUNT native signal crashes in logcat for $PACKAGE_NAME:"
+            echo "$NATIVE_APP_CRASHES"
         fi
     fi
 fi

@@ -224,4 +224,13 @@
   5. Added `Restore export directories from artifacts` step in `ci.yml` `certify` job to reconstitute export directory hierarchies from downloaded artifacts before certifier execution.
 - **Evidence**: Executed `python scripts/certifier.py` with 100% PASS across all 11 automatable quality gates (0 failures, 4 platform-required).
 
+### [2026-09-05 03:15:00 UTC] - Phase 19: Android Emulator Logcat Package Scoping & System Service Isolation
+- **Status**: COMPLETED
+- **Description**: Resolved GitHub Actions `android-emulator` runner failure where unhandled exceptions in background emulator OS/GMS system services (e.g. `FATAL EXCEPTION: AsyncTask #5` in PID 2549 from Google Play services lacking internet) triggered false application crash detection:
+  1. Updated `tests/android/test_android.sh` to scope `FATAL EXCEPTION` detection specifically to `Process: org.voltarena.gamesuite` or `ANR in org.voltarena.gamesuite`.
+  2. Scoped native signal crash detection to the target application process (`gamesuite` or `voltarena`), ignoring unrelated emulator background services.
+  3. Preserved strict fail-fast error checking for true application crashes while maintaining proper `PLATFORM_REQUIRED` classification for cloud hypervisor CPU vector instruction limitations.
+- **Evidence**: Shell syntax validated with `bash -n tests/android/test_android.sh`; exit code 0.
+
+
 

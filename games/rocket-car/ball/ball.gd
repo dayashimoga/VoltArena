@@ -19,12 +19,8 @@ func _ready() -> void:
 
 func setup_visuals() -> void:
 	ball_mesh = MeshInstance3D.new()
-	var sphere = SphereMesh.new()
-	sphere.radius = radius
-	sphere.height = radius * 2.0
-	ball_mesh.mesh = sphere
-	ball_mesh.material_override = MaterialGenerator.get_material("energy_ball")
-	add_child(ball_mesh)
+	var ball_model = MeshBuilder.build_energy_ball()
+	add_child(ball_model)
 
 	var col = CollisionShape3D.new()
 	var sphere_shape = SphereShape3D.new()

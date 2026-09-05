@@ -67,6 +67,7 @@ func switch_to_scene(packed_scene: PackedScene) -> void:
 	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
 	if tree:
 		tree.paused = false
+		clean_root_orphans(tree)
 		tree.change_scene_to_packed(packed_scene)
 
 func restart_current_game() -> void:
@@ -97,4 +98,21 @@ func return_to_launcher() -> void:
 	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
 	if tree:
 		tree.paused = false
+		clean_root_orphans(tree)
 		tree.change_scene_to_file("res://launcher/launcher.tscn")
+
+func clean_root_orphans(tree: SceneTree) -> void:
+	if not tree or not tree.root:
+		return
+	var valid_autoloads = [
+		"EventBus", "SettingsManager", "SaveManager", "AudioManager",
+		"InputManager", "PlatformAdapter", "QualityManager", "TelemetryManager",
+		"AssetLoader", "GameManager"
+	]
+	for child in tree.root.get_children():
+		if child == tree.current_scene:
+			continue
+		if child.name in valid_autoloads:
+			continue
+		child.queue_free()
+

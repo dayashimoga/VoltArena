@@ -2,7 +2,6 @@ class_name TestLauncherE2E
 extends RefCounted
 
 ## End-to-end acceptance test for the VoltArena Universal Launcher.
-## Tests: UI setup → game cards → career stats → loading overlay → settings → scene signals
 
 const LauncherScript = preload("res://launcher/launcher.gd")
 
@@ -11,10 +10,12 @@ var assertions_failed: int = 0
 
 func run_tests() -> Dictionary:
 	test_launcher_initialization()
-	test_game_cards_created()
+	test_game_cards_creation()
 	test_game_metadata_completeness()
 	test_loading_overlay()
 	test_settings_dialog()
+	test_controls_dialog()
+	test_responsive_layout()
 	test_career_stats_formatting()
 	test_game_selection_flow()
 	test_unhandled_input_esc()
@@ -22,7 +23,12 @@ func run_tests() -> Dictionary:
 
 func get_coverage_entries() -> Array:
 	return [
-		["res://launcher/launcher.gd", ["_ready", "setup_launcher_ui", "create_game_card", "get_game_career_stats", "setup_loading_overlay", "setup_settings_dialog", "show_settings", "set_quality", "toggle_audio", "on_play_game_pressed", "connect_loader_signals", "_unhandled_input"]],
+		["res://launcher/launcher.gd", [
+			"_ready", "setup_launcher_ui", "create_game_card", "get_game_career_stats",
+			"setup_loading_overlay", "setup_settings_dialog", "show_settings", "show_controls",
+			"set_quality", "toggle_audio", "on_play_game_pressed", "connect_loader_signals",
+			"_notification", "update_responsive_layout", "_unhandled_input"
+		]],
 	]
 
 func assert_true(cond: bool, msg: String) -> void:
@@ -42,10 +48,11 @@ func test_launcher_initialization() -> void:
 	assert_true(launcher.game_cards_container != null, "Game cards container must exist")
 	assert_true(launcher.loading_overlay != null, "Loading overlay must exist")
 	assert_true(launcher.settings_dialog != null, "Settings dialog must exist")
+	assert_true(launcher.controls_dialog != null, "Controls dialog must exist")
 
 	launcher.queue_free()
 
-func test_game_cards_created() -> void:
+func test_game_cards_creation() -> void:
 	var launcher = LauncherScript.new()
 	launcher.setup_launcher_ui()
 
@@ -58,21 +65,22 @@ func test_game_metadata_completeness() -> void:
 
 	assert_eq(launcher.games_meta.size(), 4, "Must have metadata for 4 games")
 
-	var required_keys = ["id", "title", "tagline", "desc", "tags", "color", "scene"]
+	var expected_ids = ["arena_fps", "subway_survival", "rocket_car", "kart_racing"]
 	for meta in launcher.games_meta:
-		for key in required_keys:
-			assert_true(meta.has(key), "Game '%s' must have key '%s'" % [meta.get("title", "unknown"), key])
+		assert_true(meta["id"] in expected_ids, "Game ID must be valid: %s" % meta["id"])
+		assert_true(meta["title"].length() > 0, "Game must have title: %s" % meta["id"])
+		assert_true(meta["desc"].length() > 0, "Game must have description: %s" % meta["id"])
+		assert_true(meta["tags"].size() > 0, "Game must have tags: %s" % meta["id"])
+		assert_true(meta["scene"].begins_with("res://"), "Game must have valid scene path: %s" % meta["id"])
 
-	# Verify unique IDs
+	for meta in launcher.games_meta:
+		var has_res = ResourceLoader.exists(meta["scene"])
+		assert_true(has_res, "Game scene must exist on disk: %s" % meta["scene"])
+
 	var ids = []
 	for meta in launcher.games_meta:
-		assert_true(not meta["id"] in ids, "Game ID '%s' must be unique" % meta["id"])
+		assert_true(not meta["id"] in ids, "Game ID must be unique: %s" % meta["id"])
 		ids.append(meta["id"])
-
-	# Verify scene paths are valid res:// paths
-	for meta in launcher.games_meta:
-		assert_true(meta["scene"].begins_with("res://"), "Scene path must start with res://")
-		assert_true(meta["scene"].ends_with(".tscn"), "Scene path must end with .tscn")
 
 	launcher.queue_free()
 
@@ -96,12 +104,43 @@ func test_settings_dialog() -> void:
 	launcher.show_settings()
 	assert_true(launcher.settings_dialog.visible, "Settings dialog must be visible after show")
 
+	launcher.set_quality(1)
+	launcher.toggle_audio()
+
+	launcher.queue_free()
+
+func test_controls_dialog() -> void:
+	var launcher = LauncherScript.new()
+	launcher.setup_launcher_ui()
+
+	assert_true(not launcher.controls_dialog.visible, "Controls dialog must be hidden initially")
+
+	launcher.show_controls()
+	assert_true(launcher.controls_dialog.visible, "Controls dialog must be visible after show")
+	assert_true(not launcher.settings_dialog.visible, "Settings dialog should close when controls opened")
+
+	launcher.queue_free()
+
+func test_responsive_layout() -> void:
+	var launcher = LauncherScript.new()
+	launcher.setup_launcher_ui()
+
+	launcher.update_responsive_layout(Vector2(600, 800)) # Mobile portrait
+	assert_eq(launcher.game_cards_container.columns, 1, "Should be 1 column on mobile")
+
+	launcher.update_responsive_layout(Vector2(900, 700)) # Tablet
+	assert_eq(launcher.game_cards_container.columns, 2, "Should be 2 columns on tablet")
+
+	launcher.update_responsive_layout(Vector2(1400, 900)) # Desktop
+	assert_eq(launcher.game_cards_container.columns, 4, "Should be 4 columns on desktop")
+
+	launcher._notification(Control.NOTIFICATION_RESIZED)
+
 	launcher.queue_free()
 
 func test_career_stats_formatting() -> void:
 	var launcher = LauncherScript.new()
 
-	# Without SaveManager, should return empty string
 	var stats = launcher.get_game_career_stats("arena_fps")
 	assert_eq(stats, "", "Stats must be empty without SaveManager")
 
@@ -123,7 +162,6 @@ func test_game_selection_flow() -> void:
 	var launcher = LauncherScript.new()
 	launcher.setup_launcher_ui()
 
-	# Simulate pressing play — without AssetLoader/EventBus, should not crash
 	var meta = launcher.games_meta[0]
 	launcher.on_play_game_pressed(meta)
 
@@ -144,5 +182,8 @@ func test_unhandled_input_esc() -> void:
 	launcher._unhandled_input(ev)
 	assert_true(not launcher.settings_dialog.visible, "Settings dialog must close on ESC")
 
-	launcher.queue_free()
+	launcher.show_controls()
+	launcher._unhandled_input(ev)
+	assert_true(not launcher.controls_dialog.visible, "Controls dialog must close on ESC")
 
+	launcher.queue_free()

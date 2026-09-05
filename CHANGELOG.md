@@ -229,3 +229,35 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Added unit test cases for input context switching, audio stop_all, asset loader readiness, race checkpoint hit callbacks, launcher ESC handling, and game constants autoload lookup.
   - Result: 670/670 passing assertions (100% pass rate) and 100.0% function coverage (263/263 functions across all 35 test suites).
 
+## [3.0.0-production-polish] - 2026-09-05
+### Added
+- **Dedicated Game HUD Isolation & Complete UI Hierarchy**:
+  - Created isolated, purpose-built HUD components: `ArenaFPSHUD` (frags counter, tactical cyber health/shield, weapon slots), `MetroSiegeHUD` (underground wave counter, threat meter, scrap economy, wave banners), `NitroKickHUD` (stadium scoreboard, match clock, nitro boost gauge, kickoff & goal celebration banners), and `DriftStormHUD` (position badge, lap counter, speedometer, 3-tier drift charge meter, powerup item slot).
+  - Eliminated mixed or leaking HUDs: verified that zero FPS health/weapon HUDs appear in Nitro Kick or Drift Storm.
+  - Added `GameManager.clean_root_orphans()` to thoroughly tear down transient nodes, orphan viewports, and canvas layers upon scene switching and returning to launcher.
+- **Compound 3D Asset & Procedural Mesh Pipeline**:
+  - Implemented `MeshBuilder` generating multi-part compound 3D meshes with PBR materials for all 15 core archetypes:
+    - 5 Energy Weapons: Pulse Rifle, Scatter Cannon, Rail Driver, Grenade Launcher, Plasma Cutter.
+    - 4 Characters & Mutants: Cyber Soldier, Crawler, Stalker, Brute.
+    - 2 Vehicles: Rocket Car (aerodynamic chassis, alloy wheels, rear spoiler, twin thrusters), Drift Kart (chassis, bucket seat, steering column, rear engine block, slick racing tires).
+    - 4 Props & Pickups: Gyroscopic Energy Ball with orbiting rings, mystery Item Box, floating crystal Pickups, and reinforced Cyber Crates.
+- **Animation, Locomotion & Camera Dynamics**:
+  - Created `ProceduralAnimator` providing organic biped limb swinging, breathing idle, spider crawler scuttling, vehicle suspension roll/pitch, and wheel spin/steering angle.
+  - Created `CameraShake` implementing non-linear trauma decay for impactful weapon shots, explosions, and collisions.
+- **Centralized Object Pooling Service**:
+  - Created `NodePool` providing zero-allocation pooling for high-frequency runtime objects (projectiles, muzzle flashes, impact sparks, damage floaters) to prevent runtime garbage collection stutter.
+- **Procedural Launcher Artwork & Controls Guide**:
+  - Created `LauncherArt` generating high-resolution stylized vector banner artwork in-engine for each game card.
+  - Added interactive card hover micro-animations (scale/modulate tweening).
+  - Added visual Controls & Input Guide modal for keyboard/mouse, touch, and gamepad bindings.
+- **Complete Procedural Audio & Music Suite**:
+  - Expanded `AudioManager` with complete synthesized procedural sound effects (plasma fire, scatter cannon, scrap pickup, wave fanfare, nitro boost, drift screech).
+  - Implemented 4 looping procedural music tracks (`iron_crucible`, `metro_siege`, `nitro_kick`, `drift_storm`) with dynamic bus volume controls.
+- **Production Certification & Verification**:
+  - Captured 5 non-blank gameplay screen artifacts (`artifacts/screenshots/`).
+  - Added 5 new test suites: `TestMeshBuilder`, `TestLauncherArt`, `TestNodePool`, `TestProceduralAnimator`, and `TestGameplayScreens`.
+  - Expanded test runner to **40 test suites** and **776 passed assertions** (0 failures, 100% success rate).
+  - Maintained **100.0% project function coverage (338/338 functions)** verified via `CoverageRegistry`.
+  - Upgraded `scripts/certifier.py` to 15 quality gates: all 11 automatable gates certified **PASS**.
+
+

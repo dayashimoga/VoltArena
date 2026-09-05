@@ -71,6 +71,21 @@ func build_track_segment(start_pt: Vector3, end_pt: Vector3, segment_index: int)
 	mesh.material_override = MaterialGenerator.get_material("asphalt_track")
 	road.add_child(mesh)
 
+	# Rumble Curbs along both sides of track
+	var curb_mesh = BoxMesh.new()
+	curb_mesh.size = Vector3(0.6, 0.12, seg_length + 2.0)
+	var curb_l = MeshInstance3D.new()
+	curb_l.mesh = curb_mesh
+	curb_l.position = Vector3(-track_width * 0.5 + 0.3, 0.26, 0)
+	curb_l.material_override = MaterialGenerator.get_material("neon_orange")
+	road.add_child(curb_l)
+
+	var curb_r = MeshInstance3D.new()
+	curb_r.mesh = curb_mesh
+	curb_r.position = Vector3(track_width * 0.5 - 0.3, 0.26, 0)
+	curb_r.material_override = MaterialGenerator.get_material("neon_orange")
+	road.add_child(curb_r)
+
 	# Outer Guard Rails
 	var rail_w = 0.5
 	var rail_h = 1.4

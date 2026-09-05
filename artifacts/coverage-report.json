@@ -31,6 +31,12 @@
       "total": 13,
       "untested": []
     },
+    "res://games/arena-fps/ui/arena_fps_hud.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
     "res://games/arena-fps/weapons/grenade_launcher.gd": {
       "coverage_pct": 100,
       "tested": 2,
@@ -109,6 +115,12 @@
       "total": 4,
       "untested": []
     },
+    "res://games/kart-racing/ui/drift_storm_hud.gd": {
+      "coverage_pct": 100,
+      "tested": 12,
+      "total": 12,
+      "untested": []
+    },
     "res://games/rocket-car/ai/car_ai.gd": {
       "coverage_pct": 100,
       "tested": 2,
@@ -131,6 +143,12 @@
       "coverage_pct": 100,
       "tested": 6,
       "total": 6,
+      "untested": []
+    },
+    "res://games/rocket-car/ui/nitro_kick_hud.gd": {
+      "coverage_pct": 100,
+      "tested": 10,
+      "total": 10,
       "untested": []
     },
     "res://games/rocket-car/vehicle/car_controller.gd": {
@@ -181,10 +199,22 @@
       "total": 3,
       "untested": []
     },
-    "res://launcher/launcher.gd": {
+    "res://games/subway-survival/ui/metro_siege_hud.gd": {
       "coverage_pct": 100,
       "tested": 14,
       "total": 14,
+      "untested": []
+    },
+    "res://launcher/launcher.gd": {
+      "coverage_pct": 100,
+      "tested": 15,
+      "total": 15,
+      "untested": []
+    },
+    "res://launcher/launcher_art.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
       "untested": []
     },
     "res://shared/ai/ai_base.gd": {
@@ -195,8 +225,8 @@
     },
     "res://shared/audio/audio_manager.gd": {
       "coverage_pct": 100,
-      "tested": 10,
-      "total": 10,
+      "tested": 14,
+      "total": 14,
       "untested": []
     },
     "res://shared/combat/health_component.gd": {
@@ -213,8 +243,20 @@
     },
     "res://shared/core/game_manager.gd": {
       "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://shared/core/node_pool.gd": {
+      "coverage_pct": 100,
       "tested": 6,
       "total": 6,
+      "untested": []
+    },
+    "res://shared/graphics/camera_shake.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
       "untested": []
     },
     "res://shared/graphics/fx_factory.gd": {
@@ -227,6 +269,18 @@
       "coverage_pct": 100,
       "tested": 3,
       "total": 3,
+      "untested": []
+    },
+    "res://shared/graphics/mesh_builder.gd": {
+      "coverage_pct": 100,
+      "tested": 15,
+      "total": 15,
+      "untested": []
+    },
+    "res://shared/graphics/procedural_animator.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
       "untested": []
     },
     "res://shared/graphics/quality_manager.gd": {
@@ -314,7 +368,7 @@
       "untested": []
     }
   },
-  "tested_functions": 263,
-  "timestamp": "2026-09-04T15:27:58",
-  "total_functions": 263
+  "tested_functions": 338,
+  "timestamp": "2026-09-05T02:42:33",
+  "total_functions": 338
 }

@@ -28,7 +28,8 @@ func spawn_projectile(spawn_pos: Vector3, dir: Vector3) -> void:
 	proj.gravity_scale = 14.0
 	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
 	if tree:
-		tree.root.add_child(proj)
+		var parent_node = tree.current_scene if tree.current_scene else tree.root
+		parent_node.add_child(proj)
 		proj.global_position = spawn_pos + dir * 0.8
 	else:
 		proj.free()

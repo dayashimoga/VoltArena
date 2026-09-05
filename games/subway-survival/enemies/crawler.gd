@@ -12,23 +12,9 @@ func _init() -> void:
 	attack_range = 1.8
 
 func setup_visuals() -> void:
-	# Quadruped / Low hunch visual
-	var body_mesh = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(0.5, 0.4, 0.9)
-	body_mesh.mesh = box
-	body_mesh.position = Vector3(0, 0.35, 0)
-	body_mesh.material_override = MaterialGenerator.get_material("enemy_crawler")
-	add_child(body_mesh)
-
-	# Glowing red eyes
-	var eyes = MeshInstance3D.new()
-	var eye_box = BoxMesh.new()
-	eye_box.size = Vector3(0.28, 0.08, 0.1)
-	eyes.mesh = eye_box
-	eyes.position = Vector3(0, 0.45, -0.46)
-	eyes.material_override = MaterialGenerator.get_material("neon_magenta")
-	add_child(eyes)
+	# Detailed multi-legged chitinous crawler model
+	var crawler_model = MeshBuilder.build_crawler_mesh()
+	add_child(crawler_model)
 
 	# Collision
 	var col = CollisionShape3D.new()

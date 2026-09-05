@@ -21,6 +21,15 @@ func build_subway_station() -> void:
 	create_box(Vector3(4.0, -1.15, 0.0), Vector3(0.15, 0.1, station_length), "sci_fi_metal")
 	create_box(Vector3(7.5, -1.15, 0.0), Vector3(0.15, 0.1, station_length), "sci_fi_metal")
 
+	# Wooden Railway Ties across the track
+	var half_z = station_length * 0.5
+	for z_pos in range(-int(half_z) + 2, int(half_z) - 2, 2):
+		create_box(Vector3(5.75, -1.18, float(z_pos)), Vector3(4.4, 0.06, 0.4), "dark_hull")
+
+	# Tactical Supply Terminal / Upgrade Station on Platform
+	create_box(Vector3(-10.5, 1.0, 0.0), Vector3(1.2, 2.0, 1.2), "sci_fi_metal")
+	create_box(Vector3(-10.5, 1.4, 0.61), Vector3(0.8, 0.6, 0.05), "neon_cyan")
+
 	# Ceiling
 	create_box(Vector3(0.0, ceiling_height, 0.0), Vector3(station_width, 1.0, station_length), "grimy_concrete")
 
@@ -31,7 +40,6 @@ func build_subway_station() -> void:
 	create_box(Vector3(11.0, ceiling_height * 0.5, 0.0), Vector3(1.0, ceiling_height, station_length), "grimy_concrete")
 
 	# End Tunnel Portals (North and South tunnel mouths where enemies spawn)
-	var half_z = station_length * 0.5
 	# North Wall with tunnel arch
 	create_box(Vector3(-5.0, ceiling_height * 0.5, -half_z), Vector3(14.0, ceiling_height, 1.0), "grimy_concrete")
 	# South Wall with tunnel arch

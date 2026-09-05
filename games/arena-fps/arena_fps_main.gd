@@ -12,7 +12,9 @@ var match_active: bool = true
 var player_node: FPSPlayer
 var bots: Array[ArenaBot] = []
 
-var hud: HUDBase
+const ArenaFPSHUDScript = preload("res://games/arena-fps/ui/arena_fps_hud.gd")
+
+var hud: Control
 var pause_menu: PauseMenu
 var results_screen: ResultsScreen
 
@@ -29,7 +31,7 @@ func setup_scene() -> void:
 
 	# UI
 	if not hud:
-		hud = HUDBase.new()
+		hud = ArenaFPSHUDScript.new()
 		hud.name = "HUD"
 		add_child(hud)
 
@@ -94,12 +96,15 @@ func _process(delta: float) -> void:
 
 func _on_enemy_killed(_type: String, score_val: int) -> void:
 	player_score += score_val
+	var frags_count = player_score / 100
+	if hud and hud.has_method("update_frags"):
+		hud.update_frags(frags_count, target_kills_to_win)
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.score_updated.emit(0, player_score)
 		bus.show_toast_requested.emit("ELIMINATION! +%d PTS" % score_val, Color(0.0, 1.0, 0.5))
 
-	if player_score >= target_kills_to_win * 100:
+	if frags_count >= target_kills_to_win:
 		end_match()
 
 func _on_player_died(_killer: String) -> void:

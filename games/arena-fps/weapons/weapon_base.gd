@@ -31,25 +31,24 @@ func _ready() -> void:
 	setup_weapon_visual()
 
 func setup_weapon_visual() -> void:
-	# Procedural weapon model
-	var body = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(0.12, 0.16, 0.6)
-	body.mesh = box
-	body.position = Vector3(0.0, -0.05, -0.2)
-	body.material_override = MaterialGenerator.get_material("sci_fi_metal")
-	add_child(body)
+	# Detailed multi-part procedural weapon model
+	var model: Node3D = null
+	match weapon_name:
+		"Pulse Rifle":
+			model = MeshBuilder.build_pulse_rifle()
+		"Scatter Cannon":
+			model = MeshBuilder.build_scatter_cannon()
+		"Rail Driver":
+			model = MeshBuilder.build_rail_driver()
+		"Grenade Launcher":
+			model = MeshBuilder.build_grenade_launcher()
+		"Plasma Cutter":
+			model = MeshBuilder.build_plasma_cutter()
+		_:
+			model = MeshBuilder.build_pulse_rifle()
 
-	var barrel = MeshInstance3D.new()
-	var cyl = CylinderMesh.new()
-	cyl.top_radius = 0.04
-	cyl.bottom_radius = 0.04
-	cyl.height = 0.4
-	barrel.mesh = cyl
-	barrel.rotation_degrees = Vector3(90, 0, 0)
-	barrel.position = Vector3(0.0, 0.0, -0.45)
-	barrel.material_override = MaterialGenerator.get_material("neon_cyan")
-	add_child(barrel)
+	if model:
+		add_child(model)
 
 func _process(delta: float) -> void:
 	if is_reloading:
@@ -137,7 +136,8 @@ func spawn_projectile(spawn_pos: Vector3, dir: Vector3) -> void:
 	proj.damage = damage_per_shot
 	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
 	if tree:
-		tree.root.add_child(proj)
+		var parent_node = tree.current_scene if tree.current_scene else tree.root
+		parent_node.add_child(proj)
 		proj.global_position = spawn_pos + dir * 0.8
 	else:
 		proj.free()

@@ -9,7 +9,7 @@ enum ItemType {
 
 var is_active: bool = true
 var respawn_timer: float = 0.0
-var box_mesh: MeshInstance3D
+var box_mesh: Node3D
 
 func _ready() -> void:
 	collision_layer = GameConstants.LAYER_PICKUPS
@@ -18,11 +18,7 @@ func _ready() -> void:
 	setup_visual()
 
 func setup_visual() -> void:
-	box_mesh = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(1.2, 1.2, 1.2)
-	box_mesh.mesh = box
-	box_mesh.material_override = MaterialGenerator.get_material("gold_pickup")
+	box_mesh = MeshBuilder.build_item_box()
 	box_mesh.position = Vector3(0, 0.9, 0)
 	add_child(box_mesh)
 

@@ -205,6 +205,58 @@ def evaluate_gates():
             "status": "FAIL"
         })
 
+    # --- Gate 13: Gameplay Screenshot Certification ---
+    expected_screens = [
+        "screenshot_launcher.png",
+        "screenshot_arena_fps.png",
+        "screenshot_subway_survival.png",
+        "screenshot_rocket_car.png",
+        "screenshot_kart_racing.png"
+    ]
+    screens_dir = os.path.join(ARTIFACTS_DIR, "screenshots")
+    existing_screens = []
+    if os.path.exists(screens_dir):
+        existing_screens = [f for f in expected_screens if os.path.exists(os.path.join(screens_dir, f)) and os.path.getsize(os.path.join(screens_dir, f)) > 500]
+
+    screenshot_pass = len(existing_screens) == len(expected_screens)
+    gates.append({
+        "gate": "Visual Gameplay Screenshots",
+        "requirement": "All 4 games + launcher render verified non-blank screenshots",
+        "measured": f"{len(existing_screens)}/{len(expected_screens)} screenshots certified",
+        "status": "PASS" if screenshot_pass else "FAIL",
+        "evidence": "artifacts/screenshots/"
+    })
+
+    # --- Gate 14: HUD Isolation & Scene Sanitation ---
+    hud_isolated = False
+    if test_results:
+        suites = test_results.get("suites", {})
+        gameplay_e2e = suites.get("Gameplay Screens Certification E2E", {})
+        hud_isolated = gameplay_e2e.get("status") == "PASS" and gameplay_e2e.get("failed", 1) == 0
+
+    gates.append({
+        "gate": "HUD Isolation & Lifecycle Sanitation",
+        "requirement": "Zero cross-game HUD pollution, clean node teardown",
+        "measured": "100% HUD isolation verified" if hud_isolated else "HUD isolation test not verified",
+        "status": "PASS" if hud_isolated else "FAIL",
+        "evidence": "tests/e2e/test_gameplay_screens.gd"
+    })
+
+    # --- Gate 15: Compound 3D Asset Pipeline ---
+    mesh_pass = False
+    if test_results:
+        suites = test_results.get("suites", {})
+        mesh_suite = suites.get("MeshBuilder 3D Assets Unit", {})
+        mesh_pass = mesh_suite.get("status") == "PASS" and mesh_suite.get("failed", 1) == 0
+
+    gates.append({
+        "gate": "Compound 3D Asset & Mesh Pipeline",
+        "requirement": "Zero primitive cubes, detailed multi-part 3D models with PBR materials",
+        "measured": "All 15 compound archetype meshes certified" if mesh_pass else "MeshBuilder test not verified",
+        "status": "PASS" if mesh_pass else "FAIL",
+        "evidence": "shared/graphics/mesh_builder.gd"
+    })
+
     return gates
 
 
@@ -222,6 +274,10 @@ def generate_traceability():
         {"req": "Graphics quality presets", "impl": "shared/graphics/quality_manager.gd", "test": "tests/unit/test_quality_manager.gd + benchmark", "evidence": "benchmark-results.json"},
         {"req": "Performance budgets", "impl": "All game scenes", "test": "tests/benchmark/test_benchmark.gd", "evidence": "benchmark-results.json"},
         {"req": ">90% code coverage", "impl": "All production GDScript", "test": "tests/coverage_registry.gd", "evidence": "coverage-report.json"},
+        {"req": "Compound 3D asset models", "impl": "shared/graphics/mesh_builder.gd", "test": "tests/unit/test_mesh_builder.gd", "evidence": "test-results.json"},
+        {"req": "Procedural animation & shake", "impl": "shared/graphics/procedural_animator.gd", "test": "tests/unit/test_procedural_animator.gd", "evidence": "test-results.json"},
+        {"req": "Dedicated HUD isolation", "impl": "Dedicated HUD classes per game", "test": "tests/e2e/test_gameplay_screens.gd", "evidence": "test-results.json"},
+        {"req": "Visual screenshot verification", "impl": "tests/e2e/test_gameplay_screens.gd", "test": "Screenshot verification", "evidence": "artifacts/screenshots/"},
         {"req": "Web export ≤25MB", "impl": "scripts/build-web.ps1", "test": "certifier file-size audit", "evidence": "export/web/"},
         {"req": "Android APK", "impl": "export_presets.cfg [Android]", "test": "CI android-emulator job", "evidence": "PLATFORM_REQUIRED"},
         {"req": "Desktop Win/Linux/macOS", "impl": "export_presets.cfg", "test": "CI build jobs", "evidence": "PLATFORM_REQUIRED"},

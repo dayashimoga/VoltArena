@@ -18,7 +18,7 @@ func get_coverage_entries() -> Array:
 	return [
 		[
 			"res://shared/core/game_manager.gd",
-			["_ready", "set_state", "start_game", "switch_to_scene", "restart_current_game", "return_to_launcher"]
+			["_ready", "set_state", "start_game", "switch_to_scene", "restart_current_game", "return_to_launcher", "clean_root_orphans"]
 		],
 		[
 			"res://shared/loading/asset_loader.gd",
@@ -51,6 +51,7 @@ func test_game_manager_signals() -> void:
 	# Test restart and return to launcher methods execute safely
 	gm.restart_current_game()
 	gm.return_to_launcher()
+	gm.clean_root_orphans(null)
 	assert_true(gm.current_state == gm.STATE_MENU, "return_to_launcher must set STATE_MENU")
 	gm.queue_free()
 

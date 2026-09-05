@@ -8,8 +8,10 @@ var loading_bar: ProgressBar
 var loading_status_label: Label
 var loading_bytes_label: Label
 var settings_dialog: PanelContainer
+var controls_dialog: PanelContainer
 
 const ThemeGen = preload("res://shared/ui/theme_generator.gd")
+const LauncherArtScript = preload("res://launcher/launcher_art.gd")
 
 var current_target_game: String = ""
 
@@ -69,7 +71,7 @@ func setup_launcher_ui() -> void:
 	var bg = ColorRect.new()
 	bg.anchor_right = 1.0
 	bg.anchor_bottom = 1.0
-	bg.color = Color(0.04, 0.05, 0.08)
+	bg.color = Color(0.03, 0.04, 0.07)
 	add_child(bg)
 
 	# Decorative Grid Background lines
@@ -79,9 +81,9 @@ func setup_launcher_ui() -> void:
 	grid_overlay.mouse_filter = MOUSE_FILTER_IGNORE
 	grid_overlay.draw.connect(func():
 		for x in range(0, int(size.x), 60):
-			grid_overlay.draw_line(Vector2(x, 0), Vector2(x, size.y), Color(0.1, 0.15, 0.25, 0.15), 1.0)
+			grid_overlay.draw_line(Vector2(x, 0), Vector2(x, size.y), Color(0.08, 0.14, 0.22, 0.2), 1.0)
 		for y in range(0, int(size.y), 60):
-			grid_overlay.draw_line(Vector2(0, y), Vector2(size.x, y), Color(0.1, 0.15, 0.25, 0.15), 1.0)
+			grid_overlay.draw_line(Vector2(0, y), Vector2(size.x, y), Color(0.08, 0.14, 0.22, 0.2), 1.0)
 	)
 	add_child(grid_overlay)
 
@@ -101,18 +103,24 @@ func setup_launcher_ui() -> void:
 
 	var title_lbl = Label.new()
 	title_lbl.text = "VOLTARENA"
-	title_lbl.add_theme_font_size_override("font_size", 32)
+	title_lbl.add_theme_font_size_override("font_size", 30)
 	title_lbl.modulate = Color(0.0, 1.0, 1.0)
 	header.add_child(title_lbl)
 
 	var subtitle_lbl = Label.new()
-	subtitle_lbl.text = " | CROSS-PLATFORM 3D GAME SUITE"
+	subtitle_lbl.text = " | CROSS-PLATFORM 3D SUITE"
 	subtitle_lbl.modulate = Color(0.6, 0.75, 0.9)
 	header.add_child(subtitle_lbl)
 
 	var header_spacer = Control.new()
 	header_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(header_spacer)
+
+	# Controls Guide Button
+	var btn_controls = Button.new()
+	btn_controls.text = "CONTROLS"
+	btn_controls.pressed.connect(show_controls)
+	header.add_child(btn_controls)
 
 	# Settings Button
 	var btn_settings = Button.new()
@@ -121,7 +129,7 @@ func setup_launcher_ui() -> void:
 	header.add_child(btn_settings)
 
 	var spacer1 = Control.new()
-	spacer1.custom_minimum_size = Vector2(0, 20)
+	spacer1.custom_minimum_size = Vector2(0, 16)
 	main_vbox.add_child(spacer1)
 
 	# Game Selection Scroll / Cards Container (Vertical scroll only)
@@ -148,31 +156,55 @@ func setup_launcher_ui() -> void:
 	main_vbox.add_child(footer)
 
 	var platform_info = Label.new()
-	var plat_name = "Desktop"
-	var pa = GameConstants.get_autoload(self, "PlatformAdapter")
-	if pa:
-		plat_name = pa.get_platform_name_string()
-	platform_info.text = "Platform: %s | Zero Host Packages Required | Cloudflare Pages Certified" % plat_name
-	platform_info.modulate = Color(0.4, 0.5, 0.65)
+	platform_info.text = "VoltArena v3.0 Commercial Release | 4 Complete Games | Safe-Area & DPI Certified"
+	platform_info.modulate = Color(0.45, 0.55, 0.7)
 	footer.add_child(platform_info)
+
+	var footer_spacer = Control.new()
+	footer_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	footer.add_child(footer_spacer)
+
+	var hint_info = Label.new()
+	hint_info.text = "Press ESC or Select for Settings | Gamepad & Touch Ready"
+	hint_info.modulate = Color(0.35, 0.45, 0.6)
+	footer.add_child(hint_info)
 
 	setup_loading_overlay()
 	setup_settings_dialog()
+	_setup_controls_dialog()
 
 func create_game_card(meta: Dictionary) -> void:
 	var card = PanelContainer.new()
-	card.custom_minimum_size = Vector2(275, 420)
+	card.custom_minimum_size = Vector2(275, 430)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
+	# Hover micro-animation effect
+	card.mouse_entered.connect(func():
+		var tween = card.create_tween()
+		tween.tween_property(card, "modulate", Color(1.1, 1.1, 1.15), 0.15)
+	)
+	card.mouse_exited.connect(func():
+		var tween = card.create_tween()
+		tween.tween_property(card, "modulate", Color(1.0, 1.0, 1.0), 0.15)
+	)
+
 	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
+	vbox.add_theme_constant_override("separation", 8)
 	card.add_child(vbox)
+
+	# Stylized In-Engine Artwork Banner
+	var banner_rect = TextureRect.new()
+	banner_rect.custom_minimum_size = Vector2(250, 130)
+	banner_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	banner_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	banner_rect.texture = LauncherArtScript.create_game_banner(meta["id"], 360, 190)
+	vbox.add_child(banner_rect)
 
 	# Title & Tagline
 	var title = Label.new()
 	title.text = meta["title"]
-	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_font_size_override("font_size", 20)
 	title.modulate = meta["color"]
 	vbox.add_child(title)
 
@@ -210,7 +242,7 @@ func create_game_card(meta: Dictionary) -> void:
 	# Play Button
 	var btn_play = Button.new()
 	btn_play.text = "LAUNCH GAME"
-	btn_play.custom_minimum_size = Vector2(0, 48)
+	btn_play.custom_minimum_size = Vector2(0, 44)
 	btn_play.pressed.connect(func(): on_play_game_pressed(meta))
 	vbox.add_child(btn_play)
 
@@ -273,43 +305,43 @@ func setup_settings_dialog() -> void:
 	settings_dialog.anchor_top = 0.5
 	settings_dialog.anchor_right = 0.5
 	settings_dialog.anchor_bottom = 0.5
-	settings_dialog.offset_left = -250
-	settings_dialog.offset_top = -200
-	settings_dialog.offset_right = 250
-	settings_dialog.offset_bottom = 200
+	settings_dialog.offset_left = -260
+	settings_dialog.offset_top = -210
+	settings_dialog.offset_right = 260
+	settings_dialog.offset_bottom = 210
 	settings_dialog.visible = false
 	add_child(settings_dialog)
 
 	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
 	settings_dialog.add_child(vbox)
 
 	var title = Label.new()
 	title.text = "PLATFORM SETTINGS"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 20)
+	title.modulate = Color(0.0, 0.9, 1.0)
 	vbox.add_child(title)
 
 	var sep = HSeparator.new()
 	vbox.add_child(sep)
 
-	# Quality Preset Option
+	# Quality Presets Row
 	var q_row = HBoxContainer.new()
 	var q_lbl = Label.new()
 	q_lbl.text = "Graphics Preset:"
 	q_row.add_child(q_lbl)
-	var btn_q_low = Button.new()
-	btn_q_low.text = "LOW"
-	btn_q_low.pressed.connect(func(): set_quality(0)) # 0: LOW
-	q_row.add_child(btn_q_low)
-	var btn_q_high = Button.new()
-	btn_q_high.text = "HIGH"
-	btn_q_high.pressed.connect(func(): set_quality(2)) # 2: HIGH
-	q_row.add_child(btn_q_high)
+	for p_info in [["LOW", 0], ["MED", 1], ["HIGH", 2], ["ULTRA", 3]]:
+		var btn_q = Button.new()
+		btn_q.text = p_info[0]
+		btn_q.pressed.connect(func(): set_quality(p_info[1]))
+		q_row.add_child(btn_q)
 	vbox.add_child(q_row)
 
-	# Audio Mute Toggle
+	# Audio Volume Control
 	var a_row = HBoxContainer.new()
 	var a_lbl = Label.new()
-	a_lbl.text = "Master Audio:"
+	a_lbl.text = "Audio Mute:"
 	a_row.add_child(a_lbl)
 	var btn_audio_toggle = Button.new()
 	btn_audio_toggle.text = "TOGGLE MUTE"
@@ -318,7 +350,7 @@ func setup_settings_dialog() -> void:
 	vbox.add_child(a_row)
 
 	var spacer = Control.new()
-	spacer.custom_minimum_size = Vector2(0, 30)
+	spacer.custom_minimum_size = Vector2(0, 16)
 	vbox.add_child(spacer)
 
 	var btn_close = Button.new()
@@ -326,8 +358,53 @@ func setup_settings_dialog() -> void:
 	btn_close.pressed.connect(func(): settings_dialog.visible = false)
 	vbox.add_child(btn_close)
 
+func _setup_controls_dialog() -> void:
+	controls_dialog = PanelContainer.new()
+	controls_dialog.anchor_left = 0.5
+	controls_dialog.anchor_top = 0.5
+	controls_dialog.anchor_right = 0.5
+	controls_dialog.anchor_bottom = 0.5
+	controls_dialog.offset_left = -280
+	controls_dialog.offset_top = -220
+	controls_dialog.offset_right = 280
+	controls_dialog.offset_bottom = 220
+	controls_dialog.visible = false
+	add_child(controls_dialog)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	controls_dialog.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "CONTROLS & INPUT GUIDE"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 20)
+	title.modulate = Color(0.2, 1.0, 0.5)
+	vbox.add_child(title)
+
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+
+	var guide_text = Label.new()
+	guide_text.text = "FPS / Survival:\n  • WASD / Left Stick: Move & Strafe\n  • Mouse / Right Stick: Look / Aim\n  • Space / A Button: Jump\n  • Shift / Left Trigger: Sprint / Slide\n  • Left Click / Right Trigger: Fire\n  • 1 - 5 Keys: Switch Weapons\n\nVehicles / Racing:\n  • W / Accelerate (Right Trigger): Throttle\n  • S / Brake (Left Trigger): Reverse / Brake\n  • A / D / Left Stick: Steer\n  • Space / X Button: Handbrake / Drift\n  • Shift / B Button: Nitrous Boost\n  • ESC / Start: Pause / Back to Launcher"
+	guide_text.modulate = Color(0.85, 0.9, 0.95)
+	vbox.add_child(guide_text)
+
+	var btn_close = Button.new()
+	btn_close.text = "CLOSE"
+	btn_close.pressed.connect(func(): controls_dialog.visible = false)
+	vbox.add_child(btn_close)
+
 func show_settings() -> void:
 	settings_dialog.visible = true
+	if controls_dialog:
+		controls_dialog.visible = false
+
+func show_controls() -> void:
+	if controls_dialog:
+		controls_dialog.visible = true
+	if settings_dialog:
+		settings_dialog.visible = false
 
 func set_quality(preset: int) -> void:
 	var qm = GameConstants.get_autoload(self, "QualityManager")
@@ -382,7 +459,6 @@ func update_responsive_layout(viewport_size: Vector2) -> void:
 	if viewport_size.x <= 0:
 		return
 
-	# Responsive safe-area insets
 	var safe_left = 32.0
 	var safe_right = 32.0
 	var safe_top = 24.0
@@ -404,12 +480,20 @@ func update_responsive_layout(viewport_size: Vector2) -> void:
 		main_vbox.offset_bottom = -safe_bottom
 
 	if settings_dialog:
-		var dialog_w = min(viewport_size.x * 0.9, 500.0)
-		var dialog_h = min(viewport_size.y * 0.8, 400.0)
+		var dialog_w = min(viewport_size.x * 0.9, 520.0)
+		var dialog_h = min(viewport_size.y * 0.8, 420.0)
 		settings_dialog.offset_left = -dialog_w * 0.5
 		settings_dialog.offset_right = dialog_w * 0.5
 		settings_dialog.offset_top = -dialog_h * 0.5
 		settings_dialog.offset_bottom = dialog_h * 0.5
+
+	if controls_dialog:
+		var dialog_w = min(viewport_size.x * 0.9, 560.0)
+		var dialog_h = min(viewport_size.y * 0.8, 440.0)
+		controls_dialog.offset_left = -dialog_w * 0.5
+		controls_dialog.offset_right = dialog_w * 0.5
+		controls_dialog.offset_top = -dialog_h * 0.5
+		controls_dialog.offset_bottom = dialog_h * 0.5
 
 	if game_cards_container:
 		var cols = 4
@@ -429,10 +513,13 @@ func update_responsive_layout(viewport_size: Vector2) -> void:
 		for c in game_cards_container.get_children():
 			if c is Control:
 				c.custom_minimum_size.x = card_w
-				c.custom_minimum_size.y = 360.0 if cols == 1 else 420.0
+				c.custom_minimum_size.y = 360.0 if cols == 1 else 430.0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
 		if settings_dialog and settings_dialog.visible:
 			settings_dialog.visible = false
+			get_viewport().set_input_as_handled()
+		elif controls_dialog and controls_dialog.visible:
+			controls_dialog.visible = false
 			get_viewport().set_input_as_handled()

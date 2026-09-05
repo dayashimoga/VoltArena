@@ -12,6 +12,7 @@ func run_tests() -> Dictionary:
 	test_volume_control()
 	test_procedural_generation()
 	test_sound_playback()
+	test_music_playback()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -21,6 +22,7 @@ func get_coverage_entries() -> Array:
 			"_ready", "setup_players", "generate_all_procedural_sounds",
 			"play_sound", "play_sound_3d", "create_synth_sound",
 			"create_noise_burst", "create_two_tone_sound", "create_click_sound",
+			"create_music_track", "play_music", "stop_music", "set_bus_volume",
 			"stop_all"
 		]
 	]]
@@ -48,6 +50,11 @@ func test_volume_control() -> void:
 	var master_idx = AudioServer.get_bus_index("Master")
 	assert_true(master_idx >= 0, "Master audio bus must exist")
 
+	var am = AudioManagerScript.new()
+	am.set_bus_volume("Master", 0.8)
+	assert_true(true, "set_bus_volume should succeed")
+	am.queue_free()
+
 func test_procedural_generation() -> void:
 	var am = AudioManagerScript.new()
 	var s1 = am.create_synth_sound(440.0, 220.0, 0.05, 0.5, "sine")
@@ -62,6 +69,9 @@ func test_procedural_generation() -> void:
 	var s4 = am.create_click_sound(0.02)
 	assert_true(s4 != null, "create_click_sound must generate AudioStream")
 
+	var m1 = am.create_music_track("iron_crucible")
+	assert_true(m1 != null, "create_music_track must generate music stream")
+
 	am.generate_all_procedural_sounds()
 	assert_true(am.sound_cache.size() >= 5, "sound_cache must contain generated sound effects")
 	am.queue_free()
@@ -74,4 +84,13 @@ func test_sound_playback() -> void:
 	am.play_sound_3d("laser_fire", Vector3.ZERO)
 	am.stop_all()
 	assert_true(true, "Sound playback calls and stop_all must succeed")
+	am.queue_free()
+
+func test_music_playback() -> void:
+	var am = AudioManagerScript.new()
+	am.setup_players()
+	am.play_music("nitro_kick")
+	assert_true(am.bgm_player.stream != null, "Music stream should be assigned")
+	am.stop_music()
+	assert_true(not am.bgm_player.playing, "Music should not be playing")
 	am.queue_free()

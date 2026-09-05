@@ -5,7 +5,7 @@ const CarControllerScript = preload("res://games/rocket-car/vehicle/car_controll
 const CarAIScript = preload("res://games/rocket-car/ai/car_ai.gd")
 const RocketBallScript = preload("res://games/rocket-car/ball/ball.gd")
 const RocketArenaScript = preload("res://games/rocket-car/arena/rocket_arena.gd")
-const HUDBaseScript = preload("res://shared/ui/hud_base.gd")
+const NitroKickHUDScript = preload("res://games/rocket-car/ui/nitro_kick_hud.gd")
 const PauseMenuScript = preload("res://shared/ui/pause_menu.gd")
 const ResultsScreenScript = preload("res://shared/ui/results_screen.gd")
 
@@ -40,10 +40,9 @@ func setup_scene() -> void:
 
 	# UI
 	if not hud:
-		hud = HUDBaseScript.new()
+		hud = NitroKickHUDScript.new()
 		hud.name = "HUD"
 		add_child(hud)
-		hud.set_crosshair_spread(0.0) # Hide weapon crosshair for driving
 
 	if not pause_menu:
 		pause_menu = PauseMenuScript.new()
@@ -71,6 +70,8 @@ func setup_scene() -> void:
 	player_car.team_id = 0
 	player_car.is_player_controlled = true
 	add_child(player_car)
+	if hud and hud.has_method("update_boost"):
+		player_car.boost_updated.connect(hud.update_boost)
 
 	# Follow Camera
 	camera = Camera3D.new()
@@ -200,6 +201,9 @@ func _on_goal_scored(scoring_team: int) -> void:
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am:
 		am.play_sound("goal")
+
+	if hud and hud.has_method("show_goal_celebration"):
+		hud.show_goal_celebration(scoring_team, 88.0)
 
 	reset_kickoff()
 

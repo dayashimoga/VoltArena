@@ -13,7 +13,7 @@ enum PickupType {
 
 var is_active: bool = true
 var respawn_timer: float = 0.0
-var visual_mesh: MeshInstance3D
+var visual_mesh: Node3D
 var base_y: float = 0.0
 
 func _ready() -> void:
@@ -24,19 +24,7 @@ func _ready() -> void:
 	setup_visual()
 
 func setup_visual() -> void:
-	visual_mesh = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(0.5, 0.5, 0.5)
-	visual_mesh.mesh = box
-
-	match pickup_type:
-		PickupType.HEALTH:
-			visual_mesh.material_override = MaterialGenerator.get_material("health_red")
-		PickupType.ARMOR:
-			visual_mesh.material_override = MaterialGenerator.get_material("neon_cyan")
-		PickupType.AMMO:
-			visual_mesh.material_override = MaterialGenerator.get_material("gold_pickup")
-
+	visual_mesh = MeshBuilder.build_pickup_mesh(pickup_type)
 	add_child(visual_mesh)
 
 	var col = CollisionShape3D.new()

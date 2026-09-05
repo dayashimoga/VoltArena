@@ -7,6 +7,10 @@ const PauseMenuScript = preload("res://shared/ui/pause_menu.gd")
 const ResultsScreenScript = preload("res://shared/ui/results_screen.gd")
 const TouchControlsScript = preload("res://shared/input/touch_controls.gd")
 const VirtualJoystickScript = preload("res://shared/input/virtual_joystick.gd")
+const ArenaFPSHUDScript = preload("res://games/arena-fps/ui/arena_fps_hud.gd")
+const MetroSiegeHUDScript = preload("res://games/subway-survival/ui/metro_siege_hud.gd")
+const NitroKickHUDScript = preload("res://games/rocket-car/ui/nitro_kick_hud.gd")
+const DriftStormHUDScript = preload("res://games/kart-racing/ui/drift_storm_hud.gd")
 
 var assertions_passed: int = 0
 var assertions_failed: int = 0
@@ -18,6 +22,10 @@ func run_tests() -> Dictionary:
 	test_results_screen()
 	test_touch_controls()
 	test_virtual_joystick()
+	test_arena_fps_hud()
+	test_metro_siege_hud()
+	test_nitro_kick_hud()
+	test_drift_storm_hud()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -50,6 +58,36 @@ func get_coverage_entries() -> Array:
 		[
 			"res://shared/input/virtual_joystick.gd",
 			["_ready", "update_knob", "reset_joystick"]
+		],
+		[
+			"res://games/arena-fps/ui/arena_fps_hud.gd",
+			["setup_hud_layout", "update_frags"]
+		],
+		[
+			"res://games/subway-survival/ui/metro_siege_hud.gd",
+			[
+				"_ready", "setup_hud_layout", "connect_bus_signals", "check_mobile_controls",
+				"set_crosshair_spread", "update_health", "update_armor", "update_ammo",
+				"update_weapon", "update_wave", "update_threats", "update_scrap",
+				"show_intermission", "show_toast"
+			]
+		],
+		[
+			"res://games/rocket-car/ui/nitro_kick_hud.gd",
+			[
+				"_ready", "setup_hud_layout", "connect_bus_signals", "check_mobile_controls",
+				"update_score", "update_clock", "update_boost",
+				"show_kickoff_countdown", "show_goal_celebration", "show_toast"
+			]
+		],
+		[
+			"res://games/kart-racing/ui/drift_storm_hud.gd",
+			[
+				"_ready", "setup_hud_layout", "check_mobile_controls", "update_position",
+				"update_lap", "update_speed", "update_drift_charge",
+				"update_powerup", "update_lap_times", "show_countdown",
+				"show_finish_banner", "show_toast"
+			]
 		]
 	]
 
@@ -145,3 +183,79 @@ func test_virtual_joystick() -> void:
 	vj.reset_joystick()
 	assert_true(vj.current_vector == Vector2.ZERO, "Joystick must reset to zero")
 	vj.queue_free()
+
+func test_arena_fps_hud() -> void:
+	var hud = ArenaFPSHUDScript.new()
+	hud._ready()
+	assert_true(hud.frags_label != null, "ArenaFPSHUD must have frags_label")
+	hud.update_frags(5, 20)
+	assert_true(hud.frags_label.text.contains("5"), "Frags label must update")
+	hud.queue_free()
+
+func test_metro_siege_hud() -> void:
+	var hud = MetroSiegeHUDScript.new()
+	hud._ready()
+	assert_true(hud.health_bar != null, "MetroSiegeHUD must have health_bar")
+	hud.update_health(75.0, 100.0)
+	hud.update_armor(30.0, 50.0)
+	hud.update_ammo(20, 30, 80)
+	hud.update_weapon("Pulse Rifle")
+	hud.update_wave(2, false)
+	assert_true(hud.wave_label.text.contains("WAVE 2"), "Wave label must display wave 2")
+	hud.update_wave(5, true)
+	assert_true(hud.wave_label.text.contains("BOSS"), "Boss wave label must display BOSS")
+	hud.update_threats(4)
+	assert_true(hud.threats_label.text.contains("4"), "Threats label must display count")
+	hud.update_scrap(120)
+	assert_true(hud.scrap_label.text.contains("120"), "Scrap label must display count")
+	hud.show_intermission(10.0, true)
+	assert_true(hud.intermission_panel.visible, "Intermission panel must be visible")
+	hud.set_crosshair_spread(10.0)
+	hud.show_toast("MUTANT ELIMINATED", Color.RED)
+	hud.queue_free()
+
+func test_nitro_kick_hud() -> void:
+	var hud = NitroKickHUDScript.new()
+	hud._ready()
+	assert_true(hud.score_label != null, "NitroKickHUD must have score_label")
+	hud.update_score(3, 1)
+	assert_true(hud.score_label.text.contains("3"), "Score label must update blue score")
+	hud.update_clock(120.0)
+	assert_true(hud.timer_label.text == "02:00", "Clock must format MM:SS")
+	hud.update_boost(80.0, 100.0)
+	assert_true(hud.boost_bar.value == 80.0, "Boost bar must update")
+	hud.show_kickoff_countdown(3)
+	assert_true(hud.kickoff_panel.visible, "Kickoff panel must show countdown")
+	hud.show_kickoff_countdown(0)
+	hud.show_goal_celebration(0, 95.0)
+	assert_true(hud.goal_panel.visible, "Goal panel must show celebration")
+	hud.show_toast("SUPER SHOT!", Color.CYAN)
+	hud.queue_free()
+
+func test_drift_storm_hud() -> void:
+	var hud = DriftStormHUDScript.new()
+	hud._ready()
+	assert_true(hud.position_label != null, "DriftStormHUD must have position_label")
+	hud.update_position(1, 4)
+	assert_true(hud.position_label.text == "1st", "Position label must display 1st")
+	hud.update_position(2, 4)
+	assert_true(hud.position_label.text == "2nd", "Position label must display 2nd")
+	hud.update_lap(2, 3)
+	assert_true(hud.lap_label.text.contains("2 / 3"), "Lap label must update")
+	hud.update_speed(35.0)
+	assert_true(hud.speed_label.text.contains("KM/H"), "Speedometer must display KM/H")
+	hud.update_drift_charge(1.5, 2)
+	assert_true(hud.drift_bar.value == 1.5, "Drift bar must update")
+	hud.update_powerup("Boost")
+	assert_true(hud.powerup_label.text.contains("BOOST"), "Powerup label must show BOOST")
+	hud.update_powerup("")
+	assert_true(hud.powerup_label.text.contains("NO ITEM"), "Powerup label must show NO ITEM")
+	hud.update_lap_times(45.2, 42.1)
+	hud.show_countdown("2")
+	assert_true(hud.countdown_panel.visible, "Countdown panel must show")
+	hud.show_countdown("GO!")
+	hud.show_finish_banner("1st Place")
+	assert_true(hud.finish_panel.visible, "Finish panel must show")
+	hud.show_toast("DRIFT BOOST!", Color.GREEN)
+	hud.queue_free()
+

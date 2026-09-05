@@ -5,7 +5,7 @@ const KartControllerScript = preload("res://games/kart-racing/kart/kart_controll
 const KartAIScript = preload("res://games/kart-racing/ai/kart_ai.gd")
 const TrackGeneratorScript = preload("res://games/kart-racing/tracks/track_generator.gd")
 const RaceManagerScript = preload("res://games/kart-racing/game/race_manager.gd")
-const HUDBaseScript = preload("res://shared/ui/hud_base.gd")
+const DriftStormHUDScript = preload("res://games/kart-racing/ui/drift_storm_hud.gd")
 const PauseMenuScript = preload("res://shared/ui/pause_menu.gd")
 const ResultsScreenScript = preload("res://shared/ui/results_screen.gd")
 
@@ -27,10 +27,9 @@ func _ready() -> void:
 func setup_scene() -> void:
 	# UI
 	if not hud:
-		hud = HUDBaseScript.new()
+		hud = DriftStormHUDScript.new()
 		hud.name = "HUD"
 		add_child(hud)
-		hud.set_crosshair_spread(0.0)
 
 	if not pause_menu:
 		pause_menu = PauseMenuScript.new()
@@ -108,6 +107,20 @@ func _on_track_built(waypoints: Array, checkpoints: Array) -> void:
 
 func _process(delta: float) -> void:
 	update_camera(delta)
+	if hud and is_instance_valid(player_kart):
+		if hud.has_method("update_speed"):
+			hud.update_speed(player_kart.forward_speed)
+		if hud.has_method("update_lap"):
+			hud.update_lap(player_kart.current_lap, 3)
+		if hud.has_method("update_drift_charge"):
+			var tier = 0
+			if player_kart.drift_charge_time > 2.5:
+				tier = 3
+			elif player_kart.drift_charge_time > 1.5:
+				tier = 2
+			elif player_kart.drift_charge_time > 0.8:
+				tier = 1
+			hud.update_drift_charge(player_kart.drift_charge_time, tier)
 
 func update_camera(delta: float) -> void:
 	if not is_instance_valid(player_kart) or not is_instance_valid(camera):

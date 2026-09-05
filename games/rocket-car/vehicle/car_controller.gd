@@ -30,60 +30,8 @@ func _ready() -> void:
 	setup_car_visual()
 
 func setup_car_visual() -> void:
-	car_visual = Node3D.new()
-	car_visual.name = "CarVisual"
+	car_visual = MeshBuilder.build_rocket_car(team_id)
 	add_child(car_visual)
-
-	# Main chassis
-	var body_mesh = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(1.8, 0.8, 3.6)
-	body_mesh.mesh = box
-	body_mesh.position = Vector3(0, 0.6, 0)
-	var mat_name = "neon_cyan" if team_id == 0 else "neon_orange"
-	body_mesh.material_override = MaterialGenerator.get_material(mat_name)
-	car_visual.add_child(body_mesh)
-
-	# Cabin / Cockpit
-	var cabin = MeshInstance3D.new()
-	var c_box = BoxMesh.new()
-	c_box.size = Vector3(1.4, 0.6, 1.8)
-	cabin.mesh = c_box
-	cabin.position = Vector3(0, 1.1, -0.2)
-	cabin.material_override = MaterialGenerator.get_material("dark_hull")
-	car_visual.add_child(cabin)
-
-	# 4 Wheels
-	var wheel_mat = MaterialGenerator.get_material("dark_hull")
-	var wheel_offsets = [
-		Vector3(-1.0, 0.35, -1.2),
-		Vector3(1.0, 0.35, -1.2),
-		Vector3(-1.0, 0.35, 1.2),
-		Vector3(1.0, 0.35, 1.2)
-	]
-	for pos in wheel_offsets:
-		var w = MeshInstance3D.new()
-		var cyl = CylinderMesh.new()
-		cyl.top_radius = 0.4
-		cyl.bottom_radius = 0.4
-		cyl.height = 0.3
-		w.mesh = cyl
-		w.rotation_degrees = Vector3(0, 0, 90)
-		w.position = pos
-		w.material_override = wheel_mat
-		car_visual.add_child(w)
-
-	# Thruster exhaust nozzle
-	var thruster = MeshInstance3D.new()
-	var t_cyl = CylinderMesh.new()
-	t_cyl.top_radius = 0.2
-	t_cyl.bottom_radius = 0.3
-	t_cyl.height = 0.4
-	thruster.mesh = t_cyl
-	thruster.rotation_degrees = Vector3(90, 0, 0)
-	thruster.position = Vector3(0, 0.6, 1.9)
-	thruster.material_override = MaterialGenerator.get_material("gold_pickup")
-	car_visual.add_child(thruster)
 
 	# Collision shape
 	var col = CollisionShape3D.new()

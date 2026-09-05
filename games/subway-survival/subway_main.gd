@@ -4,13 +4,14 @@ extends Node3D
 const FPSPlayerScript = preload("res://games/arena-fps/player/fps_player.gd")
 const WaveDirectorScript = preload("res://games/subway-survival/game/wave_director.gd")
 const SubwayGenScript = preload("res://games/subway-survival/maps/subway_generator.gd")
-const HUDBaseScript = preload("res://shared/ui/hud_base.gd")
+const MetroSiegeHUDScript = preload("res://games/subway-survival/ui/metro_siege_hud.gd")
 const PauseMenuScript = preload("res://shared/ui/pause_menu.gd")
 const ResultsScreenScript = preload("res://shared/ui/results_screen.gd")
 
 var total_score: int = 0
 var total_kills: int = 0
 var highest_wave: int = 0
+var total_scrap: int = 0
 var is_game_active: bool = true
 
 var player_node: Node3D
@@ -32,7 +33,7 @@ func setup_scene() -> void:
 
 	# UI systems
 	if not hud:
-		hud = HUDBaseScript.new()
+		hud = MetroSiegeHUDScript.new()
 		hud.name = "HUD"
 		add_child(hud)
 
@@ -72,6 +73,9 @@ func connect_signals() -> void:
 func _on_enemy_killed(_type: String, score_val: int) -> void:
 	total_kills += 1
 	total_score += score_val
+	total_scrap += int(score_val * 0.5)
+	if hud and hud.has_method("update_scrap"):
+		hud.update_scrap(total_scrap)
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.score_updated.emit(0, total_score)
@@ -79,6 +83,11 @@ func _on_enemy_killed(_type: String, score_val: int) -> void:
 func _on_wave_completed(wave_num: int, bonus_score: int) -> void:
 	highest_wave = wave_num
 	total_score += bonus_score
+	total_scrap += 50
+	if hud and hud.has_method("update_wave"):
+		hud.update_wave(wave_num + 1)
+	if hud and hud.has_method("update_scrap"):
+		hud.update_scrap(total_scrap)
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.score_updated.emit(0, total_score)

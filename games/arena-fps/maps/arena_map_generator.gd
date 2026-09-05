@@ -29,7 +29,7 @@ func build_arena() -> void:
 	create_box(Vector3(0, 1.0, 12), Vector3(6, 2.0, 8), "dark_hull")
 	create_box(Vector3(0, 1.0, -12), Vector3(6, 2.0, 8), "dark_hull")
 
-	# Pillars and Cover Blocks
+	# Pillars and Cover Blocks (Upgraded to detailed cyber crates)
 	var pillar_positions = [
 		Vector3(-18, 2.5, -18),
 		Vector3(18, 2.5, -18),
@@ -40,6 +40,15 @@ func build_arena() -> void:
 	]
 	for pos in pillar_positions:
 		create_box(pos, Vector3(3.0, 5.0, 3.0), "dark_hull")
+		var crate = MeshBuilder.build_cyber_crate(Vector3(3.1, 1.2, 3.1))
+		crate.position = pos + Vector3(0, -1.8, 0)
+		add_child(crate)
+
+	# Neon Decorative Floor Trims
+	create_box(Vector3(0, 0.05, -half_z + 0.5), Vector3(arena_size.x, 0.1, 0.4), "neon_cyan")
+	create_box(Vector3(0, 0.05, half_z - 0.5), Vector3(arena_size.x, 0.1, 0.4), "neon_cyan")
+	create_box(Vector3(-half_x + 0.5, 0.05, 0), Vector3(0.4, 0.1, arena_size.y), "neon_cyan")
+	create_box(Vector3(half_x - 0.5, 0.05, 0), Vector3(0.4, 0.1, arena_size.y), "neon_cyan")
 
 	# Place Pickups
 	spawn_pickup(Vector3(0, 4.8, 0), PickupBase.PickupType.ARMOR, 50) # On top of central platform

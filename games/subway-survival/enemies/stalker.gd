@@ -14,23 +14,9 @@ func _init() -> void:
 	attack_range = 14.0 # Ranged engagement distance
 
 func setup_visuals() -> void:
-	# Slender upright body
-	var body_mesh = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(0.4, 1.2, 0.4)
-	body_mesh.mesh = box
-	body_mesh.position = Vector3(0, 0.8, 0)
-	body_mesh.material_override = MaterialGenerator.get_material("dark_hull")
-	add_child(body_mesh)
-
-	# Glowing green bioluminescent spots
-	var glow = MeshInstance3D.new()
-	var g_box = BoxMesh.new()
-	g_box.size = Vector3(0.2, 0.6, 0.1)
-	glow.mesh = g_box
-	glow.position = Vector3(0, 0.9, -0.21)
-	glow.material_override = MaterialGenerator.get_material("neon_green")
-	add_child(glow)
+	# Detailed articulated shadow stalker model
+	var stalker_model = MeshBuilder.build_stalker_mesh()
+	add_child(stalker_model)
 
 	var col = CollisionShape3D.new()
 	var cap = CapsuleShape3D.new()
@@ -57,8 +43,9 @@ func perform_attack() -> void:
 	proj.damage = attack_damage
 	proj.shooter = self
 	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
-	if tree and tree.root:
-		tree.root.add_child(proj)
+	if tree:
+		var parent_node = tree.current_scene if tree.current_scene else tree.root
+		parent_node.add_child(proj)
 		proj.global_position = global_position + Vector3.UP * 1.0 + dir * 0.8
 	else:
 		proj.queue_free()

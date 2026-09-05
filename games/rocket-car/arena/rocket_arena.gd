@@ -35,6 +35,15 @@ func build_arena() -> void:
 	create_goal_trigger(Vector3(0, goal_height * 0.5, -half_z - goal_depth * 0.5), 1) # Orange scores in North
 	create_goal_trigger(Vector3(0, goal_height * 0.5, half_z + goal_depth * 0.5), 0)  # Blue scores in South
 
+	# Pitch Center Line & Goal Area Markings
+	create_box(Vector3(0, 0.02, 0), Vector3(width - 2.0, 0.05, 0.4), "neon_cyan")
+	create_box(Vector3(-half_x + 1.0, 0.02, 0), Vector3(0.4, 0.05, length), "neon_cyan")
+	create_box(Vector3(half_x - 1.0, 0.02, 0), Vector3(0.4, 0.05, length), "neon_cyan")
+
+	# Goal Penalty Area Boxes
+	create_box(Vector3(0, 0.02, -half_z + 12.0), Vector3(26.0, 0.05, 0.3), "neon_cyan")
+	create_box(Vector3(0, 0.02, half_z - 12.0), Vector3(26.0, 0.05, 0.3), "neon_orange")
+
 	# Boost pads on field
 	var pad_positions = [
 		Vector3(-18.0, 0.1, -25.0),

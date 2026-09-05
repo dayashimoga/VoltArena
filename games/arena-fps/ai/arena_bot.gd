@@ -23,23 +23,11 @@ func _ready() -> void:
 func setup_bot_visual() -> void:
 	if get_node_or_null("BotCollision"):
 		return
-	# Torso
-	var torso = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(0.6, 0.9, 0.4)
-	torso.mesh = box
-	torso.position = Vector3(0, 0.9, 0)
-	torso.material_override = MaterialGenerator.get_material("dark_hull")
-	add_child(torso)
 
-	# Visor (glowing red)
-	var visor = MeshInstance3D.new()
-	var v_box = BoxMesh.new()
-	v_box.size = Vector3(0.35, 0.12, 0.1)
-	visor.mesh = v_box
-	visor.position = Vector3(0, 1.45, -0.21)
-	visor.material_override = MaterialGenerator.get_material("neon_magenta")
-	add_child(visor)
+	# Detailed articulated cyber soldier model
+	var soldier_model = MeshBuilder.build_cyber_soldier(true, Color(1.0, 0.1, 0.35))
+	soldier_model.position = Vector3(0, 0, 0)
+	add_child(soldier_model)
 
 	# Collision
 	var col = CollisionShape3D.new()

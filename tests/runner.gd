@@ -32,6 +32,10 @@ const TestMapGeneratorsScript = preload("res://tests/unit/test_map_generators.gd
 const TestUISystemsScript = preload("res://tests/unit/test_ui_systems.gd")
 const TestGameManagerScript = preload("res://tests/unit/test_game_manager.gd")
 const TestFXFactoryScript = preload("res://tests/unit/test_fx_factory.gd")
+const TestMeshBuilderScript = preload("res://tests/unit/test_mesh_builder.gd")
+const TestLauncherArtScript = preload("res://tests/unit/test_launcher_art.gd")
+const TestNodePoolScript = preload("res://tests/unit/test_node_pool.gd")
+const TestProceduralAnimatorScript = preload("res://tests/unit/test_procedural_animator.gd")
 
 # --- Responsive & Soak ---
 const TestResponsiveUIScript = preload("res://tests/responsive/test_responsive_ui.gd")
@@ -43,6 +47,7 @@ const TestSubwayE2EScript = preload("res://tests/e2e/test_subway_e2e.gd")
 const TestRocketE2EScript = preload("res://tests/e2e/test_rocket_e2e.gd")
 const TestKartE2EScript = preload("res://tests/e2e/test_kart_e2e.gd")
 const TestLauncherE2EScript = preload("res://tests/e2e/test_launcher_e2e.gd")
+const TestGameplayScreensScript = preload("res://tests/e2e/test_gameplay_screens.gd")
 
 # --- Acceptance ---
 const TestAcceptanceScript = preload("res://tests/acceptance/test_platform_acceptance.gd")
@@ -97,6 +102,10 @@ func _init() -> void:
 		{"name": "UI Systems & Controls Unit", "instance": TestUISystemsScript.new()},
 		{"name": "GameManager & Loader Unit", "instance": TestGameManagerScript.new()},
 		{"name": "FXFactory & Particles Unit", "instance": TestFXFactoryScript.new()},
+		{"name": "MeshBuilder 3D Assets Unit", "instance": TestMeshBuilderScript.new()},
+		{"name": "LauncherArt Vector Graphics Unit", "instance": TestLauncherArtScript.new()},
+		{"name": "NodePool Centralized Service Unit", "instance": TestNodePoolScript.new()},
+		{"name": "Procedural Animator & Shake Unit", "instance": TestProceduralAnimatorScript.new()},
 		# Responsive & Soak
 		{"name": "Responsive UI Multi-Resolution", "instance": TestResponsiveUIScript.new()},
 		{"name": "Soak & Stability Lifecycle", "instance": TestSoakScript.new()},
@@ -106,6 +115,7 @@ func _init() -> void:
 		{"name": "Nitro Kick E2E", "instance": TestRocketE2EScript.new()},
 		{"name": "Drift Storm E2E", "instance": TestKartE2EScript.new()},
 		{"name": "Launcher E2E", "instance": TestLauncherE2EScript.new()},
+		{"name": "Gameplay Screens Certification E2E", "instance": TestGameplayScreensScript.new()},
 		# Legacy Acceptance
 		{"name": "Platform Acceptance (Legacy)", "instance": TestAcceptanceScript.new()},
 	]

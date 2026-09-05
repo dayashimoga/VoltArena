@@ -16,23 +16,9 @@ func _init() -> void:
 	attack_range = 3.0
 
 func setup_visuals() -> void:
-	# Massive armored torso
-	var torso = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(1.2, 1.8, 1.0)
-	torso.mesh = box
-	torso.position = Vector3(0, 1.1, 0)
-	torso.material_override = MaterialGenerator.get_material("sci_fi_metal")
-	add_child(torso)
-
-	# Red armored crest
-	var crest = MeshInstance3D.new()
-	var c_box = BoxMesh.new()
-	c_box.size = Vector3(0.6, 0.4, 0.6)
-	crest.mesh = c_box
-	crest.position = Vector3(0, 2.1, 0)
-	crest.material_override = MaterialGenerator.get_material("health_red")
-	add_child(crest)
+	# Detailed massive armored brute model
+	var brute_model = MeshBuilder.build_brute_mesh()
+	add_child(brute_model)
 
 	var col = CollisionShape3D.new()
 	var cap = BoxShape3D.new()

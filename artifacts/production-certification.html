@@ -25,7 +25,7 @@
         <h1>VOLTARENA PRODUCTION CERTIFICATION v2.0</h1>
         <div>
             <span class="badge">PASS</span>
-            <span class="meta">&nbsp;&bull;&nbsp; Generated: 2026-09-04 15:28:11 UTC</span>
+            <span class="meta">&nbsp;&bull;&nbsp; Generated: 2026-09-05 02:44:06 UTC</span>
         </div>
         <p class="meta">Engine: Godot 4.3 &bull; Container: Podman 5.x &bull; Data-driven certification (not static template)</p>
 
@@ -35,13 +35,13 @@
             <tbody><tr>
             <td><strong>Unit & E2E Tests</strong></td>
             <td>100% assertion pass rate, 0 failures</td>
-            <td>670 passed, 0 failed</td>
+            <td>776 passed, 0 failed</td>
             <td class="pass">✓ PASS</td>
         </tr>
 <tr>
             <td><strong>Function Coverage</strong></td>
             <td>>90.0% function coverage</td>
-            <td>100.0% (263/263 functions)</td>
+            <td>100.0% (338/338 functions)</td>
             <td class="pass">✓ PASS</td>
         </tr>
 <tr>
@@ -102,6 +102,24 @@
             <td><strong>Responsive UI Validation</strong></td>
             <td>All target resolutions pass, zero clipping</td>
             <td>Status: PASS</td>
+            <td class="pass">✓ PASS</td>
+        </tr>
+<tr>
+            <td><strong>Visual Gameplay Screenshots</strong></td>
+            <td>All 4 games + launcher render verified non-blank screenshots</td>
+            <td>5/5 screenshots certified</td>
+            <td class="pass">✓ PASS</td>
+        </tr>
+<tr>
+            <td><strong>HUD Isolation & Lifecycle Sanitation</strong></td>
+            <td>Zero cross-game HUD pollution, clean node teardown</td>
+            <td>100% HUD isolation verified</td>
+            <td class="pass">✓ PASS</td>
+        </tr>
+<tr>
+            <td><strong>Compound 3D Asset & Mesh Pipeline</strong></td>
+            <td>Zero primitive cubes, detailed multi-part 3D models with PBR materials</td>
+            <td>All 15 compound archetype meshes certified</td>
             <td class="pass">✓ PASS</td>
         </tr>
 </tbody>
@@ -175,6 +193,30 @@
             <td><code>All production GDScript</code></td>
             <td><code>tests/coverage_registry.gd</code></td>
             <td>coverage-report.json</td>
+        </tr>
+<tr>
+            <td>Compound 3D asset models</td>
+            <td><code>shared/graphics/mesh_builder.gd</code></td>
+            <td><code>tests/unit/test_mesh_builder.gd</code></td>
+            <td>test-results.json</td>
+        </tr>
+<tr>
+            <td>Procedural animation & shake</td>
+            <td><code>shared/graphics/procedural_animator.gd</code></td>
+            <td><code>tests/unit/test_procedural_animator.gd</code></td>
+            <td>test-results.json</td>
+        </tr>
+<tr>
+            <td>Dedicated HUD isolation</td>
+            <td><code>Dedicated HUD classes per game</code></td>
+            <td><code>tests/e2e/test_gameplay_screens.gd</code></td>
+            <td>test-results.json</td>
+        </tr>
+<tr>
+            <td>Visual screenshot verification</td>
+            <td><code>tests/e2e/test_gameplay_screens.gd</code></td>
+            <td><code>Screenshot verification</code></td>
+            <td>artifacts/screenshots/</td>
         </tr>
 <tr>
             <td>Web export ≤25MB</td>

@@ -53,59 +53,13 @@ func _ready() -> void:
 	setup_kart_visual()
 
 func setup_kart_visual() -> void:
-	kart_visual = Node3D.new()
-	kart_visual.name = "KartVisual"
+	var kart_col = Color(0.2, 1.0, 0.5) if is_player else (Color(1.0, 0.5, 0.0) if racer_id == 1 else Color(0.0, 0.85, 1.0))
+	kart_visual = MeshBuilder.build_drift_kart(kart_col)
 	add_child(kart_visual)
 
-	# Main aerodynamic chassis
-	var body_mesh = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(1.2, 0.45, 2.4)
-	body_mesh.mesh = box
-	body_mesh.position = Vector3(0, 0.35, 0)
-	var mat_name = "neon_cyan" if is_player else ("neon_orange" if racer_id == 1 else "neon_green")
-	body_mesh.material_override = MaterialGenerator.get_material(mat_name)
-	kart_visual.add_child(body_mesh)
-
-	# Rear Spoiler
-	var spoiler = MeshInstance3D.new()
-	var s_box = BoxMesh.new()
-	s_box.size = Vector3(1.4, 0.1, 0.4)
-	spoiler.mesh = s_box
-	spoiler.position = Vector3(0, 0.75, 1.1)
-	spoiler.material_override = MaterialGenerator.get_material("dark_hull")
-	kart_visual.add_child(spoiler)
-
-	# Driver Helmet
-	var helmet = MeshInstance3D.new()
-	var sphere = SphereMesh.new()
-	sphere.radius = 0.25
-	sphere.height = 0.5
-	helmet.mesh = sphere
-	helmet.position = Vector3(0, 0.7, -0.1)
-	helmet.material_override = MaterialGenerator.get_material("gold_pickup")
-	kart_visual.add_child(helmet)
-
-	# Wheels
-	var wheel_offsets = [
-		Vector3(-0.7, 0.25, -0.8),
-		Vector3(0.7, 0.25, -0.8),
-		Vector3(-0.75, 0.28, 0.8),
-		Vector3(0.75, 0.28, 0.8)
-	]
-	for i in range(wheel_offsets.size()):
-		var w = MeshInstance3D.new()
-		var cyl = CylinderMesh.new()
-		cyl.top_radius = 0.28
-		cyl.bottom_radius = 0.28
-		cyl.height = 0.22
-		w.mesh = cyl
-		w.rotation_degrees = Vector3(0, 0, 90)
-		w.position = wheel_offsets[i]
-		w.material_override = MaterialGenerator.get_material("dark_hull")
-		kart_visual.add_child(w)
-		if i < 2:
-			front_wheels.append(w)
+	for child in kart_visual.get_children():
+		if child.name.begins_with("FrontWheel") and child is MeshInstance3D:
+			front_wheels.append(child)
 
 	# Collision
 	var col = CollisionShape3D.new()

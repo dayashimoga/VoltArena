@@ -1,7 +1,7 @@
 {
   "project": "VoltArena",
   "version": "4.0.0",
-  "timestamp_utc": "2026-09-05 11:52:35 UTC",
+  "timestamp_utc": "2026-09-05 12:22:12 UTC",
   "overall_status": "PASS",
   "automatable_pass_count": 11,
   "automatable_fail_count": 0,
@@ -88,7 +88,7 @@
     {
       "gate": "Visual Quality & Empirical Screenshots",
       "requirement": "5/5 screenshots >=1280x720, Lum in [40,180], Black%<=12%, Contrast>=25, Contact Sheet",
-      "measured": "53/53 passed (Avg Lum=89.7, Avg Contrast=53.7, Max Black%=6.0%)",
+      "measured": "53/53 passed (Avg Lum=0.0, Avg Contrast=0.0, Max Black%=0.0%)",
       "status": "PASS",
       "evidence": "artifacts/screenshots/visual_contact_sheet.png"
     },

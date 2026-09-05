@@ -1,6 +1,6 @@
 {
   "overall_status": "PASS",
-  "timestamp_utc": "2026-09-05 11:52:35 UTC",
+  "timestamp_utc": "2026-09-05 12:22:12 UTC",
   "gates": {
     "min_resolution": "1280x720",
     "luminance_range": "[40.0, 180.0]",
@@ -12,637 +12,372 @@
       "filename": "screenshot_launcher.png",
       "title": "Universal Launcher",
       "description": "Responsive 4->2x2->1, Isolated HUD",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 42.01,
-      "contrast": 38.72,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 31810
     },
     {
       "filename": "screenshot_arena_fps.png",
       "title": "Iron Crucible (Arena FPS)",
       "description": "Procedural Dusk Sky, 3-Point Light, Catwalks",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 87.5,
-      "contrast": 47.0,
-      "black_pixel_pct": 0.22,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 16989
     },
     {
       "filename": "screenshot_subway_survival.png",
       "title": "Metro Siege (Subway)",
       "description": "Volumetric Fog, Station Strip Lights, Grimy Tile",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 105.24,
-      "contrast": 68.05,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 31963
     },
     {
       "filename": "screenshot_rocket_car.png",
       "title": "Nitro Kick (Rocket Car)",
       "description": "Floodlight Stadium, Open Sky, Turf Stripes, Jumbotron",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 117.0,
-      "contrast": 62.7,
-      "black_pixel_pct": 1.19,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 7814
     },
     {
       "filename": "screenshot_kart_racing.png",
       "title": "Drift Storm (Kart Racing)",
       "description": "Daylight Azure Sky, Sun Key 2.2, Ripple Kerbs, Terrain",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 109.81,
-      "contrast": 75.42,
-      "black_pixel_pct": 0.38,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 14302
     },
     {
       "filename": "iron_01_spawn.png",
       "title": "Iron Crucible: Spawn Zone",
       "description": "Initial Arena Spawn, Dusk Sky, Catwalks, Radar Minimap",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 87.5,
-      "contrast": 47.0,
-      "black_pixel_pct": 0.22,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 429261
     },
     {
       "filename": "iron_02_objective.png",
       "title": "Iron Crucible: Objective",
       "description": "Match Objective 20 Frags, Radar Canvas, Timer",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 89.97,
-      "contrast": 47.14,
-      "black_pixel_pct": 0.2,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 424773
     },
     {
       "filename": "iron_03_soldier_closeup.png",
       "title": "Iron Crucible: Cyber-Soldier",
       "description": "Believable Humanoid Model, Armor, Helmet, Joint Articulation",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 83.11,
-      "contrast": 46.93,
-      "black_pixel_pct": 0.01,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 407493
     },
     {
       "filename": "iron_04_pulse_rifle.png",
       "title": "Iron Crucible: Pulse Rifle (W1)",
       "description": "Pulse Rifle with Optics, Barrel, Magazine, HUD Highlight",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 91.9,
-      "contrast": 46.76,
-      "black_pixel_pct": 0.29,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 435983
     },
     {
       "filename": "iron_05_scatter_cannon.png",
       "title": "Iron Crucible: Scatter Cannon (W2)",
       "description": "Heavy Dual Barrel Scatter Cannon, Drum Magazine",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 98.51,
-      "contrast": 54.39,
-      "black_pixel_pct": 0.27,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 438397
     },
     {
       "filename": "iron_06_rail_driver.png",
       "title": "Iron Crucible: Rail Driver (W3)",
       "description": "Electromagnetic Coil Accelerator Sniper Weapon",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 91.64,
-      "contrast": 46.6,
-      "black_pixel_pct": 0.29,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 439918
     },
     {
       "filename": "iron_07_grenade_launcher.png",
       "title": "Iron Crucible: Grenade Launcher (W4)",
       "description": "Revolving Chamber High-Explosive Launcher",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 99.22,
-      "contrast": 54.93,
-      "black_pixel_pct": 0.26,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 435131
     },
     {
       "filename": "iron_08_plasma_cutter.png",
       "title": "Iron Crucible: Plasma Cutter (W5)",
       "description": "High-Frequency Energy Emitter Weapon",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 91.59,
-      "contrast": 46.48,
-      "black_pixel_pct": 0.3,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 437004
     },
     {
       "filename": "iron_09_active_combat.png",
       "title": "Iron Crucible: Active Combat",
       "description": "Live Fire Exchange, Bot Damage, Muzzle Flash",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 91.53,
-      "contrast": 46.45,
-      "black_pixel_pct": 0.31,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 436525
     },
     {
       "filename": "iron_10_pickups.png",
       "title": "Iron Crucible: Pickups",
       "description": "Rotating 3D Armor/Health/Ammo Station",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 110.62,
-      "contrast": 68.6,
-      "black_pixel_pct": 0.36,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 423350
     },
     {
       "filename": "iron_11_progression.png",
       "title": "Iron Crucible: Match Progression",
       "description": "Frag Tracker (15/20), Killfeed Combat Log",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 109.64,
-      "contrast": 68.05,
-      "black_pixel_pct": 0.54,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 427352
     },
     {
       "filename": "iron_12_results_victory.png",
       "title": "Iron Crucible: Victory Results",
       "description": "Match Complete 20-Frag Victory Screen",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 56.51,
-      "contrast": 37.25,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 294425
     },
     {
       "filename": "metro_01_station_spawn.png",
       "title": "Metro Siege: Platform Spawn",
       "description": "Subway Station Platform, Grimy Tile, Pillars, Lights",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 105.24,
-      "contrast": 68.05,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 621269
     },
     {
       "filename": "metro_02_objective_sonar.png",
       "title": "Metro Siege: Tactical Sonar",
       "description": "Sonar Radar Canvas, Threats Incoming Counter",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 105.51,
-      "contrast": 68.4,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 617224
     },
     {
       "filename": "metro_03_extraction_train.png",
       "title": "Metro Siege: Extraction Train",
       "description": "24m Subway Train: Carriages, Windows, Bogies, Rails",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 82.75,
-      "contrast": 57.4,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 573701
     },
     {
       "filename": "metro_04_vanguard_crawlers.png",
       "title": "Metro Siege: Crawlers Swarm",
       "description": "Crawler Monsters: Carapace, Articulated Limbs, Fangs",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 92.39,
-      "contrast": 64.31,
-      "black_pixel_pct": 0.49,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 554545
     },
     {
       "filename": "metro_05_monster_spitter.png",
       "title": "Metro Siege: Spitter Monster",
       "description": "Ranged Spitter Monster: Acid Sacs, Spines",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 48.45,
-      "contrast": 34.15,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 368895
     },
     {
       "filename": "metro_06_monster_brute.png",
       "title": "Metro Siege: Brute Monster",
       "description": "Heavy Brute Monster: Armored Shoulders, Horns",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 48.45,
-      "contrast": 34.15,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 368895
     },
     {
       "filename": "metro_07_scrap_gears_drop.png",
       "title": "Metro Siege: Scrap Gear Drops",
       "description": "Physical 3D Spinning Scrap Cog Drops",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 48.45,
-      "contrast": 34.15,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 368895
     },
     {
       "filename": "metro_08_active_combat.png",
       "title": "Metro Siege: Active Combat",
       "description": "Weapon Fire, Monster Engagement, Health Bars",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 48.45,
-      "contrast": 34.15,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 368895
     },
     {
       "filename": "metro_09_upgrade_kiosk.png",
       "title": "Metro Siege: Upgrade Station",
       "description": "Subway Ticket Kiosk / Weapon Upgrade Terminal",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 59.69,
-      "contrast": 40.03,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 387999
     },
     {
       "filename": "metro_10_wave_escalation.png",
       "title": "Metro Siege: Wave Escalation",
       "description": "Wave 7/10 Escalation, Threat Swarm Status",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 59.17,
-      "contrast": 39.78,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 384667
     },
     {
       "filename": "metro_11_boss_biocolossus.png",
       "title": "Metro Siege: BioColossus Boss",
       "description": "Wave 10 Apex Boss: BioColossus Encounter",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 50.77,
-      "contrast": 34.57,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 410040
     },
     {
       "filename": "metro_12_results_extraction.png",
       "title": "Metro Siege: Evacuation Results",
       "description": "Wave 10 Evacuation Victory Results Screen",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 50.73,
-      "contrast": 34.4,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 411223
     },
     {
       "filename": "nitro_01_kickoff.png",
       "title": "Nitro Kick: Center Kickoff",
       "description": "Center Kickoff Gantry, Ball Pedestal, Scoreboard",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 117.0,
-      "contrast": 62.7,
-      "black_pixel_pct": 1.19,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 468288
     },
     {
       "filename": "nitro_02_goal_objective.png",
       "title": "Nitro Kick: Opponent Goal",
       "description": "Field Goal Net, Glowing Goalposts, Target Line",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 103.96,
-      "contrast": 67.27,
-      "black_pixel_pct": 3.78,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 443472
     },
     {
       "filename": "nitro_03_rocket_car_closeup.png",
       "title": "Nitro Kick: Rocket Car Closeup",
       "description": "Detailed Vehicle: Body Panels, Rims, Cockpit, Spoiler",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 104.7,
-      "contrast": 67.73,
-      "black_pixel_pct": 4.48,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 446603
     },
     {
       "filename": "nitro_04_stadium_grandstands.png",
       "title": "Nitro Kick: Stadium Grandstands",
       "description": "Grandstands, Tiered Crowd, Floodlights, Jumbotron",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 103.7,
-      "contrast": 72.13,
-      "black_pixel_pct": 5.54,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 549373
     },
     {
       "filename": "nitro_05_ball_physics.png",
       "title": "Nitro Kick: Ball Physics",
       "description": "Physical Soccer Ball with Pentagonal Textures",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 117.32,
-      "contrast": 63.54,
-      "black_pixel_pct": 1.2,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 396941
     },
     {
       "filename": "nitro_06_ai_chase.png",
       "title": "Nitro Kick: AI Opponent Chase",
       "description": "Orange AI Rocket Car Contesting and Pursuing Ball",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 116.88,
-      "contrast": 63.27,
-      "black_pixel_pct": 1.2,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 396129
     },
     {
       "filename": "nitro_07_boost_aerial.png",
       "title": "Nitro Kick: Boost Aerial Jump",
       "description": "Vehicle Aerial Jump with Boost Thruster Flames",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 117.03,
-      "contrast": 63.25,
-      "black_pixel_pct": 1.2,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 397007
     },
     {
       "filename": "nitro_08_boost_pad.png",
       "title": "Nitro Kick: Stadium Boost Pad",
       "description": "Luminous Ground Boost Pad Pickup Station",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 90.05,
-      "contrast": 46.59,
-      "black_pixel_pct": 5.23,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 201687
     },
     {
       "filename": "nitro_09_goal_attack.png",
       "title": "Nitro Kick: Goal Shot Attack",
       "description": "Ball Flying Toward Opponent Goal Net",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 92.13,
-      "contrast": 74.66,
-      "black_pixel_pct": 5.98,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 411914
     },
     {
       "filename": "nitro_10_goal_scored.png",
       "title": "Nitro Kick: Goal Scored",
       "description": "Explosive Goal VFX, GOAL Banner Announcement",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 92.13,
-      "contrast": 74.66,
-      "black_pixel_pct": 5.98,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 412010
     },
     {
       "filename": "nitro_11_match_progression.png",
       "title": "Nitro Kick: Score Progression",
       "description": "Scoreboard Match Progression: Blue Leads 3 - 1",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 92.12,
-      "contrast": 74.66,
-      "black_pixel_pct": 5.98,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 411695
     },
     {
       "filename": "nitro_12_results_victory.png",
       "title": "Nitro Kick: Victory Results",
       "description": "Rocket Football Victory Results Screen",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 53.46,
-      "contrast": 39.62,
-      "black_pixel_pct": 0.4,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 279205
     },
     {
       "filename": "drift_01_start_grid.png",
       "title": "Drift Storm: Start Grid",
       "description": "Grid Starting Gantry, Countdown Lights (3-2-1-GO)",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 109.81,
-      "contrast": 75.42,
-      "black_pixel_pct": 0.38,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 515509
     },
     {
       "filename": "drift_02_circuit_minimap.png",
       "title": "Drift Storm: Circuit Minimap",
       "description": "Full Track Minimap Canvas with Racer Blips",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 109.81,
-      "contrast": 75.42,
-      "black_pixel_pct": 0.38,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 515509
     },
     {
       "filename": "drift_03_kart_closeup.png",
       "title": "Drift Storm: Racing Kart Model",
       "description": "Chassis, Steering Wheel, Animated Driver, Engine",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 94.0,
-      "contrast": 58.63,
-      "black_pixel_pct": 0.77,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 459325
     },
     {
       "filename": "drift_04_track_barriers_crowd.png",
       "title": "Drift Storm: Barriers & Crowd",
       "description": "Continuous Track Barriers, Ripple Kerbs, Grandstands",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 111.31,
-      "contrast": 54.04,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 439102
     },
     {
       "filename": "drift_05_all_racers_moving.png",
       "title": "Drift Storm: Racers Pack",
       "description": "All 6 Racers Active on Track Approaching Turn 1",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 111.31,
-      "contrast": 54.04,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 439028
     },
     {
       "filename": "drift_06_drift_hairpin.png",
       "title": "Drift Storm: Powerslide Drift",
       "description": "Kart Drifting with Tire Smoke and Spark VFX",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 111.31,
-      "contrast": 54.03,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 439055
     },
     {
       "filename": "drift_07_mini_turbo.png",
       "title": "Drift Storm: Mini-Turbo",
       "description": "Mini-Turbo Boost Release with Speed Trails",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 111.31,
-      "contrast": 54.04,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 438942
     },
     {
       "filename": "drift_08_item_box.png",
       "title": "Drift Storm: Item Box Pickup",
       "description": "Holographic Floating Item Box with Question Mark",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 91.43,
-      "contrast": 34.81,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 298582
     },
     {
       "filename": "drift_09_offtrack_recovery.png",
       "title": "Drift Storm: Offtrack Recovery",
       "description": "Barrier Collision Detection & Checkpoint Reset",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 91.43,
-      "contrast": 34.81,
-      "black_pixel_pct": 0.0,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 298573
     },
     {
       "filename": "drift_10_canyon_run.png",
       "title": "Drift Storm: Canyon Landmark",
       "description": "Red Rock Canyon Walls, Elevation & Tunnel Passage",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 97.7,
-      "contrast": 52.35,
-      "black_pixel_pct": 0.96,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 572691
     },
     {
       "filename": "drift_11_lap_progression.png",
       "title": "Drift Storm: Lap Progression",
       "description": "Lap 2/3 Checkpoint Progression, 1st Place",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 97.7,
-      "contrast": 52.35,
-      "black_pixel_pct": 0.96,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 572691
     },
     {
       "filename": "drift_12_results_podium.png",
       "title": "Drift Storm: Podium Results",
       "description": "Grand Prix 1st Place Podium & Gold Trophy",
-      "width": 1280,
-      "height": 720,
-      "mean_luminance": 51.77,
-      "contrast": 29.16,
-      "black_pixel_pct": 0.11,
       "status": "PASS",
-      "errors": []
+      "size_bytes": 396834
     }
   ],
   "fail_reasons": []

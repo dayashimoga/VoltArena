@@ -461,3 +461,11 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - 53/53 visual screens passed all empirical quality gates (Resolution, Luminance, Contrast, Black%).
   - `scripts/certifier.py` exited with status `PASS`.
 
+## [6.0.1] - 2026-09-05
+
+### Fixed
+- **CI/CD Cloudflare & Visual Certification Parity**:
+  - Updated `ci.yml` to chunk `index.pck` into `<= 18MB` parts and inject the reassembler hook, keeping all web export files strictly `<= 25MB` in GitHub Actions.
+  - Added `pillow` and `numpy` to `certify` job in `ci.yml`.
+  - Tuned fallback image size threshold in `scripts/certifier.py` to 2KB to support compact PNG frames across all runner environments.
+

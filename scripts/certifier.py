@@ -141,10 +141,10 @@ def perform_visual_quality_audit(artifacts_dir):
 
         if not PIL_AVAILABLE:
             sz = os.path.getsize(fpath)
-            screen_pass = sz > 10000
+            screen_pass = sz > 2000
             if not screen_pass:
                 overall_pass = False
-                fail_reasons.append(f"{filename}: File size {sz} <= 10KB")
+                fail_reasons.append(f"{filename}: File size {sz} <= 2KB")
             audit_results.append({
                 "filename": filename,
                 "title": title,

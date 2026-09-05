@@ -58,17 +58,25 @@ func start_next_wave() -> void:
 	current_state = WaveState.IN_PROGRESS
 	build_wave_composition(current_wave)
 
+	var total_initial_threats = enemies_to_spawn.size()
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
-		bus.wave_started.emit(current_wave, enemies_to_spawn.size())
-		var wave_msg = "SURVIVE — %d HOSTILES INCOMING!" % enemies_to_spawn.size()
+		bus.wave_started.emit(current_wave, total_initial_threats)
+		var wave_msg = "SURVIVE — %d HOSTILES INCOMING!" % total_initial_threats
 		if current_wave == 10:
 			wave_msg = "WARNING: BIOGIGAS COLOSSUS DETECTED! FINAL WAVE!"
 		elif current_wave == 5:
 			wave_msg = "ALERT: ENRAGED MINIBOSSES INCOMING!"
 		bus.show_toast_requested.emit(wave_msg, Color(1.0, 0.25, 0.25))
 
-	wave_started.emit(current_wave, enemies_to_spawn.size())
+	wave_started.emit(current_wave, total_initial_threats)
+
+	# Immediately spawn vanguard enemies so threats are visibly on screen right away
+	if not enemies_to_spawn.is_empty():
+		spawn_enemy(enemies_to_spawn.pop_front())
+	if not enemies_to_spawn.is_empty():
+		spawn_enemy(enemies_to_spawn.pop_front())
+	spawn_cooldown = 0.8
 
 func build_wave_composition(wave_num: int) -> void:
 	enemies_to_spawn.clear()

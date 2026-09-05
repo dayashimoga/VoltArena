@@ -244,9 +244,9 @@ static func _build_stadium_pitch_albedo() -> ImageTexture:
 	var w = 256
 	var h = 256
 	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
-	var green_dark = Color(0.18, 0.46, 0.22)
-	var green_light = Color(0.26, 0.58, 0.28)
-	var chalk_line = Color(0.95, 0.98, 0.95)
+	var green_dark = Color(0.08, 0.28, 0.12)
+	var green_light = Color(0.14, 0.38, 0.18)
+	var chalk_line = Color(0.92, 0.95, 0.92)
 
 	for y in range(h):
 		# Mowing stripes every 32 pixels
@@ -254,7 +254,7 @@ static func _build_stadium_pitch_albedo() -> ImageTexture:
 		var base = green_light if stripe else green_dark
 
 		for x in range(w):
-			var fine_noise = (float((x * 19 + y * 29) % 23) / 23.0 - 0.5) * 0.05
+			var fine_noise = (float((x * 19 + y * 29) % 23) / 23.0 - 0.5) * 0.03
 			var col = base + Color(fine_noise, fine_noise, fine_noise)
 
 			# Perimeter chalk touchlines
@@ -357,15 +357,15 @@ static func _build_stadium_pitch_day() -> ImageTexture:
 	var w = 128
 	var h = 128
 	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
-	var green_light = Color(0.24, 0.68, 0.28)
-	var green_dark = Color(0.18, 0.56, 0.22)
-	var chalk = Color(0.96, 0.98, 0.96)
+	var green_light = Color(0.12, 0.36, 0.16)
+	var green_dark = Color(0.08, 0.26, 0.10)
+	var chalk = Color(0.92, 0.95, 0.92)
 	for y in range(h):
 		var stripe = (y / 16) % 2 == 0
 		var base_col = green_light if stripe else green_dark
 		for x in range(w):
-			var noise = sin(float(x) * 0.8) * cos(float(y) * 0.8) * 0.02
-			var col = base_col + Color(noise, noise * 1.5, noise)
+			var noise = sin(float(x) * 0.8) * cos(float(y) * 0.8) * 0.015
+			var col = base_col + Color(noise, noise * 1.2, noise)
 			# Pitch perimeter chalk lines
 			if x < 3 or x >= w - 3 or y < 3 or y >= h - 3 or x == 64:
 				col = chalk

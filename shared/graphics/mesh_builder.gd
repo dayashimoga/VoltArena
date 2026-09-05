@@ -1,1398 +1,1022 @@
 class_name MeshBuilder
 extends RefCounted
 
-## Procedural compound mesh builder for VoltArena.
-## Generates original production-quality 3D assets: multi-part weapons,
-## articulated characters/mutants, detailed vehicles, and stylized props.
+## Production-quality procedural 3D model builder for VoltArena.
+## Generates original stylized production assets: articulated humanoids,
+## multi-part weapons, monsters, vehicles, subway trains, and environment props.
+
+# ==============================================================================
+# 1. WEAPONS ARSENAL (5 DISTINCT SCI-FI ENERGY WEAPONS)
+# ==============================================================================
 
 static func build_pulse_rifle() -> Node3D:
 	var root = Node3D.new()
 	root.name = "PulseRifleVisual"
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_cyan = MaterialGenerator.get_material("neon_cyan")
 
-	# Upper Receiver (main body)
-	var receiver = MeshInstance3D.new()
-	var r_box = BoxMesh.new()
-	r_box.size = Vector3(0.09, 0.12, 0.55)
-	receiver.mesh = r_box
-	receiver.position = Vector3(0, 0, -0.15)
-	receiver.material_override = MaterialGenerator.get_material("sci_fi_metal")
-	root.add_child(receiver)
-
-	# Tactical Rail on top
-	var rail = MeshInstance3D.new()
-	var rail_box = BoxMesh.new()
-	rail_box.size = Vector3(0.04, 0.02, 0.35)
-	rail.mesh = rail_box
-	rail.position = Vector3(0, 0.07, -0.15)
-	rail.material_override = MaterialGenerator.get_material("dark_hull")
-	root.add_child(rail)
-
-	# Holo-Sight Optic
-	var sight = MeshInstance3D.new()
-	var s_box = BoxMesh.new()
-	s_box.size = Vector3(0.06, 0.06, 0.08)
-	sight.mesh = s_box
-	sight.position = Vector3(0, 0.11, -0.08)
-	sight.material_override = MaterialGenerator.get_material("neon_cyan")
-	root.add_child(sight)
-
-	# Fluted Barrel
-	var barrel = MeshInstance3D.new()
-	var cyl = CylinderMesh.new()
-	cyl.top_radius = 0.025
-	cyl.bottom_radius = 0.025
-	cyl.height = 0.38
-	barrel.mesh = cyl
-	barrel.rotation_degrees = Vector3(90, 0, 0)
-	barrel.position = Vector3(0, 0.02, -0.48)
-	barrel.material_override = MaterialGenerator.get_material("dark_hull")
-	root.add_child(barrel)
-
-	# Muzzle Brake / Suppressor
-	var muzzle = MeshInstance3D.new()
-	var m_cyl = CylinderMesh.new()
-	m_cyl.top_radius = 0.035
-	m_cyl.bottom_radius = 0.035
-	m_cyl.height = 0.08
-	muzzle.mesh = m_cyl
-	muzzle.rotation_degrees = Vector3(90, 0, 0)
-	muzzle.position = Vector3(0, 0.02, -0.68)
-	muzzle.material_override = MaterialGenerator.get_material("neon_cyan")
-	root.add_child(muzzle)
-
-	# Ergonomic Pistol Grip
-	var grip = MeshInstance3D.new()
-	var g_box = BoxMesh.new()
-	g_box.size = Vector3(0.06, 0.16, 0.07)
-	grip.mesh = g_box
-	grip.position = Vector3(0, -0.12, 0.04)
-	grip.rotation_degrees = Vector3(18, 0, 0)
-	grip.material_override = MaterialGenerator.get_material("dark_hull")
-	root.add_child(grip)
-
-	# Curved Magazine
-	var mag = MeshInstance3D.new()
-	var m_box = BoxMesh.new()
-	m_box.size = Vector3(0.05, 0.20, 0.08)
-	mag.mesh = m_box
-	mag.position = Vector3(0, -0.12, -0.12)
-	mag.rotation_degrees = Vector3(-12, 0, 0)
-	mag.material_override = MaterialGenerator.get_material("sci_fi_metal")
-	root.add_child(mag)
-
-	# Energy Glow Strip
-	var strip = MeshInstance3D.new()
-	var s_strip = BoxMesh.new()
-	s_strip.size = Vector3(0.095, 0.02, 0.32)
-	strip.mesh = s_strip
-	strip.position = Vector3(0, 0.01, -0.18)
-	strip.material_override = MaterialGenerator.get_material("neon_cyan")
-	root.add_child(strip)
+	# Main Upper Receiver Body
+	_add_box(root, Vector3(0.08, 0.11, 0.46), Vector3(0, 0.02, -0.12), mat_hull)
+	# Lower Receiver & Magazine Well
+	_add_box(root, Vector3(0.07, 0.08, 0.22), Vector3(0, -0.06, -0.04), mat_metal)
+	# Ergonomic Pistol Grip with Trigger Guard
+	var grip = _add_box(root, Vector3(0.05, 0.14, 0.07), Vector3(0, -0.14, 0.06), mat_hull)
+	grip.rotation_degrees.x = 18.0
+	_add_box(root, Vector3(0.03, 0.08, 0.08), Vector3(0, -0.10, 0.01), mat_metal)
+	# Curved Bullpup Tactical Stock
+	_add_box(root, Vector3(0.07, 0.13, 0.18), Vector3(0, 0.0, 0.16), mat_hull)
+	_add_box(root, Vector3(0.075, 0.14, 0.03), Vector3(0, 0.0, 0.25), mat_metal)
+	# Curved Ammo Magazine (releasable)
+	var mag = _add_box(root, Vector3(0.045, 0.18, 0.08), Vector3(0, -0.14, -0.10), mat_metal)
+	mag.rotation_degrees.x = -12.0
+	mag.name = "MagazineMesh"
+	# Fluted Vented Outer Barrel
+	var barrel = _add_cyl(root, 0.024, 0.024, 0.36, Vector3(0, 0.035, -0.44), mat_metal)
+	barrel.rotation_degrees.x = 90.0
+	# Muzzle Brake / Flash Hider
+	var muzzle = _add_cyl(root, 0.032, 0.032, 0.08, Vector3(0, 0.035, -0.63), mat_cyan)
+	muzzle.rotation_degrees.x = 90.0
+	muzzle.name = "MuzzleTip"
+	# Top Picatinny Tactical Rail
+	_add_box(root, Vector3(0.035, 0.02, 0.32), Vector3(0, 0.085, -0.14), mat_hull)
+	# Holographic Reflex Sight Frame & Optic Lens
+	_add_box(root, Vector3(0.055, 0.06, 0.07), Vector3(0, 0.12, -0.08), mat_hull)
+	var reticle = _add_box(root, Vector3(0.04, 0.04, 0.01), Vector3(0, 0.125, -0.08), mat_cyan)
+	reticle.name = "SightReticle"
+	# Bioluminescent Energy Conduit Strips along flanks
+	_add_box(root, Vector3(0.01, 0.025, 0.28), Vector3(-0.042, 0.03, -0.14), mat_cyan)
+	_add_box(root, Vector3(0.01, 0.025, 0.28), Vector3(0.042, 0.03, -0.14), mat_cyan)
 
 	return root
 
 static func build_scatter_cannon() -> Node3D:
 	var root = Node3D.new()
 	root.name = "ScatterCannonVisual"
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_orange = MaterialGenerator.get_material("neon_orange")
 
-	# Heavy Receiver
-	var receiver = MeshInstance3D.new()
-	var r_box = BoxMesh.new()
-	r_box.size = Vector3(0.14, 0.16, 0.50)
-	receiver.mesh = r_box
-	receiver.position = Vector3(0, 0, -0.12)
-	receiver.material_override = MaterialGenerator.get_material("dark_hull")
-	root.add_child(receiver)
-
-	# Twin Heavy Barrels
-	var b_left = MeshInstance3D.new()
-	var b_right = MeshInstance3D.new()
-	var cyl = CylinderMesh.new()
-	cyl.top_radius = 0.035
-	cyl.bottom_radius = 0.035
-	cyl.height = 0.42
-	b_left.mesh = cyl
-	b_left.rotation_degrees = Vector3(90, 0, 0)
-	b_left.position = Vector3(-0.04, 0.03, -0.44)
-	b_left.material_override = MaterialGenerator.get_material("sci_fi_metal")
-	root.add_child(b_left)
-
-	b_right.mesh = cyl
-	b_right.rotation_degrees = Vector3(90, 0, 0)
-	b_right.position = Vector3(0.04, 0.03, -0.44)
-	b_right.material_override = MaterialGenerator.get_material("sci_fi_metal")
-	root.add_child(b_right)
-
-	# Heat Shield Shroud
-	var shroud = MeshInstance3D.new()
-	var s_box = BoxMesh.new()
-	s_box.size = Vector3(0.15, 0.10, 0.30)
-	shroud.mesh = s_box
-	shroud.position = Vector3(0, 0.03, -0.38)
-	shroud.material_override = MaterialGenerator.get_material("neon_orange")
-	root.add_child(shroud)
-
-	# Pump Action Grip
-	var pump = MeshInstance3D.new()
-	var p_box = BoxMesh.new()
-	p_box.size = Vector3(0.12, 0.08, 0.16)
-	pump.mesh = p_box
-	pump.position = Vector3(0, -0.06, -0.32)
-	pump.material_override = MaterialGenerator.get_material("sci_fi_metal")
-	root.add_child(pump)
-
-	# Stock & Grip
-	var grip = MeshInstance3D.new()
-	var g_box = BoxMesh.new()
-	g_box.size = Vector3(0.08, 0.18, 0.09)
-	grip.mesh = g_box
-	grip.position = Vector3(0, -0.12, 0.06)
-	grip.rotation_degrees = Vector3(20, 0, 0)
-	grip.material_override = MaterialGenerator.get_material("dark_hull")
-	root.add_child(grip)
+	# Heavy Reinforced Receiver Block
+	_add_box(root, Vector3(0.13, 0.15, 0.42), Vector3(0, 0.01, -0.10), mat_hull)
+	# Dual Heavy Over-Under Barrels
+	var b_top = _add_cyl(root, 0.032, 0.032, 0.44, Vector3(0, 0.05, -0.42), mat_metal)
+	b_top.rotation_degrees.x = 90.0
+	var b_bot = _add_cyl(root, 0.032, 0.032, 0.44, Vector3(0, -0.03, -0.42), mat_metal)
+	b_bot.rotation_degrees.x = 90.0
+	# Perforated Heat Shroud
+	_add_box(root, Vector3(0.11, 0.14, 0.28), Vector3(0, 0.01, -0.34), mat_hull)
+	# Ribbed Pump Foregrip (slidable)
+	var pump = _add_box(root, Vector3(0.09, 0.07, 0.18), Vector3(0, -0.08, -0.32), mat_metal)
+	pump.name = "PumpSlide"
+	# Ergonomic Swept Grip & Solid Stock
+	var grip = _add_box(root, Vector3(0.06, 0.15, 0.08), Vector3(0, -0.13, 0.08), mat_hull)
+	grip.rotation_degrees.x = 22.0
+	_add_box(root, Vector3(0.08, 0.13, 0.20), Vector3(0, -0.02, 0.18), mat_metal)
+	# Dual Muzzle Crowns
+	var m_top = _add_cyl(root, 0.038, 0.038, 0.04, Vector3(0, 0.05, -0.64), mat_orange)
+	m_top.rotation_degrees.x = 90.0
+	m_top.name = "MuzzleTip"
+	var m_bot = _add_cyl(root, 0.038, 0.038, 0.04, Vector3(0, -0.03, -0.64), mat_orange)
+	m_bot.rotation_degrees.x = 90.0
+	# Rotary Drum Magazine underneath
+	var drum = _add_cyl(root, 0.065, 0.065, 0.10, Vector3(0, -0.07, -0.08), mat_metal)
+	drum.rotation_degrees.z = 90.0
+	drum.name = "DrumMagazine"
 
 	return root
 
 static func build_rail_driver() -> Node3D:
 	var root = Node3D.new()
 	root.name = "RailDriverVisual"
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_blue = MaterialGenerator.get_material("neon_blue")
 
-	# Sleek Angular Chassis
-	var body = MeshInstance3D.new()
-	var b_box = BoxMesh.new()
-	b_box.size = Vector3(0.10, 0.14, 0.65)
-	body.mesh = b_box
-	body.position = Vector3(0, 0, -0.20)
-	body.material_override = MaterialGenerator.get_material("sci_fi_metal")
-	root.add_child(body)
-
-	# Top and Bottom Magnetic Accelerator Rails
-	var top_rail = MeshInstance3D.new()
-	var bot_rail = MeshInstance3D.new()
-	var r_box = BoxMesh.new()
-	r_box.size = Vector3(0.03, 0.03, 0.55)
-	top_rail.mesh = r_box
-	top_rail.position = Vector3(0, 0.06, -0.55)
-	top_rail.material_override = MaterialGenerator.get_material("neon_blue")
-	root.add_child(top_rail)
-
-	bot_rail.mesh = r_box
-	bot_rail.position = Vector3(0, -0.04, -0.55)
-	bot_rail.material_override = MaterialGenerator.get_material("neon_blue")
-	root.add_child(bot_rail)
-
-	# Heavy Battery Capacitor Core
-	var core = MeshInstance3D.new()
-	var cyl = CylinderMesh.new()
-	cyl.top_radius = 0.05
-	cyl.bottom_radius = 0.05
-	cyl.height = 0.22
-	core.mesh = cyl
-	core.position = Vector3(0, -0.02, -0.15)
-	core.material_override = MaterialGenerator.get_material("neon_magenta")
-	root.add_child(core)
-
-	# Long-Range Sniper Scope
-	var scope = MeshInstance3D.new()
-	var s_cyl = CylinderMesh.new()
-	s_cyl.top_radius = 0.028
-	s_cyl.bottom_radius = 0.028
-	s_cyl.height = 0.28
-	scope.mesh = s_cyl
-	scope.rotation_degrees = Vector3(90, 0, 0)
-	scope.position = Vector3(0, 0.12, -0.18)
-	scope.material_override = MaterialGenerator.get_material("dark_hull")
-	root.add_child(scope)
-
-	# Rear Stock
-	var stock = MeshInstance3D.new()
-	var st_box = BoxMesh.new()
-	st_box.size = Vector3(0.08, 0.12, 0.25)
-	stock.mesh = st_box
-	stock.position = Vector3(0, -0.02, 0.18)
-	stock.material_override = MaterialGenerator.get_material("dark_hull")
-	root.add_child(stock)
+	# Heavy Sniper Chassis Frame
+	_add_box(root, Vector3(0.09, 0.12, 0.55), Vector3(0, 0.02, -0.15), mat_hull)
+	# Dual Parallel Electromagnetic Accelerator Rails
+	_add_box(root, Vector3(0.03, 0.035, 0.72), Vector3(0, 0.055, -0.66), mat_metal)
+	_add_box(root, Vector3(0.03, 0.035, 0.72), Vector3(0, 0.005, -0.66), mat_metal)
+	# Magnetic Induction Coils along the rails (4 capacitor rings)
+	for z_pos in [-0.40, -0.55, -0.70, -0.85]:
+		_add_box(root, Vector3(0.07, 0.09, 0.04), Vector3(0, 0.03, z_pos), mat_blue)
+	# Muzzle Emitter Tip
+	var m_tip = _add_box(root, Vector3(0.05, 0.08, 0.04), Vector3(0, 0.03, -1.02), mat_blue)
+	m_tip.name = "MuzzleTip"
+	# High-Magnification Sniper Scope
+	var scope_tube = _add_cyl(root, 0.028, 0.035, 0.32, Vector3(0, 0.14, -0.20), mat_hull)
+	scope_tube.rotation_degrees.x = 90.0
+	var lens = _add_cyl(root, 0.032, 0.032, 0.02, Vector3(0, 0.14, -0.36), mat_blue)
+	lens.rotation_degrees.x = 90.0
+	lens.name = "ScopeLens"
+	# Scope Mounts
+	_add_box(root, Vector3(0.03, 0.05, 0.03), Vector3(0, 0.09, -0.10), mat_metal)
+	_add_box(root, Vector3(0.03, 0.05, 0.03), Vector3(0, 0.09, -0.28), mat_metal)
+	# Ergonomic Skeleton Thumbhole Stock
+	_add_box(root, Vector3(0.06, 0.14, 0.26), Vector3(0, -0.03, 0.22), mat_hull)
+	_add_box(root, Vector3(0.065, 0.16, 0.03), Vector3(0, -0.03, 0.35), mat_metal)
+	# Pistol Grip & Capacitor Battery Cell
+	var grip = _add_box(root, Vector3(0.05, 0.15, 0.06), Vector3(0, -0.14, 0.05), mat_hull)
+	grip.rotation_degrees.x = 24.0
+	var batt = _add_box(root, Vector3(0.05, 0.10, 0.12), Vector3(0, -0.10, -0.10), mat_blue)
+	batt.name = "BatteryCell"
+	# Folding Bipod Legs under barrel
+	var bp_l = _add_box(root, Vector3(0.02, 0.18, 0.02), Vector3(-0.06, -0.08, -0.50), mat_metal)
+	bp_l.rotation_degrees.z = -20.0
+	var bp_r = _add_box(root, Vector3(0.02, 0.18, 0.02), Vector3(0.06, -0.08, -0.50), mat_metal)
+	bp_r.rotation_degrees.z = 20.0
 
 	return root
 
 static func build_grenade_launcher() -> Node3D:
 	var root = Node3D.new()
 	root.name = "GrenadeLauncherVisual"
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_red = MaterialGenerator.get_material("neon_red")
 
-	# Receiver
-	var rec = MeshInstance3D.new()
-	var r_box = BoxMesh.new()
-	r_box.size = Vector3(0.12, 0.14, 0.40)
-	rec.mesh = r_box
-	rec.position = Vector3(0, 0, -0.10)
-	rec.material_override = MaterialGenerator.get_material("sci_fi_metal")
-	root.add_child(rec)
-
-	# Rotary Cylinder Drum (6-chamber grenade drum)
-	var drum = MeshInstance3D.new()
-	var d_cyl = CylinderMesh.new()
-	d_cyl.top_radius = 0.09
-	d_cyl.bottom_radius = 0.09
-	d_cyl.height = 0.18
-	drum.mesh = d_cyl
-	drum.position = Vector3(0, -0.02, -0.16)
-	drum.material_override = MaterialGenerator.get_material("dark_hull")
-	root.add_child(drum)
-
-	# Wide Bore Launcher Barrel
-	var barrel = MeshInstance3D.new()
-	var b_cyl = CylinderMesh.new()
-	b_cyl.top_radius = 0.065
-	b_cyl.bottom_radius = 0.065
-	b_cyl.height = 0.35
-	barrel.mesh = b_cyl
-	barrel.rotation_degrees = Vector3(90, 0, 0)
-	barrel.position = Vector3(0, 0.04, -0.42)
-	barrel.material_override = MaterialGenerator.get_material("dark_hull")
-	root.add_child(barrel)
-
-	# Grip and Stock
-	var grip = MeshInstance3D.new()
-	var g_box = BoxMesh.new()
-	g_box.size = Vector3(0.07, 0.16, 0.08)
-	grip.mesh = g_box
-	grip.position = Vector3(0, -0.14, 0.04)
-	grip.rotation_degrees = Vector3(15, 0, 0)
-	grip.material_override = MaterialGenerator.get_material("sci_fi_metal")
-	root.add_child(grip)
+	# Heavy Frame & Breech Housing
+	_add_box(root, Vector3(0.14, 0.16, 0.38), Vector3(0, 0.04, -0.08), mat_hull)
+	# Revolving 6-Round Drum Cylinder
+	var drum = _add_cyl(root, 0.11, 0.11, 0.24, Vector3(0, 0.02, -0.16), mat_metal)
+	drum.rotation_degrees.x = 90.0
+	drum.name = "GrenadeDrum"
+	# 6 Visible Shell Primers in rear of drum
+	for i in range(6):
+		var angle = float(i) * PI / 3.0
+		var sx = cos(angle) * 0.065
+		var sy = sin(angle) * 0.065 + 0.02
+		_add_cyl(root, 0.018, 0.018, 0.02, Vector3(sx, sy, -0.04), mat_red).rotation_degrees.x = 90.0
+	# Wide Rifled Launcher Barrel
+	var barrel = _add_cyl(root, 0.055, 0.055, 0.32, Vector3(0, 0.08, -0.42), mat_hull)
+	barrel.rotation_degrees.x = 90.0
+	# Flanged Muzzle Crown
+	var muzzle = _add_cyl(root, 0.065, 0.065, 0.05, Vector3(0, 0.08, -0.58), mat_metal)
+	muzzle.rotation_degrees.x = 90.0
+	muzzle.name = "MuzzleTip"
+	# Forward Foregrip and Pistol Grip
+	_add_box(root, Vector3(0.05, 0.14, 0.06), Vector3(0, -0.06, -0.38), mat_hull)
+	var grip = _add_box(root, Vector3(0.055, 0.15, 0.07), Vector3(0, -0.12, 0.10), mat_hull)
+	grip.rotation_degrees.x = 18.0
+	# Flip-up Ladder Sight
+	var sight = _add_box(root, Vector3(0.02, 0.08, 0.015), Vector3(0, 0.17, -0.30), mat_red)
+	sight.name = "LadderSight"
+	# Folding Shoulder Brace Stock
+	_add_box(root, Vector3(0.06, 0.12, 0.22), Vector3(0, 0.04, 0.24), mat_metal)
 
 	return root
 
 static func build_plasma_cutter() -> Node3D:
 	var root = Node3D.new()
 	root.name = "PlasmaCutterVisual"
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_cyan = MaterialGenerator.get_material("neon_cyan")
+	var mat_magenta = MaterialGenerator.get_material("neon_magenta")
 
-	# Main Body
-	var body = MeshInstance3D.new()
-	var b_box = BoxMesh.new()
-	b_box.size = Vector3(0.10, 0.12, 0.45)
-	body.mesh = b_box
-	body.position = Vector3(0, 0, -0.10)
-	body.material_override = MaterialGenerator.get_material("dark_hull")
-	root.add_child(body)
-
-	# Dual Plasma Emitter Prongs
-	var p_left = MeshInstance3D.new()
-	var p_right = MeshInstance3D.new()
-	var p_box = BoxMesh.new()
-	p_box.size = Vector3(0.025, 0.04, 0.28)
-
-	p_left.mesh = p_box
-	p_left.position = Vector3(-0.06, 0.02, -0.42)
-	p_left.material_override = MaterialGenerator.get_material("neon_cyan")
-	root.add_child(p_left)
-
-	p_right.mesh = p_box
-	p_right.position = Vector3(0.06, 0.02, -0.42)
-	p_right.material_override = MaterialGenerator.get_material("neon_cyan")
-	root.add_child(p_right)
-
-	# Plasma Arc Lens
-	var lens = MeshInstance3D.new()
-	var l_sphere = SphereMesh.new()
-	l_sphere.radius = 0.035
-	l_sphere.height = 0.07
-	lens.mesh = l_sphere
-	lens.position = Vector3(0, 0.02, -0.32)
-	lens.material_override = MaterialGenerator.get_material("neon_magenta")
-	root.add_child(lens)
+	# Heavy Industrial Tool Chassis
+	_add_box(root, Vector3(0.11, 0.13, 0.40), Vector3(0, 0.02, -0.10), mat_hull)
+	# Dual Magnetic Emitter Prongs
+	var p_left = _add_box(root, Vector3(0.022, 0.05, 0.32), Vector3(-0.075, 0.03, -0.42), mat_metal)
+	p_left.rotation_degrees.y = 8.0
+	var p_right = _add_box(root, Vector3(0.022, 0.05, 0.32), Vector3(0.075, 0.03, -0.42), mat_metal)
+	p_right.rotation_degrees.y = -8.0
+	# Active Glowing Discharge Nodes on prong tips
+	_add_sphere(root, 0.025, Vector3(-0.055, 0.03, -0.58), mat_cyan)
+	_add_sphere(root, 0.025, Vector3(0.055, 0.03, -0.58), mat_cyan)
+	# Central Plasma Induction Core
+	var core = _add_sphere(root, 0.048, Vector3(0, 0.03, -0.30), mat_magenta)
+	core.name = "PlasmaCore"
+	# Magnetic Containment Rings around core
+	var ring = _add_cyl(root, 0.065, 0.065, 0.025, Vector3(0, 0.03, -0.30), mat_metal)
+	ring.rotation_degrees.x = 90.0
+	# Dual Heavy Industrial Grips
+	var g_rear = _add_box(root, Vector3(0.05, 0.16, 0.06), Vector3(0, -0.12, 0.06), mat_hull)
+	g_rear.rotation_degrees.x = 22.0
+	_add_box(root, Vector3(0.04, 0.06, 0.16), Vector3(0, 0.12, -0.12), mat_metal)
+	# Power Coupling Cable Connector
+	_add_cyl(root, 0.025, 0.025, 0.08, Vector3(0, -0.06, 0.14), mat_cyan).rotation_degrees.x = 90.0
+	var m_tip = _add_box(root, Vector3(0.01, 0.01, 0.01), Vector3(0, 0.03, -0.60), mat_cyan)
+	m_tip.name = "MuzzleTip"
 
 	return root
+
+
+# ==============================================================================
+# 2. HUMANOID CHARACTERS (PLAYER & ARCHETYPE COMBAT BOTS)
+# ==============================================================================
 
 static func build_cyber_soldier(is_bot: bool = false, accent_color: Color = Color(0.0, 0.9, 1.0)) -> Node3D:
 	var soldier = Node3D.new()
 	soldier.name = "CyberSoldierVisual"
 
-	var armor_mat = MaterialGenerator.get_material("dark_hull")
-	var under_mat = MaterialGenerator.get_material("sci_fi_metal")
-	var glow_mat = MaterialGenerator.create_pbr_material(accent_color, 0.5, 0.2, accent_color, 2.5)
+	var mat_armor = MaterialGenerator.get_material("dark_hull")
+	var mat_under = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_glow = MaterialGenerator.create_pbr_material(accent_color, 0.4, 0.3, accent_color, 2.8)
 
-	# Pelvis / Hips
+	# --- SKELETAL ROOT: Pelvis & Hips ---
 	var pelvis = Node3D.new()
 	pelvis.name = "Pelvis"
-	pelvis.position = Vector3(0, 0.85, 0)
+	pelvis.position = Vector3(0, 0.95, 0)
 	soldier.add_child(pelvis)
 
-	var p_mesh = MeshInstance3D.new()
-	var p_box = BoxMesh.new()
-	p_box.size = Vector3(0.40, 0.22, 0.28)
-	p_mesh.mesh = p_box
-	p_mesh.material_override = armor_mat
-	pelvis.add_child(p_mesh)
+	# Sculpted Pelvis & Tactical Belt
+	_add_box(pelvis, Vector3(0.36, 0.18, 0.26), Vector3(0, 0, 0), mat_armor)
+	_add_box(pelvis, Vector3(0.38, 0.05, 0.28), Vector3(0, 0.06, 0), mat_under)
+	# Belt Pouches
+	_add_box(pelvis, Vector3(0.07, 0.08, 0.06), Vector3(-0.16, 0.02, 0.15), mat_under)
+	_add_box(pelvis, Vector3(0.07, 0.08, 0.06), Vector3(0.16, 0.02, 0.15), mat_under)
 
-	# Torso / Chest
+	# --- TORSO / CHEST ---
 	var chest = Node3D.new()
 	chest.name = "Chest"
-	chest.position = Vector3(0, 0.32, 0)
+	chest.position = Vector3(0, 0.30, 0)
 	pelvis.add_child(chest)
 
-	var c_mesh = MeshInstance3D.new()
-	var c_box = BoxMesh.new()
-	c_box.size = Vector3(0.48, 0.44, 0.32)
-	c_mesh.mesh = c_box
-	c_mesh.material_override = armor_mat
-	chest.add_child(c_mesh)
+	# Abdominal Segment
+	_add_box(chest, Vector3(0.34, 0.16, 0.24), Vector3(0, -0.14, 0), mat_under)
+	# Upper Pectoral Armor Plating
+	_add_box(chest, Vector3(0.46, 0.32, 0.30), Vector3(0, 0.08, 0), mat_armor)
+	# Glowing Arc Reactor / Power Core on Sternum
+	var reactor = _add_cyl(chest, 0.055, 0.055, 0.04, Vector3(0, 0.10, 0.16), mat_glow)
+	reactor.rotation_degrees.x = 90.0
+	reactor.name = "ArcReactor"
+	# Collar Guard
+	_add_box(chest, Vector3(0.30, 0.08, 0.18), Vector3(0, 0.26, -0.02), mat_armor)
 
-	# Core Energy Reactor on chest
-	var reactor = MeshInstance3D.new()
-	var r_cyl = CylinderMesh.new()
-	r_cyl.top_radius = 0.06
-	r_cyl.bottom_radius = 0.06
-	r_cyl.height = 0.06
-	reactor.mesh = r_cyl
-	reactor.rotation_degrees = Vector3(90, 0, 0)
-	reactor.position = Vector3(0, 0.04, 0.17)
-	reactor.material_override = glow_mat
-	chest.add_child(reactor)
-
-	# Head / Helmet
+	# --- HEAD & HELMET ---
 	var head = Node3D.new()
 	head.name = "Head"
-	head.position = Vector3(0, 0.36, 0)
+	head.position = Vector3(0, 0.34, 0)
 	chest.add_child(head)
 
-	var h_mesh = MeshInstance3D.new()
-	var h_box = BoxMesh.new()
-	h_box.size = Vector3(0.26, 0.28, 0.28)
-	h_mesh.mesh = h_box
-	h_mesh.material_override = armor_mat
-	head.add_child(h_mesh)
+	# Neck Joint
+	_add_cyl(head, 0.07, 0.08, 0.08, Vector3(0, -0.04, 0), mat_under)
+	# Sculpted Angular Combat Helmet
+	_add_box(head, Vector3(0.24, 0.26, 0.26), Vector3(0, 0.12, -0.01), mat_armor)
+	# Helmet Brow & Crown Ridge
+	_add_box(head, Vector3(0.25, 0.06, 0.16), Vector3(0, 0.24, 0.02), mat_under)
+	# Tinted Reflective Cyber Visor with Glow
+	var visor = _add_box(head, Vector3(0.22, 0.07, 0.06), Vector3(0, 0.12, 0.13), mat_glow)
+	visor.name = "HelmetVisor"
+	# Side Comms Headset / Sensor Ear Cups
+	_add_cyl(head, 0.04, 0.04, 0.03, Vector3(-0.13, 0.11, 0), mat_under).rotation_degrees.z = 90.0
+	_add_cyl(head, 0.04, 0.04, 0.03, Vector3(0.13, 0.11, 0), mat_under).rotation_degrees.z = 90.0
+	# Tactical Antenna
+	_add_cyl(head, 0.006, 0.006, 0.14, Vector3(0.13, 0.22, -0.04), mat_under)
 
-	# Visor
-	var visor = MeshInstance3D.new()
-	var v_box = BoxMesh.new()
-	v_box.size = Vector3(0.24, 0.08, 0.08)
-	visor.mesh = v_box
-	visor.position = Vector3(0, 0.02, 0.15)
-	visor.material_override = glow_mat
-	head.add_child(visor)
-
-	# Left Arm Hierarchy
+	# --- LEFT ARM ---
 	var l_shoulder = Node3D.new()
 	l_shoulder.name = "LeftShoulder"
-	l_shoulder.position = Vector3(-0.32, 0.14, 0)
+	l_shoulder.position = Vector3(-0.30, 0.16, 0)
 	chest.add_child(l_shoulder)
 
-	var l_arm_mesh = MeshInstance3D.new()
-	var arm_box = BoxMesh.new()
-	arm_box.size = Vector3(0.14, 0.34, 0.16)
-	l_arm_mesh.mesh = arm_box
-	l_arm_mesh.position = Vector3(0, -0.15, 0)
-	l_arm_mesh.material_override = under_mat
-	l_shoulder.add_child(l_arm_mesh)
+	# Left Shoulder Armor Pauldron
+	_add_box(l_shoulder, Vector3(0.16, 0.14, 0.18), Vector3(-0.02, 0.02, 0), mat_armor)
+	# Left Bicep Arm
+	_add_box(l_shoulder, Vector3(0.12, 0.24, 0.13), Vector3(0, -0.14, 0), mat_under)
+	# Left Forearm & Elbow Guard
+	var l_forearm = Node3D.new()
+	l_forearm.name = "LeftForearm"
+	l_forearm.position = Vector3(0, -0.26, 0)
+	l_shoulder.add_child(l_forearm)
+	_add_box(l_forearm, Vector3(0.11, 0.22, 0.12), Vector3(0, -0.10, 0), mat_armor)
+	# Left Hand
+	_add_box(l_forearm, Vector3(0.08, 0.09, 0.08), Vector3(0, -0.24, 0), mat_under)
 
-	# Right Arm Hierarchy
+	# --- RIGHT ARM ---
 	var r_shoulder = Node3D.new()
 	r_shoulder.name = "RightShoulder"
-	r_shoulder.position = Vector3(0.32, 0.14, 0)
+	r_shoulder.position = Vector3(0.30, 0.16, 0)
 	chest.add_child(r_shoulder)
 
-	var r_arm_mesh = MeshInstance3D.new()
-	r_arm_mesh.mesh = arm_box
-	r_arm_mesh.position = Vector3(0, -0.15, 0)
-	r_arm_mesh.material_override = under_mat
-	r_shoulder.add_child(r_arm_mesh)
+	# Right Shoulder Armor Pauldron
+	_add_box(r_shoulder, Vector3(0.16, 0.14, 0.18), Vector3(0.02, 0.02, 0), mat_armor)
+	# Right Bicep Arm
+	_add_box(r_shoulder, Vector3(0.12, 0.24, 0.13), Vector3(0, -0.14, 0), mat_under)
+	# Right Forearm & Elbow Guard
+	var r_forearm = Node3D.new()
+	r_forearm.name = "RightForearm"
+	r_forearm.position = Vector3(0, -0.26, 0)
+	r_shoulder.add_child(r_forearm)
+	_add_box(r_forearm, Vector3(0.11, 0.22, 0.12), Vector3(0, -0.10, 0), mat_armor)
+	# Right Hand Gripping Node
+	var r_hand = _add_box(r_forearm, Vector3(0.08, 0.09, 0.08), Vector3(0, -0.24, 0), mat_under)
+	r_hand.name = "RightHand"
 
-	# Left Leg Hierarchy
+	# Weapon Attachment Slot on Bot / Third-Person View
+	if is_bot:
+		var w_slot = Node3D.new()
+		w_slot.name = "WeaponSlot"
+		w_slot.position = Vector3(0, -0.24, -0.18)
+		r_forearm.add_child(w_slot)
+		var rifle_visual = build_pulse_rifle()
+		rifle_visual.scale = Vector3(0.85, 0.85, 0.85)
+		w_slot.add_child(rifle_visual)
+
+	# --- LEFT LEG ---
 	var l_hip = Node3D.new()
 	l_hip.name = "LeftHip"
-	l_hip.position = Vector3(-0.15, -0.15, 0)
+	l_hip.position = Vector3(-0.15, -0.12, 0)
 	pelvis.add_child(l_hip)
 
-	var l_leg_mesh = MeshInstance3D.new()
-	var leg_box = BoxMesh.new()
-	leg_box.size = Vector3(0.16, 0.58, 0.18)
-	l_leg_mesh.mesh = leg_box
-	l_leg_mesh.position = Vector3(0, -0.28, 0)
-	l_leg_mesh.material_override = armor_mat
-	l_hip.add_child(l_leg_mesh)
+	# Thigh Armor
+	_add_box(l_hip, Vector3(0.15, 0.32, 0.17), Vector3(0, -0.16, 0), mat_armor)
+	# Left Shin & Knee Guard
+	var l_shin = Node3D.new()
+	l_shin.name = "LeftShin"
+	l_shin.position = Vector3(0, -0.34, 0)
+	l_hip.add_child(l_shin)
+	_add_box(l_shin, Vector3(0.14, 0.30, 0.15), Vector3(0, -0.15, 0), mat_under)
+	_add_box(l_shin, Vector3(0.12, 0.10, 0.06), Vector3(0, -0.04, 0.10), mat_armor)
+	# Left Tactical Boot
+	_add_box(l_shin, Vector3(0.14, 0.12, 0.24), Vector3(0, -0.34, 0.04), mat_armor)
 
-	# Right Leg Hierarchy
+	# --- RIGHT LEG ---
 	var r_hip = Node3D.new()
 	r_hip.name = "RightHip"
-	r_hip.position = Vector3(0.15, -0.15, 0)
+	r_hip.position = Vector3(0.15, -0.12, 0)
 	pelvis.add_child(r_hip)
 
-	var r_leg_mesh = MeshInstance3D.new()
-	r_leg_mesh.mesh = leg_box
-	r_leg_mesh.position = Vector3(0, -0.28, 0)
-	r_leg_mesh.material_override = armor_mat
-	r_hip.add_child(r_leg_mesh)
+	# Thigh Armor
+	_add_box(r_hip, Vector3(0.15, 0.32, 0.17), Vector3(0, -0.16, 0), mat_armor)
+	# Right Shin & Knee Guard
+	var r_shin = Node3D.new()
+	r_shin.name = "RightShin"
+	r_shin.position = Vector3(0, -0.34, 0)
+	r_hip.add_child(r_shin)
+	_add_box(r_shin, Vector3(0.14, 0.30, 0.15), Vector3(0, -0.15, 0), mat_under)
+	_add_box(r_shin, Vector3(0.12, 0.10, 0.06), Vector3(0, -0.04, 0.10), mat_armor)
+	# Right Tactical Boot
+	_add_box(r_shin, Vector3(0.14, 0.12, 0.24), Vector3(0, -0.34, 0.04), mat_armor)
 
 	return soldier
+
+
+# ==============================================================================
+# 3. METRO MUTANT MONSTERS (CRAWLER, SPITTER, STALKER, BRUTE, BIO-COLOSSUS)
+# ==============================================================================
 
 static func build_crawler_mesh() -> Node3D:
 	var root = Node3D.new()
 	root.name = "CrawlerVisual"
-
-	var chitin_mat = MaterialGenerator.get_material("enemy_crawler")
-	var eye_mat = MaterialGenerator.get_material("neon_magenta")
-
-	# Low segmented thorax / carapace
-	var thorax = MeshInstance3D.new()
-	var t_box = BoxMesh.new()
-	t_box.size = Vector3(0.65, 0.35, 0.95)
-	thorax.mesh = t_box
-	thorax.position = Vector3(0, 0.35, 0)
-	thorax.material_override = chitin_mat
-	root.add_child(thorax)
-
-	# Dorsal Spines
-	for z in [-0.2, 0.0, 0.2]:
-		var spine = MeshInstance3D.new()
-		var s_cone = CylinderMesh.new()
-		s_cone.top_radius = 0.01
-		s_cone.bottom_radius = 0.04
-		s_cone.height = 0.22
-		spine.mesh = s_cone
-		spine.position = Vector3(0, 0.60, z)
-		spine.material_override = MaterialGenerator.get_material("dark_hull")
-		root.add_child(spine)
-
-	# Cluster Eyes
-	for x in [-0.12, -0.04, 0.04, 0.12]:
-		var eye = MeshInstance3D.new()
-		var e_sphere = SphereMesh.new()
-		e_sphere.radius = 0.03
-		e_sphere.height = 0.06
-		eye.mesh = e_sphere
-		eye.position = Vector3(x, 0.42, -0.50)
-		eye.material_override = eye_mat
-		root.add_child(eye)
-
-	# Articulated Spider Claw Limbs (6 legs)
-	var leg_mesh = BoxMesh.new()
-	leg_mesh.size = Vector3(0.08, 0.10, 0.50)
-	for i in range(3):
-		var z_off = -0.25 + i * 0.25
-		# Left leg
-		var l_leg = MeshInstance3D.new()
-		l_leg.mesh = leg_mesh
-		l_leg.position = Vector3(-0.48, 0.22, z_off)
-		l_leg.rotation_degrees = Vector3(15, 30, -25)
-		l_leg.material_override = chitin_mat
-		root.add_child(l_leg)
-
-		# Right leg
-		var r_leg = MeshInstance3D.new()
-		r_leg.mesh = leg_mesh
-		r_leg.position = Vector3(0.48, 0.22, z_off)
-		r_leg.rotation_degrees = Vector3(15, -30, 25)
-		r_leg.material_override = chitin_mat
-		root.add_child(r_leg)
-
-	return root
-
-static func build_stalker_mesh() -> Node3D:
-	var root = Node3D.new()
-	root.name = "StalkerVisual"
-
-	var shadow_mat = MaterialGenerator.get_material("dark_hull")
-	var bio_mat = MaterialGenerator.get_material("neon_green")
-
-	# Tall slender torso
-	var torso = MeshInstance3D.new()
-	var t_box = BoxMesh.new()
-	t_box.size = Vector3(0.38, 1.15, 0.32)
-	torso.mesh = t_box
-	torso.position = Vector3(0, 0.95, 0)
-	torso.material_override = shadow_mat
-	root.add_child(torso)
-
-	# Bioluminescent Ribs
-	for y in [0.70, 0.85, 1.00, 1.15]:
-		var rib = MeshInstance3D.new()
-		var r_box = BoxMesh.new()
-		r_box.size = Vector3(0.42, 0.04, 0.34)
-		rib.mesh = r_box
-		rib.position = Vector3(0, y, 0)
-		rib.material_override = bio_mat
-		root.add_child(rib)
-
-	# Skull Mask / Head
-	var head = MeshInstance3D.new()
-	var h_box = BoxMesh.new()
-	h_box.size = Vector3(0.24, 0.32, 0.28)
-	head.mesh = h_box
-	head.position = Vector3(0, 1.62, -0.05)
-	head.material_override = shadow_mat
-	root.add_child(head)
-
-	var eye = MeshInstance3D.new()
-	var e_box = BoxMesh.new()
-	e_box.size = Vector3(0.18, 0.06, 0.08)
-	eye.mesh = e_box
-	eye.position = Vector3(0, 1.66, -0.20)
-	eye.material_override = bio_mat
-	root.add_child(eye)
-
-	# Elongated Blade Arms
-	var arm_mesh = BoxMesh.new()
-	arm_mesh.size = Vector3(0.08, 0.95, 0.10)
-	var l_arm = MeshInstance3D.new()
-	l_arm.mesh = arm_mesh
-	l_arm.position = Vector3(-0.32, 0.85, -0.15)
-	l_arm.rotation_degrees = Vector3(30, 0, 0)
-	l_arm.material_override = shadow_mat
-	root.add_child(l_arm)
-
-	var r_arm = MeshInstance3D.new()
-	r_arm.mesh = arm_mesh
-	r_arm.position = Vector3(0.32, 0.85, -0.15)
-	r_arm.rotation_degrees = Vector3(30, 0, 0)
-	r_arm.material_override = shadow_mat
-	root.add_child(r_arm)
-
-	return root
-
-static func build_brute_mesh() -> Node3D:
-	var root = Node3D.new()
-	root.name = "BruteVisual"
-
-	var armor_mat = MaterialGenerator.get_material("dark_concrete")
-	var flesh_mat = MaterialGenerator.get_material("enemy_crawler")
-	var lava_mat = MaterialGenerator.get_material("neon_red")
-
-	# Massive hunchbacked torso
-	var torso = MeshInstance3D.new()
-	var t_box = BoxMesh.new()
-	t_box.size = Vector3(1.20, 1.40, 1.05)
-	torso.mesh = t_box
-	torso.position = Vector3(0, 1.30, 0)
-	torso.material_override = armor_mat
-	root.add_child(torso)
-
-	# Molten Fissures / Glowing Veins
-	var vein = MeshInstance3D.new()
-	var v_box = BoxMesh.new()
-	v_box.size = Vector3(0.85, 0.08, 1.10)
-	vein.mesh = v_box
-	vein.position = Vector3(0, 1.40, 0)
-	vein.material_override = lava_mat
-	root.add_child(vein)
-
-	# Shoulder Spikes / Bone Plates
-	for s_x in [-0.75, 0.75]:
-		var spike = MeshInstance3D.new()
-		var cone = CylinderMesh.new()
-		cone.top_radius = 0.02
-		cone.bottom_radius = 0.16
-		cone.height = 0.55
-		spike.mesh = cone
-		spike.position = Vector3(s_x, 1.95, 0)
-		spike.rotation_degrees = Vector3(0, 0, -35 * signf(s_x))
-		spike.material_override = MaterialGenerator.get_material("sci_fi_metal")
-		root.add_child(spike)
-
-	# Heavy Boulder Fists
-	for f_x in [-0.85, 0.85]:
-		var fist = MeshInstance3D.new()
-		var f_box = BoxMesh.new()
-		f_box.size = Vector3(0.48, 0.65, 0.48)
-		fist.mesh = f_box
-		fist.position = Vector3(f_x, 0.60, -0.30)
-		fist.material_override = armor_mat
-		root.add_child(fist)
-
-	return root
-
-static func build_rocket_car(team_id: int = 0) -> Node3D:
-	var car = Node3D.new()
-	car.name = "RocketCarVisual"
-
-	var team_mat = MaterialGenerator.get_material("neon_cyan" if team_id == 0 else "neon_orange")
-	var body_mat = MaterialGenerator.get_material("dark_hull")
-	var wheel_mat = MaterialGenerator.get_material("asphalt_track")
-
-	# Aerodynamic Low-Slung Chassis
-	var chassis = MeshInstance3D.new()
-	var c_box = BoxMesh.new()
-	c_box.size = Vector3(1.85, 0.55, 3.60)
-	chassis.mesh = c_box
-	chassis.position = Vector3(0, 0.45, 0)
-	chassis.material_override = team_mat
-	car.add_child(chassis)
-
-	# Cabin Cockpit / Slanted Windshield
-	var cabin = MeshInstance3D.new()
-	var cb_box = BoxMesh.new()
-	cb_box.size = Vector3(1.30, 0.45, 1.60)
-	cabin.mesh = cb_box
-	cabin.position = Vector3(0, 0.85, -0.20)
-	cabin.material_override = body_mat
-	car.add_child(cabin)
-
-	# Front Splitter Bumper
-	var splitter = MeshInstance3D.new()
-	var sp_box = BoxMesh.new()
-	sp_box.size = Vector3(1.95, 0.12, 0.45)
-	splitter.mesh = sp_box
-	splitter.position = Vector3(0, 0.22, -1.85)
-	splitter.material_override = body_mat
-	car.add_child(splitter)
-
-	# Rear High-Downforce Spoiler Wing
-	var wing = MeshInstance3D.new()
-	var w_box = BoxMesh.new()
-	w_box.size = Vector3(2.10, 0.08, 0.38)
-	wing.mesh = w_box
-	wing.position = Vector3(0, 1.25, 1.60)
-	wing.material_override = team_mat
-	car.add_child(wing)
-
-	# Wing Struts
-	for sx in [-0.7, 0.7]:
-		var strut = MeshInstance3D.new()
-		var st_box = BoxMesh.new()
-		st_box.size = Vector3(0.06, 0.45, 0.10)
-		strut.mesh = st_box
-		strut.position = Vector3(sx, 0.95, 1.60)
-		strut.material_override = body_mat
-		car.add_child(strut)
-
-	# Dual Rocket Thruster Nozzles
-	for tx in [-0.35, 0.35]:
-		var thruster = MeshInstance3D.new()
-		var t_cyl = CylinderMesh.new()
-		t_cyl.top_radius = 0.14
-		t_cyl.bottom_radius = 0.18
-		t_cyl.height = 0.35
-		thruster.mesh = t_cyl
-		thruster.rotation_degrees = Vector3(90, 0, 0)
-		thruster.position = Vector3(tx, 0.50, 1.85)
-		thruster.material_override = MaterialGenerator.get_material("sci_fi_metal")
-		car.add_child(thruster)
-
-	# 4 Detailed Alloy Wheels
-	var wheel_mesh = CylinderMesh.new()
-	wheel_mesh.top_radius = 0.38
-	wheel_mesh.bottom_radius = 0.38
-	wheel_mesh.height = 0.34
-
-	var wheel_offsets = [
-		Vector3(-1.05, 0.38, -1.25),
-		Vector3(1.05, 0.38, -1.25),
-		Vector3(-1.05, 0.38, 1.25),
-		Vector3(1.05, 0.38, 1.25)
-	]
-	for pos in wheel_offsets:
-		var w = MeshInstance3D.new()
-		w.mesh = wheel_mesh
-		w.rotation_degrees = Vector3(0, 0, 90)
-		w.position = pos
-		w.material_override = wheel_mat
-		car.add_child(w)
-
-	return car
-
-static func build_drift_kart(kart_color: Color = Color(0.2, 1.0, 0.5), _kart_type: String = "speeder") -> Node3D:
-	var kart = Node3D.new()
-	kart.name = "DriftKartVisual"
-
-	var primary_mat = MaterialGenerator.create_pbr_material(kart_color, 0.8, 0.3, kart_color, 0.5)
-	var frame_mat = MaterialGenerator.get_material("sci_fi_metal")
-	var tire_mat = MaterialGenerator.get_material("asphalt_track")
-
-	# Tubular Kart Chassis
-	var chassis = MeshInstance3D.new()
-	var c_box = BoxMesh.new()
-	c_box.size = Vector3(1.25, 0.28, 2.50)
-	chassis.mesh = c_box
-	chassis.position = Vector3(0, 0.28, 0)
-	chassis.material_override = frame_mat
-	kart.add_child(chassis)
-
-	# Aerodynamic Front Nose Fairing
-	var nose = MeshInstance3D.new()
-	var n_box = BoxMesh.new()
-	n_box.size = Vector3(1.15, 0.22, 0.70)
-	nose.mesh = n_box
-	nose.position = Vector3(0, 0.30, -1.15)
-	nose.material_override = primary_mat
-	kart.add_child(nose)
-
-	# Side Pods (Side bumpers with racing decals)
-	for px in [-0.68, 0.68]:
-		var pod = MeshInstance3D.new()
-		var p_box = BoxMesh.new()
-		p_box.size = Vector3(0.24, 0.26, 1.30)
-		pod.mesh = p_box
-		pod.position = Vector3(px, 0.30, 0)
-		pod.material_override = primary_mat
-		kart.add_child(pod)
-
-	# Racing Bucket Seat
-	var seat = MeshInstance3D.new()
-	var s_box = BoxMesh.new()
-	s_box.size = Vector3(0.55, 0.55, 0.45)
-	seat.mesh = s_box
-	seat.position = Vector3(0, 0.55, 0.25)
-	seat.material_override = MaterialGenerator.get_material("dark_hull")
-	kart.add_child(seat)
-
-	# Steering Wheel Column
-	var col = MeshInstance3D.new()
-	var col_cyl = CylinderMesh.new()
-	col_cyl.top_radius = 0.02
-	col_cyl.bottom_radius = 0.02
-	col_cyl.height = 0.40
-	col.mesh = col_cyl
-	col.rotation_degrees = Vector3(45, 0, 0)
-	col.position = Vector3(0, 0.52, -0.22)
-	col.material_override = frame_mat
-	kart.add_child(col)
-
-	# Steering Wheel
-	var wheel = MeshInstance3D.new()
-	var w_torus = TorusMesh.new()
-	w_torus.inner_radius = 0.10
-	w_torus.outer_radius = 0.14
-	wheel.mesh = w_torus
-	wheel.rotation_degrees = Vector3(45, 0, 0)
-	wheel.position = Vector3(0, 0.66, -0.34)
-	wheel.material_override = MaterialGenerator.get_material("dark_hull")
-	kart.add_child(wheel)
-
-	# Rear Engine Block with Dual Exhausts
-	var engine = MeshInstance3D.new()
-	var e_box = BoxMesh.new()
-	e_box.size = Vector3(0.55, 0.40, 0.45)
-	engine.mesh = e_box
-	engine.position = Vector3(0, 0.45, 0.85)
-	engine.material_override = MaterialGenerator.get_material("sci_fi_metal")
-	kart.add_child(engine)
-
-	# Rear Wing
-	var wing = MeshInstance3D.new()
-	var w_box = BoxMesh.new()
-	w_box.size = Vector3(1.30, 0.06, 0.28)
-	wing.mesh = w_box
-	wing.position = Vector3(0, 0.80, 1.15)
-	wing.material_override = primary_mat
-	kart.add_child(wing)
-
-	# 4 Low-Profile Wide Slick Tires
-	var tire_mesh = CylinderMesh.new()
-	tire_mesh.top_radius = 0.28
-	tire_mesh.bottom_radius = 0.28
-	tire_mesh.height = 0.28
-
-	var tire_offsets = [
-		Vector3(-0.72, 0.28, -0.85),
-		Vector3(0.72, 0.28, -0.85),
-		Vector3(-0.76, 0.32, 0.85),
-		Vector3(0.76, 0.32, 0.85)
-	]
-	for i in range(tire_offsets.size()):
-		var t = MeshInstance3D.new()
-		t.name = "FrontWheel_%d" % i if i < 2 else "RearWheel_%d" % (i - 2)
-		t.mesh = tire_mesh
-		t.rotation_degrees = Vector3(0, 0, 90)
-		t.position = tire_offsets[i]
-		t.material_override = tire_mat
-		kart.add_child(t)
-
-	return kart
-
-static func build_energy_ball() -> Node3D:
-	var ball = Node3D.new()
-	ball.name = "EnergyBallVisual"
-
-	# Polyhedral Outer Core
-	var outer = MeshInstance3D.new()
-	var sphere = SphereMesh.new()
-	sphere.radius = 1.05
-	sphere.height = 2.10
-	outer.mesh = sphere
-	outer.material_override = MaterialGenerator.get_material("energy_ball")
-	ball.add_child(outer)
-
-	# Hexagonal Equator Rings
-	var ring = MeshInstance3D.new()
-	var torus = TorusMesh.new()
-	torus.inner_radius = 1.02
-	torus.outer_radius = 1.14
-	ring.mesh = torus
-	ring.material_override = MaterialGenerator.get_material("neon_cyan")
-	ball.add_child(ring)
-
-	var ring2 = MeshInstance3D.new()
-	ring2.mesh = torus
-	ring2.rotation_degrees = Vector3(90, 0, 0)
-	ring2.material_override = MaterialGenerator.get_material("neon_orange")
-	ball.add_child(ring2)
-
-	return ball
-
-static func build_item_box() -> Node3D:
-	var box = Node3D.new()
-	box.name = "ItemBoxVisual"
-
-	var outer = MeshInstance3D.new()
-	var b_mesh = BoxMesh.new()
-	b_mesh.size = Vector3(1.1, 1.1, 1.1)
-	outer.mesh = b_mesh
-	outer.material_override = MaterialGenerator.get_material("neon_orange")
-	box.add_child(outer)
-
-	var inner = MeshInstance3D.new()
-	var in_mesh = BoxMesh.new()
-	in_mesh.size = Vector3(0.8, 0.8, 0.8)
-	inner.mesh = in_mesh
-	inner.material_override = MaterialGenerator.get_material("gold_pickup")
-	box.add_child(inner)
-
-	return box
-
-static func build_pickup_mesh(type: int) -> Node3D:
-	var root = Node3D.new()
-	root.name = "PickupVisual"
-
-	var core = MeshInstance3D.new()
-	var prism = PrismMesh.new()
-	prism.size = Vector3(0.5, 0.7, 0.5)
-	core.mesh = prism
-
-	var ring = MeshInstance3D.new()
-	var torus = TorusMesh.new()
-	torus.inner_radius = 0.45
-	torus.outer_radius = 0.55
-	ring.mesh = torus
-
-	match type:
-		0: # Health
-			core.material_override = MaterialGenerator.get_material("health_red")
-			ring.material_override = MaterialGenerator.get_material("neon_red")
-		1: # Armor
-			core.material_override = MaterialGenerator.get_material("neon_blue")
-			ring.material_override = MaterialGenerator.get_material("neon_cyan")
-		2: # Ammo
-			core.material_override = MaterialGenerator.get_material("gold_pickup")
-			ring.material_override = MaterialGenerator.get_material("neon_orange")
-		_:
-			core.material_override = MaterialGenerator.get_material("gold_pickup")
-			ring.material_override = MaterialGenerator.get_material("neon_cyan")
-
-	root.add_child(core)
-	root.add_child(ring)
-	return root
-
-static func build_cyber_crate(size: Vector3 = Vector3(2.0, 2.0, 2.0)) -> Node3D:
-	var root = Node3D.new()
-	root.name = "CyberCrate"
-
-	var main_box = MeshInstance3D.new()
-	var b = BoxMesh.new()
-	b.size = size
-	main_box.mesh = b
-	main_box.material_override = MaterialGenerator.get_material("dark_hull")
-	root.add_child(main_box)
-
-	# Beveled Corner Reinforcements
-	var rim = MeshInstance3D.new()
-	var r_box = BoxMesh.new()
-	r_box.size = Vector3(size.x + 0.05, size.y * 0.25, size.z + 0.05)
-	rim.mesh = r_box
-	rim.material_override = MaterialGenerator.get_material("sci_fi_metal")
-	root.add_child(rim)
-
-	# Glowing Status Strip
-	var strip = MeshInstance3D.new()
-	var s_box = BoxMesh.new()
-	s_box.size = Vector3(size.x + 0.06, 0.08, size.z * 0.4)
-	strip.mesh = s_box
-	strip.material_override = MaterialGenerator.get_material("neon_cyan")
-	root.add_child(strip)
+	var mat_chitin = MaterialGenerator.get_material("enemy_crawler")
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_eyes = MaterialGenerator.get_material("neon_magenta")
+
+	# Segmented Thorax & Abdomen
+	_add_box(root, Vector3(0.55, 0.28, 0.70), Vector3(0, 0.35, 0.10), mat_chitin)
+	_add_box(root, Vector3(0.45, 0.24, 0.40), Vector3(0, 0.38, -0.32), mat_hull)
+	# Spiked Dorsal Ridge
+	for z_pos in [-0.20, 0.0, 0.20]:
+		var spine = _add_cyl(root, 0.01, 0.035, 0.18, Vector3(0, 0.54, z_pos), mat_hull)
+		spine.rotation_degrees.x = -15.0
+	# Triangular Head with Razor Mandibles
+	_add_box(root, Vector3(0.32, 0.18, 0.25), Vector3(0, 0.34, -0.58), mat_chitin)
+	# Dual Scythe Mandibles
+	var m_l = _add_box(root, Vector3(0.04, 0.06, 0.22), Vector3(-0.14, 0.28, -0.74), mat_hull)
+	m_l.rotation_degrees = Vector3(10, -25, 0)
+	var m_r = _add_box(root, Vector3(0.04, 0.06, 0.22), Vector3(0.14, 0.28, -0.74), mat_hull)
+	m_r.rotation_degrees = Vector3(10, 25, 0)
+	# 6 Glowing Cluster Eyes
+	for i in range(6):
+		var ex = -0.10 + float(i % 3) * 0.10
+		var ey = 0.38 + (0.05 if i >= 3 else 0.0)
+		_add_sphere(root, 0.024, Vector3(ex, ey, -0.68), mat_eyes)
+
+	# 6 Articulated Spider Scythe Legs
+	for side in [-1.0, 1.0]:
+		for leg_i in range(3):
+			var z_off = -0.25 + float(leg_i) * 0.28
+			var coxa = Node3D.new()
+			coxa.position = Vector3(side * 0.26, 0.35, z_off)
+			coxa.rotation_degrees.y = side * (35.0 - float(leg_i) * 30.0)
+			root.add_child(coxa)
+			# Upper Femur
+			var femur = _add_box(coxa, Vector3(side * 0.06, 0.06, 0.32), Vector3(side * 0.16, 0.08, 0), mat_chitin)
+			femur.rotation_degrees.z = -side * 28.0
+			# Lower Tibia / Scythe Tip
+			var tibia = _add_box(coxa, Vector3(side * 0.04, 0.05, 0.38), Vector3(side * 0.32, -0.16, 0), mat_hull)
+			tibia.rotation_degrees.z = side * 35.0
 
 	return root
 
 static func build_spitter_mesh() -> Node3D:
 	var root = Node3D.new()
 	root.name = "SpitterVisual"
-	var chitin_mat = MaterialGenerator.get_material("enemy_crawler")
-	var acid_mat = MaterialGenerator.get_material("acid_pool")
+	var mat_chitin = MaterialGenerator.get_material("enemy_crawler")
+	var mat_acid = MaterialGenerator.get_material("acid_pool")
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
 
-	# Hunched Thorax
-	var thorax = MeshInstance3D.new()
-	var t_box = BoxMesh.new()
-	t_box.size = Vector3(0.55, 0.70, 0.85)
-	thorax.mesh = t_box
-	thorax.position = Vector3(0, 0.75, 0)
-	thorax.material_override = chitin_mat
-	root.add_child(thorax)
+	# Hunched Bulbous Thorax
+	_add_box(root, Vector3(0.60, 0.65, 0.80), Vector3(0, 0.75, 0.0), mat_chitin)
+	# Swollen Glowing Caustic Acid Sac
+	var sac = _add_sphere(root, 0.34, Vector3(0, 0.70, -0.35), mat_acid)
+	sac.scale = Vector3(1.0, 1.2, 1.4)
+	sac.name = "AcidSac"
+	# Spitting Maw & Acid Vent Tube
+	var maw = _add_cyl(root, 0.12, 0.05, 0.28, Vector3(0, 0.85, -0.65), mat_acid)
+	maw.rotation_degrees.x = 90.0
+	maw.name = "AcidMaw"
+	# Spine Crest
+	for sz in [-0.2, 0.1, 0.3]:
+		_add_box(root, Vector3(0.06, 0.18, 0.08), Vector3(0, 1.12, sz), mat_hull)
+	# 4 Sturdy Tripod/Quad Claw Legs
+	for side in [-1.0, 1.0]:
+		for leg_z in [-0.25, 0.30]:
+			var leg = _add_box(root, Vector3(0.10, 0.65, 0.10), Vector3(side * 0.38, 0.32, leg_z), mat_chitin)
+			leg.rotation_degrees = Vector3(15.0 if leg_z > 0 else -15.0, 0, -side * 22.0)
 
-	# Pulsing Caustic Throat Sac
-	var sac = MeshInstance3D.new()
-	var s_sphere = SphereMesh.new()
-	s_sphere.radius = 0.28
-	s_sphere.height = 0.50
-	sac.mesh = s_sphere
-	sac.position = Vector3(0, 0.65, -0.38)
-	sac.material_override = acid_mat
-	root.add_child(sac)
+	return root
 
-	# Acid Spit Maw
-	var maw = MeshInstance3D.new()
-	var m_cone = CylinderMesh.new()
-	m_cone.top_radius = 0.12
-	m_cone.bottom_radius = 0.04
-	m_cone.height = 0.24
-	maw.mesh = m_cone
-	maw.rotation_degrees = Vector3(90, 0, 0)
-	maw.position = Vector3(0, 0.78, -0.58)
-	maw.material_override = acid_mat
-	root.add_child(maw)
+static func build_stalker_mesh() -> Node3D:
+	var root = Node3D.new()
+	root.name = "StalkerVisual"
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_bio = MaterialGenerator.get_material("neon_green")
 
-	# Quad Tripod / Spidery Legs
-	var leg_mesh = BoxMesh.new()
-	leg_mesh.size = Vector3(0.08, 0.60, 0.08)
-	for i in range(4):
-		var lx = -0.35 if i % 2 == 0 else 0.35
-		var lz = -0.25 if i < 2 else 0.25
-		var leg = MeshInstance3D.new()
-		leg.mesh = leg_mesh
-		leg.position = Vector3(lx, 0.30, lz)
-		leg.rotation_degrees = Vector3(15 * (1 if lz > 0 else -1), 0, 20 * signf(lx))
-		leg.material_override = chitin_mat
-		root.add_child(leg)
+	# Slender Elongated Torso with Bioluminescent Ribs
+	_add_box(root, Vector3(0.32, 1.10, 0.26), Vector3(0, 1.05, 0), mat_hull)
+	for y in [0.75, 0.92, 1.09, 1.26, 1.43]:
+		_add_box(root, Vector3(0.38, 0.035, 0.30), Vector3(0, y, 0), mat_bio)
+	# Shadow Cloak / Crest Collar
+	_add_box(root, Vector3(0.44, 0.30, 0.18), Vector3(0, 1.62, -0.06), mat_hull)
+	# Faceless Skull Mask with Green Slit Eyes
+	_add_box(root, Vector3(0.20, 0.28, 0.24), Vector3(0, 1.76, -0.04), mat_hull)
+	_add_box(root, Vector3(0.16, 0.04, 0.06), Vector3(0, 1.80, -0.16), mat_bio)
+	# Twin Elongated Scythe Blade Arms
+	for side in [-1.0, 1.0]:
+		var arm = _add_box(root, Vector3(0.07, 0.50, 0.08), Vector3(side * 0.26, 1.15, -0.05), mat_hull)
+		arm.rotation_degrees = Vector3(25.0, 0, -side * 15.0)
+		var scythe = _add_box(root, Vector3(0.04, 0.70, 0.12), Vector3(side * 0.32, 0.75, -0.28), mat_bio)
+		scythe.rotation_degrees = Vector3(55.0, 0, 0)
+	# Tall Slender Stilt Legs
+	for side in [-1.0, 1.0]:
+		_add_box(root, Vector3(0.09, 0.90, 0.10), Vector3(side * 0.14, 0.45, 0), mat_hull)
+
+	return root
+
+static func build_brute_mesh() -> Node3D:
+	var root = Node3D.new()
+	root.name = "BruteVisual"
+	var mat_armor = MaterialGenerator.get_material("dark_concrete")
+	var mat_lava = MaterialGenerator.get_material("neon_red")
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+
+	# Massive Hunchbacked Rock Torso
+	_add_box(root, Vector3(1.30, 1.40, 1.10), Vector3(0, 1.40, 0), mat_armor)
+	# Molten Magma Fissures coursing across back and chest
+	_add_box(root, Vector3(0.95, 0.10, 1.15), Vector3(0, 1.55, 0), mat_lava)
+	_add_box(root, Vector3(1.15, 0.10, 0.95), Vector3(0, 1.30, 0), mat_lava)
+	# Heavy Spiked Shoulder Blocks
+	for side in [-1.0, 1.0]:
+		_add_box(root, Vector3(0.55, 0.55, 0.65), Vector3(side * 0.85, 1.85, -0.05), mat_armor)
+		var horn = _add_cyl(root, 0.02, 0.14, 0.50, Vector3(side * 0.85, 2.25, 0), mat_metal)
+		horn.rotation_degrees.z = -side * 35.0
+	# Giant Crushing Boulder Fists
+	for side in [-1.0, 1.0]:
+		var b_arm = _add_box(root, Vector3(0.35, 0.80, 0.35), Vector3(side * 0.88, 1.15, -0.15), mat_armor)
+		b_arm.rotation_degrees.x = 20.0
+		var fist = _add_box(root, Vector3(0.55, 0.65, 0.55), Vector3(side * 0.92, 0.55, -0.35), mat_metal)
+		fist.name = "Fist_" + ("Left" if side < 0 else "Right")
+	# Sturdy Elephantine Stomp Legs
+	for side in [-1.0, 1.0]:
+		_add_cyl(root, 0.28, 0.38, 0.85, Vector3(side * 0.42, 0.42, 0), mat_armor)
 
 	return root
 
 static func build_colossus_boss_mesh() -> Node3D:
 	var root = Node3D.new()
 	root.name = "BioColossusVisual"
-	var armor_mat = MaterialGenerator.get_material("dark_concrete")
-	var core_mat = MaterialGenerator.get_material("neon_red")
-	var steel_mat = MaterialGenerator.get_material("sci_fi_metal")
-	var acid_mat = MaterialGenerator.get_material("acid_pool")
+	var mat_armor = MaterialGenerator.get_material("dark_concrete")
+	var mat_core = MaterialGenerator.get_material("neon_red")
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
 
-	# Massive armored torso
-	var torso = MeshInstance3D.new()
-	var t_box = BoxMesh.new()
-	t_box.size = Vector3(2.4, 2.6, 2.0)
-	torso.mesh = t_box
-	torso.position = Vector3(0, 2.6, 0)
-	torso.material_override = armor_mat
-	root.add_child(torso)
-
-	# Core Reactor / Heart Weakpoint
-	var core = MeshInstance3D.new()
-	var c_sphere = SphereMesh.new()
-	c_sphere.radius = 0.55
-	c_sphere.height = 1.10
-	core.mesh = c_sphere
-	core.position = Vector3(0, 2.8, -1.0)
-	core.material_override = core_mat
-	root.add_child(core)
-
-	# Mutated Dorsal Rock Spines
-	for sz in [-0.5, 0.0, 0.5]:
-		var spine = MeshInstance3D.new()
-		var s_cone = CylinderMesh.new()
-		s_cone.top_radius = 0.05
-		s_cone.bottom_radius = 0.28
-		s_cone.height = 1.2
-		spine.mesh = s_cone
-		spine.position = Vector3(0, 3.8, sz)
-		spine.rotation_degrees = Vector3(25 * sz, 0, 0)
-		spine.material_override = steel_mat
-		root.add_child(spine)
-
-	# Giant Rock-Crusher Fists
-	for sx in [-1.7, 1.7]:
-		var arm = MeshInstance3D.new()
-		var a_box = BoxMesh.new()
-		a_box.size = Vector3(0.7, 1.8, 0.7)
-		arm.mesh = a_box
-		arm.position = Vector3(sx, 2.0, -0.3)
-		arm.material_override = armor_mat
-		root.add_child(arm)
-
-		var fist = MeshInstance3D.new()
-		var f_box = BoxMesh.new()
-		f_box.size = Vector3(1.1, 1.1, 1.1)
-		fist.mesh = f_box
-		fist.position = Vector3(sx, 0.8, -0.6)
-		fist.material_override = steel_mat
-		root.add_child(fist)
-
-	# Sturdy Elephantine Pillar Legs
-	for lx in [-0.8, 0.8]:
-		var leg = MeshInstance3D.new()
-		var l_cyl = CylinderMesh.new()
-		l_cyl.top_radius = 0.45
-		l_cyl.bottom_radius = 0.60
-		l_cyl.height = 1.4
-		leg.mesh = l_cyl
-		leg.position = Vector3(lx, 0.7, 0)
-		leg.material_override = armor_mat
-		root.add_child(leg)
+	# Massive 3-Story Armored Titan Torso
+	_add_box(root, Vector3(2.8, 3.2, 2.4), Vector3(0, 3.4, 0), mat_armor)
+	# Glowing Vulnerable Bioreactor Core Heart Weakpoint
+	var heart = _add_sphere(root, 0.70, Vector3(0, 3.6, -1.25), mat_core)
+	heart.name = "CoreHeartWeakpoint"
+	# Protective Rib Plating over Core
+	for ry in [3.1, 3.6, 4.1]:
+		_add_box(root, Vector3(1.8, 0.12, 0.20), Vector3(0, ry, -1.35), mat_metal)
+	# Dorsal Volcanic Spines
+	for sz in [-0.8, 0.0, 0.8]:
+		var spine = _add_cyl(root, 0.06, 0.35, 1.6, Vector3(0, 5.2, sz), mat_metal)
+		spine.rotation_degrees.x = sz * 20.0
+	# Crushing Excavator Arms and Fists
+	for side in [-1.0, 1.0]:
+		_add_box(root, Vector3(0.9, 2.2, 0.9), Vector3(side * 2.1, 2.8, -0.3), mat_armor)
+		var fist = _add_box(root, Vector3(1.4, 1.4, 1.4), Vector3(side * 2.2, 1.1, -0.8), mat_metal)
+		fist.name = "CrusherFist_" + ("Left" if side < 0 else "Right")
+	# Massive Pillar Stomp Legs
+	for side in [-1.0, 1.0]:
+		_add_cyl(root, 0.55, 0.80, 1.8, Vector3(side * 1.0, 0.9, 0), mat_armor)
 
 	return root
 
+
+# ==============================================================================
+# 4. SUBWAY TRAIN & METRO STATION PROPS
+# ==============================================================================
+
 static func build_subway_car_mesh() -> Node3D:
-	var car = Node3D.new()
-	car.name = "SubwayTrainCar"
-	var steel_mat = MaterialGenerator.get_material("subway_rust_metal")
-	var dark_mat = MaterialGenerator.get_material("dark_hull")
-	var window_mat = MaterialGenerator.get_material("neon_cyan")
-	var stripe_mat = MaterialGenerator.get_material("hazard_stripe")
+	var train = Node3D.new()
+	train.name = "SubwayTrainCar"
+	var mat_steel = MaterialGenerator.get_material("subway_rust_metal")
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_win = MaterialGenerator.get_material("neon_cyan")
+	var mat_hazard = MaterialGenerator.get_material("hazard_stripe")
+	var mat_headlight = MaterialGenerator.get_material("neon_yellow")
+	var mat_taillight = MaterialGenerator.get_material("neon_red")
 
-	# Train Body
-	var body = MeshInstance3D.new()
-	var b_box = BoxMesh.new()
-	b_box.size = Vector3(3.2, 3.0, 14.0)
-	body.mesh = b_box
-	body.position = Vector3(0, 1.8, 0)
-	body.material_override = steel_mat
-	car.add_child(body)
+	var train_length = 24.0
+	var train_width = 3.4
+	var train_height = 3.2
+	var floor_y = 1.4
 
-	# Roof Curve
-	var roof = MeshInstance3D.new()
-	var r_box = BoxMesh.new()
-	r_box.size = Vector3(2.8, 0.35, 13.8)
-	roof.mesh = r_box
-	roof.position = Vector3(0, 3.4, 0)
-	roof.material_override = dark_mat
-	car.add_child(roof)
+	# Main Streamlined Carriage Body
+	_add_box(train, Vector3(train_width, train_height, train_length), Vector3(0, floor_y + train_height * 0.5, 0), mat_steel)
+	# Corrugated Steel Roof Curve
+	_add_box(train, Vector3(train_width - 0.3, 0.35, train_length - 0.2), Vector3(0, floor_y + train_height + 0.15, 0), mat_hull)
+	# Roof HVAC Units
+	_add_box(train, Vector3(1.6, 0.40, 4.0), Vector3(0, floor_y + train_height + 0.45, -5.0), mat_metal)
+	_add_box(train, Vector3(1.6, 0.40, 4.0), Vector3(0, floor_y + train_height + 0.45, 5.0), mat_metal)
+	# Aerodynamic Sloped Locomotive Nose Cowl (at -Z end)
+	_add_box(train, Vector3(train_width - 0.1, train_height - 0.2, 2.2), Vector3(0, floor_y + train_height * 0.5, -train_length * 0.5 - 1.1), mat_steel)
+	# Front Windshield
+	_add_box(train, Vector3(train_width - 0.6, 1.1, 0.15), Vector3(0, floor_y + 2.1, -train_length * 0.5 - 2.22), mat_win)
+	# High-Intensity LED Headlights
+	for hx in [-1.1, 1.1]:
+		var hl = _add_cyl(train, 0.18, 0.18, 0.15, Vector3(hx, floor_y + 1.2, -train_length * 0.5 - 2.25), mat_headlight)
+		hl.rotation_degrees.x = 90.0
+	# Rear Red Marker Taillights (at +Z end)
+	for tx in [-1.1, 1.1]:
+		var tl = _add_cyl(train, 0.14, 0.14, 0.12, Vector3(tx, floor_y + 1.4, train_length * 0.5 + 0.05), mat_taillight)
+		tl.rotation_degrees.x = 90.0
+	# Heavy Anti-Climber Crash Bumpers and Couplers
+	_add_box(train, Vector3(train_width + 0.2, 0.45, 0.8), Vector3(0, floor_y + 0.3, -train_length * 0.5 - 1.8), mat_hull)
+	_add_box(train, Vector3(train_width + 0.2, 0.45, 0.8), Vector3(0, floor_y + 0.3, train_length * 0.5 + 0.4), mat_hull)
+	# Yellow Hazard Striping along bottom sill
+	_add_box(train, Vector3(train_width + 0.05, 0.20, train_length + 0.2), Vector3(0, floor_y + 0.12, 0), mat_hazard)
 
-	# Front Pilot / Nose Cowl
-	var nose = MeshInstance3D.new()
-	var n_box = BoxMesh.new()
-	n_box.size = Vector3(3.0, 2.6, 1.2)
-	nose.mesh = n_box
-	nose.position = Vector3(0, 1.6, -7.4)
-	nose.material_override = steel_mat
-	car.add_child(nose)
+	# Side Windows & Bi-Parting Passenger Doors along flanks
+	for side in [-1.0, 1.0]:
+		var x_pos = side * (train_width * 0.5 + 0.02)
+		# 4 Large Passenger Windows
+		for wz in [-8.0, -3.0, 3.0, 8.0]:
+			_add_box(train, Vector3(0.04, 1.10, 2.20), Vector3(x_pos, floor_y + 2.0, wz), mat_win)
+		# 2 Bi-Parting Passenger Doors
+		for dz in [-5.5, 5.5]:
+			var door_panel = _add_box(train, Vector3(0.06, 2.20, 1.60), Vector3(x_pos, floor_y + 1.15, dz), mat_metal)
+			door_panel.name = "PassengerDoor_" + str(dz)
 
-	# Headlights
-	for hx in [-1.0, 1.0]:
-		var hl = MeshInstance3D.new()
-		var h_cyl = CylinderMesh.new()
-		h_cyl.top_radius = 0.18
-		h_cyl.bottom_radius = 0.18
-		h_cyl.height = 0.2
-		hl.mesh = h_cyl
-		hl.rotation_degrees = Vector3(90, 0, 0)
-		hl.position = Vector3(hx, 1.4, -8.0)
-		hl.material_override = MaterialGenerator.get_material("neon_yellow")
-		car.add_child(hl)
+	# --- 2 REALISTIC DUAL-AXLE BOGIES WITH STEEL FLANGED WHEELS ---
+	for b_z in [-7.5, 7.5]:
+		var bogie = Node3D.new()
+		bogie.name = "Bogie_" + str(b_z)
+		bogie.position = Vector3(0, 0.45, b_z)
+		train.add_child(bogie)
 
-	# Side Windows & Doors
-	for side in [-1.62, 1.62]:
-		for wz in [-4.5, -1.5, 1.5, 4.5]:
-			var win = MeshInstance3D.new()
-			var w_box = BoxMesh.new()
-			w_box.size = Vector3(0.04, 1.0, 1.8)
-			win.mesh = w_box
-			win.position = Vector3(side, 2.0, wz)
-			win.material_override = window_mat
-			car.add_child(win)
+		# Bogie Cast Steel Frame
+		_add_box(bogie, Vector3(2.6, 0.30, 3.4), Vector3(0, 0.25, 0), mat_hull)
+		# 4 Flanged Steel Train Wheels on Rails
+		for wx in [-1.2, 1.2]:
+			for wz in [-1.1, 1.1]:
+				var wheel = _add_cyl(bogie, 0.42, 0.42, 0.22, Vector3(wx, 0.22, wz), mat_metal)
+				wheel.rotation_degrees.z = 90.0
 
-	# Hazard Trim along skirt
-	var skirt = MeshInstance3D.new()
-	var s_box = BoxMesh.new()
-	s_box.size = Vector3(3.3, 0.25, 14.2)
-	skirt.mesh = s_box
-	skirt.position = Vector3(0, 0.35, 0)
-	skirt.material_override = stripe_mat
-	car.add_child(skirt)
+	return train
 
-	return car
+static func build_ticket_turnstile() -> Node3D:
+	var root = Node3D.new()
+	root.name = "TicketTurnstile"
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_cyan = MaterialGenerator.get_material("neon_cyan")
 
-static func build_stadium_goal_mesh(team_id: int = 0) -> Node3D:
-	var goal = Node3D.new()
-	goal.name = "StadiumGoal"
-	var team_mat = MaterialGenerator.get_material("neon_cyan" if team_id == 0 else "neon_orange")
-	var steel_mat = MaterialGenerator.get_material("sci_fi_metal")
-	var net_mat = MaterialGenerator.get_material("dark_hull")
+	# Housing Pedestal
+	_add_box(root, Vector3(0.40, 1.10, 1.20), Vector3(0, 0.55, 0), mat_hull)
+	# Stainless Top Plate
+	_add_box(root, Vector3(0.44, 0.06, 1.24), Vector3(0, 1.12, 0), mat_metal)
+	# Swipe Scanner Screen
+	_add_box(root, Vector3(0.18, 0.02, 0.24), Vector3(0, 1.15, -0.30), mat_cyan)
+	# Rotary Tripod Arm Hub
+	var hub = _add_cyl(root, 0.06, 0.06, 0.12, Vector3(-0.24, 0.85, 0), mat_metal)
+	hub.rotation_degrees.z = 90.0
+	# Turnstile Barrier Bar
+	var arm = _add_cyl(root, 0.025, 0.025, 0.70, Vector3(-0.55, 0.85, 0), mat_metal)
+	arm.rotation_degrees.z = 90.0
 
-	var goal_w = 16.0
-	var goal_h = 7.0
-	var goal_d = 5.0
+	return root
 
-	# Left Post
-	var lp = MeshInstance3D.new()
-	var p_cyl = CylinderMesh.new()
-	p_cyl.top_radius = 0.25
-	p_cyl.bottom_radius = 0.25
-	p_cyl.height = goal_h
-	lp.mesh = p_cyl
-	lp.position = Vector3(-goal_w * 0.5, goal_h * 0.5, 0)
-	lp.material_override = team_mat
-	goal.add_child(lp)
+static func build_subway_bench() -> Node3D:
+	var root = Node3D.new()
+	root.name = "SubwayBench"
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
 
-	# Right Post
-	var rp = MeshInstance3D.new()
-	rp.mesh = p_cyl
-	rp.position = Vector3(goal_w * 0.5, goal_h * 0.5, 0)
-	rp.material_override = team_mat
-	goal.add_child(rp)
+	# Seat Slab
+	_add_box(root, Vector3(0.65, 0.08, 2.20), Vector3(0, 0.48, 0), mat_hull)
+	# Backrest
+	_add_box(root, Vector3(0.08, 0.55, 2.20), Vector3(-0.28, 0.76, 0), mat_hull)
+	# 2 Steel Leg Frames
+	for bz in [-0.85, 0.85]:
+		_add_box(root, Vector3(0.60, 0.44, 0.08), Vector3(0, 0.22, bz), mat_metal)
 
-	# Crossbar
-	var cb = MeshInstance3D.new()
-	var c_cyl = CylinderMesh.new()
-	c_cyl.top_radius = 0.25
-	c_cyl.bottom_radius = 0.25
-	c_cyl.height = goal_w
-	cb.mesh = c_cyl
-	cb.rotation_degrees = Vector3(0, 0, 90)
-	cb.position = Vector3(0, goal_h, 0)
-	cb.material_override = team_mat
-	goal.add_child(cb)
+	return root
 
-	# Back Net Wall
-	var net = MeshInstance3D.new()
-	var n_box = BoxMesh.new()
-	n_box.size = Vector3(goal_w, goal_h, 0.1)
-	net.mesh = n_box
-	net.position = Vector3(0, goal_h * 0.5, -goal_d)
-	net.material_override = net_mat
-	goal.add_child(net)
+static func build_vending_machine() -> Node3D:
+	var root = Node3D.new()
+	root.name = "VendingMachine"
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_cyan = MaterialGenerator.get_material("neon_cyan")
+	var mat_orange = MaterialGenerator.get_material("neon_orange")
 
-	# Goal Strobe Barrier
-	var strobe = MeshInstance3D.new()
-	var s_box = BoxMesh.new()
-	s_box.size = Vector3(goal_w * 0.9, 0.3, 0.1)
-	strobe.mesh = s_box
-	strobe.position = Vector3(0, goal_h + 0.4, 0)
-	strobe.material_override = team_mat
-	goal.add_child(strobe)
+	# Main Cabinet
+	_add_box(root, Vector3(1.10, 2.20, 0.90), Vector3(0, 1.10, 0), mat_hull)
+	# Glass Product Display Bay
+	_add_box(root, Vector3(0.85, 1.20, 0.08), Vector3(0, 1.35, 0.46), mat_cyan)
+	# Illuminated Header Branding
+	_add_box(root, Vector3(0.95, 0.25, 0.08), Vector3(0, 2.05, 0.46), mat_orange)
+	# Coin / Card Terminal and Dispenser Tray
+	_add_box(root, Vector3(0.70, 0.30, 0.15), Vector3(0, 0.30, 0.46), mat_hull)
 
-	return goal
-
-static func build_race_gantry_mesh() -> Node3D:
-	var gantry = Node3D.new()
-	gantry.name = "RaceGantry"
-	var steel_mat = MaterialGenerator.get_material("sci_fi_metal")
-	var dark_mat = MaterialGenerator.get_material("dark_hull")
-
-	# Towers
-	for tx in [-9.0, 9.0]:
-		var tower = MeshInstance3D.new()
-		var t_box = BoxMesh.new()
-		t_box.size = Vector3(0.8, 8.0, 0.8)
-		tower.mesh = t_box
-		tower.position = Vector3(tx, 4.0, 0)
-		tower.material_override = steel_mat
-		gantry.add_child(tower)
-
-	# Overhead Truss Beam
-	var beam = MeshInstance3D.new()
-	var b_box = BoxMesh.new()
-	b_box.size = Vector3(19.0, 1.2, 1.2)
-	beam.mesh = b_box
-	beam.position = Vector3(0, 7.5, 0)
-	beam.material_override = dark_mat
-	gantry.add_child(beam)
-
-	# 5 Starting Signal Tree Lamps
-	for i in range(5):
-		var lamp = MeshInstance3D.new()
-		var l_cyl = CylinderMesh.new()
-		l_cyl.top_radius = 0.30
-		l_cyl.bottom_radius = 0.30
-		l_cyl.height = 0.25
-		lamp.name = "SignalLamp_%d" % i
-		lamp.mesh = l_cyl
-		lamp.rotation_degrees = Vector3(90, 0, 0)
-		lamp.position = Vector3(-4.0 + i * 2.0, 7.5, -0.65)
-		lamp.material_override = MaterialGenerator.get_material("neon_red")
-		gantry.add_child(lamp)
-
-	return gantry
-
-static func build_blast_door_mesh() -> Node3D:
-	var door = Node3D.new()
-	door.name = "BlastDoor"
-	var steel_mat = MaterialGenerator.get_material("sci_fi_metal")
-	var stripe_mat = MaterialGenerator.get_material("hazard_stripe")
-	var red_mat = MaterialGenerator.get_material("neon_red")
-
-	# Heavy Frame
-	var frame = MeshInstance3D.new()
-	var f_box = BoxMesh.new()
-	f_box.size = Vector3(5.0, 4.5, 0.6)
-	frame.mesh = f_box
-	frame.position = Vector3(0, 2.25, 0)
-	frame.material_override = steel_mat
-	door.add_child(frame)
-
-	# Door Panels
-	var panel = MeshInstance3D.new()
-	var p_box = BoxMesh.new()
-	p_box.size = Vector3(3.8, 3.8, 0.4)
-	panel.name = "DoorSlidingPanel"
-	panel.mesh = p_box
-	panel.position = Vector3(0, 2.0, 0)
-	panel.material_override = stripe_mat
-	door.add_child(panel)
-
-	# Scrap Terminal Interactor
-	var term = MeshInstance3D.new()
-	var t_box = BoxMesh.new()
-	t_box.size = Vector3(0.5, 1.2, 0.4)
-	term.name = "TerminalKiosk"
-	term.mesh = t_box
-	term.position = Vector3(2.6, 1.2, 0.3)
-	term.material_override = red_mat
-	door.add_child(term)
-
-	return door
-
-static func build_upgrade_kiosk_mesh() -> Node3D:
-	var kiosk = Node3D.new()
-	kiosk.name = "UpgradeKiosk"
-	var dark_mat = MaterialGenerator.get_material("dark_hull")
-	var cyan_mat = MaterialGenerator.get_material("neon_cyan")
-
-	var base = MeshInstance3D.new()
-	var b_box = BoxMesh.new()
-	b_box.size = Vector3(1.6, 2.2, 0.8)
-	base.mesh = b_box
-	base.position = Vector3(0, 1.1, 0)
-	base.material_override = dark_mat
-	kiosk.add_child(base)
-
-	var screen = MeshInstance3D.new()
-	var s_box = BoxMesh.new()
-	s_box.size = Vector3(1.2, 0.8, 0.05)
-	screen.mesh = s_box
-	screen.position = Vector3(0, 1.5, 0.42)
-	screen.material_override = cyan_mat
-	kiosk.add_child(screen)
-
-	return kiosk
-
-static func build_boost_orb_mesh() -> Node3D:
-	var orb = Node3D.new()
-	orb.name = "BoostOrb"
-	var cyan_mat = MaterialGenerator.get_material("neon_cyan")
-	var gold_mat = MaterialGenerator.get_material("gold_pickup")
-	var steel_mat = MaterialGenerator.get_material("sci_fi_metal")
-
-	# Pedestal Base
-	var ped = MeshInstance3D.new()
-	var p_cyl = CylinderMesh.new()
-	p_cyl.top_radius = 0.8
-	p_cyl.bottom_radius = 1.0
-	p_cyl.height = 0.3
-	ped.mesh = p_cyl
-	ped.position = Vector3(0, 0.15, 0)
-	ped.material_override = steel_mat
-	orb.add_child(ped)
-
-	# Floating Core Orb
-	var core = MeshInstance3D.new()
-	var s_mesh = SphereMesh.new()
-	s_mesh.radius = 0.55
-	s_mesh.height = 1.10
-	core.name = "FloatingOrbCore"
-	core.mesh = s_mesh
-	core.position = Vector3(0, 1.2, 0)
-	core.material_override = gold_mat
-	orb.add_child(core)
-
-	# Revolving Outer Ring
-	var ring = MeshInstance3D.new()
-	var t_mesh = TorusMesh.new()
-	t_mesh.inner_radius = 0.70
-	t_mesh.outer_radius = 0.82
-	ring.name = "RevolvingRing"
-	ring.mesh = t_mesh
-	ring.position = Vector3(0, 1.2, 0)
-	ring.material_override = cyan_mat
-	orb.add_child(ring)
-
-	return orb
+	return root
 
 static func build_scrap_gear_mesh() -> Node3D:
 	var root = Node3D.new()
 	root.name = "ScrapGear"
-	var mat = MaterialGenerator.get_material("gold_pickup")
+	var mat_gold = MaterialGenerator.get_material("gold_pickup")
+	var mat_cyan = MaterialGenerator.get_material("neon_cyan")
 
-	var gear = MeshInstance3D.new()
-	var cyl = CylinderMesh.new()
-	cyl.top_radius = 0.28
-	cyl.bottom_radius = 0.28
-	cyl.height = 0.08
-	gear.mesh = cyl
-	gear.rotation_degrees = Vector3(90, 0, 0)
-	gear.material_override = mat
-	root.add_child(gear)
-
-	for i in range(6):
-		var tooth = MeshInstance3D.new()
-		var t_box = BoxMesh.new()
-		t_box.size = Vector3(0.08, 0.12, 0.08)
-		tooth.mesh = t_box
-		var angle = i * PI / 3.0
-		tooth.position = Vector3(cos(angle) * 0.32, sin(angle) * 0.32, 0)
-		tooth.rotation_degrees = Vector3(0, 0, rad_to_deg(angle))
-		tooth.material_override = mat
-		root.add_child(tooth)
+	# Heavy Brass Gear Disc
+	var gear = _add_cyl(root, 0.32, 0.32, 0.09, Vector3(0, 0.35, 0), mat_gold)
+	gear.rotation_degrees.x = 90.0
+	# Center Axle Hole with Energy Core
+	var center = _add_cyl(root, 0.10, 0.10, 0.11, Vector3(0, 0.35, 0), mat_cyan)
+	center.rotation_degrees.x = 90.0
+	# 8 Peripheral Gear Teeth
+	for i in range(8):
+		var angle = float(i) * PI / 4.0
+		var tooth = _add_box(root, Vector3(0.08, 0.14, 0.08), Vector3(cos(angle) * 0.38, 0.35 + sin(angle) * 0.38, 0), mat_gold)
+		tooth.rotation_degrees.z = rad_to_deg(angle)
 
 	return root
 
-static func build_speed_demon_kart() -> Node3D:
-	var kart = build_drift_kart(Color(1.0, 0.2, 0.2))
-	kart.name = "SpeedDemonKart"
+
+# ==============================================================================
+# 5. NITRO KICK ROCKET CAR & PROFESSIONAL STADIUM ASSETS
+# ==============================================================================
+
+static func build_rocket_car(team_id: int = 0) -> Node3D:
+	var car = Node3D.new()
+	car.name = "RocketCarVisual"
+
+	var team_color = Color(0.1, 0.85, 1.0) if team_id == 0 else Color(1.0, 0.55, 0.05)
+	var mat_team = MaterialGenerator.create_pbr_material(team_color, 0.85, 0.22, team_color, 0.4)
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_tire = MaterialGenerator.get_material("asphalt_track")
+	var mat_glow = MaterialGenerator.create_pbr_material(team_color, 0.3, 0.2, team_color, 2.5)
+
+	# Aerodynamic Sculpted Low-Slung Chassis Body
+	var body = _add_box(car, Vector3(1.80, 0.45, 3.50), Vector3(0, 0.42, 0), mat_team)
+	body.name = "CarBodyMesh"
+	# Sloped Aerodynamic Hood with Air Scoop
+	var hood = _add_box(car, Vector3(1.65, 0.22, 1.20), Vector3(0, 0.45, -1.20), mat_hull)
+	hood.rotation_degrees.x = 12.0
+	_add_box(car, Vector3(0.55, 0.10, 0.40), Vector3(0, 0.58, -1.15), mat_metal)
+	# Front Ground-Effect Splitter & Bumper
+	_add_box(car, Vector3(1.95, 0.10, 0.50), Vector3(0, 0.22, -1.82), mat_hull)
+	# Cockpit Canopy with Tinted Windshield
+	_add_box(car, Vector3(1.30, 0.45, 1.60), Vector3(0, 0.82, -0.15), mat_hull)
+	_add_box(car, Vector3(1.20, 0.38, 0.85), Vector3(0, 0.85, -0.55), mat_glow)
+	# Roll Cage Struts
+	_add_box(car, Vector3(1.25, 0.06, 1.55), Vector3(0, 1.05, -0.15), mat_metal)
+	# High-Downforce Carbon-Fiber Rear Spoiler Wing
+	_add_box(car, Vector3(2.15, 0.07, 0.42), Vector3(0, 1.22, 1.60), mat_team)
+	# Spoiler Wing Endplates
+	_add_box(car, Vector3(0.06, 0.25, 0.46), Vector3(-1.08, 1.22, 1.60), mat_hull)
+	_add_box(car, Vector3(0.06, 0.25, 0.46), Vector3(1.08, 1.22, 1.60), mat_hull)
+	# Spoiler Wing Pylons
+	for sx in [-0.75, 0.75]:
+		_add_box(car, Vector3(0.07, 0.45, 0.12), Vector3(sx, 0.95, 1.58), mat_metal)
+	# Aggressive Rear Diffuser
+	_add_box(car, Vector3(1.85, 0.24, 0.45), Vector3(0, 0.32, 1.76), mat_hull)
+	# Dual Cylindrical Rocket Booster Thrusters
+	for tx in [-0.38, 0.38]:
+		var thruster = _add_cyl(car, 0.14, 0.18, 0.38, Vector3(tx, 0.50, 1.88), mat_metal)
+		thruster.rotation_degrees.x = 90.0
+		# Active Rocket Exhaust Flame Cone
+		var flame = _add_cyl(car, 0.02, 0.13, 0.55, Vector3(tx, 0.50, 2.30), mat_glow)
+		flame.rotation_degrees.x = 90.0
+		flame.name = "ThrusterFlame_" + ("L" if tx < 0 else "R")
+
+	# --- 4 DETAILED ALLOY WHEELS WITH RADIAL TIRES & SUSPENSION ---
+	var wheel_offsets = [
+		Vector3(-1.08, 0.38, -1.25),
+		Vector3(1.08, 0.38, -1.25),
+		Vector3(-1.08, 0.40, 1.25),
+		Vector3(1.08, 0.40, 1.25)
+	]
+	for i in range(wheel_offsets.size()):
+		var wp = wheel_offsets[i]
+		var w_node = Node3D.new()
+		w_node.name = "Wheel_" + str(i)
+		w_node.position = wp
+		car.add_child(w_node)
+
+		# Tire Tread Cylinder
+		var tire = _add_cyl(w_node, 0.38, 0.38, 0.34, Vector3.ZERO, mat_tire)
+		tire.rotation_degrees.z = 90.0
+		# Alloy Rim Face
+		var rim = _add_cyl(w_node, 0.28, 0.28, 0.36, Vector3(sign(wp.x) * 0.02, 0, 0), mat_metal)
+		rim.rotation_degrees.z = 90.0
+		# Brake Caliper
+		_add_box(w_node, Vector3(0.12, 0.18, 0.12), Vector3(-sign(wp.x) * 0.14, 0.14, 0), mat_glow)
+		# Suspension Wishbone Arm
+		_add_box(car, Vector3(0.24, 0.08, 0.14), wp + Vector3(sign(wp.x) * -0.14, 0.06, 0), mat_metal)
+
+	return car
+
+static func build_stadium_grandstand(width: float = 80.0, height: float = 14.0, depth: float = 16.0) -> Node3D:
+	var stand = Node3D.new()
+	stand.name = "StadiumGrandstand"
+	var mat_concrete = MaterialGenerator.get_material("dark_concrete")
+	var mat_spectators = MaterialGenerator.get_material("stadium_spectators")
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+
+	var num_tiers = 6
+	for t in range(num_tiers):
+		var frac = float(t) / float(num_tiers)
+		var ty = 1.0 + frac * height
+		var tz = frac * depth
+		_add_box(stand, Vector3(width, 1.6, depth / float(num_tiers)), Vector3(0, ty, tz), mat_concrete)
+		_add_box(stand, Vector3(width - 2.0, 1.2, 0.8), Vector3(0, ty + 1.2, tz + 0.4), mat_spectators)
+		_add_box(stand, Vector3(width, 0.85, 0.05), Vector3(0, ty + 1.2, tz - depth / float(num_tiers * 2)), mat_metal)
+
+	return stand
+
+static func build_stadium_floodlight_tower(height: float = 24.0) -> Node3D:
+	var tower = Node3D.new()
+	tower.name = "FloodlightTower"
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_glow = MaterialGenerator.get_material("neon_yellow")
+
+	_add_box(tower, Vector3(1.2, height, 1.2), Vector3(0, height * 0.5, 0), mat_metal)
+	for h in range(4, int(height), 4):
+		_add_box(tower, Vector3(2.4, 0.15, 2.4), Vector3(0, float(h), 0), mat_hull)
+	_add_box(tower, Vector3(5.5, 0.35, 2.2), Vector3(0, height, 0), mat_metal)
+	for i in range(6):
+		var lx = -2.2 + float(i) * 0.88
+		var lamp = _add_cyl(tower, 0.32, 0.32, 0.22, Vector3(lx, height + 0.5, 0.8), mat_glow)
+		lamp.rotation_degrees.x = 45.0
+
+	return tower
+
+
+# ==============================================================================
+# 6. DRIFT STORM RACING KARTS & TRACK PROPS
+# ==============================================================================
+
+static func build_drift_kart(kart_color: Color = Color(0.2, 1.0, 0.5), _kart_type: String = "speeder") -> Node3D:
+	var kart = Node3D.new()
+	kart.name = "DriftKartVisual"
+
+	var mat_body = MaterialGenerator.create_pbr_material(kart_color, 0.82, 0.25, kart_color, 0.4)
+	var mat_frame = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_tire = MaterialGenerator.get_material("asphalt_track")
+
+	# Tubular Steel Spaceframe Chassis
+	_add_box(kart, Vector3(1.30, 0.24, 2.60), Vector3(0, 0.26, 0), mat_frame)
+	# Front Nose Fairing with Aerodynamic Splitter
+	_add_box(kart, Vector3(1.20, 0.22, 0.75), Vector3(0, 0.28, -1.22), mat_body)
+	_add_box(kart, Vector3(1.35, 0.06, 0.28), Vector3(0, 0.18, -1.55), mat_hull)
+	# Side Pods with Radiator Intake Ducts
+	for side in [-1.0, 1.0]:
+		_add_box(kart, Vector3(0.28, 0.26, 1.35), Vector3(side * 0.72, 0.30, 0), mat_body)
+		_add_box(kart, Vector3(0.24, 0.18, 0.08), Vector3(side * 0.72, 0.30, -0.68), mat_hull)
+	# Contoured Racing Bucket Seat
+	_add_box(kart, Vector3(0.55, 0.55, 0.48), Vector3(0, 0.52, 0.22), mat_hull)
+	# Helmeted Driver Silhouette
+	var driver_head = _add_sphere(kart, 0.18, Vector3(0, 0.98, 0.22), mat_body)
+	driver_head.name = "DriverHead"
+	_add_box(kart, Vector3(0.22, 0.08, 0.08), Vector3(0, 0.98, 0.08), mat_hull)
+	_add_box(kart, Vector3(0.42, 0.36, 0.28), Vector3(0, 0.68, 0.22), mat_hull)
+	# Driver Arms reaching for Steering Wheel
+	var arm_l = _add_box(kart, Vector3(0.08, 0.08, 0.42), Vector3(-0.18, 0.64, -0.06), mat_hull)
+	arm_l.rotation_degrees.x = -22.0
+	var arm_r = _add_box(kart, Vector3(0.08, 0.08, 0.42), Vector3(0.18, 0.64, -0.06), mat_hull)
+	arm_r.rotation_degrees.x = -22.0
+	# Angled Steering Column & Wheel
+	var col = _add_cyl(kart, 0.02, 0.02, 0.42, Vector3(0, 0.50, -0.25), mat_frame)
+	col.rotation_degrees.x = 42.0
+	var wheel_hub = Node3D.new()
+	wheel_hub.name = "SteeringWheelHub"
+	wheel_hub.position = Vector3(0, 0.66, -0.38)
+	kart.add_child(wheel_hub)
+	var st_wheel = _add_cyl(wheel_hub, 0.15, 0.15, 0.03, Vector3.ZERO, mat_hull)
+	st_wheel.rotation_degrees.x = 45.0
+	# Exposed Rear High-Output Engine Block
+	_add_box(kart, Vector3(0.58, 0.42, 0.48), Vector3(0, 0.44, 0.88), mat_frame)
+	# Dual Chrome Exhaust Pipes
+	for ex in [-0.20, 0.20]:
+		var exh = _add_cyl(kart, 0.045, 0.045, 0.35, Vector3(ex, 0.38, 1.25), mat_frame)
+		exh.rotation_degrees.x = 90.0
+		exh.name = "Exhaust_" + ("L" if ex < 0 else "R")
+	# High-Downforce Rear Wing
+	_add_box(kart, Vector3(1.35, 0.06, 0.32), Vector3(0, 0.82, 1.18), mat_body)
+	_add_box(kart, Vector3(0.06, 0.40, 0.12), Vector3(-0.48, 0.62, 1.15), mat_frame)
+	_add_box(kart, Vector3(0.06, 0.40, 0.12), Vector3(0.48, 0.62, 1.15), mat_frame)
+
+	# 4 Wide Slick Racing Tires on Alloy Wheels
+	var tire_offsets = [
+		Vector3(-0.76, 0.28, -0.88),
+		Vector3(0.76, 0.28, -0.88),
+		Vector3(-0.80, 0.32, 0.88),
+		Vector3(0.80, 0.32, 0.88)
+	]
+	for i in range(tire_offsets.size()):
+		var tp = tire_offsets[i]
+		var w_node = Node3D.new()
+		w_node.name = "FrontWheel_%d" % i if i < 2 else "RearWheel_%d" % (i - 2)
+		w_node.position = tp
+		kart.add_child(w_node)
+
+		var radius = 0.28 if i < 2 else 0.32
+		var tire = _add_cyl(w_node, radius, radius, 0.28, Vector3.ZERO, mat_tire)
+		tire.rotation_degrees.z = 90.0
+		var rim = _add_cyl(w_node, radius * 0.75, radius * 0.75, 0.30, Vector3.ZERO, mat_frame)
+		rim.rotation_degrees.z = 90.0
+
 	return kart
 
-static func build_drift_king_kart() -> Node3D:
-	var kart = build_drift_kart(Color(0.8, 0.2, 1.0))
-	kart.name = "DriftKingKart"
-	return kart
+static func build_track_barrier(barrier_length: float = 10.0, height: float = 1.4) -> Node3D:
+	var root = Node3D.new()
+	root.name = "TrackBarrier"
+	var mat_barrier = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_fence = MaterialGenerator.get_material("dark_hull")
+	var mat_stripes = MaterialGenerator.get_material("curb_stripes")
 
-static func build_turbo_tank_kart() -> Node3D:
-	var kart = build_drift_kart(Color(0.2, 0.8, 0.3))
-	kart.name = "TurboTankKart"
-	return kart
+	# Lower Concrete Armco Barrier Base
+	_add_box(root, Vector3(0.60, height * 0.6, barrier_length), Vector3(0, height * 0.3, 0), mat_barrier)
+	# Upper Steel Catch Fence Mesh & Posts
+	_add_box(root, Vector3(0.08, height * 0.4, barrier_length), Vector3(0, height * 0.8, 0), mat_fence)
+	# Top Red/White Safety Stripe
+	_add_box(root, Vector3(0.62, 0.15, barrier_length), Vector3(0, height * 0.6, 0), mat_stripes)
+
+	return root
+
+
+# ==============================================================================
+# 7. HELPER PRIMITIVE BUILDERS (CREATES VISIBLE MESH INSTANCES WITH PROPER UVs)
+# ==============================================================================
+
+static func _add_box(parent: Node3D, size: Vector3, pos: Vector3, mat: Material) -> MeshInstance3D:
+	var mi = MeshInstance3D.new()
+	var box = BoxMesh.new()
+	box.size = size
+	mi.mesh = box
+	mi.position = pos
+	mi.material_override = mat
+	parent.add_child(mi)
+	return mi
+
+static func _add_cyl(parent: Node3D, r_top: float, r_bot: float, h: float, pos: Vector3, mat: Material) -> MeshInstance3D:
+	var mi = MeshInstance3D.new()
+	var cyl = CylinderMesh.new()
+	cyl.top_radius = r_top
+	cyl.bottom_radius = r_bot
+	cyl.height = h
+	cyl.radial_segments = 16
+	mi.mesh = cyl
+	mi.position = pos
+	mi.material_override = mat
+	parent.add_child(mi)
+	return mi
+
+static func _add_sphere(parent: Node3D, r: float, pos: Vector3, mat: Material) -> MeshInstance3D:
+	var mi = MeshInstance3D.new()
+	var sp = SphereMesh.new()
+	sp.radius = r
+	sp.height = r * 2.0
+	sp.radial_segments = 16
+	sp.rings = 8
+	mi.mesh = sp
+	mi.position = pos
+	mi.material_override = mat
+	parent.add_child(mi)
+	return mi
+
+# Backwards-compatibility aliases for existing callers
+static func build_item_box() -> Node3D:
+	var root = Node3D.new()
+	root.name = "ItemBoxVisual"
+	var mat_orange = MaterialGenerator.get_material("neon_orange")
+	var mat_gold = MaterialGenerator.get_material("gold_pickup")
+	_add_box(root, Vector3(1.1, 1.1, 1.1), Vector3.ZERO, mat_orange)
+	_add_box(root, Vector3(0.8, 0.8, 0.8), Vector3.ZERO, mat_gold)
+	return root
+
+static func build_pickup_mesh(type: int) -> Node3D:
+	var root = Node3D.new()
+	root.name = "PickupVisual"
+	var mat_core = MaterialGenerator.get_material("health_red" if type == 0 else ("neon_blue" if type == 1 else "gold_pickup"))
+	var mi = MeshInstance3D.new()
+	var prism = PrismMesh.new()
+	prism.size = Vector3(0.5, 0.7, 0.5)
+	mi.mesh = prism
+	mi.material_override = mat_core
+	root.add_child(mi)
+	return root
+
+static func build_cyber_crate(size: Vector3 = Vector3(2.0, 2.0, 2.0)) -> Node3D:
+	var root = Node3D.new()
+	root.name = "CyberCrate"
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_cyan = MaterialGenerator.get_material("neon_cyan")
+	_add_box(root, size, Vector3.ZERO, mat_hull)
+	_add_box(root, Vector3(size.x + 0.05, size.y * 0.25, size.z + 0.05), Vector3.ZERO, mat_metal)
+	_add_box(root, Vector3(size.x + 0.06, 0.08, size.z * 0.4), Vector3.ZERO, mat_cyan)
+	return root
+
+static func build_upgrade_kiosk_mesh() -> Node3D:
+	var root = Node3D.new()
+	root.name = "UpgradeKiosk"
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_cyan = MaterialGenerator.get_material("neon_cyan")
+	_add_box(root, Vector3(1.6, 2.2, 0.8), Vector3(0, 1.1, 0), mat_hull)
+	_add_box(root, Vector3(1.2, 0.8, 0.05), Vector3(0, 1.5, 0.42), mat_cyan)
+	return root
+
+static func build_blast_door_mesh() -> Node3D:
+	var root = Node3D.new()
+	root.name = "BlastDoor"
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_hazard = MaterialGenerator.get_material("hazard_stripe")
+	_add_box(root, Vector3(5.0, 4.5, 0.6), Vector3(0, 2.25, 0), mat_metal)
+	var panel = _add_box(root, Vector3(3.8, 3.8, 0.4), Vector3(0, 2.0, 0), mat_hazard)
+	panel.name = "DoorSlidingPanel"
+	return root
+
+static func build_boost_orb_mesh() -> Node3D:
+	var root = Node3D.new()
+	root.name = "BoostOrb"
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_gold = MaterialGenerator.get_material("gold_pickup")
+	_add_cyl(root, 0.8, 1.0, 0.3, Vector3(0, 0.15, 0), mat_metal)
+	var core = _add_sphere(root, 0.55, Vector3(0, 1.2, 0), mat_gold)
+	core.name = "FloatingOrbCore"
+	return root
+
+static func build_energy_ball() -> Node3D:
+	var root = Node3D.new()
+	root.name = "EnergyBallVisual"
+	var mat_ball = MaterialGenerator.get_material("energy_ball")
+	_add_sphere(root, 1.05, Vector3.ZERO, mat_ball)
+	return root
+
+static func build_stadium_goal_mesh(team_id: int = 0) -> Node3D:
+	var goal = Node3D.new()
+	goal.name = "StadiumGoal"
+	var mat_team = MaterialGenerator.get_material("neon_cyan" if team_id == 0 else "neon_orange")
+	var mat_net = MaterialGenerator.get_material("dark_hull")
+	var goal_w = 16.0
+	var goal_h = 7.0
+	var goal_d = 5.0
+
+	_add_cyl(goal, 0.25, 0.25, goal_h, Vector3(-goal_w * 0.5, goal_h * 0.5, 0), mat_team)
+	_add_cyl(goal, 0.25, 0.25, goal_h, Vector3(goal_w * 0.5, goal_h * 0.5, 0), mat_team)
+	var cb = _add_cyl(goal, 0.25, 0.25, goal_w, Vector3(0, goal_h, 0), mat_team)
+	cb.rotation_degrees.z = 90.0
+	_add_box(goal, Vector3(goal_w, goal_h, 0.1), Vector3(0, goal_h * 0.5, -goal_d), mat_net)
+	return goal
 
 static func build_start_gantry(gantry_width: float = 14.0) -> Node3D:
 	var gantry = Node3D.new()
 	gantry.name = "StartFinishGantry"
-
 	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
 	var mat_sign = MaterialGenerator.get_material("digital_signage_cyan")
-
-	var t_mesh = BoxMesh.new()
-	t_mesh.size = Vector3(1.2, 7.5, 1.2)
-
-	var t_left = MeshInstance3D.new()
-	t_left.mesh = t_mesh
-	t_left.position = Vector3(-gantry_width * 0.5 - 1.0, 3.75, 0)
-	t_left.material_override = mat_metal
-	gantry.add_child(t_left)
-
-	var t_right = MeshInstance3D.new()
-	t_right.mesh = t_mesh
-	t_right.position = Vector3(gantry_width * 0.5 + 1.0, 3.75, 0)
-	t_right.material_override = mat_metal
-	gantry.add_child(t_right)
-
-	var bridge = MeshInstance3D.new()
-	var b_mesh = BoxMesh.new()
-	b_mesh.size = Vector3(gantry_width + 3.2, 1.4, 1.2)
-	bridge.mesh = b_mesh
-	bridge.position = Vector3(0, 7.0, 0)
-	bridge.material_override = mat_metal
-	gantry.add_child(bridge)
-
-	var banner = MeshInstance3D.new()
-	var banner_mesh = BoxMesh.new()
-	banner_mesh.size = Vector3(gantry_width - 1.0, 1.2, 0.2)
-	banner.mesh = banner_mesh
-	banner.position = Vector3(0, 7.0, -0.65)
-	banner.material_override = mat_sign
-	gantry.add_child(banner)
-
+	_add_box(gantry, Vector3(1.2, 7.5, 1.2), Vector3(-gantry_width * 0.5 - 1.0, 3.75, 0), mat_metal)
+	_add_box(gantry, Vector3(1.2, 7.5, 1.2), Vector3(gantry_width * 0.5 + 1.0, 3.75, 0), mat_metal)
+	_add_box(gantry, Vector3(gantry_width + 3.2, 1.4, 1.2), Vector3(0, 7.0, 0), mat_metal)
+	_add_box(gantry, Vector3(gantry_width - 1.0, 1.2, 0.2), Vector3(0, 7.0, -0.65), mat_sign)
 	return gantry
 
+static func build_race_gantry_mesh() -> Node3D:
+	return build_start_gantry(14.0)
 
+static func build_speed_demon_kart() -> Node3D:
+	return build_drift_kart(Color(1.0, 0.2, 0.2), "speeder")
 
+static func build_drift_king_kart() -> Node3D:
+	return build_drift_kart(Color(0.8, 0.2, 1.0), "phantom")
+
+static func build_turbo_tank_kart() -> Node3D:
+	return build_drift_kart(Color(0.2, 0.8, 0.3), "enforcer")

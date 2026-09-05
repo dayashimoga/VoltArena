@@ -43,6 +43,8 @@ var total_checkpoints_hit: int = 0
 var lap_start_time: float = 0.0
 var best_lap_time: float = 999.0
 var race_finished: bool = false
+var last_valid_checkpoint_pos: Vector3 = Vector3.ZERO
+var last_valid_checkpoint_rot: float = 0.0
 
 var kart_visual: Node3D
 var front_wheels: Array[MeshInstance3D] = []
@@ -50,6 +52,15 @@ var front_wheels: Array[MeshInstance3D] = []
 func _ready() -> void:
 	collision_layer = GameConstants.LAYER_PLAYER if is_player else GameConstants.LAYER_ENEMIES
 	collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES | GameConstants.LAYER_CHECKPOINTS
+
+	add_to_group("karts")
+	if is_player:
+		add_to_group("players")
+	else:
+		add_to_group("ai_racers")
+
+	last_valid_checkpoint_pos = global_position
+	last_valid_checkpoint_rot = rotation.y
 
 	setup_kart_archetype()
 	setup_kart_visual()
@@ -95,10 +106,19 @@ func _physics_process(delta: float) -> void:
 			handle_player_input(delta)
 		return
 
+	# Automatic recovery if fallen off track or out of bounds
+	if global_position.y < -3.5 or global_position.distance_to(last_valid_checkpoint_pos) > 120.0:
+		recover_to_checkpoint()
+		return
+
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 
-	if is_player and not race_finished:
+	# Only accept controls if race has started
+	var rm = get_tree().root.find_child("RaceManager", true, false)
+	var is_countdown = (rm and rm.get("current_state") == 0) # RaceState.COUNTDOWN
+
+	if is_player and not race_finished and not is_countdown:
 		handle_player_input(delta)
 
 	# Process boost timer
@@ -106,6 +126,17 @@ func _physics_process(delta: float) -> void:
 		boost_timer -= delta
 
 	move_and_slide()
+
+func recover_to_checkpoint() -> void:
+	global_position = last_valid_checkpoint_pos + Vector3(0, 0.6, 0)
+	rotation.y = last_valid_checkpoint_rot
+	velocity = Vector3.ZERO
+	forward_speed = 0.0
+	is_drifting = false
+	drift_charge_time = 0.0
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus and is_player:
+		bus.show_toast_requested.emit("RECOVERED TO TRACK", Color(1.0, 0.8, 0.2))
 
 func handle_player_input(delta: float) -> void:
 	var im = GameConstants.get_autoload(self, "InputManager")

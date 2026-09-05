@@ -12,32 +12,35 @@ func _ready() -> void:
 		car = get_parent() as CarController
 	if car:
 		car.is_player_controlled = false
-		car.team_id = 1 if is_orange_team else 0
-
 func _physics_process(delta: float) -> void:
 	if not car or not is_instance_valid(car) or not ball or not is_instance_valid(ball):
+		return
+
+	var main = car.get_parent()
+	if main and main.get("is_kickoff_pause") == true:
+		car.apply_driving_controls(0.0, 0.0, delta)
 		return
 
 	var car_pos = car.global_position
 	var ball_pos = ball.global_position
 
 	# Target goal to score in:
-	# Orange team attacks North Goal (-Z), Blue team attacks South Goal (+Z)
-	var target_goal_z = -45.0 if is_orange_team else 45.0
-	var own_goal_z = 45.0 if is_orange_team else -45.0
+	# Orange team attacks South Goal (+Z), Blue team attacks North Goal (-Z)
+	var target_goal_z = 52.0 if is_orange_team else -52.0
+	var own_goal_z = -52.0 if is_orange_team else 52.0
 
 	# Calculate desired strike angle
 	# Position behind the ball relative to target goal
 	var ball_to_goal = (Vector3(0, 0, target_goal_z) - ball_pos).normalized()
-	var strike_spot = ball_pos - ball_to_goal * 2.5
+	var strike_spot = ball_pos - ball_to_goal * 2.8
 
 	# Decide target destination
 	var target_destination = strike_spot
 	# If ball is behind us heading towards our goal, defend own goal!
 	var is_defending = false
-	if (is_orange_team and ball_pos.z > car_pos.z) or (not is_orange_team and ball_pos.z < car_pos.z):
+	if (is_orange_team and ball_pos.z < car_pos.z) or (not is_orange_team and ball_pos.z > car_pos.z):
 		is_defending = true
-		target_destination = Vector3(clampf(ball_pos.x * 0.7, -10.0, 10.0), 0.5, own_goal_z * 0.8)
+		target_destination = Vector3(clampf(ball_pos.x * 0.7, -12.0, 12.0), 0.5, own_goal_z * 0.8)
 
 	var to_target = (target_destination - car_pos)
 	to_target.y = 0.0

@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 100,
+  "overall_coverage_pct": 95.049504950495,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -26,16 +26,23 @@
       "untested": []
     },
     "res://games/arena-fps/player/fps_player.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 92.8571428571429,
       "tested": 13,
-      "total": 13,
-      "untested": []
+      "total": 14,
+      "untested": [
+        "_unhandled_input"
+      ]
     },
     "res://games/arena-fps/ui/arena_fps_hud.gd": {
-      "coverage_pct": 100,
-      "tested": 7,
-      "total": 7,
-      "untested": []
+      "coverage_pct": 60,
+      "tested": 6,
+      "total": 10,
+      "untested": [
+        "update_layout_positions",
+        "highlight_active_weapon",
+        "_process",
+        "add_killfeed_entry"
+      ]
     },
     "res://games/arena-fps/weapons/grenade_launcher.gd": {
       "coverage_pct": 100,
@@ -86,10 +93,12 @@
       "untested": []
     },
     "res://games/kart-racing/kart/kart_controller.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 88.8888888888889,
       "tested": 8,
-      "total": 8,
-      "untested": []
+      "total": 9,
+      "untested": [
+        "recover_to_checkpoint"
+      ]
     },
     "res://games/kart-racing/kart_racing_main.gd": {
       "coverage_pct": 100,
@@ -111,15 +120,18 @@
     },
     "res://games/kart-racing/tracks/track_generator.gd": {
       "coverage_pct": 100,
-      "tested": 6,
-      "total": 6,
+      "tested": 5,
+      "total": 5,
       "untested": []
     },
     "res://games/kart-racing/ui/drift_storm_hud.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 88.2352941176471,
       "tested": 15,
-      "total": 15,
-      "untested": []
+      "total": 17,
+      "untested": [
+        "update_layout_positions",
+        "_process"
+      ]
     },
     "res://games/rocket-car/ai/car_ai.gd": {
       "coverage_pct": 100,
@@ -193,6 +205,15 @@
       "total": 3,
       "untested": []
     },
+    "res://games/subway-survival/game/scrap_pickup.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 2,
+      "untested": [
+        "_ready",
+        "_process"
+      ]
+    },
     "res://games/subway-survival/game/wave_director.gd": {
       "coverage_pct": 100,
       "tested": 8,
@@ -212,10 +233,13 @@
       "untested": []
     },
     "res://games/subway-survival/ui/metro_siege_hud.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 89.4736842105263,
       "tested": 17,
-      "total": 17,
-      "untested": []
+      "total": 19,
+      "untested": [
+        "update_layout_positions",
+        "_process"
+      ]
     },
     "res://launcher/launcher.gd": {
       "coverage_pct": 100,
@@ -254,10 +278,12 @@
       "untested": []
     },
     "res://shared/core/game_manager.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 87.5,
       "tested": 7,
-      "total": 7,
-      "untested": []
+      "total": 8,
+      "untested": [
+        "handle_exec_cmd"
+      ]
     },
     "res://shared/core/node_pool.gd": {
       "coverage_pct": 100,
@@ -284,10 +310,17 @@
       "untested": []
     },
     "res://shared/graphics/mesh_builder.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 82.3529411764706,
       "tested": 28,
-      "total": 28,
-      "untested": []
+      "total": 34,
+      "untested": [
+        "build_ticket_turnstile",
+        "build_subway_bench",
+        "build_vending_machine",
+        "build_stadium_grandstand",
+        "build_stadium_floodlight_tower",
+        "build_track_barrier"
+      ]
     },
     "res://shared/graphics/procedural_animator.gd": {
       "coverage_pct": 100,
@@ -362,10 +395,12 @@
       "untested": []
     },
     "res://shared/ui/hud_base.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 92.3076923076923,
       "tested": 12,
-      "total": 12,
-      "untested": []
+      "total": 13,
+      "untested": [
+        "update_layout_positions"
+      ]
     },
     "res://shared/ui/pause_menu.gd": {
       "coverage_pct": 100,
@@ -386,7 +421,7 @@
       "untested": []
     }
   },
-  "tested_functions": 386,
-  "timestamp": "2026-09-05T06:01:59",
-  "total_functions": 386
+  "tested_functions": 384,
+  "timestamp": "2026-09-05T09:17:02",
+  "total_functions": 404
 }

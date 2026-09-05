@@ -1,6 +1,8 @@
 class_name EnemyBase
 extends CharacterBody3D
 
+const ScrapPickupScript = preload("res://games/subway-survival/game/scrap_pickup.gd")
+
 signal enemy_died(enemy_type: String, score_value: int)
 
 @export var enemy_name: String = "Subway Mutant"
@@ -89,10 +91,21 @@ func perform_attack() -> void:
 			am.play_sound_3d("hit", pos)
 
 func _on_died(_source: Node) -> void:
+	var drop_pos = global_position if is_inside_tree() else position
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am:
-		var pos = global_position if is_inside_tree() else position
-		am.play_sound_3d("explosion", pos, 1.2)
+		am.play_sound_3d("explosion", drop_pos, 1.2)
+
+	# Spawn physical scrap drop
+	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree:
+		var parent_node = tree.current_scene if tree.current_scene else get_parent()
+		if parent_node:
+			var scrap = ScrapPickupScript.new()
+			scrap.scrap_amount = int(score_value * 0.5)
+			scrap.position = drop_pos + Vector3(0, 0.4, 0)
+			parent_node.add_child(scrap)
+
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.enemy_died.emit(enemy_name, score_value)

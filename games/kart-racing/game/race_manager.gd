@@ -73,6 +73,9 @@ func _on_checkpoint_hit(kart: Node, cp_index: int) -> void:
 	if cp_index == expected_cp:
 		kart.next_checkpoint_index = (expected_cp + 1) % cp_count
 		kart.total_checkpoints_hit += 1
+		if cp_index < checkpoints.size():
+			kart.last_valid_checkpoint_pos = checkpoints[cp_index].global_position
+			kart.last_valid_checkpoint_rot = checkpoints[cp_index].rotation.y
 
 		# Lap complete when wrapping to 0
 		if kart.next_checkpoint_index == 0:

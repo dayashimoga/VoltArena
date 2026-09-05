@@ -57,11 +57,68 @@ def perform_visual_quality_audit(artifacts_dir):
     """
     screens_dir = os.path.join(artifacts_dir, "screenshots")
     expected_screens = [
+        # Flagship views
         ("screenshot_launcher.png", "Universal Launcher", "Responsive 4->2x2->1, Isolated HUD"),
         ("screenshot_arena_fps.png", "Iron Crucible (Arena FPS)", "Procedural Dusk Sky, 3-Point Light, Catwalks"),
         ("screenshot_subway_survival.png", "Metro Siege (Subway)", "Volumetric Fog, Station Strip Lights, Grimy Tile"),
         ("screenshot_rocket_car.png", "Nitro Kick (Rocket Car)", "Floodlight Stadium, Open Sky, Turf Stripes, Jumbotron"),
-        ("screenshot_kart_racing.png", "Drift Storm (Kart Racing)", "Daylight Azure Sky, Sun Key 2.2, Ripple Kerbs, Terrain")
+        ("screenshot_kart_racing.png", "Drift Storm (Kart Racing)", "Daylight Azure Sky, Sun Key 2.2, Ripple Kerbs, Terrain"),
+
+        # Iron Crucible (12 states)
+        ("iron_01_spawn.png", "Iron Crucible: Spawn Zone", "Initial Arena Spawn, Dusk Sky, Catwalks, Radar Minimap"),
+        ("iron_02_objective.png", "Iron Crucible: Objective", "Match Objective 20 Frags, Radar Canvas, Timer"),
+        ("iron_03_soldier_closeup.png", "Iron Crucible: Cyber-Soldier", "Believable Humanoid Model, Armor, Helmet, Joint Articulation"),
+        ("iron_04_pulse_rifle.png", "Iron Crucible: Pulse Rifle (W1)", "Pulse Rifle with Optics, Barrel, Magazine, HUD Highlight"),
+        ("iron_05_scatter_cannon.png", "Iron Crucible: Scatter Cannon (W2)", "Heavy Dual Barrel Scatter Cannon, Drum Magazine"),
+        ("iron_06_rail_driver.png", "Iron Crucible: Rail Driver (W3)", "Electromagnetic Coil Accelerator Sniper Weapon"),
+        ("iron_07_grenade_launcher.png", "Iron Crucible: Grenade Launcher (W4)", "Revolving Chamber High-Explosive Launcher"),
+        ("iron_08_plasma_cutter.png", "Iron Crucible: Plasma Cutter (W5)", "High-Frequency Energy Emitter Weapon"),
+        ("iron_09_active_combat.png", "Iron Crucible: Active Combat", "Live Fire Exchange, Bot Damage, Muzzle Flash"),
+        ("iron_10_pickups.png", "Iron Crucible: Pickups", "Rotating 3D Armor/Health/Ammo Station"),
+        ("iron_11_progression.png", "Iron Crucible: Match Progression", "Frag Tracker (15/20), Killfeed Combat Log"),
+        ("iron_12_results_victory.png", "Iron Crucible: Victory Results", "Match Complete 20-Frag Victory Screen"),
+
+        # Metro Siege (12 states)
+        ("metro_01_station_spawn.png", "Metro Siege: Platform Spawn", "Subway Station Platform, Grimy Tile, Pillars, Lights"),
+        ("metro_02_objective_sonar.png", "Metro Siege: Tactical Sonar", "Sonar Radar Canvas, Threats Incoming Counter"),
+        ("metro_03_extraction_train.png", "Metro Siege: Extraction Train", "24m Subway Train: Carriages, Windows, Bogies, Rails"),
+        ("metro_04_vanguard_crawlers.png", "Metro Siege: Crawlers Swarm", "Crawler Monsters: Carapace, Articulated Limbs, Fangs"),
+        ("metro_05_monster_spitter.png", "Metro Siege: Spitter Monster", "Ranged Spitter Monster: Acid Sacs, Spines"),
+        ("metro_06_monster_brute.png", "Metro Siege: Brute Monster", "Heavy Brute Monster: Armored Shoulders, Horns"),
+        ("metro_07_scrap_gears_drop.png", "Metro Siege: Scrap Gear Drops", "Physical 3D Spinning Scrap Cog Drops"),
+        ("metro_08_active_combat.png", "Metro Siege: Active Combat", "Weapon Fire, Monster Engagement, Health Bars"),
+        ("metro_09_upgrade_kiosk.png", "Metro Siege: Upgrade Station", "Subway Ticket Kiosk / Weapon Upgrade Terminal"),
+        ("metro_10_wave_escalation.png", "Metro Siege: Wave Escalation", "Wave 7/10 Escalation, Threat Swarm Status"),
+        ("metro_11_boss_biocolossus.png", "Metro Siege: BioColossus Boss", "Wave 10 Apex Boss: BioColossus Encounter"),
+        ("metro_12_results_extraction.png", "Metro Siege: Evacuation Results", "Wave 10 Evacuation Victory Results Screen"),
+
+        # Nitro Kick (12 states)
+        ("nitro_01_kickoff.png", "Nitro Kick: Center Kickoff", "Center Kickoff Gantry, Ball Pedestal, Scoreboard"),
+        ("nitro_02_goal_objective.png", "Nitro Kick: Opponent Goal", "Field Goal Net, Glowing Goalposts, Target Line"),
+        ("nitro_03_rocket_car_closeup.png", "Nitro Kick: Rocket Car Closeup", "Detailed Vehicle: Body Panels, Rims, Cockpit, Spoiler"),
+        ("nitro_04_stadium_grandstands.png", "Nitro Kick: Stadium Grandstands", "Grandstands, Tiered Crowd, Floodlights, Jumbotron"),
+        ("nitro_05_ball_physics.png", "Nitro Kick: Ball Physics", "Physical Soccer Ball with Pentagonal Textures"),
+        ("nitro_06_ai_chase.png", "Nitro Kick: AI Opponent Chase", "Orange AI Rocket Car Contesting and Pursuing Ball"),
+        ("nitro_07_boost_aerial.png", "Nitro Kick: Boost Aerial Jump", "Vehicle Aerial Jump with Boost Thruster Flames"),
+        ("nitro_08_boost_pad.png", "Nitro Kick: Stadium Boost Pad", "Luminous Ground Boost Pad Pickup Station"),
+        ("nitro_09_goal_attack.png", "Nitro Kick: Goal Shot Attack", "Ball Flying Toward Opponent Goal Net"),
+        ("nitro_10_goal_scored.png", "Nitro Kick: Goal Scored", "Explosive Goal VFX, GOAL Banner Announcement"),
+        ("nitro_11_match_progression.png", "Nitro Kick: Score Progression", "Scoreboard Match Progression: Blue Leads 3 - 1"),
+        ("nitro_12_results_victory.png", "Nitro Kick: Victory Results", "Rocket Football Victory Results Screen"),
+
+        # Drift Storm (12 states)
+        ("drift_01_start_grid.png", "Drift Storm: Start Grid", "Grid Starting Gantry, Countdown Lights (3-2-1-GO)"),
+        ("drift_02_circuit_minimap.png", "Drift Storm: Circuit Minimap", "Full Track Minimap Canvas with Racer Blips"),
+        ("drift_03_kart_closeup.png", "Drift Storm: Racing Kart Model", "Chassis, Steering Wheel, Animated Driver, Engine"),
+        ("drift_04_track_barriers_crowd.png", "Drift Storm: Barriers & Crowd", "Continuous Track Barriers, Ripple Kerbs, Grandstands"),
+        ("drift_05_all_racers_moving.png", "Drift Storm: Racers Pack", "All 6 Racers Active on Track Approaching Turn 1"),
+        ("drift_06_drift_hairpin.png", "Drift Storm: Powerslide Drift", "Kart Drifting with Tire Smoke and Spark VFX"),
+        ("drift_07_mini_turbo.png", "Drift Storm: Mini-Turbo", "Mini-Turbo Boost Release with Speed Trails"),
+        ("drift_08_item_box.png", "Drift Storm: Item Box Pickup", "Holographic Floating Item Box with Question Mark"),
+        ("drift_09_offtrack_recovery.png", "Drift Storm: Offtrack Recovery", "Barrier Collision Detection & Checkpoint Reset"),
+        ("drift_10_canyon_run.png", "Drift Storm: Canyon Landmark", "Red Rock Canyon Walls, Elevation & Tunnel Passage"),
+        ("drift_11_lap_progression.png", "Drift Storm: Lap Progression", "Lap 2/3 Checkpoint Progression, 1st Place"),
+        ("drift_12_results_podium.png", "Drift Storm: Podium Results", "Grand Prix 1st Place Podium & Gold Trophy")
     ]
 
     audit_results = []
@@ -172,6 +229,60 @@ def perform_visual_quality_audit(artifacts_dir):
     return audit_data
 
 
+def _generate_game_grid(screens_dir, game_title, file_list, audit_map, out_filename):
+    try:
+        canvas_w, canvas_h = 1920, 1080
+        canvas = Image.new("RGB", (canvas_w, canvas_h), color=(11, 14, 20))
+        draw = ImageDraw.Draw(canvas)
+
+        header_font = _get_font(20)
+        sub_font = _get_font(13)
+        card_font = _get_font(11)
+        badge_font = _get_font(10)
+
+        # Header bar
+        draw.rectangle([(0, 0), (canvas_w, 60)], fill=(19, 23, 32))
+        draw.line([(0, 60), (canvas_w, 60)], fill=(0, 240, 255), width=2)
+        draw.text((40, 12), f"VOLTARENA -- {game_title.upper()} RUNTIME STATE DOSSIER", fill=(0, 240, 255), font=header_font)
+        draw.text((40, 38), "Packaged Web/Windows Runtime Audit | 12 Forensic Playable States | 1280x720 HD | PBR Stylized 3D Assets", fill=(148, 163, 184), font=sub_font)
+
+        thumb_w, thumb_h = 420, 236
+        gap_x = 40
+        gap_y = 70
+        start_x = 50
+        start_y = 85
+
+        for i, (fname, title, desc) in enumerate(file_list):
+            row = i // 4
+            col = i % 4
+            x = start_x + col * (thumb_w + gap_x)
+            y = start_y + row * (thumb_h + gap_y)
+
+            fpath = os.path.join(screens_dir, fname)
+            res = audit_map.get(fname, {})
+            status = res.get("status", "PASS")
+
+            # Draw card
+            draw.rectangle([(x - 4, y - 20), (x + thumb_w + 4, y + thumb_h + 24)], fill=(20, 26, 38), outline=(45, 55, 72), width=1)
+            draw.text((x, y - 18), title[:36].upper(), fill=(56, 189, 248), font=card_font)
+
+            if os.path.exists(fpath):
+                orig_img = Image.open(fpath).convert("RGB")
+                thumb = orig_img.resize((thumb_w, thumb_h), Image.Resampling.LANCZOS)
+                canvas.paste(thumb, (x, y))
+
+            lum = res.get("mean_luminance", 0.0)
+            contrast = res.get("contrast", 0.0)
+            draw.rectangle([(x, y + thumb_h + 2), (x + thumb_w, y + thumb_h + 20)], fill=(15, 20, 30))
+            metrics_text = f"Lum: {lum:.1f} | Con: {contrast:.1f} | [{status}]"
+            status_col = (16, 185, 129) if status == "PASS" else (239, 68, 68)
+            draw.text((x + 4, y + thumb_h + 4), metrics_text, fill=status_col, font=badge_font)
+
+        canvas.save(os.path.join(screens_dir, out_filename))
+    except Exception as e:
+        print(f"[CERTIFIER] Warning: Could not generate {out_filename}: {e}")
+
+
 def _generate_contact_sheet_image(screens_dir, expected_screens, audit_results):
     try:
         canvas_w, canvas_h = 1920, 1080
@@ -205,7 +316,8 @@ def _generate_contact_sheet_image(screens_dir, expected_screens, audit_results):
 
         audit_map = {res["filename"]: res for res in audit_results}
 
-        for idx, (filename, title, _) in enumerate(expected_screens):
+        # 1. Master Contact Sheet (Flagship 5 screens)
+        for idx, (filename, title, _) in enumerate(expected_screens[:5]):
             if idx >= len(coords):
                 break
             x, y = coords[idx]
@@ -240,6 +352,19 @@ def _generate_contact_sheet_image(screens_dir, expected_screens, audit_results):
 
         out_path = os.path.join(screens_dir, "visual_contact_sheet.png")
         canvas.save(out_path)
+
+        # 2. Per-game 12-state contact sheets
+        game_buckets = {
+            "Iron Crucible": [s for s in expected_screens if s[0].startswith("iron_")],
+            "Metro Siege": [s for s in expected_screens if s[0].startswith("metro_")],
+            "Nitro Kick": [s for s in expected_screens if s[0].startswith("nitro_")],
+            "Drift Storm": [s for s in expected_screens if s[0].startswith("drift_")]
+        }
+        _generate_game_grid(screens_dir, "Iron Crucible", game_buckets["Iron Crucible"], audit_map, "contact_sheet_iron_crucible.png")
+        _generate_game_grid(screens_dir, "Metro Siege", game_buckets["Metro Siege"], audit_map, "contact_sheet_metro_siege.png")
+        _generate_game_grid(screens_dir, "Nitro Kick", game_buckets["Nitro Kick"], audit_map, "contact_sheet_nitro_kick.png")
+        _generate_game_grid(screens_dir, "Drift Storm", game_buckets["Drift Storm"], audit_map, "contact_sheet_drift_storm.png")
+
     except Exception as e:
         print(f"[CERTIFIER] Warning: Could not generate visual contact sheet image: {e}")
 

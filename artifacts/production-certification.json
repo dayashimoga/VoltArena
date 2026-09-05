@@ -1,7 +1,7 @@
 {
   "project": "VoltArena",
   "version": "4.0.0",
-  "timestamp_utc": "2026-09-05 05:27:45 UTC",
+  "timestamp_utc": "2026-09-05 09:14:47 UTC",
   "overall_status": "PASS",
   "automatable_pass_count": 11,
   "automatable_fail_count": 0,
@@ -11,14 +11,14 @@
     {
       "gate": "Unit & E2E Tests",
       "requirement": "100% assertion pass rate, 0 failures",
-      "measured": "787 passed, 0 failed",
+      "measured": "808 passed, 0 failed",
       "status": "PASS",
       "evidence": "artifacts/test-results.json"
     },
     {
       "gate": "Function Coverage",
       "requirement": ">90.0% function coverage",
-      "measured": "94.0% (344/366 functions)",
+      "measured": "95.3% (384/403 functions)",
       "status": "PASS",
       "evidence": "artifacts/coverage-report.json"
     },
@@ -32,7 +32,7 @@
     {
       "gate": "Web Export & Cloudflare Limits",
       "requirement": "All files <=25MB, valid WASM/HTML",
-      "measured": "Largest file: 18.0MB (export/web)",
+      "measured": "Largest file: 21.1MB (export/web)",
       "status": "PASS",
       "evidence": "export/web/"
     },
@@ -88,7 +88,7 @@
     {
       "gate": "Visual Quality & Empirical Screenshots",
       "requirement": "5/5 screenshots >=1280x720, Lum in [40,180], Black%<=12%, Contrast>=25, Contact Sheet",
-      "measured": "5/5 passed (Avg Lum=95.5, Avg Contrast=34.9, Max Black%=0.0%)",
+      "measured": "53/53 passed (Avg Lum=103.3, Avg Contrast=59.5, Max Black%=2.8%)",
       "status": "PASS",
       "evidence": "artifacts/screenshots/visual_contact_sheet.png"
     },

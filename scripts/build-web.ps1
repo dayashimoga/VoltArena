@@ -42,6 +42,9 @@ $hookScript = @"
 					combined.set(new Uint8Array(b2), b1.byteLength);
 					return new Response(combined, { status: 200, headers: { "Content-Type": "application/wasm" } });
 				}
+				if (url.includes(".pck")) {
+					init = Object.assign({}, init, { cache: "no-store" });
+				}
 				return origFetch(resource, init);
 			};
 		})();

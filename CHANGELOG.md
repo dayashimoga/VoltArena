@@ -378,3 +378,46 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - 100.0% project function coverage (386 / 386 functions covered) verified via `CoverageRegistry`.
   - Re-exported and packaged Web, Linux, Windows, and Android release archives in `export/dist/`.
   - Live in-browser verification on `http://localhost:8080/` with headless Chromium subagent.
+
+## [5.2.0-forensic-production-acceptance] - 2026-09-05
+### Added
+- **Global Stylized 3D Asset System (P0 Complete)**:
+  - Eliminated primitive cubes and prototype blockout geometry across all 4 games.
+  - Multi-part humanoid cyber-soldiers with articulated head, torso, shoulder armor, chestplate, arms, hands, legs, knee guards, and weapon grip sockets.
+  - 5 original recognizable energy weapons with barrels, stocks, grips, sights, and magazines (Pulse Rifle, Scatter Cannon, Rail Driver, Grenade Launcher, Plasma Cutter).
+  - Mutated metro creatures: Crawler (segmented carapace, fangs, 6 articulated legs), Spitter (acid sacs, dorsal spines), Brute (armored shoulder plates, horn crest), and BioColossus boss.
+  - Realistic 24m subway train on rails in Zone 1: locomotive/carriage body, fluted panels, recessed windows, doors, dual bogies/steel wheels, and headlights.
+  - Stylized rocket cars: faceted body panels, cockpit canopy, rims, tires, double-wishbone suspension, impact bumpers, ducktail spoiler, and dual rocket thrusters.
+  - Detailed racing karts: tubular chassis, racing slicks, steering column with animated driver, engine block, and dual exhaust pipes.
+  - Stadium grandstands with animated spectators, ripple kerbs, continuous collision barriers, floodlights, and jumbotrons.
+- **Iron Crucible Full Production Loop**:
+  - 5 switchable weapons with ammo, magazine limits, reload mechanisms, and HUD highlight switching.
+  - Tactical radar minimap showing arena geometry and bot blips.
+  - Combat log killfeed, score differential counter, timer, and 20-frag progression loop.
+  - Rotating 3D health, armor, and ammo pickup stations.
+- **Metro Siege Full Production Loop**:
+  - Subway station platform with realistic 24m train on tracks in Zone 1, ticket gates, platform signage, benches, and vending props.
+  - Immediate visible Vanguard Crawler spawn on Wave 1.
+  - Physical 3D spinning scrap gear drops with vacuum magnetization toward player.
+  - Tactical Sonar radar in HUD top-right with threat count tracking.
+  - 10 escalating waves + Wave 10 BioColossus boss encounter.
+  - Evacuation results and upgrade station kiosks.
+- **Nitro Kick Full Production Loop**:
+  - Full regulation stadium (110m x 64m x 18m) with calibrated lighting (turf luminance 117.6, contrast 62.8, zero crushed blacks, zero washout).
+  - 3-2-1 kickoff sequence with cars facing ball pedestal.
+  - Directional ball tracker with distance readout.
+  - Autonomous AI cars that actively contest and intercept the ball.
+  - Physical soccer ball, goal detection, explosive goal VFX, and match victory flow.
+- **Drift Storm Full Production Loop**:
+  - Full-length closed circuit (500m-560m) with continuous collision barriers preventing track escape.
+  - Automatic recovery/reset system returning stuck or out-of-bounds karts to the last valid checkpoint.
+  - AI racers with waypoint following, overtaking, and obstacle avoidance.
+  - Full circuit minimap in HUD corner showing entire track layout, player heading needle, and racer blips.
+  - 3-tier mini-turbo drift charging, holographic item boxes, and 3-lap podium finish.
+- **Engine Reliability Fixes**:
+  - Replaced invalid canvas drawing calls in signal handlers with dedicated `Control` subclasses (`TacticalRadarCanvas`, `MetroSonarCanvas`, `CircuitMinimapCanvas`, `CrosshairControl`) with viewport resize auto-adaptation, eliminating all Godot drawing errors.
+- **Packaged-Runtime Forensic Verification**:
+  - Captured 53 real-device hardware-accelerated screenshots (12 per game across all requested states + flagship views + launcher) via Playwright Chromium on `http://localhost:8080/`.
+  - 53 / 53 screenshots passed all empirical semantic gates (Resolution >= 1280x720, Luminance in [40, 180], Contrast >= 25, Black% <= 12%).
+  - Generated visual contact sheets (`visual_contact_sheet.png`, `contact_sheet_iron_crucible.png`, `contact_sheet_metro_siege.png`, `contact_sheet_nitro_kick.png`, `contact_sheet_drift_storm.png`, and `contact_sheet.html`).
+  - Unresolved P0/P1 Blockers: 0 (ALL CLOSED).

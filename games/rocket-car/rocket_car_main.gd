@@ -169,20 +169,20 @@ func reset_kickoff() -> void:
 
 	# Reset player car
 	if is_instance_valid(player_car):
-		player_car.global_position = Vector3(0, 0.5, 25.0)
+		player_car.global_position = Vector3(0, 0.5, 30.0)
 		player_car.rotation = Vector3.ZERO
 		player_car.velocity = Vector3.ZERO
 		player_car.forward_speed = 0.0
 
 	# Reset AI cars
 	if ai_cars.size() >= 2:
-		ai_cars[0].global_position = Vector3(-8.0, 0.5, -25.0)
-		ai_cars[0].rotation = Vector3.ZERO
+		ai_cars[0].global_position = Vector3(-10.0, 0.5, -30.0)
+		ai_cars[0].rotation = Vector3(0, PI, 0)
 		ai_cars[0].velocity = Vector3.ZERO
 		ai_cars[0].forward_speed = 0.0
 
-		ai_cars[1].global_position = Vector3(8.0, 0.5, -25.0)
-		ai_cars[1].rotation = Vector3.ZERO
+		ai_cars[1].global_position = Vector3(10.0, 0.5, -30.0)
+		ai_cars[1].rotation = Vector3(0, PI, 0)
 		ai_cars[1].velocity = Vector3.ZERO
 		ai_cars[1].forward_speed = 0.0
 

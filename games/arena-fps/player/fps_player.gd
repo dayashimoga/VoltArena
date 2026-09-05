@@ -101,6 +101,12 @@ func select_weapon(index: int) -> void:
 	var active_w = weapons[current_weapon_index]
 	active_w.visible = true
 
+	var parent = get_parent()
+	if parent and parent.has_node("HUD"):
+		var hud_node = parent.get_node("HUD")
+		if hud_node and hud_node.has_method("highlight_active_weapon"):
+			hud_node.highlight_active_weapon(current_weapon_index)
+
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.player_weapon_switched.emit(active_w.weapon_name, "")
@@ -206,12 +212,19 @@ func handle_weapons_input() -> void:
 	if Input.is_action_just_pressed("reload"):
 		active_w.start_reload()
 
-	# Weapon cycling with number keys or scroll
+	# Weapon cycling with number keys
 	if Input.is_key_pressed(KEY_1): select_weapon(0)
 	elif Input.is_key_pressed(KEY_2): select_weapon(1)
 	elif Input.is_key_pressed(KEY_3): select_weapon(2)
 	elif Input.is_key_pressed(KEY_4): select_weapon(3)
 	elif Input.is_key_pressed(KEY_5): select_weapon(4)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			select_weapon(current_weapon_index - 1)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			select_weapon(current_weapon_index + 1)
 
 func notify_ammo_update(w: WeaponBase) -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")

@@ -14,23 +14,60 @@ var crosshair: Control
 var toast_container: VBoxContainer
 var touch_controls: TouchControls
 
-var crosshair_spread: float = 8.0
+class CrosshairControl extends Control:
+	var spread: float = 8.0
+	func _draw() -> void:
+		var col = Color(0.0, 1.0, 0.9, 0.85)
+		var s = spread
+		var l = 8.0
+		draw_line(Vector2(-s - l, 0), Vector2(-s, 0), col, 2.0)
+		draw_line(Vector2(s, 0), Vector2(s + l, 0), col, 2.0)
+		draw_line(Vector2(0, -s - l), Vector2(0, -s), col, 2.0)
+		draw_line(Vector2(0, s), Vector2(0, s + l), col, 2.0)
+		draw_circle(Vector2.ZERO, 1.5, col)
+
+var stat_panel: PanelContainer
+var weapon_panel: PanelContainer
+var top_panel: PanelContainer
 
 func _ready() -> void:
 	anchor_right = 1.0
 	anchor_bottom = 1.0
 	mouse_filter = MOUSE_FILTER_IGNORE
 	theme = ThemeGenerator.get_theme()
+	if get_viewport():
+		size = get_viewport().get_visible_rect().size
+		if not get_viewport().size_changed.is_connected(_on_viewport_size_changed):
+			get_viewport().size_changed.connect(_on_viewport_size_changed)
+	else:
+		size = Vector2(1280, 720)
 	setup_hud_layout()
 	connect_bus_signals()
 	check_mobile_controls()
+	update_layout_positions()
+
+func _on_viewport_size_changed() -> void:
+	if get_viewport():
+		size = get_viewport().get_visible_rect().size
+		update_layout_positions()
+
+func update_layout_positions() -> void:
+	var vp = size
+	if stat_panel and is_instance_valid(stat_panel):
+		stat_panel.position = Vector2(24, maxf(vp.y - 130, 24))
+	if weapon_panel and is_instance_valid(weapon_panel):
+		weapon_panel.position = Vector2(maxf(vp.x - 220, 24), maxf(vp.y - 120, 24))
+	if top_panel and is_instance_valid(top_panel):
+		top_panel.position = Vector2((vp.x - 300) * 0.5, 16)
+	if crosshair and is_instance_valid(crosshair):
+		crosshair.position = vp * 0.5
+	if toast_container and is_instance_valid(toast_container):
+		toast_container.position = Vector2(maxf(vp.x - 320, 24), 80)
 
 func setup_hud_layout() -> void:
 	# Bottom-Left: Health & Armor
-	var stat_panel = PanelContainer.new()
-	stat_panel.position = Vector2(24, -130)
-	stat_panel.anchor_top = 1.0
-	stat_panel.anchor_bottom = 1.0
+	stat_panel = PanelContainer.new()
+	stat_panel.custom_minimum_size = Vector2(200, 80)
 	add_child(stat_panel)
 
 	var stat_vbox = VBoxContainer.new()
@@ -121,23 +158,13 @@ func setup_hud_layout() -> void:
 	top_hbox.add_child(timer_label)
 
 	# Center: Crosshair
-	crosshair = Control.new()
-	crosshair.name = "Crosshair"
-	crosshair.anchor_left = 0.5
-	crosshair.anchor_top = 0.5
-	crosshair.anchor_right = 0.5
-	crosshair.anchor_bottom = 0.5
-	crosshair.draw.connect(_on_draw_crosshair)
+	var ch = CrosshairControl.new()
+	ch.name = "Crosshair"
+	crosshair = ch
 	add_child(crosshair)
 
 	# Toast / Notifications on Top-Right
 	toast_container = VBoxContainer.new()
-	toast_container.anchor_left = 1.0
-	toast_container.anchor_right = 1.0
-	toast_container.offset_left = -320
-	toast_container.offset_top = 80
-	toast_container.offset_right = -20
-	toast_container.offset_bottom = 300
 	add_child(toast_container)
 
 func connect_bus_signals() -> void:
@@ -156,21 +183,9 @@ func check_mobile_controls() -> void:
 		touch_controls = TouchControls.new()
 		add_child(touch_controls)
 
-func _on_draw_crosshair() -> void:
-	var col = Color(0.0, 1.0, 0.9, 0.85)
-	var s = crosshair_spread
-	var l = 8.0
-	# Left, Right, Top, Bottom lines
-	crosshair.draw_line(Vector2(-s - l, 0), Vector2(-s, 0), col, 2.0)
-	crosshair.draw_line(Vector2(s, 0), Vector2(s + l, 0), col, 2.0)
-	crosshair.draw_line(Vector2(0, -s - l), Vector2(0, -s), col, 2.0)
-	crosshair.draw_line(Vector2(0, s), Vector2(0, s + l), col, 2.0)
-	# Center dot
-	crosshair.draw_circle(Vector2.ZERO, 1.5, col)
-
 func set_crosshair_spread(spread: float) -> void:
-	crosshair_spread = spread
-	if crosshair:
+	if crosshair is CrosshairControl:
+		(crosshair as CrosshairControl).spread = spread
 		crosshair.queue_redraw()
 
 func update_health(hp: float, max_hp: float) -> void:

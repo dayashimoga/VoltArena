@@ -51,7 +51,9 @@ func _physics_process(delta: float) -> void:
 		velocity.y -= gravity * delta
 
 	if is_player_controlled:
-		handle_player_input(delta)
+		var main = get_parent()
+		if not (main and main.get("is_kickoff_pause") == true):
+			handle_player_input(delta)
 
 	move_and_slide()
 

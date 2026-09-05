@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 100,
-  "coverage_tested_functions": 386,
-  "coverage_total_functions": 386,
-  "execution_seconds": 3.44,
+  "coverage_percent": 95.049504950495,
+  "coverage_tested_functions": 384,
+  "coverage_total_functions": 404,
+  "execution_seconds": 3.45,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -192,7 +192,7 @@
     },
     "UI Systems & Controls Unit": {
       "failed": 0,
-      "passed": 50,
+      "passed": 48,
       "status": "PASS"
     },
     "Wave Director Unit": {
@@ -206,8 +206,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-05T06:01:59",
+  "timestamp": "2026-09-05T09:17:02",
   "total_failed": 0,
-  "total_passed": 810,
+  "total_passed": 808,
   "total_suites": 40
 }

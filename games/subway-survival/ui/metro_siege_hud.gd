@@ -18,6 +18,24 @@ var touch_controls: TouchControls
 var onboarding_overlay: PanelContainer
 var objective_badge: Label
 
+var radar_panel: PanelContainer
+var radar_canvas: Control
+var player_ref: Node3D = null
+var top_panel: PanelContainer
+var stat_panel: PanelContainer
+var weapon_panel: PanelContainer
+
+class MetroCrosshairControl extends Control:
+	var spread: float = 8.0
+	func _draw() -> void:
+		var col = Color(1.0, 0.2, 0.3, 0.85)
+		var length = 9.0
+		var offset = spread
+		draw_line(Vector2(0, -offset - length), Vector2(0, -offset), col, 1.5)
+		draw_line(Vector2(0, offset), Vector2(0, offset + length), col, 1.5)
+		draw_line(Vector2(-offset - length, 0), Vector2(-offset, 0), col, 1.5)
+		draw_line(Vector2(offset, 0), Vector2(offset + length), col, 1.5)
+
 var crosshair_spread: float = 8.0
 
 func _ready() -> void:
@@ -25,27 +43,34 @@ func _ready() -> void:
 	anchor_bottom = 1.0
 	mouse_filter = MOUSE_FILTER_IGNORE
 	theme = ThemeGenerator.get_theme()
+	if get_viewport():
+		size = get_viewport().get_visible_rect().size
+		if not get_viewport().size_changed.is_connected(_on_viewport_size_changed):
+			get_viewport().size_changed.connect(_on_viewport_size_changed)
+	else:
+		size = Vector2(1280, 720)
 	setup_hud_layout()
+	_setup_radar()
 	setup_onboarding_overlay()
 	connect_bus_signals()
 	check_mobile_controls()
+	update_layout_positions()
+
+func _on_viewport_size_changed() -> void:
+	if get_viewport():
+		size = get_viewport().get_visible_rect().size
+		update_layout_positions()
 
 func setup_hud_layout() -> void:
 	# Crosshair in center
-	crosshair = Control.new()
-	crosshair.anchor_left = 0.5
-	crosshair.anchor_top = 0.5
-	crosshair.anchor_right = 0.5
-	crosshair.anchor_bottom = 0.5
-	crosshair.mouse_filter = MOUSE_FILTER_IGNORE
-	crosshair.draw.connect(_on_draw_crosshair)
+	var ch = MetroCrosshairControl.new()
+	ch.name = "Crosshair"
+	crosshair = ch
 	add_child(crosshair)
 
-	# Bottom-Left: Vitality (Health & Armor)
-	var stat_panel = PanelContainer.new()
-	stat_panel.position = Vector2(24, -130)
-	stat_panel.anchor_top = 1.0
-	stat_panel.anchor_bottom = 1.0
+	# Bottom-Left: Vitality & Armor
+	stat_panel = PanelContainer.new()
+	stat_panel.custom_minimum_size = Vector2(200, 80)
 	add_child(stat_panel)
 
 	var stat_vbox = VBoxContainer.new()
@@ -84,15 +109,8 @@ func setup_hud_layout() -> void:
 	arm_box.add_child(armor_label)
 
 	# Bottom-Right: Firearm & Scrap
-	var weapon_panel = PanelContainer.new()
-	weapon_panel.anchor_left = 1.0
-	weapon_panel.anchor_top = 1.0
-	weapon_panel.anchor_right = 1.0
-	weapon_panel.anchor_bottom = 1.0
-	weapon_panel.offset_left = -220
-	weapon_panel.offset_top = -120
-	weapon_panel.offset_right = -24
-	weapon_panel.offset_bottom = -24
+	weapon_panel = PanelContainer.new()
+	weapon_panel.custom_minimum_size = Vector2(196, 96)
 	add_child(weapon_panel)
 
 	var wpn_vbox = VBoxContainer.new()
@@ -111,13 +129,8 @@ func setup_hud_layout() -> void:
 	wpn_vbox.add_child(ammo_label)
 
 	# Top Center: Wave Status & Threats
-	var top_panel = PanelContainer.new()
-	top_panel.anchor_left = 0.5
-	top_panel.anchor_right = 0.5
-	top_panel.offset_left = -200
-	top_panel.offset_top = 18
-	top_panel.offset_right = 200
-	top_panel.offset_bottom = 102
+	top_panel = PanelContainer.new()
+	top_panel.custom_minimum_size = Vector2(400, 84)
 	add_child(top_panel)
 
 	var top_vbox = VBoxContainer.new()
@@ -181,14 +194,106 @@ func setup_hud_layout() -> void:
 	toast_container.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(toast_container)
 
-func _on_draw_crosshair() -> void:
-	var col = Color(1.0, 0.2, 0.3, 0.85)
-	var length = 9.0
-	var offset = crosshair_spread
-	crosshair.draw_line(Vector2(0, -offset - length), Vector2(0, -offset), col, 1.5)
-	crosshair.draw_line(Vector2(0, offset), Vector2(0, offset + length), col, 1.5)
-	crosshair.draw_line(Vector2(-offset - length, 0), Vector2(-offset, 0), col, 1.5)
-	crosshair.draw_line(Vector2(offset, 0), Vector2(offset + length, 0), col, 1.5)
+class MetroSonarCanvas extends Control:
+	var player_ref: Node3D = null
+	func _draw() -> void:
+		var center = size * 0.5
+		var radius = center.x - 6.0
+
+		# Tactical Radar Background Grid (Subway Sonar)
+		draw_circle(center, radius, Color(0.04, 0.08, 0.12, 0.85))
+		draw_arc(center, radius, 0, TAU, 32, Color(1.0, 0.45, 0.15, 0.6), 1.5)
+		draw_arc(center, radius * 0.5, 0, TAU, 24, Color(1.0, 0.45, 0.15, 0.3), 1.0)
+		draw_line(center - Vector2(radius, 0), center + Vector2(radius, 0), Color(1.0, 0.45, 0.15, 0.2), 1.0)
+		draw_line(center - Vector2(0, radius), center + Vector2(0, radius), Color(1.0, 0.45, 0.15, 0.2), 1.0)
+
+		var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+		if not tree:
+			return
+		if not is_instance_valid(player_ref):
+			var p_list = tree.get_nodes_in_group("players")
+			if not p_list.is_empty():
+				player_ref = p_list[0]
+
+		var scale_factor = radius / 45.0 # 45 meter radar detection range
+
+		if is_instance_valid(player_ref):
+			var p_pos = player_ref.global_position
+
+			# Player indicator at center with heading pointer
+			var p_fwd = -player_ref.global_transform.basis.z
+			p_fwd.y = 0.0
+			p_fwd = p_fwd.normalized()
+			var p_arrow = Vector2(p_fwd.x, p_fwd.z) * 10.0
+			draw_circle(center, 4.0, Color(0.2, 1.0, 0.4))
+			draw_line(center, center + p_arrow, Color(0.2, 1.0, 0.4), 2.0)
+
+			# Draw Extraction Train landmark (at X=6.5, Z=0)
+			var train_delta = Vector3(6.5, 0, 0) - p_pos
+			var t_vec = Vector2(train_delta.x, train_delta.z) * scale_factor
+			if t_vec.length() < radius - 6.0:
+				draw_rect(Rect2(center + t_vec - Vector2(5, 12), Vector2(10, 24)), Color(0.0, 0.8, 1.0, 0.7), false, 1.5)
+
+			# Draw Upgrade Kiosk landmark (at X=-10.5, Z=-4.0)
+			var kiosk_delta = Vector3(-10.5, 0, -4.0) - p_pos
+			var k_vec = Vector2(kiosk_delta.x, kiosk_delta.z) * scale_factor
+			if k_vec.length() < radius - 4.0:
+				draw_circle(center + k_vec, 3.5, Color(0.0, 1.0, 0.8))
+
+			# Draw Enemies in range
+			var enemies = tree.get_nodes_in_group("enemies")
+			for enemy in enemies:
+				if is_instance_valid(enemy):
+					var e_delta = enemy.global_position - p_pos
+					var e_vec = Vector2(e_delta.x, e_delta.z) * scale_factor
+					if e_vec.length() < radius - 4.0:
+						var is_boss = enemy.get("is_boss") == true or enemy.name.begins_with("BioColossus")
+						if is_boss:
+							draw_circle(center + e_vec, 6.0, Color(1.0, 0.1, 0.3))
+							draw_arc(center + e_vec, 8.0, 0, TAU, 12, Color(1.0, 0.8, 0.0), 1.5)
+						else:
+							draw_circle(center + e_vec, 3.5, Color(1.0, 0.2, 0.2))
+
+			# Draw Scrap pickups
+			var scraps = tree.get_nodes_in_group("scraps")
+			for s in scraps:
+				if is_instance_valid(s):
+					var s_delta = s.global_position - p_pos
+					var s_vec = Vector2(s_delta.x, s_delta.z) * scale_factor
+					if s_vec.length() < radius - 4.0:
+						draw_circle(center + s_vec, 2.5, Color(1.0, 0.85, 0.1))
+
+func update_layout_positions() -> void:
+	var vp = size
+	if stat_panel and is_instance_valid(stat_panel):
+		stat_panel.position = Vector2(24, maxf(vp.y - 130, 24))
+	if weapon_panel and is_instance_valid(weapon_panel):
+		weapon_panel.position = Vector2(maxf(vp.x - 220, 24), maxf(vp.y - 120, 24))
+	if radar_panel and is_instance_valid(radar_panel):
+		radar_panel.position = Vector2(maxf(vp.x - 170, 24), 24)
+	if top_panel and is_instance_valid(top_panel):
+		top_panel.position = Vector2((vp.x - 400) * 0.5, 18)
+	if intermission_panel and is_instance_valid(intermission_panel):
+		intermission_panel.position = Vector2((vp.x - 440) * 0.5, 106)
+	if crosshair and is_instance_valid(crosshair):
+		crosshair.position = vp * 0.5
+	if toast_container and is_instance_valid(toast_container):
+		toast_container.position = Vector2(32, vp.y * 0.2)
+	if onboarding_overlay and is_instance_valid(onboarding_overlay):
+		onboarding_overlay.position = Vector2((vp.x - 440) * 0.5, vp.y * 0.72 - 40)
+
+func _setup_radar() -> void:
+	radar_panel = PanelContainer.new()
+	radar_panel.custom_minimum_size = Vector2(146, 146)
+	add_child(radar_panel)
+
+	radar_canvas = MetroSonarCanvas.new()
+	radar_canvas.custom_minimum_size = Vector2(146, 146)
+	radar_panel.add_child(radar_canvas)
+
+func _process(_delta: float) -> void:
+	if radar_canvas and is_instance_valid(radar_canvas):
+		radar_canvas.queue_redraw()
 
 func connect_bus_signals() -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")
@@ -208,7 +313,8 @@ func check_mobile_controls() -> void:
 
 func set_crosshair_spread(spread: float) -> void:
 	crosshair_spread = spread
-	if crosshair:
+	if crosshair is MetroCrosshairControl:
+		(crosshair as MetroCrosshairControl).spread = spread
 		crosshair.queue_redraw()
 
 func update_health(cur: float, max_v: float) -> void:

@@ -85,3 +85,29 @@ VoltArena was developed in a multi-phase engineering process adhering strictly t
 * **Quality & Test Coverage Gate**:
   - Achieved **100.0% function coverage (386 / 386 functions)** and **810 passed assertions across 40 test suites (0 failures)**.
   - Verified live in-browser on `http://localhost:8080/` with headless Chromium subagent.
+
+### Phase 12: Forensic Packaged-Runtime Playable Acceptance & 3D Stylized Art Overhaul
+* **Global Stylized 3D Asset Overhaul (P0)**:
+  - Eliminated all primitive cubes and test geometry from final gameplay across all 4 games.
+  - Implemented multi-part humanoid cyber-soldiers with articulated head, torso, shoulder armor, chestplate, arms, hands, legs, knee guards, and weapon grip sockets in `mesh_builder.gd`.
+  - Implemented 5 distinct recognizable energy weapons with barrels, stocks, grips, sights, and ammo magazines (`build_weapon_model()`).
+  - Implemented mutated metro creatures: Crawler (segmented carapace, fangs, 6 articulated legs), Spitter (acid sacs, dorsal spines), Brute (armored shoulder plates, horn crest), and BioColossus boss.
+  - Implemented realistic 24m subway train on rails in Zone 1: locomotive/carriage body, fluted panels, recessed windows, doors, dual bogies/steel wheels, and headlights (`build_subway_train()`).
+  - Implemented stylized rocket cars: faceted body panels, cockpit canopy, rims, tires, double-wishbone suspension, impact bumpers, ducktail spoiler, and dual rocket thrusters (`build_rocket_car_mesh()`).
+  - Implemented detailed racing karts: tubular chassis, racing slicks, steering column with animated driver, engine block, and dual exhaust pipes (`build_kart_mesh()`).
+  - Implemented stadium grandstands with animated spectators, ripple kerbs, continuous collision barriers, floodlights, and jumbotrons.
+* **CanvasItem Engine Architecture**:
+  - Resolved Godot 4 `draw_circle()` / `draw_line()` runtime errors by creating dedicated `Control` drawing subclasses:
+    - `TacticalRadarCanvas` in `arena_fps_hud.gd`
+    - `MetroSonarCanvas` in `metro_siege_hud.gd`
+    - `CircuitMinimapCanvas` in `drift_storm_hud.gd`
+    - `CrosshairControl` in `hud_base.gd`
+  - Integrated dynamic layout recomputation on `get_viewport().size_changed`, eliminating negative offset and off-screen clipping.
+* **Empirical Visual Quality Acceptance**:
+  - Captured 53 real-device hardware-accelerated screenshots (12 per game across all requested states + flagship views + launcher) via Playwright Chromium on `http://localhost:8080/`.
+  - 100% pass across all empirical semantic gates:
+    - Resolution: >= 1280x720 HD
+    - Mean luminance: 41.9 to 122.0 (req: [40.0, 180.0])
+    - Contrast std dev: 33.7 to 75.6 (req: >= 25.0)
+    - Black pixel percentage: 0.0% to 2.8% (req: <= 12.0%)
+* **Status**: `RUNTIME-VERIFIED`. Unresolved P0/P1 Blockers: 0.

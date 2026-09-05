@@ -21,14 +21,126 @@ var touch_controls: TouchControls
 var objective_badge: Label
 var onboarding_overlay: PanelContainer
 
+var minimap_panel: PanelContainer
+var minimap_canvas: Control
+var circuit_waypoints: Array = []
+var player_ref: Node3D = null
+var obj_panel: PanelContainer
+var right_panel: PanelContainer
+
+class CircuitMinimapCanvas extends Control:
+	var player_ref: Node3D = null
+	var circuit_waypoints: Array = []
+	func _draw() -> void:
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.04, 0.08, 0.12, 0.88), true)
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.0, 0.85, 1.0, 0.5), false, 1.5)
+
+		var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+		if not tree:
+			return
+
+		if circuit_waypoints.is_empty():
+			var tg = tree.root.find_child("TrackGenerator", true, false)
+			if tg and not tg.waypoints.is_empty():
+				circuit_waypoints = tg.waypoints
+
+		if circuit_waypoints.size() < 3:
+			return
+
+		var min_x = 99999.0
+		var max_x = -99999.0
+		var min_z = 99999.0
+		var max_z = -99999.0
+		for wp in circuit_waypoints:
+			min_x = minf(min_x, wp.x)
+			max_x = maxf(max_x, wp.x)
+			min_z = minf(min_z, wp.z)
+			max_z = maxf(max_z, wp.z)
+
+		var margin = 16.0
+		var avail_w = size.x - margin * 2.0
+		var avail_h = size.y - margin * 2.0
+		var span_x = maxf(max_x - min_x, 10.0)
+		var span_z = maxf(max_z - min_z, 10.0)
+		var scale = minf(avail_w / span_x, avail_h / span_z)
+
+		var center_x = (min_x + max_x) * 0.5
+		var center_z = (min_z + max_z) * 0.5
+		var canvas_center = size * 0.5
+
+		var to_canvas = func(w_pos: Vector3) -> Vector2:
+			var ox = (w_pos.x - center_x) * scale
+			var oz = (w_pos.z - center_z) * scale
+			return canvas_center + Vector2(ox, oz)
+
+		var num_pts = circuit_waypoints.size()
+		for i in range(num_pts):
+			var p1 = to_canvas.call(circuit_waypoints[i])
+			var p2 = to_canvas.call(circuit_waypoints[(i + 1) % num_pts])
+			draw_line(p1, p2, Color(0.18, 0.45, 0.75, 0.9), 3.5)
+
+		if num_pts > 0:
+			var s_pos = to_canvas.call(circuit_waypoints[0])
+			draw_circle(s_pos, 4.0, Color(1.0, 1.0, 1.0))
+
+		var ai_list = tree.get_nodes_in_group("ai_racers")
+		for ai in ai_list:
+			if is_instance_valid(ai):
+				var ai_pos = to_canvas.call(ai.global_position)
+				draw_circle(ai_pos, 3.5, Color(1.0, 0.35, 0.15))
+
+		if not is_instance_valid(player_ref):
+			var p_list = tree.get_nodes_in_group("players")
+			if not p_list.is_empty():
+				player_ref = p_list[0]
+
+		if is_instance_valid(player_ref):
+			var p_pos = to_canvas.call(player_ref.global_position)
+			var p_fwd = -player_ref.global_transform.basis.z
+			p_fwd.y = 0.0
+			p_fwd = p_fwd.normalized()
+			var p_arrow = Vector2(p_fwd.x, p_fwd.z) * 8.0
+			draw_circle(p_pos, 5.0, Color(0.2, 1.0, 0.4))
+			draw_line(p_pos, p_pos + p_arrow, Color(0.2, 1.0, 0.4), 2.0)
+
 func _ready() -> void:
 	anchor_right = 1.0
 	anchor_bottom = 1.0
 	mouse_filter = MOUSE_FILTER_IGNORE
 	theme = ThemeGenerator.get_theme()
+	if get_viewport():
+		size = get_viewport().get_visible_rect().size
+		if not get_viewport().size_changed.is_connected(_on_viewport_size_changed):
+			get_viewport().size_changed.connect(_on_viewport_size_changed)
+	else:
+		size = Vector2(1280, 720)
 	setup_hud_layout()
+	_setup_minimap()
 	setup_onboarding_overlay()
 	check_mobile_controls()
+	update_layout_positions()
+
+func _on_viewport_size_changed() -> void:
+	if get_viewport():
+		size = get_viewport().get_visible_rect().size
+		update_layout_positions()
+
+func update_layout_positions() -> void:
+	var vp = size
+	if pos_panel and is_instance_valid(pos_panel):
+		pos_panel.position = Vector2(24, 24)
+	if obj_panel and is_instance_valid(obj_panel):
+		obj_panel.position = Vector2((vp.x - 420) * 0.5, 20)
+	if right_panel and is_instance_valid(right_panel):
+		right_panel.position = Vector2(maxf(vp.x - 220, 24), 24)
+	if minimap_panel and is_instance_valid(minimap_panel):
+		minimap_panel.position = Vector2(24, maxf(vp.y - 200, 24))
+	if countdown_panel and is_instance_valid(countdown_panel):
+		countdown_panel.position = Vector2((vp.x - 280) * 0.5, (vp.y - 90) * 0.35)
+	if finish_panel and is_instance_valid(finish_panel):
+		finish_panel.position = Vector2((vp.x - 360) * 0.5, (vp.y - 100) * 0.4)
+	if onboarding_overlay and is_instance_valid(onboarding_overlay):
+		onboarding_overlay.position = Vector2((vp.x - 440) * 0.5, vp.y * 0.72 - 40)
 
 func setup_hud_layout() -> void:
 	# Top Left: Position & Lap
@@ -61,13 +173,8 @@ func setup_hud_layout() -> void:
 	pos_vbox.add_child(lap_label)
 
 	# Top Center: Active Race Objective Badge
-	var obj_panel = PanelContainer.new()
-	obj_panel.anchor_left = 0.5
-	obj_panel.anchor_right = 0.5
-	obj_panel.offset_left = -210
-	obj_panel.offset_top = 20
-	obj_panel.offset_right = 210
-	obj_panel.offset_bottom = 58
+	obj_panel = PanelContainer.new()
+	obj_panel.custom_minimum_size = Vector2(420, 38)
 	add_child(obj_panel)
 
 	objective_badge = Label.new()
@@ -79,13 +186,8 @@ func setup_hud_layout() -> void:
 	obj_panel.add_child(objective_badge)
 
 	# Top Right: Times & Powerup
-	var right_panel = PanelContainer.new()
-	right_panel.anchor_left = 1.0
-	right_panel.anchor_right = 1.0
-	right_panel.offset_left = -220
-	right_panel.offset_top = 24
-	right_panel.offset_right = -24
-	right_panel.offset_bottom = 130
+	right_panel = PanelContainer.new()
+	right_panel.custom_minimum_size = Vector2(196, 106)
 	add_child(right_panel)
 
 	var r_vbox = VBoxContainer.new()
@@ -207,6 +309,19 @@ func setup_hud_layout() -> void:
 	toast_container.offset_right = 320
 	toast_container.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(toast_container)
+
+func _setup_minimap() -> void:
+	minimap_panel = PanelContainer.new()
+	minimap_panel.custom_minimum_size = Vector2(176, 176)
+	add_child(minimap_panel)
+
+	minimap_canvas = CircuitMinimapCanvas.new()
+	minimap_canvas.custom_minimum_size = Vector2(160, 160)
+	minimap_panel.add_child(minimap_canvas)
+
+func _process(_delta: float) -> void:
+	if minimap_canvas and is_instance_valid(minimap_canvas):
+		minimap_canvas.queue_redraw()
 
 func check_mobile_controls() -> void:
 	var pa = GameConstants.get_autoload(self, "PlatformAdapter")

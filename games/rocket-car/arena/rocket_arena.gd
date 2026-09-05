@@ -4,9 +4,9 @@ extends Node3D
 signal goal_triggered(scoring_team: int)
 
 @export var stadium_theme: String = "day" # "day" (Volt Park) or "cyber" (Cyber Dome)
-@export var length: float = 90.0
-@export var width: float = 50.0
-@export var wall_height: float = 16.0
+@export var length: float = 110.0
+@export var width: float = 64.0
+@export var wall_height: float = 18.0
 @export var goal_width: float = 16.0
 @export var goal_height: float = 7.0
 @export var goal_depth: float = 6.0
@@ -71,9 +71,9 @@ func build_arena() -> void:
 	goal_south.rotation_degrees = Vector3(0, 180, 0)
 	add_child(goal_south)
 
-	# Goal trigger zones
-	create_goal_trigger(Vector3(0, goal_height * 0.5, -half_z - goal_depth * 0.5), 1) # Orange scores in North
-	create_goal_trigger(Vector3(0, goal_height * 0.5, half_z + goal_depth * 0.5), 0)  # Blue scores in South
+	# Goal trigger zones (Ball into North goal = Blue scores! Ball into South goal = Orange scores!)
+	create_goal_trigger(Vector3(0, goal_height * 0.5, -half_z - goal_depth * 0.5), 0)
+	create_goal_trigger(Vector3(0, goal_height * 0.5, half_z + goal_depth * 0.5), 1)
 
 	# Suspended Center Jumbotron Scoreboard Cube
 	create_jumbotron()
@@ -349,22 +349,22 @@ func setup_stadium_lighting() -> void:
 		sky_mat.sun_angle_max = 35.0
 
 		environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-		environment.ambient_light_color = Color(0.68, 0.78, 0.90)
-		environment.ambient_light_energy = 1.65
+		environment.ambient_light_color = Color(0.55, 0.65, 0.78)
+		environment.ambient_light_energy = 0.55
 
 		environment.tonemap_mode = Environment.TONE_MAPPER_ACES
-		environment.tonemap_exposure = 1.25
+		environment.tonemap_exposure = 1.0
 		environment.tonemap_white = 6.0
 
 		environment.glow_enabled = true
-		environment.glow_intensity = 0.25
-		environment.glow_bloom = 0.10
+		environment.glow_intensity = 0.20
+		environment.glow_bloom = 0.08
 
 		# Dedicated Directional Sunlight
 		var sun = DirectionalLight3D.new()
 		sun.name = "StadiumSun"
 		sun.light_color = Color(1.0, 0.98, 0.92)
-		sun.light_energy = 2.4
+		sun.light_energy = 1.35
 		sun.shadow_enabled = true
 		sun.rotation_degrees = Vector3(-55, 35, 0)
 		add_child(sun)
@@ -377,22 +377,22 @@ func setup_stadium_lighting() -> void:
 		sky_mat.sun_angle_max = 20.0
 
 		environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-		environment.ambient_light_color = Color(0.50, 0.58, 0.70)
-		environment.ambient_light_energy = 1.45
+		environment.ambient_light_color = Color(0.40, 0.48, 0.60)
+		environment.ambient_light_energy = 0.45
 
 		environment.tonemap_mode = Environment.TONE_MAPPER_ACES
-		environment.tonemap_exposure = 1.35
+		environment.tonemap_exposure = 1.05
 		environment.tonemap_white = 6.0
 
 		environment.glow_enabled = true
-		environment.glow_intensity = 0.35
-		environment.glow_bloom = 0.15
+		environment.glow_intensity = 0.28
+		environment.glow_bloom = 0.12
 
 		# Overhead Main Floodlight Key
 		var flood_key = DirectionalLight3D.new()
 		flood_key.name = "StadiumFloodKey"
 		flood_key.light_color = Color(0.95, 0.98, 1.0)
-		flood_key.light_energy = 1.8
+		flood_key.light_energy = 1.25
 		flood_key.shadow_enabled = true
 		flood_key.rotation_degrees = Vector3(-80, 0, 0)
 		add_child(flood_key)
@@ -415,16 +415,16 @@ func setup_stadium_lighting() -> void:
 	for p in towers:
 		var spot = SpotLight3D.new()
 		spot.look_at_from_position(p, Vector3(0, 0, p.z * 0.2))
-		spot.spot_range = 80.0
+		spot.spot_range = 95.0
 		spot.spot_angle = 60.0
 		spot.light_color = Color(0.98, 0.99, 1.0)
-		spot.light_energy = 2.2 if stadium_theme == "day" else 2.8
+		spot.light_energy = 1.2 if stadium_theme == "day" else 1.6
 		spot.shadow_enabled = (stadium_theme != "day")
 		add_child(spot)
 
 		var omni = OmniLight3D.new()
 		omni.position = p
 		omni.light_color = Color(0.85, 0.92, 1.0)
-		omni.light_energy = 1.4 if stadium_theme == "day" else 1.8
+		omni.light_energy = 0.5 if stadium_theme == "day" else 0.8
 		omni.omni_range = 35.0
 		add_child(omni)

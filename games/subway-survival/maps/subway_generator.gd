@@ -52,10 +52,47 @@ func _build_zone_1_platform() -> void:
 		create_box(Vector3(-0.5, ceiling_height * 0.5, z), Vector3(1.0, ceiling_height, 1.0), "sci_fi_metal")
 		create_box(Vector3(-0.5, 2.5, z + 0.52), Vector3(0.6, 0.8, 0.05), "neon_cyan")
 
+	# Realistic Subway Extraction Train on Tracks (Zone 1)
+	var train_zone1 = MeshBuilder.build_subway_car_mesh()
+	train_zone1.name = "ExtractionTrain"
+	train_zone1.position = Vector3(6.5, -1.4, 0.0)
+	add_child(train_zone1)
+
 	# Interactive Holographic Upgrade Kiosk
 	var kiosk = MeshBuilder.build_upgrade_kiosk_mesh()
 	kiosk.position = Vector3(-10.5, 0.0, -4.0)
 	add_child(kiosk)
+
+	# Ticket Turnstile Gates near North Entrance
+	var turnstile1 = MeshBuilder.build_ticket_turnstile()
+	turnstile1.position = Vector3(-6.0, 0.0, -25.0)
+	add_child(turnstile1)
+	var turnstile2 = MeshBuilder.build_ticket_turnstile()
+	turnstile2.position = Vector3(-8.0, 0.0, -25.0)
+	add_child(turnstile2)
+
+	# Passenger Waiting Benches
+	var bench1 = MeshBuilder.build_subway_bench()
+	bench1.position = Vector3(-9.5, 0.0, -12.0)
+	add_child(bench1)
+	var bench2 = MeshBuilder.build_subway_bench()
+	bench2.position = Vector3(-9.5, 0.0, 12.0)
+	add_child(bench2)
+
+	# Vending Machines along platform wall
+	var vend1 = MeshBuilder.build_vending_machine()
+	vend1.position = Vector3(-11.2, 0.0, -18.0)
+	vend1.rotation_degrees.y = 90.0
+	add_child(vend1)
+	var vend2 = MeshBuilder.build_vending_machine()
+	vend2.position = Vector3(-11.2, 0.0, 18.0)
+	vend2.rotation_degrees.y = 90.0
+	add_child(vend2)
+
+	# Supply Crates
+	var c_plat = MeshBuilder.build_cyber_crate(Vector3(1.4, 1.2, 1.4))
+	c_plat.position = Vector3(-10.5, 0.6, -1.0)
+	add_child(c_plat)
 
 	# Security Blast Door leading to Zone 2 (at Z = 30)
 	gate_zone2 = MeshBuilder.build_blast_door_mesh()

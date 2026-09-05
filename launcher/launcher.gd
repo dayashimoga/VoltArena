@@ -93,11 +93,11 @@ func _sanitize_root_scene() -> void:
 			child.queue_free()
 
 func setup_launcher_ui() -> void:
-	# Dark Cyberpunk Background
+	# Modern Deep Cyberpunk Background
 	var bg = ColorRect.new()
 	bg.anchor_right = 1.0
 	bg.anchor_bottom = 1.0
-	bg.color = Color(0.03, 0.04, 0.07)
+	bg.color = Color(0.12, 0.16, 0.25)
 	add_child(bg)
 
 	# Decorative Grid Background lines
@@ -107,9 +107,9 @@ func setup_launcher_ui() -> void:
 	grid_overlay.mouse_filter = MOUSE_FILTER_IGNORE
 	grid_overlay.draw.connect(func():
 		for x in range(0, int(size.x), 60):
-			grid_overlay.draw_line(Vector2(x, 0), Vector2(x, size.y), Color(0.08, 0.14, 0.22, 0.2), 1.0)
+			grid_overlay.draw_line(Vector2(x, 0), Vector2(x, size.y), Color(0.16, 0.24, 0.36, 0.35), 1.0)
 		for y in range(0, int(size.y), 60):
-			grid_overlay.draw_line(Vector2(0, y), Vector2(size.x, y), Color(0.08, 0.14, 0.22, 0.2), 1.0)
+			grid_overlay.draw_line(Vector2(0, y), Vector2(size.x, y), Color(0.16, 0.24, 0.36, 0.35), 1.0)
 	)
 	add_child(grid_overlay)
 

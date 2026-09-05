@@ -139,6 +139,8 @@ func _on_enemy_killed(_type: String, score_val: int) -> void:
 		hud.update_objective(frags_count, enemy_frags, target_kills_to_win)
 	elif hud and hud.has_method("update_frags"):
 		hud.update_frags(frags_count, target_kills_to_win)
+	if hud and hud.has_method("add_killfeed_entry"):
+		hud.add_killfeed_entry("You", "Combat Bot", "Pulse Rifle")
 
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
@@ -163,6 +165,8 @@ func _on_player_died(_killer: String) -> void:
 	var enemy_frags = bot_score / 100
 	if hud and hud.has_method("update_objective"):
 		hud.update_objective(frags_count, enemy_frags, target_kills_to_win)
+	if hud and hud.has_method("add_killfeed_entry"):
+		hud.add_killfeed_entry("Combat Bot", "You", "Pulse Rifle")
 
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:

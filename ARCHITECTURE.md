@@ -76,17 +76,25 @@ graph TD
 
 ---
 
-## 4. Pure Procedural Asset Generation Engine
+## 4. Production Asset & Material Pipelines
 
-VoltArena achieves zero external file dependencies through runtime procedural asset synthesis:
+VoltArena balances high-fidelity 3D assets with zero runtime external dependencies through an offline-vendored production asset cache combined with dynamic runtime procedural synthesis:
 
-### 4.1 `MaterialGenerator`
+### 4.1 `ModelCache` (Production 3D Asset Subsystem)
+The `ModelCache` singleton (`shared/graphics/model_cache.gd`) provides centralized, optimized loading, caching, and instantiation of production-quality 3D assets:
+* **Offline Vendoring**: 49 permissive (MIT / CC0) `.glb` models stored in `res://assets/models/` verified via SHA-256 integrity checksums in `assets/asset-manifest.json`.
+* **Resource Caching**: Preloads and caches packed scenes in memory (`_cache[model_key]`) to eliminate redundant disk I/O and frame hitching during runtime spawning.
+* **Character Rigs & Animations**: Manages 13 skeletal animation tracks for humanoids (aim, fire, reload, hit react, strafe locomotion, turn in place).
+* **Weapons & Vehicles**: Supplies authentic modeled firearms (`pulse_rifle`, `scatter_cannon`, `rail_driver`, `grenade_launcher`, `plasma_cutter`), competition karts, and rocket battle-cars with proper socket linkage.
+* **Zero Gameplay Fallbacks**: Replaces all procedural CSG and toy primitive blocks in active gameplay scenes with authentic production geometry.
+
+### 4.2 `MaterialGenerator`
 Creates dynamic PBR materials on demand using Godot's `StandardMaterial3D`:
 * Generates emissive neon shaders (cyan, orange, magenta, green, yellow) with configurable glow intensities and roughness.
 * Generates industrial metals (`dark_hull`, `metal_floor`, `hazard_stripe`) with procedural noise patterns, normal perturbations, and metallic reflections.
 * Reuses cached `Ref<StandardMaterial3D>` instances to prevent state changes on the GPU.
 
-### 4.2 `AudioManager` (Procedural Waveform Synthesis)
+### 4.3 `AudioManager` (Procedural Waveform Synthesis)
 Generates pure PCM audio buffers in-memory using algorithmic mathematical synthesis:
 * **Pulse Laser / Blaster**: Square wave with exponential frequency pitch down-sweep.
 * **Shotgun Blast / Explosion**: White noise buffer with aggressive low-pass filtering and rapid amplitude decay envelope.

@@ -17,7 +17,7 @@ func setup_ui() -> void:
 	var bg = ColorRect.new()
 	bg.anchor_right = 1.0
 	bg.anchor_bottom = 1.0
-	bg.color = Color(0.04, 0.07, 0.12, 0.45)
+	bg.color = Color(0.04, 0.07, 0.12, 0.35)
 	add_child(bg)
 
 	var panel = PanelContainer.new()

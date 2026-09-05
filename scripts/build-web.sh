@@ -26,6 +26,33 @@ hook = """
 \t\t// VoltArena Cloudflare Chunk Reassembler Hook
 \t\t(function() {
 \t\t\tconst origFetch = window.fetch;
+\t\t\tasync function assembleParts(prefix, contentType) {
+\t\t\t\tlet parts = [];
+\t\t\t\tfor (let i = 0; i < 20; i++) {
+\t\t\t\t\tconst num = i < 10 ? '0' + i : '' + i;
+\t\t\t\t\tconst partUrl = prefix + '.part' + num;
+\t\t\t\t\ttry {
+\t\t\t\t\t\tconst res = await origFetch(partUrl);
+\t\t\t\t\t\tif (!res.ok) break;
+\t\t\t\t\t\tconst buf = await res.arrayBuffer();
+\t\t\t\t\t\tif (buf.byteLength === 0) break;
+\t\t\t\t\t\tparts.push(new Uint8Array(buf));
+\t\t\t\t\t} catch (e) {
+\t\t\t\t\t\tbreak;
+\t\t\t\t\t}
+\t\t\t\t}
+\t\t\t\tif (parts.length === 0) return null;
+\t\t\t\tlet totalLen = 0;
+\t\t\t\tfor (const p of parts) totalLen += p.byteLength;
+\t\t\t\tconst combined = new Uint8Array(totalLen);
+\t\t\t\tlet offset = 0;
+\t\t\t\tfor (const p of parts) {
+\t\t\t\t\tcombined.set(p, offset);
+\t\t\t\t\toffset += p.byteLength;
+\t\t\t\t}
+\t\t\t\treturn new Response(combined, { status: 200, headers: { "Content-Type": contentType } });
+\t\t\t}
+
 \t\t\twindow.fetch = async function(resource, init) {
 \t\t\t\tconst url = typeof resource === "string" ? resource : (resource?.url || "");
 \t\t\t\tif (url.endsWith("index.wasm")) {
@@ -33,30 +60,16 @@ hook = """
 \t\t\t\t\t\tconst res = await origFetch(resource, init);
 \t\t\t\t\t\tif (res.ok) return res;
 \t\t\t\t\t} catch (e) {}
-\t\t\t\t\tconst [r1, r2] = await Promise.all([
-\t\t\t\t\t\torigFetch("index.wasm.part00"),
-\t\t\t\t\t\torigFetch("index.wasm.part01")
-\t\t\t\t\t]);
-\t\t\t\t\tconst [b1, b2] = await Promise.all([r1.arrayBuffer(), r2.arrayBuffer()]);
-\t\t\t\t\tconst combined = new Uint8Array(b1.byteLength + b2.byteLength);
-\t\t\t\t\tcombined.set(new Uint8Array(b1), 0);
-\t\t\t\t\tcombined.set(new Uint8Array(b2), b1.byteLength);
-\t\t\t\t\treturn new Response(combined, { status: 200, headers: { "Content-Type": "application/wasm" } });
+\t\t\t\t\tconst assembled = await assembleParts("index.wasm", "application/wasm");
+\t\t\t\t\tif (assembled) return assembled;
 \t\t\t\t}
 \t\t\t\tif (url.endsWith("index.pck")) {
 \t\t\t\t\ttry {
 \t\t\t\t\t\tconst res = await origFetch(resource, init);
 \t\t\t\t\t\tif (res.ok) return res;
 \t\t\t\t\t} catch (e) {}
-\t\t\t\t\tconst [r1, r2] = await Promise.all([
-\t\t\t\t\t\torigFetch("index.pck.part00"),
-\t\t\t\t\t\torigFetch("index.pck.part01")
-\t\t\t\t\t]);
-\t\t\t\t\tconst [b1, b2] = await Promise.all([r1.arrayBuffer(), r2.arrayBuffer()]);
-\t\t\t\t\tconst combined = new Uint8Array(b1.byteLength + b2.byteLength);
-\t\t\t\t\tcombined.set(new Uint8Array(b1), 0);
-\t\t\t\t\tcombined.set(new Uint8Array(b2), b1.byteLength);
-\t\t\t\t\treturn new Response(combined, { status: 200, headers: { "Content-Type": "application/octet-stream" } });
+\t\t\t\t\tconst assembled = await assembleParts("index.pck", "application/octet-stream");
+\t\t\t\t\tif (assembled) return assembled;
 \t\t\t\t}
 \t\t\t\tif (url.includes(".pck")) {
 \t\t\t\t\tinit = Object.assign({}, init, { cache: "no-store" });

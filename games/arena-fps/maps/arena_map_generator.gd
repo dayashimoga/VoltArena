@@ -1,11 +1,19 @@
 class_name ArenaMapGenerator
 extends Node3D
 
+## ArenaMapGenerator: Generates 3 distinct production arenas for Iron Crucible:
+## 1. Foundry (Ruined Urban/Industrial Sector with blast furnaces and catwalks)
+## 2. Citadel (Orbital Military Facility with observation decks and airlocks)
+## 3. Sektor (Reactor and Energy Core Complex with turbine piping and consoles)
+## Populated with authentic Kenney & Quaternius 3D modular architecture kits.
+
 @export var map_type: String = "foundry" # "foundry", "citadel", "sektor"
 @export var arena_size: Vector2 = Vector2(70, 70)
 @export var wall_height: float = 8.0
 
 var capture_zones: Array[Dictionary] = []
+
+const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
 
 func _ready() -> void:
 	build_arena()
@@ -20,63 +28,63 @@ func build_arena() -> void:
 			_build_foundry_map()
 	setup_lighting()
 
-const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
+func _spawn_prop_asset(asset_name: String, pos: Vector3, rot_y: float = 0.0, s: Vector3 = Vector3(1.0, 1.0, 1.0)) -> Node3D:
+	var prop = ModelCacheScript.get_prop(asset_name)
+	if prop:
+		prop.position = pos
+		prop.rotation_degrees.y = rot_y
+		prop.scale = s
+		add_child(prop)
+		return prop
+	return null
 
 func _build_foundry_map() -> void:
 	var half_x = arena_size.x * 0.5
 	var half_z = arena_size.y * 0.5
 
-	# Main Foundry Floor with PBR sci-fi metal panels
+	# Main Foundry Floor
 	create_box(Vector3(0, -0.5, 0), Vector3(arena_size.x, 1.0, arena_size.y), "sci_fi_metal")
 
 	# Perimeter Tactical Bulkhead Walls
 	create_box(Vector3(0, wall_height * 0.5, -half_z), Vector3(arena_size.x, wall_height, 1.2), "dark_hull")
-	create_box(Vector3(0, wall_height - 1.5, -half_z + 0.7), Vector3(22.0, 2.8, 0.2), "digital_signage_cyan")
 	create_box(Vector3(0, wall_height * 0.5, half_z), Vector3(arena_size.x, wall_height, 1.2), "dark_hull")
-	create_box(Vector3(0, wall_height - 1.5, half_z - 0.7), Vector3(22.0, 2.8, 0.2), "digital_signage_orange")
 	create_box(Vector3(-half_x, wall_height * 0.5, 0), Vector3(1.2, wall_height, arena_size.y), "dark_hull")
 	create_box(Vector3(half_x, wall_height * 0.5, 0), Vector3(1.2, wall_height, arena_size.y), "dark_hull")
 
-	# Heavy Military High/Low Walls from ModelCache
-	for wall_x in [-14.0, 14.0]:
-		var wh = ModelCacheScript.get_prop("wall_high")
-		if wh:
-			wh.position = Vector3(wall_x, 0, -10.0)
-			wh.scale = Vector3(2.5, 2.5, 2.5)
-			add_child(wh)
-		var wl = ModelCacheScript.get_prop("wall_low")
-		if wl:
-			wl.position = Vector3(wall_x, 0, 10.0)
-			wl.scale = Vector3(2.5, 2.5, 2.5)
-			add_child(wl)
+	# 3D Double Blast Doors at entry points
+	_spawn_prop_asset("door_double", Vector3(0, 0, -half_z + 1.0), 0.0, Vector3(2.5, 2.5, 2.5))
+	_spawn_prop_asset("door_double", Vector3(0, 0, half_z - 1.0), 180.0, Vector3(2.5, 2.5, 2.5))
+
+	# 4 Corner Fortified Structural Support Pillars
+	for p_pos in [Vector3(-20, 0, -20), Vector3(20, 0, -20), Vector3(-20, 0, 20), Vector3(20, 0, 20)]:
+		_spawn_prop_asset("wall_pillar", p_pos, 0.0, Vector3(3.5, 3.5, 3.5))
+
+	# Industrial Catwalk Stairs
+	_spawn_prop_asset("stairs_industrial", Vector3(-12, 0, -15), 90.0, Vector3(2.0, 2.0, 2.0))
+	_spawn_prop_asset("stairs_industrial", Vector3(12, 0, 15), -90.0, Vector3(2.0, 2.0, 2.0))
+
+	# Heavy High Barriers for combat cover
+	for bx in [-14.0, 14.0]:
+		_spawn_prop_asset("barrier_high", Vector3(bx, 0, -8.0), 0.0, Vector3(2.2, 2.0, 2.2))
+		_spawn_prop_asset("barrier_high", Vector3(bx, 0, 8.0), 180.0, Vector3(2.2, 2.0, 2.2))
+
+	# Industrial Pipe Networks along catwalks
+	_spawn_prop_asset("pipe_network", Vector3(-18, 4.0, 0), 90.0, Vector3(2.5, 2.5, 2.5))
+	_spawn_prop_asset("pipe_network", Vector3(18, 4.0, 0), -90.0, Vector3(2.5, 2.5, 2.5))
 
 	# Upper Perimeter Catwalks
 	create_box(Vector3(0, 4.5, -half_z + 3.0), Vector3(arena_size.x - 8.0, 0.4, 4.0), "sci_fi_metal")
-	create_box(Vector3(0, 5.2, -half_z + 5.0), Vector3(arena_size.x - 8.0, 1.0, 0.15), "dark_hull")
 	create_box(Vector3(0, 4.5, half_z - 3.0), Vector3(arena_size.x - 8.0, 0.4, 4.0), "sci_fi_metal")
-	create_box(Vector3(0, 5.2, half_z - 5.0), Vector3(arena_size.x - 8.0, 1.0, 0.15), "dark_hull")
 
-	# Molten Core / Blast Furnace Center Dais
+	# Center Blast Furnace Platform
 	create_box(Vector3(0, 1.2, 0), Vector3(20, 2.4, 20), "sci_fi_metal")
 	create_box(Vector3(0, 2.5, 0), Vector3(12, 0.6, 12), "dark_hull")
-	create_box(Vector3(0, 2.85, 0), Vector3(4.0, 0.1, 4.0), "neon_orange")
 
 	# Tactical Ramps
 	create_box(Vector3(0, 0.8, 14.0), Vector3(6.0, 1.6, 8.0), "dark_hull")
 	create_box(Vector3(0, 0.8, -14.0), Vector3(6.0, 1.6, 8.0), "dark_hull")
 	create_box(Vector3(14.0, 0.8, 0), Vector3(8.0, 1.6, 6.0), "dark_hull")
 	create_box(Vector3(-14.0, 0.8, 0), Vector3(8.0, 1.6, 6.0), "dark_hull")
-
-	# Molten lava hazard trenches along flanks
-	for side_x in [-22.0, 22.0]:
-		create_box(Vector3(side_x, 0.05, 0), Vector3(4.0, 0.1, 30.0), "neon_red")
-
-	# 4 Corner Fortified Foundry Pillars & Crate Bunkers
-	for pos in [Vector3(-20, 3.5, -20), Vector3(20, 3.5, -20), Vector3(-20, 3.5, 20), Vector3(20, 3.5, 20)]:
-		create_box(pos, Vector3(3.6, 7.0, 3.6), "dark_hull")
-		var crate = MeshBuilder.build_cyber_crate(Vector3(2.4, 1.2, 2.4))
-		crate.position = pos + Vector3(2.0, -2.8, 0)
-		add_child(crate)
 
 	# Pickups
 	spawn_pickup(Vector3(0, 3.6, 0), PickupBase.PickupType.ARMOR, 50)
@@ -85,7 +93,7 @@ func _build_foundry_map() -> void:
 	spawn_pickup(Vector3(20, 1.0, -10), PickupBase.PickupType.AMMO, 50)
 	spawn_pickup(Vector3(-20, 1.0, 10), PickupBase.PickupType.AMMO, 50)
 
-	# 3 Capture Beacons
+	# Capture Beacons
 	_add_capture_beacon("Alpha", Vector3(-18, 0.5, 0), Color(0.0, 0.9, 1.0))
 	_add_capture_beacon("Bravo", Vector3(0, 3.0, 0), Color(1.0, 0.6, 0.1))
 	_add_capture_beacon("Charlie", Vector3(18, 0.5, 0), Color(0.8, 0.2, 1.0))
@@ -94,32 +102,38 @@ func _build_citadel_map() -> void:
 	var half_x = arena_size.x * 0.5
 	var half_z = arena_size.y * 0.5
 
-	# Clean Orbital Deck Floor
+	# Orbital Facility Metallic Deck
 	create_box(Vector3(0, -0.5, 0), Vector3(arena_size.x, 1.0, arena_size.y), "sci_fi_metal")
 
-	# Low Perimeter Glass Balustrades (open to starfield)
+	# Low Perimeter Bulkheads
 	create_box(Vector3(0, 1.5, -half_z), Vector3(arena_size.x, 3.0, 0.8), "dark_hull")
 	create_box(Vector3(0, 1.5, half_z), Vector3(arena_size.x, 3.0, 0.8), "dark_hull")
 	create_box(Vector3(-half_x, 1.5, 0), Vector3(0.8, 3.0, arena_size.y), "dark_hull")
 	create_box(Vector3(half_x, 1.5, 0), Vector3(0.8, 3.0, arena_size.y), "dark_hull")
 
-	# Defense Walls
+	# Modular Observation Windows overlooking space
+	for wz in [-18.0, 0.0, 18.0]:
+		_spawn_prop_asset("wall_window", Vector3(-half_x + 1.2, 0, wz), 90.0, Vector3(2.5, 2.5, 2.5))
+		_spawn_prop_asset("wall_window", Vector3(half_x - 1.2, 0, wz), -90.0, Vector3(2.5, 2.5, 2.5))
+
+	# Command Consoles and Terminals
+	_spawn_prop_asset("computer_terminal", Vector3(-15, 2.6, -8), 45.0, Vector3(2.0, 2.0, 2.0))
+	_spawn_prop_asset("computer_terminal", Vector3(15, 2.6, 8), -135.0, Vector3(2.0, 2.0, 2.0))
+
+	# Security High Barriers
 	for wall_z in [-15.0, 15.0]:
-		var wl = ModelCacheScript.get_prop("wall_low")
-		if wl:
-			wl.position = Vector3(0, 0, wall_z)
-			wl.scale = Vector3(2.5, 2.5, 2.5)
-			add_child(wl)
+		_spawn_prop_asset("barrier_high", Vector3(0, 0, wall_z), 0.0, Vector3(2.5, 2.0, 2.2))
 
 	# Twin Elevated Observation Terraces
 	create_box(Vector3(-18.0, 2.5, 0), Vector3(10.0, 5.0, 24.0), "sci_fi_metal")
 	create_box(Vector3(18.0, 2.5, 0), Vector3(10.0, 5.0, 24.0), "sci_fi_metal")
 
-	# Central Energy Concourse with Sunken Ring
-	create_box(Vector3(0, 0.8, 0), Vector3(14.0, 1.6, 14.0), "dark_hull")
-	create_box(Vector3(0, 1.7, 0), Vector3(6.0, 0.2, 6.0), "neon_cyan")
+	# Industrial Access Stairs
+	_spawn_prop_asset("stairs_industrial", Vector3(-18, 0, 14), 0.0, Vector3(2.0, 2.0, 2.0))
+	_spawn_prop_asset("stairs_industrial", Vector3(18, 0, -14), 180.0, Vector3(2.0, 2.0, 2.0))
 
-	# Gravity Lift Pads & Glass Bridges
+	# Central Energy Concourse
+	create_box(Vector3(0, 0.8, 0), Vector3(14.0, 1.6, 14.0), "dark_hull")
 	create_box(Vector3(0, 4.2, 0), Vector3(4.0, 0.3, 30.0), "sci_fi_metal")
 
 	# Pickups
@@ -137,50 +151,38 @@ func _build_sektor_map() -> void:
 	var half_x = arena_size.x * 0.5
 	var half_z = arena_size.y * 0.5
 
-	# Asphalt Street Pavement
-	create_box(Vector3(0, -0.5, 0), Vector3(arena_size.x, 1.0, arena_size.y), "asphalt")
+	# Reactor Core Foundation Floor
+	create_box(Vector3(0, -0.5, 0), Vector3(arena_size.x, 1.0, arena_size.y), "sci_fi_metal")
 
-	# Real 3D Modular City Buildings from ModelCache
-	var b_configs = [
-		[Vector3(-22, 0, -22), "a", Vector3(3.2, 4.5, 3.2)],
-		[Vector3(22, 0, -22), "b", Vector3(3.2, 4.5, 3.2)],
-		[Vector3(-22, 0, 22), "c", Vector3(3.2, 4.5, 3.2)],
-		[Vector3(22, 0, 22), "d", Vector3(3.2, 4.5, 3.2)],
-		[Vector3(0, 0, -26), "garage", Vector3(2.5, 2.5, 2.5)]
-	]
-	for bc in b_configs:
-		var b = ModelCacheScript.get_building(bc[1])
-		if b:
-			b.position = bc[0]
-			b.scale = bc[2]
-			add_child(b)
+	# Heavy Perimeter Containment
+	create_box(Vector3(0, wall_height * 0.5, -half_z), Vector3(arena_size.x, wall_height, 1.2), "dark_hull")
+	create_box(Vector3(0, wall_height * 0.5, half_z), Vector3(arena_size.x, wall_height, 1.2), "dark_hull")
+	create_box(Vector3(-half_x, wall_height * 0.5, 0), Vector3(1.2, wall_height, arena_size.y), "dark_hull")
+	create_box(Vector3(half_x, wall_height * 0.5, 0), Vector3(1.2, wall_height, arena_size.y), "dark_hull")
 
-	# Street Lightposts
-	for lp_pos in [Vector3(-8, 0, -12), Vector3(8, 0, -12), Vector3(-8, 0, 12), Vector3(8, 0, 12)]:
-		var lp = ModelCacheScript.get_prop("road_lightposts")
-		if lp:
-			lp.position = lp_pos
-			lp.scale = Vector3(1.8, 1.8, 1.8)
-			add_child(lp)
+	# 4 Reactor Coolant Pipe Networks
+	_spawn_prop_asset("pipe_network", Vector3(-15, 0, -15), 0.0, Vector3(3.0, 3.0, 3.0))
+	_spawn_prop_asset("pipe_network", Vector3(15, 0, -15), 90.0, Vector3(3.0, 3.0, 3.0))
+	_spawn_prop_asset("pipe_network", Vector3(-15, 0, 15), 270.0, Vector3(3.0, 3.0, 3.0))
+	_spawn_prop_asset("pipe_network", Vector3(15, 0, 15), 180.0, Vector3(3.0, 3.0, 3.0))
 
-	# Tactical High and Low Wall Barricades
-	var wh1 = ModelCacheScript.get_prop("wall_high")
-	if wh1:
-		wh1.position = Vector3(0, 0, -10)
-		wh1.scale = Vector3(2.2, 2.2, 2.2)
-		add_child(wh1)
+	# Control Terminals at Reactor Stations
+	_spawn_prop_asset("computer_terminal", Vector3(0, 0, -12), 0.0, Vector3(2.5, 2.5, 2.5))
+	_spawn_prop_asset("computer_terminal", Vector3(0, 0, 12), 180.0, Vector3(2.5, 2.5, 2.5))
 
-	var wh2 = ModelCacheScript.get_prop("wall_high")
-	if wh2:
-		wh2.position = Vector3(0, 0, 10)
-		wh2.scale = Vector3(2.2, 2.2, 2.2)
-		add_child(wh2)
+	# High Blast Barriers
+	_spawn_prop_asset("barrier_high", Vector3(-8, 0, 0), 90.0, Vector3(2.5, 2.0, 2.0))
+	_spawn_prop_asset("barrier_high", Vector3(8, 0, 0), -90.0, Vector3(2.5, 2.0, 2.0))
+
+	# Central Reactor Core Dais
+	create_box(Vector3(0, 1.5, 0), Vector3(14.0, 3.0, 14.0), "dark_hull")
 
 	# Overhead Walkways
 	create_box(Vector3(0, 5.5, 0), Vector3(8.0, 0.4, 22.0), "sci_fi_metal")
+	_spawn_prop_asset("stairs_industrial", Vector3(-4, 0, -10), 0.0, Vector3(2.0, 2.0, 2.0))
 
 	# Pickups
-	spawn_pickup(Vector3(0, 1.0, 0), PickupBase.PickupType.HEALTH, 25)
+	spawn_pickup(Vector3(0, 3.5, 0), PickupBase.PickupType.HEALTH, 25)
 	spawn_pickup(Vector3(0, 6.0, 0), PickupBase.PickupType.ARMOR, 50)
 	spawn_pickup(Vector3(-22, 1.0, 0), PickupBase.PickupType.AMMO, 40)
 	spawn_pickup(Vector3(22, 1.0, 0), PickupBase.PickupType.AMMO, 40)
@@ -219,7 +221,7 @@ func _add_capture_beacon(beacon_name: String, pos: Vector3, beacon_color: Color)
 		"name": beacon_name,
 		"pos": pos,
 		"color": beacon_color,
-		"captured_by": 0, # 0: neutral, 1: player, 2: bots
+		"captured_by": 0,
 		"progress": 0.0
 	})
 
@@ -253,7 +255,6 @@ func spawn_pickup(pos: Vector3, p_type: PickupBase.PickupType, amt: int) -> void
 	add_child(pickup)
 
 func setup_lighting() -> void:
-	# Key Light (Directional Sun)
 	var sun = DirectionalLight3D.new()
 	sun.name = "KeySun"
 	sun.rotation_degrees = Vector3(-50, 40, 0)
@@ -262,7 +263,6 @@ func setup_lighting() -> void:
 	sun.shadow_enabled = true
 	add_child(sun)
 
-	# Fill Light (Soft cool ambient fill from opposite angle)
 	var fill = DirectionalLight3D.new()
 	fill.name = "FillLight"
 	fill.rotation_degrees = Vector3(45, -140, 0)
@@ -271,7 +271,6 @@ func setup_lighting() -> void:
 	fill.shadow_enabled = false
 	add_child(fill)
 
-	# Corner Accent Omni Lights (giving depth and rim illumination in combat alcoves)
 	var corner_lights = [
 		Vector3(-22, 5.0, -22),
 		Vector3(22, 5.0, -22),
@@ -286,7 +285,6 @@ func setup_lighting() -> void:
 		omni.omni_range = 22.0
 		add_child(omni)
 
-	# WorldEnvironment with Procedural Sky and Filmic Tonemapping
 	var env = WorldEnvironment.new()
 	var environment = Environment.new()
 

@@ -135,6 +135,11 @@ func _handle_arena_fps_cmd(scene: Node, cmd: String) -> void:
 			hud.update_frags(15, 20)
 			hud.add_killfeed_entry("You", "Assault Titan", "Scatter Cannon")
 	elif cmd == "show_results":
+		var cam = _get_scene_cam(scene)
+		if cam and player:
+			cam.top_level = true
+			cam.global_position = player.global_position + Vector3(1.2, 1.0, -2.5)
+			cam.look_at(player.global_position + Vector3(0, 0.8, 0), Vector3.UP)
 		if results and results.has_method("display_results"):
 			results.display_results(true, {"Match": "TDM 20 Frags", "Frags": "20 / 20", "Accuracy": "78%", "Result": "VICTORY"})
 
@@ -150,63 +155,106 @@ func _handle_subway_cmd(scene: Node, cmd: String) -> void:
 			cam.global_position = Vector3(1.5, 1.2, 4.5)
 			cam.look_at(Vector3(6.5, 0.0, 0.0), Vector3.UP)
 	elif cmd == "cam_crawlers":
+		var crawler = null
+		for e in scene.get_tree().get_nodes_in_group("enemies"):
+			if e is SubwayCrawler or "Crawler" in e.name or e.get("enemy_type") == "Crawler":
+				crawler = e
+				break
+		if not crawler:
+			crawler = SubwayCrawler.new()
+			crawler.position = Vector3(-4.0, 0.0, 6.0)
+			scene.add_child(crawler)
 		var cam = scene.find_child("Camera3D", true, false)
-		if cam:
+		if cam and crawler:
 			cam.top_level = true
-			cam.global_position = Vector3(0.0, 2.5, 12.0)
-			cam.look_at(Vector3(0.0, 0.0, 18.0), Vector3.UP)
+			cam.global_position = crawler.global_position + Vector3(1.2, 0.8, 2.5)
+			cam.look_at(crawler.global_position + Vector3(0, 0.3, 0), Vector3.UP)
 	elif cmd == "cam_spitter":
-		var enemies = scene.get_tree().get_nodes_in_group("enemies")
-		for e in enemies:
-			if "Spitter" in e.name or e.get("enemy_type") == "spitter":
-				var cam = scene.find_child("Camera3D", true, false)
-				if cam:
-					cam.top_level = true
-					cam.global_position = e.global_position + Vector3(0.8, 0.6, 2.4)
-					cam.look_at(e.global_position + Vector3(0, 0.3, 0), Vector3.UP)
+		var spitter = null
+		for e in scene.get_tree().get_nodes_in_group("enemies"):
+			if e is SubwaySpitter or "Spitter" in e.name or e.get("enemy_type") == "Spitter":
+				spitter = e
 				break
-	elif cmd == "cam_brute":
-		var enemies = scene.get_tree().get_nodes_in_group("enemies")
-		for e in enemies:
-			if "Brute" in e.name or e.get("enemy_type") == "brute":
-				var cam = scene.find_child("Camera3D", true, false)
-				if cam:
-					cam.top_level = true
-					cam.global_position = e.global_position + Vector3(1.2, 0.8, 3.2)
-					cam.look_at(e.global_position + Vector3(0, 0.6, 0), Vector3.UP)
-				break
-	elif cmd == "cam_boss":
-		var boss = BioColossus.new()
-		boss.name = "BioColossus_Boss"
-		boss.position = Vector3(0.0, 0.0, 10.0)
-		scene.add_child(boss)
+		if not spitter:
+			spitter = SubwaySpitter.new()
+			spitter.position = Vector3(-4.0, 0.0, 4.0)
+			scene.add_child(spitter)
 		var cam = scene.find_child("Camera3D", true, false)
-		if cam:
+		if cam and spitter:
 			cam.top_level = true
-			cam.global_position = Vector3(2.5, 1.8, 3.5)
-			cam.look_at(boss.global_position + Vector3(0, 1.5, 0), Vector3.UP)
+			cam.global_position = spitter.global_position + Vector3(1.5, 1.0, 2.8)
+			cam.look_at(spitter.global_position + Vector3(0, 0.5, 0), Vector3.UP)
+	elif cmd == "cam_brute":
+		var brute = null
+		for e in scene.get_tree().get_nodes_in_group("enemies"):
+			if e is SubwayBrute or "Brute" in e.name or e.get("enemy_type") == "Brute":
+				brute = e
+				break
+		if not brute:
+			brute = SubwayBrute.new()
+			brute.position = Vector3(-4.0, 0.0, 0.0)
+			scene.add_child(brute)
+		var cam = scene.find_child("Camera3D", true, false)
+		if cam and brute:
+			cam.top_level = true
+			cam.global_position = brute.global_position + Vector3(1.8, 1.2, 3.2)
+			cam.look_at(brute.global_position + Vector3(0, 0.8, 0), Vector3.UP)
+	elif cmd == "cam_boss":
+		var boss = null
+		for e in scene.get_tree().get_nodes_in_group("enemies"):
+			if e is BioColossus or "Boss" in e.name or "Colossus" in e.name:
+				boss = e
+				break
+		if not boss:
+			boss = BioColossus.new()
+			boss.position = Vector3(-4.0, 0.0, 6.0)
+			scene.add_child(boss)
+		var cam = scene.find_child("Camera3D", true, false)
+		if cam and boss:
+			cam.top_level = true
+			cam.global_position = boss.global_position + Vector3(2.5, 1.8, 4.5)
+			cam.look_at(boss.global_position + Vector3(0, 1.2, 0), Vector3.UP)
 	elif cmd == "cam_kiosk":
 		var cam = scene.find_child("Camera3D", true, false)
 		if cam:
 			cam.top_level = true
-			cam.global_position = Vector3(-7.5, 1.2, -1.5)
-			cam.look_at(Vector3(-10.5, 0.8, -4.0), Vector3.UP)
+			cam.global_position = Vector3(-3.0, 1.4, -2.0)
+			cam.look_at(Vector3(-7.0, 1.0, -5.0), Vector3.UP)
 	elif cmd == "scrap_gears":
-		if player:
+		var cam = scene.find_child("Camera3D", true, false)
+		if player and cam:
 			for k in range(4):
 				var sc = ScrapPickup.new()
-				sc.position = player.global_position + Vector3(sin(k * 1.5) * 2.0, 0.5, cos(k * 1.5) * 2.0)
+				sc.position = player.global_position + Vector3(sin(k * 1.5) * 1.5, 0.4, cos(k * 1.5) * 1.5)
 				scene.add_child(sc)
+			cam.top_level = true
+			cam.global_position = player.global_position + Vector3(1.5, 2.0, 2.5)
+			cam.look_at(player.global_position, Vector3.UP)
+	elif cmd == "active_combat":
+		var cam = scene.find_child("Camera3D", true, false)
+		if player and cam:
+			cam.top_level = true
+			cam.global_position = player.global_position + Vector3(0.5, 1.5, -0.8)
+			cam.look_at(player.global_position + Vector3(0.0, 1.2, 6.0), Vector3.UP)
+			if player.has_method("fire_weapon"):
+				player.fire_weapon()
 	elif cmd == "wave_escalation":
 		if hud:
 			if hud.has_method("update_wave"):
 				hud.update_wave(7, 10)
 			if hud.has_method("update_threats"):
 				hud.update_threats(14)
-	elif cmd == "active_combat":
-		if player and player.has_method("fire_weapon"):
-			player.fire_weapon()
+		var cam = scene.find_child("Camera3D", true, false)
+		if player and cam:
+			cam.top_level = true
+			cam.global_position = player.global_position + Vector3(0.0, 1.8, -2.5)
+			cam.look_at(player.global_position + Vector3(0.0, 1.0, 5.0), Vector3.UP)
 	elif cmd == "show_results":
+		var cam = scene.find_child("Camera3D", true, false)
+		if cam:
+			cam.top_level = true
+			cam.global_position = Vector3(-5.0, 1.5, 0.0)
+			cam.look_at(Vector3(-5.0, 1.0, 8.0), Vector3.UP)
 		if results and results.has_method("display_results"):
 			results.display_results(true, {"Waves": "10 / 10 Complete", "Boss Defeated": "BioColossus", "Scrap": "1,450", "Status": "EVACUATED"})
 
@@ -239,8 +287,8 @@ func _handle_rocket_car_cmd(scene: Node, cmd: String) -> void:
 	elif cmd == "cam_stadium":
 		if cam:
 			cam.top_level = true
-			cam.global_position = Vector3(0, 24.0, -35.0)
-			cam.look_at(Vector3(0, 0, 10.0), Vector3.UP)
+			cam.global_position = Vector3(-18.0, 7.0, -5.0)
+			cam.look_at(Vector3(25.0, 9.0, 10.0), Vector3.UP)
 	elif cmd == "cam_goal_objective":
 		if cam:
 			cam.top_level = true
@@ -286,6 +334,10 @@ func _handle_rocket_car_cmd(scene: Node, cmd: String) -> void:
 			if hud.has_method("update_time"):
 				hud.update_time(105.0)
 	elif cmd == "show_results":
+		if cam and player:
+			cam.top_level = true
+			cam.global_position = player.global_position + Vector3(1.8, 1.2, -3.5)
+			cam.look_at(player.global_position + Vector3(0, 0.5, 0), Vector3.UP)
 		if results and results.has_method("display_results"):
 			results.display_results(true, {"Final Score": "Blue 3 - 1 Orange", "Goals": 3, "Saves": 4, "Result": "VICTORY"})
 
@@ -344,6 +396,10 @@ func _handle_kart_cmd(scene: Node, cmd: String) -> void:
 			if hud.has_method("update_position"):
 				hud.update_position(1, 6)
 	elif cmd == "show_results":
+		if cam and player:
+			cam.top_level = true
+			cam.global_position = player.global_position + Vector3(2.2, 1.4, -3.8)
+			cam.look_at(player.global_position + Vector3(0, 0.6, 0), Vector3.UP)
 		if results and results.has_method("display_results"):
 			results.display_results(true, {"Position": "1st Place (GOLD)", "Best Lap": "00:48.2", "Total Time": "02:31.5"})
 

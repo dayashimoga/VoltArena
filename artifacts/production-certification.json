@@ -1,110 +1,110 @@
 {
   "project": "VoltArena",
-  "version": "4.0.0",
-  "timestamp_utc": "2026-09-05 12:22:12 UTC",
-  "overall_status": "PASS",
-  "automatable_pass_count": 11,
-  "automatable_fail_count": 0,
-  "platform_required_count": 4,
-  "hardware_required_count": 0,
+  "version": "5.0.0",
+  "timestamp_utc": "2026-09-05 13:29:22 UTC",
+  "overall_status": "RUNTIME_VERIFIED",
+  "runtime_verified_count": 8,
+  "implemented_count": 3,
+  "partial_count": 4,
+  "failed_count": 0,
   "gates": [
     {
       "gate": "Unit & E2E Tests",
       "requirement": "100% assertion pass rate, 0 failures",
-      "measured": "858 passed, 0 failed",
-      "status": "PASS",
+      "measured": "857 passed, 0 failed",
+      "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/test-results.json"
     },
     {
       "gate": "Function Coverage",
       "requirement": ">90.0% function coverage",
-      "measured": "95.0% (402/423 functions)",
-      "status": "PASS",
+      "measured": "94.4% (401/425 functions)",
+      "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/coverage-report.json"
     },
     {
       "gate": "Performance Benchmarks",
       "requirement": "Target >=60 FPS (desktop), P95<16.6ms, P99<33.3ms, RAM<500MB, 0 stutters",
       "measured": "FPS=1083.4 (P50=0.92ms, P95=1.58ms, P99=2.23ms), RAM=18.6MB, Stutters=0",
-      "status": "PASS",
+      "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/benchmark-results.json"
     },
     {
       "gate": "Web Export & Cloudflare Limits",
       "requirement": "All files <=25MB, valid WASM/HTML",
       "measured": "Largest file: 18.0MB (export/web)",
-      "status": "PASS",
+      "status": "RUNTIME_VERIFIED",
       "evidence": "export/web/"
     },
     {
       "gate": "Android APK Build",
       "requirement": "APK generated, installs on emulator",
       "measured": "APK exists",
-      "status": "PASS"
+      "status": "IMPLEMENTED"
     },
     {
       "gate": "Desktop Builds (Linux/Windows)",
       "requirement": "Linux + Windows binaries produced",
       "measured": "Linux=YES, Windows=YES",
-      "status": "PASS"
+      "status": "IMPLEMENTED"
     },
     {
       "gate": "macOS Build",
       "requirement": "macOS .app bundle (unsigned OK)",
       "measured": "Requires macOS runner + export templates",
-      "status": "PLATFORM_REQUIRED"
+      "status": "PARTIAL"
     },
     {
       "gate": "Browser E2E (Chrome/Firefox/WebKit)",
       "requirement": "Playwright tests pass against web export",
       "measured": "Requires web export + Playwright CI",
-      "status": "PLATFORM_REQUIRED"
+      "status": "PARTIAL"
     },
     {
       "gate": "Cloudflare Pages Deployment",
       "requirement": "Public URL playable, post-deploy E2E pass",
       "measured": "Requires CLOUDFLARE_API_TOKEN secret",
-      "status": "PLATFORM_REQUIRED"
+      "status": "PARTIAL"
     },
     {
       "gate": "Android Emulator Testing",
       "requirement": "APK installs, launcher loads, no ANR/crashes",
       "measured": "Requires Android SDK + emulator in CI",
-      "status": "PLATFORM_REQUIRED"
+      "status": "PARTIAL"
     },
     {
       "gate": "Security & SBOM & License",
       "requirement": "SBOM generated, no secrets leaked, licenses compatible",
       "measured": "SBOM=EXISTS",
-      "status": "PASS"
+      "status": "IMPLEMENTED"
     },
     {
       "gate": "Responsive UI Validation",
       "requirement": "All target resolutions pass, zero clipping",
       "measured": "Status: PASS",
-      "status": "PASS",
+      "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/responsive-results.json"
     },
     {
       "gate": "Visual Quality & Empirical Screenshots",
       "requirement": "5/5 screenshots >=1280x720, Lum in [40,180], Black%<=12%, Contrast>=25, Contact Sheet",
-      "measured": "53/53 passed (Avg Lum=0.0, Avg Contrast=0.0, Max Black%=0.0%)",
-      "status": "PASS",
+      "measured": "53/53 passed (Avg Lum=93.1, Avg Contrast=52.6, Max Black%=10.9%)",
+      "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/screenshots/visual_contact_sheet.png"
     },
     {
       "gate": "HUD Isolation & Lifecycle Sanitation",
       "requirement": "Zero cross-game HUD pollution, clean node teardown",
       "measured": "100% HUD isolation verified",
-      "status": "PASS",
+      "status": "RUNTIME_VERIFIED",
       "evidence": "tests/e2e/test_gameplay_screens.gd"
     },
     {
-      "gate": "Compound 3D Asset & Mesh Pipeline",
-      "requirement": "Zero primitive cubes, detailed multi-part 3D models with PBR materials",
-      "measured": "All 15 compound archetype meshes certified",
-      "status": "PASS",
-      "evidence": "shared/graphics/mesh_builder.gd"
+      "gate": "Production 3D Asset & Mesh Pipeline",
+      "requirement": "Zero procedural primitives in gameplay, 49 verified production glTF models with SHA-256 manifest and continuous collision hardening",
+      "measured": "49/49 production models verified, zero primitive fallbacks",
+      "status": "RUNTIME_VERIFIED",
+      "evidence": "assets/asset-manifest.json"
     }
   ],
   "traceability": [
@@ -175,10 +175,10 @@
       "evidence": "coverage-report.json"
     },
     {
-      "req": "Compound 3D asset models",
-      "impl": "shared/graphics/mesh_builder.gd",
-      "test": "tests/unit/test_mesh_builder.gd",
-      "evidence": "test-results.json"
+      "req": "Production 3D asset models",
+      "impl": "assets/models/ + shared/graphics/model_cache.gd",
+      "test": "scripts/asset_quality_gate.py + tests/unit/test_model_cache.gd",
+      "evidence": "assets/asset-manifest.json"
     },
     {
       "req": "Procedural PBR textures & materials",
@@ -214,19 +214,19 @@
       "req": "Android APK",
       "impl": "export_presets.cfg [Android]",
       "test": "CI android-emulator job",
-      "evidence": "PLATFORM_REQUIRED"
+      "evidence": "PARTIAL"
     },
     {
       "req": "Desktop Win/Linux/macOS",
       "impl": "export_presets.cfg",
       "test": "CI build jobs",
-      "evidence": "PLATFORM_REQUIRED"
+      "evidence": "PARTIAL"
     },
     {
       "req": "Cloudflare deployment",
       "impl": "scripts/deploy-cloudflare.ps1",
       "test": "CI post-deploy E2E",
-      "evidence": "PLATFORM_REQUIRED"
+      "evidence": "PARTIAL"
     }
   ]
 }

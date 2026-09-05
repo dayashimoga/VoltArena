@@ -15,14 +15,14 @@ The automated test runner is located at `tests/runner.gd`. When executed, it run
 
 ```
 tests/runner.gd
-├── Unit Test Suites (30 Suites, 483 assertions)
+├── Unit Test Suites (31 Suites, 530 assertions)
 │   ├── TestHealthComponent, TestWeapons, TestCarPhysics, TestRaceManager, TestSaveManager
 │   ├── TestWaveDirector, TestInputManager, TestAudioManager, TestQualityManager, TestEventBus
 │   ├── TestMaterialGenerator, TestArenaBot, TestEnemyBase, TestKartController, TestBallPhysics
 │   ├── TestSaveCorruption, TestSettingsManager, TestTelemetryManager, TestPlatformAdapter
 │   ├── TestPhysicsHelpers, TestAIBase, TestProjectile, TestPickupBase, TestMapGenerators
 │   ├── TestUISystems, TestGameManager, TestFXFactory, TestMeshBuilder, TestLauncherArt
-│   └── TestNodePool, TestProceduralAnimator
+│   ├── TestNodePool, TestProceduralAnimator, TestModelCache
 ├── Responsive & Soak Suites (2 Suites, 100 assertions)
 │   ├── TestResponsiveUI (95 assertions across 5 resolutions)
 │   └── TestSoak (5 full lifecycle clean runs)
@@ -33,10 +33,10 @@ tests/runner.gd
 │   ├── TestKartE2E (31 assertions)
 │   ├── TestLauncherE2E (56 assertions)
 │   └── TestGameplayScreens (32 assertions)
-└── Legacy Acceptance Suite (1 Suite, 19 assertions)
+└── Legacy Acceptance Suite (2 Suites, 19 assertions)
     └── TestPlatformAcceptance (19 assertions)
 ─────────────────────────────────────────────────────────────
-Total: 40 Suites, 810 Assertions (100% Success, 100.0% Function Coverage: 386/386)
+Total: 41 Suites, 857 Assertions (100% Success, 94.35% Function Coverage: 401/425)
 ```
 
 ---
@@ -132,6 +132,7 @@ python scripts/certifier.py
 
 ### 6.2 Acceptance Results:
 - **Total Packaged Screenshots Audited**: 53 / 53
+- **Asset Quality Gate (`scripts/asset_quality_gate.py`)**: 49 / 49 GLB models verified, 0 fallback procedural primitives in gameplay
 - **Gate 13 (Visual & UX Quality)**: **100% PASS (0 FAILURES)**
 - **Contact Sheets Generated**:
   - `artifacts/screenshots/visual_contact_sheet.png` (Flagship 5-screen composite)
@@ -140,5 +141,6 @@ python scripts/certifier.py
   - `artifacts/screenshots/contact_sheet_nitro_kick.png` (12 Nitro Kick states)
   - `artifacts/screenshots/contact_sheet_drift_storm.png` (12 Drift Storm states)
   - `artifacts/screenshots/contact_sheet.html` (Interactive Web Portfolio Dossier)
-- **Status**: `RUNTIME-VERIFIED`. Unresolved P0/P1 Blockers: 0.
+- **Status**: `RUNTIME_VERIFIED`. Note: User real-device observation is authoritative and overrides automated certification.
+
 

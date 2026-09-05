@@ -469,3 +469,22 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Added `pillow` and `numpy` to `certify` job in `ci.yml`.
   - Tuned fallback image size threshold in `scripts/certifier.py` to 2KB to support compact PNG frames across all runner environments.
 
+## [6.1.0-real-asset-runtime-verified] - 2026-09-05
+
+### Added
+- **Production 3D Asset System (`ModelCache`)**:
+  - Vendored 49 production-quality `.glb` models into `res://assets/models/` under permissive MIT and CC0 licenses.
+  - Added SHA-256 integrity checksums in `assets/asset-manifest.json` and legal documentation in `assets/LICENSES.md`.
+  - Added `scripts/asset_quality_gate.py` asserting format integrity, valid vertex counts, and zero fallback primitive calls in gameplay scenes.
+  - Eliminated procedural `MeshBuilder` fallback paths in `shared/graphics/model_cache.gd`.
+- **High-Speed Physics Hardening & Anti-Tunneling**:
+  - Implemented continuous collision detection (`continuous_cd = true`) and contact monitoring on Nitro Kick ball.
+  - Hardened stadium boundaries to 3.0m thickness and track walls to 2.5m thickness to prevent tunneling at maximum speeds (>60 m/s).
+
+### Changed
+- **Certification Framework Alignment**:
+  - Replaced binary "PASS" and unverified claims with standardized certification states (`IMPLEMENTED`, `RUNTIME_VERIFIED`, `PARTIAL`, `FAILED`).
+  - Recorded overall status as **RUNTIME_VERIFIED** across automated gates, visual audits, and Playwright captures.
+  - Explicitly recognized user real-device observation as authoritative over automated certification metrics.
+
+

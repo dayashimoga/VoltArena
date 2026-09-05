@@ -17,7 +17,7 @@ func _init() -> void:
 func setup_visuals() -> void:
 	creature_model = ModelCacheScript.get_enemy("spitter")
 	if not creature_model:
-		creature_model = MeshBuilder.build_spitter_mesh()
+		creature_model = ModelCacheScript.get_enemy("infected_human")
 	add_child(creature_model)
 	ModelCacheScript.play_animation(creature_model, "Idle")
 

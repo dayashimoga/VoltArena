@@ -1,6 +1,11 @@
 class_name RocketArena
 extends Node3D
 
+## RocketArena: Production-quality stadium arena for Nitro Kick.
+## Features authentic 3D goal posts, floodlight towers, tiered spectator stands,
+## animated perimeter ad boards, center jumbotron scoreboard,
+## and anti-tunneling hardened collision geometry.
+
 signal goal_triggered(scoring_team: int)
 
 @export var stadium_theme: String = "day" # "day" (Volt Park) or "cyber" (Cyber Dome)
@@ -11,6 +16,8 @@ signal goal_triggered(scoring_team: int)
 @export var goal_height: float = 7.0
 @export var goal_depth: float = 6.0
 
+const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
+
 func _ready() -> void:
 	build_arena()
 
@@ -18,9 +25,9 @@ func build_arena() -> void:
 	var half_x = width * 0.5
 	var half_z = length * 0.5
 
-	# Pitch Floor with Turf based on Theme
+	# Pitch Floor with Turf based on Theme (3.0m deep collision to completely prevent ground tunneling)
 	var turf_material = "stadium_pitch_day" if stadium_theme == "day" else "stadium_pitch_cyber"
-	create_box(Vector3(0, -0.5, 0), Vector3(width, 1.0, length), turf_material)
+	create_box(Vector3(0, -1.5, 0), Vector3(width, 3.0, length), turf_material)
 
 	# High-Readability Soccer Pitch Markings & Team Halves
 	build_pitch_markings(half_x, half_z)
@@ -29,10 +36,10 @@ func build_arena() -> void:
 	var ceiling_body = StaticBody3D.new()
 	ceiling_body.collision_layer = GameConstants.LAYER_WORLD
 	ceiling_body.collision_mask = 0
-	ceiling_body.position = Vector3(0, wall_height + 0.5, 0)
+	ceiling_body.position = Vector3(0, wall_height + 1.5, 0)
 	var col_shape = CollisionShape3D.new()
 	var box_shape = BoxShape3D.new()
-	box_shape.size = Vector3(width, 1.0, length)
+	box_shape.size = Vector3(width, 3.0, length)
 	col_shape.shape = box_shape
 	ceiling_body.add_child(col_shape)
 	add_child(ceiling_body)
@@ -41,44 +48,84 @@ func build_arena() -> void:
 	var ribbon_color_1 = "digital_signage_cyan" if stadium_theme == "day" else "neon_cyan"
 	var ribbon_color_2 = "digital_signage_orange" if stadium_theme == "day" else "neon_orange"
 
-	create_box(Vector3(-half_x, 1.5, 0), Vector3(1.0, 3.0, length), "dark_hull")
+	# Hardened outer sidewalls with 3m collision depth
+	create_box(Vector3(-half_x - 1.0, wall_height * 0.5, 0), Vector3(3.0, wall_height, length), "dark_hull")
 	create_box(Vector3(-half_x, 3.1, 0), Vector3(0.9, 0.2, length), ribbon_color_1)
-	create_box(Vector3(-half_x, wall_height * 0.5 + 1.5, 0), Vector3(0.6, wall_height - 3.0, length), "sci_fi_metal")
 
-	create_box(Vector3(half_x, 1.5, 0), Vector3(1.0, 3.0, length), "dark_hull")
+	create_box(Vector3(half_x + 1.0, wall_height * 0.5, 0), Vector3(3.0, wall_height, length), "dark_hull")
 	create_box(Vector3(half_x, 3.1, 0), Vector3(0.9, 0.2, length), ribbon_color_2)
-	create_box(Vector3(half_x, wall_height * 0.5 + 1.5, 0), Vector3(0.6, wall_height - 3.0, length), "sci_fi_metal")
 
-	# Tiered Spectator Grandstands
-	for tier in range(4):
-		var tier_y = 2.0 + float(tier) * 2.2
-		var tier_depth = 3.5
-		var w_offset = half_x + 2.0 + float(tier) * 3.0
-		create_box(Vector3(-w_offset, tier_y, 0), Vector3(tier_depth, 1.8, length - 4.0), "stadium_spectators")
-		create_box(Vector3(w_offset, tier_y, 0), Vector3(tier_depth, 1.8, length - 4.0), "stadium_spectators")
+	# Perimeter 3D Ad Boards along kickboards
+	for zb in [-35.0, -15.0, 15.0, 35.0]:
+		var ad_l = ModelCacheScript.get_prop("ad_board")
+		if ad_l:
+			ad_l.position = Vector3(-half_x + 0.8, 0, zb)
+			ad_l.rotation_degrees.y = 90.0
+			ad_l.scale = Vector3(2.5, 2.5, 2.5)
+			add_child(ad_l)
+		var ad_r = ModelCacheScript.get_prop("ad_board")
+		if ad_r:
+			ad_r.position = Vector3(half_x - 0.8, 0, zb)
+			ad_r.rotation_degrees.y = -90.0
+			ad_r.scale = Vector3(2.5, 2.5, 2.5)
+			add_child(ad_r)
 
-	# End Walls with Goal Openings
+	# Authentic 3D Tiered Grandstands with Spectator Crowds
+	for z_stand in [-32.0, 0.0, 32.0]:
+		var st_l = ModelCacheScript.get_prop("stadium_stands")
+		if st_l:
+			st_l.position = Vector3(-half_x - 3.5, 0, z_stand)
+			st_l.rotation_degrees.y = 90.0
+			st_l.scale = Vector3(3.2, 3.2, 3.2)
+			add_child(st_l)
+		var st_r = ModelCacheScript.get_prop("stadium_stands")
+		if st_r:
+			st_r.position = Vector3(half_x + 3.5, 0, z_stand)
+			st_r.rotation_degrees.y = -90.0
+			st_r.scale = Vector3(3.2, 3.2, 3.2)
+			add_child(st_r)
+
+	# End Walls with Hardened Goal Openings
 	build_end_wall(true)  # North wall (-Z, Team 1 Orange Goal)
 	build_end_wall(false) # South wall (+Z, Team 0 Blue Goal)
 
-	# Modeled Stadium Goals
-	var goal_north = MeshBuilder.build_stadium_goal_mesh(1)
-	goal_north.position = Vector3(0, 0, -half_z)
-	add_child(goal_north)
+	# Modeled 3D Production Stadium Goals
+	var goal_n = ModelCacheScript.get_prop("goal_post")
+	if goal_n:
+		goal_n.position = Vector3(0, 0, -half_z)
+		goal_n.scale = Vector3(2.8, 2.8, 2.8)
+		add_child(goal_n)
+	else:
+		var fallback_n = MeshBuilder.build_stadium_goal_mesh(1)
+		fallback_n.position = Vector3(0, 0, -half_z)
+		add_child(fallback_n)
 
-	var goal_south = MeshBuilder.build_stadium_goal_mesh(0)
-	goal_south.position = Vector3(0, 0, half_z)
-	goal_south.rotation_degrees = Vector3(0, 180, 0)
-	add_child(goal_south)
+	var goal_s = ModelCacheScript.get_prop("goal_post")
+	if goal_s:
+		goal_s.position = Vector3(0, 0, half_z)
+		goal_s.rotation_degrees.y = 180.0
+		goal_s.scale = Vector3(2.8, 2.8, 2.8)
+		add_child(goal_s)
+	else:
+		var fallback_s = MeshBuilder.build_stadium_goal_mesh(0)
+		fallback_s.position = Vector3(0, 0, half_z)
+		fallback_s.rotation_degrees = Vector3(0, 180, 0)
+		add_child(fallback_s)
 
-	# Goal trigger zones (Ball into North goal = Blue scores! Ball into South goal = Orange scores!)
+	# Goal trigger zones
 	create_goal_trigger(Vector3(0, goal_height * 0.5, -half_z - goal_depth * 0.5), 0)
 	create_goal_trigger(Vector3(0, goal_height * 0.5, half_z + goal_depth * 0.5), 1)
 
-	# Suspended Center Jumbotron Scoreboard Cube
-	create_jumbotron()
+	# Suspended Overhead Production Jumbotron Scoreboard
+	var jb = ModelCacheScript.get_prop("jumbotron")
+	if jb:
+		jb.position = Vector3(0, wall_height - 2.0, 0)
+		jb.scale = Vector3(3.5, 3.5, 3.5)
+		add_child(jb)
+	else:
+		create_jumbotron()
 
-	# 6 Full 100% Boost Orbs (4 corners + 2 midfield wings)
+	# 6 Full 100% Boost Orbs
 	var full_orb_positions = [
 		Vector3(-20.0, 0.0, -38.0),
 		Vector3(20.0, 0.0, -38.0),
@@ -139,7 +186,6 @@ func create_jumbotron() -> void:
 	jumbotron.name = "Jumbotron"
 	jumbotron.position = Vector3(0, wall_height - 3.0, 0)
 
-	# Main Core Box
 	var core = MeshInstance3D.new()
 	var b_mesh = BoxMesh.new()
 	b_mesh.size = Vector3(10.0, 4.5, 10.0)
@@ -147,8 +193,6 @@ func create_jumbotron() -> void:
 	core.material_override = MaterialGenerator.get_material("dark_hull")
 	jumbotron.add_child(core)
 
-	# 4 Display Screens
-	# North Screen
 	var s_n = MeshInstance3D.new()
 	var s_mesh = BoxMesh.new()
 	s_mesh.size = Vector3(8.5, 3.5, 0.2)
@@ -156,7 +200,7 @@ func create_jumbotron() -> void:
 	s_n.position = Vector3(0, 0, -5.1)
 	s_n.material_override = MaterialGenerator.get_material("digital_signage_cyan")
 	jumbotron.add_child(s_n)
-	# South Screen
+
 	var s_s = MeshInstance3D.new()
 	s_s.mesh = s_mesh
 	s_s.position = Vector3(0, 0, 5.1)
@@ -170,33 +214,20 @@ func build_end_wall(is_north: bool) -> void:
 	var half_x = width * 0.5
 	var side_wall_w = (width - goal_width) * 0.5
 
-	# Left section
 	var left_x = -half_x + side_wall_w * 0.5
-	create_box(Vector3(left_x, wall_height * 0.5, z_pos), Vector3(side_wall_w, wall_height, 1.2), "sci_fi_metal")
+	create_box(Vector3(left_x, wall_height * 0.5, z_pos + (-1.5 if is_north else 1.5)), Vector3(side_wall_w, wall_height, 3.0), "sci_fi_metal")
 
-	# Right section
 	var right_x = half_x - side_wall_w * 0.5
-	create_box(Vector3(right_x, wall_height * 0.5, z_pos), Vector3(side_wall_w, wall_height, 1.2), "sci_fi_metal")
+	create_box(Vector3(right_x, wall_height * 0.5, z_pos + (-1.5 if is_north else 1.5)), Vector3(side_wall_w, wall_height, 3.0), "sci_fi_metal")
 
-	# Top crossbar section above goal
 	var top_h = wall_height - goal_height
 	var top_y = goal_height + top_h * 0.5
-	create_box(Vector3(0, top_y, z_pos), Vector3(goal_width, top_h, 1.2), "dark_hull")
+	create_box(Vector3(0, top_y, z_pos + (-1.5 if is_north else 1.5)), Vector3(goal_width, top_h, 3.0), "dark_hull")
 
-	# End Wall Banner Sign
-	var banner_mat = "digital_signage_cyan" if is_north else "digital_signage_orange"
-	create_box(Vector3(0, top_y + 1.2, z_pos + (0.7 if is_north else -0.7)), Vector3(goal_width - 2.0, 2.0, 0.15), banner_mat)
-
-	# Goal Back Wall & Net
-	var back_z = z_pos + (-goal_depth if is_north else goal_depth)
+	# Hardened Back Wall behind Goal (to completely prevent ball escaping the net)
+	var back_z = z_pos + (-goal_depth - 1.5 if is_north else goal_depth + 1.5)
 	var net_mat = "neon_cyan" if is_north else "neon_orange"
-	create_box(Vector3(0, goal_height * 0.5, back_z), Vector3(goal_width, goal_height, 0.8), net_mat)
-
-	# Goal Posts and Crossbar Frame
-	var post_mat = "sci_fi_metal"
-	create_box(Vector3(-goal_width * 0.5, goal_height * 0.5, z_pos), Vector3(0.5, goal_height, 0.5), post_mat)
-	create_box(Vector3(goal_width * 0.5, goal_height * 0.5, z_pos), Vector3(0.5, goal_height, 0.5), post_mat)
-	create_box(Vector3(0, goal_height, z_pos), Vector3(goal_width, 0.5, 0.5), post_mat)
+	create_box(Vector3(0, goal_height * 0.5, back_z), Vector3(goal_width + 4.0, goal_height, 3.0), net_mat)
 
 func create_goal_trigger(pos: Vector3, scoring_team: int) -> void:
 	var area = Area3D.new()
@@ -284,13 +315,9 @@ func build_pitch_markings(half_x: float, half_z: float) -> void:
 	var y_elev = 0.02
 	var line_w = 0.45
 
-	# Center Line dividing Blue and Orange Halves
 	create_flat_marker(Vector3(0, y_elev, 0), Vector3(width - 4.0, 0.02, line_w), line_mat)
-
-	# Center Spot (Kickoff Ball Point)
 	create_flat_marker(Vector3(0, y_elev + 0.01, 0), Vector3(1.6, 0.02, 1.6), line_mat)
 
-	# Center Circle (8.5m radius approximated with 24 segments)
 	var radius = 8.5
 	var segments = 24
 	for i in range(segments):
@@ -309,13 +336,11 @@ func build_pitch_markings(half_x: float, half_z: float) -> void:
 		seg.material_override = MaterialGenerator.get_material(line_mat)
 		add_child(seg)
 
-	# Outer Boundary Touchlines
 	create_flat_marker(Vector3(-half_x + 1.8, y_elev, 0), Vector3(line_w, 0.02, length - 3.6), line_mat)
 	create_flat_marker(Vector3(half_x - 1.8, y_elev, 0), Vector3(line_w, 0.02, length - 3.6), line_mat)
 	create_flat_marker(Vector3(0, y_elev, -half_z + 1.8), Vector3(width - 3.6, 0.02, line_w), line_mat)
 	create_flat_marker(Vector3(0, y_elev, half_z - 1.8), Vector3(width - 3.6, 0.02, line_w), line_mat)
 
-	# North Half (Orange Goal Territory, -Z)
 	create_flat_marker(Vector3(0, y_elev, -half_z + 18.0), Vector3(26.0, 0.02, line_w), line_mat)
 	create_flat_marker(Vector3(-13.0, y_elev, -half_z + 9.9), Vector3(line_w, 0.02, 16.2), line_mat)
 	create_flat_marker(Vector3(13.0, y_elev, -half_z + 9.9), Vector3(line_w, 0.02, 16.2), line_mat)
@@ -323,9 +348,7 @@ func build_pitch_markings(half_x: float, half_z: float) -> void:
 	create_flat_marker(Vector3(-9.0, y_elev, -half_z + 4.9), Vector3(line_w, 0.02, 6.2), line_mat)
 	create_flat_marker(Vector3(9.0, y_elev, -half_z + 4.9), Vector3(line_w, 0.02, 6.2), line_mat)
 	create_flat_marker(Vector3(0, y_elev + 0.01, -half_z + 12.0), Vector3(1.0, 0.02, 1.0), line_mat)
-	create_flat_marker(Vector3(0, y_elev + 0.005, -half_z * 0.5), Vector3(0.2, 0.02, half_z - 3.0), "pitch_orange_zone")
 
-	# South Half (Blue Goal Territory, +Z)
 	create_flat_marker(Vector3(0, y_elev, half_z - 18.0), Vector3(26.0, 0.02, line_w), line_mat)
 	create_flat_marker(Vector3(-13.0, y_elev, half_z - 9.9), Vector3(line_w, 0.02, 16.2), line_mat)
 	create_flat_marker(Vector3(13.0, y_elev, half_z - 9.9), Vector3(line_w, 0.02, 16.2), line_mat)
@@ -333,7 +356,6 @@ func build_pitch_markings(half_x: float, half_z: float) -> void:
 	create_flat_marker(Vector3(-9.0, y_elev, half_z - 4.9), Vector3(line_w, 0.02, 6.2), line_mat)
 	create_flat_marker(Vector3(9.0, y_elev, half_z - 4.9), Vector3(line_w, 0.02, 6.2), line_mat)
 	create_flat_marker(Vector3(0, y_elev + 0.01, half_z - 12.0), Vector3(1.0, 0.02, 1.0), line_mat)
-	create_flat_marker(Vector3(0, y_elev + 0.005, half_z * 0.5), Vector3(0.2, 0.02, half_z - 3.0), "pitch_blue_zone")
 
 func setup_stadium_lighting() -> void:
 	var env = WorldEnvironment.new()
@@ -341,7 +363,6 @@ func setup_stadium_lighting() -> void:
 
 	var sky_mat = ProceduralSkyMaterial.new()
 	if stadium_theme == "day":
-		# Volt Park Daylight Stadium: Crisp sunny clear atmosphere
 		sky_mat.sky_top_color = Color(0.25, 0.55, 0.92)
 		sky_mat.sky_horizon_color = Color(0.72, 0.85, 0.98)
 		sky_mat.ground_bottom_color = Color(0.20, 0.38, 0.18)
@@ -360,7 +381,6 @@ func setup_stadium_lighting() -> void:
 		environment.glow_intensity = 0.20
 		environment.glow_bloom = 0.08
 
-		# Dedicated Directional Sunlight
 		var sun = DirectionalLight3D.new()
 		sun.name = "StadiumSun"
 		sun.light_color = Color(1.0, 0.98, 0.92)
@@ -369,7 +389,6 @@ func setup_stadium_lighting() -> void:
 		sun.rotation_degrees = Vector3(-55, 35, 0)
 		add_child(sun)
 	else:
-		# Cyber Dome Night Stadium: Electric floodlit arena
 		sky_mat.sky_top_color = Color(0.06, 0.10, 0.22)
 		sky_mat.sky_horizon_color = Color(0.20, 0.32, 0.50)
 		sky_mat.ground_bottom_color = Color(0.10, 0.14, 0.18)
@@ -388,7 +407,6 @@ func setup_stadium_lighting() -> void:
 		environment.glow_intensity = 0.28
 		environment.glow_bloom = 0.12
 
-		# Overhead Main Floodlight Key
 		var flood_key = DirectionalLight3D.new()
 		flood_key.name = "StadiumFloodKey"
 		flood_key.light_color = Color(0.95, 0.98, 1.0)
@@ -405,26 +423,25 @@ func setup_stadium_lighting() -> void:
 	env.environment = environment
 	add_child(env)
 
-	# 4 High-Powered Corner Stadium Floodlight Towers
+	# 4 High-Powered Corner Stadium Floodlight Towers with 3D Light Tower Models
 	var towers = [
-		Vector3(-width * 0.45, wall_height - 1.0, -length * 0.45),
-		Vector3(width * 0.45, wall_height - 1.0, -length * 0.45),
-		Vector3(-width * 0.45, wall_height - 1.0, length * 0.45),
-		Vector3(width * 0.45, wall_height - 1.0, length * 0.45)
+		Vector3(-width * 0.45, 0.0, -length * 0.45),
+		Vector3(width * 0.45, 0.0, -length * 0.45),
+		Vector3(-width * 0.45, 0.0, length * 0.45),
+		Vector3(width * 0.45, 0.0, length * 0.45)
 	]
 	for p in towers:
+		var fl = ModelCacheScript.get_prop("stadium_floodlight")
+		if fl:
+			fl.position = p
+			fl.scale = Vector3(3.2, 3.2, 3.2)
+			add_child(fl)
+
 		var spot = SpotLight3D.new()
-		spot.look_at_from_position(p, Vector3(0, 0, p.z * 0.2))
+		spot.look_at_from_position(p + Vector3(0, wall_height - 1.0, 0), Vector3(0, 0, p.z * 0.2))
 		spot.spot_range = 95.0
 		spot.spot_angle = 60.0
 		spot.light_color = Color(0.98, 0.99, 1.0)
 		spot.light_energy = 1.2 if stadium_theme == "day" else 1.6
 		spot.shadow_enabled = (stadium_theme != "day")
 		add_child(spot)
-
-		var omni = OmniLight3D.new()
-		omni.position = p
-		omni.light_color = Color(0.85, 0.92, 1.0)
-		omni.light_energy = 0.5 if stadium_theme == "day" else 0.8
-		omni.omni_range = 35.0
-		add_child(omni)

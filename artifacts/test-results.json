@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 95.0354609929078,
-  "coverage_tested_functions": 402,
-  "coverage_total_functions": 423,
-  "execution_seconds": 7.178,
+  "coverage_percent": 94.3529411764706,
+  "coverage_tested_functions": 401,
+  "coverage_total_functions": 425,
+  "execution_seconds": 21.803,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -152,7 +152,7 @@
     },
     "Projectiles & Weapons Unit": {
       "failed": 0,
-      "passed": 17,
+      "passed": 16,
       "status": "PASS"
     },
     "Quality Manager Unit": {
@@ -211,8 +211,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-05T11:54:08",
+  "timestamp": "2026-09-05T13:23:54",
   "total_failed": 0,
-  "total_passed": 858,
+  "total_passed": 857,
   "total_suites": 41
 }

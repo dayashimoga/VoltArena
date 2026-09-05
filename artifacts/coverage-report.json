@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 95.0354609929078,
+  "overall_coverage_pct": 94.3529411764706,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -76,10 +76,12 @@
       "untested": []
     },
     "res://games/arena-fps/weapons/weapon_base.gd": {
-      "coverage_pct": 100,
-      "tested": 11,
+      "coverage_pct": 90.9090909090909,
+      "tested": 10,
       "total": 11,
-      "untested": []
+      "untested": [
+        "setup_muzzle_flash"
+      ]
     },
     "res://games/kart-racing/ai/kart_ai.gd": {
       "coverage_pct": 100,
@@ -193,6 +195,15 @@
       "tested": 6,
       "total": 6,
       "untested": []
+    },
+    "res://games/subway-survival/enemies/infected_human.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 2,
+      "untested": [
+        "_init",
+        "setup_visuals"
+      ]
     },
     "res://games/subway-survival/enemies/spitter.gd": {
       "coverage_pct": 100,
@@ -428,7 +439,7 @@
       "untested": []
     }
   },
-  "tested_functions": 402,
-  "timestamp": "2026-09-05T11:54:08",
-  "total_functions": 423
+  "tested_functions": 401,
+  "timestamp": "2026-09-05T13:23:54",
+  "total_functions": 425
 }

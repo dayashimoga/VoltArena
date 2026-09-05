@@ -1,6 +1,9 @@
 class_name RocketBall
 extends RigidBody3D
 
+## RocketBall: Production soccer ball with continuous collision detection,
+## anti-tunneling physics constraints, and real 3D soccer ball geometry.
+
 signal goal_scored(team_id: int)
 
 @export var radius: float = 1.4
@@ -12,6 +15,8 @@ var ball_mesh: Node3D
 var last_hit_team: int = 0
 var last_hit_speed: float = 0.0
 
+const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
+
 # Property alias for compatibility with test assertions and AI
 var velocity: Vector3:
 	get: return linear_velocity
@@ -22,7 +27,9 @@ func _ready() -> void:
 	collision_layer = GameConstants.LAYER_BALL
 	collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES
 	mass = ball_mass
-	continuous_cd = true # Prevents tunneling at high speed
+	continuous_cd = true # Prevents tunneling at supersonic car/ball speeds
+	contact_monitor = true
+	max_contacts_reported = 4
 	linear_damp = 0.35
 	angular_damp = 0.55
 	gravity_scale = 1.25
@@ -35,7 +42,12 @@ func _ready() -> void:
 	setup_visuals()
 
 func setup_visuals() -> void:
-	ball_mesh = MeshBuilder.build_energy_ball()
+	# Production-quality 3D soccer ball model
+	ball_mesh = ModelCacheScript.get_prop("soccer_ball")
+	if not ball_mesh:
+		ball_mesh = MeshBuilder.build_energy_ball()
+	else:
+		ball_mesh.scale = Vector3(2.8, 2.8, 2.8)
 	add_child(ball_mesh)
 
 	var col = CollisionShape3D.new()

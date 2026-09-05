@@ -32,17 +32,14 @@ def capture_runtime_evidence():
     print("STARTING DETERMINISTIC REAL-DEVICE RUNTIME CAPTURE (WEBGL)")
     print("==========================================================")
 
-    # Check if port 8080 is already active; if not, spin up dedicated server
-    server = None
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        is_running = (s.connect_ex(("127.0.0.1", 8080)) == 0)
-
-    if not is_running:
-        print("[0/5] Starting embedded HTTP server on http://localhost:8080/ ...")
-        server = http.server.HTTPServer(("127.0.0.1", 8080), WebHandler)
-        t = threading.Thread(target=server.serve_forever, daemon=True)
-        t.start()
-        time.sleep(0.5)
+    print("[0/5] Starting dedicated HTTP server on dynamic port...")
+    server = http.server.HTTPServer(("127.0.0.1", 0), WebHandler)
+    port = server.server_address[1]
+    base_url = f"http://127.0.0.1:{port}/"
+    t = threading.Thread(target=server.serve_forever, daemon=True)
+    t.start()
+    time.sleep(0.5)
+    print(f"[0/5] Server active at {base_url}")
 
     try:
         with sync_playwright() as p:
@@ -59,11 +56,13 @@ def capture_runtime_evidence():
             )
             context = browser.new_context(viewport={"width": 1280, "height": 720})
             page = context.new_page()
+            page.on("console", lambda msg: print(f"  [WEB LOG] {msg.text}"))
+            page.on("pageerror", lambda err: print(f"  [WEB ERR] {err}"))
 
-            print("[1/5] Loading Web Package from http://localhost:8080/ ...")
-            page.goto("http://localhost:8080/", wait_until="networkidle")
+            print(f"[1/5] Loading Web Package from {base_url} ...")
+            page.goto(base_url, wait_until="networkidle")
             page.wait_for_selector("#canvas", timeout=60000)
-            page.wait_for_function("() => window.godotLaunchGame !== undefined", timeout=60000)
+            page.wait_for_function("() => typeof window.godotLaunchGame === 'function'", timeout=60000)
             time.sleep(2.5)
 
             # 1. Universal Launcher

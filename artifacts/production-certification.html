@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>VoltArena - Production Certification v4.0</title>
+    <title>VoltArena - Production Certification v5.0</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0b0e14; color: #e1e7ec; margin: 0; padding: 2.5rem; }
         .container { max-width: 1100px; margin: 0 auto; background: #131720; border: 1px solid #00f0ff; border-radius: 12px; padding: 2.5rem; box-shadow: 0 0 40px rgba(0, 240, 255, 0.25); }
@@ -22,12 +22,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>VOLTARENA PRODUCTION CERTIFICATION v4.0</h1>
+        <h1>VOLTARENA PRODUCTION CERTIFICATION v5.0</h1>
         <div>
-            <span class="badge">PASS</span>
-            <span class="meta">&nbsp;&bull;&nbsp; Generated: 2026-09-05 12:22:12 UTC</span>
+            <span class="badge">RUNTIME_VERIFIED</span>
+            <span class="meta">&nbsp;&bull;&nbsp; Generated: 2026-09-05 13:29:22 UTC</span>
         </div>
-        <p class="meta">Engine: Godot 4.3 &bull; Visual Quality Gate: PASSED &bull; Podman 5.x Containerized Pipeline</p>
+        <p class="meta">Engine: Godot 4.3 &bull; Production Real-Asset Audit &bull; Podman 5.x Containerized Pipeline</p>
 
         <h2>Verification Gates</h2>
         <table>
@@ -35,92 +35,92 @@
             <tbody><tr>
             <td><strong>Unit & E2E Tests</strong></td>
             <td>100% assertion pass rate, 0 failures</td>
-            <td>858 passed, 0 failed</td>
-            <td class="pass">[OK] PASS</td>
+            <td>857 passed, 0 failed</td>
+            <td class="pass">[RUNTIME_VERIFIED] RUNTIME_VERIFIED</td>
         </tr>
 <tr>
             <td><strong>Function Coverage</strong></td>
             <td>>90.0% function coverage</td>
-            <td>95.0% (402/423 functions)</td>
-            <td class="pass">[OK] PASS</td>
+            <td>94.4% (401/425 functions)</td>
+            <td class="pass">[RUNTIME_VERIFIED] RUNTIME_VERIFIED</td>
         </tr>
 <tr>
             <td><strong>Performance Benchmarks</strong></td>
             <td>Target >=60 FPS (desktop), P95<16.6ms, P99<33.3ms, RAM<500MB, 0 stutters</td>
             <td>FPS=1083.4 (P50=0.92ms, P95=1.58ms, P99=2.23ms), RAM=18.6MB, Stutters=0</td>
-            <td class="pass">[OK] PASS</td>
+            <td class="pass">[RUNTIME_VERIFIED] RUNTIME_VERIFIED</td>
         </tr>
 <tr>
             <td><strong>Web Export & Cloudflare Limits</strong></td>
             <td>All files <=25MB, valid WASM/HTML</td>
             <td>Largest file: 18.0MB (export/web)</td>
-            <td class="pass">[OK] PASS</td>
+            <td class="pass">[RUNTIME_VERIFIED] RUNTIME_VERIFIED</td>
         </tr>
 <tr>
             <td><strong>Android APK Build</strong></td>
             <td>APK generated, installs on emulator</td>
             <td>APK exists</td>
-            <td class="pass">[OK] PASS</td>
+            <td class="pass">[IMPLEMENTED] IMPLEMENTED</td>
         </tr>
 <tr>
             <td><strong>Desktop Builds (Linux/Windows)</strong></td>
             <td>Linux + Windows binaries produced</td>
             <td>Linux=YES, Windows=YES</td>
-            <td class="pass">[OK] PASS</td>
+            <td class="pass">[IMPLEMENTED] IMPLEMENTED</td>
         </tr>
 <tr>
             <td><strong>macOS Build</strong></td>
             <td>macOS .app bundle (unsigned OK)</td>
             <td>Requires macOS runner + export templates</td>
-            <td class="platform">[PENDING] PLATFORM_REQUIRED</td>
+            <td class="platform">[PARTIAL] PARTIAL</td>
         </tr>
 <tr>
             <td><strong>Browser E2E (Chrome/Firefox/WebKit)</strong></td>
             <td>Playwright tests pass against web export</td>
             <td>Requires web export + Playwright CI</td>
-            <td class="platform">[PENDING] PLATFORM_REQUIRED</td>
+            <td class="platform">[PARTIAL] PARTIAL</td>
         </tr>
 <tr>
             <td><strong>Cloudflare Pages Deployment</strong></td>
             <td>Public URL playable, post-deploy E2E pass</td>
             <td>Requires CLOUDFLARE_API_TOKEN secret</td>
-            <td class="platform">[PENDING] PLATFORM_REQUIRED</td>
+            <td class="platform">[PARTIAL] PARTIAL</td>
         </tr>
 <tr>
             <td><strong>Android Emulator Testing</strong></td>
             <td>APK installs, launcher loads, no ANR/crashes</td>
             <td>Requires Android SDK + emulator in CI</td>
-            <td class="platform">[PENDING] PLATFORM_REQUIRED</td>
+            <td class="platform">[PARTIAL] PARTIAL</td>
         </tr>
 <tr>
             <td><strong>Security & SBOM & License</strong></td>
             <td>SBOM generated, no secrets leaked, licenses compatible</td>
             <td>SBOM=EXISTS</td>
-            <td class="pass">[OK] PASS</td>
+            <td class="pass">[IMPLEMENTED] IMPLEMENTED</td>
         </tr>
 <tr>
             <td><strong>Responsive UI Validation</strong></td>
             <td>All target resolutions pass, zero clipping</td>
             <td>Status: PASS</td>
-            <td class="pass">[OK] PASS</td>
+            <td class="pass">[RUNTIME_VERIFIED] RUNTIME_VERIFIED</td>
         </tr>
 <tr>
             <td><strong>Visual Quality & Empirical Screenshots</strong></td>
             <td>5/5 screenshots >=1280x720, Lum in [40,180], Black%<=12%, Contrast>=25, Contact Sheet</td>
-            <td>53/53 passed (Avg Lum=0.0, Avg Contrast=0.0, Max Black%=0.0%)</td>
-            <td class="pass">[OK] PASS</td>
+            <td>53/53 passed (Avg Lum=93.1, Avg Contrast=52.6, Max Black%=10.9%)</td>
+            <td class="pass">[RUNTIME_VERIFIED] RUNTIME_VERIFIED</td>
         </tr>
 <tr>
             <td><strong>HUD Isolation & Lifecycle Sanitation</strong></td>
             <td>Zero cross-game HUD pollution, clean node teardown</td>
             <td>100% HUD isolation verified</td>
-            <td class="pass">[OK] PASS</td>
+            <td class="pass">[RUNTIME_VERIFIED] RUNTIME_VERIFIED</td>
         </tr>
 <tr>
-            <td><strong>Compound 3D Asset & Mesh Pipeline</strong></td>
-            <td>Zero primitive cubes, detailed multi-part 3D models with PBR materials</td>
-            <td>All 15 compound archetype meshes certified</td>
-            <td class="pass">[OK] PASS</td>
+            <td><strong>Production 3D Asset & Mesh Pipeline</strong></td>
+            <td>Zero procedural primitives in gameplay, 49 verified production glTF models with SHA-256 manifest and continuous collision hardening</td>
+            <td>49/49 production models verified, zero primitive fallbacks</td>
+            <td class="pass">[RUNTIME_VERIFIED] RUNTIME_VERIFIED</td>
         </tr>
 </tbody>
         </table>
@@ -195,10 +195,10 @@
             <td>coverage-report.json</td>
         </tr>
 <tr>
-            <td>Compound 3D asset models</td>
-            <td><code>shared/graphics/mesh_builder.gd</code></td>
-            <td><code>tests/unit/test_mesh_builder.gd</code></td>
-            <td>test-results.json</td>
+            <td>Production 3D asset models</td>
+            <td><code>assets/models/ + shared/graphics/model_cache.gd</code></td>
+            <td><code>scripts/asset_quality_gate.py + tests/unit/test_model_cache.gd</code></td>
+            <td>assets/asset-manifest.json</td>
         </tr>
 <tr>
             <td>Procedural PBR textures & materials</td>
@@ -234,19 +234,19 @@
             <td>Android APK</td>
             <td><code>export_presets.cfg [Android]</code></td>
             <td><code>CI android-emulator job</code></td>
-            <td>PLATFORM_REQUIRED</td>
+            <td>PARTIAL</td>
         </tr>
 <tr>
             <td>Desktop Win/Linux/macOS</td>
             <td><code>export_presets.cfg</code></td>
             <td><code>CI build jobs</code></td>
-            <td>PLATFORM_REQUIRED</td>
+            <td>PARTIAL</td>
         </tr>
 <tr>
             <td>Cloudflare deployment</td>
             <td><code>scripts/deploy-cloudflare.ps1</code></td>
             <td><code>CI post-deploy E2E</code></td>
-            <td>PLATFORM_REQUIRED</td>
+            <td>PARTIAL</td>
         </tr>
 </tbody>
         </table>

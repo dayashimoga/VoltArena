@@ -20,11 +20,38 @@ Copy-Item -Force "platform/web/_headers" "export/web/_headers"
 
 Write-Host "[4/5] Injecting WASM and PCK chunk reassembler into index.html..." -ForegroundColor Yellow
 $htmlContent = Get-Content -Raw -Encoding UTF8 "export/web/index.html"
-$hookScript = @"
+$hookScript = @'
 		<script>
 		// VoltArena Cloudflare Chunk Reassembler Hook
 		(function() {
 			const origFetch = window.fetch;
+			async function assembleParts(prefix, contentType) {
+				let parts = [];
+				for (let i = 0; i < 20; i++) {
+					const num = i < 10 ? '0' + i : '' + i;
+					const partUrl = prefix + '.part' + num;
+					try {
+						const res = await origFetch(partUrl);
+						if (!res.ok) break;
+						const buf = await res.arrayBuffer();
+						if (buf.byteLength === 0) break;
+						parts.push(new Uint8Array(buf));
+					} catch (e) {
+						break;
+					}
+				}
+				if (parts.length === 0) return null;
+				let totalLen = 0;
+				for (const p of parts) totalLen += p.byteLength;
+				const combined = new Uint8Array(totalLen);
+				let offset = 0;
+				for (const p of parts) {
+					combined.set(p, offset);
+					offset += p.byteLength;
+				}
+				return new Response(combined, { status: 200, headers: { "Content-Type": contentType } });
+			}
+
 			window.fetch = async function(resource, init) {
 				const url = typeof resource === "string" ? resource : (resource?.url || "");
 				if (url.endsWith("index.wasm")) {
@@ -32,30 +59,16 @@ $hookScript = @"
 						const res = await origFetch(resource, init);
 						if (res.ok) return res;
 					} catch (e) {}
-					const [r1, r2] = await Promise.all([
-						origFetch("index.wasm.part00"),
-						origFetch("index.wasm.part01")
-					]);
-					const [b1, b2] = await Promise.all([r1.arrayBuffer(), r2.arrayBuffer()]);
-					const combined = new Uint8Array(b1.byteLength + b2.byteLength);
-					combined.set(new Uint8Array(b1), 0);
-					combined.set(new Uint8Array(b2), b1.byteLength);
-					return new Response(combined, { status: 200, headers: { "Content-Type": "application/wasm" } });
+					const assembled = await assembleParts("index.wasm", "application/wasm");
+					if (assembled) return assembled;
 				}
 				if (url.endsWith("index.pck")) {
 					try {
 						const res = await origFetch(resource, init);
 						if (res.ok) return res;
 					} catch (e) {}
-					const [r1, r2] = await Promise.all([
-						origFetch("index.pck.part00"),
-						origFetch("index.pck.part01")
-					]);
-					const [b1, b2] = await Promise.all([r1.arrayBuffer(), r2.arrayBuffer()]);
-					const combined = new Uint8Array(b1.byteLength + b2.byteLength);
-					combined.set(new Uint8Array(b1), 0);
-					combined.set(new Uint8Array(b2), b1.byteLength);
-					return new Response(combined, { status: 200, headers: { "Content-Type": "application/octet-stream" } });
+					const assembled = await assembleParts("index.pck", "application/octet-stream");
+					if (assembled) return assembled;
 				}
 				if (url.includes(".pck")) {
 					init = Object.assign({}, init, { cache: "no-store" });
@@ -64,7 +77,7 @@ $hookScript = @"
 			};
 		})();
 		</script>
-"@
+'@
 
 if (-not $htmlContent.Contains("VoltArena Cloudflare Chunk Reassembler Hook")) {
     $htmlContent = $htmlContent.Replace('<script src="index.js"></script>', "$hookScript`r`n`t`t<script src=`"index.js`"></script>")

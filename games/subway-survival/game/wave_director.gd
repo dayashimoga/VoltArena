@@ -1,6 +1,12 @@
 class_name WaveDirector
 extends Node
 
+const SubwayCrawlerScript = preload("res://games/subway-survival/enemies/crawler.gd")
+const SubwayStalkerScript = preload("res://games/subway-survival/enemies/stalker.gd")
+const SubwayBruteScript = preload("res://games/subway-survival/enemies/brute.gd")
+const SubwaySpitterScript = preload("res://games/subway-survival/enemies/spitter.gd")
+const BioColossusScript = preload("res://games/subway-survival/enemies/bio_colossus.gd")
+
 signal wave_started(wave_num: int, total_enemies: int)
 signal wave_completed(wave_num: int, score_bonus: int)
 signal all_waves_defeated()
@@ -61,20 +67,42 @@ func start_next_wave() -> void:
 
 func build_wave_composition(wave_num: int) -> void:
 	enemies_to_spawn.clear()
-	# Base crawlers
+	if wave_num == 10:
+		# Final Boss Wave: Bio-Colossus + Escorts
+		enemies_to_spawn.append("boss")
+		for i in range(4):
+			enemies_to_spawn.append("spitter")
+		for i in range(6):
+			enemies_to_spawn.append("crawler")
+		return
+
+	if wave_num == 5:
+		# Miniboss Wave: Twin Enraged Brutes + Spitters
+		enemies_to_spawn.append("brute")
+		enemies_to_spawn.append("brute")
+		for i in range(3):
+			enemies_to_spawn.append("spitter")
+		for i in range(8):
+			enemies_to_spawn.append("crawler")
+		return
+
+	# Standard Escalating Waves (1-4, 6-9)
 	var crawler_count = 5 + wave_num * 2
 	for i in range(crawler_count):
 		enemies_to_spawn.append("crawler")
 
-	# Stalkers enter on wave 2+
 	if wave_num >= 2:
-		var stalker_count = wave_num + 1
+		var stalker_count = wave_num
 		for i in range(stalker_count):
 			enemies_to_spawn.append("stalker")
 
-	# Brutes enter on wave 3+
+	if wave_num >= 4:
+		var spitter_count = wave_num - 2
+		for i in range(spitter_count):
+			enemies_to_spawn.append("spitter")
+
 	if wave_num >= 3:
-		var brute_count = (wave_num - 2)
+		var brute_count = 1 if wave_num < 6 else (wave_num - 4)
 		for i in range(brute_count):
 			enemies_to_spawn.append("brute")
 
@@ -94,16 +122,22 @@ func spawn_enemy(type: String) -> void:
 	var enemy: EnemyBase = null
 	match type:
 		"crawler":
-			enemy = SubwayCrawler.new()
+			enemy = SubwayCrawlerScript.new()
 		"stalker":
-			enemy = SubwayStalker.new()
+			enemy = SubwayStalkerScript.new()
 		"brute":
-			enemy = SubwayBrute.new()
+			enemy = SubwayBruteScript.new()
+		"spitter":
+			enemy = SubwaySpitterScript.new()
+		"boss":
+			enemy = BioColossusScript.new()
 
 	if not enemy:
 		return
 
 	var sp = spawn_positions.pick_random()
+	if type == "boss":
+		sp = Vector3(0.0, -1.0, 110.0) # Spawn in Zone 3 Hive Arena
 	enemy.position = sp
 	if get_parent():
 		get_parent().add_child(enemy)

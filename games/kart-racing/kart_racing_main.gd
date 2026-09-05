@@ -9,6 +9,10 @@ const DriftStormHUDScript = preload("res://games/kart-racing/ui/drift_storm_hud.
 const PauseMenuScript = preload("res://shared/ui/pause_menu.gd")
 const ResultsScreenScript = preload("res://shared/ui/results_screen.gd")
 
+@export var selected_track: String = "metropolis" # "metropolis", "canyon", "frozen"
+@export var selected_kart: String = "speeder" # "speeder", "phantom", "enforcer"
+@export var ai_racer_count: int = 3
+
 var player_kart: Node3D
 var ai_karts: Array[Node3D] = []
 var all_karts: Array[Node3D] = []
@@ -56,6 +60,7 @@ func setup_scene() -> void:
 	player_kart = KartControllerScript.new()
 	player_kart.name = "PlayerKart"
 	player_kart.is_player = true
+	player_kart.kart_type = selected_kart
 	player_kart.racer_name = "Player 1"
 	player_kart.position = Vector3(-3.0, 0.5, 0.0)
 	add_child(player_kart)
@@ -67,17 +72,21 @@ func setup_scene() -> void:
 	camera.current = true
 	add_child(camera)
 
-	# 3 AI Racers
+	# 4 Competitive AI Racers
 	var grid_slots = [
 		Vector3(3.0, 0.5, 0.0),
 		Vector3(-3.0, 0.5, 5.0),
-		Vector3(3.0, 0.5, 5.0)
+		Vector3(3.0, 0.5, 5.0),
+		Vector3(-3.0, 0.5, 10.0)
 	]
-	for i in range(grid_slots.size()):
+	var ai_names = ["Apex Nova", "Blaze Raptor", "Viper Strike", "Turbo Titan"]
+	var ai_types = ["speeder", "phantom", "enforcer", "speeder"]
+	for i in range(min(ai_racer_count, grid_slots.size())):
 		var ai_kart = KartControllerScript.new()
 		ai_kart.name = "AI_Racer_" + str(i + 1)
 		ai_kart.racer_id = i + 1
-		ai_kart.racer_name = "Racer " + str(i + 1)
+		ai_kart.racer_name = ai_names[i]
+		ai_kart.kart_type = ai_types[i]
 		ai_kart.is_player = false
 		ai_kart.position = grid_slots[i]
 		add_child(ai_kart)
@@ -89,9 +98,10 @@ func setup_scene() -> void:
 		ai_karts.append(ai_kart)
 		all_karts.append(ai_kart)
 
-	# Track Generator (built after racers & race manager are initialized)
+	# Track Generator
 	track_generator = TrackGeneratorScript.new()
 	track_generator.name = "TrackGenerator"
+	track_generator.track_theme = selected_track
 	track_generator.track_built.connect(_on_track_built)
 	add_child(track_generator)
 

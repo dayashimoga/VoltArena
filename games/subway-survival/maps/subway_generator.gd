@@ -8,73 +8,131 @@ extends Node3D
 func _ready() -> void:
 	build_subway_station()
 
+var gate_zone2: Node3D = null
+var gate_zone3: Node3D = null
+var is_zone2_unlocked: bool = false
+var is_zone3_unlocked: bool = false
+
 func build_subway_station() -> void:
-	var half_z = station_length * 0.5
+	_build_zone_1_platform()
+	_build_zone_2_tunnels()
+	_build_zone_3_pump_hive()
+	setup_subway_lighting()
+
+func _build_zone_1_platform() -> void:
+	var half_z = 30.0
 
 	# Passenger Platform Floor (left side) with ceramic subway tiles
-	create_box(Vector3(-5.0, -0.5, 0.0), Vector3(14.0, 1.0, station_length), "subway_tile")
+	create_box(Vector3(-5.0, -0.5, 0.0), Vector3(14.0, 1.0, 60.0), "subway_tile")
 
-	# Platform Edge Tactile Warning Hazard Stripe (yellow/black ribbed)
-	create_box(Vector3(1.8, 0.02, 0.0), Vector3(0.5, 0.05, station_length), "hazard_stripe")
+	# Platform Edge Tactile Warning Hazard Stripe
+	create_box(Vector3(1.8, 0.02, 0.0), Vector3(0.5, 0.05, 60.0), "hazard_stripe")
 
-	# Sunken Track Recess Floor (right side, lower by 1.4m) with grimy concrete
-	create_box(Vector3(7.0, -1.9, 0.0), Vector3(10.0, 1.0, station_length), "grimy_concrete")
+	# Sunken Track Recess Floor (right side)
+	create_box(Vector3(7.0, -1.9, 0.0), Vector3(10.0, 1.0, 60.0), "grimy_concrete")
 
-	# Steel Train Rails along track
-	create_box(Vector3(4.5, -1.35, 0.0), Vector3(0.18, 0.12, station_length), "sci_fi_metal")
-	create_box(Vector3(8.5, -1.35, 0.0), Vector3(0.18, 0.12, station_length), "sci_fi_metal")
+	# Steel Train Rails
+	create_box(Vector3(4.5, -1.35, 0.0), Vector3(0.18, 0.12, 60.0), "sci_fi_metal")
+	create_box(Vector3(8.5, -1.35, 0.0), Vector3(0.18, 0.12, 60.0), "sci_fi_metal")
+	create_box(Vector3(10.2, -1.30, 0.0), Vector3(0.15, 0.20, 60.0), "neon_orange")
 
-	# Third Rail (Electrified power rail with caution glow)
-	create_box(Vector3(10.2, -1.30, 0.0), Vector3(0.15, 0.20, station_length), "neon_orange")
+	# Ceiling
+	create_box(Vector3(0.0, ceiling_height, 0.0), Vector3(station_width, 0.8, 60.0), "grimy_concrete")
 
-	# Concrete Railway Ties across the track
-	for z_pos in range(-int(half_z) + 2, int(half_z) - 2, 2):
-		create_box(Vector3(6.5, -1.38, float(z_pos)), Vector3(5.2, 0.08, 0.4), "dark_hull")
+	# Left Back Wall & Signs
+	create_box(Vector3(-12.0, ceiling_height * 0.5, 0.0), Vector3(1.0, ceiling_height, 60.0), "subway_tile")
+	create_box(Vector3(-11.45, 3.2, 0.0), Vector3(0.1, 1.2, 14.0), "digital_signage_cyan")
+	create_box(Vector3(12.0, ceiling_height * 0.5, 0.0), Vector3(1.0, ceiling_height, 60.0), "grimy_concrete")
 
-	# Overhead Structural Arched Ceiling with Steel Girders
-	create_box(Vector3(0.0, ceiling_height, 0.0), Vector3(station_width, 0.8, station_length), "grimy_concrete")
-	# Transverse Steel Structural Girders every 6m
-	for z_pos in range(-int(half_z) + 3, int(half_z) - 3, 6):
-		create_box(Vector3(0.0, ceiling_height - 0.4, float(z_pos)), Vector3(station_width - 1.0, 0.5, 0.6), "dark_hull")
+	# Back wall at North end (Z = -30)
+	create_box(Vector3(0.0, ceiling_height * 0.5, -30.0), Vector3(station_width, ceiling_height, 1.0), "grimy_concrete")
 
-	# Side Walls
-	# Left Platform Back Wall with subway tile and backlit signage
-	create_box(Vector3(-12.0, ceiling_height * 0.5, 0.0), Vector3(1.0, ceiling_height, station_length), "subway_tile")
-	create_box(Vector3(-11.45, 3.2, 0.0), Vector3(0.1, 1.2, 14.0), "digital_signage_cyan") # Station name sign
-	create_box(Vector3(-11.45, 3.2, -18.0), Vector3(0.1, 1.2, 8.0), "digital_signage_cyan")
-	create_box(Vector3(-11.45, 3.2, 18.0), Vector3(0.1, 1.2, 8.0), "digital_signage_cyan")
-
-	# Right Track Tunnel Wall
-	create_box(Vector3(12.0, ceiling_height * 0.5, 0.0), Vector3(1.0, ceiling_height, station_length), "grimy_concrete")
-
-	# End Tunnel Portals (North and South where mutated enemies emerge)
-	create_box(Vector3(-5.0, ceiling_height * 0.5, -half_z), Vector3(14.0, ceiling_height, 1.0), "grimy_concrete")
-	create_box(Vector3(-5.0, ceiling_height * 0.5, half_z), Vector3(14.0, ceiling_height, 1.0), "grimy_concrete")
-
-	# Tunnel Arch Portals above tracks
-	create_box(Vector3(7.0, ceiling_height - 0.8, -half_z), Vector3(10.0, 1.6, 1.0), "dark_hull")
-	create_box(Vector3(7.0, ceiling_height - 0.8, half_z), Vector3(10.0, 1.6, 1.0), "dark_hull")
-
-	# Platform Support Pillars with Illuminated Signs
+	# Pillars
 	for z in [-20.0, -10.0, 0.0, 10.0, 20.0]:
 		create_box(Vector3(-0.5, ceiling_height * 0.5, z), Vector3(1.0, ceiling_height, 1.0), "sci_fi_metal")
 		create_box(Vector3(-0.5, 2.5, z + 0.52), Vector3(0.6, 0.8, 0.05), "neon_cyan")
 
-	# Scavenging Supply Terminal & Workbench on Platform
-	create_box(Vector3(-10.5, 1.0, 0.0), Vector3(1.4, 2.0, 1.4), "sci_fi_metal")
-	create_box(Vector3(-10.5, 1.5, 0.72), Vector3(0.9, 0.7, 0.05), "digital_signage_orange")
-	var crate1 = MeshBuilder.build_cyber_crate(Vector3(1.2, 1.0, 1.2))
-	crate1.position = Vector3(-10.5, 0.5, 2.0)
-	add_child(crate1)
+	# Interactive Holographic Upgrade Kiosk
+	var kiosk = MeshBuilder.build_upgrade_kiosk_mesh()
+	kiosk.position = Vector3(-10.5, 0.0, -4.0)
+	add_child(kiosk)
 
-	# Platform Passenger Benches & Barricades
-	create_box(Vector3(-8.0, 0.45, -12.0), Vector3(2.5, 0.5, 0.9), "dark_hull")
-	create_box(Vector3(-8.0, 0.45, 12.0), Vector3(2.5, 0.5, 0.9), "dark_hull")
-	create_box(Vector3(-7.5, 0.7, -22.0), Vector3(4.0, 1.4, 0.6), "dark_hull")
-	create_box(Vector3(-7.5, 0.7, 22.0), Vector3(4.0, 1.4, 0.6), "dark_hull")
+	# Security Blast Door leading to Zone 2 (at Z = 30)
+	gate_zone2 = MeshBuilder.build_blast_door_mesh()
+	gate_zone2.position = Vector3(0.0, 0.0, 30.0)
+	add_child(gate_zone2)
 
-	# Setup Production Lighting & WorldEnvironment
-	setup_subway_lighting()
+func _build_zone_2_tunnels() -> void:
+	# Zone 2: Abandoned Train Tunnels (Z: 30 to 90)
+	# Tunnel floor
+	create_box(Vector3(0.0, -1.9, 60.0), Vector3(station_width, 1.0, 60.0), "grimy_concrete")
+	create_box(Vector3(0.0, ceiling_height, 60.0), Vector3(station_width, 0.8, 60.0), "dark_hull")
+
+	# Tunnel Walls
+	create_box(Vector3(-12.0, ceiling_height * 0.5, 60.0), Vector3(1.0, ceiling_height, 60.0), "subway_rust_metal")
+	create_box(Vector3(12.0, ceiling_height * 0.5, 60.0), Vector3(1.0, ceiling_height, 60.0), "subway_rust_metal")
+
+	# Derailed Train Car inside Tunnel
+	var train_car = MeshBuilder.build_subway_car_mesh()
+	train_car.position = Vector3(3.0, -1.4, 60.0)
+	train_car.rotation_degrees = Vector3(0, 12, 0)
+	add_child(train_car)
+
+	# Scrap Caches & Crates
+	var c1 = MeshBuilder.build_cyber_crate(Vector3(1.8, 1.2, 1.8))
+	c1.position = Vector3(-8.0, -0.8, 50.0)
+	add_child(c1)
+
+	var c2 = MeshBuilder.build_cyber_crate(Vector3(1.5, 1.5, 1.5))
+	c2.position = Vector3(-6.0, -0.8, 70.0)
+	add_child(c2)
+
+	# Hydraulic Gate leading to Zone 3 (at Z = 90)
+	gate_zone3 = MeshBuilder.build_blast_door_mesh()
+	gate_zone3.position = Vector3(0.0, -1.4, 90.0)
+	add_child(gate_zone3)
+
+func _build_zone_3_pump_hive() -> void:
+	# Zone 3: Sub-Level Pump Station & Hive Nest (Z: 90 to 150)
+	# Cavernous Room Floor
+	create_box(Vector3(0.0, -2.5, 120.0), Vector3(36.0, 1.0, 60.0), "dark_concrete")
+	create_box(Vector3(0.0, ceiling_height + 4.0, 120.0), Vector3(36.0, 1.0, 60.0), "dark_hull")
+
+	# Perimeter Walls
+	create_box(Vector3(-18.0, ceiling_height * 0.5 + 2.0, 120.0), Vector3(1.0, ceiling_height + 4.0, 60.0), "dark_concrete")
+	create_box(Vector3(18.0, ceiling_height * 0.5 + 2.0, 120.0), Vector3(1.0, ceiling_height + 4.0, 60.0), "dark_concrete")
+	create_box(Vector3(0.0, ceiling_height * 0.5 + 2.0, 150.0), Vector3(36.0, ceiling_height + 4.0, 1.0), "dark_concrete")
+
+	# Toxic Acid Hazard Pools
+	create_box(Vector3(-8.0, -2.35, 115.0), Vector3(10.0, 0.2, 12.0), "acid_pool")
+	create_box(Vector3(8.0, -2.35, 130.0), Vector3(10.0, 0.2, 12.0), "acid_pool")
+
+	# Industrial Pump Columns
+	for px in [-10.0, 10.0]:
+		for pz in [105.0, 135.0]:
+			var pump = MeshInstance3D.new()
+			var cyl = CylinderMesh.new()
+			cyl.top_radius = 1.2
+			cyl.bottom_radius = 1.6
+			cyl.height = 8.0
+			pump.mesh = cyl
+			pump.position = Vector3(px, 1.5, pz)
+			pump.material_override = MaterialGenerator.get_material("sci_fi_metal")
+			add_child(pump)
+
+func unlock_gate(zone_idx: int) -> void:
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		am.play_sound("gate_unlock", 1.0, 1.5)
+
+	if zone_idx == 2 and gate_zone2:
+		is_zone2_unlocked = true
+		var tween = create_tween()
+		tween.tween_property(gate_zone2, "position:y", 6.0, 1.2)
+	elif zone_idx == 3 and gate_zone3:
+		is_zone3_unlocked = true
+		var tween = create_tween()
+		tween.tween_property(gate_zone3, "position:y", 6.0, 1.2)
 
 func create_box(pos: Vector3, size: Vector3, material_name: String) -> StaticBody3D:
 	var body = StaticBody3D.new()

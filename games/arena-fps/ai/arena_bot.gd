@@ -20,16 +20,25 @@ func _ready() -> void:
 	setup_weapon()
 	pick_random_patrol()
 
+@export var archetype: String = "assault" # "skirmisher", "assault", "sentinel"
+
 func setup_bot_visual() -> void:
 	if get_node_or_null("BotCollision"):
 		return
 
-	# Detailed articulated cyber soldier model
-	var soldier_model = MeshBuilder.build_cyber_soldier(true, Color(1.0, 0.1, 0.35))
+	var accent_color = Color(0.2, 0.6, 1.0)
+	match archetype:
+		"skirmisher":
+			accent_color = Color(1.0, 0.4, 0.1)
+		"sentinel":
+			accent_color = Color(0.8, 0.2, 0.9)
+		_:
+			accent_color = Color(0.2, 0.6, 1.0)
+
+	var soldier_model = MeshBuilder.build_cyber_soldier(true, accent_color)
 	soldier_model.position = Vector3(0, 0, 0)
 	add_child(soldier_model)
 
-	# Collision
 	var col = CollisionShape3D.new()
 	col.name = "BotCollision"
 	var cap = CapsuleShape3D.new()
@@ -39,13 +48,30 @@ func setup_bot_visual() -> void:
 	col.position = Vector3(0, 0.9, 0)
 	add_child(col)
 
+var move_speed: float:
+	get: return movement_speed
+	set(v): movement_speed = v
+
 func setup_health() -> void:
 	if health_component:
 		return
 	health_component = HealthComponent.new()
 	health_component.name = "HealthComponent"
-	health_component.max_health = 100.0
-	health_component.max_armor = 50.0
+
+	match archetype:
+		"skirmisher":
+			health_component.max_health = 75.0
+			health_component.max_armor = 25.0
+			movement_speed = 7.5
+		"sentinel":
+			health_component.max_health = 130.0
+			health_component.max_armor = 80.0
+			movement_speed = 4.5
+		_:
+			health_component.max_health = 100.0
+			health_component.max_armor = 50.0
+			movement_speed = 6.0
+
 	add_child(health_component)
 	health_component.died.connect(_on_died)
 
@@ -55,8 +81,24 @@ func setup_weapon() -> void:
 	weapon = WeaponBase.new()
 	weapon.name = "BotWeapon"
 	weapon.owner_entity = self
-	weapon.damage_per_shot = 12.0
-	weapon.fire_rate_rpm = 320.0
+
+	match archetype:
+		"skirmisher":
+			weapon.weapon_name = "Scatter Cannon"
+			weapon.damage_per_shot = 9.0
+			weapon.fire_rate_rpm = 200.0
+			attack_range = 14.0
+		"sentinel":
+			weapon.weapon_name = "Rail Driver"
+			weapon.damage_per_shot = 35.0
+			weapon.fire_rate_rpm = 90.0
+			attack_range = 35.0
+		_:
+			weapon.weapon_name = "Pulse Rifle"
+			weapon.damage_per_shot = 14.0
+			weapon.fire_rate_rpm = 400.0
+			attack_range = 22.0
+
 	add_child(weapon)
 	weapon.position = Vector3(0.3, 0.9, -0.4)
 

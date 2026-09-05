@@ -80,6 +80,24 @@ func generate_all_procedural_sounds() -> void:
 	sound_cache["drift_screech"] = create_noise_burst(0.3, 0.4, 0.9)
 	sound_cache["boost"] = create_synth_sound(300.0, 600.0, 0.35, 0.8, "saw")
 
+	# New Production SFX
+	sound_cache["acid_spit"] = create_synth_sound(750.0, 200.0, 0.22, 0.75, "saw")
+	sound_cache["acid_splatter"] = create_noise_burst(0.35, 0.6, 0.8)
+	sound_cache["colossus_stomp"] = create_synth_sound(90.0, 30.0, 0.60, 1.0, "square")
+	sound_cache["colossus_roar"] = create_synth_sound(120.0, 45.0, 0.85, 0.9, "saw")
+	sound_cache["gate_unlock"] = create_two_tone_sound(350.0, 520.0, 0.30, 0.8)
+	sound_cache["upgrade_buy"] = create_two_tone_sound(523.25, 1046.5, 0.25, 0.85)
+	sound_cache["countdown_whistle"] = create_synth_sound(1200.0, 1400.0, 0.35, 0.7, "sine")
+	sound_cache["goal_horn"] = create_synth_sound(220.0, 220.0, 0.9, 0.95, "saw")
+	sound_cache["drift_turbo_1"] = create_synth_sound(500.0, 750.0, 0.15, 0.7, "sine")
+	sound_cache["drift_turbo_2"] = create_synth_sound(700.0, 1050.0, 0.20, 0.8, "sine")
+	sound_cache["drift_turbo_3"] = create_synth_sound(900.0, 1500.0, 0.30, 0.95, "saw")
+	sound_cache["powerup_missile"] = create_synth_sound(400.0, 800.0, 0.4, 0.85, "saw")
+	sound_cache["powerup_shield"] = create_synth_sound(350.0, 550.0, 0.5, 0.7, "sine")
+	sound_cache["crowd_cheer"] = create_noise_burst(0.8, 0.5, 0.6)
+	sound_cache["weapon_grenade"] = create_synth_sound(260.0, 80.0, 0.35, 0.9, "square")
+	sound_cache["referee_whistle"] = sound_cache["countdown_whistle"]
+
 	# Generate all 4 game background music tracks
 	sound_cache["music_iron_crucible"] = create_music_track("iron_crucible")
 	sound_cache["music_metro_siege"] = create_music_track("metro_siege")
@@ -112,21 +130,21 @@ func play_sound_3d(sound_name: String, global_pos: Vector3, pitch_scale: float =
 	var stream: AudioStreamWAV = sound_cache[sound_name]
 	for p in sfx_3d_pool:
 		if not p.playing:
-			if p.is_inside_tree():
-				p.global_position = global_pos
-				p.play()
 			p.stream = stream
 			p.pitch_scale = clampf(pitch_scale + randf_range(-0.04, 0.04), 0.5, 2.0)
 			p.volume_db = volume_db
+			if p.is_inside_tree():
+				p.global_position = global_pos
+				p.play()
 			return
 	if not sfx_3d_pool.is_empty():
 		var p = sfx_3d_pool[0]
-		if p.is_inside_tree():
-			p.global_position = global_pos
-			p.play()
 		p.stream = stream
 		p.pitch_scale = pitch_scale
 		p.volume_db = volume_db
+		if p.is_inside_tree():
+			p.global_position = global_pos
+			p.play()
 
 func play_music(track_name: String) -> void:
 	if not is_instance_valid(bgm_player):

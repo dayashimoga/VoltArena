@@ -3,6 +3,7 @@ extends Node3D
 
 signal goal_triggered(scoring_team: int)
 
+@export var stadium_theme: String = "day" # "day" (Volt Park) or "cyber" (Cyber Dome)
 @export var length: float = 90.0
 @export var width: float = 50.0
 @export var wall_height: float = 16.0
@@ -17,10 +18,11 @@ func build_arena() -> void:
 	var half_x = width * 0.5
 	var half_z = length * 0.5
 
-	# Regulation Pitch Floor with Mowed Turf & Chalk Lines
-	create_box(Vector3(0, -0.5, 0), Vector3(width, 1.0, length), "stadium_pitch")
+	# Pitch Floor with Turf based on Theme
+	var turf_material = "stadium_pitch_day" if stadium_theme == "day" else "stadium_pitch_cyber"
+	create_box(Vector3(0, -0.5, 0), Vector3(width, 1.0, length), turf_material)
 
-	# Invisible Collision Ceiling (retains aerial cars & ball without black roof)
+	# Invisible Collision Ceiling
 	var ceiling_body = StaticBody3D.new()
 	ceiling_body.collision_layer = GameConstants.LAYER_WORLD
 	ceiling_body.collision_mask = 0
@@ -32,29 +34,39 @@ func build_arena() -> void:
 	ceiling_body.add_child(col_shape)
 	add_child(ceiling_body)
 
-	# Sidewalls (West and East) with Lower Kickboard & Translucent Upper Glass
-	# West Wall
+	# Sidewalls (West and East) with Lower Kickboard & LED Ribbon
+	var ribbon_color_1 = "digital_signage_cyan" if stadium_theme == "day" else "neon_cyan"
+	var ribbon_color_2 = "digital_signage_orange" if stadium_theme == "day" else "neon_orange"
+
 	create_box(Vector3(-half_x, 1.5, 0), Vector3(1.0, 3.0, length), "dark_hull")
-	create_box(Vector3(-half_x, 3.1, 0), Vector3(0.9, 0.2, length), "digital_signage_cyan") # LED Ribbon Board
+	create_box(Vector3(-half_x, 3.1, 0), Vector3(0.9, 0.2, length), ribbon_color_1)
 	create_box(Vector3(-half_x, wall_height * 0.5 + 1.5, 0), Vector3(0.6, wall_height - 3.0, length), "sci_fi_metal")
-	# East Wall
+
 	create_box(Vector3(half_x, 1.5, 0), Vector3(1.0, 3.0, length), "dark_hull")
-	create_box(Vector3(half_x, 3.1, 0), Vector3(0.9, 0.2, length), "digital_signage_orange") # LED Ribbon Board
+	create_box(Vector3(half_x, 3.1, 0), Vector3(0.9, 0.2, length), ribbon_color_2)
 	create_box(Vector3(half_x, wall_height * 0.5 + 1.5, 0), Vector3(0.6, wall_height - 3.0, length), "sci_fi_metal")
 
-	# Tiered Spectator Grandstands (Outside perimeter walls)
+	# Tiered Spectator Grandstands
 	for tier in range(4):
 		var tier_y = 2.0 + float(tier) * 2.2
 		var tier_depth = 3.5
 		var w_offset = half_x + 2.0 + float(tier) * 3.0
-		# West Grandstands
 		create_box(Vector3(-w_offset, tier_y, 0), Vector3(tier_depth, 1.8, length - 4.0), "stadium_spectators")
-		# East Grandstands
 		create_box(Vector3(w_offset, tier_y, 0), Vector3(tier_depth, 1.8, length - 4.0), "stadium_spectators")
 
 	# End Walls with Goal Openings
-	build_end_wall(true)  # North wall (-Z)
-	build_end_wall(false) # South wall (+Z)
+	build_end_wall(true)  # North wall (-Z, Team 1 Orange Goal)
+	build_end_wall(false) # South wall (+Z, Team 0 Blue Goal)
+
+	# Modeled Stadium Goals
+	var goal_north = MeshBuilder.build_stadium_goal_mesh(1)
+	goal_north.position = Vector3(0, 0, -half_z)
+	add_child(goal_north)
+
+	var goal_south = MeshBuilder.build_stadium_goal_mesh(0)
+	goal_south.position = Vector3(0, 0, half_z)
+	goal_south.rotation_degrees = Vector3(0, 180, 0)
+	add_child(goal_south)
 
 	# Goal trigger zones
 	create_goal_trigger(Vector3(0, goal_height * 0.5, -half_z - goal_depth * 0.5), 1) # Orange scores in North
@@ -63,18 +75,61 @@ func build_arena() -> void:
 	# Suspended Center Jumbotron Scoreboard Cube
 	create_jumbotron()
 
-	# Boost refill pads on field
-	var pad_positions = [
-		Vector3(-18.0, 0.08, -25.0),
-		Vector3(18.0, 0.08, -25.0),
-		Vector3(-18.0, 0.08, 25.0),
-		Vector3(18.0, 0.08, 25.0),
-		Vector3(0.0, 0.08, 0.0) # Center pad
+	# 6 Full 100% Boost Orbs (4 corners + 2 midfield wings)
+	var full_orb_positions = [
+		Vector3(-20.0, 0.0, -38.0),
+		Vector3(20.0, 0.0, -38.0),
+		Vector3(-20.0, 0.0, 38.0),
+		Vector3(20.0, 0.0, 38.0),
+		Vector3(-22.0, 0.0, 0.0),
+		Vector3(22.0, 0.0, 0.0)
 	]
-	for p in pad_positions:
-		create_boost_pad(p)
+	for op in full_orb_positions:
+		create_boost_orb(op)
+
+	# 12 Small Boost Refill Pads
+	var small_pad_positions = [
+		Vector3(-10.0, 0.08, -25.0),
+		Vector3(10.0, 0.08, -25.0),
+		Vector3(-10.0, 0.08, 25.0),
+		Vector3(10.0, 0.08, 25.0),
+		Vector3(-10.0, 0.08, -12.0),
+		Vector3(10.0, 0.08, -12.0),
+		Vector3(-10.0, 0.08, 12.0),
+		Vector3(10.0, 0.08, 12.0),
+		Vector3(0.0, 0.08, -20.0),
+		Vector3(0.0, 0.08, 20.0),
+		Vector3(0.0, 0.08, -8.0),
+		Vector3(0.0, 0.08, 8.0)
+	]
+	for sp in small_pad_positions:
+		create_boost_pad(sp)
 
 	setup_stadium_lighting()
+
+func create_boost_orb(pos: Vector3) -> void:
+	var orb_node = MeshBuilder.build_boost_orb_mesh()
+	orb_node.position = pos
+	add_child(orb_node)
+
+	var area = Area3D.new()
+	area.collision_layer = 0
+	area.collision_mask = GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var sphere = SphereShape3D.new()
+	sphere.radius = 1.6
+	col.shape = sphere
+	col.position = Vector3(0, 1.2, 0)
+	area.add_child(col)
+	orb_node.add_child(area)
+
+	area.body_entered.connect(func(body: Node3D):
+		if body.has_method("replenish_boost"):
+			body.replenish_boost(100.0)
+			var am = GameConstants.get_autoload(area, "AudioManager")
+			if am:
+				am.play_sound_3d("boost", pos, 1.2)
+	)
 
 func create_jumbotron() -> void:
 	var jumbotron = Node3D.new()

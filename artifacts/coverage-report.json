@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 100,
+  "overall_coverage_pct": 93.9890710382514,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -86,10 +86,12 @@
       "untested": []
     },
     "res://games/kart-racing/kart/kart_controller.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 87.5,
       "tested": 7,
-      "total": 7,
-      "untested": []
+      "total": 8,
+      "untested": [
+        "setup_kart_archetype"
+      ]
     },
     "res://games/kart-racing/kart_racing_main.gd": {
       "coverage_pct": 100,
@@ -128,10 +130,12 @@
       "untested": []
     },
     "res://games/rocket-car/arena/rocket_arena.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 88.8888888888889,
       "tested": 8,
-      "total": 8,
-      "untested": []
+      "total": 9,
+      "untested": [
+        "create_boost_orb"
+      ]
     },
     "res://games/rocket-car/ball/ball.gd": {
       "coverage_pct": 100,
@@ -157,6 +161,16 @@
       "total": 6,
       "untested": []
     },
+    "res://games/subway-survival/enemies/bio_colossus.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 3,
+      "untested": [
+        "_init",
+        "setup_visuals",
+        "perform_attack"
+      ]
+    },
     "res://games/subway-survival/enemies/brute.gd": {
       "coverage_pct": 100,
       "tested": 3,
@@ -175,6 +189,16 @@
       "total": 6,
       "untested": []
     },
+    "res://games/subway-survival/enemies/spitter.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 3,
+      "untested": [
+        "_init",
+        "setup_visuals",
+        "perform_attack"
+      ]
+    },
     "res://games/subway-survival/enemies/stalker.gd": {
       "coverage_pct": 100,
       "tested": 3,
@@ -188,10 +212,12 @@
       "untested": []
     },
     "res://games/subway-survival/maps/subway_generator.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 80,
       "tested": 4,
-      "total": 4,
-      "untested": []
+      "total": 5,
+      "untested": [
+        "unlock_gate"
+      ]
     },
     "res://games/subway-survival/subway_main.gd": {
       "coverage_pct": 100,
@@ -272,10 +298,24 @@
       "untested": []
     },
     "res://shared/graphics/mesh_builder.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 53.5714285714286,
       "tested": 15,
-      "total": 15,
-      "untested": []
+      "total": 28,
+      "untested": [
+        "build_spitter_mesh",
+        "build_colossus_boss_mesh",
+        "build_subway_car_mesh",
+        "build_stadium_goal_mesh",
+        "build_race_gantry_mesh",
+        "build_blast_door_mesh",
+        "build_upgrade_kiosk_mesh",
+        "build_boost_orb_mesh",
+        "build_scrap_gear_mesh",
+        "build_speed_demon_kart",
+        "build_drift_king_kart",
+        "build_turbo_tank_kart",
+        "build_start_gantry"
+      ]
     },
     "res://shared/graphics/procedural_animator.gd": {
       "coverage_pct": 100,
@@ -375,6 +415,6 @@
     }
   },
   "tested_functions": 344,
-  "timestamp": "2026-09-05T03:42:59",
-  "total_functions": 344
+  "timestamp": "2026-09-05T05:28:03",
+  "total_functions": 366
 }

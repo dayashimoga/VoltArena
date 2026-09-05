@@ -1,7 +1,7 @@
 {
   "project": "VoltArena",
   "version": "4.0.0",
-  "timestamp_utc": "2026-09-05 03:43:58 UTC",
+  "timestamp_utc": "2026-09-05 05:27:45 UTC",
   "overall_status": "PASS",
   "automatable_pass_count": 11,
   "automatable_fail_count": 0,
@@ -18,7 +18,7 @@
     {
       "gate": "Function Coverage",
       "requirement": ">90.0% function coverage",
-      "measured": "100.0% (344/344 functions)",
+      "measured": "94.0% (344/366 functions)",
       "status": "PASS",
       "evidence": "artifacts/coverage-report.json"
     },

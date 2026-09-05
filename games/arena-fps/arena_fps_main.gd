@@ -23,10 +23,14 @@ func _ready() -> void:
 	setup_scene()
 	connect_events()
 
+@export var selected_map: String = "foundry" # "foundry", "citadel", "sektor"
+var escalated: bool = false
+
 func setup_scene() -> void:
 	# Map
 	var map = ArenaMapGenerator.new()
 	map.name = "ArenaMap"
+	map.map_type = selected_map
 	add_child(map)
 
 	# UI
@@ -59,16 +63,19 @@ func setup_scene() -> void:
 	player_node.setup_weapons()
 	player_node.connect_health()
 
-	# Spawn Bots
+	# Spawn 3 Distinct Archetype Bots
 	var spawn_points = [
 		Vector3(-20, 1.0, -20),
 		Vector3(20, 1.0, -20),
 		Vector3(0, 1.0, -25)
 	]
+	var archetypes = ["skirmisher", "assault", "sentinel"]
+	var bot_names = ["Skirmisher Viper", "Assault Titan", "Sentinel Ghost"]
 	for i in range(spawn_points.size()):
 		var bot = ArenaBot.new()
 		bot.name = "Bot_" + str(i + 1)
-		bot.bot_name = "CyberUnit " + str(i + 1)
+		bot.bot_name = bot_names[i]
+		bot.archetype = archetypes[i]
 		bot.position = spawn_points[i]
 		add_child(bot)
 		bot.setup_bot_visual()
@@ -103,6 +110,15 @@ func _on_enemy_killed(_type: String, score_val: int) -> void:
 	if bus:
 		bus.score_updated.emit(0, player_score)
 		bus.show_toast_requested.emit("ELIMINATION! +%d PTS" % score_val, Color(0.0, 1.0, 0.5))
+
+	# Mid-match escalation at 50% target score
+	if not escalated and frags_count >= int(target_kills_to_win * 0.5):
+		escalated = true
+		if bus:
+			bus.show_toast_requested.emit("MATCH ESCALATION: QUAD DAMAGE ACTIVE!", Color(1.0, 0.85, 0.1))
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am:
+			am.play_sound("drift_turbo_3", 1.0, 2.0)
 
 	if frags_count >= target_kills_to_win:
 		end_match()

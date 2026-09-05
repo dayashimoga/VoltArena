@@ -64,9 +64,16 @@ func _ready() -> void:
 	connect_loader_signals()
 	update_responsive_layout(get_viewport_rect().size)
 
+	var vp = get_viewport()
+	if vp and not vp.size_changed.is_connected(_on_viewport_size_changed):
+		vp.size_changed.connect(_on_viewport_size_changed)
+
 	var im = GameConstants.get_autoload(self, "InputManager")
 	if im:
 		im.capture_mouse(false)
+
+func _on_viewport_size_changed() -> void:
+	update_responsive_layout(get_viewport_rect().size)
 
 func _sanitize_root_scene() -> void:
 	var tree = get_tree()
@@ -175,8 +182,8 @@ func setup_launcher_ui() -> void:
 	main_vbox.add_child(footer)
 
 	var platform_info = Label.new()
-	platform_info.text = "VoltArena v3.0 Commercial Release | 4 Complete Games | Safe-Area & DPI Certified"
-	platform_info.modulate = Color(0.45, 0.55, 0.7)
+	platform_info.text = "VOLTARENA 3D HIGH-PERFORMANCE SUITE"
+	platform_info.modulate = Color(0.45, 0.75, 0.95)
 	footer.add_child(platform_info)
 
 	var footer_spacer = Control.new()
@@ -194,14 +201,14 @@ func setup_launcher_ui() -> void:
 
 func create_game_card(meta: Dictionary) -> void:
 	var card = PanelContainer.new()
-	card.custom_minimum_size = Vector2(210, 420)
+	card.custom_minimum_size = Vector2(100, 320)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	# Hover micro-animation effect
 	card.mouse_entered.connect(func():
 		var tween = card.create_tween()
-		tween.tween_property(card, "modulate", Color(1.1, 1.1, 1.15), 0.15)
+		tween.tween_property(card, "modulate", Color(1.15, 1.15, 1.2), 0.15)
 	)
 	card.mouse_exited.connect(func():
 		var tween = card.create_tween()
@@ -209,21 +216,22 @@ func create_game_card(meta: Dictionary) -> void:
 	)
 
 	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
+	vbox.add_theme_constant_override("separation", 6)
 	card.add_child(vbox)
 
 	# Stylized In-Engine Artwork Banner
 	var banner_rect = TextureRect.new()
-	banner_rect.custom_minimum_size = Vector2(200, 120)
+	banner_rect.custom_minimum_size = Vector2(100, 100)
 	banner_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	banner_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	banner_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	banner_rect.texture = LauncherArtScript.create_game_banner(meta["id"], 360, 190)
 	vbox.add_child(banner_rect)
 
 	# Title & Tagline
 	var title = Label.new()
 	title.text = meta["title"]
-	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_font_size_override("font_size", 19)
 	title.modulate = meta["color"]
 	vbox.add_child(title)
 
@@ -260,9 +268,19 @@ func create_game_card(meta: Dictionary) -> void:
 
 	# Play Button
 	var btn_play = Button.new()
-	btn_play.text = "LAUNCH GAME"
-	btn_play.custom_minimum_size = Vector2(0, 44)
-	btn_play.pressed.connect(func(): on_play_game_pressed(meta))
+	btn_play.text = "PLAY"
+	btn_play.custom_minimum_size = Vector2(0, 38)
+	btn_play.mouse_entered.connect(func():
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am:
+			am.play_sfx("ui_hover")
+	)
+	btn_play.pressed.connect(func():
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am:
+			am.play_sfx("ui_click")
+		on_play_game_pressed(meta)
+	)
 	vbox.add_child(btn_play)
 
 	game_cards_container.add_child(card)
@@ -475,22 +493,25 @@ func _notification(what: int) -> void:
 		update_responsive_layout(size)
 
 func update_responsive_layout(viewport_size: Vector2) -> void:
-	if viewport_size.x <= 0:
+	if viewport_size.x <= 0 or viewport_size.y <= 0:
 		return
 
-	var safe_left = 32.0
-	var safe_right = 32.0
-	var safe_top = 24.0
-	var safe_bottom = 24.0
-	var safe_area = DisplayServer.get_display_safe_area()
-	if safe_area.size.x > 0 and safe_area.size.y > 0:
-		safe_left = maxf(32.0, float(safe_area.position.x))
-		safe_top = maxf(24.0, float(safe_area.position.y))
+	var safe_left = 24.0
+	var safe_right = 24.0
+	var safe_top = 20.0
+	var safe_bottom = 20.0
+
+	# Safe area cutouts only on mobile devices with notches
+	if OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios"):
+		var safe_area = DisplayServer.get_display_safe_area()
 		var screen_sz = DisplayServer.screen_get_size()
-		if screen_sz.x > 0:
-			safe_right = maxf(32.0, float(screen_sz.x - (safe_area.position.x + safe_area.size.x)))
-		if screen_sz.y > 0:
-			safe_bottom = maxf(24.0, float(screen_sz.y - (safe_area.position.y + safe_area.size.y)))
+		if safe_area.size.x > 0 and screen_sz.x > 0:
+			var scale_x = viewport_size.x / float(screen_sz.x)
+			var scale_y = viewport_size.y / float(screen_sz.y)
+			safe_left = maxf(24.0, float(safe_area.position.x) * scale_x)
+			safe_top = maxf(20.0, float(safe_area.position.y) * scale_y)
+			safe_right = maxf(24.0, float(screen_sz.x - (safe_area.position.x + safe_area.size.x)) * scale_x)
+			safe_bottom = maxf(20.0, float(screen_sz.y - (safe_area.position.y + safe_area.size.y)) * scale_y)
 
 	if main_vbox:
 		main_vbox.offset_left = safe_left
@@ -516,25 +537,36 @@ func update_responsive_layout(viewport_size: Vector2) -> void:
 
 	if game_cards_container:
 		var cols = 4
-		if viewport_size.x < 700.0:
-			cols = 1 # Mobile portrait
-		elif viewport_size.x < 1250.0:
-			cols = 2 # Tablet / 720p / compact desktop (2x2 grid)
+		if viewport_size.x < 680.0:
+			cols = 1 # Mobile portrait (1 col)
+		elif viewport_size.x < 1120.0:
+			cols = 2 # Tablet / compact desktop (2x2 grid)
 		else:
-			cols = 4 # Desktop 4 columns
+			cols = 4 # Desktop (4 columns)
 
 		game_cards_container.columns = cols
 
-		var padding = safe_left + safe_right + 56.0
-		var available_w = maxf(280.0, viewport_size.x - padding)
-		var sep = 16.0
-		game_cards_container.add_theme_constant_override("h_separation", int(sep))
-		game_cards_container.add_theme_constant_override("v_separation", int(sep))
-		var card_w = floor((available_w - float(cols - 1) * sep) / float(cols)) - 2.0
+		var h_sep = 16.0
+		var v_sep = 16.0
+		game_cards_container.add_theme_constant_override("h_separation", int(h_sep))
+		game_cards_container.add_theme_constant_override("v_separation", int(v_sep))
+
+		var available_w = maxf(280.0, viewport_size.x - (safe_left + safe_right) - 8.0)
+		var total_sep = float(cols - 1) * h_sep
+		var card_w = floor((available_w - total_sep) / float(cols))
+
+		var padding_v = safe_top + safe_bottom + 110.0
+		var available_h = maxf(320.0, viewport_size.y - padding_v)
+
 		for c in game_cards_container.get_children():
 			if c is Control:
-				c.custom_minimum_size.x = maxf(200.0, card_w)
-				c.custom_minimum_size.y = 350.0 if cols == 1 else 420.0
+				c.custom_minimum_size.x = maxf(100.0, card_w)
+				if cols == 4:
+					c.custom_minimum_size.y = clampf(available_h, 320.0, 520.0)
+				elif cols == 2:
+					c.custom_minimum_size.y = clampf(available_h * 0.48, 280.0, 390.0)
+				else:
+					c.custom_minimum_size.y = 320.0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):

@@ -690,7 +690,7 @@ static func build_rocket_car(team_id: int = 0) -> Node3D:
 
 	return car
 
-static func build_drift_kart(kart_color: Color = Color(0.2, 1.0, 0.5)) -> Node3D:
+static func build_drift_kart(kart_color: Color = Color(0.2, 1.0, 0.5), _kart_type: String = "speeder") -> Node3D:
 	var kart = Node3D.new()
 	kart.name = "DriftKartVisual"
 
@@ -910,3 +910,489 @@ static func build_cyber_crate(size: Vector3 = Vector3(2.0, 2.0, 2.0)) -> Node3D:
 	root.add_child(strip)
 
 	return root
+
+static func build_spitter_mesh() -> Node3D:
+	var root = Node3D.new()
+	root.name = "SpitterVisual"
+	var chitin_mat = MaterialGenerator.get_material("enemy_crawler")
+	var acid_mat = MaterialGenerator.get_material("acid_pool")
+
+	# Hunched Thorax
+	var thorax = MeshInstance3D.new()
+	var t_box = BoxMesh.new()
+	t_box.size = Vector3(0.55, 0.70, 0.85)
+	thorax.mesh = t_box
+	thorax.position = Vector3(0, 0.75, 0)
+	thorax.material_override = chitin_mat
+	root.add_child(thorax)
+
+	# Pulsing Caustic Throat Sac
+	var sac = MeshInstance3D.new()
+	var s_sphere = SphereMesh.new()
+	s_sphere.radius = 0.28
+	s_sphere.height = 0.50
+	sac.mesh = s_sphere
+	sac.position = Vector3(0, 0.65, -0.38)
+	sac.material_override = acid_mat
+	root.add_child(sac)
+
+	# Acid Spit Maw
+	var maw = MeshInstance3D.new()
+	var m_cone = CylinderMesh.new()
+	m_cone.top_radius = 0.12
+	m_cone.bottom_radius = 0.04
+	m_cone.height = 0.24
+	maw.mesh = m_cone
+	maw.rotation_degrees = Vector3(90, 0, 0)
+	maw.position = Vector3(0, 0.78, -0.58)
+	maw.material_override = acid_mat
+	root.add_child(maw)
+
+	# Quad Tripod / Spidery Legs
+	var leg_mesh = BoxMesh.new()
+	leg_mesh.size = Vector3(0.08, 0.60, 0.08)
+	for i in range(4):
+		var lx = -0.35 if i % 2 == 0 else 0.35
+		var lz = -0.25 if i < 2 else 0.25
+		var leg = MeshInstance3D.new()
+		leg.mesh = leg_mesh
+		leg.position = Vector3(lx, 0.30, lz)
+		leg.rotation_degrees = Vector3(15 * (1 if lz > 0 else -1), 0, 20 * signf(lx))
+		leg.material_override = chitin_mat
+		root.add_child(leg)
+
+	return root
+
+static func build_colossus_boss_mesh() -> Node3D:
+	var root = Node3D.new()
+	root.name = "BioColossusVisual"
+	var armor_mat = MaterialGenerator.get_material("dark_concrete")
+	var core_mat = MaterialGenerator.get_material("neon_red")
+	var steel_mat = MaterialGenerator.get_material("sci_fi_metal")
+	var acid_mat = MaterialGenerator.get_material("acid_pool")
+
+	# Massive armored torso
+	var torso = MeshInstance3D.new()
+	var t_box = BoxMesh.new()
+	t_box.size = Vector3(2.4, 2.6, 2.0)
+	torso.mesh = t_box
+	torso.position = Vector3(0, 2.6, 0)
+	torso.material_override = armor_mat
+	root.add_child(torso)
+
+	# Core Reactor / Heart Weakpoint
+	var core = MeshInstance3D.new()
+	var c_sphere = SphereMesh.new()
+	c_sphere.radius = 0.55
+	c_sphere.height = 1.10
+	core.mesh = c_sphere
+	core.position = Vector3(0, 2.8, -1.0)
+	core.material_override = core_mat
+	root.add_child(core)
+
+	# Mutated Dorsal Rock Spines
+	for sz in [-0.5, 0.0, 0.5]:
+		var spine = MeshInstance3D.new()
+		var s_cone = CylinderMesh.new()
+		s_cone.top_radius = 0.05
+		s_cone.bottom_radius = 0.28
+		s_cone.height = 1.2
+		spine.mesh = s_cone
+		spine.position = Vector3(0, 3.8, sz)
+		spine.rotation_degrees = Vector3(25 * sz, 0, 0)
+		spine.material_override = steel_mat
+		root.add_child(spine)
+
+	# Giant Rock-Crusher Fists
+	for sx in [-1.7, 1.7]:
+		var arm = MeshInstance3D.new()
+		var a_box = BoxMesh.new()
+		a_box.size = Vector3(0.7, 1.8, 0.7)
+		arm.mesh = a_box
+		arm.position = Vector3(sx, 2.0, -0.3)
+		arm.material_override = armor_mat
+		root.add_child(arm)
+
+		var fist = MeshInstance3D.new()
+		var f_box = BoxMesh.new()
+		f_box.size = Vector3(1.1, 1.1, 1.1)
+		fist.mesh = f_box
+		fist.position = Vector3(sx, 0.8, -0.6)
+		fist.material_override = steel_mat
+		root.add_child(fist)
+
+	# Sturdy Elephantine Pillar Legs
+	for lx in [-0.8, 0.8]:
+		var leg = MeshInstance3D.new()
+		var l_cyl = CylinderMesh.new()
+		l_cyl.top_radius = 0.45
+		l_cyl.bottom_radius = 0.60
+		l_cyl.height = 1.4
+		leg.mesh = l_cyl
+		leg.position = Vector3(lx, 0.7, 0)
+		leg.material_override = armor_mat
+		root.add_child(leg)
+
+	return root
+
+static func build_subway_car_mesh() -> Node3D:
+	var car = Node3D.new()
+	car.name = "SubwayTrainCar"
+	var steel_mat = MaterialGenerator.get_material("subway_rust_metal")
+	var dark_mat = MaterialGenerator.get_material("dark_hull")
+	var window_mat = MaterialGenerator.get_material("neon_cyan")
+	var stripe_mat = MaterialGenerator.get_material("hazard_stripe")
+
+	# Train Body
+	var body = MeshInstance3D.new()
+	var b_box = BoxMesh.new()
+	b_box.size = Vector3(3.2, 3.0, 14.0)
+	body.mesh = b_box
+	body.position = Vector3(0, 1.8, 0)
+	body.material_override = steel_mat
+	car.add_child(body)
+
+	# Roof Curve
+	var roof = MeshInstance3D.new()
+	var r_box = BoxMesh.new()
+	r_box.size = Vector3(2.8, 0.35, 13.8)
+	roof.mesh = r_box
+	roof.position = Vector3(0, 3.4, 0)
+	roof.material_override = dark_mat
+	car.add_child(roof)
+
+	# Front Pilot / Nose Cowl
+	var nose = MeshInstance3D.new()
+	var n_box = BoxMesh.new()
+	n_box.size = Vector3(3.0, 2.6, 1.2)
+	nose.mesh = n_box
+	nose.position = Vector3(0, 1.6, -7.4)
+	nose.material_override = steel_mat
+	car.add_child(nose)
+
+	# Headlights
+	for hx in [-1.0, 1.0]:
+		var hl = MeshInstance3D.new()
+		var h_cyl = CylinderMesh.new()
+		h_cyl.top_radius = 0.18
+		h_cyl.bottom_radius = 0.18
+		h_cyl.height = 0.2
+		hl.mesh = h_cyl
+		hl.rotation_degrees = Vector3(90, 0, 0)
+		hl.position = Vector3(hx, 1.4, -8.0)
+		hl.material_override = MaterialGenerator.get_material("neon_yellow")
+		car.add_child(hl)
+
+	# Side Windows & Doors
+	for side in [-1.62, 1.62]:
+		for wz in [-4.5, -1.5, 1.5, 4.5]:
+			var win = MeshInstance3D.new()
+			var w_box = BoxMesh.new()
+			w_box.size = Vector3(0.04, 1.0, 1.8)
+			win.mesh = w_box
+			win.position = Vector3(side, 2.0, wz)
+			win.material_override = window_mat
+			car.add_child(win)
+
+	# Hazard Trim along skirt
+	var skirt = MeshInstance3D.new()
+	var s_box = BoxMesh.new()
+	s_box.size = Vector3(3.3, 0.25, 14.2)
+	skirt.mesh = s_box
+	skirt.position = Vector3(0, 0.35, 0)
+	skirt.material_override = stripe_mat
+	car.add_child(skirt)
+
+	return car
+
+static func build_stadium_goal_mesh(team_id: int = 0) -> Node3D:
+	var goal = Node3D.new()
+	goal.name = "StadiumGoal"
+	var team_mat = MaterialGenerator.get_material("neon_cyan" if team_id == 0 else "neon_orange")
+	var steel_mat = MaterialGenerator.get_material("sci_fi_metal")
+	var net_mat = MaterialGenerator.get_material("dark_hull")
+
+	var goal_w = 16.0
+	var goal_h = 7.0
+	var goal_d = 5.0
+
+	# Left Post
+	var lp = MeshInstance3D.new()
+	var p_cyl = CylinderMesh.new()
+	p_cyl.top_radius = 0.25
+	p_cyl.bottom_radius = 0.25
+	p_cyl.height = goal_h
+	lp.mesh = p_cyl
+	lp.position = Vector3(-goal_w * 0.5, goal_h * 0.5, 0)
+	lp.material_override = team_mat
+	goal.add_child(lp)
+
+	# Right Post
+	var rp = MeshInstance3D.new()
+	rp.mesh = p_cyl
+	rp.position = Vector3(goal_w * 0.5, goal_h * 0.5, 0)
+	rp.material_override = team_mat
+	goal.add_child(rp)
+
+	# Crossbar
+	var cb = MeshInstance3D.new()
+	var c_cyl = CylinderMesh.new()
+	c_cyl.top_radius = 0.25
+	c_cyl.bottom_radius = 0.25
+	c_cyl.height = goal_w
+	cb.mesh = c_cyl
+	cb.rotation_degrees = Vector3(0, 0, 90)
+	cb.position = Vector3(0, goal_h, 0)
+	cb.material_override = team_mat
+	goal.add_child(cb)
+
+	# Back Net Wall
+	var net = MeshInstance3D.new()
+	var n_box = BoxMesh.new()
+	n_box.size = Vector3(goal_w, goal_h, 0.1)
+	net.mesh = n_box
+	net.position = Vector3(0, goal_h * 0.5, -goal_d)
+	net.material_override = net_mat
+	goal.add_child(net)
+
+	# Goal Strobe Barrier
+	var strobe = MeshInstance3D.new()
+	var s_box = BoxMesh.new()
+	s_box.size = Vector3(goal_w * 0.9, 0.3, 0.1)
+	strobe.mesh = s_box
+	strobe.position = Vector3(0, goal_h + 0.4, 0)
+	strobe.material_override = team_mat
+	goal.add_child(strobe)
+
+	return goal
+
+static func build_race_gantry_mesh() -> Node3D:
+	var gantry = Node3D.new()
+	gantry.name = "RaceGantry"
+	var steel_mat = MaterialGenerator.get_material("sci_fi_metal")
+	var dark_mat = MaterialGenerator.get_material("dark_hull")
+
+	# Towers
+	for tx in [-9.0, 9.0]:
+		var tower = MeshInstance3D.new()
+		var t_box = BoxMesh.new()
+		t_box.size = Vector3(0.8, 8.0, 0.8)
+		tower.mesh = t_box
+		tower.position = Vector3(tx, 4.0, 0)
+		tower.material_override = steel_mat
+		gantry.add_child(tower)
+
+	# Overhead Truss Beam
+	var beam = MeshInstance3D.new()
+	var b_box = BoxMesh.new()
+	b_box.size = Vector3(19.0, 1.2, 1.2)
+	beam.mesh = b_box
+	beam.position = Vector3(0, 7.5, 0)
+	beam.material_override = dark_mat
+	gantry.add_child(beam)
+
+	# 5 Starting Signal Tree Lamps
+	for i in range(5):
+		var lamp = MeshInstance3D.new()
+		var l_cyl = CylinderMesh.new()
+		l_cyl.top_radius = 0.30
+		l_cyl.bottom_radius = 0.30
+		l_cyl.height = 0.25
+		lamp.name = "SignalLamp_%d" % i
+		lamp.mesh = l_cyl
+		lamp.rotation_degrees = Vector3(90, 0, 0)
+		lamp.position = Vector3(-4.0 + i * 2.0, 7.5, -0.65)
+		lamp.material_override = MaterialGenerator.get_material("neon_red")
+		gantry.add_child(lamp)
+
+	return gantry
+
+static func build_blast_door_mesh() -> Node3D:
+	var door = Node3D.new()
+	door.name = "BlastDoor"
+	var steel_mat = MaterialGenerator.get_material("sci_fi_metal")
+	var stripe_mat = MaterialGenerator.get_material("hazard_stripe")
+	var red_mat = MaterialGenerator.get_material("neon_red")
+
+	# Heavy Frame
+	var frame = MeshInstance3D.new()
+	var f_box = BoxMesh.new()
+	f_box.size = Vector3(5.0, 4.5, 0.6)
+	frame.mesh = f_box
+	frame.position = Vector3(0, 2.25, 0)
+	frame.material_override = steel_mat
+	door.add_child(frame)
+
+	# Door Panels
+	var panel = MeshInstance3D.new()
+	var p_box = BoxMesh.new()
+	p_box.size = Vector3(3.8, 3.8, 0.4)
+	panel.name = "DoorSlidingPanel"
+	panel.mesh = p_box
+	panel.position = Vector3(0, 2.0, 0)
+	panel.material_override = stripe_mat
+	door.add_child(panel)
+
+	# Scrap Terminal Interactor
+	var term = MeshInstance3D.new()
+	var t_box = BoxMesh.new()
+	t_box.size = Vector3(0.5, 1.2, 0.4)
+	term.name = "TerminalKiosk"
+	term.mesh = t_box
+	term.position = Vector3(2.6, 1.2, 0.3)
+	term.material_override = red_mat
+	door.add_child(term)
+
+	return door
+
+static func build_upgrade_kiosk_mesh() -> Node3D:
+	var kiosk = Node3D.new()
+	kiosk.name = "UpgradeKiosk"
+	var dark_mat = MaterialGenerator.get_material("dark_hull")
+	var cyan_mat = MaterialGenerator.get_material("neon_cyan")
+
+	var base = MeshInstance3D.new()
+	var b_box = BoxMesh.new()
+	b_box.size = Vector3(1.6, 2.2, 0.8)
+	base.mesh = b_box
+	base.position = Vector3(0, 1.1, 0)
+	base.material_override = dark_mat
+	kiosk.add_child(base)
+
+	var screen = MeshInstance3D.new()
+	var s_box = BoxMesh.new()
+	s_box.size = Vector3(1.2, 0.8, 0.05)
+	screen.mesh = s_box
+	screen.position = Vector3(0, 1.5, 0.42)
+	screen.material_override = cyan_mat
+	kiosk.add_child(screen)
+
+	return kiosk
+
+static func build_boost_orb_mesh() -> Node3D:
+	var orb = Node3D.new()
+	orb.name = "BoostOrb"
+	var cyan_mat = MaterialGenerator.get_material("neon_cyan")
+	var gold_mat = MaterialGenerator.get_material("gold_pickup")
+	var steel_mat = MaterialGenerator.get_material("sci_fi_metal")
+
+	# Pedestal Base
+	var ped = MeshInstance3D.new()
+	var p_cyl = CylinderMesh.new()
+	p_cyl.top_radius = 0.8
+	p_cyl.bottom_radius = 1.0
+	p_cyl.height = 0.3
+	ped.mesh = p_cyl
+	ped.position = Vector3(0, 0.15, 0)
+	ped.material_override = steel_mat
+	orb.add_child(ped)
+
+	# Floating Core Orb
+	var core = MeshInstance3D.new()
+	var s_mesh = SphereMesh.new()
+	s_mesh.radius = 0.55
+	s_mesh.height = 1.10
+	core.name = "FloatingOrbCore"
+	core.mesh = s_mesh
+	core.position = Vector3(0, 1.2, 0)
+	core.material_override = gold_mat
+	orb.add_child(core)
+
+	# Revolving Outer Ring
+	var ring = MeshInstance3D.new()
+	var t_mesh = TorusMesh.new()
+	t_mesh.inner_radius = 0.70
+	t_mesh.outer_radius = 0.82
+	ring.name = "RevolvingRing"
+	ring.mesh = t_mesh
+	ring.position = Vector3(0, 1.2, 0)
+	ring.material_override = cyan_mat
+	orb.add_child(ring)
+
+	return orb
+
+static func build_scrap_gear_mesh() -> Node3D:
+	var root = Node3D.new()
+	root.name = "ScrapGear"
+	var mat = MaterialGenerator.get_material("gold_pickup")
+
+	var gear = MeshInstance3D.new()
+	var cyl = CylinderMesh.new()
+	cyl.top_radius = 0.28
+	cyl.bottom_radius = 0.28
+	cyl.height = 0.08
+	gear.mesh = cyl
+	gear.rotation_degrees = Vector3(90, 0, 0)
+	gear.material_override = mat
+	root.add_child(gear)
+
+	for i in range(6):
+		var tooth = MeshInstance3D.new()
+		var t_box = BoxMesh.new()
+		t_box.size = Vector3(0.08, 0.12, 0.08)
+		tooth.mesh = t_box
+		var angle = i * PI / 3.0
+		tooth.position = Vector3(cos(angle) * 0.32, sin(angle) * 0.32, 0)
+		tooth.rotation_degrees = Vector3(0, 0, rad_to_deg(angle))
+		tooth.material_override = mat
+		root.add_child(tooth)
+
+	return root
+
+static func build_speed_demon_kart() -> Node3D:
+	var kart = build_drift_kart(Color(1.0, 0.2, 0.2))
+	kart.name = "SpeedDemonKart"
+	return kart
+
+static func build_drift_king_kart() -> Node3D:
+	var kart = build_drift_kart(Color(0.8, 0.2, 1.0))
+	kart.name = "DriftKingKart"
+	return kart
+
+static func build_turbo_tank_kart() -> Node3D:
+	var kart = build_drift_kart(Color(0.2, 0.8, 0.3))
+	kart.name = "TurboTankKart"
+	return kart
+
+static func build_start_gantry(gantry_width: float = 14.0) -> Node3D:
+	var gantry = Node3D.new()
+	gantry.name = "StartFinishGantry"
+
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_sign = MaterialGenerator.get_material("digital_signage_cyan")
+
+	var t_mesh = BoxMesh.new()
+	t_mesh.size = Vector3(1.2, 7.5, 1.2)
+
+	var t_left = MeshInstance3D.new()
+	t_left.mesh = t_mesh
+	t_left.position = Vector3(-gantry_width * 0.5 - 1.0, 3.75, 0)
+	t_left.material_override = mat_metal
+	gantry.add_child(t_left)
+
+	var t_right = MeshInstance3D.new()
+	t_right.mesh = t_mesh
+	t_right.position = Vector3(gantry_width * 0.5 + 1.0, 3.75, 0)
+	t_right.material_override = mat_metal
+	gantry.add_child(t_right)
+
+	var bridge = MeshInstance3D.new()
+	var b_mesh = BoxMesh.new()
+	b_mesh.size = Vector3(gantry_width + 3.2, 1.4, 1.2)
+	bridge.mesh = b_mesh
+	bridge.position = Vector3(0, 7.0, 0)
+	bridge.material_override = mat_metal
+	gantry.add_child(bridge)
+
+	var banner = MeshInstance3D.new()
+	var banner_mesh = BoxMesh.new()
+	banner_mesh.size = Vector3(gantry_width - 1.0, 1.2, 0.2)
+	banner.mesh = banner_mesh
+	banner.position = Vector3(0, 7.0, -0.65)
+	banner.material_override = mat_sign
+	gantry.add_child(banner)
+
+	return gantry
+
+
+

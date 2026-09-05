@@ -69,6 +69,8 @@ func connect_signals() -> void:
 		bus.enemy_died.connect(_on_enemy_killed)
 		bus.player_died.connect(_on_player_died)
 		bus.wave_completed.connect(_on_wave_completed)
+	if wave_director and wave_director.has_signal("all_waves_defeated"):
+		wave_director.all_waves_defeated.connect(_on_all_waves_defeated)
 
 func _on_enemy_killed(_type: String, score_val: int) -> void:
 	total_kills += 1
@@ -91,6 +93,42 @@ func _on_wave_completed(wave_num: int, bonus_score: int) -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.score_updated.emit(0, total_score)
+
+	var env = get_node_or_null("SubwayEnvironment")
+	if env:
+		if wave_num == 3:
+			env.unlock_gate(2)
+			if bus:
+				bus.show_toast_requested.emit("ZONE 2 UNLOCKED: TRAIN TUNNELS CLEARED!", Color(0.2, 1.0, 0.4))
+		elif wave_num == 7:
+			env.unlock_gate(3)
+			if bus:
+				bus.show_toast_requested.emit("ZONE 3 UNLOCKED: PUMP HIVE ACCESSIBLE!", Color(1.0, 0.8, 0.1))
+
+	if wave_num >= 10:
+		_on_all_waves_defeated()
+
+func _on_all_waves_defeated() -> void:
+	is_game_active = false
+	var sm = GameConstants.get_autoload(self, "SaveManager")
+	if sm:
+		sm.record_subway_run(highest_wave, total_kills, total_score)
+
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.show_toast_requested.emit("BIO-COLOSSUS DESTROYED! EXTRACTION SUCCESSFUL!", Color(0.0, 1.0, 0.8))
+
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		am.play_sound("goal_horn", 1.0, 2.0)
+
+	results_screen.display_results(true, {
+		"Final Score": total_score,
+		"Waves Survived": highest_wave,
+		"Mutants Eliminated": total_kills,
+		"Scrap Salvaged": total_scrap,
+		"Outcome": "EXTRACTION SUCCESSFUL"
+	})
 
 func _on_player_died(_killer: String) -> void:
 	is_game_active = false

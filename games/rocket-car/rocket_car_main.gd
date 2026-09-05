@@ -9,13 +9,16 @@ const NitroKickHUDScript = preload("res://games/rocket-car/ui/nitro_kick_hud.gd"
 const PauseMenuScript = preload("res://shared/ui/pause_menu.gd")
 const ResultsScreenScript = preload("res://shared/ui/results_screen.gd")
 
+@export var selected_theme: String = "day" # "day" (Volt Park) or "cyber" (Cyber Dome)
 @export var match_duration: float = 300.0 # 5 minutes
+@export var enable_overtime: bool = false
 
 var blue_score: int = 0
 var orange_score: int = 0
 var time_left: float = 300.0
 var match_active: bool = true
 var is_kickoff_pause: bool = false
+var is_overtime: bool = false
 
 var player_car: Node3D
 var ai_cars: Array[Node3D] = []
@@ -32,9 +35,10 @@ func _ready() -> void:
 		setup_scene()
 
 func setup_scene() -> void:
-	# Arena
+	# Arena with selected stadium theme
 	var arena = RocketArenaScript.new()
 	arena.name = "RocketArena"
+	arena.stadium_theme = selected_theme
 	arena.goal_triggered.connect(_on_goal_scored)
 	add_child(arena)
 
@@ -119,7 +123,16 @@ func _process(delta: float) -> void:
 			bus.round_timer_updated.emit(max(0.0, time_left))
 
 		if time_left <= 0.0:
-			end_match()
+			if enable_overtime and blue_score == orange_score:
+				if not is_overtime:
+					is_overtime = true
+					if bus:
+						bus.show_toast_requested.emit("OVERTIME! NEXT GOAL WINS!", Color(1.0, 0.85, 0.1))
+					var am = GameConstants.get_autoload(self, "AudioManager")
+					if am:
+						am.play_sound("referee_whistle", 1.0, 2.0)
+			else:
+				end_match()
 
 	update_chase_camera(delta)
 
@@ -174,6 +187,9 @@ func reset_kickoff() -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.show_toast_requested.emit("KICKOFF!", Color(0.0, 1.0, 1.0))
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		am.play_sound("referee_whistle", 1.0, 1.5)
 
 	# Unpause driving after short countdown
 	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
@@ -200,10 +216,14 @@ func _on_goal_scored(scoring_team: int) -> void:
 
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am:
-		am.play_sound("goal")
+		am.play_sound("goal_horn", 1.0, 2.5)
 
 	if hud and hud.has_method("show_goal_celebration"):
 		hud.show_goal_celebration(scoring_team, 88.0)
+
+	if is_overtime:
+		end_match()
+		return
 
 	reset_kickoff()
 
@@ -214,10 +234,15 @@ func end_match() -> void:
 	if sm:
 		sm.record_rocket_match(blue_score, 0, won)
 
+	var outcome = "VICTORY!" if won else "DEFEAT"
+	if is_overtime:
+		outcome += " (Overtime Sudden Death)"
+
 	results_screen.display_results(won, {
 		"Blue Score": blue_score,
 		"Orange Score": orange_score,
-		"Result": "Match Finished"
+		"Status": outcome,
+		"Arena": "Volt Park Arena" if selected_theme == "day" else "Cyber Dome"
 	})
 
 func _on_restart() -> void:

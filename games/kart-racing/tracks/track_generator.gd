@@ -3,6 +3,7 @@ extends Node3D
 
 signal track_built(waypoints: Array[Vector3], checkpoints: Array[RaceCheckpoint])
 
+@export var track_theme: String = "metropolis" # "metropolis", "canyon", "frozen"
 @export var track_width: float = 14.0
 
 var waypoints: Array[Vector3] = []
@@ -12,32 +13,59 @@ func _ready() -> void:
 	build_circuit()
 
 func build_circuit() -> void:
-	var circuit_nodes: Array[Vector3] = [
-		Vector3(0, 0, 0),        # 0: Start/Finish straight
-		Vector3(0, 0, -40),      # 1: Straightaway
-		Vector3(20, 0, -75),     # 2: Turn 1 (Right curve)
-		Vector3(60, 0, -75),     # 3: North Straight
-		Vector3(85, 0, -40),     # 4: Turn 2 (Hairpin entry)
-		Vector3(85, 0, 10),      # 5: Hairpin apex
-		Vector3(60, 0, 45),      # 6: Turn 3
-		Vector3(20, 0, 45)       # 7: Final chicane back to 0
-	]
+	var circuit_nodes: Array[Vector3] = []
+	match track_theme:
+		"canyon":
+			circuit_nodes = [
+				Vector3(0, 0, 0),
+				Vector3(0, 0, -50),
+				Vector3(30, 0, -90),
+				Vector3(70, 0, -80),
+				Vector3(100, 0, -40),
+				Vector3(80, 0, 20),
+				Vector3(40, 0, 50),
+				Vector3(10, 0, 30)
+			]
+			# Red Rock Canyon Floor
+			create_box(Vector3(50.0, -0.6, -10.0), Vector3(250.0, 0.8, 250.0), "canyon_rock")
+			# Sandstone Mesa Pillars
+			for p in [Vector3(-30, 10, -60), Vector3(50, 14, -120), Vector3(130, 12, -20), Vector3(50, 10, 80)]:
+				create_box(p, Vector3(35.0, 20.0, 35.0), "canyon_rock")
+		"frozen":
+			circuit_nodes = [
+				Vector3(0, 0, 0),
+				Vector3(0, 0, -45),
+				Vector3(-35, 0, -85),
+				Vector3(10, 0, -110),
+				Vector3(65, 0, -75),
+				Vector3(80, 0, -20),
+				Vector3(50, 0, 35),
+				Vector3(20, 0, 25)
+			]
+			# Glacial Ice Floor
+			create_box(Vector3(25.0, -0.6, -35.0), Vector3(250.0, 0.8, 250.0), "snow_ice")
+			# Ice Peak Spires
+			for p in [Vector3(-45, 12, -50), Vector3(20, 18, -135), Vector3(110, 15, -45), Vector3(30, 12, 60)]:
+				create_box(p, Vector3(28.0, 24.0, 28.0), "snow_ice")
+		_: # "metropolis"
+			circuit_nodes = [
+				Vector3(0, 0, 0),        # 0: Start/Finish straight
+				Vector3(0, 0, -40),      # 1: Straightaway
+				Vector3(20, 0, -75),     # 2: Turn 1 (Right curve)
+				Vector3(60, 0, -75),     # 3: North Straight
+				Vector3(85, 0, -40),     # 4: Turn 2 (Hairpin entry)
+				Vector3(85, 0, 10),      # 5: Hairpin apex
+				Vector3(60, 0, 45),      # 6: Turn 3
+				Vector3(20, 0, 45)       # 7: Final chicane back to 0
+			]
+			# Metropolis Asphalt Ground & Skyscraper Facades
+			create_box(Vector3(45.0, -0.6, -15.0), Vector3(240.0, 0.8, 240.0), "asphalt")
+			for p in [Vector3(-35, 16, -60), Vector3(45, 22, -120), Vector3(125, 20, -15), Vector3(45, 18, 85)]:
+				create_box(p, Vector3(30.0, 36.0, 30.0), "dark_concrete")
+				# Add Neon Billboard to each skyscraper
+				create_box(p + Vector3(0, 0, 15.2), Vector3(18.0, 8.0, 0.4), "digital_signage_cyan")
 
 	waypoints = circuit_nodes
-
-	# Surrounding Natural Grass Terrain (No empty black voids!)
-	create_box(Vector3(45.0, -0.6, -15.0), Vector3(220.0, 0.8, 220.0), "grass")
-
-	# Perimeter Canyon Hills & Rock Formations (Scenic framing)
-	var hill_positions = [
-		Vector3(-30.0, 6.0, -60.0),
-		Vector3(45.0, 8.0, -110.0),
-		Vector3(115.0, 7.0, -15.0),
-		Vector3(45.0, 6.0, 75.0),
-		Vector3(-35.0, 5.0, 20.0)
-	]
-	for p in hill_positions:
-		create_box(p, Vector3(35.0, 14.0, 35.0), "grimy_concrete")
 
 	# Build track segments between sequential nodes
 	for i in range(circuit_nodes.size()):
@@ -45,8 +73,10 @@ func build_circuit() -> void:
 		var p2 = circuit_nodes[(i + 1) % circuit_nodes.size()]
 		build_track_segment(p1, p2, i)
 
-	# Start/Finish Overhead Gantry Truss with Countdown Signal Lights
-	create_start_finish_gantry(circuit_nodes[0])
+	# Start/Finish Overhead Gantry Truss
+	var gantry = MeshBuilder.build_start_gantry(track_width)
+	gantry.position = circuit_nodes[0] + Vector3(0, 0, -2.0)
+	add_child(gantry)
 
 	# Place item box powerups
 	var item_spots = [

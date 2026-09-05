@@ -3,6 +3,7 @@ extends CharacterBody3D
 
 signal drift_boost_triggered(boost_level: int)
 
+@export var kart_type: String = "speeder" # "speeder", "phantom", "enforcer"
 @export var base_speed: float = 26.0
 @export var boost_top_speed: float = 38.0
 @export var acceleration: float = 24.0
@@ -50,11 +51,30 @@ func _ready() -> void:
 	collision_layer = GameConstants.LAYER_PLAYER if is_player else GameConstants.LAYER_ENEMIES
 	collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES | GameConstants.LAYER_CHECKPOINTS
 
+	setup_kart_archetype()
 	setup_kart_visual()
 
+func setup_kart_archetype() -> void:
+	match kart_type:
+		"phantom":
+			base_speed = 28.5
+			boost_top_speed = 42.0
+			acceleration = 21.0
+			steer_speed = 3.0
+		"enforcer":
+			base_speed = 24.5
+			boost_top_speed = 36.0
+			acceleration = 28.0
+			steer_speed = 3.6
+		_:
+			base_speed = 26.0
+			boost_top_speed = 38.0
+			acceleration = 24.0
+			steer_speed = 3.2
+
 func setup_kart_visual() -> void:
-	var kart_col = Color(0.2, 1.0, 0.5) if is_player else (Color(1.0, 0.5, 0.0) if racer_id == 1 else Color(0.0, 0.85, 1.0))
-	kart_visual = MeshBuilder.build_drift_kart(kart_col)
+	var kart_col = Color(0.2, 1.0, 0.5) if is_player else (Color(1.0, 0.5, 0.0) if racer_id == 1 else (Color(0.8, 0.2, 1.0) if racer_id == 2 else Color(0.0, 0.85, 1.0)))
+	kart_visual = MeshBuilder.build_drift_kart(kart_col, kart_type)
 	add_child(kart_visual)
 
 	for child in kart_visual.get_children():
@@ -155,21 +175,33 @@ func apply_kart_controls(throttle: float, steer: float, want_drift: bool, delta:
 
 func trigger_drift_boost() -> void:
 	var boost_level = 0
-	if drift_charge_time >= 2.0:
-		boost_level = 2 # Super Boost
-		boost_timer = 2.2
-	elif drift_charge_time >= 0.8:
-		boost_level = 1 # Regular Boost
-		boost_timer = 1.2
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	var bus = GameConstants.get_autoload(self, "EventBus")
+
+	if drift_charge_time >= 2.5:
+		boost_level = 3 # Tier 3: Ultra Mini-Turbo (Purple sparks)
+		boost_timer = 3.2
+		if am:
+			am.play_sound("drift_turbo_3", 1.0, 1.8)
+		if bus and is_player:
+			bus.show_toast_requested.emit("ULTRA MINI-TURBO! +++", Color(1.0, 0.2, 0.9))
+	elif drift_charge_time >= 1.5:
+		boost_level = 2 # Tier 2: Super Mini-Turbo (Orange sparks)
+		boost_timer = 2.0
+		if am:
+			am.play_sound("drift_screech", 1.4, 1.2)
+		if bus and is_player:
+			bus.show_toast_requested.emit("SUPER MINI-TURBO! ++", Color(1.0, 0.6, 0.1))
+	elif drift_charge_time >= 0.7:
+		boost_level = 1 # Tier 1: Mini-Turbo (Blue sparks)
+		boost_timer = 1.0
+		if am:
+			am.play_sound("jump", 1.4)
+		if bus and is_player:
+			bus.show_toast_requested.emit("MINI-TURBO! +", Color(0.2, 0.8, 1.0))
 
 	if boost_level > 0:
 		drift_boost_triggered.emit(boost_level)
-		var am = GameConstants.get_autoload(self, "AudioManager")
-		if am:
-			am.play_sound("jump", 1.4)
-		var bus = GameConstants.get_autoload(self, "EventBus")
-		if bus:
-			bus.show_toast_requested.emit("DRIFT BOOST!", Color(0.0, 1.0, 1.0))
 	drift_charge_time = 0.0
 
 func apply_item_boost(duration: float) -> void:

@@ -310,3 +310,45 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - Card horizontal clipping and overflow on 1280x720 display resolution in Universal Launcher.
 - Leaked FPS HUD and Kickoff banner bleedover into launcher hierarchy.
 
+## [5.0.0-production-release] - 2026-09-05
+### Added
+- **Game 1: Iron Crucible (Tactical Arena FPS) - Production Content**:
+  - Added 3 distinct procedural tactical maps: Sanctum, Orbital Yard, and Reactor Core with varied verticality, cover, and lighting.
+  - Interactive pre-match weapon loadout selector allowing primary weapon customization (Pulse Rifle, Scatter Cannon, Rail Driver, Grenade Launcher, Plasma Cutter).
+  - 3 distinct bot AI archetypes: Aggressive Rusher (Scout), Balanced Patrol (Trooper), and Defensive Sniper (Heavy).
+  - Dynamic match escalation events with overtime announcements, killstreak notifications, match stats, and rematch loop.
+- **Game 2: Metro Siege (Subway Survival FPS) - Production Content**:
+  - Added 3 interconnected subway sector zones: Station Terminal, Maintenance Bay, and Highline Junction.
+  - Escalating 10-wave director with pacing, intermission supply airdrops, scrap currency economy, and weapon/stat perk upgrade station.
+  - 4+ enemy archetypes: Fast Melee Crawler, Acid Spitter, Armored Brute, Stalker, and the multi-phase BioColossus boss at wave 10.
+  - Zone unlock mechanics requiring scrap investment to open barricades and extract to victory.
+- **Game 3: Nitro Kick (Rocket-Car Football) - Production Content**:
+  - 2 distinct arena stadium themes: Cyber Dome (night neon) and Volt Park Day (bright high-clarity sports turf).
+  - 6 peripheral and midfield boost replenishment pads with dynamic respawn cooldowns and collection VFX.
+  - 3D goal cages with depth netting, goal line detectors, explosion particle burst upon scoring, and sudden death overtime.
+  - Ball trajectory predictor and team color vehicle liveries (Blue vs. Orange).
+- **Game 4: Drift Storm (Arcade Kart Racing) - Production Content**:
+  - 3 complete race courses: Neon Circuit, Canyon Run, and Skyline Drift with banked curves, tunnels, and elevation changes.
+  - Interactive pre-race kart and track selection screen.
+  - 3-tier mini-turbo drift charging system with progressive blue/orange/purple spark particles and turbo burst release.
+  - 3 distinct AI racer archetypes (Aggressive, Balanced, Cautious) with dynamic racing lines and rubberbanding options.
+  - Race countdown, 3-lap progression checkpoints, real-time position HUD, powerup mystery crates (Turbo Boost, EMP, Shield), and podium finish screen.
+- **Universal Launcher & Multi-Resolution Display**:
+  - Fixed safe-area calculation root cause that previously shaved 320px on desktop and browser viewports, ensuring all 4 game cards are visible side-by-side with zero clipping.
+  - Real-time responsive layout with viewport resize listener dynamically adapting between 4-column (desktop/ultrawide), 2x2 grid (laptop/tablet), and 1-column (portrait mobile).
+  - Rendered gameplay card previews, polished hover/focus states, sound feedback, and clean player-facing UI devoid of developer/certification jargon.
+- **Audio & Visual Synthesis**:
+  - Synthesized procedural sound effects for all weapons, engines, drift squeals, turbo boost, goal explosions, ball bounces, and UI navigation.
+  - Multi-layered procedural materials with normal maps, albedo textures, metallic roughness, and environmental lighting presets.
+- **Packaged Releases**:
+  - Web: `export/dist/VoltArena-Web.zip` (16.01 MB, verified in-browser on localhost:8080 with COOP/COEP headers).
+  - Windows: `export/dist/VoltArena-Windows-x86_64.zip` (29.39 MB, portable executable with embedded PCK).
+  - Linux: `export/dist/VoltArena-Linux-x86_64.tar.gz` (23.56 MB, ELF binary).
+  - Android: `export/dist/VoltArena-Android.apk` (44.55 MB, multi-ABI APK).
+
+### Fixed
+- Launcher 4th card (Drift Storm) clipping caused by inappropriate mobile safe-area deduction on desktop and web viewports.
+- Missing track variety and lack of race customization in Drift Storm.
+- Linear wave pacing and missing boss encounters in Metro Siege.
+- Stadium lighting clarity and missing boost pads in Nitro Kick.
+- Lack of bot variety and map selection in Iron Crucible.

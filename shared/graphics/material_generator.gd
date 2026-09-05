@@ -172,6 +172,61 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			mat.roughness = 1.0
 			mat.metallic = 0.0
+		"stadium_pitch_day":
+			mat.albedo_color = Color(0.92, 0.98, 0.92)
+			mat.albedo_texture = TexSynth.get_texture("stadium_pitch_day")
+			mat.metallic = 0.04
+			mat.roughness = 0.80
+		"stadium_pitch_cyber":
+			mat.albedo_color = Color(0.90, 0.95, 1.0)
+			mat.albedo_texture = TexSynth.get_texture("stadium_pitch_cyber")
+			mat.metallic = 0.25
+			mat.roughness = 0.60
+		"canyon_rock":
+			mat.albedo_color = Color(0.95, 0.90, 0.85)
+			mat.albedo_texture = TexSynth.get_texture("canyon_rock")
+			mat.normal_enabled = true
+			mat.normal_texture = TexSynth.get_texture("canyon_rock_normal")
+			mat.metallic = 0.08
+			mat.roughness = 0.88
+			mat.uv1_scale = Vector3(2.0, 4.0, 2.0)
+		"snow_ice":
+			mat.albedo_color = Color(0.95, 0.98, 1.0)
+			mat.albedo_texture = TexSynth.get_texture("snow_ice")
+			mat.metallic = 0.15
+			mat.roughness = 0.35
+			mat.uv1_scale = Vector3(4.0, 4.0, 4.0)
+		"subway_rust_metal":
+			mat.albedo_color = Color(0.88, 0.88, 0.88)
+			mat.albedo_texture = TexSynth.get_texture("subway_rust_metal")
+			mat.metallic = 0.75
+			mat.roughness = 0.45
+			mat.uv1_scale = Vector3(2.0, 2.0, 2.0)
+		"acid_pool":
+			mat.albedo_color = Color(0.2, 1.0, 0.2)
+			mat.albedo_texture = TexSynth.get_texture("acid_pool")
+			mat.emission_enabled = true
+			mat.emission = Color(0.2, 0.95, 0.1)
+			mat.emission_energy_multiplier = 2.8
+			mat.roughness = 0.2
+		"ball_hex_glow":
+			mat.albedo_color = Color(1.0, 1.0, 1.0)
+			mat.albedo_texture = TexSynth.get_texture("ball_hex_glow")
+			mat.emission_enabled = true
+			mat.emission = Color(0.0, 0.85, 1.0)
+			mat.emission_energy_multiplier = 1.8
+			mat.metallic = 0.2
+			mat.roughness = 0.3
+		"neon_yellow":
+			mat.albedo_color = Color(1.0, 0.95, 0.1)
+			mat.emission_enabled = true
+			mat.emission = Color(1.0, 0.95, 0.1)
+			mat.emission_energy_multiplier = 2.4
+		"neon_purple":
+			mat.albedo_color = Color(0.8, 0.2, 1.0)
+			mat.emission_enabled = true
+			mat.emission = Color(0.8, 0.2, 1.0)
+			mat.emission_energy_multiplier = 2.8
 		_:
 			mat.albedo_color = Color(0.7, 0.7, 0.7)
 			mat.metallic = 0.5

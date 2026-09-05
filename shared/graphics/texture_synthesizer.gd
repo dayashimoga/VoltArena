@@ -31,6 +31,22 @@ static func get_texture(texture_id: String) -> ImageTexture:
 			tex = _build_asphalt_normal()
 		"stadium_pitch_albedo":
 			tex = _build_stadium_pitch_albedo()
+		"stadium_pitch_day":
+			tex = _build_stadium_pitch_day()
+		"stadium_pitch_cyber":
+			tex = _build_stadium_pitch_cyber()
+		"canyon_rock":
+			tex = _build_canyon_rock()
+		"canyon_rock_normal":
+			tex = _build_canyon_rock_normal()
+		"snow_ice":
+			tex = _build_snow_ice()
+		"subway_rust_metal":
+			tex = _build_subway_rust_metal()
+		"acid_pool":
+			tex = _build_acid_pool()
+		"ball_hex_glow":
+			tex = _build_ball_hex_glow()
 		"hazard_stripe_albedo":
 			tex = _build_hazard_stripe_albedo()
 		"curb_stripes_albedo":
@@ -335,6 +351,135 @@ static func _build_stadium_spectators_albedo() -> ImageTexture:
 				col = fan_colors[color_idx]
 			img.set_pixel(x, y, col)
 
+	return ImageTexture.create_from_image(img)
+
+static func _build_stadium_pitch_day() -> ImageTexture:
+	var w = 128
+	var h = 128
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var green_light = Color(0.24, 0.68, 0.28)
+	var green_dark = Color(0.18, 0.56, 0.22)
+	var chalk = Color(0.96, 0.98, 0.96)
+	for y in range(h):
+		var stripe = (y / 16) % 2 == 0
+		var base_col = green_light if stripe else green_dark
+		for x in range(w):
+			var noise = sin(float(x) * 0.8) * cos(float(y) * 0.8) * 0.02
+			var col = base_col + Color(noise, noise * 1.5, noise)
+			# Pitch perimeter chalk lines
+			if x < 3 or x >= w - 3 or y < 3 or y >= h - 3 or x == 64:
+				col = chalk
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+static func _build_stadium_pitch_cyber() -> ImageTexture:
+	var w = 128
+	var h = 128
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var turf_base = Color(0.08, 0.12, 0.18)
+	var grid_cyan = Color(0.0, 0.85, 1.0)
+	var grid_sub = Color(0.12, 0.22, 0.32)
+	for y in range(h):
+		for x in range(w):
+			var is_major = (x % 32 == 0 or y % 32 == 0)
+			var is_minor = (x % 8 == 0 or y % 8 == 0)
+			var col = turf_base
+			if is_major:
+				col = grid_cyan
+			elif is_minor:
+				col = grid_sub
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+static func _build_canyon_rock() -> ImageTexture:
+	var w = 128
+	var h = 128
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var rock_red = Color(0.72, 0.38, 0.24)
+	var rock_tan = Color(0.82, 0.52, 0.32)
+	var rock_strata = Color(0.55, 0.28, 0.18)
+	for y in range(h):
+		var band = sin(float(y) * 0.15 + sin(float(y) * 0.05) * 2.0)
+		var base = rock_red.lerp(rock_tan, (band + 1.0) * 0.5)
+		if (y % 16 < 2):
+			base = rock_strata
+		for x in range(w):
+			var grain = (sin(float(x * 3)) + cos(float(y * 4))) * 0.03
+			img.set_pixel(x, y, base + Color(grain, grain * 0.7, grain * 0.4))
+	return ImageTexture.create_from_image(img)
+
+static func _build_canyon_rock_normal() -> ImageTexture:
+	var w = 128
+	var h = 128
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var flat = Color(0.5, 0.5, 1.0)
+	for y in range(h):
+		for x in range(w):
+			var nx = 0.5 + sin(float(x) * 0.5) * 0.15
+			var ny = 0.5 + cos(float(y) * 0.3) * 0.2
+			img.set_pixel(x, y, Color(nx, ny, 0.95))
+	return ImageTexture.create_from_image(img)
+
+static func _build_snow_ice() -> ImageTexture:
+	var w = 128
+	var h = 128
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var snow_white = Color(0.92, 0.95, 0.98)
+	var ice_cyan = Color(0.75, 0.88, 0.96)
+	for y in range(h):
+		for x in range(w):
+			var sparkle = (sin(float(x * 5)) * cos(float(y * 7))) * 0.05
+			var blend = sin(float(x) * 0.08) * cos(float(y) * 0.08)
+			var col = snow_white.lerp(ice_cyan, abs(blend)) + Color(sparkle, sparkle, sparkle)
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+static func _build_subway_rust_metal() -> ImageTexture:
+	var w = 128
+	var h = 128
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var steel = Color(0.35, 0.38, 0.42)
+	var rust = Color(0.55, 0.28, 0.15)
+	for y in range(h):
+		for x in range(w):
+			var corrugation = sin(float(x) * 0.4) * 0.1
+			var rust_patch = sin(float(x) * 0.12) * cos(float(y) * 0.15)
+			var col = steel + Color(corrugation, corrugation, corrugation)
+			if rust_patch > 0.3:
+				col = col.lerp(rust, (rust_patch - 0.3) * 2.0)
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+static func _build_acid_pool() -> ImageTexture:
+	var w = 128
+	var h = 128
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var toxic_green = Color(0.3, 0.95, 0.1)
+	var dark_slime = Color(0.1, 0.45, 0.05)
+	for y in range(h):
+		for x in range(w):
+			var swirl = sin(float(x) * 0.2 + float(y) * 0.1) * cos(float(y) * 0.2 - float(x) * 0.1)
+			var col = toxic_green.lerp(dark_slime, (swirl + 1.0) * 0.5)
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+static func _build_ball_hex_glow() -> ImageTexture:
+	var w = 128
+	var h = 128
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var hex_white = Color(0.95, 0.98, 1.0)
+	var hex_core = Color(0.1, 0.8, 1.0)
+	for y in range(h):
+		for x in range(w):
+			var q = (x % 32) - 16
+			var r = (y % 32) - 16
+			var d = sqrt(float(q * q + r * r))
+			var col = hex_white
+			if d < 5.0:
+				col = hex_core
+			elif d > 14.0:
+				col = Color(0.15, 0.2, 0.25)
+			img.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(img)
 
 static func _build_fallback_texture() -> ImageTexture:

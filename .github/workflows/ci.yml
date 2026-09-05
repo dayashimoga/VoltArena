@@ -155,61 +155,8 @@ jobs:
           fi
       - name: Inject chunk reassembler into index.html
         run: |
-          python3 -c '
-          with open("export/web/index.html", "r", encoding="utf-8") as f:
-              content = f.read()
+          bash scripts/inject_web_hook.sh export/web/index.html platform/web/reassembler_hook.html
 
-          hook = """
-          \t\t<script>
-          \t\t// VoltArena Cloudflare Chunk Reassembler Hook
-          \t\t(function() {
-          \t\t\tconst origFetch = window.fetch;
-          \t\t\twindow.fetch = async function(resource, init) {
-          \t\t\t\tconst url = typeof resource === "string" ? resource : (resource?.url || "");
-          \t\t\t\tif (url.endsWith("index.wasm")) {
-          \t\t\t\t\ttry {
-          \t\t\t\t\t\tconst res = await origFetch(resource, init);
-          \t\t\t\t\t\tif (res.ok) return res;
-          \t\t\t\t\t} catch (e) {}
-          \t\t\t\t\tconst [r1, r2] = await Promise.all([
-          \t\t\t\t\t\torigFetch("index.wasm.part00"),
-          \t\t\t\t\t\torigFetch("index.wasm.part01")
-          \t\t\t\t\t]);
-          \t\t\t\t\tconst [b1, b2] = await Promise.all([r1.arrayBuffer(), r2.arrayBuffer()]);
-          \t\t\t\t\tconst combined = new Uint8Array(b1.byteLength + b2.byteLength);
-          \t\t\t\t\tcombined.set(new Uint8Array(b1), 0);
-          \t\t\t\t\tcombined.set(new Uint8Array(b2), b1.byteLength);
-          \t\t\t\t\treturn new Response(combined, { status: 200, headers: { "Content-Type": "application/wasm" } });
-          \t\t\t\t}
-          \t\t\t\tif (url.endsWith("index.pck")) {
-          \t\t\t\t\ttry {
-          \t\t\t\t\t\tconst res = await origFetch(resource, init);
-          \t\t\t\t\t\tif (res.ok) return res;
-          \t\t\t\t\t} catch (e) {}
-          \t\t\t\t\tconst [r1, r2] = await Promise.all([
-          \t\t\t\t\t\torigFetch("index.pck.part00"),
-          \t\t\t\t\t\torigFetch("index.pck.part01")
-          \t\t\t\t\t]);
-          \t\t\t\t\tconst [b1, b2] = await Promise.all([r1.arrayBuffer(), r2.arrayBuffer()]);
-          \t\t\t\t\tconst combined = new Uint8Array(b1.byteLength + b2.byteLength);
-          \t\t\t\t\tcombined.set(new Uint8Array(b1), 0);
-          \t\t\t\t\tcombined.set(new Uint8Array(b2), b1.byteLength);
-          \t\t\t\t\treturn new Response(combined, { status: 200, headers: { "Content-Type": "application/octet-stream" } });
-          \t\t\t\t}
-          \t\t\t\tif (url.includes(".pck")) {
-          \t\t\t\t\tinit = Object.assign({}, init, { cache: "no-store" });
-          \t\t\t\t}
-          \t\t\t\treturn origFetch(resource, init);
-          \t\t\t};
-          \t\t})();
-          \t\t</script>
-          """
-
-          if "VoltArena Cloudflare Chunk Reassembler Hook" not in content:
-              content = content.replace("<script src=\"index.js\"></script>", hook + "\n\t\t<script src=\"index.js\"></script>")
-              with open("export/web/index.html", "w", encoding="utf-8") as f:
-                  f.write(content)
-          '
       - name: Verify Cloudflare 25MB limit
         run: |
           echo "Checking file sizes in export/web/..."

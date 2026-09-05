@@ -472,3 +472,16 @@
   - `artifacts/screenshots/visual_contact_sheet.png` & `artifacts/screenshots/contact_sheet.html`
   - `PRODUCTION_CERTIFICATION.md` (Updated to RUNTIME_VERIFIED)
 
+### [2026-09-05 22:55:00 UTC] - CI/CD Web Export Python Dependency Resolution
+- **Status**: COMPLETED
+- **Description**:
+  1. Resolved `python3: not found (exit code 127)` failure in GitHub Actions `build-web` stage caused by invoking python3 directly within the `barichello/godot-ci:4.3` container.
+  2. Created `platform/web/reassembler_hook.html` storing the standard in-memory chunk reassembly hook.
+  3. Created `scripts/inject_web_hook.sh` using POSIX `awk` to inject the reassembler script before `<script src="index.js"></script>` with zero python dependencies.
+  4. Updated `.github/workflows/ci.yml`, `scripts/build-web.sh`, and `scripts/build-web.ps1` to reference the standardized injector and verified end-to-end web build in container.
+- **Evidence**:
+  - `scripts/inject_web_hook.sh` (POSIX awk injection verified in `barichello/godot-ci:4.3`)
+  - `bash scripts/build-web.sh` (100% compliant export with chunk reassembler hook verified)
+  - `.github/workflows/ci.yml` (Updated build-web step)
+
+

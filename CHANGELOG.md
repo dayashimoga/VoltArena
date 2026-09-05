@@ -487,4 +487,13 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Recorded overall status as **RUNTIME_VERIFIED** across automated gates, visual audits, and Playwright captures.
   - Explicitly recognized user real-device observation as authoritative over automated certification metrics.
 
+## [6.1.1-ci-web-export-fix] - 2026-09-05
+
+### Fixed
+- **CI/CD Web Export Python Dependency**:
+  - Resolved `python3: not found (exit code 127)` error in GitHub Actions `build-web` job occurring inside the `barichello/godot-ci:4.3` container.
+  - Created `platform/web/reassembler_hook.html` and standalone POSIX awk injector `scripts/inject_web_hook.sh`, eliminating python runtime requirement during web export hook injection.
+  - Updated `.github/workflows/ci.yml`, `scripts/build-web.sh`, and `scripts/build-web.ps1` to use the standardized hook fragment and injector script.
+
+
 

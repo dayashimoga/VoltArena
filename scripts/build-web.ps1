@@ -20,64 +20,7 @@ Copy-Item -Force "platform/web/_headers" "export/web/_headers"
 
 Write-Host "[4/5] Injecting WASM and PCK chunk reassembler into index.html..." -ForegroundColor Yellow
 $htmlContent = Get-Content -Raw -Encoding UTF8 "export/web/index.html"
-$hookScript = @'
-		<script>
-		// VoltArena Cloudflare Chunk Reassembler Hook
-		(function() {
-			const origFetch = window.fetch;
-			async function assembleParts(prefix, contentType) {
-				let parts = [];
-				for (let i = 0; i < 20; i++) {
-					const num = i < 10 ? '0' + i : '' + i;
-					const partUrl = prefix + '.part' + num;
-					try {
-						const res = await origFetch(partUrl);
-						if (!res.ok) break;
-						const buf = await res.arrayBuffer();
-						if (buf.byteLength === 0) break;
-						parts.push(new Uint8Array(buf));
-					} catch (e) {
-						break;
-					}
-				}
-				if (parts.length === 0) return null;
-				let totalLen = 0;
-				for (const p of parts) totalLen += p.byteLength;
-				const combined = new Uint8Array(totalLen);
-				let offset = 0;
-				for (const p of parts) {
-					combined.set(p, offset);
-					offset += p.byteLength;
-				}
-				return new Response(combined, { status: 200, headers: { "Content-Type": contentType } });
-			}
-
-			window.fetch = async function(resource, init) {
-				const url = typeof resource === "string" ? resource : (resource?.url || "");
-				if (url.endsWith("index.wasm")) {
-					try {
-						const res = await origFetch(resource, init);
-						if (res.ok) return res;
-					} catch (e) {}
-					const assembled = await assembleParts("index.wasm", "application/wasm");
-					if (assembled) return assembled;
-				}
-				if (url.endsWith("index.pck")) {
-					try {
-						const res = await origFetch(resource, init);
-						if (res.ok) return res;
-					} catch (e) {}
-					const assembled = await assembleParts("index.pck", "application/octet-stream");
-					if (assembled) return assembled;
-				}
-				if (url.includes(".pck")) {
-					init = Object.assign({}, init, { cache: "no-store" });
-				}
-				return origFetch(resource, init);
-			};
-		})();
-		</script>
-'@
+$hookScript = Get-Content -Raw -Encoding UTF8 "platform/web/reassembler_hook.html"
 
 if (-not $htmlContent.Contains("VoltArena Cloudflare Chunk Reassembler Hook")) {
     $htmlContent = $htmlContent.Replace('<script src="index.js"></script>', "$hookScript`r`n`t`t<script src=`"index.js`"></script>")

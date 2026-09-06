@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 93.6915887850467,
+  "overall_coverage_pct": 93.2558139534884,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -193,10 +193,12 @@
       "untested": []
     },
     "res://games/subway-survival/enemies/enemy_base.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 85.7142857142857,
       "tested": 6,
-      "total": 6,
-      "untested": []
+      "total": 7,
+      "untested": [
+        "attach_enemy_weapon"
+      ]
     },
     "res://games/subway-survival/enemies/infected_human.gd": {
       "coverage_pct": 0,
@@ -274,10 +276,12 @@
       "untested": []
     },
     "res://shared/audio/audio_manager.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 93.3333333333333,
       "tested": 14,
-      "total": 14,
-      "untested": []
+      "total": 15,
+      "untested": [
+        "play_sfx"
+      ]
     },
     "res://shared/combat/health_component.gd": {
       "coverage_pct": 100,
@@ -443,6 +447,6 @@
     }
   },
   "tested_functions": 401,
-  "timestamp": "2026-09-06T11:52:19",
-  "total_functions": 428
+  "timestamp": "2026-09-06T14:10:53",
+  "total_functions": 430
 }

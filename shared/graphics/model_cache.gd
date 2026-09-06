@@ -101,11 +101,11 @@ static func get_enemy(enemy_type: String = "crawler") -> Node3D:
 	match enemy_type.to_lower():
 		"crawler":
 			path = "res://assets/models/enemies/fast_crawler.glb"
-			target_scale = Vector3(0.85, 0.75, 1.1)
+			target_scale = Vector3(1.0, 1.0, 1.0)
 			tint_color = Color(0.8, 0.3, 0.1)
 		"stalker":
 			path = "res://assets/models/enemies/stalker.glb"
-			target_scale = Vector3(0.95, 1.05, 0.95)
+			target_scale = Vector3(1.0, 1.0, 1.0)
 			tint_color = Color(0.3, 0.1, 0.5)
 		"spitter":
 			path = "res://assets/models/enemies/ranged_spitter.glb"
@@ -113,11 +113,11 @@ static func get_enemy(enemy_type: String = "crawler") -> Node3D:
 			tint_color = Color(0.2, 0.9, 0.2)
 		"brute":
 			path = "res://assets/models/enemies/armored_brute.glb"
-			target_scale = Vector3(1.5, 1.4, 1.5)
+			target_scale = Vector3(1.35, 1.35, 1.35)
 			tint_color = Color(0.6, 0.2, 0.1)
 		"boss", "biocolossus":
 			path = "res://assets/models/enemies/biocolossus_boss.glb"
-			target_scale = Vector3(2.8, 2.8, 2.8)
+			target_scale = Vector3(2.5, 2.5, 2.5)
 			tint_color = Color(0.9, 0.1, 0.1)
 		_:
 			path = "res://assets/models/enemies/infected_human.glb"
@@ -410,41 +410,47 @@ static func play_animation(root: Node3D, anim_name: String, blend_time: float = 
 	return false
 
 static func _resolve_animation_name(anim: AnimationPlayer, generic_name: String) -> String:
-	if anim.has_animation(generic_name):
-		return generic_name
-
 	var anim_list = anim.get_animation_list()
 	var g_lower = generic_name.to_lower()
 
+	# 1. Locomotion / Moving requests (walk, run, sprint, patrol, seek, strafe)
+	if "run" in g_lower or "sprint" in g_lower or "seek" in g_lower or "chase" in g_lower:
+		for a in anim_list:
+			if a.to_lower() == "run" or ("run" in a.to_lower() and "walk" not in a.to_lower()):
+				return a
+		for a in anim_list:
+			if "walk" in a.to_lower():
+				return a
+
+	if "walk" in g_lower or "strafe" in g_lower or "patrol" in g_lower or "move" in g_lower or "step" in g_lower:
+		for a in anim_list:
+			if a.to_lower() == "walk" or ("walk" in a.to_lower() and "back" not in a.to_lower()):
+				return a
+		for a in anim_list:
+			if "run" in a.to_lower():
+				return a
+
+	# 2. Idle requests
+	if "idle" in g_lower or "rest" in g_lower or "stand" in g_lower:
+		for a in anim_list:
+			if "idle" in a.to_lower():
+				return a
+
+	# 3. Direct exact match check (excluding known non-upright collapsed tracks in Vanguard rig)
+	var blacklisted = ["aim", "hitreact", "fire", "reload", "strafeleft", "straferight", "walkback", "turnleft", "turnright"]
+	if anim.has_animation(generic_name) and generic_name.to_lower() not in blacklisted:
+		return generic_name
+
+	# 4. Safe upright fallback: prioritize verified upright animations (Idle, Walk, Run)
 	for a in anim_list:
-		var a_lower = a.to_lower()
-		match g_lower:
-			"idle":
-				if "idle" in a_lower: return a
-			"walk", "walking":
-				if "walk" in a_lower and "back" not in a_lower: return a
-			"walk_back", "walkback":
-				if "walkback" in a_lower or "back" in a_lower: return a
-			"run", "running", "sprint":
-				if "run" in a_lower: return a
-			"strafe_left", "strafeleft":
-				if "strafeleft" in a_lower or "strafe_left" in a_lower: return a
-			"strafe_right", "straferight":
-				if "straferight" in a_lower or "strafe_right" in a_lower: return a
-			"aim", "aiming":
-				if "aim" in a_lower: return a
-			"shoot", "fire", "attack":
-				if "fire" in a_lower or "shoot" in a_lower: return a
-			"reload":
-				if "reload" in a_lower: return a
-			"hit", "hurt", "hit_react":
-				if "hit" in a_lower: return a
-			"death", "die":
-				if "death" in a_lower: return a
-			"turn_left":
-				if "turnleft" in a_lower or "turn_left" in a_lower: return a
-			"turn_right":
-				if "turnright" in a_lower or "turn_right" in a_lower: return a
+		if "idle" in a.to_lower():
+			return a
+	for a in anim_list:
+		if "walk" in a.to_lower():
+			return a
+	for a in anim_list:
+		if "run" in a.to_lower():
+			return a
 
 	if not anim_list.is_empty():
 		return anim_list[0]

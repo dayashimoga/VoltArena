@@ -158,9 +158,12 @@ func _physics_process(delta: float) -> void:
 				aim_point += Vector3(randf_range(-aim_jitter_amount, aim_jitter_amount), randf_range(-aim_jitter_amount, aim_jitter_amount), 0)
 				var to_target = (aim_point - (global_position + Vector3.UP * 1.1)).normalized()
 
-				# Maintain direct face-to-face line of sight (forward is -basis.z)
-				var target_basis = Basis.looking_at(to_target, Vector3.UP)
-				basis = basis.slerp(target_basis, turn_speed * delta * 1.5)
+				# Maintain upright yaw orientation facing threat (zero pitch on humanoid body)
+				var to_target_horiz = to_target
+				to_target_horiz.y = 0.0
+				if to_target_horiz.length_squared() > 0.01:
+					var target_basis = Basis.looking_at(to_target_horiz.normalized(), Vector3.UP)
+					basis = basis.slerp(target_basis, turn_speed * delta * 1.5)
 
 				# Dynamic strafe and combat movement
 				strafe_timer -= delta
@@ -181,28 +184,25 @@ func _physics_process(delta: float) -> void:
 				velocity.x = strafe_vec.x + forward_vec.x
 				velocity.z = strafe_vec.z + forward_vec.z
 
-				# Play appropriate combat locomotion animation
+				# Play upright combat locomotion animation
 				if character_model:
-					if strafe_dir > 0:
-						ModelCacheScript.play_animation(character_model, "StrafeRight", 0.15)
-					else:
-						ModelCacheScript.play_animation(character_model, "StrafeLeft", 0.15)
+					ModelCacheScript.play_animation(character_model, "Run", 0.15)
 
 				# Fire weapon with aim alignment check
 				fire_cooldown -= delta
-				var dot = (-basis.z).dot(to_target)
+				var dot = (-basis.z).dot(to_target_horiz.normalized() if to_target_horiz.length_squared() > 0.01 else to_target)
 				if fire_cooldown <= 0.0 and dot > 0.8: # Must face player within ~35 degrees
 					weapon.trigger_fire(global_position + Vector3.UP * 1.1, to_target)
-					if character_model:
-						ModelCacheScript.play_animation(character_model, "Fire", 0.06)
 					fire_cooldown = 60.0 / weapon.fire_rate_rpm + randf_range(0.04, 0.15)
 
 		AIState.RETREAT:
 			if current_target:
-				# Backpedal while keeping gun trained on player
+				# Backpedal while keeping body upright
 				var to_target = (current_target.global_position - global_position).normalized()
-				var target_basis = Basis.looking_at(to_target, Vector3.UP)
-				basis = basis.slerp(target_basis, turn_speed * delta)
+				to_target.y = 0.0
+				if to_target.length_squared() > 0.01:
+					var target_basis = Basis.looking_at(to_target.normalized(), Vector3.UP)
+					basis = basis.slerp(target_basis, turn_speed * delta)
 
 				# Move backwards away from player
 				var away = basis.z * (movement_speed * 0.75)
@@ -210,12 +210,12 @@ func _physics_process(delta: float) -> void:
 				velocity.z = away.z
 
 				if character_model:
-					ModelCacheScript.play_animation(character_model, "WalkBack", 0.15)
+					ModelCacheScript.play_animation(character_model, "Walk", 0.15)
 
 				# Retaliatory fire while retreating
 				fire_cooldown -= delta
 				if fire_cooldown <= 0.0:
-					weapon.trigger_fire(global_position + Vector3.UP * 1.1, to_target)
+					weapon.trigger_fire(global_position + Vector3.UP * 1.1, (current_target.global_position + Vector3.UP * 1.2 - (global_position + Vector3.UP * 1.1)).normalized())
 					fire_cooldown = (60.0 / weapon.fire_rate_rpm) * 1.5
 
 	move_and_slide()
@@ -237,7 +237,7 @@ func _on_died(killer: Node) -> void:
 		bus.enemy_died.emit("Arena Bot", 100)
 
 	if character_model:
-		ModelCacheScript.play_animation(character_model, "Death", 0.1)
+		ModelCacheScript.play_animation(character_model, "Idle", 0.1)
 	collision_layer = 0
 
 	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)

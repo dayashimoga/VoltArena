@@ -91,39 +91,40 @@ func _physics_process(delta: float) -> void:
 	var dot_fwd = fwd.dot(dir_to_wp)
 
 	# Multi-tier stuck watchdog unjamming logic:
-	# Only triggers after launch grace period (> 2.0s race active time) to prevent reverse moves on grid
-	if kart.forward_speed < 1.0 and race_active_time > 2.0:
+	# Only triggers after launch sprint (> 3.0s race active time) to prevent reverse moves on grid
+	if kart.forward_speed < 1.0 and race_active_time > 3.0:
 		stuck_timer += delta
-		if stuck_timer > 5.5:
-			# Restore to last valid checkpoint with zero velocity facing along track
+		if stuck_timer > 4.0:
+			# Restore to last valid checkpoint with forward speed facing along track
 			kart.recover_to_checkpoint()
 			stuck_timer = 0.0
 			reverse_timer = 0.0
-		elif stuck_timer > 2.0 and reverse_timer <= 0.0:
-			reverse_timer = 0.6
+		elif stuck_timer > 1.8 and reverse_timer <= 0.0:
+			reverse_timer = 0.5
 	else:
 		stuck_timer = maxf(0.0, stuck_timer - delta * 2.0)
 
 	if reverse_timer > 0.0:
 		reverse_timer -= delta
-		kart.apply_kart_controls(-0.8, -signf(dot_right) if abs(dot_right) > 0.1 else 1.0, false, delta)
+		kart.apply_kart_controls(-0.8, signf(dot_right) if abs(dot_right) > 0.1 else -1.0, false, delta)
 		return
 
-	var steer_input = clampf(dot_right * 2.5, -1.0, 1.0)
+	# Negative steer turns right, positive steer turns left in kart_controller
+	var steer_input = -clampf(dot_right * 2.5, -1.0, 1.0)
 	var throttle_input = 1.0
 
 	# Waypoint behind car handling: steer hard forward to turn around without reversing
 	if dot_fwd < 0.0:
-		steer_input = 1.0 if dot_right >= 0.0 else -1.0
+		steer_input = -1.0 if dot_right >= 0.0 else 1.0
 		throttle_input = 0.55
 	elif abs(dot_right) > 0.5:
 		throttle_input = 0.70
 	elif abs(dot_right) > 0.3:
 		throttle_input = 0.85
 
-	# Dynamic kart-to-kart collision avoidance
+	# Gentle kart-to-kart lateral collision avoidance (active only after initial launch)
 	var avoidance_steer = 0.0
-	if is_inside_tree():
+	if race_active_time > 3.0 and is_inside_tree():
 		var all_karts = get_tree().get_nodes_in_group("karts")
 		for other in all_karts:
 			if other == kart or not is_instance_valid(other):
@@ -132,12 +133,13 @@ func _physics_process(delta: float) -> void:
 			var to_other = o_pos - kart_pos
 			to_other.y = 0.0
 			var other_dist = to_other.length()
-			if other_dist < 6.5 and other_dist > 0.2:
+			if other_dist < 5.0 and other_dist > 0.3:
 				var other_fwd = fwd.dot(to_other.normalized())
-				if other_fwd > 0.35: # Ahead in front of us
+				if other_fwd > 0.40: # In front
 					var other_right = right.dot(to_other.normalized())
-					if abs(other_right) < 0.50:
-						avoidance_steer -= signf(other_right if abs(other_right) > 0.05 else 1.0) * 0.60
+					if abs(other_right) < 0.45:
+						# If other is to our right, steer left (+), and vice versa
+						avoidance_steer += signf(other_right if abs(other_right) > 0.05 else 1.0) * 0.15
 	steer_input = clampf(steer_input + avoidance_steer, -1.0, 1.0)
 
 	# Drift if fast and sharp

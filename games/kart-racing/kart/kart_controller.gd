@@ -63,12 +63,13 @@ func _ready() -> void:
 	last_valid_checkpoint_rot = rotation.y
 
 	floor_snap_length = 0.50
-	floor_max_angle = deg_to_rad(45.0)
+	floor_max_angle = deg_to_rad(55.0)
 	floor_constant_speed = true
 	floor_block_on_wall = false
-	floor_stop_on_slope = true
+	floor_stop_on_slope = false
+	wall_min_slide_angle = deg_to_rad(15.0)
 	up_direction = Vector3.UP
-	max_slides = 4
+	max_slides = 6
 
 	setup_kart_archetype()
 	setup_kart_visual()
@@ -160,7 +161,12 @@ func _physics_process(delta: float) -> void:
 		velocity.y = -2.0 # Continuous ground contact on seams and ramps
 
 	# Only accept controls if race has started
-	var rm = get_tree().root.find_child("RaceManager", true, false)
+	var rm: Node = null
+	var p_node = get_parent()
+	if p_node:
+		rm = p_node.get_node_or_null("RaceManager")
+	if not rm and get_tree() and get_tree().root:
+		rm = get_tree().root.find_child("RaceManager", true, false)
 	var is_countdown = (rm and rm.get("current_state") == 0) # RaceState.COUNTDOWN
 
 	if is_player and not race_finished and not is_countdown:
@@ -175,8 +181,8 @@ func _physics_process(delta: float) -> void:
 func recover_to_checkpoint() -> void:
 	global_position = last_valid_checkpoint_pos + Vector3(0, 0.6, 0)
 	rotation.y = last_valid_checkpoint_rot
-	velocity = Vector3.ZERO
-	forward_speed = 0.0
+	velocity = -transform.basis.z * 12.0
+	forward_speed = 12.0
 	is_drifting = false
 	drift_charge_time = 0.0
 	var bus = GameConstants.get_autoload(self, "EventBus")
@@ -265,14 +271,14 @@ func trigger_drift_boost() -> void:
 		boost_level = 2 # Tier 2: Super Mini-Turbo (Orange sparks)
 		boost_timer = 2.0
 		if am:
-			am.play_sound("drift_screech", 1.4, 1.2)
+			am.play_sound("drift_turbo_2", 1.0, 1.4)
 		if bus and is_player:
 			bus.show_toast_requested.emit("SUPER MINI-TURBO! ++", Color(1.0, 0.6, 0.1))
 	elif drift_charge_time >= 0.7:
 		boost_level = 1 # Tier 1: Mini-Turbo (Blue sparks)
 		boost_timer = 1.0
 		if am:
-			am.play_sound("jump", 1.4)
+			am.play_sound("drift_turbo_1", 1.0, 1.2)
 		if bus and is_player:
 			bus.show_toast_requested.emit("MINI-TURBO! +", Color(0.2, 0.8, 1.0))
 

@@ -441,15 +441,20 @@ func start_game(game_id: String) -> void:
 	set_state(STATE_LOADING)
 
 	var scene_path = ""
+	var music_track = ""
 	match game_id:
 		"arena_fps":
 			scene_path = "res://games/arena-fps/arena_fps_main.tscn"
+			music_track = "iron_crucible"
 		"subway_survival":
 			scene_path = "res://games/subway-survival/subway_main.tscn"
+			music_track = "metro_siege"
 		"rocket_car":
 			scene_path = "res://games/rocket-car/rocket_car_main.tscn"
+			music_track = "nitro_kick"
 		"kart_racing":
 			scene_path = "res://games/kart-racing/kart_racing_main.tscn"
+			music_track = "drift_storm"
 		_:
 			push_error("Unknown game ID: " + game_id)
 			return
@@ -462,6 +467,9 @@ func start_game(game_id: String) -> void:
 			var im = GameConstants.get_autoload(self, "InputManager")
 			if im and im.has_method("set_game_context"):
 				im.set_game_context(game_id)
+			var am = GameConstants.get_autoload(self, "AudioManager")
+			if am and am.has_method("play_music") and not music_track.is_empty():
+				am.play_music(music_track)
 			if event_bus:
 				event_bus.game_loaded.emit(game_id)
 	else:

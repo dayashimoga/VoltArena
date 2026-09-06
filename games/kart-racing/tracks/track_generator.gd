@@ -100,7 +100,7 @@ func build_circuit() -> void:
 				Vector3(45, 0.0, 45),
 				Vector3(18, 0.0, 22)
 			]
-			create_box(Vector3(105.0, -1.5, -50.0), Vector3(500.0, 3.0, 500.0), "asphalt")
+			create_box(Vector3(105.0, -1.65, -50.0), Vector3(500.0, 3.0, 500.0), "asphalt")
 			var neon_props = [
 				[Vector3(-35, 0, -70), "c", Vector3(4, 4, 4)],
 				[Vector3(70, 0, -190), "a", Vector3(5, 8, 5)],
@@ -170,7 +170,11 @@ func _build_continuous_road_foundation(nodes: Array[Vector3]) -> void:
 
 	var left_pts: Array[Vector3] = []
 	var right_pts: Array[Vector3] = []
+	var left_wall_top: Array[Vector3] = []
+	var right_wall_top: Array[Vector3] = []
 	var half_w = track_width * 0.5
+	var wall_h = 3.5
+	var wall_margin = 0.5 # Continuous barrier wall set slightly outside track edge
 
 	for i in range(n):
 		var prev = nodes[(i - 1 + n) % n]
@@ -181,8 +185,15 @@ func _build_continuous_road_foundation(nodes: Array[Vector3]) -> void:
 		var tangent = (dir_prev + dir_next).normalized()
 		var normal = Vector3.UP
 		var side = tangent.cross(normal).normalized()
-		left_pts.append(curr - side * half_w)
-		right_pts.append(curr + side * half_w)
+		var l_pt = curr - side * half_w
+		var r_pt = curr + side * half_w
+		left_pts.append(l_pt)
+		right_pts.append(r_pt)
+		# Barrier walls placed along track edge with vertical height
+		var l_wall = curr - side * (half_w + wall_margin)
+		var r_wall = curr + side * (half_w + wall_margin)
+		left_wall_top.append(l_wall + Vector3.UP * wall_h)
+		right_wall_top.append(r_wall + Vector3.UP * wall_h)
 
 	var road_body = StaticBody3D.new()
 	road_body.name = "ContinuousRoadFoundation"
@@ -201,7 +212,7 @@ func _build_continuous_road_foundation(nodes: Array[Vector3]) -> void:
 		var l2 = left_pts[next_idx]
 		var r2 = right_pts[next_idx]
 
-		# Top continuous drivable surface (shared edge quads, zero bumps/seams)
+		# 1. Top continuous drivable surface (shared edge quads, zero bumps/seams)
 		faces.append(l1)
 		faces.append(r1)
 		faces.append(l2)
@@ -209,6 +220,32 @@ func _build_continuous_road_foundation(nodes: Array[Vector3]) -> void:
 		faces.append(r1)
 		faces.append(r2)
 		faces.append(l2)
+
+		# 2. Continuous Left Barrier Wall (shared smooth vertices, zero corner bumps)
+		var lw1_b = l1
+		var lw2_b = l2
+		var lw1_t = left_wall_top[i]
+		var lw2_t = left_wall_top[next_idx]
+		faces.append(lw1_b)
+		faces.append(lw1_t)
+		faces.append(lw2_b)
+
+		faces.append(lw1_t)
+		faces.append(lw2_t)
+		faces.append(lw2_b)
+
+		# 3. Continuous Right Barrier Wall (shared smooth vertices, zero corner bumps)
+		var rw1_b = r1
+		var rw2_b = r2
+		var rw1_t = right_wall_top[i]
+		var rw2_t = right_wall_top[next_idx]
+		faces.append(rw1_b)
+		faces.append(rw2_b)
+		faces.append(rw1_t)
+
+		faces.append(rw1_t)
+		faces.append(rw2_b)
+		faces.append(rw2_t)
 
 	concave_shape.set_faces(faces)
 	col.shape = concave_shape
@@ -229,12 +266,12 @@ func build_track_segment(start_pt: Vector3, end_pt: Vector3, segment_index: int)
 	road.rotation.y = angle_y
 	road.rotation.x = angle_x
 
-	# Sub-bed foundation collider placed strictly under the continuous surface to prevent tunneling
+	# Subterranean catch-floor collider placed 2.5m deep under the surface to prevent tunneling
 	var col = CollisionShape3D.new()
 	var box = BoxShape3D.new()
-	box.size = Vector3(track_width, 1.8, seg_length + 0.1)
+	box.size = Vector3(track_width, 1.0, seg_length * 0.95)
 	col.shape = box
-	col.position = Vector3(0, -1.0, 0)
+	col.position = Vector3(0, -2.5, 0)
 	road.add_child(col)
 
 	var mesh = MeshInstance3D.new()
@@ -245,29 +282,28 @@ func build_track_segment(start_pt: Vector3, end_pt: Vector3, segment_index: int)
 	mesh.position = Vector3(0, -0.1, 0)
 	road.add_child(mesh)
 
-	# Rumble Curbs along track shoulders
+	# Rumble Curbs along track shoulders (flush with asphalt surface, zero protruding step)
 	var curb_w = 1.0
-	var curb_h = 0.15
+	var curb_h = 0.04
 	var curb_l = MeshInstance3D.new()
 	var cm_l = BoxMesh.new()
-	cm_l.size = Vector3(curb_w, curb_h, seg_length + 0.1)
+	cm_l.size = Vector3(curb_w, curb_h, seg_length + 0.05)
 	curb_l.mesh = cm_l
 	curb_l.material_override = MaterialGenerator.get_material("curb_blue_white")
-	curb_l.position = Vector3(-track_width * 0.5 + curb_w * 0.5, 0.15, 0)
+	curb_l.position = Vector3(-track_width * 0.5 + curb_w * 0.5, 0.02, 0)
 	road.add_child(curb_l)
 
 	var curb_r = MeshInstance3D.new()
 	var cm_r = BoxMesh.new()
-	cm_r.size = Vector3(curb_w, curb_h, seg_length + 0.1)
+	cm_r.size = Vector3(curb_w, curb_h, seg_length + 0.05)
 	curb_r.mesh = cm_r
 	curb_r.material_override = MaterialGenerator.get_material("curb_blue_white")
-	curb_r.position = Vector3(track_width * 0.5 - curb_w * 0.5, 0.15, 0)
+	curb_r.position = Vector3(track_width * 0.5 - curb_w * 0.5, 0.02, 0)
 	road.add_child(curb_r)
 
-	# Hardened Outer Crash Barriers strictly outside track lane
+	# Outer Visual Crash Barrier Props strictly outside track lane
 	var rail_w = 0.8
-	var rail_h = 2.4
-	var barrier_offset = track_width * 0.5 + rail_w * 0.5 + 0.2
+	var barrier_offset = track_width * 0.5 + rail_w * 0.5 + 0.4
 
 	var left_bar = ModelCacheScript.get_prop("racing_barrier")
 	if left_bar:
@@ -280,21 +316,6 @@ func build_track_segment(start_pt: Vector3, end_pt: Vector3, segment_index: int)
 		right_bar.position = Vector3(barrier_offset, 0.2, 0)
 		right_bar.scale = Vector3(2.0, 2.0, seg_length * 0.4)
 		road.add_child(right_bar)
-
-	# Physical barrier colliders flush with barriers, zero track encroachment
-	var col_l = CollisionShape3D.new()
-	var bar_shape_l = BoxShape3D.new()
-	bar_shape_l.size = Vector3(rail_w, rail_h + 1.5, seg_length + 0.1)
-	col_l.shape = bar_shape_l
-	col_l.position = Vector3(-barrier_offset, rail_h * 0.5, 0)
-	road.add_child(col_l)
-
-	var col_r = CollisionShape3D.new()
-	var bar_shape_r = BoxShape3D.new()
-	bar_shape_r.size = Vector3(rail_w, rail_h + 1.5, seg_length + 0.1)
-	col_r.shape = bar_shape_r
-	col_r.position = Vector3(barrier_offset, rail_h * 0.5, 0)
-	road.add_child(col_r)
 
 	# Apex Tire Wall
 	if segment_index % 3 == 0:

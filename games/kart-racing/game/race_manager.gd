@@ -30,7 +30,11 @@ func initialize_race(all_racers: Array, all_checkpoints: Array) -> void:
 		cp.checkpoint_hit.connect(_on_checkpoint_hit)
 
 	current_state = RaceState.COUNTDOWN
-	countdown_timer = 3.9
+	countdown_timer = 3.0
+	countdown_tick.emit(3)
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		am.play_sound("countdown_tick", 1.0)
 
 func _process(delta: float) -> void:
 	match current_state:
@@ -43,11 +47,11 @@ func _process(delta: float) -> void:
 					countdown_tick.emit(new_count)
 					var am = GameConstants.get_autoload(self, "AudioManager")
 					if am:
-						am.play_sound("beep_low")
+						am.play_sound("countdown_tick", 1.0)
 					var bus = GameConstants.get_autoload(self, "EventBus")
 					if bus:
 						bus.show_toast_requested.emit(str(new_count), Color(1.0, 0.8, 0.0))
-				elif new_count == 0:
+				elif new_count <= 0:
 					start_race()
 		RaceState.RACING:
 			race_time += delta
@@ -58,7 +62,7 @@ func start_race() -> void:
 	race_started.emit()
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am:
-		am.play_sound("beep_high")
+		am.play_sound("countdown_go", 1.2)
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.show_toast_requested.emit("GO!", Color(0.0, 1.0, 0.5))

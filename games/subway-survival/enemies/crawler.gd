@@ -18,12 +18,13 @@ func setup_visuals() -> void:
 	add_child(creature_model)
 	ModelCacheScript.play_animation(creature_model, "Idle")
 
-	# Collision
+	# Upright Humanoid Collision
 	var col = CollisionShape3D.new()
-	var sphere = SphereShape3D.new()
-	sphere.radius = 0.45
-	col.shape = sphere
-	col.position = Vector3(0, 0.45, 0)
+	var cap = CapsuleShape3D.new()
+	cap.radius = 0.40
+	cap.height = 1.75
+	col.shape = cap
+	col.position = Vector3(0, 0.88, 0)
 	add_child(col)
 
 	if health_component:

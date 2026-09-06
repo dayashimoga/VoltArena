@@ -26,9 +26,21 @@ func _ready() -> void:
 
 	setup_health()
 	setup_visuals()
+	attach_enemy_weapon()
 
 const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
 var creature_model: Node3D = null
+var weapon_visual: Node3D = null
+
+func attach_enemy_weapon(w_type: String = "pulse_rifle") -> void:
+	if weapon_visual and is_instance_valid(weapon_visual):
+		return
+	weapon_visual = ModelCacheScript.get_weapon_model(w_type)
+	if weapon_visual:
+		weapon_visual.name = "EnemyWeapon"
+		weapon_visual.position = Vector3(0.25, 0.95, -0.35)
+		weapon_visual.scale = Vector3(0.9, 0.9, 0.9)
+		add_child(weapon_visual)
 
 func setup_health() -> void:
 	if not health_component:
@@ -38,7 +50,7 @@ func setup_health() -> void:
 	health_component.died.connect(_on_died)
 	health_component.health_changed.connect(func(_cur, _max_hp):
 		if not health_component.is_dead and creature_model:
-			ModelCacheScript.play_animation(creature_model, "Hit_A", 0.1)
+			ModelCacheScript.play_animation(creature_model, "Idle", 0.1)
 	)
 
 func setup_visuals() -> void:
@@ -88,11 +100,11 @@ func steer_to_target(target_pos: Vector3, delta: float) -> void:
 		velocity.x = dir.x * move_speed
 		velocity.z = dir.z * move_speed
 		if creature_model:
-			ModelCacheScript.play_animation(creature_model, "Walking_A")
+			ModelCacheScript.play_animation(creature_model, "Walk")
 
 func perform_attack() -> void:
 	if creature_model:
-		ModelCacheScript.play_animation(creature_model, "1H_Melee_Attack_Chop", 0.1)
+		ModelCacheScript.play_animation(creature_model, "Run", 0.1)
 	if target_player and is_instance_valid(target_player):
 		if target_player.has_node("HealthComponent"):
 			target_player.get_node("HealthComponent").take_damage(attack_damage, self)
@@ -103,7 +115,7 @@ func perform_attack() -> void:
 
 func _on_died(_source: Node) -> void:
 	if creature_model:
-		ModelCacheScript.play_animation(creature_model, "Death_A", 0.1)
+		ModelCacheScript.play_animation(creature_model, "Idle", 0.1)
 	var drop_pos = global_position if is_inside_tree() else position
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am:

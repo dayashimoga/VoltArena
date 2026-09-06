@@ -54,10 +54,10 @@ func setup_scene() -> void:
 		results_screen.launcher_pressed.connect(_on_quit_to_launcher)
 		add_child(results_screen)
 
-	# Spawn Player on passenger platform
+	# Spawn Player on passenger platform looking down platform length
 	player_node = FPSPlayerScript.new()
 	player_node.name = "Player"
-	player_node.position = Vector3(-5.0, 1.0, 0.0)
+	player_node.position = Vector3(-5.0, 1.0, 20.0)
 	add_child(player_node)
 
 	# Wave Director

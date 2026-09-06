@@ -58,3 +58,20 @@
 ### Gotcha: Kickoff state assertions in tests
 * **Cause**: Checking `is_kickoff_pause` immediately following a goal event must be synchronous.
 * **Resolution**: `reset_kickoff()` must be invoked synchronously inside `_on_goal_scored()` with `is_kickoff_pause = true` set immediately, while scene timers manage the visual countdown hold.
+
+### Gotcha: Hexagonal Grid Boundary Rendering
+* **Cause**: Checking Euclidean distance only from hexagon vertices (`>= side - 4.0`) leaves flat edges unrendered.
+* **Resolution**: Use exact distance to the hexagon edge plane: `24.25 - max(dx*0.866025, dx*0.433013 + dy*0.75)`.
+
+### Gotcha: Subway Station Longitudinal Orientation
+* **Cause**: Spawning player at Z=0 looking level into cross-beams hides the 45m corridor perspective.
+* **Resolution**: Spawn player at `Z = 20.0` facing `-Z` (north) along the platform length to capture columns, tracks, 24m train, and incoming mutant spawns.
+
+### Gotcha: Top-Level Camera Recoil Overwrite
+* **Cause**: Physics loop overwriting `camera.rotation` directly resets spring recoil whenever `camera.top_level == true`.
+* **Resolution**: Guard rotation resets with `if not camera.top_level:`.
+
+### Gotcha: Cloudflare 25MB Limit with Full 3D Asset Package
+* **Cause**: Exporting 49 production 3D models increases `index.pck` to 64.9MB, exceeding Cloudflare Pages' 25MB limit.
+* **Resolution**: Split `index.pck` into 18MB chunks (`index.pck.part00` to `index.pck.part03`) and reassemble via client-side fetch streaming before WASM boot.
+

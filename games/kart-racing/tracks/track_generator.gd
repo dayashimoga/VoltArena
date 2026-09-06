@@ -125,35 +125,26 @@ func build_circuit() -> void:
 		var p2 = circuit_nodes[(i + 1) % circuit_nodes.size()]
 		build_track_segment(p1, p2, i)
 
-	# Production Start/Finish Overhead Gantry (finish_line.glb)
-	var finish_prop = ModelCacheScript.get_prop("finish_line")
-	if finish_prop:
-		finish_prop.position = circuit_nodes[0] + Vector3(0, 0, -1.0)
-		finish_prop.scale = Vector3(3.2, 3.2, 3.2)
-		add_child(finish_prop)
-	else:
-		var gantry = MeshBuilder.build_start_gantry(track_width)
-		gantry.position = circuit_nodes[0] + Vector3(0, 0, -2.0)
-		add_child(gantry)
+	# Production Start/Finish Overhead Gantry with Turbo Kart Rush banner & lights
+	var gantry = MeshBuilder.build_start_gantry(track_width)
+	gantry.position = circuit_nodes[0] + Vector3(0, 0, -2.0)
+	add_child(gantry)
 
-	# Production Grandstands along the home straight
-	for z_pos in [-35.0, -15.0]:
-		var stand_l = ModelCacheScript.get_prop("stadium_stands")
-		if stand_l:
-			stand_l.position = Vector3(-track_width * 0.5 - 5.0, 0.0, z_pos)
-			stand_l.rotation_degrees.y = 90.0
-			stand_l.scale = Vector3(2.5, 2.5, 2.5)
-			add_child(stand_l)
-		var stand_r = ModelCacheScript.get_prop("stadium_stands")
-		if stand_r:
-			stand_r.position = Vector3(track_width * 0.5 + 5.0, 0.0, z_pos)
-			stand_r.rotation_degrees.y = -90.0
-			stand_r.scale = Vector3(2.5, 2.5, 2.5)
-			add_child(stand_r)
+	# Production Grandstands with Spectator Crowds along the home straight
+	for z_pos in [-50.0, -25.0, 0.0, 25.0]:
+		var stand_l = MeshBuilder.build_grandstand_with_crowd(24.0, 7.0, 9.0)
+		stand_l.position = Vector3(-track_width * 0.5 - 6.5, 0.0, z_pos)
+		stand_l.rotation_degrees.y = 90.0
+		add_child(stand_l)
+
+		var stand_r = MeshBuilder.build_grandstand_with_crowd(24.0, 7.0, 9.0)
+		stand_r.position = Vector3(track_width * 0.5 + 6.5, 0.0, z_pos)
+		stand_r.rotation_degrees.y = -90.0
+		add_child(stand_r)
 
 	# Production Stadium Floodlight Towers
-	for fl_pos in [Vector3(-track_width * 0.5 - 10.0, 0.0, -48.0), Vector3(track_width * 0.5 + 10.0, 0.0, -48.0)]:
-		var fl = ModelCacheScript.get_prop("stadium_floodlight")
+	for fl_pos in [Vector3(-track_width * 0.5 - 12.0, 0.0, -48.0), Vector3(track_width * 0.5 + 12.0, 0.0, -48.0)]:
+		var fl = ModelCacheScript.get_prop("floodlight_tower")
 		if fl:
 			fl.position = fl_pos
 			fl.scale = Vector3(3.0, 3.0, 3.0)
@@ -192,21 +183,27 @@ func build_track_segment(start_pt: Vector3, end_pt: Vector3, segment_index: int)
 	var b_mesh = BoxMesh.new()
 	b_mesh.size = Vector3(track_width, 0.5, seg_length + 2.0)
 	mesh.mesh = b_mesh
-	mesh.material_override = MaterialGenerator.get_material("asphalt_track")
+	mesh.material_override = MaterialGenerator.get_material("asphalt_lanes")
 	road.add_child(mesh)
 
-	# Production Racing Curbs along left and right track shoulders
-	var curb_l = ModelCacheScript.get_prop("racing_curb")
-	if curb_l:
-		curb_l.position = Vector3(-track_width * 0.5 + 0.4, 0.1, 0)
-		curb_l.scale = Vector3(1.5, 1.5, seg_length * 0.4)
-		road.add_child(curb_l)
+	# Production Alternating Blue/White Rumble Curbs along track shoulders
+	var curb_w = 1.0
+	var curb_h = 0.15
+	var curb_l = MeshInstance3D.new()
+	var cm_l = BoxMesh.new()
+	cm_l.size = Vector3(curb_w, curb_h, seg_length + 2.0)
+	curb_l.mesh = cm_l
+	curb_l.material_override = MaterialGenerator.get_material("curb_blue_white")
+	curb_l.position = Vector3(-track_width * 0.5 + curb_w * 0.5, 0.15, 0)
+	road.add_child(curb_l)
 
-	var curb_r = ModelCacheScript.get_prop("racing_curb")
-	if curb_r:
-		curb_r.position = Vector3(track_width * 0.5 - 0.4, 0.1, 0)
-		curb_r.scale = Vector3(1.5, 1.5, seg_length * 0.4)
-		road.add_child(curb_r)
+	var curb_r = MeshInstance3D.new()
+	var cm_r = BoxMesh.new()
+	cm_r.size = Vector3(curb_w, curb_h, seg_length + 2.0)
+	curb_r.mesh = cm_r
+	curb_r.material_override = MaterialGenerator.get_material("curb_blue_white")
+	curb_r.position = Vector3(track_width * 0.5 - curb_w * 0.5, 0.15, 0)
+	road.add_child(curb_r)
 
 	# Hardened Outer Crash Barriers with 2.5m thick collision shapes
 	var rail_w = 0.8

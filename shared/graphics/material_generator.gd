@@ -12,19 +12,21 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 	var mat = StandardMaterial3D.new()
 	match mat_type:
 		"sci_fi_metal":
-			mat.albedo_color = Color(0.85, 0.90, 0.95)
+			mat.albedo_color = Color(0.38, 0.42, 0.48)
 			mat.albedo_texture = TexSynth.get_texture("sci_fi_metal_albedo")
 			mat.normal_enabled = true
 			mat.normal_texture = TexSynth.get_texture("sci_fi_metal_normal")
 			mat.metallic = 0.80
 			mat.roughness = 0.30
-			mat.uv1_scale = Vector3(4.0, 4.0, 4.0)
+			mat.uv1_triplanar = true
+			mat.uv1_scale = Vector3(0.5, 0.5, 0.5)
 		"dark_hull":
-			mat.albedo_color = Color(0.75, 0.80, 0.88)
+			mat.albedo_color = Color(0.14, 0.16, 0.20)
 			mat.albedo_texture = TexSynth.get_texture("dark_hull_albedo")
 			mat.metallic = 0.85
 			mat.roughness = 0.35
-			mat.uv1_scale = Vector3(4.0, 4.0, 4.0)
+			mat.uv1_triplanar = true
+			mat.uv1_scale = Vector3(0.5, 0.5, 0.5)
 		"neon_cyan":
 			mat.albedo_color = Color(0.1, 0.95, 1.0)
 			mat.emission_enabled = true
@@ -53,20 +55,82 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.metallic = 0.1
 			mat.roughness = 0.75
 			mat.uv1_scale = Vector3(2.0, 8.0, 2.0)
+		"hex_grid_cyan":
+			mat.albedo_color = Color(1.0, 1.0, 1.0)
+			mat.albedo_texture = TexSynth.get_texture("hex_grid_cyan_albedo")
+			mat.emission_enabled = true
+			mat.emission_texture = TexSynth.get_texture("hex_grid_cyan_emission")
+			mat.emission = Color(0.0, 0.95, 1.0)
+			mat.emission_energy_multiplier = 3.8
+			mat.metallic = 0.8
+			mat.roughness = 0.2
+			mat.uv1_triplanar = true
+			mat.uv1_scale = Vector3(0.2, 0.2, 0.2)
 		"subway_tile":
 			mat.albedo_color = Color(0.92, 0.94, 0.96)
 			mat.albedo_texture = TexSynth.get_texture("subway_tile_albedo")
 			mat.normal_enabled = true
 			mat.normal_texture = TexSynth.get_texture("subway_tile_normal")
-			mat.metallic = 0.25
-			mat.roughness = 0.45
-			mat.uv1_scale = Vector3(4.0, 4.0, 4.0)
+			mat.metallic = 0.15
+			mat.roughness = 0.35
+			mat.uv1_triplanar = true
+			mat.uv1_triplanar_sharpness = 8.0
+			mat.uv1_scale = Vector3(0.5, 0.5, 0.5)
 		"grimy_concrete":
 			mat.albedo_color = Color(0.82, 0.84, 0.86)
 			mat.albedo_texture = TexSynth.get_texture("grimy_concrete_albedo")
 			mat.metallic = 0.08
 			mat.roughness = 0.85
-			mat.uv1_scale = Vector3(4.0, 4.0, 4.0)
+			mat.uv1_triplanar = true
+			mat.uv1_triplanar_sharpness = 4.0
+			mat.uv1_scale = Vector3(0.25, 0.25, 0.25)
+		"yellow_tactile_edge":
+			mat.albedo_color = Color(1.0, 0.85, 0.05)
+			mat.albedo_texture = TexSynth.get_texture("tactile_bump_albedo")
+			mat.metallic = 0.05
+			mat.roughness = 0.50
+			mat.uv1_triplanar = true
+			mat.uv1_scale = Vector3(1.0, 1.0, 1.0)
+		"curb_blue_white":
+			mat.albedo_color = Color(1.0, 1.0, 1.0)
+			mat.albedo_texture = TexSynth.get_texture("curb_stripes_blue_white")
+			mat.roughness = 0.60
+			mat.uv1_scale = Vector3(8.0, 1.0, 1.0)
+		"asphalt_lanes":
+			mat.albedo_color = Color(0.90, 0.92, 0.95)
+			mat.albedo_texture = TexSynth.get_texture("asphalt_lanes_albedo")
+			mat.normal_enabled = true
+			mat.normal_texture = TexSynth.get_texture("asphalt_normal")
+			mat.metallic = 0.10
+			mat.roughness = 0.75
+		"checkered_flag":
+			mat.albedo_texture = TexSynth.get_texture("checkered_flag_albedo")
+			mat.roughness = 0.5
+			mat.metallic = 0.1
+			mat.uv1_scale = Vector3(1.0, 1.0, 1.0)
+		"crowd_spectators":
+			mat.albedo_texture = TexSynth.get_texture("crowd_texture_albedo")
+			mat.roughness = 0.8
+			mat.metallic = 0.0
+			mat.uv1_scale = Vector3(4.0, 2.0, 1.0)
+		"turbo_kart_rush_banner":
+			mat.albedo_texture = TexSynth.get_texture("turbo_kart_rush_banner")
+			mat.emission_enabled = true
+			mat.emission_texture = TexSynth.get_texture("turbo_kart_rush_banner")
+			mat.emission_energy_multiplier = 0.6
+			mat.roughness = 0.4
+		"stadium_banner_orange":
+			mat.albedo_texture = TexSynth.get_texture("stadium_score_banner_orange")
+			mat.emission_enabled = true
+			mat.emission_texture = TexSynth.get_texture("stadium_score_banner_orange")
+			mat.emission_energy_multiplier = 0.8
+			mat.roughness = 0.3
+		"stadium_banner_blue":
+			mat.albedo_texture = TexSynth.get_texture("stadium_score_banner_blue")
+			mat.emission_enabled = true
+			mat.emission_texture = TexSynth.get_texture("stadium_score_banner_blue")
+			mat.emission_energy_multiplier = 0.8
+			mat.roughness = 0.3
 		"gold_pickup":
 			mat.albedo_color = Color(1.0, 0.88, 0.15)
 			mat.metallic = 0.95

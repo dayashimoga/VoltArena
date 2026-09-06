@@ -95,18 +95,18 @@ func setup_kart_visual() -> void:
 		kart_visual.queue_free()
 		front_wheels.clear()
 
-	var vehicle_key = "truck_green"
+	var vehicle_key = "kart_speedster"
 	if is_player:
 		match kart_type:
-			"phantom": vehicle_key = "truck_purple"
-			"enforcer": vehicle_key = "truck_yellow"
-			_: vehicle_key = "truck_green"
+			"phantom": vehicle_key = "kart_turbo"
+			"enforcer": vehicle_key = "kart_muscle"
+			_: vehicle_key = "kart_speedster"
 	else:
-		match racer_id:
-			1: vehicle_key = "truck_red"
-			2: vehicle_key = "truck_yellow"
-			3: vehicle_key = "truck_purple"
-			_: vehicle_key = "truck_red"
+		match racer_id % 4:
+			0: vehicle_key = "kart_speedster"
+			1: vehicle_key = "kart_drift"
+			2: vehicle_key = "kart_muscle"
+			3: vehicle_key = "kart_turbo"
 
 	var prod_model = ModelCacheScript.get_vehicle(vehicle_key)
 	if prod_model:

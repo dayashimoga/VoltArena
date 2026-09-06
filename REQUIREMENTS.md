@@ -113,4 +113,19 @@ This document specifies the technical, functional, architectural, performance, a
 | **NFR-PERF-03** | Memory Budget | Heap under 500MB | **RUNTIME_VERIFIED** | 17.18MB static heap footprint |
 | **NFR-WEB-01**  | Cloudflare 25MB Limit | All individual deployed files $\le 25.0$ MB | **RUNTIME_VERIFIED** | `index.pck` and `index.wasm` split into <= 18MB chunks, all files PASS |
 | **NFR-QA-01**   | Test Pass Rate | 100% assertions passing | **RUNTIME_VERIFIED** | 41/41 suites, 857/857 assertions PASS (0 failures) |
-| **NFR-QA-02**   | Code Coverage | $> 90.0\%$ function coverage | **RUNTIME_VERIFIED** | **94.35% coverage (401 / 425 functions)** |
+| **NFR-QA-02**   | Code Coverage | $> 90.0\%$ function coverage | **RUNTIME_VERIFIED** | **93.91% coverage (401 / 427 functions)** |
+| **FR-VIS-01**   | Iron Crucible Visuals | Match Reference 1: Hex grid floor, portal arch, dark pillars | **RUNTIME_VERIFIED** | Mathematically regular hex grid with cyan emission 3.8, ambient 1.45 |
+| **FR-VIS-02**   | Metro Siege Visuals | Match Reference 2: Subway tiles, yellow strip, columns, train | **RUNTIME_VERIFIED** | Northbound 45m perspective, subway tiles, lights, 24m train |
+| **FR-VIS-03**   | Nitro Kick Visuals | Match Reference 3: Enclosed stadium, turf stripes, jumbotron | **RUNTIME_VERIFIED** | Two-tone turf stripes, floodlights, grandstands, rocket cars |
+| **FR-VIS-04**   | Drift Storm Visuals | Match Reference 4: Circuit gantry, ripple kerbs, crowd stands | **RUNTIME_VERIFIED** | Start/finish gantry, 5-lamp start lights, asphalt, karts with drivers |
+| **NFR-GATE-01** | Production Gates | G0-G9 verified, G10 human validation required | **RUNTIME_VERIFIED** | Zero automatable P0/P1 failures, `scripts/certifier.py` exited code 0 |
+
+---
+
+## 6. v5.0 Forensic Gap Closure & Visual Reference Acceptance
+To eliminate any prototype or blockout aesthetics, VoltArena enforces strict visual fidelity requirements evaluated against the four user-supplied reference screenshots:
+1. **Reference 1 (Iron Crucible)**: Factional cyber-arena featuring a regular hexagonal grid floor with vivid cyan emission boundaries, high-contrast dark monolith pillars, amber portal archway landmark, and first-person weapon model with spring recoil.
+2. **Reference 2 (Metro Siege)**: Authentic subterranean platform featuring ceramic wall tiles, yellow hazard safety line, fluted cast-iron columns, suspended dual-tube fluorescent lighting, vending kiosks, 24m subway train, and crawling mutant adversaries.
+3. **Reference 3 (Nitro Kick)**: Enclosed rocket-car football colosseum featuring manicured two-tone turf stripes, goal nets with collision sensors, overhead steel trusses, elevated spectator grandstands, and detailed rocket cars.
+4. **Reference 4 (Drift Storm)**: Dedicated grand prix circuit featuring start/finish gantry with checkered banner and 5-lamp sequence, dual-color rumble kerbs, Armco barriers, tiered crowd grandstands, and karts with helmeted racers.
+

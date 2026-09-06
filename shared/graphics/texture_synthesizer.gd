@@ -51,6 +51,26 @@ static func get_texture(texture_id: String) -> ImageTexture:
 			tex = _build_hazard_stripe_albedo()
 		"curb_stripes_albedo":
 			tex = _build_curb_stripes_albedo()
+		"curb_stripes_blue_white":
+			tex = _build_curb_stripes_blue_white()
+		"tactile_bump_albedo":
+			tex = _build_tactile_bump_albedo()
+		"asphalt_lanes_albedo":
+			tex = _build_asphalt_lanes_albedo()
+		"hex_grid_cyan_albedo":
+			tex = _build_hex_grid_cyan_albedo()
+		"hex_grid_cyan_emission":
+			tex = _build_hex_grid_cyan_emission()
+		"checkered_flag_albedo":
+			tex = _build_checkered_flag_albedo()
+		"crowd_texture_albedo":
+			tex = _build_crowd_texture_albedo()
+		"turbo_kart_rush_banner":
+			tex = _build_turbo_kart_rush_banner()
+		"stadium_score_banner_orange":
+			tex = _build_stadium_score_banner_orange()
+		"stadium_score_banner_blue":
+			tex = _build_stadium_score_banner_blue()
 		"digital_signage_cyan":
 			tex = _build_digital_signage_albedo(Color(0.0, 0.9, 1.0), "VOLTARENA")
 		"digital_signage_orange":
@@ -482,7 +502,298 @@ static func _build_ball_hex_glow() -> ImageTexture:
 			img.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(img)
 
+static func _build_curb_stripes_blue_white() -> ImageTexture:
+	var w = 64
+	var h = 64
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var blue = Color(0.12, 0.45, 0.95)
+	var white = Color(0.96, 0.96, 0.98)
+	for y in range(h):
+		for x in range(w):
+			var stripe = (x / 16) % 2 == 0
+			img.set_pixel(x, y, blue if stripe else white)
+	return ImageTexture.create_from_image(img)
+
+static func _build_tactile_bump_albedo() -> ImageTexture:
+	var w = 64
+	var h = 64
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var yellow_base = Color(0.98, 0.85, 0.05)
+	var yellow_bump = Color(0.85, 0.72, 0.02)
+	for y in range(h):
+		for x in range(w):
+			var cx = (x % 16) - 8
+			var cy = (y % 16) - 8
+			var dist = sqrt(float(cx * cx + cy * cy))
+			var col = yellow_bump if dist < 4.0 else yellow_base
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+static func _build_asphalt_lanes_albedo() -> ImageTexture:
+	var w = 128
+	var h = 128
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var dark_asphalt = Color(0.18, 0.20, 0.23)
+	var white_line = Color(0.95, 0.96, 0.98)
+	var curb_edge = Color(0.12, 0.14, 0.16)
+	for y in range(h):
+		var dashed = (y % 32) < 18
+		for x in range(w):
+			var grain = (float((x * 19 + y * 23) % 29) / 29.0 - 0.5) * 0.03
+			var col = dark_asphalt + Color(grain, grain, grain)
+			# Outer edge lines
+			if x < 4 or x >= w - 4:
+				col = white_line
+			# Center dashed lane divider
+			elif x >= 62 and x <= 66 and dashed:
+				col = white_line
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+static func _build_hex_grid_cyan_albedo() -> ImageTexture:
+	var w = 256
+	var h = 256
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var dark_metal = Color(0.06, 0.09, 0.14)
+	var cyan_edge = Color(0.12, 0.95, 1.0)
+	var cyan_core = Color(0.0, 0.65, 0.92)
+
+	# Hexagon geometry: period along X is 3 * R, period along Y is sqrt(3) * R
+	var radius = 28.0
+	var h_step = radius * 1.5 # 42.0
+	var v_step = radius * 1.73205 # 48.497
+
+	for y in range(h):
+		var fy = float(y)
+		var approx_row = int(fy / v_step)
+		for x in range(w):
+			var fx = float(x)
+			var approx_col = int(fx / h_step)
+			var min_edge_dist = 999.0
+
+			for c_offset in [-1, 0, 1]:
+				var col = approx_col + c_offset
+				var cx = float(col) * h_step
+				var is_odd = posmod(col, 2) != 0
+				for r_offset in [-1, 0, 1]:
+					var row = approx_row + r_offset
+					var cy = float(row) * v_step + (v_step * 0.5 if is_odd else 0.0)
+					var dx = absf(fx - cx)
+					var dy = absf(fy - cy)
+					# Distance to boundary of regular hexagon with radius R:
+					# Boundary plane is at distance R * sqrt(3) / 2 = radius * 0.866025
+					var edge_dist = 24.25 - maxf(dx * 0.866025, dx * 0.433013 + dy * 0.75)
+					if edge_dist >= -1.0 and edge_dist < min_edge_dist:
+						min_edge_dist = edge_dist
+
+			var col = dark_metal
+			if min_edge_dist >= 0.0 and min_edge_dist < 2.2:
+				col = cyan_edge
+			elif min_edge_dist >= 2.2 and min_edge_dist < 4.2:
+				col = cyan_core
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+static func _build_hex_grid_cyan_emission() -> ImageTexture:
+	var w = 256
+	var h = 256
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var black = Color(0.0, 0.0, 0.0)
+	var cyan_glow = Color(0.0, 0.95, 1.0)
+	var soft_glow = Color(0.0, 0.50, 0.80)
+
+	var radius = 28.0
+	var h_step = radius * 1.5
+	var v_step = radius * 1.73205
+
+	for y in range(h):
+		var fy = float(y)
+		var approx_row = int(fy / v_step)
+		for x in range(w):
+			var fx = float(x)
+			var approx_col = int(fx / h_step)
+			var min_edge_dist = 999.0
+
+			for c_offset in [-1, 0, 1]:
+				var col = approx_col + c_offset
+				var cx = float(col) * h_step
+				var is_odd = posmod(col, 2) != 0
+				for r_offset in [-1, 0, 1]:
+					var row = approx_row + r_offset
+					var cy = float(row) * v_step + (v_step * 0.5 if is_odd else 0.0)
+					var dx = absf(fx - cx)
+					var dy = absf(fy - cy)
+					var edge_dist = 24.25 - maxf(dx * 0.866025, dx * 0.433013 + dy * 0.75)
+					if edge_dist >= -1.0 and edge_dist < min_edge_dist:
+						min_edge_dist = edge_dist
+
+			var col = black
+			if min_edge_dist >= 0.0 and min_edge_dist < 2.2:
+				col = cyan_glow
+			elif min_edge_dist >= 2.2 and min_edge_dist < 4.2:
+				col = soft_glow
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+static func _build_checkered_flag_albedo() -> ImageTexture:
+	var size = 64
+	var img = Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var square = 8
+	var white = Color(0.96, 0.96, 0.98)
+	var black = Color(0.08, 0.08, 0.10)
+	for y in range(size):
+		var y_idx = int(y / square)
+		for x in range(size):
+			var x_idx = int(x / square)
+			var is_white = (x_idx + y_idx) % 2 == 0
+			img.set_pixel(x, y, white if is_white else black)
+	return ImageTexture.create_from_image(img)
+
+static func _build_crowd_texture_albedo() -> ImageTexture:
+	var w = 128
+	var h = 128
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var bench_color = Color(0.18, 0.22, 0.26)
+	img.fill(bench_color)
+
+	var palette = [
+		Color(0.88, 0.22, 0.20),
+		Color(0.20, 0.45, 0.90),
+		Color(0.95, 0.80, 0.15),
+		Color(0.25, 0.80, 0.35),
+		Color(0.95, 0.50, 0.10),
+		Color(0.92, 0.92, 0.95),
+		Color(0.50, 0.20, 0.70),
+		Color(0.25, 0.28, 0.32)
+	]
+	var skin_tones = [
+		Color(0.95, 0.80, 0.70),
+		Color(0.85, 0.65, 0.50),
+		Color(0.60, 0.40, 0.25),
+		Color(0.40, 0.25, 0.15)
+	]
+
+	for row in range(10):
+		var base_y = 6 + row * 12
+		if base_y + 8 >= h:
+			break
+		for col in range(18):
+			var base_x = 4 + col * 7
+			if base_x + 5 >= w:
+				break
+			var hash_val = (row * 37 + col * 19 + 7)
+			var shirt_col = palette[hash_val % palette.size()]
+			var skin_col = skin_tones[(hash_val / 3) % skin_tones.size()]
+
+			for hy in range(3):
+				for hx in range(3):
+					img.set_pixel(base_x + 1 + hx, base_y + hy, skin_col)
+
+			for by in range(3, 8):
+				for bx in range(5):
+					img.set_pixel(base_x + bx, base_y + by, shirt_col)
+
+	return ImageTexture.create_from_image(img)
+
+static func _build_turbo_kart_rush_banner() -> ImageTexture:
+	var w = 256
+	var h = 64
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var red_banner = Color(0.85, 0.12, 0.16)
+	img.fill(red_banner)
+
+	var white = Color(0.98, 0.98, 0.98)
+	var black = Color(0.06, 0.06, 0.08)
+	for y in range(8):
+		for x in range(w):
+			var chk = (int(x / 8) + int(y / 4)) % 2 == 0
+			img.set_pixel(x, y, white if chk else black)
+			img.set_pixel(x, h - 1 - y, white if chk else black)
+
+	for y in range(8, h - 8):
+		for x in range(w):
+			if (y == 9 or y == h - 10) and x > 12 and x < w - 12:
+				img.set_pixel(x, y, white)
+			if y >= 20 and y <= 44:
+				var hash_x = x % 16
+				if hash_x > 2 and hash_x < 14 and (x > 24 and x < w - 24):
+					if (y < 25 or y > 39 or hash_x < 6 or hash_x > 10):
+						img.set_pixel(x, y, white)
+
+	return ImageTexture.create_from_image(img)
+
+static func _build_stadium_score_banner_orange() -> ImageTexture:
+	var w = 256
+	var h = 64
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var bg = Color(0.12, 0.14, 0.18)
+	var orange = Color(1.0, 0.55, 0.05)
+	var white = Color(0.98, 0.98, 0.98)
+	img.fill(bg)
+
+	for y in range(h):
+		for x in range(w):
+			if x < 4 or x >= w - 4 or y < 4 or y >= h - 4:
+				img.set_pixel(x, y, orange)
+			elif (y == 8 or y == h - 9) and x > 8 and x < w - 8:
+				img.set_pixel(x, y, orange)
+			elif y >= 18 and y <= 46 and x >= 40 and x <= 216:
+				var char_idx = int((x - 40) / 28)
+				var char_x = (x - 40) % 28
+				if char_x >= 4 and char_x <= 22:
+					var is_px = false
+					match char_idx:
+						0:
+							is_px = (y < 24 or y > 40 or char_x < 8 or char_x > 18)
+						1:
+							is_px = (char_x < 8 or y < 24 or (y > 30 and y < 35) or (char_x > 18 and y <= 32) or (char_x > 12 and y > 34))
+						2:
+							is_px = (char_x < 8 or char_x > 18 or y < 24 or (y >= 32 and y <= 36))
+						3:
+							is_px = (char_x < 8 or char_x > 18 or absf(float(char_x - 4) - float(y - 18) * 0.5) < 3.0)
+						4:
+							is_px = (char_x < 8 or y < 24 or y > 40 or (char_x > 18 and y >= 32) or (y >= 32 and y <= 36 and char_x >= 12))
+						5:
+							is_px = (char_x < 8 or y < 24 or y > 40 or (y >= 30 and y <= 34 and char_x < 18))
+					if is_px:
+						img.set_pixel(x, y, white)
+	return ImageTexture.create_from_image(img)
+
+static func _build_stadium_score_banner_blue() -> ImageTexture:
+	var w = 256
+	var h = 64
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var bg = Color(0.12, 0.14, 0.18)
+	var cyan = Color(0.10, 0.75, 1.0)
+	var white = Color(0.98, 0.98, 0.98)
+	img.fill(bg)
+
+	for y in range(h):
+		for x in range(w):
+			if x < 4 or x >= w - 4 or y < 4 or y >= h - 4:
+				img.set_pixel(x, y, cyan)
+			elif (y == 8 or y == h - 9) and x > 8 and x < w - 8:
+				img.set_pixel(x, y, cyan)
+			elif y >= 18 and y <= 46 and x >= 60 and x <= 196:
+				var char_idx = int((x - 60) / 32)
+				var char_x = (x - 60) % 32
+				if char_x >= 4 and char_x <= 26:
+					var is_px = false
+					match char_idx:
+						0:
+							is_px = (char_x < 8 or y < 24 or y > 40 or (y >= 30 and y <= 34) or (char_x > 20))
+						1:
+							is_px = (char_x < 8 or y > 40)
+						2:
+							is_px = (char_x < 8 or char_x > 20 or y > 40)
+						3:
+							is_px = (char_x < 8 or y < 24 or y > 40 or (y >= 30 and y <= 34 and char_x < 20))
+					if is_px:
+						img.set_pixel(x, y, white)
+	return ImageTexture.create_from_image(img)
+
 static func _build_fallback_texture() -> ImageTexture:
 	var img = Image.create(16, 16, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0.5, 0.5, 0.5))
 	return ImageTexture.create_from_image(img)
+

@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 94.3529411764706,
+  "overall_coverage_pct": 93.9110070257611,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -26,10 +26,11 @@
       "untested": []
     },
     "res://games/arena-fps/player/fps_player.gd": {
-      "coverage_pct": 92.8571428571429,
+      "coverage_pct": 86.6666666666667,
       "tested": 13,
-      "total": 14,
+      "total": 15,
       "untested": [
+        "set_third_person",
         "_unhandled_input"
       ]
     },
@@ -322,16 +323,17 @@
       "untested": []
     },
     "res://shared/graphics/mesh_builder.gd": {
-      "coverage_pct": 82.3529411764706,
+      "coverage_pct": 80,
       "tested": 28,
-      "total": 34,
+      "total": 35,
       "untested": [
         "build_ticket_turnstile",
         "build_subway_bench",
         "build_vending_machine",
         "build_stadium_grandstand",
         "build_stadium_floodlight_tower",
-        "build_track_barrier"
+        "build_track_barrier",
+        "build_grandstand_with_crowd"
       ]
     },
     "res://shared/graphics/model_cache.gd": {
@@ -440,6 +442,6 @@
     }
   },
   "tested_functions": 401,
-  "timestamp": "2026-09-05T13:23:54",
-  "total_functions": 425
+  "timestamp": "2026-09-06T08:32:17",
+  "total_functions": 427
 }

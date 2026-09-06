@@ -70,47 +70,52 @@ func build_arena() -> void:
 			ad_r.scale = Vector3(2.5, 2.5, 2.5)
 			add_child(ad_r)
 
-	# Authentic 3D Tiered Grandstands with Spectator Crowds
-	for z_stand in [-32.0, 0.0, 32.0]:
-		var st_l = ModelCacheScript.get_prop("stadium_stands")
-		if st_l:
-			st_l.position = Vector3(-half_x - 3.5, 0, z_stand)
-			st_l.rotation_degrees.y = 90.0
-			st_l.scale = Vector3(3.2, 3.2, 3.2)
-			add_child(st_l)
-		var st_r = ModelCacheScript.get_prop("stadium_stands")
-		if st_r:
-			st_r.position = Vector3(half_x + 3.5, 0, z_stand)
-			st_r.rotation_degrees.y = -90.0
-			st_r.scale = Vector3(3.2, 3.2, 3.2)
-			add_child(st_r)
+	# Authentic 3D Tiered Grandstands with Spectator Crowds along sidewalls
+	for z_stand in [-36.0, -12.0, 12.0, 36.0]:
+		var st_l = MeshBuilder.build_grandstand_with_crowd(24.0, 8.0, 10.0)
+		st_l.position = Vector3(-half_x - 5.0, 0, z_stand)
+		st_l.rotation_degrees.y = 90.0
+		add_child(st_l)
+
+		var st_r = MeshBuilder.build_grandstand_with_crowd(24.0, 8.0, 10.0)
+		st_r.position = Vector3(half_x + 5.0, 0, z_stand)
+		st_r.rotation_degrees.y = -90.0
+		add_child(st_r)
+
+	# Massive Overhead Arched Steel Roof Trusses spanning across stadium
+	var mat_truss = MaterialGenerator.get_material("sci_fi_metal")
+	for z_truss in [-40.0, -20.0, 0.0, 20.0, 40.0]:
+		var truss_beam = MeshInstance3D.new()
+		var b_box = BoxMesh.new()
+		b_box.size = Vector3(width + 8.0, 1.2, 1.2)
+		truss_beam.mesh = b_box
+		truss_beam.material_override = mat_truss
+		truss_beam.position = Vector3(0, wall_height + 0.6, z_truss)
+		add_child(truss_beam)
+
+		for s_side in [-1.0, 1.0]:
+			var strut = MeshInstance3D.new()
+			var s_box = BoxMesh.new()
+			s_box.size = Vector3(12.0, 0.6, 0.6)
+			strut.mesh = s_box
+			strut.material_override = mat_truss
+			strut.position = Vector3(s_side * (half_x - 4.0), wall_height - 2.5, z_truss)
+			strut.rotation_degrees.z = s_side * -35.0
+			add_child(strut)
 
 	# End Walls with Hardened Goal Openings
 	build_end_wall(true)  # North wall (-Z, Team 1 Orange Goal)
 	build_end_wall(false) # South wall (+Z, Team 0 Blue Goal)
 
 	# Modeled 3D Production Stadium Goals
-	var goal_n = ModelCacheScript.get_prop("goal_post")
-	if goal_n:
-		goal_n.position = Vector3(0, 0, -half_z)
-		goal_n.scale = Vector3(2.8, 2.8, 2.8)
-		add_child(goal_n)
-	else:
-		var fallback_n = MeshBuilder.build_stadium_goal_mesh(1)
-		fallback_n.position = Vector3(0, 0, -half_z)
-		add_child(fallback_n)
+	var fallback_n = MeshBuilder.build_stadium_goal_mesh(1)
+	fallback_n.position = Vector3(0, 0, -half_z)
+	add_child(fallback_n)
 
-	var goal_s = ModelCacheScript.get_prop("goal_post")
-	if goal_s:
-		goal_s.position = Vector3(0, 0, half_z)
-		goal_s.rotation_degrees.y = 180.0
-		goal_s.scale = Vector3(2.8, 2.8, 2.8)
-		add_child(goal_s)
-	else:
-		var fallback_s = MeshBuilder.build_stadium_goal_mesh(0)
-		fallback_s.position = Vector3(0, 0, half_z)
-		fallback_s.rotation_degrees = Vector3(0, 180, 0)
-		add_child(fallback_s)
+	var fallback_s = MeshBuilder.build_stadium_goal_mesh(0)
+	fallback_s.position = Vector3(0, 0, half_z)
+	fallback_s.rotation_degrees = Vector3(0, 180, 0)
+	add_child(fallback_s)
 
 	# Goal trigger zones
 	create_goal_trigger(Vector3(0, goal_height * 0.5, -half_z - goal_depth * 0.5), 0)
@@ -224,6 +229,16 @@ func build_end_wall(is_north: bool) -> void:
 	var top_y = goal_height + top_h * 0.5
 	create_box(Vector3(0, top_y, z_pos + (-1.5 if is_north else 1.5)), Vector3(goal_width, top_h, 3.0), "dark_hull")
 
+	# Team Scoreboard Banner above goal matching Reference Screenshot 5
+	var banner_mat = "stadium_banner_orange" if is_north else "stadium_banner_blue"
+	var banner = MeshInstance3D.new()
+	var banner_box = BoxMesh.new()
+	banner_box.size = Vector3(20.0, 4.8, 0.4)
+	banner.mesh = banner_box
+	banner.material_override = MaterialGenerator.get_material(banner_mat)
+	banner.position = Vector3(0, goal_height + 3.2, z_pos + (0.3 if is_north else -0.3))
+	add_child(banner)
+
 	# Hardened Back Wall behind Goal (to completely prevent ball escaping the net)
 	var back_z = z_pos + (-goal_depth - 1.5 if is_north else goal_depth + 1.5)
 	var net_mat = "neon_cyan" if is_north else "neon_orange"
@@ -253,18 +268,37 @@ func create_boost_pad(pos: Vector3) -> void:
 	pad.collision_mask = GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES
 	pad.position = pos
 
-	var mesh = MeshInstance3D.new()
+	# Glowing yellow circular ring matching Reference Screenshot 5
+	var outer_ring = MeshInstance3D.new()
+	var torus = TorusMesh.new()
+	torus.inner_radius = 1.3
+	torus.outer_radius = 1.6
+	torus.rings = 16
+	torus.ring_segments = 8
+	outer_ring.mesh = torus
+	var mat_ring = StandardMaterial3D.new()
+	mat_ring.albedo_color = Color(1.0, 0.85, 0.1)
+	mat_ring.emission_enabled = true
+	mat_ring.emission = Color(1.0, 0.85, 0.1)
+	mat_ring.emission_energy_multiplier = 2.8
+	outer_ring.material_override = mat_ring
+	outer_ring.position = Vector3(0, 0.04, 0)
+	pad.add_child(outer_ring)
+
+	# Inner glowing disc core
+	var inner_disc = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
-	cyl.top_radius = 1.4
-	cyl.bottom_radius = 1.4
-	cyl.height = 0.12
-	mesh.mesh = cyl
-	mesh.material_override = MaterialGenerator.get_material("gold_pickup")
-	pad.add_child(mesh)
+	cyl.top_radius = 0.55
+	cyl.bottom_radius = 0.55
+	cyl.height = 0.08
+	inner_disc.mesh = cyl
+	inner_disc.material_override = mat_ring
+	inner_disc.position = Vector3(0, 0.04, 0)
+	pad.add_child(inner_disc)
 
 	var col = CollisionShape3D.new()
 	var cyl_shape = CylinderShape3D.new()
-	cyl_shape.radius = 1.4
+	cyl_shape.radius = 1.6
 	cyl_shape.height = 1.0
 	col.shape = cyl_shape
 	pad.add_child(col)

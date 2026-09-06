@@ -119,7 +119,7 @@ func _on_track_built(waypoints: Array, checkpoints: Array) -> void:
 
 	# Starting lights countdown sequence
 	if hud and hud.has_method("show_countdown"):
-		hud.show_countdown(3)
+		hud.show_countdown("3")
 
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am:
@@ -129,17 +129,17 @@ func _on_track_built(waypoints: Array, checkpoints: Array) -> void:
 	if tree:
 		tree.create_timer(1.0).timeout.connect(func():
 			if hud and hud.has_method("show_countdown"):
-				hud.show_countdown(2)
+				hud.show_countdown("2")
 			if am: am.play_sound("countdown_tick", 1.0)
 		)
 		tree.create_timer(2.0).timeout.connect(func():
 			if hud and hud.has_method("show_countdown"):
-				hud.show_countdown(1)
+				hud.show_countdown("1")
 			if am: am.play_sound("countdown_tick", 1.0)
 		)
 		tree.create_timer(3.0).timeout.connect(func():
 			if hud and hud.has_method("show_countdown"):
-				hud.show_countdown(0)
+				hud.show_countdown("GO!")
 			if hud and hud.has_method("dismiss_onboarding"):
 				hud.dismiss_onboarding()
 			if am: am.play_sound("countdown_go", 1.2)

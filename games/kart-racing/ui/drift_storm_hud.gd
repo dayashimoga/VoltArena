@@ -386,12 +386,15 @@ func update_lap_times(cur_sec: float, best_sec: float) -> void:
 	if best_lap_label and best_sec < 900.0:
 		best_lap_label.text = "BEST: %s" % _format_time(best_sec)
 
-func show_countdown(text: String) -> void:
+func show_countdown(val: Variant) -> void:
 	if not countdown_panel:
 		return
+	var text: String = str(val)
+	if text == "0":
+		text = "GO!"
 	countdown_panel.visible = true
 	countdown_label.text = text
-	if text == "GO!":
+	if text == "GO!" or text == "GO":
 		countdown_label.modulate = Color(0.2, 1.0, 0.5)
 		var tween = create_tween()
 		tween.tween_property(countdown_panel, "modulate:a", 0.0, 0.6).set_delay(0.4)
@@ -547,13 +550,12 @@ func setup_onboarding_overlay() -> void:
 	vbox.add_child(start_btn)
 
 func dismiss_onboarding() -> void:
-	if not is_instance_valid(onboarding_overlay) or not onboarding_overlay.visible:
-		return
-	var tween = create_tween()
-	tween.tween_property(onboarding_overlay, "modulate:a", 0.0, 0.3)
-	tween.tween_callback(func():
+	if is_instance_valid(onboarding_overlay):
 		onboarding_overlay.visible = false
-	)
+		onboarding_overlay.modulate.a = 0.0
+	if is_instance_valid(countdown_panel):
+		countdown_panel.visible = false
+		countdown_panel.modulate.a = 0.0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if is_instance_valid(onboarding_overlay) and onboarding_overlay.visible:

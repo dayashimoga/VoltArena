@@ -32,8 +32,8 @@ func _ready() -> void:
 	setup_car_visual()
 
 func setup_car_visual() -> void:
-	# Production-quality 3D vehicle model
-	var v_id = "truck_red" if team_id == 0 else "truck_yellow"
+	# Production-quality 3D rocket car model
+	var v_id = "rocket_car_spectre" if team_id == 0 else "rocket_car_enforcer"
 	car_visual = ModelCacheScript.get_vehicle(v_id)
 	if not car_visual:
 		car_visual = MeshBuilder.build_rocket_car(team_id)
@@ -81,6 +81,11 @@ func _physics_process(delta: float) -> void:
 		var main = get_parent()
 		if not (main and main.get("is_kickoff_pause") == true):
 			handle_player_input(delta)
+
+	if is_inside_tree():
+		if global_position.y < -4.0 or abs(global_position.x) > 60.0 or abs(global_position.z) > 85.0:
+			velocity = Vector3.ZERO
+			global_position = Vector3(-12.0 if team_id == 0 else 12.0, 0.5, 32.0 if team_id == 0 else -32.0)
 
 	move_and_slide()
 

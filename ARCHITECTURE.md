@@ -148,3 +148,24 @@ In fast-paced 3D arenas (specifically Nitro Kick for the soccer ball), keeping t
 * **Camera Projection**: Converts `global_position` via `camera.unproject_position()` and tests `camera.is_position_behind(target_pos)`.
 * **Clamping & Direction Vectors**: When off-screen, projects from viewport center along normalized vector to screen border margins with directional arrow rotation (`▲`, `▼`, `◄`, `►`).
 * **Dynamic Distance Metric**: Calculates real-time Euclidean distance in meters, displaying e.g. `BALL 24m` directly on the screen-space tracker badge.
+
+---
+
+## 9. Real-Time Texture Synthesis & PBR Shading Subsystem
+
+To eliminate runtime I/O stalls and maintain high visual fidelity matching reference targets, `TextureSynthesizer` (`shared/graphics/texture_synthesizer.gd`) generates deterministic procedural textures directly into Godot `ImageTexture` objects:
+* **Mathematical Hex Grid**: Computes exact regular hexagonal boundary distance:
+  $$\text{dist} = 24.25 - \max(|x|\cdot 0.866025, |x|\cdot 0.433013 + |y|\cdot 0.75)$$
+  yielding clean, non-aliasing 2-pixel glowing lines along all 6 edges of every hexagon with zero procedural noise artifacts.
+* **Ceramic Subway Tiling**: Generates staggered brick masonry grids with recessed grout lines and subtle specular variation.
+* **Stadium Turf Stripes**: Alternates grass hue and roughness frequencies to produce manicured football pitch bands.
+* **Motorsport Kerbs & Decals**: Produces crisp alternating red/white and blue/white rumble strips and yellow/black diagonal hazard stripes.
+
+---
+
+## 10. Spatial Environmental Hardening & Camera Isolation
+
+* **Top-Level Camera Decoupling**: In first-person player controllers (`FPSPlayer`), camera pitch and spring recoil are isolated from hierarchy overwrites via `if not camera.top_level:` guards, allowing clean rotational bobbing without orientation snapping.
+* **Subway Platform Corridor Geometry**: Subway station generation constructs longitudinal column galleries along the Z-axis, orienting the player at $Z = 20\text{m}$ looking north toward $Z = -30\text{m}$ to expose 45 meters of column perspective, passenger trains, and dynamic mutant routes.
+* **Continuous Collision Protection**: Dynamic projectiles, racing vehicles, and sports spheres enforce continuous collision detection (`continuous_cd = true`) and thick collision margins ($\ge 2.5\text{m}$) across arena barriers.
+

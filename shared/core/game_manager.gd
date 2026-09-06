@@ -96,20 +96,34 @@ func _handle_arena_fps_cmd(scene: Node, cmd: String) -> void:
 			player.select_weapon(idx)
 		if hud and hud.has_method("highlight_active_weapon"):
 			hud.highlight_active_weapon(idx)
+	elif cmd == "cam_arena":
+		var cam = scene.find_child("Camera3D", true, false)
+		if cam:
+			cam.top_level = true
+			cam.global_position = Vector3(0, 2.5, 18.0)
+			cam.look_at(Vector3(0, 1.8, 0.0), Vector3.UP)
 	elif cmd == "objective":
 		if hud and hud.has_method("update_objective"):
 			hud.update_objective(0, 0, 20)
 	elif cmd == "cam_character":
 		var cam = scene.find_child("Camera3D", true, false)
-		if cam and player:
+		var bots = scene.get("bots")
+		if cam and bots and not bots.is_empty() and is_instance_valid(bots[0]):
+			var bot = bots[0]
 			cam.top_level = true
-			cam.global_position = player.global_position + Vector3(0.8, 0.4, -2.4)
-			cam.look_at(player.global_position + Vector3(0, 0.2, 0), Vector3.UP)
+			cam.look_at_from_position(bot.global_position + Vector3(0.0, 1.4, 3.2), bot.global_position + Vector3(0.0, 1.0, 0.0), Vector3.UP)
+		elif cam and player:
+			if player.has_method("set_third_person"):
+				player.set_third_person(true)
+			cam.top_level = true
+			cam.look_at_from_position(player.global_position + Vector3(0.0, 1.4, -2.8), player.global_position + Vector3(0.0, 1.0, 0.0), Vector3.UP)
 	elif cmd == "cam_first_person":
+		if player and player.has_method("set_third_person"):
+			player.set_third_person(false)
 		var cam = scene.find_child("Camera3D", true, false)
 		if cam:
 			cam.top_level = false
-			cam.position = Vector3(0, 0.6, 0)
+			cam.position = Vector3.ZERO
 			cam.rotation = Vector3.ZERO
 	elif cmd == "cam_pickup":
 		var cam = scene.find_child("Camera3D", true, false)
@@ -148,7 +162,13 @@ func _handle_subway_cmd(scene: Node, cmd: String) -> void:
 	var hud = scene.get_node_or_null("HUD")
 	var results = scene.get_node_or_null("ResultsScreen")
 
-	if cmd == "cam_train":
+	if cmd == "cam_platform":
+		var cam = scene.find_child("Camera3D", true, false)
+		if cam:
+			cam.top_level = true
+			cam.global_position = Vector3(-4.5, 1.35, 14.0)
+			cam.look_at(Vector3(-4.5, 1.25, -15.0), Vector3.UP)
+	elif cmd == "cam_train":
 		var cam = scene.find_child("Camera3D", true, false)
 		if cam:
 			cam.top_level = true
@@ -225,17 +245,17 @@ func _handle_subway_cmd(scene: Node, cmd: String) -> void:
 		if player and cam:
 			for k in range(4):
 				var sc = ScrapPickup.new()
-				sc.position = player.global_position + Vector3(sin(k * 1.5) * 1.5, 0.4, cos(k * 1.5) * 1.5)
+				sc.position = player.global_position + Vector3(sin(k * 1.5) * 1.5, 0.4, -cos(k * 1.5) * 1.5)
 				scene.add_child(sc)
 			cam.top_level = true
-			cam.global_position = player.global_position + Vector3(1.5, 2.0, 2.5)
-			cam.look_at(player.global_position, Vector3.UP)
+			cam.global_position = player.global_position + Vector3(1.2, 1.4, 2.2)
+			cam.look_at(player.global_position + Vector3(0, 0.4, -1.5), Vector3.UP)
 	elif cmd == "active_combat":
 		var cam = scene.find_child("Camera3D", true, false)
 		if player and cam:
 			cam.top_level = true
-			cam.global_position = player.global_position + Vector3(0.5, 1.5, -0.8)
-			cam.look_at(player.global_position + Vector3(0.0, 1.2, 6.0), Vector3.UP)
+			cam.global_position = Vector3(-4.5, 1.35, 12.0)
+			cam.look_at(Vector3(-4.5, 1.2, -10.0), Vector3.UP)
 			if player.has_method("fire_weapon"):
 				player.fire_weapon()
 	elif cmd == "wave_escalation":
@@ -245,10 +265,10 @@ func _handle_subway_cmd(scene: Node, cmd: String) -> void:
 			if hud.has_method("update_threats"):
 				hud.update_threats(14)
 		var cam = scene.find_child("Camera3D", true, false)
-		if player and cam:
+		if cam:
 			cam.top_level = true
-			cam.global_position = player.global_position + Vector3(0.0, 1.8, -2.5)
-			cam.look_at(player.global_position + Vector3(0.0, 1.0, 5.0), Vector3.UP)
+			cam.global_position = Vector3(-4.5, 1.35, 14.0)
+			cam.look_at(Vector3(-4.5, 1.2, -10.0), Vector3.UP)
 	elif cmd == "show_results":
 		var cam = scene.find_child("Camera3D", true, false)
 		if cam:

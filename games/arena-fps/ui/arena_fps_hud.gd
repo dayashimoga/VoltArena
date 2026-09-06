@@ -357,9 +357,8 @@ func setup_onboarding_overlay() -> void:
 
 func dismiss_onboarding() -> void:
 	if is_instance_valid(onboarding_overlay):
-		var tw = create_tween()
-		tw.tween_property(onboarding_overlay, "modulate:a", 0.0, 0.8)
-		tw.tween_callback(func():
-			if is_instance_valid(onboarding_overlay):
-				onboarding_overlay.visible = false
-		)
+		onboarding_overlay.visible = false
+		onboarding_overlay.modulate.a = 0.0
+	if is_instance_valid(countdown_panel):
+		countdown_panel.visible = false
+		countdown_panel.modulate.a = 0.0

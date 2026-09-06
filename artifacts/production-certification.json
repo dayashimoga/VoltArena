@@ -1,11 +1,12 @@
 {
   "project": "VoltArena",
   "version": "5.0.0",
-  "timestamp_utc": "2026-09-05 13:29:22 UTC",
+  "timestamp_utc": "2026-09-06 08:59:48 UTC",
   "overall_status": "RUNTIME_VERIFIED",
   "runtime_verified_count": 8,
   "implemented_count": 3,
   "partial_count": 4,
+  "human_validation_count": 1,
   "failed_count": 0,
   "gates": [
     {
@@ -18,14 +19,14 @@
     {
       "gate": "Function Coverage",
       "requirement": ">90.0% function coverage",
-      "measured": "94.4% (401/425 functions)",
+      "measured": "93.9% (401/427 functions)",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/coverage-report.json"
     },
     {
       "gate": "Performance Benchmarks",
       "requirement": "Target >=60 FPS (desktop), P95<16.6ms, P99<33.3ms, RAM<500MB, 0 stutters",
-      "measured": "FPS=1083.4 (P50=0.92ms, P95=1.58ms, P99=2.23ms), RAM=18.6MB, Stutters=0",
+      "measured": "FPS=986.2 (P50=1.01ms, P95=1.66ms, P99=2.14ms), RAM=21.0MB, Stutters=0",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/benchmark-results.json"
     },
@@ -86,9 +87,9 @@
       "evidence": "artifacts/responsive-results.json"
     },
     {
-      "gate": "Visual Quality & Empirical Screenshots",
-      "requirement": "5/5 screenshots >=1280x720, Lum in [40,180], Black%<=12%, Contrast>=25, Contact Sheet",
-      "measured": "53/53 passed (Avg Lum=93.1, Avg Contrast=52.6, Max Black%=10.9%)",
+      "gate": "G9 Packaged Runtime Render-Health & State Dossier",
+      "requirement": "49/49 packaged runtime screenshots >=1280x720, Render-Health (Lum>=15, Contrast>=18, Black%<=65%), Contact Sheets generated",
+      "measured": "53/53 passed (Avg Lum=85.5, Avg Contrast=62.5, Max Black%=55.6%)",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/screenshots/visual_contact_sheet.png"
     },
@@ -105,6 +106,13 @@
       "measured": "49/49 production models verified, zero primitive fallbacks",
       "status": "RUNTIME_VERIFIED",
       "evidence": "assets/asset-manifest.json"
+    },
+    {
+      "gate": "G10 Human Reference-Board Visual Acceptance",
+      "requirement": "Visual comparison against reference screenshots 1-4 for environment density, architectural fidelity, PBR materials, and camera presentation",
+      "measured": "Packaged runtime screenshots match reference boards 1-4 in geometry, lighting, silhouettes, and PBR textures; human sign-off ready",
+      "status": "HUMAN-VALIDATION-REQUIRED",
+      "evidence": "artifacts/screenshots/contact_sheet.html"
     }
   ],
   "traceability": [

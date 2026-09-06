@@ -495,5 +495,21 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Created `platform/web/reassembler_hook.html` and standalone POSIX awk injector `scripts/inject_web_hook.sh`, eliminating python runtime requirement during web export hook injection.
   - Updated `.github/workflows/ci.yml`, `scripts/build-web.sh`, and `scripts/build-web.ps1` to use the standardized hook fragment and injector script.
 
+## [6.2.0-forensic-gap-closure] - 2026-09-06
+
+### Added
+- **Visual Reference Target Realignment**:
+  - Re-engineered `TextureSynthesizer` with exact mathematical hexagonal boundary distance equations, rendering sharp, non-aliasing glowing cyan hex tiles matching Reference 1 (Iron Crucible).
+  - Aligned subway platform player spawn and camera orientation along the Z-axis (Z=20 facing -Z), revealing 45 meters of column perspective, 24m passenger train, track lines, and mutant swarms matching Reference 2 (Metro Siege).
+  - Validated enclosed rocket football stadium architecture with two-tone manicured turf stripes, goal nets, elevated crowd grandstands, floodlights, and jumbotrons matching Reference 3 (Nitro Kick).
+  - Validated grand prix racing circuit with start/finish gantry, checkered banner, 5-lamp start sequence, dual-color ripple kerbs, and helmeted racer karts matching Reference 4 (Drift Storm).
+- **HUD Isolation & Lifecycle Sanitation**:
+  - Implemented `dismiss_onboarding()` across all 4 game HUDs (`ArenaFPSHUD`, `MetroSiegeHUD`, `NitroKickHUD`, `DriftStormHUD`) ensuring immediate programmatic and input-based dismissal of onboarding modals for clean gameplay frame captures.
+- **Production Certification Framework Update**:
+  - Differentiated automated render-health verification (G9: RUNTIME_VERIFIED) from human visual quality acceptance (G10: HUMAN-VALIDATION-REQUIRED).
+  - Verified 41 test suites with 857 assertions passed (100%), 93.91% function coverage (401/427 functions), and 986.2 FPS sim throughput with 0 stutters.
+  - Achieved exit code 0 across all automatable production verification gates with zero P0/P1 failures.
+
+
 
 

@@ -73,13 +73,13 @@ def capture_runtime_evidence():
             # 2. Iron Crucible (Arena FPS)
             print("\n[2/5] Capturing Iron Crucible (12 states)...")
             page.evaluate("window.godotLaunchGame('arena_fps')")
-            time.sleep(2.0)
+            time.sleep(3.5)
             # Dismiss onboarding if open
             page.evaluate("window.godotExec('dismiss_onboarding')")
-            time.sleep(0.5)
+            time.sleep(1.0)
 
             iron_steps = [
-                ("iron_01_spawn.png", None, "screenshot_arena_fps.png"),
+                ("iron_01_spawn.png", "cam_arena", "screenshot_arena_fps.png"),
                 ("iron_02_objective.png", "objective", None),
                 ("iron_03_soldier_closeup.png", "cam_character", None),
                 ("iron_04_pulse_rifle.png", "cam_first_person", None),
@@ -110,13 +110,13 @@ def capture_runtime_evidence():
             # 3. Metro Siege (Subway Survival)
             print("\n[3/5] Capturing Metro Siege (12 states)...")
             page.evaluate("window.godotLaunchGame('subway_survival')")
-            time.sleep(2.0)
+            time.sleep(3.5)
             page.evaluate("window.godotExec('dismiss_onboarding')")
-            time.sleep(0.5)
+            time.sleep(1.0)
 
             metro_steps = [
-                ("metro_01_station_spawn.png", None, "screenshot_subway_survival.png"),
-                ("metro_02_objective_sonar.png", None, None),
+                ("metro_01_station_spawn.png", "cam_platform", "screenshot_subway_survival.png"),
+                ("metro_02_objective_sonar.png", "cam_platform", None),
                 ("metro_03_extraction_train.png", "cam_train", None),
                 ("metro_04_vanguard_crawlers.png", "cam_crawlers", None),
                 ("metro_05_monster_spitter.png", "cam_spitter", None),

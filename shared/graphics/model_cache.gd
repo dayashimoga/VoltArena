@@ -161,25 +161,36 @@ static func get_vehicle(vehicle_id: String = "kart_speedster") -> Node3D:
 	var path = "res://assets/models/vehicles/kart_speedster.glb"
 	var target_scale = Vector3(1.2, 1.2, 1.2)
 	var rot_y = 180.0
+	var is_kart = false
+	var is_rocket_car = false
+	var team_tint = Color.WHITE
 
 	match vehicle_id.to_lower():
+		"rocket_car_spectre", "spectre", "rocket_car", "truck_red":
+			path = "res://assets/models/vehicles/rocket_car_spectre.glb"
+			target_scale = Vector3(1.3, 1.3, 1.3)
+			is_rocket_car = true
+			team_tint = Color(0.1, 0.75, 1.0)
+		"rocket_car_enforcer", "enforcer_car", "truck_yellow":
+			path = "res://assets/models/vehicles/rocket_car_enforcer.glb"
+			target_scale = Vector3(1.3, 1.3, 1.3)
+			is_rocket_car = true
+			team_tint = Color(1.0, 0.55, 0.05)
 		"kart_drift", "drift", "drift_spec", "truck_green":
 			path = "res://assets/models/vehicles/kart_drift.glb"
-		"kart_muscle", "muscle", "truck_yellow", "enforcer":
+			is_kart = true
+		"kart_muscle", "muscle", "enforcer":
 			path = "res://assets/models/vehicles/kart_muscle.glb"
+			is_kart = true
 		"kart_turbo", "turbo", "truck_purple", "phantom":
 			path = "res://assets/models/vehicles/kart_turbo.glb"
+			is_kart = true
 		"racecar_gp", "gp", "open_wheel":
 			path = "res://assets/models/vehicles/racecar_gp.glb"
 			target_scale = Vector3(1.1, 1.1, 1.1)
-		"rocket_car_spectre", "spectre", "rocket_car":
-			path = "res://assets/models/vehicles/rocket_car_spectre.glb"
-			target_scale = Vector3(1.3, 1.3, 1.3)
-		"rocket_car_enforcer":
-			path = "res://assets/models/vehicles/rocket_car_enforcer.glb"
-			target_scale = Vector3(1.3, 1.3, 1.3)
 		_:
 			path = "res://assets/models/vehicles/kart_speedster.glb"
+			is_kart = true
 
 	var model = get_model(path)
 	if not model:
@@ -189,7 +200,101 @@ static func get_vehicle(vehicle_id: String = "kart_speedster") -> Node3D:
 
 	model.scale = target_scale
 	model.rotation_degrees.y = rot_y
+
+	if is_kart:
+		_replace_kart_driver(model, vehicle_id)
+	elif is_rocket_car:
+		_enhance_rocket_car(model, team_tint)
+
 	return model
+
+static func _recursive_remove_chibi(node: Node) -> void:
+	if not node:
+		return
+	for child in node.get_children():
+		var c_name = child.name.to_lower()
+		if "character" in c_name or "head" in c_name or "chibi" in c_name:
+			if child is Node3D:
+				child.visible = false
+			child.queue_free()
+		else:
+			_recursive_remove_chibi(child)
+
+static func _replace_kart_driver(model: Node3D, _vid: String) -> void:
+	if not model:
+		return
+	_recursive_remove_chibi(model)
+
+	# Create a sleek, helmeted racing driver matching Reference Screenshot 3
+	var driver_root = Node3D.new()
+	driver_root.name = "RacingDriver"
+	driver_root.position = Vector3(0, 0.15, 0.0)
+
+	var mat_suit = StandardMaterial3D.new()
+	mat_suit.albedo_color = Color(0.20, 0.35, 0.65)
+	mat_suit.roughness = 0.5
+
+	var mat_helmet = StandardMaterial3D.new()
+	mat_helmet.albedo_color = Color(0.96, 0.96, 0.98)
+	mat_helmet.roughness = 0.2
+	mat_helmet.metallic = 0.4
+
+	var mat_visor = StandardMaterial3D.new()
+	mat_visor.albedo_color = Color(0.04, 0.06, 0.10)
+	mat_visor.roughness = 0.08
+	mat_visor.metallic = 0.95
+
+	# Torso in racing harness
+	var torso = MeshInstance3D.new()
+	var t_mesh = BoxMesh.new()
+	t_mesh.size = Vector3(0.42, 0.46, 0.32)
+	torso.mesh = t_mesh
+	torso.material_override = mat_suit
+	torso.position = Vector3(0, 0.30, 0.02)
+	driver_root.add_child(torso)
+
+	# Aerodynamic Racing Helmet
+	var helmet = MeshInstance3D.new()
+	var h_mesh = SphereMesh.new()
+	h_mesh.radius = 0.22
+	h_mesh.height = 0.44
+	helmet.mesh = h_mesh
+	helmet.material_override = mat_helmet
+	helmet.position = Vector3(0, 0.68, 0.02)
+	driver_root.add_child(helmet)
+
+	# Tinted Visor Band across front of helmet
+	var visor = MeshInstance3D.new()
+	var v_mesh = BoxMesh.new()
+	v_mesh.size = Vector3(0.28, 0.10, 0.12)
+	visor.mesh = v_mesh
+	visor.material_override = mat_visor
+	visor.position = Vector3(0, 0.70, -0.16)
+	driver_root.add_child(visor)
+
+	model.add_child(driver_root)
+
+static func _enhance_rocket_car(model: Node3D, team_col: Color) -> void:
+	if not model:
+		return
+	# Add rear boost thruster glow points
+	for side in [-0.42, 0.42]:
+		var thruster = MeshInstance3D.new()
+		thruster.name = "ThrusterGlow_" + ("L" if side < 0 else "R")
+		var cyl = CylinderMesh.new()
+		cyl.top_radius = 0.04
+		cyl.bottom_radius = 0.14
+		cyl.height = 0.35
+		thruster.mesh = cyl
+		thruster.rotation_degrees.x = -90.0
+		thruster.position = Vector3(side, 0.42, 1.45)
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = team_col
+		mat.emission_enabled = true
+		mat.emission = team_col
+		mat.emission_energy_multiplier = 3.0
+		thruster.material_override = mat
+		model.add_child(thruster)
 
 # ==============================================================================
 # 4. WEAPON & PROP INSTANTIATION
@@ -249,6 +354,16 @@ static func get_building(variant: String = "a") -> Node3D:
 	return null
 
 static func get_prop(prop_id: String) -> Node3D:
+	var id_clean = prop_id.to_lower()
+	# Prop aliases to match model directory filenames
+	match id_clean:
+		"stadium_stands", "grandstand_stands":
+			id_clean = "grandstand"
+		"ad_board", "advertisement_board":
+			id_clean = "billboard"
+		"floodlight":
+			id_clean = "floodlight_tower"
+
 	var search_dirs = [
 		"res://assets/models/environment/scifi/",
 		"res://assets/models/environment/subway/",
@@ -258,7 +373,7 @@ static func get_prop(prop_id: String) -> Node3D:
 		"res://assets/models/props/",
 	]
 	for dir in search_dirs:
-		var full_path = dir + prop_id + ".glb"
+		var full_path = dir + id_clean + ".glb"
 		var m = get_model(full_path)
 		if m:
 			return m

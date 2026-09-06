@@ -18,7 +18,7 @@ var health_component: HealthComponent
 var current_recoil_pitch: float = 0.0
 var current_recoil_yaw: float = 0.0
 var bob_phase: float = 0.0
-var default_camera_y: float = 1.6
+var default_camera_y: float = 1.4
 var is_crouching: bool = false
 
 # Weapons Inventory
@@ -44,7 +44,8 @@ func setup_default_nodes() -> void:
 	if not camera_pivot:
 		camera_pivot = Node3D.new()
 		camera_pivot.name = "CameraPivot"
-		camera_pivot.position = Vector3(0, 1.6, 0)
+		camera_pivot.position = Vector3(0, default_camera_y, 0)
+		camera_pivot.rotation.x = deg_to_rad(-8.0)
 		add_child(camera_pivot)
 
 		camera = Camera3D.new()
@@ -54,13 +55,27 @@ func setup_default_nodes() -> void:
 
 		weapon_holder = Node3D.new()
 		weapon_holder.name = "WeaponHolder"
-		weapon_holder.position = Vector3(0.28, -0.25, -0.55)
+		weapon_holder.position = Vector3(0.24, -0.22, -0.48)
 		camera.add_child(weapon_holder)
 
 	if not health_component:
 		health_component = HealthComponent.new()
 		health_component.name = "HealthComponent"
 		add_child(health_component)
+
+	if not get_node_or_null("PlayerVisual"):
+		var char_model = ModelCache.get_character("soldier")
+		if char_model:
+			char_model.name = "PlayerVisual"
+			char_model.visible = false
+			add_child(char_model)
+
+func set_third_person(enabled: bool) -> void:
+	var pv = get_node_or_null("PlayerVisual")
+	if pv and is_instance_valid(pv):
+		pv.visible = enabled
+	if weapon_holder and is_instance_valid(weapon_holder):
+		weapon_holder.visible = not enabled
 
 	# Collision shape
 	if not get_node_or_null("PlayerCollision"):
@@ -152,8 +167,9 @@ func handle_look_and_recoil(delta: float) -> void:
 	# Decay recoil back to center
 	current_recoil_pitch = lerpf(current_recoil_pitch, 0.0, delta * 12.0)
 	current_recoil_yaw = lerpf(current_recoil_yaw, 0.0, delta * 12.0)
-	camera.rotation.x = current_recoil_pitch
-	camera.rotation.y = current_recoil_yaw
+	if not camera.top_level:
+		camera.rotation.x = current_recoil_pitch
+		camera.rotation.y = current_recoil_yaw
 
 func apply_recoil(pitch: float, yaw: float) -> void:
 	current_recoil_pitch = min(current_recoil_pitch + pitch, deg_to_rad(15.0))

@@ -1,7 +1,7 @@
 {
-  "arena_gen_ms": 17.884,
-  "avg_frame_time_ms": 1.04934,
-  "combat_10k_ms": 18.052,
+  "arena_gen_ms": 118.253,
+  "avg_frame_time_ms": 1.11535333333333,
+  "combat_10k_ms": 19.538,
   "draw_calls": 0,
   "gates": {
     "combat_throughput": "PASS",
@@ -11,12 +11,12 @@
     "quality_presets": "PASS",
     "time_to_playable": "PASS"
   },
-  "measured_fps": 1083.42361863489,
+  "measured_fps": 986.193293885602,
   "objects_in_frame": 0,
   "overall_status": "PASS",
-  "p50_frame_time_ms": 0.923,
-  "p95_frame_time_ms": 1.583,
-  "p99_frame_time_ms": 2.233,
+  "p50_frame_time_ms": 1.014,
+  "p95_frame_time_ms": 1.664,
+  "p99_frame_time_ms": 2.143,
   "preset_validation": {
     "AUTO": "PASS",
     "HIGH": "PASS",
@@ -24,15 +24,15 @@
     "MEDIUM": "PASS",
     "ULTRA": "PASS"
   },
-  "static_memory_mb": 18.6337890625,
+  "static_memory_mb": 20.9883689880371,
   "stutter_count": 0,
-  "subway_gen_ms": 12.992,
+  "subway_gen_ms": 580.137,
   "time_to_playable_ms": {
-    "ArenaFPS": 0.803,
-    "KartRacing": 0.261,
-    "RocketCar": 0.346,
-    "SubwaySurvival": 0.213
+    "ArenaFPS": 218.067,
+    "KartRacing": 0.23,
+    "RocketCar": 0.579,
+    "SubwaySurvival": 0.66
   },
-  "timestamp": "2026-09-05T03:39:30",
-  "track_gen_ms": 27.294
+  "timestamp": "2026-09-06T08:32:51",
+  "track_gen_ms": 1317.613
 }

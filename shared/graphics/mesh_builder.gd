@@ -913,6 +913,51 @@ static func _add_sphere(parent: Node3D, r: float, pos: Vector3, mat: Material) -
 	parent.add_child(mi)
 	return mi
 
+static func build_start_gantry(track_w: float = 14.0) -> Node3D:
+	var gantry = Node3D.new()
+	gantry.name = "StartFinishGantry"
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_red = MaterialGenerator.get_material("neon_red")
+	var mat_cyan = MaterialGenerator.get_material("neon_cyan")
+
+	var half_w = track_w * 0.5 + 1.2
+	var g_height = 8.5
+
+	# Left and Right Steel Truss Support Columns
+	for sx in [-half_w, half_w]:
+		_add_box(gantry, Vector3(0.8, g_height, 0.8), Vector3(sx, g_height * 0.5, 0), mat_hull)
+		_add_box(gantry, Vector3(1.4, 0.6, 1.4), Vector3(sx, 0.3, 0), mat_metal)
+		# Diagonal truss bracing
+		for ty in [2.5, 5.0, 7.0]:
+			_add_box(gantry, Vector3(0.9, 0.15, 0.9), Vector3(sx, ty, 0), mat_metal)
+
+	# Overhead Crossbeam Truss
+	_add_box(gantry, Vector3(track_w + 3.2, 0.8, 0.8), Vector3(0, g_height, 0), mat_hull)
+	_add_box(gantry, Vector3(track_w + 3.2, 0.2, 0.85), Vector3(0, g_height + 0.45, 0), mat_metal)
+
+	# Main Start/Finish Banner Header matching Reference Screenshot 3
+	var banner_w = track_w - 1.5
+	var banner_h = 2.4
+	# Red banner ("TURBO KART RUSH") with checkered borders
+	var banner = _add_box(gantry, Vector3(banner_w, banner_h, 0.2), Vector3(0, g_height - 1.2, 0), MaterialGenerator.get_material("turbo_kart_rush_banner"))
+	banner.name = "BannerHeader"
+
+	# Ground Checkered Start/Finish Line Strip
+	var ground_checker = _add_box(gantry, Vector3(track_w, 0.04, 2.4), Vector3(0, 0.02, 0), MaterialGenerator.get_material("checkered_flag"))
+	ground_checker.name = "GroundCheckeredLine"
+
+	# Row of 4 Suspended Countdown Starting Light Lamps matching Screenshot 3
+	for li in range(4):
+		var lx = -2.4 + li * 1.6
+		var lamp_housing = _add_cyl(gantry, 0.32, 0.32, 0.25, Vector3(lx, g_height - 2.7, 0), mat_hull)
+		lamp_housing.rotation_degrees.x = 90.0
+		var lamp_lens = _add_cyl(gantry, 0.24, 0.24, 0.28, Vector3(lx, g_height - 2.7, 0.05), mat_red)
+		lamp_lens.rotation_degrees.x = 90.0
+		lamp_lens.name = "StartLight_%d" % li
+
+	return gantry
+
 # Backwards-compatibility aliases for existing callers
 static func build_item_box() -> Node3D:
 	var root = Node3D.new()
@@ -986,28 +1031,55 @@ static func build_stadium_goal_mesh(team_id: int = 0) -> Node3D:
 	var goal = Node3D.new()
 	goal.name = "StadiumGoal"
 	var mat_team = MaterialGenerator.get_material("neon_cyan" if team_id == 0 else "neon_orange")
+	var mat_post = MaterialGenerator.get_material("sci_fi_metal")
 	var mat_net = MaterialGenerator.get_material("dark_hull")
 	var goal_w = 16.0
 	var goal_h = 7.0
 	var goal_d = 5.0
 
-	_add_cyl(goal, 0.25, 0.25, goal_h, Vector3(-goal_w * 0.5, goal_h * 0.5, 0), mat_team)
-	_add_cyl(goal, 0.25, 0.25, goal_h, Vector3(goal_w * 0.5, goal_h * 0.5, 0), mat_team)
-	var cb = _add_cyl(goal, 0.25, 0.25, goal_w, Vector3(0, goal_h, 0), mat_team)
+	# Heavy Glowing Front Goal Posts & Crossbar
+	_add_cyl(goal, 0.35, 0.35, goal_h, Vector3(-goal_w * 0.5, goal_h * 0.5, 0), mat_team)
+	_add_cyl(goal, 0.35, 0.35, goal_h, Vector3(goal_w * 0.5, goal_h * 0.5, 0), mat_team)
+	var cb = _add_cyl(goal, 0.35, 0.35, goal_w, Vector3(0, goal_h, 0), mat_team)
 	cb.rotation_degrees.z = 90.0
-	_add_box(goal, Vector3(goal_w, goal_h, 0.1), Vector3(0, goal_h * 0.5, -goal_d), mat_net)
+
+	# Ground frame
+	var gb = _add_cyl(goal, 0.20, 0.20, goal_w, Vector3(0, 0.1, 0), mat_post)
+	gb.rotation_degrees.z = 90.0
+
+	# Rear Depth Struts
+	var strut_l = _add_cyl(goal, 0.20, 0.20, goal_d, Vector3(-goal_w * 0.5, goal_h, -goal_d * 0.5), mat_post)
+	strut_l.rotation_degrees.x = 90.0
+	var strut_r = _add_cyl(goal, 0.20, 0.20, goal_d, Vector3(goal_w * 0.5, goal_h, -goal_d * 0.5), mat_post)
+	strut_r.rotation_degrees.x = 90.0
+
+	# Netting enclosure (back, top, left, right)
+	_add_box(goal, Vector3(goal_w, goal_h, 0.08), Vector3(0, goal_h * 0.5, -goal_d), mat_net)
+	_add_box(goal, Vector3(goal_w, 0.08, goal_d), Vector3(0, goal_h, -goal_d * 0.5), mat_net)
+	_add_box(goal, Vector3(0.08, goal_h, goal_d), Vector3(-goal_w * 0.5, goal_h * 0.5, -goal_d * 0.5), mat_net)
+	_add_box(goal, Vector3(0.08, goal_h, goal_d), Vector3(goal_w * 0.5, goal_h * 0.5, -goal_d * 0.5), mat_net)
 	return goal
 
-static func build_start_gantry(gantry_width: float = 14.0) -> Node3D:
-	var gantry = Node3D.new()
-	gantry.name = "StartFinishGantry"
+static func build_grandstand_with_crowd(stand_len: float = 24.0, stand_h: float = 8.0, stand_d: float = 8.0) -> Node3D:
+	var stand = Node3D.new()
+	stand.name = "GrandstandWithCrowd"
+	var mat_conc = MaterialGenerator.get_material("grimy_concrete")
+	var mat_crowd = MaterialGenerator.get_material("crowd_spectators")
 	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
-	var mat_sign = MaterialGenerator.get_material("digital_signage_cyan")
-	_add_box(gantry, Vector3(1.2, 7.5, 1.2), Vector3(-gantry_width * 0.5 - 1.0, 3.75, 0), mat_metal)
-	_add_box(gantry, Vector3(1.2, 7.5, 1.2), Vector3(gantry_width * 0.5 + 1.0, 3.75, 0), mat_metal)
-	_add_box(gantry, Vector3(gantry_width + 3.2, 1.4, 1.2), Vector3(0, 7.0, 0), mat_metal)
-	_add_box(gantry, Vector3(gantry_width - 1.0, 1.2, 0.2), Vector3(0, 7.0, -0.65), mat_sign)
-	return gantry
+
+	var tiers = 4
+	for t in range(tiers):
+		var step_y = float(t + 1) * (stand_h / float(tiers))
+		var step_z = float(t) * (stand_d / float(tiers))
+		var step_h = stand_h / float(tiers)
+		var step_d = stand_d / float(tiers)
+
+		_add_box(stand, Vector3(stand_len, step_h, step_d), Vector3(0, step_y - step_h * 0.5, step_z), mat_conc)
+		_add_box(stand, Vector3(stand_len - 0.4, 0.9, step_d * 0.7), Vector3(0, step_y + 0.45, step_z), mat_crowd)
+
+	var canopy = _add_box(stand, Vector3(stand_len + 1.0, 0.25, stand_d + 2.0), Vector3(0, stand_h + 1.5, stand_d * 0.4), mat_metal)
+	canopy.rotation_degrees.x = -8.0
+	return stand
 
 static func build_race_gantry_mesh() -> Node3D:
 	return build_start_gantry(14.0)

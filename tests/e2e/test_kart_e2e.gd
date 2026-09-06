@@ -21,6 +21,8 @@ func run_tests() -> Dictionary:
 	test_track_and_vehicle_selection()
 	test_race_finish_flow()
 	test_pause_restart_quit()
+	test_track_collision_and_barriers()
+	test_ai_racers_waypoint_navigation()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -176,5 +178,44 @@ func test_pause_restart_quit() -> void:
 	race._on_restart()
 	race._on_quit_to_launcher()
 	assert_true(true, "Restart/quit must not crash without EventBus")
+
+	race.queue_free()
+
+func test_track_collision_and_barriers() -> void:
+	var race = KartRacingMainScript.new()
+	race.setup_scene()
+
+	var tg = race.track_generator
+	assert_true(tg != null, "TrackGenerator must exist")
+	assert_true(tg.checkpoints.size() > 0, "Track must generate checkpoints")
+
+	# Check kart collision is rounded capsule
+	var kart_col = race.player_kart.get_node_or_null("KartCollision")
+	assert_true(kart_col != null, "Kart must have KartCollision")
+	assert_true(kart_col.shape is CapsuleShape3D, "Kart collision shape must be CapsuleShape3D for seamless seam gliding")
+
+	race.queue_free()
+
+func test_ai_racers_waypoint_navigation() -> void:
+	var race = KartRacingMainScript.new()
+	race.setup_scene()
+	if race.race_manager:
+		race.race_manager.start_race()
+
+	# Verify AI racers have waypoints assigned
+	assert_true(race.ai_karts.size() > 0, "Must have AI racers")
+	for ai_kart in race.ai_karts:
+		var brain = ai_kart.get_node_or_null("KartAI")
+		assert_true(brain != null, "AI kart must have KartAI node")
+		assert_true(brain.waypoints.size() > 0, "KartAI brain must have non-empty waypoints")
+
+		# Simulate 1 frame of physics
+		brain._physics_process(0.016)
+
+		# Test watchdog logic: simulate stuck kart
+		brain.kart.forward_speed = 0.5
+		brain.stuck_timer = 1.5
+		brain._physics_process(0.016)
+		assert_true(brain.reverse_timer > 0.0, "Watchdog must trigger reverse recovery when stuck")
 
 	race.queue_free()

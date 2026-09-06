@@ -94,6 +94,7 @@ func setup_scene() -> void:
 		add_child(ai_kart)
 
 		var ai_brain = KartAIScript.new()
+		ai_brain.name = "KartAI"
 		ai_brain.kart = ai_kart
 		ai_kart.add_child(ai_brain)
 
@@ -107,12 +108,27 @@ func setup_scene() -> void:
 	track_generator.track_built.connect(_on_track_built)
 	add_child(track_generator)
 
+	# Ensure karts and track initialize even outside active SceneTree
+	player_kart._ready()
+	for ai in ai_karts:
+		ai._ready()
+	track_generator.build_circuit()
+
 func _on_track_built(waypoints: Array, checkpoints: Array) -> void:
 	# Provide waypoints to AI
+	var typed_waypoints: Array[Vector3] = []
+	for wp in waypoints:
+		if wp is Vector3:
+			typed_waypoints.append(wp)
+
 	for ai_kart in ai_karts:
 		var brain = ai_kart.get_node_or_null("KartAI")
 		if brain:
-			brain.waypoints = waypoints
+			brain.waypoints = typed_waypoints
+		else:
+			for child in ai_kart.get_children():
+				if "waypoints" in child:
+					child.waypoints = typed_waypoints
 
 	# Initialize race manager with participants and checkpoints
 	race_manager.initialize_race(all_karts, checkpoints)

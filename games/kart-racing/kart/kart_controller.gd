@@ -62,6 +62,12 @@ func _ready() -> void:
 	last_valid_checkpoint_pos = global_position
 	last_valid_checkpoint_rot = rotation.y
 
+	floor_snap_length = 0.35
+	floor_max_angle = deg_to_rad(45.0)
+	floor_stop_on_slope = true
+	up_direction = Vector3.UP
+	max_slides = 4
+
 	setup_kart_archetype()
 	setup_kart_visual()
 
@@ -123,14 +129,16 @@ func setup_kart_visual() -> void:
 		if child.name.begins_with("FrontWheel") and child is MeshInstance3D:
 			front_wheels.append(child)
 
-	# Collision
+	# Collision - Rounded Longitudinal Capsule to glide over seams and barriers without snagging
 	if not has_node("KartCollision"):
 		var col = CollisionShape3D.new()
 		col.name = "KartCollision"
-		var b_shape = BoxShape3D.new()
-		b_shape.size = Vector3(1.5, 0.8, 2.5)
-		col.shape = b_shape
-		col.position = Vector3(0, 0.45, 0)
+		var cap_shape = CapsuleShape3D.new()
+		cap_shape.radius = 0.55
+		cap_shape.height = 2.2
+		col.shape = cap_shape
+		col.rotation_degrees.x = 90.0
+		col.position = Vector3(0, 0.55, 0)
 		add_child(col)
 
 func _physics_process(delta: float) -> void:

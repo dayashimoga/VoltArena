@@ -130,16 +130,16 @@ func build_circuit() -> void:
 	gantry.position = circuit_nodes[0] + Vector3(0, 0, -2.0)
 	add_child(gantry)
 
-	# Production Grandstands with Spectator Crowds along the home straight
+	# Production Grandstands with Spectator Crowds along the home straight facing inward toward track
 	for z_pos in [-50.0, -25.0, 0.0, 25.0]:
 		var stand_l = MeshBuilder.build_grandstand_with_crowd(24.0, 7.0, 9.0)
 		stand_l.position = Vector3(-track_width * 0.5 - 6.5, 0.0, z_pos)
-		stand_l.rotation_degrees.y = 90.0
+		stand_l.rotation_degrees.y = -90.0
 		add_child(stand_l)
 
 		var stand_r = MeshBuilder.build_grandstand_with_crowd(24.0, 7.0, 9.0)
 		stand_r.position = Vector3(track_width * 0.5 + 6.5, 0.0, z_pos)
-		stand_r.rotation_degrees.y = -90.0
+		stand_r.rotation_degrees.y = 90.0
 		add_child(stand_r)
 
 	# Production Stadium Floodlight Towers
@@ -171,27 +171,27 @@ func build_track_segment(start_pt: Vector3, end_pt: Vector3, segment_index: int)
 	road.position = center
 	road.rotation.y = angle_y
 
-	# Hardened road slab collision (2.0m depth to prevent kart under-carriage tunneling)
+	# Hardened road slab collision (2.0m depth to prevent kart tunneling, seg_length + 0.1 for clean corners)
 	var col = CollisionShape3D.new()
 	var box = BoxShape3D.new()
-	box.size = Vector3(track_width, 2.0, seg_length + 2.0)
+	box.size = Vector3(track_width, 2.0, seg_length + 0.1)
 	col.shape = box
 	col.position = Vector3(0, -0.8, 0)
 	road.add_child(col)
 
 	var mesh = MeshInstance3D.new()
 	var b_mesh = BoxMesh.new()
-	b_mesh.size = Vector3(track_width, 0.5, seg_length + 2.0)
+	b_mesh.size = Vector3(track_width, 0.5, seg_length + 0.1)
 	mesh.mesh = b_mesh
 	mesh.material_override = MaterialGenerator.get_material("asphalt_lanes")
 	road.add_child(mesh)
 
-	# Production Alternating Blue/White Rumble Curbs along track shoulders
+	# Rumble Curbs along track shoulders
 	var curb_w = 1.0
 	var curb_h = 0.15
 	var curb_l = MeshInstance3D.new()
 	var cm_l = BoxMesh.new()
-	cm_l.size = Vector3(curb_w, curb_h, seg_length + 2.0)
+	cm_l.size = Vector3(curb_w, curb_h, seg_length + 0.1)
 	curb_l.mesh = cm_l
 	curb_l.material_override = MaterialGenerator.get_material("curb_blue_white")
 	curb_l.position = Vector3(-track_width * 0.5 + curb_w * 0.5, 0.15, 0)
@@ -199,41 +199,42 @@ func build_track_segment(start_pt: Vector3, end_pt: Vector3, segment_index: int)
 
 	var curb_r = MeshInstance3D.new()
 	var cm_r = BoxMesh.new()
-	cm_r.size = Vector3(curb_w, curb_h, seg_length + 2.0)
+	cm_r.size = Vector3(curb_w, curb_h, seg_length + 0.1)
 	curb_r.mesh = cm_r
 	curb_r.material_override = MaterialGenerator.get_material("curb_blue_white")
 	curb_r.position = Vector3(track_width * 0.5 - curb_w * 0.5, 0.15, 0)
 	road.add_child(curb_r)
 
-	# Hardened Outer Crash Barriers with 2.5m thick collision shapes
+	# Hardened Outer Crash Barriers strictly outside track lane
 	var rail_w = 0.8
 	var rail_h = 2.4
+	var barrier_offset = track_width * 0.5 + rail_w * 0.5 + 0.2
 
 	var left_bar = ModelCacheScript.get_prop("racing_barrier")
 	if left_bar:
-		left_bar.position = Vector3(-track_width * 0.5 - rail_w * 0.5, 0.2, 0)
+		left_bar.position = Vector3(-barrier_offset, 0.2, 0)
 		left_bar.scale = Vector3(2.0, 2.0, seg_length * 0.4)
 		road.add_child(left_bar)
 
 	var right_bar = ModelCacheScript.get_prop("racing_barrier")
 	if right_bar:
-		right_bar.position = Vector3(track_width * 0.5 + rail_w * 0.5, 0.2, 0)
+		right_bar.position = Vector3(barrier_offset, 0.2, 0)
 		right_bar.scale = Vector3(2.0, 2.0, seg_length * 0.4)
 		road.add_child(right_bar)
 
-	# Physical barrier colliders
+	# Physical barrier colliders flush with barriers, zero track encroachment
 	var col_l = CollisionShape3D.new()
 	var bar_shape_l = BoxShape3D.new()
-	bar_shape_l.size = Vector3(rail_w + 1.0, rail_h + 2.0, seg_length + 2.0)
+	bar_shape_l.size = Vector3(rail_w, rail_h + 1.5, seg_length + 0.1)
 	col_l.shape = bar_shape_l
-	col_l.position = Vector3(-track_width * 0.5 - rail_w * 0.5, rail_h * 0.5, 0)
+	col_l.position = Vector3(-barrier_offset, rail_h * 0.5, 0)
 	road.add_child(col_l)
 
 	var col_r = CollisionShape3D.new()
 	var bar_shape_r = BoxShape3D.new()
-	bar_shape_r.size = Vector3(rail_w + 1.0, rail_h + 2.0, seg_length + 2.0)
+	bar_shape_r.size = Vector3(rail_w, rail_h + 1.5, seg_length + 0.1)
 	col_r.shape = bar_shape_r
-	col_r.position = Vector3(track_width * 0.5 + rail_w * 0.5, rail_h * 0.5, 0)
+	col_r.position = Vector3(barrier_offset, rail_h * 0.5, 0)
 	road.add_child(col_r)
 
 	# Apex Tire Wall

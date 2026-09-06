@@ -32,6 +32,8 @@ func setup_scene() -> void:
 	var env = SubwayGenScript.new()
 	env.name = "SubwayEnvironment"
 	add_child(env)
+	if env.has_method("build_subway_station"):
+		env.build_subway_station()
 
 	# UI systems
 	if not hud:

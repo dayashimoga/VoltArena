@@ -34,9 +34,67 @@ func _spawn_prop_asset(asset_name: String, pos: Vector3, rot_y: float = 0.0, s: 
 		prop.position = pos
 		prop.rotation_degrees.y = rot_y
 		prop.scale = s
+		_add_arena_prop_collision(prop, asset_name, s)
 		add_child(prop)
 		return prop
 	return null
+
+func _add_arena_prop_collision(prop: Node3D, asset_name: String, _s: Vector3) -> void:
+	var body = StaticBody3D.new()
+	body.collision_layer = GameConstants.LAYER_WORLD
+	body.collision_mask = 0
+
+	match asset_name:
+		"stairs_industrial":
+			var col = CollisionShape3D.new()
+			var box = BoxShape3D.new()
+			box.size = Vector3(2.2, 0.35, 2.6)
+			col.shape = box
+			col.position = Vector3(0, 0.55, 0)
+			col.rotation_degrees.x = 28.0
+			body.add_child(col)
+
+			var top_col = CollisionShape3D.new()
+			var top_box = BoxShape3D.new()
+			top_box.size = Vector3(2.2, 0.35, 0.8)
+			top_col.shape = top_box
+			top_col.position = Vector3(0, 1.05, -0.6)
+			body.add_child(top_col)
+			prop.add_child(body)
+		"barrier_high":
+			var col = CollisionShape3D.new()
+			var box = BoxShape3D.new()
+			box.size = Vector3(2.4, 2.0, 0.5)
+			col.shape = box
+			col.position = Vector3(0, 1.0, 0)
+			body.add_child(col)
+			prop.add_child(body)
+		"computer_terminal":
+			var col = CollisionShape3D.new()
+			var box = BoxShape3D.new()
+			box.size = Vector3(1.4, 1.8, 1.0)
+			col.shape = box
+			col.position = Vector3(0, 0.9, 0)
+			body.add_child(col)
+			prop.add_child(body)
+		"pipe_network":
+			var col = CollisionShape3D.new()
+			var box = BoxShape3D.new()
+			box.size = Vector3(3.2, 3.2, 1.2)
+			col.shape = box
+			col.position = Vector3(0, 1.6, 0)
+			body.add_child(col)
+			prop.add_child(body)
+		"wall_window", "wall_pillar":
+			var col = CollisionShape3D.new()
+			var box = BoxShape3D.new()
+			box.size = Vector3(2.5, 3.5, 0.8)
+			col.shape = box
+			col.position = Vector3(0, 1.75, 0)
+			body.add_child(col)
+			prop.add_child(body)
+		_:
+			body.queue_free()
 
 func _build_foundry_map() -> void:
 	var half_x = arena_size.x * 0.5

@@ -61,11 +61,11 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.emission_enabled = true
 			mat.emission_texture = TexSynth.get_texture("hex_grid_cyan_emission")
 			mat.emission = Color(0.0, 0.95, 1.0)
-			mat.emission_energy_multiplier = 3.8
-			mat.metallic = 0.8
-			mat.roughness = 0.2
+			mat.emission_energy_multiplier = 0.9
+			mat.metallic = 0.85
+			mat.roughness = 0.3
 			mat.uv1_triplanar = true
-			mat.uv1_scale = Vector3(0.2, 0.2, 0.2)
+			mat.uv1_scale = Vector3(0.35, 0.35, 0.35)
 		"subway_tile":
 			mat.albedo_color = Color(0.92, 0.94, 0.96)
 			mat.albedo_texture = TexSynth.get_texture("subway_tile_albedo")

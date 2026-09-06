@@ -25,6 +25,8 @@ func run_tests() -> Dictionary:
 	test_results_display()
 	test_pause_and_resume()
 	test_restart_signal()
+	test_player_fall_prevention_and_grounding()
+	test_weapon_model_rigs()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -286,5 +288,50 @@ func test_restart_signal() -> void:
 	arena._on_restart()
 	arena._on_quit_to_launcher()
 	assert_true(true, "Restart/quit signals must not crash without EventBus")
+
+	arena.queue_free()
+
+func test_player_fall_prevention_and_grounding() -> void:
+	var arena = ArenaFPSMainScript.new()
+	arena.setup_scene()
+	var player = arena.player_node
+	player._ready()
+
+	# 1. Structural collision shape verification
+	var col = player.get_node_or_null("PlayerCollision")
+	assert_true(col != null, "Player must have PlayerCollision node")
+	assert_true(col.shape != null, "PlayerCollision must have a valid physics shape")
+	assert_true(player.floor_snap_length >= 0.4, "Player floor snap length must be >= 0.4")
+	assert_true(player.floor_max_angle > 0.0, "Player floor max angle must be configured")
+
+	# 2. Kill plane and out-of-bounds recovery verification
+	player.global_position = Vector3(0.0, 1.5, 0.0)
+	player.last_safe_grounded_transform = Transform3D(Basis(), Vector3(0.0, 1.0, 0.0))
+	player.velocity = Vector3(0.0, -50.0, 0.0)
+	# Simulate player falling below min_playable_y
+	player.global_position.y = -15.0
+	player._physics_process(0.016)
+
+	assert_true(player.global_position.y >= 0.0, "Player falling below world must be recovered to safe grounded height")
+	assert_true(player.velocity.y >= 0.0, "Recovered player downward velocity must be cancelled")
+
+	arena.queue_free()
+
+func test_weapon_model_rigs() -> void:
+	var arena = ArenaFPSMainScript.new()
+	arena.setup_scene()
+	var player = arena.player_node
+	player._ready()
+
+	assert_true(player.weapons.size() == 5, "Must have 5 weapons initialized")
+
+	for i in range(player.weapons.size()):
+		player.select_weapon(i)
+		var w = player.weapons[i]
+		var model = w.get_node_or_null("WeaponModel")
+		assert_true(model != null, "Weapon %d (%s) must have WeaponModel child" % [i, w.weapon_name])
+		if model:
+			assert_true(model.scale.length() > 0.1, "Weapon model scale must be positive non-zero")
+			assert_true(model.rotation_degrees.y == 0.0, "Weapon model must face forward (0.0 degrees) not inverted")
 
 	arena.queue_free()

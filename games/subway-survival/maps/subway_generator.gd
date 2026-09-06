@@ -18,10 +18,16 @@ var is_zone3_unlocked: bool = false
 
 const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
 
+var is_built: bool = false
+
 func _ready() -> void:
-	build_subway_station()
+	if not is_built:
+		build_subway_station()
 
 func build_subway_station() -> void:
+	if is_built:
+		return
+	is_built = true
 	_build_zone_1_platform()
 	_build_zone_2_tunnels()
 	_build_zone_3_pump_hive()
@@ -33,17 +39,139 @@ func _spawn_subway_prop(asset_name: String, pos: Vector3, rot_y: float = 0.0, s:
 		prop.position = pos
 		prop.rotation_degrees.y = rot_y
 		prop.scale = s
+		_add_subway_prop_collision(prop, asset_name, s)
 		add_child(prop)
 		return prop
 	return null
 
-func _build_zone_1_platform() -> void:
-	# Passenger Platform Floor with ceramic subway tiles and grimy concrete
-	create_box(Vector3(-5.0, -0.5, 0.0), Vector3(14.0, 1.0, 60.0), "grimy_concrete")
-	create_box(Vector3(-5.0, 0.01, 0.0), Vector3(13.6, 0.02, 59.6), "subway_tile")
+func _add_subway_prop_collision(prop: Node3D, asset_name: String, _s: Vector3) -> void:
+	var body = StaticBody3D.new()
+	body.collision_layer = GameConstants.LAYER_WORLD
+	body.collision_mask = 0
 
-	# Platform Edge Yellow Tactile Hazard Bump Stripe matching Reference Screenshots 2 & 4
-	create_box(Vector3(1.8, 0.03, 0.0), Vector3(0.65, 0.04, 60.0), "yellow_tactile_edge")
+	match asset_name:
+		"train_subway_car", "train_subway_middle":
+			var col = CollisionShape3D.new()
+			var box = BoxShape3D.new()
+			box.size = Vector3(3.6, 3.8, 8.2)
+			col.shape = box
+			col.position = Vector3(0, 1.7, 0)
+			body.add_child(col)
+			prop.add_child(body)
+		"station_stairs":
+			var col = CollisionShape3D.new()
+			var box = BoxShape3D.new()
+			box.size = Vector3(3.0, 0.4, 3.6)
+			col.shape = box
+			col.position = Vector3(0.9, 0.7, -0.4)
+			col.rotation_degrees.x = 32.0
+			body.add_child(col)
+
+			var top_col = CollisionShape3D.new()
+			var top_box = BoxShape3D.new()
+			top_box.size = Vector3(3.0, 0.4, 1.2)
+			top_col.shape = top_box
+			top_col.position = Vector3(0.9, 1.35, -0.8)
+			body.add_child(top_col)
+			prop.add_child(body)
+		"station_bench":
+			var col = CollisionShape3D.new()
+			var box = BoxShape3D.new()
+			box.size = Vector3(0.9, 0.9, 2.4)
+			col.shape = box
+			col.position = Vector3(0, 0.45, 0)
+			body.add_child(col)
+			prop.add_child(body)
+		"ammo_box":
+			var col = CollisionShape3D.new()
+			var box = BoxShape3D.new()
+			box.size = Vector3(1.2, 1.0, 1.2)
+			col.shape = box
+			col.position = Vector3(0, 0.5, 0)
+			body.add_child(col)
+			prop.add_child(body)
+		"computer_terminal":
+			var col = CollisionShape3D.new()
+			var box = BoxShape3D.new()
+			box.size = Vector3(1.2, 1.8, 1.0)
+			col.shape = box
+			col.position = Vector3(0, 0.9, 0)
+			body.add_child(col)
+			prop.add_child(body)
+		"barrier_high":
+			var col = CollisionShape3D.new()
+			var box = BoxShape3D.new()
+			box.size = Vector3(2.5, 2.0, 0.6)
+			col.shape = box
+			col.position = Vector3(0, 1.0, 0)
+			body.add_child(col)
+			prop.add_child(body)
+		"door_double":
+			var col = CollisionShape3D.new()
+			var box = BoxShape3D.new()
+			box.size = Vector3(3.5, 3.0, 0.5)
+			col.shape = box
+			col.position = Vector3(0, 1.5, 0)
+			body.add_child(col)
+			prop.add_child(body)
+		"pipe_network":
+			var col = CollisionShape3D.new()
+			var box = BoxShape3D.new()
+			box.size = Vector3(3.5, 3.5, 1.2)
+			col.shape = box
+			col.position = Vector3(0, 1.75, 0)
+			body.add_child(col)
+			prop.add_child(body)
+		"wall_pillar":
+			var col = CollisionShape3D.new()
+			var box = BoxShape3D.new()
+			box.size = Vector3(3.0, 4.0, 3.0)
+			col.shape = box
+			col.position = Vector3(0, 2.0, 0)
+			body.add_child(col)
+			prop.add_child(body)
+		_:
+			body.queue_free()
+
+func _create_visual_box(pos: Vector3, size: Vector3, material_name: String) -> MeshInstance3D:
+	var mesh_inst = MeshInstance3D.new()
+	var box_mesh = BoxMesh.new()
+	box_mesh.size = size
+	mesh_inst.mesh = box_mesh
+	mesh_inst.material_override = MaterialGenerator.get_material(material_name)
+	mesh_inst.position = pos
+	add_child(mesh_inst)
+	return mesh_inst
+
+func _add_box_collision_to(parent: Node3D, size: Vector3, pos: Vector3) -> StaticBody3D:
+	var body = StaticBody3D.new()
+	body.collision_layer = GameConstants.LAYER_WORLD
+	body.collision_mask = 0
+	body.position = pos
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = size
+	col.shape = box
+	body.add_child(col)
+	parent.add_child(body)
+	return body
+
+func _build_zone_1_platform() -> void:
+	# Continuous sub-station foundation slab beneath everything - zero void visible
+	var f_slab = create_box(Vector3(0.0, -3.2, 30.0), Vector3(station_width + 8.0, 1.5, 140.0), "dark_concrete")
+	f_slab.name = "PlatformFoundation"
+	for c in f_slab.get_children():
+		if c is CollisionShape3D:
+			c.name = "FoundationCol"
+
+	# Passenger Platform Floor (Single solid continuous collision slab at Y=0)
+	create_box(Vector3(-5.0, -0.5, 0.0), Vector3(14.0, 1.0, 60.0), "subway_tile")
+
+	# Platform Edge Yellow Tactile Hazard Bump Stripe (visual overlay flush with floor)
+	_create_visual_box(Vector3(1.7, 0.005, 0.0), Vector3(0.6, 0.01, 60.0), "yellow_tactile_edge")
+
+	# Platform Vertical Face Riser (between platform edge at X=2 and track bed at X=2 to 12)
+	create_box(Vector3(2.0, -0.7, 0.0), Vector3(0.2, 1.4, 60.0), "dark_concrete")
 
 	# Sunken Track Recess Ballast Bed
 	create_box(Vector3(7.0, -1.9, 0.0), Vector3(10.0, 1.0, 60.0), "grimy_concrete")
@@ -88,12 +216,14 @@ func _build_zone_1_platform() -> void:
 	kiosk1.position = Vector3(-10.5, 0.0, -2.0)
 	kiosk1.rotation_degrees.y = 90.0
 	kiosk1.scale = Vector3(1.25, 1.25, 1.25)
+	_add_box_collision_to(kiosk1, Vector3(1.4, 2.6, 1.2), Vector3(0, 1.3, 0))
 	add_child(kiosk1)
 
 	var kiosk2 = MeshBuilder.build_vending_machine()
 	kiosk2.position = Vector3(-10.5, 0.0, 18.0)
 	kiosk2.rotation_degrees.y = 90.0
 	kiosk2.scale = Vector3(1.25, 1.25, 1.25)
+	_add_box_collision_to(kiosk2, Vector3(1.4, 2.6, 1.2), Vector3(0, 1.3, 0))
 	add_child(kiosk2)
 
 	# Production Subway Train Carriages (Engine + Middle Car) with restored textures
@@ -154,6 +284,19 @@ func _spawn_subway_column(pos: Vector3, h: float) -> Node3D:
 	cap.material_override = mat_iron
 	cap.position = Vector3(0, h - 0.18, 0)
 	col_node.add_child(cap)
+
+	# Solid physics collider for column
+	var body = StaticBody3D.new()
+	body.collision_layer = GameConstants.LAYER_WORLD
+	body.collision_mask = 0
+	var col = CollisionShape3D.new()
+	var cyl = CylinderShape3D.new()
+	cyl.radius = 0.38
+	cyl.height = h
+	col.shape = cyl
+	col.position = Vector3(0, h * 0.5, 0)
+	body.add_child(col)
+	col_node.add_child(body)
 
 	add_child(col_node)
 	return col_node

@@ -25,14 +25,24 @@ var is_crouching: bool = false
 var weapons: Array[WeaponBase] = []
 var current_weapon_index: int = 0
 
+var kill_plane_y: float = -8.0
+var last_safe_grounded_transform: Transform3D = Transform3D.IDENTITY
+
 func _ready() -> void:
 	add_to_group("players")
 	collision_layer = GameConstants.LAYER_PLAYER
 	collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_ENEMIES | GameConstants.LAYER_PICKUPS
+	floor_snap_length = 0.45
+	floor_max_angle = deg_to_rad(48.0)
+	floor_stop_on_slope = true
+	up_direction = Vector3.UP
+	max_slides = 6
 
 	setup_default_nodes()
 	setup_weapons()
 	connect_health()
+
+	last_safe_grounded_transform = global_transform
 
 	var im = GameConstants.get_autoload(self, "InputManager")
 	if im:
@@ -41,6 +51,17 @@ func _ready() -> void:
 var health_connected: bool = false
 
 func setup_default_nodes() -> void:
+	# Ensure PlayerCollision always exists from the first frame
+	if not get_node_or_null("PlayerCollision"):
+		var col = CollisionShape3D.new()
+		col.name = "PlayerCollision"
+		var cap = CapsuleShape3D.new()
+		cap.radius = 0.45
+		cap.height = 1.8
+		col.shape = cap
+		col.position = Vector3(0, 0.9, 0)
+		add_child(col)
+
 	if not camera_pivot:
 		camera_pivot = Node3D.new()
 		camera_pivot.name = "CameraPivot"
@@ -77,17 +98,6 @@ func set_third_person(enabled: bool) -> void:
 	if weapon_holder and is_instance_valid(weapon_holder):
 		weapon_holder.visible = not enabled
 
-	# Collision shape
-	if not get_node_or_null("PlayerCollision"):
-		var col = CollisionShape3D.new()
-		col.name = "PlayerCollision"
-		var cap = CapsuleShape3D.new()
-		cap.radius = 0.45
-		cap.height = 1.8
-		col.shape = cap
-		col.position = Vector3(0, 0.9, 0)
-		add_child(col)
-
 func setup_weapons() -> void:
 	if not weapons.is_empty():
 		return
@@ -115,6 +125,8 @@ func select_weapon(index: int) -> void:
 	current_weapon_index = posmod(index, weapons.size())
 	var active_w = weapons[current_weapon_index]
 	active_w.visible = true
+	if not active_w.has_node("WeaponModel") and active_w.has_method("setup_weapon_visual"):
+		active_w.setup_weapon_visual()
 
 	var parent = get_parent()
 	if parent and parent.has_node("HUD"):
@@ -210,6 +222,33 @@ func handle_movement(delta: float) -> void:
 
 	if is_inside_tree():
 		move_and_slide()
+
+		# Track safe grounded transform strictly while grounded on valid terrain
+		if is_on_floor() and velocity.length() < 25.0 and global_position.y > kill_plane_y:
+			last_safe_grounded_transform = global_transform
+
+	# Secondary fail-safe recovery: prevent permanent falling
+	var cur_y = global_position.y if is_inside_tree() else position.y
+	if cur_y < kill_plane_y:
+		recover_from_out_of_bounds()
+
+func recover_from_out_of_bounds() -> void:
+	if last_safe_grounded_transform != Transform3D.IDENTITY:
+		if is_inside_tree():
+			global_transform = last_safe_grounded_transform
+			global_position.y += 0.25
+		else:
+			transform = last_safe_grounded_transform
+			position.y += 0.25
+	else:
+		if is_inside_tree():
+			global_position = Vector3(0, 1.5, 0)
+		else:
+			position = Vector3(0, 1.5, 0)
+	velocity = Vector3.ZERO
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.show_toast_requested.emit("RESET TO SAFE GROUND", Color(1.0, 0.8, 0.2))
 
 func handle_weapons_input() -> void:
 	var active_w = weapons[current_weapon_index]

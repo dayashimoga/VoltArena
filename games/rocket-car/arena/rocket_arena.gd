@@ -70,16 +70,16 @@ func build_arena() -> void:
 			ad_r.scale = Vector3(2.5, 2.5, 2.5)
 			add_child(ad_r)
 
-	# Authentic 3D Tiered Grandstands with Spectator Crowds along sidewalls
+	# Authentic 3D Tiered Grandstands with Spectator Crowds along sidewalls (facing pitch inward)
 	for z_stand in [-36.0, -12.0, 12.0, 36.0]:
 		var st_l = MeshBuilder.build_grandstand_with_crowd(24.0, 8.0, 10.0)
 		st_l.position = Vector3(-half_x - 5.0, 0, z_stand)
-		st_l.rotation_degrees.y = 90.0
+		st_l.rotation_degrees.y = -90.0
 		add_child(st_l)
 
 		var st_r = MeshBuilder.build_grandstand_with_crowd(24.0, 8.0, 10.0)
 		st_r.position = Vector3(half_x + 5.0, 0, z_stand)
-		st_r.rotation_degrees.y = -90.0
+		st_r.rotation_degrees.y = 90.0
 		add_child(st_r)
 
 	# Massive Overhead Arched Steel Roof Trusses spanning across stadium

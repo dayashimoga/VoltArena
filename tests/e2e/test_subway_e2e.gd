@@ -20,6 +20,7 @@ func run_tests() -> Dictionary:
 	test_player_death_flow()
 	test_results_and_save()
 	test_pause_resume_restart()
+	test_subway_foundation_and_colliders()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -160,5 +161,30 @@ func test_pause_resume_restart() -> void:
 	subway._on_restart()
 	subway._on_quit_to_launcher()
 	assert_true(true, "Pause/resume/restart must not crash without singletons")
+
+	subway.queue_free()
+
+func test_subway_foundation_and_colliders() -> void:
+	var subway = SubwayMainScript.new()
+	subway.setup_scene()
+
+	var env = subway.get_node_or_null("SubwayEnvironment")
+	assert_true(env != null, "SubwayEnvironment must exist")
+
+	var foundation = env.find_child("PlatformFoundation", true, false)
+	assert_true(foundation != null, "Subway platform continuous foundation must exist")
+	assert_true(foundation is StaticBody3D, "PlatformFoundation must be StaticBody3D")
+
+	var col = foundation.find_child("FoundationCol", true, false)
+	assert_true(col != null, "PlatformFoundation must have CollisionShape3D")
+	assert_true(col.shape is BoxShape3D, "PlatformFoundation shape must be BoxShape3D")
+	var box = col.shape as BoxShape3D
+	assert_true(box.size.x >= 20.0, "PlatformFoundation width must cover station width")
+	assert_true(box.size.z >= 60.0, "PlatformFoundation length must cover station length")
+
+	# Verify props have structural collision
+	var stairs = env.find_child("Prop_Stairs", true, false)
+	if stairs:
+		assert_true(stairs is StaticBody3D, "Prop_Stairs must be a physical StaticBody3D")
 
 	subway.queue_free()

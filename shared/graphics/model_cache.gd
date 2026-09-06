@@ -303,30 +303,30 @@ static func _enhance_rocket_car(model: Node3D, team_col: Color) -> void:
 static func get_weapon_model(weapon_name: String) -> Node3D:
 	var path = "res://assets/models/weapons/pulse_rifle.glb"
 	var s = Vector3(1.2, 1.2, 1.2)
-	var pos = Vector3(0.0, -0.05, -0.15)
-	var rot_y = 180.0
+	var pos = Vector3(0.0, -0.05, 0.0)
+	var rot_y = 0.0
 
 	match weapon_name.to_lower():
 		"pulse rifle", "pulse_rifle", "assault rifle":
 			path = "res://assets/models/weapons/pulse_rifle.glb"
 			s = Vector3(1.2, 1.2, 1.2)
-			pos = Vector3(0.0, -0.05, -0.15)
+			pos = Vector3(0.0, -0.05, 0.0)
 		"scatter cannon", "scatter_cannon", "shotgun":
 			path = "res://assets/models/weapons/scatter_cannon.glb"
 			s = Vector3(1.3, 1.3, 1.3)
-			pos = Vector3(0.0, -0.05, -0.15)
+			pos = Vector3(0.0, -0.05, 0.0)
 		"rail driver", "rail_driver", "sniper":
 			path = "res://assets/models/weapons/rail_driver.glb"
-			s = Vector3(1.1, 1.1, 1.4)
-			pos = Vector3(0.0, -0.05, -0.2)
+			s = Vector3(1.1, 1.1, 1.3)
+			pos = Vector3(0.0, -0.05, -0.05)
 		"grenade launcher", "grenade_launcher", "rocket_launcher":
 			path = "res://assets/models/weapons/grenade_launcher.glb"
 			s = Vector3(1.2, 1.2, 1.2)
-			pos = Vector3(0.0, -0.05, -0.15)
+			pos = Vector3(0.0, -0.05, 0.0)
 		"plasma cutter", "plasma_cutter", "pistol":
 			path = "res://assets/models/weapons/plasma_cutter.glb"
 			s = Vector3(1.1, 1.1, 1.1)
-			pos = Vector3(0.0, -0.03, -0.1)
+			pos = Vector3(0.0, -0.03, 0.05)
 		_:
 			path = "res://assets/models/weapons/pulse_rifle.glb"
 

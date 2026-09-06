@@ -160,7 +160,7 @@ static func _apply_enemy_tint(root: Node3D, tint: Color) -> void:
 static func get_vehicle(vehicle_id: String = "kart_speedster") -> Node3D:
 	var path = "res://assets/models/vehicles/kart_speedster.glb"
 	var target_scale = Vector3(1.2, 1.2, 1.2)
-	var rot_y = 180.0
+	var rot_y = 0.0
 	var is_kart = false
 	var is_rocket_car = false
 	var team_tint = Color.WHITE
@@ -303,30 +303,30 @@ static func _enhance_rocket_car(model: Node3D, team_col: Color) -> void:
 static func get_weapon_model(weapon_name: String) -> Node3D:
 	var path = "res://assets/models/weapons/pulse_rifle.glb"
 	var s = Vector3(1.2, 1.2, 1.2)
-	var pos = Vector3(0.0, -0.05, 0.0)
-	var rot_y = 0.0
+	var pos = Vector3(0.0, -0.05, -0.15)
+	var rot_y = 180.0
 
 	match weapon_name.to_lower():
 		"pulse rifle", "pulse_rifle", "assault rifle":
 			path = "res://assets/models/weapons/pulse_rifle.glb"
 			s = Vector3(1.2, 1.2, 1.2)
-			pos = Vector3(0.0, -0.05, 0.0)
+			pos = Vector3(0.0, -0.05, -0.15)
 		"scatter cannon", "scatter_cannon", "shotgun":
 			path = "res://assets/models/weapons/scatter_cannon.glb"
 			s = Vector3(1.3, 1.3, 1.3)
-			pos = Vector3(0.0, -0.05, 0.0)
+			pos = Vector3(0.0, -0.05, -0.15)
 		"rail driver", "rail_driver", "sniper":
 			path = "res://assets/models/weapons/rail_driver.glb"
 			s = Vector3(1.1, 1.1, 1.3)
-			pos = Vector3(0.0, -0.05, -0.05)
+			pos = Vector3(0.0, -0.05, -0.20)
 		"grenade launcher", "grenade_launcher", "rocket_launcher":
 			path = "res://assets/models/weapons/grenade_launcher.glb"
 			s = Vector3(1.2, 1.2, 1.2)
-			pos = Vector3(0.0, -0.05, 0.0)
+			pos = Vector3(0.0, -0.05, -0.15)
 		"plasma cutter", "plasma_cutter", "pistol":
 			path = "res://assets/models/weapons/plasma_cutter.glb"
 			s = Vector3(1.1, 1.1, 1.1)
-			pos = Vector3(0.0, -0.03, 0.05)
+			pos = Vector3(0.0, -0.03, -0.10)
 		_:
 			path = "res://assets/models/weapons/pulse_rifle.glb"
 

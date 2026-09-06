@@ -62,8 +62,10 @@ func _ready() -> void:
 	last_valid_checkpoint_pos = global_position
 	last_valid_checkpoint_rot = rotation.y
 
-	floor_snap_length = 0.35
+	floor_snap_length = 0.50
 	floor_max_angle = deg_to_rad(45.0)
+	floor_constant_speed = true
+	floor_block_on_wall = false
 	floor_stop_on_slope = true
 	up_direction = Vector3.UP
 	max_slides = 4
@@ -134,8 +136,8 @@ func setup_kart_visual() -> void:
 		var col = CollisionShape3D.new()
 		col.name = "KartCollision"
 		var cap_shape = CapsuleShape3D.new()
-		cap_shape.radius = 0.55
-		cap_shape.height = 2.2
+		cap_shape.radius = 0.50
+		cap_shape.height = 1.9
 		col.shape = cap_shape
 		col.rotation_degrees.x = 90.0
 		col.position = Vector3(0, 0.55, 0)
@@ -154,6 +156,8 @@ func _physics_process(delta: float) -> void:
 
 	if not is_on_floor():
 		velocity.y -= gravity * delta
+	else:
+		velocity.y = -2.0 # Continuous ground contact on seams and ramps
 
 	# Only accept controls if race has started
 	var rm = get_tree().root.find_child("RaceManager", true, false)

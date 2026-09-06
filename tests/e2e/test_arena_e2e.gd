@@ -332,6 +332,6 @@ func test_weapon_model_rigs() -> void:
 		assert_true(model != null, "Weapon %d (%s) must have WeaponModel child" % [i, w.weapon_name])
 		if model:
 			assert_true(model.scale.length() > 0.1, "Weapon model scale must be positive non-zero")
-			assert_true(model.rotation_degrees.y == 0.0, "Weapon model must face forward (0.0 degrees) not inverted")
+			assert_true(model.rotation_degrees.y == 180.0, "Weapon model must face forward down-range (180.0 degrees) towards targets")
 
 	arena.queue_free()

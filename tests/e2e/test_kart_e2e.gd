@@ -213,8 +213,9 @@ func test_ai_racers_waypoint_navigation() -> void:
 		brain._physics_process(0.016)
 
 		# Test watchdog logic: simulate stuck kart
+		brain.race_active_time = 3.0
 		brain.kart.forward_speed = 0.5
-		brain.stuck_timer = 1.5
+		brain.stuck_timer = 2.1
 		brain._physics_process(0.016)
 		assert_true(brain.reverse_timer > 0.0, "Watchdog must trigger reverse recovery when stuck")
 

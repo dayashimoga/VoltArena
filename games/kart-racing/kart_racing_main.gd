@@ -62,7 +62,8 @@ func setup_scene() -> void:
 	player_kart.is_player = true
 	player_kart.kart_type = selected_kart
 	player_kart.racer_name = "Player 1"
-	player_kart.position = Vector3(-3.0, 0.5, 0.0)
+	player_kart.position = Vector3(-2.5, 0.5, 0.0)
+	player_kart.rotation.y = 0.0
 	add_child(player_kart)
 	all_karts.append(player_kart)
 
@@ -74,12 +75,12 @@ func setup_scene() -> void:
 	camera.look_at(Vector3(0.0, 1.0, 5.0), Vector3.UP)
 	add_child(camera)
 
-	# 4 Competitive AI Racers
+	# 4 Competitive AI Racers - Staggered starting grid
 	var grid_slots = [
-		Vector3(3.0, 0.5, 0.0),
-		Vector3(-3.0, 0.5, 5.0),
-		Vector3(3.0, 0.5, 5.0),
-		Vector3(-3.0, 0.5, 10.0)
+		Vector3(2.5, 0.5, 3.5),
+		Vector3(-2.5, 0.5, 7.5),
+		Vector3(2.5, 0.5, 11.5),
+		Vector3(-2.5, 0.5, 15.5)
 	]
 	var ai_names = ["Apex Nova", "Blaze Raptor", "Viper Strike", "Turbo Titan"]
 	var ai_types = ["speeder", "phantom", "enforcer", "speeder"]
@@ -91,11 +92,13 @@ func setup_scene() -> void:
 		ai_kart.kart_type = ai_types[i]
 		ai_kart.is_player = false
 		ai_kart.position = grid_slots[i]
+		ai_kart.rotation.y = 0.0
 		add_child(ai_kart)
 
 		var ai_brain = KartAIScript.new()
 		ai_brain.name = "KartAI"
 		ai_brain.kart = ai_kart
+		ai_brain.current_waypoint_index = 1
 		ai_kart.add_child(ai_brain)
 
 		ai_karts.append(ai_kart)

@@ -119,6 +119,9 @@ func build_circuit() -> void:
 
 	waypoints = circuit_nodes
 
+	# Build continuous seamless road ribbon with matching collision
+	_build_continuous_road_foundation(circuit_nodes)
+
 	# Build track segments
 	for i in range(circuit_nodes.size()):
 		var p1 = circuit_nodes[i]
@@ -160,30 +163,86 @@ func build_circuit() -> void:
 	setup_racing_environment()
 	track_built.emit(waypoints, checkpoints)
 
+func _build_continuous_road_foundation(nodes: Array[Vector3]) -> void:
+	var n = nodes.size()
+	if n < 3:
+		return
+
+	var left_pts: Array[Vector3] = []
+	var right_pts: Array[Vector3] = []
+	var half_w = track_width * 0.5
+
+	for i in range(n):
+		var prev = nodes[(i - 1 + n) % n]
+		var curr = nodes[i]
+		var next = nodes[(i + 1) % n]
+		var dir_prev = (curr - prev).normalized()
+		var dir_next = (next - curr).normalized()
+		var tangent = (dir_prev + dir_next).normalized()
+		var normal = Vector3.UP
+		var side = tangent.cross(normal).normalized()
+		left_pts.append(curr - side * half_w)
+		right_pts.append(curr + side * half_w)
+
+	var road_body = StaticBody3D.new()
+	road_body.name = "ContinuousRoadFoundation"
+	road_body.collision_layer = GameConstants.LAYER_WORLD
+	road_body.collision_mask = 0
+
+	var col = CollisionShape3D.new()
+	col.name = "ContinuousRoadCol"
+	var concave_shape = ConcavePolygonShape3D.new()
+	var faces = PackedVector3Array()
+
+	for i in range(n):
+		var next_idx = (i + 1) % n
+		var l1 = left_pts[i]
+		var r1 = right_pts[i]
+		var l2 = left_pts[next_idx]
+		var r2 = right_pts[next_idx]
+
+		# Top continuous drivable surface (shared edge quads, zero bumps/seams)
+		faces.append(l1)
+		faces.append(r1)
+		faces.append(l2)
+
+		faces.append(r1)
+		faces.append(r2)
+		faces.append(l2)
+
+	concave_shape.set_faces(faces)
+	col.shape = concave_shape
+	road_body.add_child(col)
+	add_child(road_body)
+
 func build_track_segment(start_pt: Vector3, end_pt: Vector3, segment_index: int) -> void:
 	var delta = end_pt - start_pt
 	var seg_length = delta.length()
 	var center = start_pt + delta * 0.5
 	var angle_y = atan2(-delta.x, -delta.z)
+	var horiz_dist = maxf(Vector2(delta.x, delta.z).length(), 0.001)
+	var angle_x = atan2(delta.y, horiz_dist)
 
 	var road = StaticBody3D.new()
 	road.collision_layer = GameConstants.LAYER_WORLD
 	road.position = center
 	road.rotation.y = angle_y
+	road.rotation.x = angle_x
 
-	# Hardened road slab collision (2.0m depth to prevent kart tunneling, seg_length + 0.1 for clean corners)
+	# Sub-bed foundation collider placed strictly under the continuous surface to prevent tunneling
 	var col = CollisionShape3D.new()
 	var box = BoxShape3D.new()
-	box.size = Vector3(track_width, 2.0, seg_length + 0.1)
+	box.size = Vector3(track_width, 1.8, seg_length + 0.1)
 	col.shape = box
-	col.position = Vector3(0, -0.8, 0)
+	col.position = Vector3(0, -1.0, 0)
 	road.add_child(col)
 
 	var mesh = MeshInstance3D.new()
 	var b_mesh = BoxMesh.new()
-	b_mesh.size = Vector3(track_width, 0.5, seg_length + 0.1)
+	b_mesh.size = Vector3(track_width, 0.4, seg_length + 0.1)
 	mesh.mesh = b_mesh
 	mesh.material_override = MaterialGenerator.get_material("asphalt_lanes")
+	mesh.position = Vector3(0, -0.1, 0)
 	road.add_child(mesh)
 
 	# Rumble Curbs along track shoulders

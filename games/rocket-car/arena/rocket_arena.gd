@@ -72,15 +72,29 @@ func build_arena() -> void:
 
 	# Authentic 3D Tiered Grandstands with Spectator Crowds along sidewalls (facing pitch inward)
 	for z_stand in [-36.0, -12.0, 12.0, 36.0]:
-		var st_l = MeshBuilder.build_grandstand_with_crowd(24.0, 8.0, 10.0)
-		st_l.position = Vector3(-half_x - 5.0, 0, z_stand)
-		st_l.rotation_degrees.y = -90.0
-		add_child(st_l)
+		var st_l = ModelCacheScript.get_prop("stadium_stands")
+		if st_l:
+			st_l.position = Vector3(-half_x - 5.0, 0, z_stand)
+			st_l.rotation_degrees.y = -90.0
+			st_l.scale = Vector3(3.2, 3.2, 3.2)
+			add_child(st_l)
+		else:
+			var mb_l = MeshBuilder.build_grandstand_with_crowd(24.0, 8.0, 10.0)
+			mb_l.position = Vector3(-half_x - 5.0, 0, z_stand)
+			mb_l.rotation_degrees.y = -90.0
+			add_child(mb_l)
 
-		var st_r = MeshBuilder.build_grandstand_with_crowd(24.0, 8.0, 10.0)
-		st_r.position = Vector3(half_x + 5.0, 0, z_stand)
-		st_r.rotation_degrees.y = 90.0
-		add_child(st_r)
+		var st_r = ModelCacheScript.get_prop("stadium_stands")
+		if st_r:
+			st_r.position = Vector3(half_x + 5.0, 0, z_stand)
+			st_r.rotation_degrees.y = 90.0
+			st_r.scale = Vector3(3.2, 3.2, 3.2)
+			add_child(st_r)
+		else:
+			var mb_r = MeshBuilder.build_grandstand_with_crowd(24.0, 8.0, 10.0)
+			mb_r.position = Vector3(half_x + 5.0, 0, z_stand)
+			mb_r.rotation_degrees.y = 90.0
+			add_child(mb_r)
 
 	# Massive Overhead Arched Steel Roof Trusses spanning across stadium
 	var mat_truss = MaterialGenerator.get_material("sci_fi_metal")
@@ -108,14 +122,27 @@ func build_arena() -> void:
 	build_end_wall(false) # South wall (+Z, Team 0 Blue Goal)
 
 	# Modeled 3D Production Stadium Goals
-	var fallback_n = MeshBuilder.build_stadium_goal_mesh(1)
-	fallback_n.position = Vector3(0, 0, -half_z)
-	add_child(fallback_n)
+	var goal_n = ModelCacheScript.get_prop("goal_post")
+	if goal_n:
+		goal_n.position = Vector3(0, 0, -half_z)
+		goal_n.scale = Vector3(2.8, 2.8, 2.8)
+		add_child(goal_n)
+	else:
+		var fallback_n = MeshBuilder.build_stadium_goal_mesh(1)
+		fallback_n.position = Vector3(0, 0, -half_z)
+		add_child(fallback_n)
 
-	var fallback_s = MeshBuilder.build_stadium_goal_mesh(0)
-	fallback_s.position = Vector3(0, 0, half_z)
-	fallback_s.rotation_degrees = Vector3(0, 180, 0)
-	add_child(fallback_s)
+	var goal_s = ModelCacheScript.get_prop("goal_post")
+	if goal_s:
+		goal_s.position = Vector3(0, 0, half_z)
+		goal_s.rotation_degrees.y = 180.0
+		goal_s.scale = Vector3(2.8, 2.8, 2.8)
+		add_child(goal_s)
+	else:
+		var fallback_s = MeshBuilder.build_stadium_goal_mesh(0)
+		fallback_s.position = Vector3(0, 0, half_z)
+		fallback_s.rotation_degrees = Vector3(0, 180, 0)
+		add_child(fallback_s)
 
 	# Goal trigger zones
 	create_goal_trigger(Vector3(0, goal_height * 0.5, -half_z - goal_depth * 0.5), 0)

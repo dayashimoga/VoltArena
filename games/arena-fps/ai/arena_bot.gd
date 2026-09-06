@@ -172,15 +172,13 @@ func _physics_process(delta: float) -> void:
 					strafe_dir = -strafe_dir if randf() < 0.7 else strafe_dir
 
 				var dist = global_position.distance_to(current_target.global_position)
-				var forward_push = 0.0
-				if dist > attack_range * 0.7:
-					forward_push = 0.4 # Close in
-				elif dist < 5.0:
-					forward_push = -0.3 # Keep comfortable tactical distance
+				var forward_push = 0.65 # Aggressively close in towards player
+				if dist < 3.5:
+					forward_push = 0.15 # Maintain close-quarters pressure
 
-				# Lateral strafe velocity
-				var strafe_vec = basis.x * strafe_dir * (movement_speed * 0.6)
-				var forward_vec = -basis.z * forward_push * (movement_speed * 0.4)
+				# Lateral strafe and forward engagement velocity
+				var strafe_vec = basis.x * strafe_dir * (movement_speed * 0.65)
+				var forward_vec = -basis.z * forward_push * (movement_speed * 0.5)
 				velocity.x = strafe_vec.x + forward_vec.x
 				velocity.z = strafe_vec.z + forward_vec.z
 
@@ -191,26 +189,27 @@ func _physics_process(delta: float) -> void:
 				# Fire weapon with aim alignment check
 				fire_cooldown -= delta
 				var dot = (-basis.z).dot(to_target_horiz.normalized() if to_target_horiz.length_squared() > 0.01 else to_target)
-				if fire_cooldown <= 0.0 and dot > 0.8: # Must face player within ~35 degrees
+				if fire_cooldown <= 0.0 and dot > 0.75: # Must face player within ~40 degrees
 					weapon.trigger_fire(global_position + Vector3.UP * 1.1, to_target)
 					fire_cooldown = 60.0 / weapon.fire_rate_rpm + randf_range(0.04, 0.15)
 
 		AIState.RETREAT:
 			if current_target:
-				# Backpedal while keeping body upright
+				# Face target while performing tactical lateral evasive moves
 				var to_target = (current_target.global_position - global_position).normalized()
 				to_target.y = 0.0
 				if to_target.length_squared() > 0.01:
 					var target_basis = Basis.looking_at(to_target.normalized(), Vector3.UP)
-					basis = basis.slerp(target_basis, turn_speed * delta)
+					basis = basis.slerp(target_basis, turn_speed * delta * 1.5)
 
-				# Move backwards away from player
-				var away = basis.z * (movement_speed * 0.75)
-				velocity.x = away.x
-				velocity.z = away.z
+				# Tactical lateral strafe towards player
+				var strafe_vec = basis.x * strafe_dir * (movement_speed * 0.75)
+				var forward_vec = -basis.z * (movement_speed * 0.25)
+				velocity.x = strafe_vec.x + forward_vec.x
+				velocity.z = strafe_vec.z + forward_vec.z
 
 				if character_model:
-					ModelCacheScript.play_animation(character_model, "Walk", 0.15)
+					ModelCacheScript.play_animation(character_model, "Run", 0.15)
 
 				# Retaliatory fire while retreating
 				fire_cooldown -= delta

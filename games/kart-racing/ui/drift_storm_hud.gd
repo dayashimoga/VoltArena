@@ -387,23 +387,32 @@ func update_lap_times(cur_sec: float, best_sec: float) -> void:
 		best_lap_label.text = "BEST: %s" % _format_time(best_sec)
 
 func show_countdown(val: Variant) -> void:
-	if not countdown_panel:
+	if not countdown_panel or not countdown_label:
 		return
 	var text: String = str(val)
 	if text == "0":
 		text = "GO!"
 	countdown_panel.visible = true
+	countdown_panel.modulate.a = 1.0
 	countdown_label.text = text
 	if text == "GO!" or text == "GO":
-		countdown_label.modulate = Color(0.2, 1.0, 0.5)
+		countdown_label.modulate = Color(0.0, 1.0, 0.5)
+		countdown_label.add_theme_font_size_override("font_size", 64)
 		var tween = create_tween()
-		tween.tween_property(countdown_panel, "modulate:a", 0.0, 0.6).set_delay(0.4)
-		tween.tween_callback(func():
-			countdown_panel.visible = false
-			countdown_panel.modulate.a = 1.0
-		)
+		if tween:
+			tween.tween_property(countdown_panel, "modulate:a", 0.0, 0.8).set_delay(0.6)
+			tween.tween_callback(func():
+				countdown_panel.visible = false
+				countdown_panel.modulate.a = 1.0
+			)
 	else:
-		countdown_label.modulate = Color(1.0, 0.9, 0.2)
+		countdown_label.modulate = Color(1.0, 0.85, 0.15)
+		countdown_label.add_theme_font_size_override("font_size", 54)
+		countdown_label.scale = Vector2(1.2, 1.2)
+		countdown_label.pivot_offset = countdown_label.size * 0.5
+		var tween = create_tween()
+		if tween:
+			tween.tween_property(countdown_label, "scale", Vector2(1.0, 1.0), 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func show_finish_banner(pos_text: String) -> void:
 	if not finish_panel:
@@ -553,9 +562,6 @@ func dismiss_onboarding() -> void:
 	if is_instance_valid(onboarding_overlay):
 		onboarding_overlay.visible = false
 		onboarding_overlay.modulate.a = 0.0
-	if is_instance_valid(countdown_panel):
-		countdown_panel.visible = false
-		countdown_panel.modulate.a = 0.0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if is_instance_valid(onboarding_overlay) and onboarding_overlay.visible:

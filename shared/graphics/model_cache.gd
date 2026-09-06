@@ -70,7 +70,7 @@ static func get_character(archetype: String = "assault") -> Node3D:
 			visor_color = Color(0.2, 0.7, 1.0) # Electric Blue
 
 	model.scale = target_scale
-	model.rotation_degrees.y = 180.0
+	model.rotation_degrees.y = 0.0
 	_apply_visor_tint(model, visor_color)
 	_ensure_animation_player(model)
 	return model
@@ -129,7 +129,7 @@ static func get_enemy(enemy_type: String = "crawler") -> Node3D:
 		return Node3D.new()
 
 	model.scale = target_scale
-	model.rotation_degrees.y = 180.0
+	model.rotation_degrees.y = 0.0
 	_apply_enemy_tint(model, tint_color)
 	_ensure_animation_player(model)
 	return model

@@ -103,6 +103,13 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.normal_texture = TexSynth.get_texture("asphalt_normal")
 			mat.metallic = 0.10
 			mat.roughness = 0.75
+		"racing_barrier":
+			mat.albedo_color = Color(0.20, 0.25, 0.32)
+			mat.metallic = 0.85
+			mat.roughness = 0.25
+			mat.emission_enabled = true
+			mat.emission = Color(0.0, 0.85, 1.0)
+			mat.emission_energy_multiplier = 0.9
 		"checkered_flag":
 			mat.albedo_texture = TexSynth.get_texture("checkered_flag_albedo")
 			mat.roughness = 0.5

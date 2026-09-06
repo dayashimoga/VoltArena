@@ -27,21 +27,21 @@ func build_circuit() -> void:
 		"canyon":
 			circuit_nodes = [
 				Vector3(0, 0, 0),
-				Vector3(0, 0, -50),
-				Vector3(20, 1.2, -100),
-				Vector3(60, 3.5, -145),
-				Vector3(110, 6.0, -165),
+				Vector3(0, 0, -40),
+				Vector3(0, 0, -75),
+				Vector3(25, 1.5, -115),
+				Vector3(65, 3.5, -145),
+				Vector3(115, 6.0, -165),
 				Vector3(170, 7.5, -150),
 				Vector3(220, 8.0, -105),
 				Vector3(235, 7.5, -50),
 				Vector3(225, 6.0, 10),
 				Vector3(190, 4.0, 60),
 				Vector3(150, 2.5, 95),
-				Vector3(100, 1.0, 110),
-				Vector3(55, 0.0, 90),
-				Vector3(30, -0.5, 60),
-				Vector3(15, 0.0, 35),
-				Vector3(5, 0.0, 18)
+				Vector3(100, 1.0, 105),
+				Vector3(55, 0.0, 85),
+				Vector3(25, 0.0, 55),
+				Vector3(0, 0, 35)
 			]
 			create_box(Vector3(110.0, -1.5, -25.0), Vector3(550.0, 3.0, 550.0), "canyon_rock")
 			for p in [Vector3(-45, 18, -80), Vector3(85, 24, -190), Vector3(260, 22, -40), Vector3(85, 20, 135), Vector3(-35, 16, 60), Vector3(175, 14, 25)]:
@@ -50,20 +50,21 @@ func build_circuit() -> void:
 		"skyline":
 			circuit_nodes = [
 				Vector3(0, 0, 0),
-				Vector3(0, 0, -55),
-				Vector3(15, 1.0, -110),
-				Vector3(45, 3.5, -160),
-				Vector3(95, 6.0, -190),
-				Vector3(155, 7.5, -195),
+				Vector3(0, 0, -45),
+				Vector3(0, 0, -80),
+				Vector3(20, 1.0, -120),
+				Vector3(50, 3.5, -160),
+				Vector3(100, 6.0, -190),
+				Vector3(160, 7.5, -195),
 				Vector3(210, 6.5, -170),
 				Vector3(240, 4.5, -115),
 				Vector3(235, 2.0, -55),
 				Vector3(205, 0.5, 0),
 				Vector3(165, 0.0, 45),
-				Vector3(120, 0.0, 75),
-				Vector3(75, 0.0, 70),
-				Vector3(45, 0.0, 45),
-				Vector3(20, 0.0, 22)
+				Vector3(115, 0.0, 75),
+				Vector3(65, 0.0, 65),
+				Vector3(25, 0.0, 48),
+				Vector3(0, 0, 35)
 			]
 			create_box(Vector3(115.0, -1.5, -55.0), Vector3(550.0, 3.0, 550.0), "asphalt")
 			var building_coords = [
@@ -86,19 +87,21 @@ func build_circuit() -> void:
 		_: # "metropolis" / "neon"
 			circuit_nodes = [
 				Vector3(0, 0, 0),
-				Vector3(0, 0, -50),
-				Vector3(12, 0, -100),
-				Vector3(42, 0.5, -145),
-				Vector3(88, 1.0, -168),
-				Vector3(145, 1.0, -168),
-				Vector3(195, 0.5, -140),
-				Vector3(215, 0.0, -90),
-				Vector3(205, 0.0, -35),
-				Vector3(170, 0.0, 15),
-				Vector3(125, 0.0, 40),
-				Vector3(80, 0.0, 60),
-				Vector3(45, 0.0, 45),
-				Vector3(18, 0.0, 22)
+				Vector3(0, 0, -40),
+				Vector3(0, 0, -75),
+				Vector3(15, 0, -115),
+				Vector3(45, 0.5, -145),
+				Vector3(90, 1.0, -165),
+				Vector3(145, 1.0, -165),
+				Vector3(195, 0.5, -135),
+				Vector3(215, 0.0, -85),
+				Vector3(205, 0.0, -30),
+				Vector3(170, 0.0, 20),
+				Vector3(125, 0.0, 45),
+				Vector3(80, 0.0, 65),
+				Vector3(45, 0.0, 55),
+				Vector3(18, 0.0, 45),
+				Vector3(0, 0, 35)
 			]
 			create_box(Vector3(105.0, -1.65, -50.0), Vector3(500.0, 3.0, 500.0), "asphalt")
 			var neon_props = [
@@ -132,6 +135,13 @@ func build_circuit() -> void:
 	var gantry = MeshBuilder.build_start_gantry(track_width)
 	gantry.position = circuit_nodes[0] + Vector3(0, 0, -2.0)
 	add_child(gantry)
+
+	# Authentic 3D rumble curbs along track
+	var curb_model = ModelCacheScript.get_prop("racing_curb")
+	if curb_model:
+		curb_model.position = circuit_nodes[0] + Vector3(-track_width * 0.5 - 1.5, 0, 0)
+		curb_model.scale = Vector3(2.0, 2.0, 2.0)
+		add_child(curb_model)
 
 	# Production Grandstands with Spectator Crowds along the home straight facing inward toward track
 	for z_pos in [-50.0, -25.0, 0.0, 25.0]:
@@ -168,13 +178,31 @@ func _build_continuous_road_foundation(nodes: Array[Vector3]) -> void:
 	if n < 3:
 		return
 
-	var left_pts: Array[Vector3] = []
-	var right_pts: Array[Vector3] = []
-	var left_wall_top: Array[Vector3] = []
-	var right_wall_top: Array[Vector3] = []
+	# Precompute cumulative distance along track centerline for seamless UV tiling
+	var total_dist = 0.0
+	var node_dists: Array[float] = [0.0]
+	for i in range(n):
+		var next_pt = nodes[(i + 1) % n]
+		total_dist += nodes[i].distance_to(next_pt)
+		if i < n - 1:
+			node_dists.append(total_dist)
+
 	var half_w = track_width * 0.5
-	var wall_h = 3.5
-	var wall_margin = 0.5 # Continuous barrier wall set slightly outside track edge
+	var curb_w = 1.2
+	var curb_h = 0.06
+	var wall_h = 1.8
+
+	# Compute track cross-section points at each node
+	var road_left: Array[Vector3] = []
+	var road_right: Array[Vector3] = []
+	var curb_left_inner: Array[Vector3] = []
+	var curb_left_outer: Array[Vector3] = []
+	var curb_right_inner: Array[Vector3] = []
+	var curb_right_outer: Array[Vector3] = []
+	var wall_left_bot: Array[Vector3] = []
+	var wall_left_top: Array[Vector3] = []
+	var wall_right_bot: Array[Vector3] = []
+	var wall_right_top: Array[Vector3] = []
 
 	for i in range(n):
 		var prev = nodes[(i - 1 + n) % n]
@@ -185,147 +213,265 @@ func _build_continuous_road_foundation(nodes: Array[Vector3]) -> void:
 		var tangent = (dir_prev + dir_next).normalized()
 		var normal = Vector3.UP
 		var side = tangent.cross(normal).normalized()
-		var l_pt = curr - side * half_w
-		var r_pt = curr + side * half_w
-		left_pts.append(l_pt)
-		right_pts.append(r_pt)
-		# Barrier walls placed along track edge with vertical height
-		var l_wall = curr - side * (half_w + wall_margin)
-		var r_wall = curr + side * (half_w + wall_margin)
-		left_wall_top.append(l_wall + Vector3.UP * wall_h)
-		right_wall_top.append(r_wall + Vector3.UP * wall_h)
+
+		var rl = curr - side * half_w
+		var rr = curr + side * half_w
+		road_left.append(rl)
+		road_right.append(rr)
+
+		# 3D Rumble Curbs (raised slightly above asphalt with bevel)
+		var cli = rl + Vector3.UP * 0.02
+		var clo = rl - side * curb_w + Vector3.UP * curb_h
+		curb_left_inner.append(cli)
+		curb_left_outer.append(clo)
+
+		var cri = rr + Vector3.UP * 0.02
+		var cro = rr + side * curb_w + Vector3.UP * curb_h
+		curb_right_inner.append(cri)
+		curb_right_outer.append(cro)
+
+		# Metallic Safety Barriers placed outside the curbs
+		var wlb = clo - side * 0.08
+		var wlt = wlb + Vector3.UP * wall_h
+		wall_left_bot.append(wlb)
+		wall_left_top.append(wlt)
+
+		var wrb = cro + side * 0.08
+		var wrt = wrb + Vector3.UP * wall_h
+		wall_right_bot.append(wrb)
+		wall_right_top.append(wrt)
 
 	var road_body = StaticBody3D.new()
 	road_body.name = "ContinuousRoadFoundation"
 	road_body.collision_layer = GameConstants.LAYER_WORLD
 	road_body.collision_mask = 0
 
-	var col = CollisionShape3D.new()
-	col.name = "ContinuousRoadCol"
-	var concave_shape = ConcavePolygonShape3D.new()
-	var faces = PackedVector3Array()
+	var st_road = SurfaceTool.new()
+	st_road.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st_road.set_material(MaterialGenerator.get_material("asphalt_lanes"))
+
+	var st_curb = SurfaceTool.new()
+	st_curb.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st_curb.set_material(MaterialGenerator.get_material("curb_blue_white"))
+
+	var st_barrier = SurfaceTool.new()
+	st_barrier.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st_barrier.set_material(MaterialGenerator.get_material("racing_barrier"))
+
+	var collision_faces = PackedVector3Array()
 
 	for i in range(n):
 		var next_idx = (i + 1) % n
-		var l1 = left_pts[i]
-		var r1 = right_pts[i]
-		var l2 = left_pts[next_idx]
-		var r2 = right_pts[next_idx]
+		var d1 = node_dists[i]
+		var d2 = node_dists[next_idx] if next_idx != 0 else total_dist
 
-		# 1. Top continuous drivable surface (shared edge quads, zero bumps/seams)
-		faces.append(l1)
-		faces.append(r1)
-		faces.append(l2)
+		# --- 1. Road Surface Ribbon ---
+		var v_rl1 = road_left[i]
+		var v_rr1 = road_right[i]
+		var v_rl2 = road_left[next_idx]
+		var v_rr2 = road_right[next_idx]
 
-		faces.append(r1)
-		faces.append(r2)
-		faces.append(l2)
+		var uv_rl1 = Vector2(0.0, d1 / 12.0)
+		var uv_rr1 = Vector2(1.0, d1 / 12.0)
+		var uv_rl2 = Vector2(0.0, d2 / 12.0)
+		var uv_rr2 = Vector2(1.0, d2 / 12.0)
 
-		# 2. Continuous Left Barrier Wall (shared smooth vertices, zero corner bumps)
-		var lw1_b = l1
-		var lw2_b = l2
-		var lw1_t = left_wall_top[i]
-		var lw2_t = left_wall_top[next_idx]
-		faces.append(lw1_b)
-		faces.append(lw1_t)
-		faces.append(lw2_b)
+		# Road Triangle 1
+		st_road.set_normal(Vector3.UP)
+		st_road.set_uv(uv_rl1)
+		st_road.add_vertex(v_rl1)
+		st_road.set_normal(Vector3.UP)
+		st_road.set_uv(uv_rr1)
+		st_road.add_vertex(v_rr1)
+		st_road.set_normal(Vector3.UP)
+		st_road.set_uv(uv_rl2)
+		st_road.add_vertex(v_rl2)
 
-		faces.append(lw1_t)
-		faces.append(lw2_t)
-		faces.append(lw2_b)
+		# Road Triangle 2
+		st_road.set_normal(Vector3.UP)
+		st_road.set_uv(uv_rr1)
+		st_road.add_vertex(v_rr1)
+		st_road.set_normal(Vector3.UP)
+		st_road.set_uv(uv_rr2)
+		st_road.add_vertex(v_rr2)
+		st_road.set_normal(Vector3.UP)
+		st_road.set_uv(uv_rl2)
+		st_road.add_vertex(v_rl2)
 
-		# 3. Continuous Right Barrier Wall (shared smooth vertices, zero corner bumps)
-		var rw1_b = r1
-		var rw2_b = r2
-		var rw1_t = right_wall_top[i]
-		var rw2_t = right_wall_top[next_idx]
-		faces.append(rw1_b)
-		faces.append(rw2_b)
-		faces.append(rw1_t)
+		# Add to collision
+		collision_faces.append(v_rl1)
+		collision_faces.append(v_rr1)
+		collision_faces.append(v_rl2)
+		collision_faces.append(v_rr1)
+		collision_faces.append(v_rr2)
+		collision_faces.append(v_rl2)
 
-		faces.append(rw1_t)
-		faces.append(rw2_b)
-		faces.append(rw2_t)
+		# --- 2. Left Rumble Curb Ribbon ---
+		var v_clo1 = curb_left_outer[i]
+		var v_cli1 = curb_left_inner[i]
+		var v_clo2 = curb_left_outer[next_idx]
+		var v_cli2 = curb_left_inner[next_idx]
 
-	concave_shape.set_faces(faces)
+		var uv_clo1 = Vector2(d1 / 2.0, 0.0)
+		var uv_cli1 = Vector2(d1 / 2.0, 1.0)
+		var uv_clo2 = Vector2(d2 / 2.0, 0.0)
+		var uv_cli2 = Vector2(d2 / 2.0, 1.0)
+
+		st_curb.set_normal(Vector3.UP)
+		st_curb.set_uv(uv_clo1)
+		st_curb.add_vertex(v_clo1)
+		st_curb.set_normal(Vector3.UP)
+		st_curb.set_uv(uv_cli1)
+		st_curb.add_vertex(v_cli1)
+		st_curb.set_normal(Vector3.UP)
+		st_curb.set_uv(uv_clo2)
+		st_curb.add_vertex(v_clo2)
+
+		st_curb.set_normal(Vector3.UP)
+		st_curb.set_uv(uv_cli1)
+		st_curb.add_vertex(v_cli1)
+		st_curb.set_normal(Vector3.UP)
+		st_curb.set_uv(uv_cli2)
+		st_curb.add_vertex(v_cli2)
+		st_curb.set_normal(Vector3.UP)
+		st_curb.set_uv(uv_clo2)
+		st_curb.add_vertex(v_clo2)
+
+		collision_faces.append(v_clo1)
+		collision_faces.append(v_cli1)
+		collision_faces.append(v_clo2)
+		collision_faces.append(v_cli1)
+		collision_faces.append(v_cli2)
+		collision_faces.append(v_clo2)
+
+		# --- 3. Right Rumble Curb Ribbon ---
+		var v_cro1 = curb_right_outer[i]
+		var v_cri1 = curb_right_inner[i]
+		var v_cro2 = curb_right_outer[next_idx]
+		var v_cri2 = curb_right_inner[next_idx]
+
+		var uv_cri1 = Vector2(d1 / 2.0, 0.0)
+		var uv_cro1 = Vector2(d1 / 2.0, 1.0)
+		var uv_cri2 = Vector2(d2 / 2.0, 0.0)
+		var uv_cro2 = Vector2(d2 / 2.0, 1.0)
+
+		st_curb.set_normal(Vector3.UP)
+		st_curb.set_uv(uv_cri1)
+		st_curb.add_vertex(v_cri1)
+		st_curb.set_normal(Vector3.UP)
+		st_curb.set_uv(uv_cro1)
+		st_curb.add_vertex(v_cro1)
+		st_curb.set_normal(Vector3.UP)
+		st_curb.set_uv(uv_cri2)
+		st_curb.add_vertex(v_cri2)
+
+		st_curb.set_normal(Vector3.UP)
+		st_curb.set_uv(uv_cro1)
+		st_curb.add_vertex(v_cro1)
+		st_curb.set_normal(Vector3.UP)
+		st_curb.set_uv(uv_cro2)
+		st_curb.add_vertex(v_cro2)
+		st_curb.set_normal(Vector3.UP)
+		st_curb.set_uv(uv_cri2)
+		st_curb.add_vertex(v_cri2)
+
+		collision_faces.append(v_cri1)
+		collision_faces.append(v_cro1)
+		collision_faces.append(v_cri2)
+		collision_faces.append(v_cro1)
+		collision_faces.append(v_cro2)
+		collision_faces.append(v_cri2)
+
+		# --- 4. Left Safety Barrier Ribbon ---
+		var v_wlb1 = wall_left_bot[i]
+		var v_wlt1 = wall_left_top[i]
+		var v_wlb2 = wall_left_bot[next_idx]
+		var v_wlt2 = wall_left_top[next_idx]
+
+		var uv_wb1 = Vector2(d1 / 4.0, 1.0)
+		var uv_wt1 = Vector2(d1 / 4.0, 0.0)
+		var uv_wb2 = Vector2(d2 / 4.0, 1.0)
+		var uv_wt2 = Vector2(d2 / 4.0, 0.0)
+
+		st_barrier.set_uv(uv_wb1)
+		st_barrier.add_vertex(v_wlb1)
+		st_barrier.set_uv(uv_wt1)
+		st_barrier.add_vertex(v_wlt1)
+		st_barrier.set_uv(uv_wb2)
+		st_barrier.add_vertex(v_wlb2)
+
+		st_barrier.set_uv(uv_wt1)
+		st_barrier.add_vertex(v_wlt1)
+		st_barrier.set_uv(uv_wt2)
+		st_barrier.add_vertex(v_wlt2)
+		st_barrier.set_uv(uv_wb2)
+		st_barrier.add_vertex(v_wlb2)
+
+		collision_faces.append(v_wlb1)
+		collision_faces.append(v_wlt1)
+		collision_faces.append(v_wlb2)
+		collision_faces.append(v_wlt1)
+		collision_faces.append(v_wlt2)
+		collision_faces.append(v_wlb2)
+
+		# --- 5. Right Safety Barrier Ribbon ---
+		var v_wrb1 = wall_right_bot[i]
+		var v_wrt1 = wall_right_top[i]
+		var v_wrb2 = wall_right_bot[next_idx]
+		var v_wrt2 = wall_right_top[next_idx]
+
+		st_barrier.set_uv(uv_wb1)
+		st_barrier.add_vertex(v_wrb1)
+		st_barrier.set_uv(uv_wb2)
+		st_barrier.add_vertex(v_wrb2)
+		st_barrier.set_uv(uv_wt1)
+		st_barrier.add_vertex(v_wrt1)
+
+		st_barrier.set_uv(uv_wt1)
+		st_barrier.add_vertex(v_wrt1)
+		st_barrier.set_uv(uv_wb2)
+		st_barrier.add_vertex(v_wrb2)
+		st_barrier.set_uv(uv_wt2)
+		st_barrier.add_vertex(v_wrt2)
+
+		collision_faces.append(v_wrb1)
+		collision_faces.append(v_wrb2)
+		collision_faces.append(v_wrt1)
+		collision_faces.append(v_wrt1)
+		collision_faces.append(v_wrb2)
+		collision_faces.append(v_wrt2)
+
+	# Generate smooth vertex normals and tangents for safety barriers
+	st_barrier.generate_normals()
+
+	var mesh_road = MeshInstance3D.new()
+	mesh_road.name = "ContinuousRoadMesh"
+	mesh_road.mesh = st_road.commit()
+	road_body.add_child(mesh_road)
+
+	var mesh_curb = MeshInstance3D.new()
+	mesh_curb.name = "ContinuousCurbMesh"
+	mesh_curb.mesh = st_curb.commit()
+	road_body.add_child(mesh_curb)
+
+	var mesh_barrier = MeshInstance3D.new()
+	mesh_barrier.name = "ContinuousBarrierMesh"
+	mesh_barrier.mesh = st_barrier.commit()
+	road_body.add_child(mesh_barrier)
+
+	# Continuous collision shape matching road, curbs, and barriers 1:1
+	var col = CollisionShape3D.new()
+	col.name = "ContinuousRoadCol"
+	var concave_shape = ConcavePolygonShape3D.new()
+	concave_shape.set_faces(collision_faces)
 	col.shape = concave_shape
 	road_body.add_child(col)
+
 	add_child(road_body)
 
 func build_track_segment(start_pt: Vector3, end_pt: Vector3, segment_index: int) -> void:
 	var delta = end_pt - start_pt
-	var seg_length = delta.length()
-	var center = start_pt + delta * 0.5
 	var angle_y = atan2(-delta.x, -delta.z)
-	var horiz_dist = maxf(Vector2(delta.x, delta.z).length(), 0.001)
-	var angle_x = atan2(delta.y, horiz_dist)
-
-	var road = StaticBody3D.new()
-	road.collision_layer = GameConstants.LAYER_WORLD
-	road.position = center
-	road.rotation.y = angle_y
-	road.rotation.x = angle_x
-
-	# Subterranean catch-floor collider placed 2.5m deep under the surface to prevent tunneling
-	var col = CollisionShape3D.new()
-	var box = BoxShape3D.new()
-	box.size = Vector3(track_width, 1.0, seg_length * 0.95)
-	col.shape = box
-	col.position = Vector3(0, -2.5, 0)
-	road.add_child(col)
-
-	var mesh = MeshInstance3D.new()
-	var b_mesh = BoxMesh.new()
-	b_mesh.size = Vector3(track_width, 0.4, seg_length + 0.1)
-	mesh.mesh = b_mesh
-	mesh.material_override = MaterialGenerator.get_material("asphalt_lanes")
-	mesh.position = Vector3(0, -0.1, 0)
-	road.add_child(mesh)
-
-	# Rumble Curbs along track shoulders (flush with asphalt surface, zero protruding step)
-	var curb_w = 1.0
-	var curb_h = 0.04
-	var curb_l = MeshInstance3D.new()
-	var cm_l = BoxMesh.new()
-	cm_l.size = Vector3(curb_w, curb_h, seg_length + 0.05)
-	curb_l.mesh = cm_l
-	curb_l.material_override = MaterialGenerator.get_material("curb_blue_white")
-	curb_l.position = Vector3(-track_width * 0.5 + curb_w * 0.5, 0.02, 0)
-	road.add_child(curb_l)
-
-	var curb_r = MeshInstance3D.new()
-	var cm_r = BoxMesh.new()
-	cm_r.size = Vector3(curb_w, curb_h, seg_length + 0.05)
-	curb_r.mesh = cm_r
-	curb_r.material_override = MaterialGenerator.get_material("curb_blue_white")
-	curb_r.position = Vector3(track_width * 0.5 - curb_w * 0.5, 0.02, 0)
-	road.add_child(curb_r)
-
-	# Outer Visual Crash Barrier Props strictly outside track lane
-	var rail_w = 0.8
-	var barrier_offset = track_width * 0.5 + rail_w * 0.5 + 0.4
-
-	var left_bar = ModelCacheScript.get_prop("racing_barrier")
-	if left_bar:
-		left_bar.position = Vector3(-barrier_offset, 0.2, 0)
-		left_bar.scale = Vector3(2.0, 2.0, seg_length * 0.4)
-		road.add_child(left_bar)
-
-	var right_bar = ModelCacheScript.get_prop("racing_barrier")
-	if right_bar:
-		right_bar.position = Vector3(barrier_offset, 0.2, 0)
-		right_bar.scale = Vector3(2.0, 2.0, seg_length * 0.4)
-		road.add_child(right_bar)
-
-	# Apex Tire Wall
-	if segment_index % 3 == 0:
-		var tire = ModelCacheScript.get_prop("racing_tire_stack")
-		if tire:
-			tire.position = Vector3(track_width * 0.5 + 1.5, 0.2, 0)
-			tire.scale = Vector3(2.0, 2.0, 2.0)
-			road.add_child(tire)
-
-	add_child(road)
 
 	# Checkpoint
 	var cp = RaceCheckpoint.new()
@@ -336,6 +482,16 @@ func build_track_segment(start_pt: Vector3, end_pt: Vector3, segment_index: int)
 	cp.rotation.y = angle_y
 	add_child(cp)
 	checkpoints.append(cp)
+
+	# Apex Tire Wall at sharp corners
+	if segment_index % 4 == 2:
+		var tire = ModelCacheScript.get_prop("racing_tire_stack")
+		if tire:
+			tire.position = start_pt + Vector3(track_width * 0.5 + 2.0, 0.2, 0)
+			tire.scale = Vector3(2.0, 2.0, 2.0)
+			add_child(tire)
+
+
 
 func create_box(pos: Vector3, size: Vector3, material_name: String) -> StaticBody3D:
 	var body = StaticBody3D.new()

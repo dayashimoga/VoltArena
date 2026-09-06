@@ -1,7 +1,7 @@
 {
   "project": "VoltArena",
   "version": "5.0.0",
-  "timestamp_utc": "2026-09-06 08:59:48 UTC",
+  "timestamp_utc": "2026-09-06 16:42:56 UTC",
   "overall_status": "RUNTIME_VERIFIED",
   "runtime_verified_count": 8,
   "implemented_count": 3,
@@ -12,21 +12,21 @@
     {
       "gate": "Unit & E2E Tests",
       "requirement": "100% assertion pass rate, 0 failures",
-      "measured": "857 passed, 0 failed",
+      "measured": "900 passed, 0 failed",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/test-results.json"
     },
     {
       "gate": "Function Coverage",
       "requirement": ">90.0% function coverage",
-      "measured": "93.9% (401/427 functions)",
+      "measured": "93.3% (401/430 functions)",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/coverage-report.json"
     },
     {
       "gate": "Performance Benchmarks",
       "requirement": "Target >=60 FPS (desktop), P95<16.6ms, P99<33.3ms, RAM<500MB, 0 stutters",
-      "measured": "FPS=986.2 (P50=1.01ms, P95=1.66ms, P99=2.14ms), RAM=21.0MB, Stutters=0",
+      "measured": "FPS=1088.1 (P50=0.92ms, P95=1.45ms, P99=1.75ms), RAM=21.3MB, Stutters=0",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/benchmark-results.json"
     },
@@ -89,7 +89,7 @@
     {
       "gate": "G9 Packaged Runtime Render-Health & State Dossier",
       "requirement": "49/49 packaged runtime screenshots >=1280x720, Render-Health (Lum>=15, Contrast>=18, Black%<=65%), Contact Sheets generated",
-      "measured": "53/53 passed (Avg Lum=85.5, Avg Contrast=62.5, Max Black%=55.6%)",
+      "measured": "53/53 passed (Avg Lum=83.8, Avg Contrast=61.8, Max Black%=34.8%)",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/screenshots/visual_contact_sheet.png"
     },

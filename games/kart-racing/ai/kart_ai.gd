@@ -91,8 +91,8 @@ func _physics_process(delta: float) -> void:
 	var dot_fwd = fwd.dot(dir_to_wp)
 
 	# Multi-tier stuck watchdog unjamming logic:
-	# Only triggers after launch sprint (> 3.0s race active time) to prevent reverse moves on grid
-	if kart.forward_speed < 1.0 and race_active_time > 3.0:
+	# Only triggers after launch sprint (>= 2.0s race active time) to prevent reverse moves on grid
+	if kart.forward_speed < 1.0 and race_active_time >= 2.0:
 		stuck_timer += delta
 		if stuck_timer > 4.0:
 			# Restore to last valid checkpoint with forward speed facing along track

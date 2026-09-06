@@ -18,14 +18,17 @@ func run_tests() -> Dictionary:
 	test_drift_boost_mechanic()
 	test_kart_acceleration()
 	test_camera_follow()
+	test_track_and_vehicle_selection()
 	test_race_finish_flow()
 	test_pause_restart_quit()
+	test_track_collision_and_barriers()
+	test_ai_racers_waypoint_navigation()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
 	return [
-		["res://games/kart-racing/kart_racing_main.gd", ["_ready", "setup_scene", "update_camera", "_on_race_finished"]],
-		["res://games/kart-racing/kart/kart_controller.gd", ["trigger_drift_boost"]],
+		["res://games/kart-racing/kart_racing_main.gd", ["_ready", "setup_scene", "update_camera", "_on_race_finished", "select_track", "select_kart"]],
+		["res://games/kart-racing/kart/kart_controller.gd", ["trigger_drift_boost", "set_kart_type"]],
 		["res://games/kart-racing/game/race_manager.gd", ["initialize_race"]],
 		["res://games/kart-racing/tracks/track_generator.gd", ["_ready"]],
 		["res://games/kart-racing/ai/kart_ai.gd", ["_ready"]],
@@ -130,6 +133,34 @@ func test_camera_follow() -> void:
 
 	race.queue_free()
 
+func test_track_and_vehicle_selection() -> void:
+	var race = KartRacingMainScript.new()
+	race.setup_scene()
+
+	# Test track selection across all 3 production circuits
+	race.select_track("canyon")
+	assert_eq(race.selected_track, "canyon", "Track selection must update selected_track")
+	assert_true(race.track_generator.waypoints.size() >= 15, "Canyon track must have >= 15 waypoints")
+
+	race.select_track("skyline")
+	assert_eq(race.selected_track, "skyline", "Skyline selection must update selected_track")
+	assert_true(race.track_generator.waypoints.size() >= 15, "Skyline track must have >= 15 waypoints")
+
+	race.select_track("neon")
+	assert_eq(race.selected_track, "neon", "Neon selection must update selected_track")
+	assert_true(race.track_generator.waypoints.size() >= 14, "Neon track must have >= 14 waypoints")
+
+	# Test vehicle selection
+	race.select_kart("enforcer")
+	assert_eq(race.selected_kart, "enforcer", "Vehicle selection must update selected_kart")
+	assert_eq(race.player_kart.kart_type, "enforcer", "Player kart archetype must update to enforcer")
+
+	race.select_kart("phantom")
+	assert_eq(race.selected_kart, "phantom", "Vehicle selection must update to phantom")
+	assert_eq(race.player_kart.kart_type, "phantom", "Player kart archetype must update to phantom")
+
+	race.queue_free()
+
 func test_race_finish_flow() -> void:
 	var race = KartRacingMainScript.new()
 	race.setup_scene()
@@ -147,5 +178,45 @@ func test_pause_restart_quit() -> void:
 	race._on_restart()
 	race._on_quit_to_launcher()
 	assert_true(true, "Restart/quit must not crash without EventBus")
+
+	race.queue_free()
+
+func test_track_collision_and_barriers() -> void:
+	var race = KartRacingMainScript.new()
+	race.setup_scene()
+
+	var tg = race.track_generator
+	assert_true(tg != null, "TrackGenerator must exist")
+	assert_true(tg.checkpoints.size() > 0, "Track must generate checkpoints")
+
+	# Check kart collision is rounded capsule
+	var kart_col = race.player_kart.get_node_or_null("KartCollision")
+	assert_true(kart_col != null, "Kart must have KartCollision")
+	assert_true(kart_col.shape is CapsuleShape3D, "Kart collision shape must be CapsuleShape3D for seamless seam gliding")
+
+	race.queue_free()
+
+func test_ai_racers_waypoint_navigation() -> void:
+	var race = KartRacingMainScript.new()
+	race.setup_scene()
+	if race.race_manager:
+		race.race_manager.start_race()
+
+	# Verify AI racers have waypoints assigned
+	assert_true(race.ai_karts.size() > 0, "Must have AI racers")
+	for ai_kart in race.ai_karts:
+		var brain = ai_kart.get_node_or_null("KartAI")
+		assert_true(brain != null, "AI kart must have KartAI node")
+		assert_true(brain.waypoints.size() > 0, "KartAI brain must have non-empty waypoints")
+
+		# Simulate 1 frame of physics
+		brain._physics_process(0.016)
+
+		# Test watchdog logic: simulate stuck kart
+		brain.race_active_time = 3.0
+		brain.kart.forward_speed = 0.5
+		brain.stuck_timer = 2.1
+		brain._physics_process(0.016)
+		assert_true(brain.reverse_timer > 0.0, "Watchdog must trigger reverse recovery when stuck")
 
 	race.queue_free()

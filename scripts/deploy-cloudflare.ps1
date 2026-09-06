@@ -16,7 +16,7 @@ $files = Get-ChildItem -Path "export/web" -File
 $failed = $false
 
 foreach ($f in $files) {
-    if ($f.Name -eq "index.wasm") { continue }
+    if ($f.Name -eq "index.wasm" -or $f.Name -eq "index.pck") { continue }
     $szMB = [math]::Round($f.Length / 1MB, 2)
     if ($f.Length -le $maxBytes) {
         Write-Host ("VERIFIED: {0,-30} ({1,6} MB <= 25MB)" -f $f.Name, $szMB) -ForegroundColor Green

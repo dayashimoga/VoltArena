@@ -12,44 +12,15 @@ if (-not (Test-Path "export/web")) {
 Write-Host "[1/5] Exporting Godot Web package in Podman container..." -ForegroundColor Yellow
 podman run --rm -v "${PWD}:/workspace:Z" -w /workspace docker.io/barichello/godot-ci:4.3 bash -c "mkdir -p export/web && godot --headless --export-release 'Web' export/web/index.html"
 
-Write-Host "[2/5] Creating Cloudflare-compliant WASM chunks (<= 18MB each)..." -ForegroundColor Yellow
-podman run --rm -v "${PWD}:/workspace:Z" -w /workspace docker.io/barichello/godot-ci:4.3 bash -c "split -b 18M -d export/web/index.wasm export/web/index.wasm.part"
+Write-Host "[2/5] Creating Cloudflare-compliant WASM & PCK chunks (<= 18MB each)..." -ForegroundColor Yellow
+podman run --rm -v "${PWD}:/workspace:Z" -w /workspace docker.io/barichello/godot-ci:4.3 bash -c "split -b 18M -d export/web/index.wasm export/web/index.wasm.part && split -b 18M -d export/web/index.pck export/web/index.pck.part"
 
 Write-Host "[3/5] Deploying Cloudflare Pages _headers..." -ForegroundColor Yellow
 Copy-Item -Force "platform/web/_headers" "export/web/_headers"
 
-Write-Host "[4/5] Injecting WASM chunk reassembler into index.html..." -ForegroundColor Yellow
+Write-Host "[4/5] Injecting WASM and PCK chunk reassembler into index.html..." -ForegroundColor Yellow
 $htmlContent = Get-Content -Raw -Encoding UTF8 "export/web/index.html"
-$hookScript = @"
-		<script>
-		// VoltArena Cloudflare Chunk Reassembler Hook
-		(function() {
-			const origFetch = window.fetch;
-			window.fetch = async function(resource, init) {
-				const url = typeof resource === "string" ? resource : (resource?.url || "");
-				if (url.endsWith("index.wasm")) {
-					try {
-						const res = await origFetch(resource, init);
-						if (res.ok) return res;
-					} catch (e) {}
-					const [r1, r2] = await Promise.all([
-						origFetch("index.wasm.part00"),
-						origFetch("index.wasm.part01")
-					]);
-					const [b1, b2] = await Promise.all([r1.arrayBuffer(), r2.arrayBuffer()]);
-					const combined = new Uint8Array(b1.byteLength + b2.byteLength);
-					combined.set(new Uint8Array(b1), 0);
-					combined.set(new Uint8Array(b2), b1.byteLength);
-					return new Response(combined, { status: 200, headers: { "Content-Type": "application/wasm" } });
-				}
-				if (url.includes(".pck")) {
-					init = Object.assign({}, init, { cache: "no-store" });
-				}
-				return origFetch(resource, init);
-			};
-		})();
-		</script>
-"@
+$hookScript = Get-Content -Raw -Encoding UTF8 "platform/web/reassembler_hook.html"
 
 if (-not $htmlContent.Contains("VoltArena Cloudflare Chunk Reassembler Hook")) {
     $htmlContent = $htmlContent.Replace('<script src="index.js"></script>', "$hookScript`r`n`t`t<script src=`"index.js`"></script>")
@@ -63,7 +34,7 @@ $hasFailure = $false
 
 foreach ($f in $files) {
     $sizeMB = [math]::Round($f.Length / 1MB, 2)
-    if ($f.Name -eq "index.wasm") {
+    if ($f.Name -eq "index.wasm" -or $f.Name -eq "index.pck") {
         Write-Host ("{0,-30} | {1,8} MB | [SOURCE - Chunks will be served]" -f $f.Name, $sizeMB) -ForegroundColor DarkGray
         continue
     }

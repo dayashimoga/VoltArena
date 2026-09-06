@@ -62,6 +62,15 @@ func _ready() -> void:
 	last_valid_checkpoint_pos = global_position
 	last_valid_checkpoint_rot = rotation.y
 
+	floor_snap_length = 0.50
+	floor_max_angle = deg_to_rad(55.0)
+	floor_constant_speed = true
+	floor_block_on_wall = false
+	floor_stop_on_slope = false
+	wall_min_slide_angle = deg_to_rad(15.0)
+	up_direction = Vector3.UP
+	max_slides = 6
+
 	setup_kart_archetype()
 	setup_kart_visual()
 
@@ -83,22 +92,57 @@ func setup_kart_archetype() -> void:
 			acceleration = 24.0
 			steer_speed = 3.2
 
+const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
+
+func set_kart_type(new_type: String) -> void:
+	kart_type = new_type
+	setup_kart_archetype()
+	setup_kart_visual()
+
 func setup_kart_visual() -> void:
-	var kart_col = Color(0.2, 1.0, 0.5) if is_player else (Color(1.0, 0.5, 0.0) if racer_id == 1 else (Color(0.8, 0.2, 1.0) if racer_id == 2 else Color(0.0, 0.85, 1.0)))
-	kart_visual = MeshBuilder.build_drift_kart(kart_col, kart_type)
+	if kart_visual and is_instance_valid(kart_visual):
+		kart_visual.queue_free()
+		front_wheels.clear()
+
+	var vehicle_key = "kart_speedster"
+	if is_player:
+		match kart_type:
+			"phantom": vehicle_key = "kart_turbo"
+			"enforcer": vehicle_key = "kart_muscle"
+			_: vehicle_key = "kart_speedster"
+	else:
+		match racer_id % 4:
+			0: vehicle_key = "kart_speedster"
+			1: vehicle_key = "kart_drift"
+			2: vehicle_key = "kart_muscle"
+			3: vehicle_key = "kart_turbo"
+
+	var prod_model = ModelCacheScript.get_vehicle(vehicle_key)
+	if prod_model:
+		kart_visual = prod_model
+		kart_visual.scale = Vector3(1.2, 1.2, 1.2)
+		kart_visual.position = Vector3(0, 0.05, 0)
+	else:
+		var kart_col = Color(0.2, 1.0, 0.5) if is_player else (Color(1.0, 0.5, 0.0) if racer_id == 1 else (Color(0.8, 0.2, 1.0) if racer_id == 2 else Color(0.0, 0.85, 1.0)))
+		kart_visual = MeshBuilder.build_drift_kart(kart_col, kart_type)
+
 	add_child(kart_visual)
 
 	for child in kart_visual.get_children():
 		if child.name.begins_with("FrontWheel") and child is MeshInstance3D:
 			front_wheels.append(child)
 
-	# Collision
-	var col = CollisionShape3D.new()
-	var b_shape = BoxShape3D.new()
-	b_shape.size = Vector3(1.5, 0.8, 2.5)
-	col.shape = b_shape
-	col.position = Vector3(0, 0.45, 0)
-	add_child(col)
+	# Collision - Rounded Longitudinal Capsule to glide over seams and barriers without snagging
+	if not has_node("KartCollision"):
+		var col = CollisionShape3D.new()
+		col.name = "KartCollision"
+		var cap_shape = CapsuleShape3D.new()
+		cap_shape.radius = 0.50
+		cap_shape.height = 1.9
+		col.shape = cap_shape
+		col.rotation_degrees.x = 90.0
+		col.position = Vector3(0, 0.55, 0)
+		add_child(col)
 
 func _physics_process(delta: float) -> void:
 	if not is_inside_tree():
@@ -113,9 +157,16 @@ func _physics_process(delta: float) -> void:
 
 	if not is_on_floor():
 		velocity.y -= gravity * delta
+	else:
+		velocity.y = -2.0 # Continuous ground contact on seams and ramps
 
 	# Only accept controls if race has started
-	var rm = get_tree().root.find_child("RaceManager", true, false)
+	var rm: Node = null
+	var p_node = get_parent()
+	if p_node:
+		rm = p_node.get_node_or_null("RaceManager")
+	if not rm and get_tree() and get_tree().root:
+		rm = get_tree().root.find_child("RaceManager", true, false)
 	var is_countdown = (rm and rm.get("current_state") == 0) # RaceState.COUNTDOWN
 
 	if is_player and not race_finished and not is_countdown:
@@ -130,8 +181,8 @@ func _physics_process(delta: float) -> void:
 func recover_to_checkpoint() -> void:
 	global_position = last_valid_checkpoint_pos + Vector3(0, 0.6, 0)
 	rotation.y = last_valid_checkpoint_rot
-	velocity = Vector3.ZERO
-	forward_speed = 0.0
+	velocity = -transform.basis.z * 12.0
+	forward_speed = 12.0
 	is_drifting = false
 	drift_charge_time = 0.0
 	var bus = GameConstants.get_autoload(self, "EventBus")
@@ -220,14 +271,14 @@ func trigger_drift_boost() -> void:
 		boost_level = 2 # Tier 2: Super Mini-Turbo (Orange sparks)
 		boost_timer = 2.0
 		if am:
-			am.play_sound("drift_screech", 1.4, 1.2)
+			am.play_sound("drift_turbo_2", 1.0, 1.4)
 		if bus and is_player:
 			bus.show_toast_requested.emit("SUPER MINI-TURBO! ++", Color(1.0, 0.6, 0.1))
 	elif drift_charge_time >= 0.7:
 		boost_level = 1 # Tier 1: Mini-Turbo (Blue sparks)
 		boost_timer = 1.0
 		if am:
-			am.play_sound("jump", 1.4)
+			am.play_sound("drift_turbo_1", 1.0, 1.2)
 		if bus and is_player:
 			bus.show_toast_requested.emit("MINI-TURBO! +", Color(0.2, 0.8, 1.0))
 

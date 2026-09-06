@@ -76,7 +76,11 @@ Write-Host "`n[GATE 5/10] Building Web Export..." -ForegroundColor Yellow
 powershell -ExecutionPolicy Bypass -File scripts/build-web.ps1 2>&1 | Out-Host
 if (Test-Path "export/web/index.html") {
     $hasChunks = Test-Path "export/web/index.wasm.part00"
-    $maxFile = Get-ChildItem -Path "export/web" -Recurse -File | Where-Object { (-not $hasChunks) -or ($_.Name -ne "index.wasm") } | Sort-Object Length -Descending | Select-Object -First 1
+    $hasPckChunks = Test-Path "export/web/index.pck.part00"
+    $maxFile = Get-ChildItem -Path "export/web" -Recurse -File | Where-Object { 
+        ((-not $hasChunks) -or ($_.Name -ne "index.wasm")) -and
+        ((-not $hasPckChunks) -or ($_.Name -ne "index.pck"))
+    } | Sort-Object Length -Descending | Select-Object -First 1
     $maxMB = [math]::Round($maxFile.Length / 1MB, 2)
     Write-Host ">> Largest deployable web file: ${maxMB}MB (limit: 25MB)" -ForegroundColor $(if ($maxMB -le 25) { "Green" } else { "Red" })
     if ($maxMB -gt 25) { $allPassed = $false }

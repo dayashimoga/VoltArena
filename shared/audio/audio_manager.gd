@@ -77,7 +77,7 @@ func generate_all_procedural_sounds() -> void:
 	sound_cache["goal"] = create_two_tone_sound(659.25, 1046.5, 0.45, 0.9)
 	sound_cache["wave_clear"] = create_two_tone_sound(587.33, 880.0, 0.35, 0.8)
 	# Drift screech & boost
-	sound_cache["drift_screech"] = create_noise_burst(0.3, 0.4, 0.9)
+	sound_cache["drift_screech"] = create_noise_burst(0.20, 0.20, 0.35)
 	sound_cache["boost"] = create_synth_sound(300.0, 600.0, 0.35, 0.8, "saw")
 
 	# New Production SFX
@@ -97,12 +97,19 @@ func generate_all_procedural_sounds() -> void:
 	sound_cache["crowd_cheer"] = create_noise_burst(0.8, 0.5, 0.6)
 	sound_cache["weapon_grenade"] = create_synth_sound(260.0, 80.0, 0.35, 0.9, "square")
 	sound_cache["referee_whistle"] = sound_cache["countdown_whistle"]
+	sound_cache["countdown_tick"] = sound_cache["beep_low"]
+	sound_cache["countdown_go"] = sound_cache["beep_high"]
+	sound_cache["ui_hover"] = create_click_sound(0.04)
+	sound_cache["ui_click"] = create_click_sound(0.08)
 
 	# Generate all 4 game background music tracks
 	sound_cache["music_iron_crucible"] = create_music_track("iron_crucible")
 	sound_cache["music_metro_siege"] = create_music_track("metro_siege")
 	sound_cache["music_nitro_kick"] = create_music_track("nitro_kick")
 	sound_cache["music_drift_storm"] = create_music_track("drift_storm")
+
+func play_sfx(sound_name: String, pitch_scale: float = 1.0, volume_db: float = 0.0) -> void:
+	play_sound(sound_name, pitch_scale, volume_db)
 
 func play_sound(sound_name: String, pitch_scale: float = 1.0, volume_db: float = 0.0) -> void:
 	if not sound_cache.has(sound_name):
@@ -316,12 +323,34 @@ func create_music_track(track_name: String) -> AudioStreamWAV:
 				var val: float = kick + lead
 				data[i] = clampi(int(val * 127.0) + 128, 0, 255)
 		"drift_storm":
-			var arp = [330.0, 392.0, 493.88, 659.25, 493.88, 392.0, 330.0, 293.66]
+			# High-energy arcade synthwave: punchy sub-kick, melodic electro bassline, and warm synth arpeggio
+			var bass_notes = [110.0, 110.0, 130.81, 146.83, 110.0, 110.0, 164.81, 146.83]
+			var arp_notes = [330.0, 392.0, 493.88, 659.25, 587.33, 493.88, 392.0, 440.0]
 			for i in range(num_samples):
 				var t: float = float(i) / float(sample_rate)
-				var step: int = int(t * 10.0) % arp.size()
-				var saw: float = (2.0 * fmod(t * arp[step], 1.0) - 1.0) * 0.22
-				data[i] = clampi(int(saw * 127.0) + 128, 0, 255)
+
+				# 1. Four-on-the-floor sub kick
+				var beat_t: float = fmod(t * 3.333, 1.0)
+				var kick_env: float = maxf(0.0, 1.0 - beat_t * 3.0)
+				var kick_freq: float = lerpf(80.0, 45.0, beat_t)
+				var kick: float = sin(beat_t * kick_freq * TAU) * kick_env * 0.35
+
+				# 2. Driving melodic bassline
+				var b_step: int = int(t * 6.666) % bass_notes.size()
+				var b_t: float = fmod(t * 6.666, 1.0)
+				var b_env: float = maxf(0.0, 1.0 - b_t * 1.5)
+				var b_freq: float = bass_notes[b_step]
+				var bass: float = (sin(t * b_freq * TAU) + sin(t * b_freq * 2.0 * TAU) * 0.35) * b_env * 0.25
+
+				# 3. Melodic synth arpeggio with warm harmonics (zero harsh aliasing)
+				var a_step: int = int(t * 13.333) % arp_notes.size()
+				var a_t: float = fmod(t * 13.333, 1.0)
+				var a_env: float = maxf(0.0, 1.0 - a_t * 2.2)
+				var a_freq: float = arp_notes[a_step]
+				var lead: float = (sin(t * a_freq * TAU) + sin(t * a_freq * 2.0 * TAU) * 0.25) * a_env * 0.18
+
+				var mixed: float = kick + bass + lead
+				data[i] = clampi(int(mixed * 127.0) + 128, 0, 255)
 		_:
 			for i in range(num_samples):
 				data[i] = 128

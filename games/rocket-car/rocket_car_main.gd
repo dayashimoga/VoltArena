@@ -12,6 +12,8 @@ const ResultsScreenScript = preload("res://shared/ui/results_screen.gd")
 @export var selected_theme: String = "day" # "day" (Volt Park) or "cyber" (Cyber Dome)
 @export var match_duration: float = 300.0 # 5 minutes
 @export var enable_overtime: bool = false
+@export var game_mode: String = "2v2" # "1v1", "2v2", "3v3", "target_challenge"
+@export var selected_vehicle: String = "speed_demon" # "speed_demon", "turbo_truck", "phantom"
 
 var blue_score: int = 0
 var orange_score: int = 0
@@ -81,6 +83,8 @@ func setup_scene() -> void:
 	camera = Camera3D.new()
 	camera.name = "ChaseCamera"
 	camera.current = true
+	camera.global_position = Vector3(0, 4.0, 37.5)
+	camera.look_at(Vector3(0, 1.2, 25.0), Vector3.UP)
 	add_child(camera)
 	if hud and hud.has_method("set_tracking_targets"):
 		hud.set_tracking_targets(camera, ball)
@@ -138,7 +142,11 @@ func _process(delta: float) -> void:
 
 	update_chase_camera(delta)
 
+var camera_override: bool = false
+
 func update_chase_camera(delta: float) -> void:
+	if camera_override:
+		return
 	if not is_instance_valid(player_car) or not is_instance_valid(camera):
 		return
 
@@ -270,3 +278,43 @@ func _on_quit_to_launcher() -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.return_to_launcher_requested.emit()
+
+func select_game_mode(mode: String) -> void:
+	game_mode = mode
+	match mode:
+		"1v1":
+			# Only 1 AI opponent
+			if ai_cars.size() > 1:
+				for i in range(1, ai_cars.size()):
+					ai_cars[i].visible = false
+					ai_cars[i].process_mode = Node.PROCESS_MODE_DISABLED
+		"2v2":
+			for ai in ai_cars:
+				ai.visible = true
+				ai.process_mode = Node.PROCESS_MODE_INHERIT
+		"3v3":
+			for ai in ai_cars:
+				ai.visible = true
+				ai.process_mode = Node.PROCESS_MODE_INHERIT
+		"target_challenge":
+			time_left = 120.0 # 2 minute time attack challenge
+
+func select_car_vehicle(vehicle_id: String) -> void:
+	selected_vehicle = vehicle_id
+	if is_instance_valid(player_car) and player_car is CarController:
+		match vehicle_id:
+			"speed_demon":
+				player_car.max_speed = 28.0
+				player_car.boost_speed = 42.0
+			"turbo_truck":
+				player_car.max_boost = 150.0
+				player_car.boost_recharge_rate = 14.0
+			"phantom":
+				player_car.jump_impulse = 13.5
+				player_car.steer_speed = 3.2
+
+func get_available_modes() -> Array[String]:
+	return ["1v1", "2v2", "3v3", "target_challenge"]
+
+func get_available_cars() -> Array[String]:
+	return ["speed_demon", "turbo_truck", "phantom"]

@@ -142,14 +142,21 @@ jobs:
         run: mkdir -p export/web
       - name: Export Web
         run: godot --headless --export-release "Web" export/web/index.html 2>&1 || true
-      - name: Create Cloudflare-compliant WASM chunks and headers
+      - name: Create Cloudflare-compliant WASM & PCK chunks and headers
         run: |
           if [ -f export/web/index.wasm ]; then
             split -b 18M -d export/web/index.wasm export/web/index.wasm.part
           fi
+          if [ -f export/web/index.pck ]; then
+            split -b 18M -d export/web/index.pck export/web/index.pck.part
+          fi
           if [ -f platform/web/_headers ]; then
             cp platform/web/_headers export/web/_headers
           fi
+      - name: Inject chunk reassembler into index.html
+        run: |
+          bash scripts/inject_web_hook.sh export/web/index.html platform/web/reassembler_hook.html
+
       - name: Verify Cloudflare 25MB limit
         run: |
           echo "Checking file sizes in export/web/..."
@@ -489,6 +496,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install Python dependencies for visual audit
+        run: pip install pillow numpy
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -497,6 +506,9 @@ jobs:
       - name: Restore export directories from artifacts
         run: |
           mkdir -p export/web export/linux export/windows export/android
+          if [ -d artifacts/web ]; then
+            cp -r artifacts/web/* export/web/ 2>/dev/null || true
+          fi
           if [ -f artifacts/index.html ]; then
             cp -r artifacts/index.* artifacts/_headers export/web/ 2>/dev/null || true
           fi

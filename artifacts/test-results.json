@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 95.049504950495,
-  "coverage_tested_functions": 384,
-  "coverage_total_functions": 404,
-  "execution_seconds": 3.45,
+  "coverage_percent": 93.2558139534884,
+  "coverage_tested_functions": 401,
+  "coverage_total_functions": 430,
+  "execution_seconds": 25.033,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -32,7 +32,7 @@
     },
     "Drift Storm E2E": {
       "failed": 0,
-      "passed": 31,
+      "passed": 55,
       "status": "PASS"
     },
     "Enemy Archetypes Unit": {
@@ -72,7 +72,7 @@
     },
     "Iron Crucible E2E": {
       "failed": 0,
-      "passed": 48,
+      "passed": 76,
       "status": "PASS"
     },
     "KartController Unit": {
@@ -107,12 +107,17 @@
     },
     "Metro Siege E2E": {
       "failed": 0,
-      "passed": 29,
+      "passed": 36,
+      "status": "PASS"
+    },
+    "ModelCache 3D glTF Assets Unit": {
+      "failed": 0,
+      "passed": 23,
       "status": "PASS"
     },
     "Nitro Kick E2E": {
       "failed": 0,
-      "passed": 29,
+      "passed": 40,
       "status": "PASS"
     },
     "NodePool Centralized Service Unit": {
@@ -147,7 +152,7 @@
     },
     "Projectiles & Weapons Unit": {
       "failed": 0,
-      "passed": 17,
+      "passed": 16,
       "status": "PASS"
     },
     "Quality Manager Unit": {
@@ -206,8 +211,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-05T09:17:02",
+  "timestamp": "2026-09-06T16:42:49",
   "total_failed": 0,
-  "total_passed": 808,
-  "total_suites": 40
+  "total_passed": 900,
+  "total_suites": 41
 }

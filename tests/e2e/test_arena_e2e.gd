@@ -20,15 +20,18 @@ func run_tests() -> Dictionary:
 	test_bot_damage_and_kill()
 	test_player_damage_and_death()
 	test_score_tracking()
+	test_map_and_mode_selection()
 	test_match_timer_and_end()
 	test_results_display()
 	test_pause_and_resume()
 	test_restart_signal()
+	test_player_fall_prevention_and_grounding()
+	test_weapon_model_rigs()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
 	return [
-		["res://games/arena-fps/arena_fps_main.gd", ["_ready", "_process", "setup_scene", "connect_events", "end_match"]],
+		["res://games/arena-fps/arena_fps_main.gd", ["_ready", "_process", "setup_scene", "connect_events", "end_match", "select_map", "select_game_mode"]],
 		["res://games/arena-fps/player/fps_player.gd", ["_ready", "_physics_process", "setup_default_nodes", "setup_weapons", "select_weapon", "connect_health", "apply_recoil", "add_ammo", "handle_look_and_recoil", "handle_movement", "handle_weapons_input", "notify_ammo_update", "update_view_bobbing"]],
 		["res://games/arena-fps/weapons/weapon_base.gd", ["can_fire", "trigger_fire", "start_reload", "finish_reload", "add_reserve_ammo", "setup_weapon_visual"]],
 		["res://shared/combat/health_component.gd", ["take_damage", "heal", "add_armor", "reset"]],
@@ -213,6 +216,32 @@ func test_score_tracking() -> void:
 
 	arena.queue_free()
 
+func test_map_and_mode_selection() -> void:
+	var arena = ArenaFPSMainScript.new()
+	arena.setup_scene()
+
+	# Map selection
+	arena.select_map("citadel")
+	assert_eq(arena.selected_map, "citadel", "Map selection must update to citadel")
+
+	arena.select_map("sektor")
+	assert_eq(arena.selected_map, "sektor", "Map selection must update to sektor")
+
+	arena.select_map("foundry")
+	assert_eq(arena.selected_map, "foundry", "Map selection must update to foundry")
+
+	# Game mode selection
+	arena.select_game_mode("tdm")
+	assert_eq(arena.selected_game_mode, "tdm", "Game mode must update to tdm")
+
+	arena.select_game_mode("control_point")
+	assert_eq(arena.selected_game_mode, "control_point", "Game mode must update to control_point")
+
+	arena.select_game_mode("survival")
+	assert_eq(arena.selected_game_mode, "survival", "Game mode must update to survival")
+
+	arena.queue_free()
+
 func test_match_timer_and_end() -> void:
 	var arena = ArenaFPSMainScript.new()
 	arena.setup_scene()
@@ -259,5 +288,50 @@ func test_restart_signal() -> void:
 	arena._on_restart()
 	arena._on_quit_to_launcher()
 	assert_true(true, "Restart/quit signals must not crash without EventBus")
+
+	arena.queue_free()
+
+func test_player_fall_prevention_and_grounding() -> void:
+	var arena = ArenaFPSMainScript.new()
+	arena.setup_scene()
+	var player = arena.player_node
+	player._ready()
+
+	# 1. Structural collision shape verification
+	var col = player.get_node_or_null("PlayerCollision")
+	assert_true(col != null, "Player must have PlayerCollision node")
+	assert_true(col.shape != null, "PlayerCollision must have a valid physics shape")
+	assert_true(player.floor_snap_length >= 0.4, "Player floor snap length must be >= 0.4")
+	assert_true(player.floor_max_angle > 0.0, "Player floor max angle must be configured")
+
+	# 2. Kill plane and out-of-bounds recovery verification
+	player.global_position = Vector3(0.0, 1.5, 0.0)
+	player.last_safe_grounded_transform = Transform3D(Basis(), Vector3(0.0, 1.0, 0.0))
+	player.velocity = Vector3(0.0, -50.0, 0.0)
+	# Simulate player falling below min_playable_y
+	player.global_position.y = -15.0
+	player._physics_process(0.016)
+
+	assert_true(player.global_position.y >= 0.0, "Player falling below world must be recovered to safe grounded height")
+	assert_true(player.velocity.y >= 0.0, "Recovered player downward velocity must be cancelled")
+
+	arena.queue_free()
+
+func test_weapon_model_rigs() -> void:
+	var arena = ArenaFPSMainScript.new()
+	arena.setup_scene()
+	var player = arena.player_node
+	player._ready()
+
+	assert_true(player.weapons.size() == 5, "Must have 5 weapons initialized")
+
+	for i in range(player.weapons.size()):
+		player.select_weapon(i)
+		var w = player.weapons[i]
+		var model = w.get_node_or_null("WeaponModel")
+		assert_true(model != null, "Weapon %d (%s) must have WeaponModel child" % [i, w.weapon_name])
+		if model:
+			assert_true(model.scale.length() > 0.1, "Weapon model scale must be positive non-zero")
+			assert_true(model.rotation_degrees.y == 180.0, "Weapon model must face forward down-range (180.0 degrees) towards targets")
 
 	arena.queue_free()

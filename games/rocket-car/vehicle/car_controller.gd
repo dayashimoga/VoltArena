@@ -1,6 +1,8 @@
 class_name CarController
 extends CharacterBody3D
 
+const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
+
 signal boost_updated(current_boost: float, max_boost: float)
 
 @export var max_speed: float = 24.0
@@ -20,28 +22,53 @@ signal boost_updated(current_boost: float, max_boost: float)
 @export var is_player_controlled: bool = true
 
 var car_visual: Node3D
-var thruster_particles: MeshInstance3D
 var is_boosting: bool = false
 var forward_speed: float = 0.0
+var hit_cooldown: float = 0.0
 
 func _ready() -> void:
-	collision_layer = GameConstants.LAYER_PLAYER
+	collision_layer = GameConstants.LAYER_PLAYER if is_player_controlled else GameConstants.LAYER_ENEMIES
 	collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_BALL | GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES
 	setup_car_visual()
 
 func setup_car_visual() -> void:
-	car_visual = MeshBuilder.build_rocket_car(team_id)
+	# Production-quality 3D rocket car model
+	var v_id = "rocket_car_spectre" if team_id == 0 else "rocket_car_enforcer"
+	car_visual = ModelCacheScript.get_vehicle(v_id)
+	if not car_visual:
+		car_visual = MeshBuilder.build_rocket_car(team_id)
 	add_child(car_visual)
 
-	# Collision shape
+	# Main physics collider
 	var col = CollisionShape3D.new()
 	var b_shape = BoxShape3D.new()
-	b_shape.size = Vector3(2.0, 1.2, 3.8)
+	b_shape.size = Vector3(2.2, 1.3, 3.8)
 	col.shape = b_shape
 	col.position = Vector3(0, 0.7, 0)
 	add_child(col)
 
+	# Front impact bumper for responsive ball contact
+	var bumper = Area3D.new()
+	bumper.name = "FrontBumper"
+	bumper.collision_layer = 0
+	bumper.collision_mask = GameConstants.LAYER_BALL
+	var b_col = CollisionShape3D.new()
+	var b_box = BoxShape3D.new()
+	b_box.size = Vector3(2.4, 1.2, 1.2)
+	b_col.shape = b_box
+	b_col.position = Vector3(0, 0.7, -1.9)
+	bumper.add_child(b_col)
+	add_child(bumper)
+
+	bumper.body_entered.connect(func(b: Node3D):
+		if b.is_in_group("balls"):
+			_apply_ball_hit(b, -global_transform.basis.z)
+	)
+
 func _physics_process(delta: float) -> void:
+	if hit_cooldown > 0.0:
+		hit_cooldown -= delta
+
 	if not is_inside_tree():
 		if is_player_controlled:
 			handle_player_input(delta)
@@ -55,20 +82,40 @@ func _physics_process(delta: float) -> void:
 		if not (main and main.get("is_kickoff_pause") == true):
 			handle_player_input(delta)
 
+	if is_inside_tree():
+		if global_position.y < -4.0 or abs(global_position.x) > 60.0 or abs(global_position.z) > 85.0:
+			velocity = Vector3.ZERO
+			global_position = Vector3(-12.0 if team_id == 0 else 12.0, 0.5, 32.0 if team_id == 0 else -32.0)
+
 	move_and_slide()
 
-	# Check ball collision impulse
+	# Check slide collisions with ball
 	for i in range(get_slide_collision_count()):
 		var col = get_slide_collision(i)
 		var collider = col.get_collider()
 		if collider and collider.is_in_group("balls"):
-			var hit_speed = velocity.length()
-			var push_dir = -col.get_normal()
-			var force = max(hit_speed * 1.5, 12.0)
-			collider.apply_impulse(push_dir, force)
-			var am = GameConstants.get_autoload(self, "AudioManager")
-			if am:
-				am.play_sfx("car_hit_ball")
+			_apply_ball_hit(collider, -col.get_normal())
+
+func _apply_ball_hit(ball_node: Node3D, contact_normal: Vector3) -> void:
+	if hit_cooldown > 0.0:
+		return
+	hit_cooldown = 0.08
+
+	var hit_speed = maxf(velocity.length(), 10.0)
+	if is_boosting:
+		hit_speed *= 1.45
+	var fwd = -global_transform.basis.z
+	var launch_dir = (fwd * 0.75 + contact_normal * 0.25 + Vector3.UP * 0.32).normalized()
+	var impulse = launch_dir * (hit_speed * 1.9)
+
+	if ball_node.has_method("apply_ball_impulse"):
+		ball_node.apply_ball_impulse(impulse, global_position + fwd * 1.5)
+	elif ball_node.has_method("apply_central_impulse"):
+		ball_node.apply_central_impulse(impulse)
+
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am:
+		am.play_sfx("car_hit_ball")
 
 func handle_player_input(delta: float) -> void:
 	var im = GameConstants.get_autoload(self, "InputManager")

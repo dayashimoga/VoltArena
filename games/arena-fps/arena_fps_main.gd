@@ -214,3 +214,30 @@ func _on_quit_to_launcher() -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.return_to_launcher_requested.emit()
+
+@export var selected_game_mode: String = "frag_race"
+
+func select_map(map_name: String) -> void:
+	selected_map = map_name
+	var map = get_node_or_null("ArenaMap")
+	if map and is_instance_valid(map):
+		map.queue_free()
+		var new_map = ArenaMapGenerator.new()
+		new_map.name = "ArenaMap"
+		new_map.map_type = selected_map
+		add_child(new_map)
+
+func select_game_mode(mode_name: String) -> void:
+	selected_game_mode = mode_name
+	if hud and hud.has_method("update_objective_label"):
+		match selected_game_mode:
+			"tdm":
+				hud.update_objective_label("MODE: TEAM DEATHMATCH — REACH 25 ALLIED FRAGS")
+			"control_point":
+				hud.update_objective_label("MODE: CONTROL POINT — SECURE BEACONS A, B & C")
+			"artifact":
+				hud.update_objective_label("MODE: ARTIFACT CAPTURE — RETRIEVE QUANTUM CORE")
+			"survival":
+				hud.update_objective_label("MODE: SURVIVAL — WITHSTAND ALL COMBAT WAVES")
+			_:
+				hud.update_objective_label("MODE: FRAG RACE — FIRST TO %d ELIMINATIONS" % target_kills_to_win)

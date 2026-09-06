@@ -29,8 +29,9 @@ temp/
 Thumbs.db
 desktop.ini
 
-# IDE files
+# IDE and scratch files
 .vscode/
 .idea/
 *.swp
 *.swo
+scratch/

@@ -18,21 +18,31 @@ var health_component: HealthComponent
 var current_recoil_pitch: float = 0.0
 var current_recoil_yaw: float = 0.0
 var bob_phase: float = 0.0
-var default_camera_y: float = 1.6
+var default_camera_y: float = 1.4
 var is_crouching: bool = false
 
 # Weapons Inventory
 var weapons: Array[WeaponBase] = []
 var current_weapon_index: int = 0
 
+var kill_plane_y: float = -8.0
+var last_safe_grounded_transform: Transform3D = Transform3D.IDENTITY
+
 func _ready() -> void:
 	add_to_group("players")
 	collision_layer = GameConstants.LAYER_PLAYER
 	collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_ENEMIES | GameConstants.LAYER_PICKUPS
+	floor_snap_length = 0.45
+	floor_max_angle = deg_to_rad(48.0)
+	floor_stop_on_slope = true
+	up_direction = Vector3.UP
+	max_slides = 6
 
 	setup_default_nodes()
 	setup_weapons()
 	connect_health()
+
+	last_safe_grounded_transform = global_transform
 
 	var im = GameConstants.get_autoload(self, "InputManager")
 	if im:
@@ -41,28 +51,7 @@ func _ready() -> void:
 var health_connected: bool = false
 
 func setup_default_nodes() -> void:
-	if not camera_pivot:
-		camera_pivot = Node3D.new()
-		camera_pivot.name = "CameraPivot"
-		camera_pivot.position = Vector3(0, 1.6, 0)
-		add_child(camera_pivot)
-
-		camera = Camera3D.new()
-		camera.name = "Camera3D"
-		camera.current = true
-		camera_pivot.add_child(camera)
-
-		weapon_holder = Node3D.new()
-		weapon_holder.name = "WeaponHolder"
-		weapon_holder.position = Vector3(0.28, -0.25, -0.55)
-		camera.add_child(weapon_holder)
-
-	if not health_component:
-		health_component = HealthComponent.new()
-		health_component.name = "HealthComponent"
-		add_child(health_component)
-
-	# Collision shape
+	# Ensure PlayerCollision always exists from the first frame
 	if not get_node_or_null("PlayerCollision"):
 		var col = CollisionShape3D.new()
 		col.name = "PlayerCollision"
@@ -72,6 +61,42 @@ func setup_default_nodes() -> void:
 		col.shape = cap
 		col.position = Vector3(0, 0.9, 0)
 		add_child(col)
+
+	if not camera_pivot:
+		camera_pivot = Node3D.new()
+		camera_pivot.name = "CameraPivot"
+		camera_pivot.position = Vector3(0, default_camera_y, 0)
+		camera_pivot.rotation.x = deg_to_rad(-8.0)
+		add_child(camera_pivot)
+
+		camera = Camera3D.new()
+		camera.name = "Camera3D"
+		camera.current = true
+		camera_pivot.add_child(camera)
+
+		weapon_holder = Node3D.new()
+		weapon_holder.name = "WeaponHolder"
+		weapon_holder.position = Vector3(0.24, -0.22, -0.48)
+		camera.add_child(weapon_holder)
+
+	if not health_component:
+		health_component = HealthComponent.new()
+		health_component.name = "HealthComponent"
+		add_child(health_component)
+
+	if not get_node_or_null("PlayerVisual"):
+		var char_model = ModelCache.get_character("soldier")
+		if char_model:
+			char_model.name = "PlayerVisual"
+			char_model.visible = false
+			add_child(char_model)
+
+func set_third_person(enabled: bool) -> void:
+	var pv = get_node_or_null("PlayerVisual")
+	if pv and is_instance_valid(pv):
+		pv.visible = enabled
+	if weapon_holder and is_instance_valid(weapon_holder):
+		weapon_holder.visible = not enabled
 
 func setup_weapons() -> void:
 	if not weapons.is_empty():
@@ -100,6 +125,8 @@ func select_weapon(index: int) -> void:
 	current_weapon_index = posmod(index, weapons.size())
 	var active_w = weapons[current_weapon_index]
 	active_w.visible = true
+	if not active_w.has_node("WeaponModel") and active_w.has_method("setup_weapon_visual"):
+		active_w.setup_weapon_visual()
 
 	var parent = get_parent()
 	if parent and parent.has_node("HUD"):
@@ -152,8 +179,9 @@ func handle_look_and_recoil(delta: float) -> void:
 	# Decay recoil back to center
 	current_recoil_pitch = lerpf(current_recoil_pitch, 0.0, delta * 12.0)
 	current_recoil_yaw = lerpf(current_recoil_yaw, 0.0, delta * 12.0)
-	camera.rotation.x = current_recoil_pitch
-	camera.rotation.y = current_recoil_yaw
+	if not camera.top_level:
+		camera.rotation.x = current_recoil_pitch
+		camera.rotation.y = current_recoil_yaw
 
 func apply_recoil(pitch: float, yaw: float) -> void:
 	current_recoil_pitch = min(current_recoil_pitch + pitch, deg_to_rad(15.0))
@@ -194,6 +222,33 @@ func handle_movement(delta: float) -> void:
 
 	if is_inside_tree():
 		move_and_slide()
+
+		# Track safe grounded transform strictly while grounded on valid terrain
+		if is_on_floor() and velocity.length() < 25.0 and global_position.y > kill_plane_y:
+			last_safe_grounded_transform = global_transform
+
+	# Secondary fail-safe recovery: prevent permanent falling
+	var cur_y = global_position.y if is_inside_tree() else position.y
+	if cur_y < kill_plane_y:
+		recover_from_out_of_bounds()
+
+func recover_from_out_of_bounds() -> void:
+	if last_safe_grounded_transform != Transform3D.IDENTITY:
+		if is_inside_tree():
+			global_transform = last_safe_grounded_transform
+			global_position.y += 0.25
+		else:
+			transform = last_safe_grounded_transform
+			position.y += 0.25
+	else:
+		if is_inside_tree():
+			global_position = Vector3(0, 1.5, 0)
+		else:
+			position = Vector3(0, 1.5, 0)
+	velocity = Vector3.ZERO
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.show_toast_requested.emit("RESET TO SAFE GROUND", Color(1.0, 0.8, 0.2))
 
 func handle_weapons_input() -> void:
 	var active_w = weapons[current_weapon_index]

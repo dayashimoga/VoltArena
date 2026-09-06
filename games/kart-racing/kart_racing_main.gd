@@ -62,7 +62,8 @@ func setup_scene() -> void:
 	player_kart.is_player = true
 	player_kart.kart_type = selected_kart
 	player_kart.racer_name = "Player 1"
-	player_kart.position = Vector3(-3.0, 0.5, 0.0)
+	player_kart.position = Vector3(-2.0, 0.5, 0.0)
+	player_kart.rotation.y = 0.0
 	add_child(player_kart)
 	all_karts.append(player_kart)
 
@@ -70,14 +71,16 @@ func setup_scene() -> void:
 	camera = Camera3D.new()
 	camera.name = "KartCamera"
 	camera.current = true
+	camera.global_position = Vector3(0.0, 3.2, 7.5)
+	camera.look_at(Vector3(0.0, 1.0, 0.0), Vector3.UP)
 	add_child(camera)
 
-	# 4 Competitive AI Racers
+	# 4 Competitive AI Racers - Centered staggered starting grid along straight
 	var grid_slots = [
-		Vector3(3.0, 0.5, 0.0),
-		Vector3(-3.0, 0.5, 5.0),
-		Vector3(3.0, 0.5, 5.0),
-		Vector3(-3.0, 0.5, 10.0)
+		Vector3(2.0, 0.5, 3.5),
+		Vector3(-2.0, 0.5, 7.0),
+		Vector3(2.0, 0.5, 10.5),
+		Vector3(-2.0, 0.5, 14.0)
 	]
 	var ai_names = ["Apex Nova", "Blaze Raptor", "Viper Strike", "Turbo Titan"]
 	var ai_types = ["speeder", "phantom", "enforcer", "speeder"]
@@ -89,10 +92,13 @@ func setup_scene() -> void:
 		ai_kart.kart_type = ai_types[i]
 		ai_kart.is_player = false
 		ai_kart.position = grid_slots[i]
+		ai_kart.rotation.y = 0.0
 		add_child(ai_kart)
 
 		var ai_brain = KartAIScript.new()
+		ai_brain.name = "KartAI"
 		ai_brain.kart = ai_kart
+		ai_brain.current_waypoint_index = 1
 		ai_kart.add_child(ai_brain)
 
 		ai_karts.append(ai_kart)
@@ -105,43 +111,41 @@ func setup_scene() -> void:
 	track_generator.track_built.connect(_on_track_built)
 	add_child(track_generator)
 
+	# Ensure karts and track initialize even outside active SceneTree
+	player_kart._ready()
+	for ai in ai_karts:
+		ai._ready()
+	track_generator.build_circuit()
+
 func _on_track_built(waypoints: Array, checkpoints: Array) -> void:
 	# Provide waypoints to AI
+	var typed_waypoints: Array[Vector3] = []
+	for wp in waypoints:
+		if wp is Vector3:
+			typed_waypoints.append(wp)
+
 	for ai_kart in ai_karts:
 		var brain = ai_kart.get_node_or_null("KartAI")
 		if brain:
-			brain.waypoints = waypoints
+			brain.waypoints = typed_waypoints
+		else:
+			for child in ai_kart.get_children():
+				if "waypoints" in child:
+					child.waypoints = typed_waypoints
 
 	# Initialize race manager with participants and checkpoints
+	race_manager.countdown_tick.connect(func(count: int):
+		if hud and hud.has_method("show_countdown"):
+			hud.show_countdown(str(count))
+	)
+	race_manager.race_started.connect(func():
+		if hud and hud.has_method("show_countdown"):
+			hud.show_countdown("GO!")
+		if hud and hud.has_method("dismiss_onboarding"):
+			hud.dismiss_onboarding()
+	)
+
 	race_manager.initialize_race(all_karts, checkpoints)
-
-	# Starting lights countdown sequence
-	if hud and hud.has_method("show_countdown"):
-		hud.show_countdown(3)
-
-	var am = GameConstants.get_autoload(self, "AudioManager")
-	if am:
-		am.play_sound("countdown_tick", 1.0)
-
-	var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
-	if tree:
-		tree.create_timer(1.0).timeout.connect(func():
-			if hud and hud.has_method("show_countdown"):
-				hud.show_countdown(2)
-			if am: am.play_sound("countdown_tick", 1.0)
-		)
-		tree.create_timer(2.0).timeout.connect(func():
-			if hud and hud.has_method("show_countdown"):
-				hud.show_countdown(1)
-			if am: am.play_sound("countdown_tick", 1.0)
-		)
-		tree.create_timer(3.0).timeout.connect(func():
-			if hud and hud.has_method("show_countdown"):
-				hud.show_countdown(0)
-			if hud and hud.has_method("dismiss_onboarding"):
-				hud.dismiss_onboarding()
-			if am: am.play_sound("countdown_go", 1.2)
-		)
 
 func _process(delta: float) -> void:
 	update_camera(delta)
@@ -160,7 +164,11 @@ func _process(delta: float) -> void:
 				tier = 1
 			hud.update_drift_charge(player_kart.drift_charge_time, tier)
 
+var camera_override: bool = false
+
 func update_camera(delta: float) -> void:
+	if camera_override:
+		return
 	if not is_instance_valid(player_kart) or not is_instance_valid(camera):
 		return
 
@@ -197,3 +205,18 @@ func _on_quit_to_launcher() -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.return_to_launcher_requested.emit()
+
+func select_track(track_name: String) -> void:
+	selected_track = track_name
+	if track_generator and is_instance_valid(track_generator):
+		track_generator.track_theme = selected_track
+		track_generator.waypoints.clear()
+		track_generator.checkpoints.clear()
+		for child in track_generator.get_children():
+			child.queue_free()
+		track_generator.build_circuit()
+
+func select_kart(kart_name: String) -> void:
+	selected_kart = kart_name
+	if player_kart and is_instance_valid(player_kart) and player_kart.has_method("set_kart_type"):
+		player_kart.set_kart_type(selected_kart)

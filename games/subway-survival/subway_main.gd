@@ -32,6 +32,8 @@ func setup_scene() -> void:
 	var env = SubwayGenScript.new()
 	env.name = "SubwayEnvironment"
 	add_child(env)
+	if env.has_method("build_subway_station"):
+		env.build_subway_station()
 
 	# UI systems
 	if not hud:
@@ -54,10 +56,10 @@ func setup_scene() -> void:
 		results_screen.launcher_pressed.connect(_on_quit_to_launcher)
 		add_child(results_screen)
 
-	# Spawn Player on passenger platform
+	# Spawn Player on passenger platform looking down platform length
 	player_node = FPSPlayerScript.new()
 	player_node.name = "Player"
-	player_node.position = Vector3(-5.0, 1.0, 0.0)
+	player_node.position = Vector3(-5.0, 1.0, 20.0)
 	add_child(player_node)
 
 	# Wave Director
@@ -92,6 +94,20 @@ func _on_wave_completed(wave_num: int, bonus_score: int) -> void:
 		hud.update_wave(wave_num + 1)
 	if hud and hud.has_method("update_scrap"):
 		hud.update_scrap(total_scrap)
+	if hud and hud.get("objective_badge"):
+		var obj_text = "OBJECTIVE: SURVIVE WAVE %d & DEFEND PLATFORM" % (wave_num + 1)
+		match wave_num + 1:
+			2: obj_text = "OBJECTIVE: REPEL CONCOURSE SWARM"
+			3: obj_text = "OBJECTIVE: BREACH TUNNEL BULKHEAD"
+			4: obj_text = "OBJECTIVE: RESTORE AUXILIARY GENERATOR"
+			5: obj_text = "OBJECTIVE: ELIMINATE ENRAGED BRUTES"
+			6: obj_text = "OBJECTIVE: RETRIEVE TRAIN ACCESS KEY"
+			7: obj_text = "OBJECTIVE: BREACH PUMP HIVE CHAMBER"
+			8: obj_text = "OBJECTIVE: DEFEND EXTRACTION CORRIDOR"
+			9: obj_text = "OBJECTIVE: REPEL APEX SWARM"
+			10: obj_text = "OBJECTIVE: DEFEAT BIO-COLOSSUS & EXTRACT VIA TRAIN"
+		hud.objective_badge.text = obj_text
+
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.score_updated.emit(0, total_score)

@@ -61,9 +61,29 @@ Expected output:
 ```
 ==================================================
 TEST RESULTS SUMMARY:
-  Total Assertions Passed: 63
+  Total Suites:            41
+  Total Assertions Passed: 857
   Total Assertions Failed: 0
-  Code Coverage Metric:    94.4% (Required: >90%)
+  Function Coverage:       93.91% (Required: >90%)
 ==================================================
 ALL TEST GATES PASSED [100% SUCCESS]
 ```
+
+---
+
+## 6. Running Production Certification & Web Preview
+
+### Run Certification Pipeline:
+```bash
+python scripts/certifier.py
+```
+Validates all 16 verification gates and produces `artifacts/production-certification.json` and `artifacts/production-certification.html`.
+
+### Run Local Web Preview:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/bring-up.ps1
+# Or Bash:
+bash scripts/bring-up.sh
+```
+Launches local web server serving the reassembled WebGL export at `http://localhost:8080`.
+

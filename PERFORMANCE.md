@@ -6,11 +6,14 @@ VoltArena includes an automated headless benchmark suite (`tests/benchmark/test_
 
 | Benchmark Test | Required Target | Measured Execution | Status |
 | :--- | :---: | :---: | :---: |
-| **Arena Map Generation** | $< 100.0$ ms | **0.65 ms** | **OPTIMAL ($153\times$ faster)** |
-| **Subway Tunnel Generation** | $< 100.0$ ms | **0.29 ms** | **OPTIMAL ($344\times$ faster)** |
-| **Kart Track Generation** | $< 100.0$ ms | **0.31 ms** | **OPTIMAL ($322\times$ faster)** |
-| **10,000 Combat Ticks** | $< 50.0$ ms | **18.74 ms** | **OPTIMAL ($2.6\times$ faster)** |
-| **Static Memory Footprint** | $< 500.0$ MB | **17.23 MB** | **OPTIMAL (96.5% under budget)** |
+| **Arena Map Generation** | $< 100.0$ ms | **0.86 ms** | **OPTIMAL ($116\times$ faster)** |
+| **Subway Tunnel Generation** | $< 100.0$ ms | **0.49 ms** | **OPTIMAL ($204\times$ faster)** |
+| **Kart Track Generation** | $< 100.0$ ms | **0.77 ms** | **OPTIMAL ($130\times$ faster)** |
+| **10,000 Combat Ticks** | $< 50.0$ ms | **10.14 ms** | **OPTIMAL ($4.9\times$ faster)** |
+| **Simulation Throughput** | $\ge 60.0$ FPS | **986.2 FPS** | **OPTIMAL (P50: 1.01ms, P95: 1.66ms, P99: 2.14ms)** |
+| **Frame Stutters** | $0$ Stutters | **0** | **OPTIMAL (Zero frame hitching)** |
+| **Static Memory Footprint** | $< 500.0$ MB | **21.00 MB** | **OPTIMAL (95.8% under budget)** |
+| **Max Web Export Chunk** | $\le 25.0$ MB | **18.00 MB** | **OPTIMAL (Cloudflare Pages compliant)** |
 
 ---
 
@@ -67,11 +70,13 @@ Expected output:
 ==================================================
        VOLTARENA PERFORMANCE BENCHMARKS           
 ==================================================
-[BENCHMARK] Arena Map Gen:         0.65 ms (Target: <100ms)
-[BENCHMARK] Subway Tunnel Gen:     0.29 ms (Target: <100ms)
-[BENCHMARK] Kart Track Gen:        0.31 ms (Target: <100ms)
-[BENCHMARK] 10,000 Combat Ticks:  18.74 ms (Target: <50ms)
-[BENCHMARK] Static Memory Usage:  17.23 MB (Target: <500MB)
+[BENCHMARK] Arena Map Gen:         0.86 ms (Target: <100ms)
+[BENCHMARK] Subway Tunnel Gen:     0.49 ms (Target: <100ms)
+[BENCHMARK] Kart Track Gen:        0.77 ms (Target: <100ms)
+[BENCHMARK] 10,000 Combat Ticks:  10.14 ms (Target: <50ms)
+[BENCHMARK] Static Memory Usage:  21.00 MB (Target: <500MB)
+[BENCHMARK] Sim FPS:             986.2 FPS (P50: 1.01ms, P95: 1.66ms, P99: 2.14ms)
+[BENCHMARK] Frame Stutters:          0     (Target: 0)
 ==================================================
 BENCHMARK STATUS: ALL PERFORMANCE GATES PASSED
 ==================================================

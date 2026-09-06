@@ -58,3 +58,24 @@ When a match concludes (time runs out, all waves survived, race finished, or goa
 * **Victory / Defeat Status**: Highlighting performance metrics.
 * **Stats Breakdown**: Kills, deaths, score, waves survived, goals scored, best lap time, and accuracy.
 * **Actions**: One-click buttons to **PLAY AGAIN** or **QUIT TO LAUNCHER**.
+
+---
+
+## 6. In-Depth Tactical Strategy Guides
+
+### 6.1 Iron Crucible
+* **Weapon Synergy**: Open with Rail Driver at long range through catwalk corridors, then hot-swap (`1` or `2`) to Pulse Rifle or Scatter Cannon as enemies close in.
+* **Verticality**: Exploit jump pads to reach elevated sniper roosts and control health pickup nodes.
+
+### 6.2 Metro Siege
+* **Platform Defense**: Hold the central station platform between the cast-iron columns. Do not get trapped in dead-end track pits.
+* **Scrap Economy**: Prioritize collecting glowing scrap gears between waves. Visit the kiosk terminal before the 10-second intermission ends to purchase damage and shield upgrades.
+
+### 6.3 Nitro Kick
+* **Boost Pathing**: Maintain possession by driving over the glowing boost rings around the perimeter.
+* **Aerial Interceptions**: Use the double-jump mechanic with pitch-up rotation to block high shots and spike the ball into the opponent net.
+
+### 6.4 Drift Storm
+* **Mini-Turbo Timing**: Initiate drifts early before hairpin bends; hold drift angle until purple sparks erupt for a tier-3 speed surge down the following straight.
+* **Powerup Management**: Hold the Plasma Shield powerup when leading the pack to counter incoming Seeker Missiles.
+

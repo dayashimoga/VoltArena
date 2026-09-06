@@ -201,7 +201,14 @@ func setup_launcher_ui() -> void:
 
 func create_game_card(meta: Dictionary) -> void:
 	var card = PanelContainer.new()
-	card.custom_minimum_size = Vector2(100, 320)
+	var card_style = ThemeGen.get_theme().get_stylebox("panel", "PanelContainer").duplicate()
+	if card_style is StyleBoxFlat:
+		card_style.content_margin_left = 12
+		card_style.content_margin_right = 12
+		card_style.content_margin_top = 12
+		card_style.content_margin_bottom = 12
+	card.add_theme_stylebox_override("panel", card_style)
+	card.custom_minimum_size = Vector2(80, 300)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
@@ -216,12 +223,12 @@ func create_game_card(meta: Dictionary) -> void:
 	)
 
 	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
+	vbox.add_theme_constant_override("separation", 5)
 	card.add_child(vbox)
 
 	# Stylized In-Engine Artwork Banner
 	var banner_rect = TextureRect.new()
-	banner_rect.custom_minimum_size = Vector2(100, 100)
+	banner_rect.custom_minimum_size = Vector2(80, 90)
 	banner_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	banner_rect.stretch_mode = TextureRect.STRETCH_SCALE
 	banner_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -231,20 +238,23 @@ func create_game_card(meta: Dictionary) -> void:
 	# Title & Tagline
 	var title = Label.new()
 	title.text = meta["title"]
-	title.add_theme_font_size_override("font_size", 19)
+	title.add_theme_font_size_override("font_size", 18)
 	title.modulate = meta["color"]
 	vbox.add_child(title)
 
 	var tagline = Label.new()
 	tagline.text = meta["tagline"]
 	tagline.modulate = Color(0.7, 0.8, 0.9)
+	tagline.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(tagline)
 
 	var sep = HSeparator.new()
 	vbox.add_child(sep)
 
-	# Tags Row
-	var tags_box = HBoxContainer.new()
+	# Tags Row (HFlowContainer wraps tags gracefully)
+	var tags_box = HFlowContainer.new()
+	tags_box.add_theme_constant_override("h_separation", 4)
+	tags_box.add_theme_constant_override("v_separation", 2)
 	for tag in meta["tags"]:
 		var chip = Label.new()
 		chip.text = "[%s]" % tag
@@ -264,6 +274,7 @@ func create_game_card(meta: Dictionary) -> void:
 	var stats_lbl = Label.new()
 	stats_lbl.text = get_game_career_stats(meta["id"])
 	stats_lbl.modulate = Color(0.5, 0.8, 1.0)
+	stats_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(stats_lbl)
 
 	# Play Button
@@ -496,10 +507,10 @@ func update_responsive_layout(viewport_size: Vector2) -> void:
 	if viewport_size.x <= 0 or viewport_size.y <= 0:
 		return
 
-	var safe_left = 24.0
-	var safe_right = 24.0
-	var safe_top = 20.0
-	var safe_bottom = 20.0
+	var safe_left = 20.0
+	var safe_right = 20.0
+	var safe_top = 16.0
+	var safe_bottom = 16.0
 
 	# Safe area cutouts only on mobile devices with notches
 	if OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios"):
@@ -508,10 +519,10 @@ func update_responsive_layout(viewport_size: Vector2) -> void:
 		if safe_area.size.x > 0 and screen_sz.x > 0:
 			var scale_x = viewport_size.x / float(screen_sz.x)
 			var scale_y = viewport_size.y / float(screen_sz.y)
-			safe_left = maxf(24.0, float(safe_area.position.x) * scale_x)
-			safe_top = maxf(20.0, float(safe_area.position.y) * scale_y)
-			safe_right = maxf(24.0, float(screen_sz.x - (safe_area.position.x + safe_area.size.x)) * scale_x)
-			safe_bottom = maxf(20.0, float(screen_sz.y - (safe_area.position.y + safe_area.size.y)) * scale_y)
+			safe_left = maxf(20.0, float(safe_area.position.x) * scale_x)
+			safe_top = maxf(16.0, float(safe_area.position.y) * scale_y)
+			safe_right = maxf(20.0, float(screen_sz.x - (safe_area.position.x + safe_area.size.x)) * scale_x)
+			safe_bottom = maxf(16.0, float(screen_sz.y - (safe_area.position.y + safe_area.size.y)) * scale_y)
 
 	if main_vbox:
 		main_vbox.offset_left = safe_left
@@ -537,36 +548,36 @@ func update_responsive_layout(viewport_size: Vector2) -> void:
 
 	if game_cards_container:
 		var cols = 4
-		if viewport_size.x < 680.0:
-			cols = 1 # Mobile portrait (1 col)
-		elif viewport_size.x < 1120.0:
-			cols = 2 # Tablet / compact desktop (2x2 grid)
+		if viewport_size.x < 768.0:
+			cols = 1 # Mobile / compact screen (<768px: 1 column)
+		elif viewport_size.x < 1200.0:
+			cols = 2 # Tablet / compact desktop (768–1199px: 2x2 grid)
 		else:
-			cols = 4 # Desktop (4 columns)
+			cols = 4 # Full Desktop (>=1200px: 4 cards fit viewport)
 
 		game_cards_container.columns = cols
 
-		var h_sep = 16.0
-		var v_sep = 16.0
+		var h_sep = 12.0 if cols > 2 else (10.0 if cols == 2 else 0.0)
+		var v_sep = 12.0
 		game_cards_container.add_theme_constant_override("h_separation", int(h_sep))
 		game_cards_container.add_theme_constant_override("v_separation", int(v_sep))
 
 		var available_w = maxf(280.0, viewport_size.x - (safe_left + safe_right) - 8.0)
 		var total_sep = float(cols - 1) * h_sep
-		var card_w = floor((available_w - total_sep) / float(cols))
+		var card_w = maxf(80.0, floor((available_w - total_sep) / float(cols)))
 
 		var padding_v = safe_top + safe_bottom + 110.0
-		var available_h = maxf(320.0, viewport_size.y - padding_v)
+		var available_h = maxf(300.0, viewport_size.y - padding_v)
 
 		for c in game_cards_container.get_children():
 			if c is Control:
-				c.custom_minimum_size.x = maxf(100.0, card_w)
+				c.custom_minimum_size.x = card_w
 				if cols == 4:
-					c.custom_minimum_size.y = clampf(available_h, 320.0, 520.0)
+					c.custom_minimum_size.y = clampf(available_h, 300.0, 520.0)
 				elif cols == 2:
-					c.custom_minimum_size.y = clampf(available_h * 0.48, 280.0, 390.0)
+					c.custom_minimum_size.y = clampf(available_h * 0.48, 280.0, 420.0)
 				else:
-					c.custom_minimum_size.y = 320.0
+					c.custom_minimum_size.y = 300.0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):

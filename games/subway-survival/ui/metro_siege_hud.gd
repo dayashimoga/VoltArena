@@ -449,13 +449,9 @@ func setup_onboarding_overlay() -> void:
 	vbox.add_child(prompt_lbl)
 
 func dismiss_onboarding() -> void:
-	if not is_instance_valid(onboarding_overlay) or not onboarding_overlay.visible:
-		return
-	var tween = create_tween()
-	tween.tween_property(onboarding_overlay, "modulate:a", 0.0, 0.3)
-	tween.tween_callback(func():
+	if is_instance_valid(onboarding_overlay):
 		onboarding_overlay.visible = false
-	)
+		onboarding_overlay.modulate.a = 0.0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if is_instance_valid(onboarding_overlay) and onboarding_overlay.visible:

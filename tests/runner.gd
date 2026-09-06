@@ -36,6 +36,7 @@ const TestMeshBuilderScript = preload("res://tests/unit/test_mesh_builder.gd")
 const TestLauncherArtScript = preload("res://tests/unit/test_launcher_art.gd")
 const TestNodePoolScript = preload("res://tests/unit/test_node_pool.gd")
 const TestProceduralAnimatorScript = preload("res://tests/unit/test_procedural_animator.gd")
+const TestModelCacheScript = preload("res://tests/unit/test_model_cache.gd")
 
 # --- Responsive & Soak ---
 const TestResponsiveUIScript = preload("res://tests/responsive/test_responsive_ui.gd")
@@ -106,6 +107,7 @@ func _init() -> void:
 		{"name": "LauncherArt Vector Graphics Unit", "instance": TestLauncherArtScript.new()},
 		{"name": "NodePool Centralized Service Unit", "instance": TestNodePoolScript.new()},
 		{"name": "Procedural Animator & Shake Unit", "instance": TestProceduralAnimatorScript.new()},
+		{"name": "ModelCache 3D glTF Assets Unit", "instance": TestModelCacheScript.new()},
 		# Responsive & Soak
 		{"name": "Responsive UI Multi-Resolution", "instance": TestResponsiveUIScript.new()},
 		{"name": "Soak & Stability Lifecycle", "instance": TestSoakScript.new()},

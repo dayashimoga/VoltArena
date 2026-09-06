@@ -3,7 +3,7 @@ extends Node
 
 @export var kart: KartController
 @export var waypoints: Array[Vector3] = []
-@export var current_waypoint_index: int = 0
+@export var current_waypoint_index: int = 1
 
 func _ready() -> void:
 	if not kart:
@@ -13,19 +13,60 @@ func _ready() -> void:
 
 var stuck_timer: float = 0.0
 var reverse_timer: float = 0.0
+var race_active_time: float = 0.0
 
 func _physics_process(delta: float) -> void:
-	if not kart or not is_instance_valid(kart) or waypoints.is_empty() or kart.race_finished:
+	if not kart or not is_instance_valid(kart) or kart.race_finished:
+		return
+
+	# Auto-resolve waypoints if not yet assigned
+	if waypoints.is_empty():
+		var p = get_parent()
+		while p:
+			var tg = p.get_node_or_null("TrackGenerator")
+			if tg and not tg.waypoints.is_empty():
+				for wp in tg.waypoints:
+					if wp is Vector3:
+						waypoints.append(wp)
+				break
+			p = p.get_parent()
+		if waypoints.is_empty() and get_tree() and get_tree().root:
+			var tg = get_tree().root.find_child("TrackGenerator", true, false)
+			if tg and not tg.waypoints.is_empty():
+				for wp in tg.waypoints:
+					if wp is Vector3:
+						waypoints.append(wp)
+
+	if waypoints.is_empty():
 		return
 
 	# Hold at start grid during countdown
-	var rm = get_tree().root.find_child("RaceManager", true, false)
+	var rm: Node = null
+	var parent_cursor = get_parent()
+	while parent_cursor:
+		rm = parent_cursor.get_node_or_null("RaceManager")
+		if rm:
+			break
+		parent_cursor = parent_cursor.get_parent()
+	if not rm and get_tree() and get_tree().root:
+		rm = get_tree().root.find_child("RaceManager", true, false)
+
 	if rm and rm.get("current_state") == 0: # RaceState.COUNTDOWN
 		kart.apply_kart_controls(0.0, 0.0, false, delta)
+		stuck_timer = 0.0
+		reverse_timer = 0.0
+		race_active_time = 0.0
 		return
 
+	race_active_time += delta
+
+	# Ensure we target waypoints ahead of start line
+	if current_waypoint_index < 0 or current_waypoint_index >= waypoints.size():
+		current_waypoint_index = 1 if waypoints.size() > 1 else 0
+
 	var target_wp = waypoints[current_waypoint_index]
-	var to_wp = target_wp - kart.global_position
+	var kart_pos = kart.global_position if kart.is_inside_tree() else kart.position
+	var to_wp = target_wp - kart_pos
 	to_wp.y = 0.0
 	var dist = to_wp.length()
 
@@ -33,14 +74,15 @@ func _physics_process(delta: float) -> void:
 	if dist < 14.0:
 		current_waypoint_index = (current_waypoint_index + 1) % waypoints.size()
 		target_wp = waypoints[current_waypoint_index]
-		to_wp = target_wp - kart.global_position
+		to_wp = target_wp - kart_pos
 		to_wp.y = 0.0
 
-	var fwd = -kart.global_transform.basis.z
+	var k_basis = kart.global_transform.basis if kart.is_inside_tree() else kart.transform.basis
+	var fwd = -k_basis.z
 	fwd.y = 0.0
 	fwd = fwd.normalized()
 
-	var right = kart.global_transform.basis.x
+	var right = k_basis.x
 	right.y = 0.0
 	right = right.normalized()
 
@@ -48,26 +90,57 @@ func _physics_process(delta: float) -> void:
 	var dot_right = right.dot(dir_to_wp)
 	var dot_fwd = fwd.dot(dir_to_wp)
 
-	# Stuck unjamming logic: if throttle is applied but kart is jammed, reverse out
-	if kart.forward_speed < 2.5:
+	# Multi-tier stuck watchdog unjamming logic:
+	# Only triggers after launch sprint (>= 2.0s race active time) to prevent reverse moves on grid
+	if kart.forward_speed < 1.0 and race_active_time >= 2.0:
 		stuck_timer += delta
-		if stuck_timer > 1.2:
-			reverse_timer = 0.8
+		if stuck_timer > 4.0:
+			# Restore to last valid checkpoint with forward speed facing along track
+			kart.recover_to_checkpoint()
 			stuck_timer = 0.0
+			reverse_timer = 0.0
+		elif stuck_timer > 1.8 and reverse_timer <= 0.0:
+			reverse_timer = 0.5
 	else:
-		stuck_timer = 0.0
+		stuck_timer = maxf(0.0, stuck_timer - delta * 2.0)
 
 	if reverse_timer > 0.0:
 		reverse_timer -= delta
-		kart.apply_kart_controls(-1.0, -signf(dot_right) if abs(dot_right) > 0.1 else 1.0, false, delta)
+		kart.apply_kart_controls(-0.8, signf(dot_right) if abs(dot_right) > 0.1 else -1.0, false, delta)
 		return
 
-	var steer_input = clampf(dot_right * 2.8, -1.0, 1.0)
+	# Negative steer turns right, positive steer turns left in kart_controller
+	var steer_input = -clampf(dot_right * 2.5, -1.0, 1.0)
 	var throttle_input = 1.0
 
-	# Slow down slightly into very sharp 90-degree corners
-	if abs(dot_right) > 0.6:
-		throttle_input = 0.75
+	# Waypoint behind car handling: steer hard forward to turn around without reversing
+	if dot_fwd < 0.0:
+		steer_input = -1.0 if dot_right >= 0.0 else 1.0
+		throttle_input = 0.55
+	elif abs(dot_right) > 0.5:
+		throttle_input = 0.70
+	elif abs(dot_right) > 0.3:
+		throttle_input = 0.85
+
+	# Gentle kart-to-kart lateral collision avoidance (active only after initial launch)
+	var avoidance_steer = 0.0
+	if race_active_time > 3.0 and is_inside_tree():
+		var all_karts = get_tree().get_nodes_in_group("karts")
+		for other in all_karts:
+			if other == kart or not is_instance_valid(other):
+				continue
+			var o_pos = other.global_position if other.is_inside_tree() else other.position
+			var to_other = o_pos - kart_pos
+			to_other.y = 0.0
+			var other_dist = to_other.length()
+			if other_dist < 5.0 and other_dist > 0.3:
+				var other_fwd = fwd.dot(to_other.normalized())
+				if other_fwd > 0.40: # In front
+					var other_right = right.dot(to_other.normalized())
+					if abs(other_right) < 0.45:
+						# If other is to our right, steer left (+), and vice versa
+						avoidance_steer += signf(other_right if abs(other_right) > 0.05 else 1.0) * 0.15
+	steer_input = clampf(steer_input + avoidance_steer, -1.0, 1.0)
 
 	# Drift if fast and sharp
 	var want_drift = abs(dot_right) > 0.35 and kart.forward_speed > 16.0

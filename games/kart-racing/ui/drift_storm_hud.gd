@@ -386,21 +386,33 @@ func update_lap_times(cur_sec: float, best_sec: float) -> void:
 	if best_lap_label and best_sec < 900.0:
 		best_lap_label.text = "BEST: %s" % _format_time(best_sec)
 
-func show_countdown(text: String) -> void:
-	if not countdown_panel:
+func show_countdown(val: Variant) -> void:
+	if not countdown_panel or not countdown_label:
 		return
+	var text: String = str(val)
+	if text == "0":
+		text = "GO!"
 	countdown_panel.visible = true
+	countdown_panel.modulate.a = 1.0
 	countdown_label.text = text
-	if text == "GO!":
-		countdown_label.modulate = Color(0.2, 1.0, 0.5)
+	if text == "GO!" or text == "GO":
+		countdown_label.modulate = Color(0.0, 1.0, 0.5)
+		countdown_label.add_theme_font_size_override("font_size", 64)
 		var tween = create_tween()
-		tween.tween_property(countdown_panel, "modulate:a", 0.0, 0.6).set_delay(0.4)
-		tween.tween_callback(func():
-			countdown_panel.visible = false
-			countdown_panel.modulate.a = 1.0
-		)
+		if tween:
+			tween.tween_property(countdown_panel, "modulate:a", 0.0, 0.8).set_delay(0.6)
+			tween.tween_callback(func():
+				countdown_panel.visible = false
+				countdown_panel.modulate.a = 1.0
+			)
 	else:
-		countdown_label.modulate = Color(1.0, 0.9, 0.2)
+		countdown_label.modulate = Color(1.0, 0.85, 0.15)
+		countdown_label.add_theme_font_size_override("font_size", 54)
+		countdown_label.scale = Vector2(1.2, 1.2)
+		countdown_label.pivot_offset = countdown_label.size * 0.5
+		var tween = create_tween()
+		if tween:
+			tween.tween_property(countdown_label, "scale", Vector2(1.0, 1.0), 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func show_finish_banner(pos_text: String) -> void:
 	if not finish_panel:
@@ -458,6 +470,60 @@ func setup_onboarding_overlay() -> void:
 	obj_lbl.modulate = Color(1.0, 0.85, 0.2)
 	vbox.add_child(obj_lbl)
 
+	# Track Selection Row
+	var trk_box = HBoxContainer.new()
+	trk_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	trk_box.add_theme_constant_override("separation", 10)
+	vbox.add_child(trk_box)
+
+	var trk_lbl = Label.new()
+	trk_lbl.text = "TRACK:"
+	trk_lbl.modulate = Color(0.2, 0.9, 1.0)
+	trk_lbl.add_theme_font_size_override("font_size", 13)
+	trk_box.add_child(trk_lbl)
+
+	var tracks = [["NEON CIRCUIT", "neon"], ["CANYON RUN", "canyon"], ["SKYLINE DRIFT", "skyline"]]
+	for t in tracks:
+		var btn = Button.new()
+		btn.text = t[0]
+		btn.add_theme_font_size_override("font_size", 12)
+		btn.pressed.connect(func():
+			var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+			if tree:
+				var km = tree.root.find_child("KartRacingMain", true, false)
+				if km and km.has_method("select_track"):
+					km.select_track(t[1])
+					show_toast("TRACK SELECTED: " + t[0], Color(0.2, 0.9, 1.0))
+		)
+		trk_box.add_child(btn)
+
+	# Vehicle Selection Row
+	var veh_box = HBoxContainer.new()
+	veh_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	veh_box.add_theme_constant_override("separation", 10)
+	vbox.add_child(veh_box)
+
+	var veh_lbl = Label.new()
+	veh_lbl.text = "VEHICLE:"
+	veh_lbl.modulate = Color(1.0, 0.8, 0.2)
+	veh_lbl.add_theme_font_size_override("font_size", 13)
+	veh_box.add_child(veh_lbl)
+
+	var vehs = [["SPEED DEMON (Speeder)", "speeder"], ["TURBO TRUCK (Enforcer)", "enforcer"], ["PHANTOM DRIFT", "phantom"]]
+	for v in vehs:
+		var btn = Button.new()
+		btn.text = v[0]
+		btn.add_theme_font_size_override("font_size", 12)
+		btn.pressed.connect(func():
+			var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+			if tree:
+				var km = tree.root.find_child("KartRacingMain", true, false)
+				if km and km.has_method("select_kart"):
+					km.select_kart(v[1])
+					show_toast("VEHICLE SELECTED: " + v[0], Color(1.0, 0.85, 0.2))
+		)
+		veh_box.add_child(btn)
+
 	var sep = HSeparator.new()
 	vbox.add_child(sep)
 
@@ -485,21 +551,17 @@ func setup_onboarding_overlay() -> void:
 		a.add_theme_font_size_override("font_size", 13)
 		ctrl_grid.add_child(a)
 
-	var prompt_lbl = Label.new()
-	prompt_lbl.text = "RACE STARTING (PRESS ANY KEY OR SPACE TO START)"
-	prompt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt_lbl.add_theme_font_size_override("font_size", 12)
-	prompt_lbl.modulate = Color(0.7, 0.85, 0.95)
-	vbox.add_child(prompt_lbl)
+	var start_btn = Button.new()
+	start_btn.text = "START RACE (CLICK OR PRESS SPACE)"
+	start_btn.add_theme_font_size_override("font_size", 14)
+	start_btn.modulate = Color(0.2, 1.0, 0.5)
+	start_btn.pressed.connect(dismiss_onboarding)
+	vbox.add_child(start_btn)
 
 func dismiss_onboarding() -> void:
-	if not is_instance_valid(onboarding_overlay) or not onboarding_overlay.visible:
-		return
-	var tween = create_tween()
-	tween.tween_property(onboarding_overlay, "modulate:a", 0.0, 0.3)
-	tween.tween_callback(func():
+	if is_instance_valid(onboarding_overlay):
 		onboarding_overlay.visible = false
-	)
+		onboarding_overlay.modulate.a = 0.0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if is_instance_valid(onboarding_overlay) and onboarding_overlay.visible:

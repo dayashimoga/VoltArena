@@ -76,17 +76,25 @@ graph TD
 
 ---
 
-## 4. Pure Procedural Asset Generation Engine
+## 4. Production Asset & Material Pipelines
 
-VoltArena achieves zero external file dependencies through runtime procedural asset synthesis:
+VoltArena balances high-fidelity 3D assets with zero runtime external dependencies through an offline-vendored production asset cache combined with dynamic runtime procedural synthesis:
 
-### 4.1 `MaterialGenerator`
+### 4.1 `ModelCache` (Production 3D Asset Subsystem)
+The `ModelCache` singleton (`shared/graphics/model_cache.gd`) provides centralized, optimized loading, caching, and instantiation of production-quality 3D assets:
+* **Offline Vendoring**: 49 permissive (MIT / CC0) `.glb` models stored in `res://assets/models/` verified via SHA-256 integrity checksums in `assets/asset-manifest.json`.
+* **Resource Caching**: Preloads and caches packed scenes in memory (`_cache[model_key]`) to eliminate redundant disk I/O and frame hitching during runtime spawning.
+* **Character Rigs & Animations**: Manages 13 skeletal animation tracks for humanoids (aim, fire, reload, hit react, strafe locomotion, turn in place).
+* **Weapons & Vehicles**: Supplies authentic modeled firearms (`pulse_rifle`, `scatter_cannon`, `rail_driver`, `grenade_launcher`, `plasma_cutter`), competition karts, and rocket battle-cars with proper socket linkage.
+* **Zero Gameplay Fallbacks**: Replaces all procedural CSG and toy primitive blocks in active gameplay scenes with authentic production geometry.
+
+### 4.2 `MaterialGenerator`
 Creates dynamic PBR materials on demand using Godot's `StandardMaterial3D`:
 * Generates emissive neon shaders (cyan, orange, magenta, green, yellow) with configurable glow intensities and roughness.
 * Generates industrial metals (`dark_hull`, `metal_floor`, `hazard_stripe`) with procedural noise patterns, normal perturbations, and metallic reflections.
 * Reuses cached `Ref<StandardMaterial3D>` instances to prevent state changes on the GPU.
 
-### 4.2 `AudioManager` (Procedural Waveform Synthesis)
+### 4.3 `AudioManager` (Procedural Waveform Synthesis)
 Generates pure PCM audio buffers in-memory using algorithmic mathematical synthesis:
 * **Pulse Laser / Blaster**: Square wave with exponential frequency pitch down-sweep.
 * **Shotgun Blast / Explosion**: White noise buffer with aggressive low-pass filtering and rapid amplitude decay envelope.
@@ -140,3 +148,24 @@ In fast-paced 3D arenas (specifically Nitro Kick for the soccer ball), keeping t
 * **Camera Projection**: Converts `global_position` via `camera.unproject_position()` and tests `camera.is_position_behind(target_pos)`.
 * **Clamping & Direction Vectors**: When off-screen, projects from viewport center along normalized vector to screen border margins with directional arrow rotation (`▲`, `▼`, `◄`, `►`).
 * **Dynamic Distance Metric**: Calculates real-time Euclidean distance in meters, displaying e.g. `BALL 24m` directly on the screen-space tracker badge.
+
+---
+
+## 9. Real-Time Texture Synthesis & PBR Shading Subsystem
+
+To eliminate runtime I/O stalls and maintain high visual fidelity matching reference targets, `TextureSynthesizer` (`shared/graphics/texture_synthesizer.gd`) generates deterministic procedural textures directly into Godot `ImageTexture` objects:
+* **Mathematical Hex Grid**: Computes exact regular hexagonal boundary distance:
+  $$\text{dist} = 24.25 - \max(|x|\cdot 0.866025, |x|\cdot 0.433013 + |y|\cdot 0.75)$$
+  yielding clean, non-aliasing 2-pixel glowing lines along all 6 edges of every hexagon with zero procedural noise artifacts.
+* **Ceramic Subway Tiling**: Generates staggered brick masonry grids with recessed grout lines and subtle specular variation.
+* **Stadium Turf Stripes**: Alternates grass hue and roughness frequencies to produce manicured football pitch bands.
+* **Motorsport Kerbs & Decals**: Produces crisp alternating red/white and blue/white rumble strips and yellow/black diagonal hazard stripes.
+
+---
+
+## 10. Spatial Environmental Hardening & Camera Isolation
+
+* **Top-Level Camera Decoupling**: In first-person player controllers (`FPSPlayer`), camera pitch and spring recoil are isolated from hierarchy overwrites via `if not camera.top_level:` guards, allowing clean rotational bobbing without orientation snapping.
+* **Subway Platform Corridor Geometry**: Subway station generation constructs longitudinal column galleries along the Z-axis, orienting the player at $Z = 20\text{m}$ looking north toward $Z = -30\text{m}$ to expose 45 meters of column perspective, passenger trains, and dynamic mutant routes.
+* **Continuous Collision Protection**: Dynamic projectiles, racing vehicles, and sports spheres enforce continuous collision detection (`continuous_cd = true`) and thick collision margins ($\ge 2.5\text{m}$) across arena barriers.
+

@@ -14,9 +14,11 @@ func _init() -> void:
 	attack_range = 14.0 # Ranged engagement distance
 
 func setup_visuals() -> void:
-	# Detailed articulated shadow stalker model
-	var stalker_model = MeshBuilder.build_stalker_mesh()
-	add_child(stalker_model)
+	creature_model = ModelCacheScript.get_enemy("stalker")
+	if not creature_model:
+		creature_model = ModelCacheScript.get_enemy("infected_human")
+	add_child(creature_model)
+	ModelCacheScript.play_animation(creature_model, "Idle")
 
 	var col = CollisionShape3D.new()
 	var cap = CapsuleShape3D.new()

@@ -32,4 +32,6 @@ func setup_trigger_volume() -> void:
 
 func _on_body_entered(body: Node3D) -> void:
 	if body is KartController:
+		body.last_valid_checkpoint_pos = global_position
+		body.last_valid_checkpoint_rot = rotation.y
 		checkpoint_hit.emit(body, checkpoint_index)

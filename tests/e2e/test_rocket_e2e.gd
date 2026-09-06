@@ -15,6 +15,7 @@ func run_tests() -> Dictionary:
 	test_player_car_initialization()
 	test_ai_car_setup()
 	test_ball_physics()
+	test_ball_kickoff_to_goal_scoring_flow()
 	test_goal_scoring_blue()
 	test_goal_scoring_orange()
 	test_kickoff_reset()
@@ -22,11 +23,12 @@ func run_tests() -> Dictionary:
 	test_match_end_results()
 	test_chase_camera()
 	test_pause_restart_quit()
+	test_modes_and_vehicles()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
 	return [
-		["res://games/rocket-car/rocket_car_main.gd", ["_ready", "setup_scene", "reset_kickoff", "_on_goal_scored", "end_match", "update_chase_camera"]],
+		["res://games/rocket-car/rocket_car_main.gd", ["_ready", "setup_scene", "reset_kickoff", "_on_goal_scored", "end_match", "update_chase_camera", "select_game_mode", "select_car_vehicle", "get_available_modes", "get_available_cars"]],
 		["res://games/rocket-car/vehicle/car_controller.gd", ["replenish_boost", "apply_driving_controls"]],
 		["res://games/rocket-car/ball/ball.gd", ["apply_ball_impulse", "reset_to_center"]],
 		["res://games/rocket-car/arena/rocket_arena.gd", ["_ready"]],
@@ -91,6 +93,40 @@ func test_ball_physics() -> void:
 	# Test reset
 	rocket.ball.reset_to_center()
 	assert_true(rocket.ball.velocity.length() < 0.1, "Ball velocity must be near zero after reset")
+
+	rocket.queue_free()
+
+func test_ball_kickoff_to_goal_scoring_flow() -> void:
+	var rocket = RocketCarMainScript.new()
+	rocket.setup_scene()
+	rocket.is_kickoff_pause = false
+
+	# 1. Kickoff state: Ball at center
+	var b_pos = rocket.ball.global_position if rocket.ball.is_inside_tree() else rocket.ball.position
+	assert_true(b_pos.distance_to(Vector3(0, rocket.ball.radius + 0.6, 0)) < 1.0, "Ball starts at center kickoff")
+
+	# 2. Player car accelerates towards ball
+	rocket.player_car.apply_driving_controls(1.0, 0.0, 0.5)
+	rocket.player_car.velocity = Vector3(0, 0, -20.0)
+
+	# 3. Car strikes ball -> simulate collision contact
+	rocket.player_car._apply_ball_hit(rocket.ball, Vector3(0, 0, 1.0))
+
+	# 4. Assert ball displacement & velocity
+	assert_true(rocket.ball.velocity.length() > 10.0, "Ball must gain >=10 m/s velocity on impact")
+	assert_true(rocket.ball.velocity.z < -5.0, "Ball must be driven towards North/Orange goal (-Z)")
+
+	# 5. Push ball into Orange goal trigger (North goal at z = -55.0)
+	rocket.ball.global_position = Vector3(0, 3.0, -56.0)
+	rocket._on_goal_scored(0) # Blue scores into Orange goal!
+
+	# 6. Goal trigger -> score 0 -> 1
+	assert_eq(rocket.blue_score, 1, "Blue score must increment from 0 to 1")
+
+	# 7. Celebration & Kickoff reset
+	assert_true(rocket.is_kickoff_pause, "Kickoff pause must activate after goal")
+	rocket.reset_kickoff()
+	assert_true(rocket.ball.velocity.length() < 0.1, "Ball velocity must be reset to zero at kickoff")
 
 	rocket.queue_free()
 
@@ -179,3 +215,26 @@ func test_pause_restart_quit() -> void:
 	assert_true(true, "Restart/quit must not crash without EventBus")
 
 	rocket.queue_free()
+
+func test_modes_and_vehicles() -> void:
+	var rocket = RocketCarMainScript.new()
+	rocket.setup_scene()
+
+	var modes = rocket.get_available_modes()
+	assert_true(modes.size() >= 4, "Must have at least 4 game modes")
+	assert_true("1v1" in modes and "2v2" in modes and "3v3" in modes and "target_challenge" in modes, "Must support standard and challenge modes")
+
+	var cars = rocket.get_available_cars()
+	assert_true(cars.size() >= 3, "Must have at least 3 vehicles")
+
+	rocket.select_game_mode("1v1")
+	assert_eq(rocket.game_mode, "1v1", "Game mode must switch to 1v1")
+
+	rocket.select_car_vehicle("speed_demon")
+	assert_eq(rocket.selected_vehicle, "speed_demon", "Vehicle must switch to speed_demon")
+
+	rocket.select_car_vehicle("turbo_truck")
+	rocket.select_car_vehicle("phantom")
+
+	rocket.queue_free()
+

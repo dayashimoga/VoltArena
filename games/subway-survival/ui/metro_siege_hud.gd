@@ -299,15 +299,28 @@ func connect_bus_signals() -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if not bus:
 		return
-	bus.player_health_updated.connect(update_health)
-	bus.player_armor_updated.connect(update_armor)
-	bus.ammo_count_updated.connect(update_ammo)
-	bus.weapon_switched.connect(update_weapon)
-	bus.show_toast_requested.connect(show_toast)
+	if bus.has_signal("player_health_changed"):
+		bus.player_health_changed.connect(update_health)
+	elif bus.has_signal("player_health_updated"):
+		bus.player_health_updated.connect(update_health)
+	if bus.has_signal("player_armor_changed"):
+		bus.player_armor_changed.connect(update_armor)
+	elif bus.has_signal("player_armor_updated"):
+		bus.player_armor_updated.connect(update_armor)
+	if bus.has_signal("player_ammo_changed"):
+		bus.player_ammo_changed.connect(func(cur, max_c, reserve): update_ammo(cur, max_c, reserve))
+	elif bus.has_signal("ammo_count_updated"):
+		bus.ammo_count_updated.connect(func(cur, max_c, reserve): update_ammo(cur, max_c, reserve))
+	if bus.has_signal("player_weapon_switched"):
+		bus.player_weapon_switched.connect(func(wname, _icon): update_weapon(wname))
+	elif bus.has_signal("weapon_switched"):
+		bus.weapon_switched.connect(update_weapon)
+	if bus.has_signal("show_toast_requested"):
+		bus.show_toast_requested.connect(show_toast)
 
 func check_mobile_controls() -> void:
 	var pa = GameConstants.get_autoload(self, "PlatformAdapter")
-	if pa and pa.has_touchscreen():
+	if pa and pa.has_touchscreen:
 		touch_controls = TouchControls.new()
 		add_child(touch_controls)
 

@@ -18,7 +18,7 @@ func get_coverage_entries() -> Array:
 	return [
 		[
 			"res://shared/core/game_manager.gd",
-			["_ready", "set_state", "start_game", "switch_to_scene", "restart_current_game", "return_to_launcher", "clean_root_orphans"]
+			["_ready", "set_state", "start_game", "switch_to_scene", "restart_current_game", "return_to_launcher", "clean_root_orphans", "handle_exec_cmd"]
 		],
 		[
 			"res://shared/loading/asset_loader.gd",

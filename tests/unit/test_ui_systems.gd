@@ -64,7 +64,9 @@ func get_coverage_entries() -> Array:
 			[
 				"setup_hud_layout", "update_frags", "update_objective",
 				"show_countdown", "setup_onboarding_overlay",
-				"dismiss_onboarding", "_unhandled_input"
+				"dismiss_onboarding", "_unhandled_input",
+				"update_layout_positions", "highlight_active_weapon", "_process",
+				"add_killfeed_entry", "update_objective_label"
 			]
 		],
 		[
@@ -74,7 +76,7 @@ func get_coverage_entries() -> Array:
 				"set_crosshair_spread", "update_health", "update_armor", "update_ammo",
 				"update_weapon", "update_wave", "update_threats", "update_scrap",
 				"show_intermission", "show_toast", "setup_onboarding_overlay",
-				"dismiss_onboarding", "_unhandled_input"
+				"dismiss_onboarding", "_unhandled_input", "update_layout_positions", "_process"
 			]
 		],
 		[
@@ -95,7 +97,8 @@ func get_coverage_entries() -> Array:
 				"update_lap", "update_speed", "update_drift_charge",
 				"update_powerup", "update_lap_times", "show_countdown",
 				"show_finish_banner", "show_toast", "setup_onboarding_overlay",
-				"dismiss_onboarding", "_unhandled_input"
+				"dismiss_onboarding", "_unhandled_input",
+				"update_layout_positions", "_process", "set_wrong_way"
 			]
 		]
 	]

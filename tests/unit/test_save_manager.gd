@@ -18,7 +18,9 @@ func get_coverage_entries() -> Array:
 		[
 			"_ready", "get_default_save", "load_save", "save_game",
 			"record_arena_match", "record_subway_run",
-			"record_rocket_match", "record_kart_race"
+			"record_rocket_match", "record_kart_race",
+			"record_skybound_progress", "record_roboforge_challenge",
+			"record_wildcircuit_photo", "set_custom_data", "get_custom_data"
 		]
 	]]
 
@@ -60,3 +62,15 @@ func test_all_game_records() -> void:
 
 	sm.record_kart_race("track_1", 45.2, true)
 	assert_true(sm.save_data["statistics"]["kart_racing"]["podiums"] == 1, "Kart podiums must be 1")
+
+	sm.record_skybound_progress(1, 5, false)
+	assert_true(sm.save_data["statistics"]["skybound_odyssey"]["shards_collected"] == 5, "Skybound shards must be 5")
+
+	sm.record_roboforge_challenge("obstacle_course", 42.0, true)
+	assert_true(sm.save_data["statistics"]["roboforge_arena"]["challenges_completed"] == 1, "RoboForge challenges must be 1")
+
+	sm.record_wildcircuit_photo("lion", 95, "Platinum")
+	assert_true(sm.save_data["statistics"]["wildcircuit"]["species_discovered"] == 1, "WildCircuit species must be 1")
+
+	sm.set_custom_data("test_key", "test_value")
+	assert_true(sm.get_custom_data("test_key") == "test_value", "Custom data should be retrieved")

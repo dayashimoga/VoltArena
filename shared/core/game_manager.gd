@@ -455,6 +455,15 @@ func start_game(game_id: String) -> void:
 		"kart_racing":
 			scene_path = "res://games/kart-racing/kart_racing_main.tscn"
 			music_track = "drift_storm"
+		"skybound_odyssey":
+			scene_path = "res://games/skybound-odyssey/skybound_main.tscn"
+			music_track = "drift_storm"
+		"roboforge_arena":
+			scene_path = "res://games/roboforge-arena/roboforge_main.tscn"
+			music_track = "iron_crucible"
+		"wildcircuit":
+			scene_path = "res://games/wildcircuit/wildcircuit_main.tscn"
+			music_track = "metro_siege"
 		_:
 			push_error("Unknown game ID: " + game_id)
 			return

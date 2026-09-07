@@ -19,7 +19,7 @@ func get_coverage_entries() -> Array:
 		[
 			"_ready", "setup_bot_visual", "setup_health",
 			"setup_weapon", "_physics_process",
-			"pick_random_patrol", "respawn"
+			"pick_random_patrol", "respawn", "recover_from_out_of_bounds"
 		]
 	]]
 

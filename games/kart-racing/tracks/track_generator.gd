@@ -463,6 +463,7 @@ func _build_continuous_road_foundation(nodes: Array[Vector3]) -> void:
 	var col = CollisionShape3D.new()
 	col.name = "ContinuousRoadCol"
 	var concave_shape = ConcavePolygonShape3D.new()
+	concave_shape.backface_collision = true
 	concave_shape.set_faces(collision_faces)
 	col.shape = concave_shape
 	road_body.add_child(col)

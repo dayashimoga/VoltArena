@@ -23,6 +23,8 @@ signal boost_updated(current_boost: float, max_boost: float)
 
 var car_visual: Node3D
 var is_boosting: bool = false
+var is_drifting: bool = false
+var can_double_jump: bool = true
 var forward_speed: float = 0.0
 var hit_cooldown: float = 0.0
 
@@ -74,7 +76,10 @@ func _physics_process(delta: float) -> void:
 			handle_player_input(delta)
 		return
 
-	if not is_on_floor():
+	var on_ground = is_on_floor()
+	if on_ground:
+		can_double_jump = true
+	else:
 		velocity.y -= gravity * delta
 
 	if is_player_controlled:
@@ -117,6 +122,34 @@ func _apply_ball_hit(ball_node: Node3D, contact_normal: Vector3) -> void:
 	if am:
 		am.play_sfx("car_hit_ball")
 
+func perform_jump() -> bool:
+	var on_ground = (is_on_floor() and velocity.y <= 0.1) if is_inside_tree() else true
+	if on_ground:
+		velocity.y = jump_impulse
+		can_double_jump = true
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am:
+			am.play_sound("jump", 0.9)
+		return true
+	elif can_double_jump:
+		velocity.y = jump_impulse * 0.9
+		can_double_jump = false
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am:
+			am.play_sound("jump", 1.2)
+		return true
+	return false
+
+func perform_dodge(direction: Vector2) -> void:
+	if can_double_jump:
+		velocity.y = jump_impulse * 0.6
+		var dodge_dir = (-global_transform.basis.z * direction.y + global_transform.basis.x * direction.x).normalized()
+		velocity += dodge_dir * 14.0
+		can_double_jump = false
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am:
+			am.play_sound("jump", 1.3)
+
 func handle_player_input(delta: float) -> void:
 	var im = GameConstants.get_autoload(self, "InputManager")
 	var throttle = 0.0
@@ -131,15 +164,20 @@ func handle_player_input(delta: float) -> void:
 		steer = -im.virtual_move_vector.x
 		throttle = -im.virtual_move_vector.y
 
+	is_drifting = Input.is_action_pressed("drift")
+
 	apply_driving_controls(throttle, steer, delta)
 
-	# Jump
-	var on_floor = is_on_floor() if is_inside_tree() else true
-	if Input.is_action_just_pressed("jump") and on_floor:
-		velocity.y = jump_impulse
-		var am = GameConstants.get_autoload(self, "AudioManager")
-		if am:
-			am.play_sound("jump", 0.9)
+	# Jump and Double Jump
+	if Input.is_action_just_pressed("jump"):
+		var on_ground = is_on_floor() if is_inside_tree() else true
+		if on_ground:
+			perform_jump()
+		elif can_double_jump:
+			if abs(throttle) > 0.1 or abs(steer) > 0.1:
+				perform_dodge(Vector2(-steer, throttle))
+			else:
+				perform_jump()
 
 	# Boost
 	is_boosting = Input.is_action_pressed("boost") and current_boost > 0.0
@@ -157,25 +195,47 @@ func handle_player_input(delta: float) -> void:
 	boost_updated.emit(current_boost, max_boost)
 
 func apply_driving_controls(throttle: float, steer: float, delta: float) -> void:
-	# Steering rotates vehicle around Y axis
-	if abs(forward_speed) > 0.5:
-		var on_floor = is_on_floor() if is_inside_tree() else true
-		var steer_dir = sign(forward_speed) if on_floor else 1.0
-		rotate_y(steer * steer_speed * delta * steer_dir)
+	var on_ground = (is_on_floor() and velocity.y <= 0.1 and global_position.y < 1.0) if is_inside_tree() else true
 
-	# Acceleration / Braking
-	var top_speed = boost_speed if is_boosting else max_speed
-	if throttle > 0.0:
-		forward_speed = move_toward(forward_speed, top_speed, acceleration * delta)
-	elif throttle < 0.0:
-		forward_speed = move_toward(forward_speed, -reverse_speed, brake_deceleration * delta)
+	if on_ground:
+		# Ground Driving & Drift
+		if abs(forward_speed) > 0.5:
+			var steer_dir = sign(forward_speed)
+			var drift_multiplier = 1.75 if is_drifting else 1.0
+			rotate_y(steer * steer_speed * drift_multiplier * delta * steer_dir)
+
+		# Acceleration / Braking
+		var top_speed = boost_speed if is_boosting else max_speed
+		if throttle > 0.0:
+			forward_speed = move_toward(forward_speed, top_speed, acceleration * delta)
+		elif throttle < 0.0:
+			forward_speed = move_toward(forward_speed, -reverse_speed, brake_deceleration * delta)
+		else:
+			forward_speed = move_toward(forward_speed, 0.0, 12.0 * delta)
+
+		# Apply forward direction velocity
+		var fwd = -transform.basis.z
+		velocity.x = fwd.x * forward_speed
+		velocity.z = fwd.z * forward_speed
 	else:
-		forward_speed = move_toward(forward_speed, 0.0, 12.0 * delta)
+		# Aerial Pitch, Yaw, and Roll
+		# Pitch: forward/back pitch tilt
+		if abs(throttle) > 0.05:
+			rotate_object_local(Vector3.RIGHT, throttle * 2.8 * delta)
 
-	# Apply forward direction velocity
-	var fwd = -transform.basis.z
-	velocity.x = fwd.x * forward_speed
-	velocity.z = fwd.z * forward_speed
+		# Yaw / Roll:
+		if abs(steer) > 0.05:
+			if is_drifting or Input.is_action_pressed("crouch"):
+				# Aerial Roll
+				rotate_object_local(Vector3.FORWARD, steer * 3.5 * delta)
+			else:
+				# Aerial Yaw
+				rotate_object_local(Vector3.UP, steer * 2.8 * delta)
+
+		# Aerial thrust when boosting mid-air
+		if is_boosting:
+			var fwd = -global_transform.basis.z
+			velocity += fwd * (acceleration * 0.7 * delta)
 
 func replenish_boost(amount: float) -> void:
 	current_boost = min(max_boost, current_boost + amount)
@@ -183,3 +243,4 @@ func replenish_boost(amount: float) -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.boost_amount_changed.emit(current_boost, max_boost)
+

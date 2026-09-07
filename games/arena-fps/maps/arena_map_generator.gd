@@ -218,11 +218,11 @@ func _build_citadel_map() -> void:
 	# Orbital Facility Metallic Deck
 	create_box(Vector3(0, -0.5, 0), Vector3(arena_size.x, 1.0, arena_size.y), "sci_fi_metal")
 
-	# Low Perimeter Bulkheads
-	create_box(Vector3(0, 1.5, -half_z), Vector3(arena_size.x, 3.0, 0.8), "dark_hull")
-	create_box(Vector3(0, 1.5, half_z), Vector3(arena_size.x, 3.0, 0.8), "dark_hull")
-	create_box(Vector3(-half_x, 1.5, 0), Vector3(0.8, 3.0, arena_size.y), "dark_hull")
-	create_box(Vector3(half_x, 1.5, 0), Vector3(0.8, 3.0, arena_size.y), "dark_hull")
+	# High Perimeter Containment Bulkheads
+	create_box(Vector3(0, wall_height * 0.5, -half_z), Vector3(arena_size.x, wall_height, 1.2), "dark_hull")
+	create_box(Vector3(0, wall_height * 0.5, half_z), Vector3(arena_size.x, wall_height, 1.2), "dark_hull")
+	create_box(Vector3(-half_x, wall_height * 0.5, 0), Vector3(1.2, wall_height, arena_size.y), "dark_hull")
+	create_box(Vector3(half_x, wall_height * 0.5, 0), Vector3(1.2, wall_height, arena_size.y), "dark_hull")
 
 	# Modular Observation Windows overlooking space
 	for wz in [-18.0, 0.0, 18.0]:

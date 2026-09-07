@@ -25,7 +25,7 @@ func get_coverage_entries() -> Array:
 	return [
 		[
 			"res://games/subway-survival/enemies/enemy_base.gd",
-			["_ready", "setup_health", "setup_visuals", "_physics_process", "steer_to_target", "perform_attack"]
+			["_ready", "setup_health", "setup_visuals", "_physics_process", "steer_to_target", "perform_attack", "attach_enemy_weapon", "recover_from_out_of_bounds"]
 		],
 		[
 			"res://games/subway-survival/enemies/crawler.gd",

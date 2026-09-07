@@ -27,11 +27,12 @@ func initialize_race(all_racers: Array, all_checkpoints: Array) -> void:
 	checkpoints = all_checkpoints
 
 	for cp in checkpoints:
-		cp.checkpoint_hit.connect(_on_checkpoint_hit)
+		if not cp.checkpoint_hit.is_connected(_on_checkpoint_hit):
+			cp.checkpoint_hit.connect(_on_checkpoint_hit)
 
 	current_state = RaceState.COUNTDOWN
-	countdown_timer = 3.0
-	countdown_tick.emit(3)
+	countdown_timer = 5.0
+	countdown_tick.emit(5)
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am:
 		am.play_sound("countdown_tick", 1.0)

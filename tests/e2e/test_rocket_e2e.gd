@@ -51,7 +51,7 @@ func test_scene_setup() -> void:
 
 	assert_true(rocket.player_car != null, "Player car must be instantiated")
 	assert_true(rocket.ball != null, "Ball must be instantiated")
-	assert_true(rocket.ai_cars.size() == 2, "Must spawn 2 AI opponents")
+	assert_true(rocket.ai_cars.size() >= 2, "Must spawn AI opponents")
 	assert_true(rocket.hud != null, "HUD must exist")
 	assert_true(rocket.pause_menu != null, "PauseMenu must exist")
 	assert_true(rocket.results_screen != null, "ResultsScreen must exist")
@@ -76,8 +76,11 @@ func test_ai_car_setup() -> void:
 	var rocket = RocketCarMainScript.new()
 	rocket.setup_scene()
 
-	for ai_car in rocket.ai_cars:
-		assert_eq(ai_car.team_id, 1, "AI cars must be on Orange team (1)")
+	for ai_car in rocket.orange_ai_cars:
+		assert_eq(ai_car.team_id, 1, "AI opponents must be on Orange team (1)")
+		assert_true(not ai_car.is_player_controlled, "AI cars must not be player-controlled")
+	for ai_car in rocket.blue_ai_cars:
+		assert_eq(ai_car.team_id, 0, "AI teammates must be on Blue team (0)")
 		assert_true(not ai_car.is_player_controlled, "AI cars must not be player-controlled")
 
 	rocket.queue_free()

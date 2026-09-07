@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://games/roboforge-arena/roboforge_main.gd" id="1_robo"]
+
+[node name="RoboForgeMain" type="Node3D"]
+script = ExtResource("1_robo")

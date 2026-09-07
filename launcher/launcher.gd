@@ -52,6 +52,33 @@ var games_meta = [
 		"tags": ["RACING", "DRIFT", "BOOST", "CIRCUIT"],
 		"color": Color(0.2, 1.0, 0.5),
 		"scene": "res://games/kart-racing/kart_racing_main.tscn"
+	},
+	{
+		"id": "skybound_odyssey",
+		"title": "SKYBOUND ODYSSEY",
+		"tagline": "3D Platforming & Puzzle Adventure",
+		"desc": "Explore five floating sky realms with fluid gliding, grappling, ledge mantling, ancient puzzle mechanisms, and NPC quests.",
+		"tags": ["ADVENTURE", "PLATFORMER", "PUZZLE", "GLIDER"],
+		"color": Color(0.2, 0.9, 1.0),
+		"scene": "res://games/skybound-odyssey/skybound_main.tscn"
+	},
+	{
+		"id": "roboforge_arena",
+		"title": "ROBOFORGE ARENA",
+		"tagline": "Modular Robot Physics Engineering",
+		"desc": "Design, build, and test modular physics robots with wheels, tracks, legs, and tool modules across 7 engineering challenges.",
+		"tags": ["ENGINEERING", "PHYSICS", "ROBOTICS", "MODULAR"],
+		"color": Color(1.0, 0.85, 0.1),
+		"scene": "res://games/roboforge-arena/roboforge_main.tscn"
+	},
+	{
+		"id": "wildcircuit",
+		"title": "WILDCIRCUIT",
+		"tagline": "Wildlife Photography & Conservation",
+		"desc": "Embark on peaceful conservation surveys across 5 living biomes with scored photography, state-machine animal AI, and ATV expeditions.",
+		"tags": ["EXPLORATION", "PHOTOGRAPHY", "WILDLIFE", "PEACEFUL"],
+		"color": Color(0.3, 1.0, 0.4),
+		"scene": "res://games/wildcircuit/wildcircuit_main.tscn"
 	}
 ]
 

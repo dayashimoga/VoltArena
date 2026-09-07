@@ -1,7 +1,7 @@
 {
   "project": "VoltArena",
   "version": "5.0.0",
-  "timestamp_utc": "2026-09-06 16:42:56 UTC",
+  "timestamp_utc": "2026-09-07 03:14:42 UTC",
   "overall_status": "RUNTIME_VERIFIED",
   "runtime_verified_count": 8,
   "implemented_count": 3,
@@ -12,21 +12,21 @@
     {
       "gate": "Unit & E2E Tests",
       "requirement": "100% assertion pass rate, 0 failures",
-      "measured": "900 passed, 0 failed",
+      "measured": "1043 passed, 0 failed",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/test-results.json"
     },
     {
       "gate": "Function Coverage",
       "requirement": ">90.0% function coverage",
-      "measured": "93.3% (401/430 functions)",
+      "measured": "96.9% (585/604 functions)",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/coverage-report.json"
     },
     {
       "gate": "Performance Benchmarks",
       "requirement": "Target >=60 FPS (desktop), P95<16.6ms, P99<33.3ms, RAM<500MB, 0 stutters",
-      "measured": "FPS=1088.1 (P50=0.92ms, P95=1.45ms, P99=1.75ms), RAM=21.3MB, Stutters=0",
+      "measured": "FPS=1028.8 (P50=0.97ms, P95=1.47ms, P99=1.79ms), RAM=22.3MB, Stutters=0",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/benchmark-results.json"
     },

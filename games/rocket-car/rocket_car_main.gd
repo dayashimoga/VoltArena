@@ -89,34 +89,47 @@ func setup_scene() -> void:
 	if hud and hud.has_method("set_tracking_targets"):
 		hud.set_tracking_targets(camera, ball)
 
-	# AI Opponents (Orange Team)
-	var ai1 = CarControllerScript.new()
-	ai1.name = "AI_Opponent_1"
-	ai1.team_id = 1
-	ai1.is_player_controlled = false
-	add_child(ai1)
+	# Blue Team AI Teammates
+	var b_ai1 = _create_ai_car("AI_Blue_1", 0, false)
+	var b_ai2 = _create_ai_car("AI_Blue_2", 0, false)
+	blue_ai_cars.append(b_ai1)
+	blue_ai_cars.append(b_ai2)
 
-	var ai_brain1 = CarAIScript.new()
-	ai_brain1.car = ai1
-	ai_brain1.ball = ball
-	ai_brain1.is_orange_team = true
-	ai1.add_child(ai_brain1)
-	ai_cars.append(ai1)
+	# Orange Team AI Opponents
+	var o_ai1 = _create_ai_car("AI_Orange_1", 1, true)
+	var o_ai2 = _create_ai_car("AI_Orange_2", 1, true)
+	var o_ai3 = _create_ai_car("AI_Orange_3", 1, true)
+	orange_ai_cars.append(o_ai1)
+	orange_ai_cars.append(o_ai2)
+	orange_ai_cars.append(o_ai3)
 
-	var ai2 = CarControllerScript.new()
-	ai2.name = "AI_Opponent_2"
-	ai2.team_id = 1
-	ai2.is_player_controlled = false
-	add_child(ai2)
+	# Maintain ai_cars array for backwards compatibility
+	ai_cars.clear()
+	ai_cars.append(o_ai1)
+	ai_cars.append(o_ai2)
+	ai_cars.append(o_ai3)
+	ai_cars.append(b_ai1)
+	ai_cars.append(b_ai2)
 
-	var ai_brain2 = CarAIScript.new()
-	ai_brain2.car = ai2
-	ai_brain2.ball = ball
-	ai_brain2.is_orange_team = true
-	ai2.add_child(ai_brain2)
-	ai_cars.append(ai2)
-
+	select_game_mode(game_mode)
 	reset_kickoff()
+
+func _create_ai_car(car_name: String, team: int, is_orange: bool) -> Node3D:
+	var car_node = CarControllerScript.new()
+	car_node.name = car_name
+	car_node.team_id = team
+	car_node.is_player_controlled = false
+	add_child(car_node)
+
+	var ai_brain = CarAIScript.new()
+	ai_brain.car = car_node
+	ai_brain.ball = ball
+	ai_brain.is_orange_team = is_orange
+	car_node.add_child(ai_brain)
+	return car_node
+
+var blue_ai_cars: Array[Node3D] = []
+var orange_ai_cars: Array[Node3D] = []
 
 func _process(delta: float) -> void:
 	if not match_active:
@@ -175,24 +188,34 @@ func reset_kickoff() -> void:
 	# Reset ball
 	ball.reset_to_center()
 
-	# Reset player car
-	if is_instance_valid(player_car):
-		player_car.global_position = Vector3(0, 0.5, 30.0)
-		player_car.rotation = Vector3.ZERO
-		player_car.velocity = Vector3.ZERO
-		player_car.forward_speed = 0.0
-
-	# Reset AI cars
-	if ai_cars.size() >= 2:
-		ai_cars[0].global_position = Vector3(-10.0, 0.5, -30.0)
-		ai_cars[0].rotation = Vector3(0, PI, 0)
-		ai_cars[0].velocity = Vector3.ZERO
-		ai_cars[0].forward_speed = 0.0
-
-		ai_cars[1].global_position = Vector3(10.0, 0.5, -30.0)
-		ai_cars[1].rotation = Vector3(0, PI, 0)
-		ai_cars[1].velocity = Vector3.ZERO
-		ai_cars[1].forward_speed = 0.0
+	# Positions depending on game mode
+	if game_mode == "1v1":
+		if is_instance_valid(player_car):
+			_place_car(player_car, Vector3(0.0, 0.5, 30.0), 0.0)
+		if orange_ai_cars.size() > 0 and is_instance_valid(orange_ai_cars[0]):
+			_place_car(orange_ai_cars[0], Vector3(0.0, 0.5, -30.0), PI)
+	elif game_mode == "2v2":
+		if is_instance_valid(player_car):
+			_place_car(player_car, Vector3(-10.0, 0.5, 30.0), 0.0)
+		if blue_ai_cars.size() > 0 and is_instance_valid(blue_ai_cars[0]):
+			_place_car(blue_ai_cars[0], Vector3(10.0, 0.5, 30.0), 0.0)
+		if orange_ai_cars.size() > 1:
+			_place_car(orange_ai_cars[0], Vector3(-10.0, 0.5, -30.0), PI)
+			_place_car(orange_ai_cars[1], Vector3(10.0, 0.5, -30.0), PI)
+	elif game_mode == "3v3":
+		if is_instance_valid(player_car):
+			_place_car(player_car, Vector3(0.0, 0.5, 34.0), 0.0)
+		if blue_ai_cars.size() > 1:
+			_place_car(blue_ai_cars[0], Vector3(-14.0, 0.5, 26.0), 0.0)
+			_place_car(blue_ai_cars[1], Vector3(14.0, 0.5, 26.0), 0.0)
+		if orange_ai_cars.size() > 2:
+			_place_car(orange_ai_cars[0], Vector3(0.0, 0.5, -34.0), PI)
+			_place_car(orange_ai_cars[1], Vector3(-14.0, 0.5, -26.0), PI)
+			_place_car(orange_ai_cars[2], Vector3(14.0, 0.5, -26.0), PI)
+	else:
+		# Target challenge or solo practice
+		if is_instance_valid(player_car):
+			_place_car(player_car, Vector3(0.0, 0.5, 30.0), 0.0)
 
 	# Sequential 3-2-1-GO Kickoff countdown
 	var am = GameConstants.get_autoload(self, "AudioManager")
@@ -221,6 +244,17 @@ func reset_kickoff() -> void:
 			if am: am.play_sound("referee_whistle", 1.2, 1.6)
 			is_kickoff_pause = false
 		)
+
+func _place_car(car_node: Node3D, pos: Vector3, y_rot: float) -> void:
+	if not is_instance_valid(car_node):
+		return
+	car_node.global_position = pos
+	car_node.rotation = Vector3(0, y_rot, 0)
+	if "velocity" in car_node:
+		car_node.velocity = Vector3.ZERO
+	if "forward_speed" in car_node:
+		car_node.forward_speed = 0.0
+
 
 func _on_goal_scored(scoring_team: int) -> void:
 	if not match_active or is_kickoff_pause:
@@ -281,23 +315,40 @@ func _on_quit_to_launcher() -> void:
 
 func select_game_mode(mode: String) -> void:
 	game_mode = mode
+	for b in blue_ai_cars:
+		if is_instance_valid(b):
+			b.visible = false
+			b.process_mode = Node.PROCESS_MODE_DISABLED
+	for o in orange_ai_cars:
+		if is_instance_valid(o):
+			o.visible = false
+			o.process_mode = Node.PROCESS_MODE_DISABLED
+
 	match mode:
 		"1v1":
-			# Only 1 AI opponent
-			if ai_cars.size() > 1:
-				for i in range(1, ai_cars.size()):
-					ai_cars[i].visible = false
-					ai_cars[i].process_mode = Node.PROCESS_MODE_DISABLED
+			if orange_ai_cars.size() > 0 and is_instance_valid(orange_ai_cars[0]):
+				orange_ai_cars[0].visible = true
+				orange_ai_cars[0].process_mode = Node.PROCESS_MODE_INHERIT
 		"2v2":
-			for ai in ai_cars:
-				ai.visible = true
-				ai.process_mode = Node.PROCESS_MODE_INHERIT
+			if blue_ai_cars.size() > 0 and is_instance_valid(blue_ai_cars[0]):
+				blue_ai_cars[0].visible = true
+				blue_ai_cars[0].process_mode = Node.PROCESS_MODE_INHERIT
+			for i in range(mini(2, orange_ai_cars.size())):
+				if is_instance_valid(orange_ai_cars[i]):
+					orange_ai_cars[i].visible = true
+					orange_ai_cars[i].process_mode = Node.PROCESS_MODE_INHERIT
 		"3v3":
-			for ai in ai_cars:
-				ai.visible = true
-				ai.process_mode = Node.PROCESS_MODE_INHERIT
+			for b in blue_ai_cars:
+				if is_instance_valid(b):
+					b.visible = true
+					b.process_mode = Node.PROCESS_MODE_INHERIT
+			for o in orange_ai_cars:
+				if is_instance_valid(o):
+					o.visible = true
+					o.process_mode = Node.PROCESS_MODE_INHERIT
 		"target_challenge":
 			time_left = 120.0 # 2 minute time attack challenge
+
 
 func select_car_vehicle(vehicle_id: String) -> void:
 	selected_vehicle = vehicle_id

@@ -18,6 +18,8 @@ var health_component: HealthComponent
 
 var target_player: Node3D = null
 var attack_cooldown: float = 0.0
+var kill_plane_y: float = -6.0
+var last_safe_grounded_transform: Transform3D = Transform3D.IDENTITY
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -63,6 +65,14 @@ func _physics_process(delta: float) -> void:
 
 	if not is_on_floor():
 		velocity.y -= 20.0 * delta
+	else:
+		velocity.y = 0.0
+		if global_position.y > kill_plane_y:
+			last_safe_grounded_transform = global_transform
+
+	if global_position.y < kill_plane_y:
+		recover_from_out_of_bounds()
+		return
 
 	if health_component.is_dead:
 		move_and_slide()
@@ -136,3 +146,11 @@ func _on_died(_source: Node) -> void:
 		bus.enemy_died.emit(enemy_name, score_value)
 	enemy_died.emit(enemy_name, score_value)
 	queue_free()
+
+func recover_from_out_of_bounds() -> void:
+	if last_safe_grounded_transform != Transform3D.IDENTITY:
+		global_transform = last_safe_grounded_transform
+		global_position.y += 0.3
+	else:
+		global_position = Vector3(-5.0, 0.6, 0.0)
+	velocity = Vector3.ZERO

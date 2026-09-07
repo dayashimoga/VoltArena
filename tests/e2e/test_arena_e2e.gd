@@ -32,7 +32,7 @@ func run_tests() -> Dictionary:
 func get_coverage_entries() -> Array:
 	return [
 		["res://games/arena-fps/arena_fps_main.gd", ["_ready", "_process", "setup_scene", "connect_events", "end_match", "select_map", "select_game_mode"]],
-		["res://games/arena-fps/player/fps_player.gd", ["_ready", "_physics_process", "setup_default_nodes", "setup_weapons", "select_weapon", "connect_health", "apply_recoil", "add_ammo", "handle_look_and_recoil", "handle_movement", "handle_weapons_input", "notify_ammo_update", "update_view_bobbing"]],
+		["res://games/arena-fps/player/fps_player.gd", ["_ready", "_physics_process", "setup_default_nodes", "setup_weapons", "select_weapon", "connect_health", "apply_recoil", "add_ammo", "handle_look_and_recoil", "handle_movement", "handle_weapons_input", "notify_ammo_update", "update_view_bobbing", "set_third_person", "recover_from_out_of_bounds", "_unhandled_input"]],
 		["res://games/arena-fps/weapons/weapon_base.gd", ["can_fire", "trigger_fire", "start_reload", "finish_reload", "add_reserve_ammo", "setup_weapon_visual"]],
 		["res://shared/combat/health_component.gd", ["take_damage", "heal", "add_armor", "reset"]],
 		["res://shared/ui/hud_base.gd", ["_ready"]],

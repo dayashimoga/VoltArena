@@ -19,7 +19,8 @@ func get_coverage_entries() -> Array:
 		"res://games/rocket-car/vehicle/car_controller.gd",
 		[
 			"_ready", "setup_car_visual", "_physics_process",
-			"handle_player_input", "apply_driving_controls", "replenish_boost"
+			"handle_player_input", "apply_driving_controls", "replenish_boost",
+			"perform_jump", "perform_dodge"
 		]
 	]]
 

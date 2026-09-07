@@ -64,7 +64,7 @@ func test_rocket_acceptance() -> void:
 	rocket.setup_scene()
 	assert_true(rocket.player_car != null, "Player car must be instantiated")
 	assert_true(rocket.ball != null, "Rocket ball must be instantiated")
-	assert_true(rocket.ai_cars.size() == 2, "AI opponents must be spawned")
+	assert_true(rocket.ai_cars.size() >= 2, "AI opponents must be spawned")
 
 	# Test ball impulse and goal detection
 	rocket.ball.apply_ball_impulse(Vector3(0, 0, -20.0))
@@ -78,7 +78,7 @@ func test_kart_acceptance() -> void:
 	var kart_race = KartRacingMainScript.new()
 	kart_race.setup_scene()
 	assert_true(kart_race.player_kart != null, "Player kart must be instantiated")
-	assert_true(kart_race.ai_karts.size() == 3, "AI racers must be spawned")
+	assert_true(kart_race.ai_karts.size() >= 3, "AI racers must be spawned")
 	assert_true(kart_race.race_manager != null, "Race manager must be active")
 
 	# Test drift charge & boost

@@ -25,6 +25,10 @@ var steering_speed: float:
 	get: return steer_speed
 	set(v): steer_speed = v
 
+var grip_factor: float:
+	get: return drift_steer_speed
+	set(v): drift_steer_speed = v
+
 @export var racer_id: int = 0
 @export var racer_name: String = "Player"
 @export var is_player: bool = true
@@ -51,9 +55,10 @@ var front_wheels: Array[MeshInstance3D] = []
 
 func _ready() -> void:
 	collision_layer = GameConstants.LAYER_PLAYER if is_player else GameConstants.LAYER_ENEMIES
-	collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES | GameConstants.LAYER_CHECKPOINTS
+	collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES
 
 	add_to_group("karts")
+	add_to_group("racers")
 	if is_player:
 		add_to_group("players")
 	else:
@@ -62,14 +67,14 @@ func _ready() -> void:
 	last_valid_checkpoint_pos = global_position
 	last_valid_checkpoint_rot = rotation.y
 
-	floor_snap_length = 0.50
-	floor_max_angle = deg_to_rad(55.0)
-	floor_constant_speed = true
+	floor_snap_length = 0.4
+	floor_max_angle = deg_to_rad(60.0)
+	floor_constant_speed = false
 	floor_block_on_wall = false
 	floor_stop_on_slope = false
-	wall_min_slide_angle = deg_to_rad(15.0)
+	wall_min_slide_angle = 0.0
 	up_direction = Vector3.UP
-	max_slides = 6
+	max_slides = 4
 
 	setup_kart_archetype()
 	setup_kart_visual()
@@ -77,20 +82,37 @@ func _ready() -> void:
 func setup_kart_archetype() -> void:
 	match kart_type:
 		"phantom":
-			base_speed = 28.5
-			boost_top_speed = 42.0
-			acceleration = 21.0
-			steer_speed = 3.0
+			# High-speed drift specialist
+			base_speed = 29.0
+			boost_top_speed = 43.0
+			acceleration = 20.0
+			brake_deceleration = 30.0
+			steer_speed = 2.9
+			drift_steer_speed = 4.8
 		"enforcer":
-			base_speed = 24.5
-			boost_top_speed = 36.0
-			acceleration = 28.0
+			# Heavy chassis, high grip, fast off the line
+			base_speed = 24.0
+			boost_top_speed = 35.0
+			acceleration = 29.0
+			brake_deceleration = 36.0
 			steer_speed = 3.6
-		_:
+			drift_steer_speed = 3.6
+		"turbo_demon":
+			# Rocket burst racer
+			base_speed = 25.5
+			boost_top_speed = 45.0
+			acceleration = 26.0
+			brake_deceleration = 32.0
+			steer_speed = 3.4
+			drift_steer_speed = 4.4
+		_: # "speeder"
+			# Balanced all-rounder
 			base_speed = 26.0
 			boost_top_speed = 38.0
 			acceleration = 24.0
+			brake_deceleration = 32.0
 			steer_speed = 3.2
+			drift_steer_speed = 4.2
 
 const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
 
@@ -107,8 +129,9 @@ func setup_kart_visual() -> void:
 	var vehicle_key = "kart_speedster"
 	if is_player:
 		match kart_type:
-			"phantom": vehicle_key = "kart_turbo"
+			"phantom": vehicle_key = "kart_drift"
 			"enforcer": vehicle_key = "kart_muscle"
+			"turbo_demon": vehicle_key = "kart_turbo"
 			_: vehicle_key = "kart_speedster"
 	else:
 		match racer_id % 4:
@@ -132,16 +155,14 @@ func setup_kart_visual() -> void:
 		if child.name.begins_with("FrontWheel") and child is MeshInstance3D:
 			front_wheels.append(child)
 
-	# Collision - Rounded Longitudinal Capsule to glide over seams and barriers without snagging
+	# Collision - Vertical SphereShape3D for 100% seam/edge-free gliding
 	if not has_node("KartCollision"):
 		var col = CollisionShape3D.new()
 		col.name = "KartCollision"
-		var cap_shape = CapsuleShape3D.new()
-		cap_shape.radius = 0.50
-		cap_shape.height = 1.9
-		col.shape = cap_shape
-		col.rotation_degrees.x = 90.0
-		col.position = Vector3(0, 0.55, 0)
+		var sphere = SphereShape3D.new()
+		sphere.radius = 0.50
+		col.shape = sphere
+		col.position = Vector3(0, 0.50, 0)
 		add_child(col)
 
 func _physics_process(delta: float) -> void:
@@ -158,7 +179,10 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 	else:
-		velocity.y = -2.0 # Continuous ground contact on seams and ramps
+		velocity.y = 0.0 # Clean flat road glide, zero internal edge bump
+
+	# Check wrong-way progression
+	_check_wrong_way(delta)
 
 	# Only accept controls if race has started
 	var rm: Node = null
@@ -189,7 +213,15 @@ func recover_to_checkpoint() -> void:
 	if bus and is_player:
 		bus.show_toast_requested.emit("RECOVERED TO TRACK", Color(1.0, 0.8, 0.2))
 
+var input_override: bool = false
+var override_throttle: float = 0.0
+var override_steer: float = 0.0
+var override_drift: bool = false
+
 func handle_player_input(delta: float) -> void:
+	if input_override:
+		apply_kart_controls(override_throttle, override_steer, override_drift, delta)
+		return
 	var im = GameConstants.get_autoload(self, "InputManager")
 	var throttle = 0.0
 	var steer = 0.0
@@ -291,3 +323,41 @@ func apply_item_boost(duration: float) -> void:
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am:
 		am.play_sound("jump", 1.5)
+
+var is_wrong_way: bool = false
+var wrong_way_timer: float = 0.0
+
+func _check_wrong_way(delta: float) -> void:
+	if not is_player or forward_speed < 4.0:
+		is_wrong_way = false
+		wrong_way_timer = 0.0
+		return
+
+	# Compare forward vector with tangent towards next checkpoint
+	var rm: Node = null
+	var p_node = get_parent()
+	if p_node:
+		rm = p_node.get_node_or_null("RaceManager")
+	if not rm and get_tree() and get_tree().root:
+		rm = get_tree().root.find_child("RaceManager", true, false)
+
+	if not rm or rm.checkpoints.is_empty():
+		return
+
+	var cp_idx = next_checkpoint_index % rm.checkpoints.size()
+	var cp_node = rm.checkpoints[cp_idx]
+	if not is_instance_valid(cp_node):
+		return
+
+	var to_next_cp = (cp_node.global_position - global_position).normalized()
+	var fwd = -global_transform.basis.z
+	var dot = fwd.dot(to_next_cp)
+
+	if dot < -0.4:
+		wrong_way_timer += delta
+		if wrong_way_timer > 0.8:
+			is_wrong_way = true
+	else:
+		wrong_way_timer = maxf(0.0, wrong_way_timer - delta * 3.0)
+		if wrong_way_timer <= 0.0:
+			is_wrong_way = false

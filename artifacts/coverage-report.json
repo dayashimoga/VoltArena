@@ -1,10 +1,10 @@
 {
-  "overall_coverage_pct": 93.2558139534884,
+  "overall_coverage_pct": 96.8543046357616,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
-      "tested": 7,
-      "total": 7,
+      "tested": 8,
+      "total": 8,
       "untested": []
     },
     "res://games/arena-fps/arena_fps_main.gd": {
@@ -26,26 +26,16 @@
       "untested": []
     },
     "res://games/arena-fps/player/fps_player.gd": {
-      "coverage_pct": 81.25,
-      "tested": 13,
+      "coverage_pct": 100,
+      "tested": 16,
       "total": 16,
-      "untested": [
-        "set_third_person",
-        "recover_from_out_of_bounds",
-        "_unhandled_input"
-      ]
+      "untested": []
     },
     "res://games/arena-fps/ui/arena_fps_hud.gd": {
-      "coverage_pct": 54.5454545454545,
-      "tested": 6,
+      "coverage_pct": 100,
+      "tested": 11,
       "total": 11,
-      "untested": [
-        "update_layout_positions",
-        "highlight_active_weapon",
-        "_process",
-        "add_killfeed_entry",
-        "update_objective_label"
-      ]
+      "untested": []
     },
     "res://games/arena-fps/weapons/grenade_launcher.gd": {
       "coverage_pct": 100,
@@ -130,13 +120,46 @@
       "untested": []
     },
     "res://games/kart-racing/ui/drift_storm_hud.gd": {
-      "coverage_pct": 88.2352941176471,
-      "tested": 15,
-      "total": 17,
-      "untested": [
-        "update_layout_positions",
-        "_process"
-      ]
+      "coverage_pct": 100,
+      "tested": 18,
+      "total": 18,
+      "untested": []
+    },
+    "res://games/roboforge-arena/challenges/challenge_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/roboforge-arena/roboforge_main.gd": {
+      "coverage_pct": 100,
+      "tested": 6,
+      "total": 6,
+      "untested": []
+    },
+    "res://games/roboforge-arena/robot/modular_robot.gd": {
+      "coverage_pct": 100,
+      "tested": 9,
+      "total": 9,
+      "untested": []
+    },
+    "res://games/roboforge-arena/robot/robot_data.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/roboforge-arena/ui/roboforge_hud.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://games/roboforge-arena/workshop/workshop_3d.gd": {
+      "coverage_pct": 100,
+      "tested": 8,
+      "total": 8,
+      "untested": []
     },
     "res://games/rocket-car/ai/car_ai.gd": {
       "coverage_pct": 100,
@@ -170,8 +193,32 @@
     },
     "res://games/rocket-car/vehicle/car_controller.gd": {
       "coverage_pct": 100,
+      "tested": 8,
+      "total": 8,
+      "untested": []
+    },
+    "res://games/skybound-odyssey/character/sky_character.gd": {
+      "coverage_pct": 100,
+      "tested": 13,
+      "total": 13,
+      "untested": []
+    },
+    "res://games/skybound-odyssey/skybound_main.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/skybound-odyssey/ui/skybound_hud.gd": {
+      "coverage_pct": 100,
       "tested": 6,
       "total": 6,
+      "untested": []
+    },
+    "res://games/skybound-odyssey/world/skybound_world.gd": {
+      "coverage_pct": 100,
+      "tested": 8,
+      "total": 8,
       "untested": []
     },
     "res://games/subway-survival/enemies/bio_colossus.gd": {
@@ -193,12 +240,10 @@
       "untested": []
     },
     "res://games/subway-survival/enemies/enemy_base.gd": {
-      "coverage_pct": 85.7142857142857,
-      "tested": 6,
-      "total": 7,
-      "untested": [
-        "attach_enemy_weapon"
-      ]
+      "coverage_pct": 100,
+      "tested": 8,
+      "total": 8,
+      "untested": []
     },
     "res://games/subway-survival/enemies/infected_human.gd": {
       "coverage_pct": 0,
@@ -249,13 +294,58 @@
       "untested": []
     },
     "res://games/subway-survival/ui/metro_siege_hud.gd": {
-      "coverage_pct": 89.4736842105263,
-      "tested": 17,
+      "coverage_pct": 100,
+      "tested": 19,
       "total": 19,
-      "untested": [
-        "update_layout_positions",
-        "_process"
-      ]
+      "untested": []
+    },
+    "res://games/wildcircuit/animals/animal_data.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/wildcircuit/animals/wild_animal.gd": {
+      "coverage_pct": 100,
+      "tested": 8,
+      "total": 8,
+      "untested": []
+    },
+    "res://games/wildcircuit/journal/field_journal.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/wildcircuit/photography/camera_mode.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/wildcircuit/traversal/explorer_atv.gd": {
+      "coverage_pct": 100,
+      "tested": 6,
+      "total": 6,
+      "untested": []
+    },
+    "res://games/wildcircuit/ui/wildcircuit_hud.gd": {
+      "coverage_pct": 100,
+      "tested": 8,
+      "total": 8,
+      "untested": []
+    },
+    "res://games/wildcircuit/wildcircuit_main.gd": {
+      "coverage_pct": 100,
+      "tested": 10,
+      "total": 10,
+      "untested": []
+    },
+    "res://games/wildcircuit/world/wild_biomes.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
     },
     "res://launcher/launcher.gd": {
       "coverage_pct": 100,
@@ -283,6 +373,12 @@
         "play_sfx"
       ]
     },
+    "res://shared/cameras/orbit_camera.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
     "res://shared/combat/health_component.gd": {
       "coverage_pct": 100,
       "tested": 5,
@@ -296,18 +392,59 @@
       "untested": []
     },
     "res://shared/core/game_manager.gd": {
-      "coverage_pct": 87.5,
-      "tested": 7,
+      "coverage_pct": 100,
+      "tested": 8,
       "total": 8,
-      "untested": [
-        "handle_exec_cmd"
-      ]
+      "untested": []
     },
     "res://shared/core/node_pool.gd": {
       "coverage_pct": 100,
       "tested": 6,
       "total": 6,
       "untested": []
+    },
+    "res://shared/environment/day_night_cycle.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://shared/gameplay/interaction_area.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://shared/gameplay/inventory_system.gd": {
+      "coverage_pct": 100,
+      "tested": 11,
+      "total": 11,
+      "untested": []
+    },
+    "res://shared/gameplay/puzzle_elements.gd": {
+      "coverage_pct": 55.5555555555556,
+      "tested": 5,
+      "total": 9,
+      "untested": [
+        "_init",
+        "toggle",
+        "register_trigger",
+        "_physics_process"
+      ]
+    },
+    "res://shared/gameplay/quest_system.gd": {
+      "coverage_pct": 63.1578947368421,
+      "tested": 12,
+      "total": 19,
+      "untested": [
+        "_init",
+        "advance",
+        "to_dict",
+        "from_dict",
+        "is_all_objectives_complete",
+        "to_dict",
+        "from_dict"
+      ]
     },
     "res://shared/graphics/camera_shake.gd": {
       "coverage_pct": 100,
@@ -328,18 +465,10 @@
       "untested": []
     },
     "res://shared/graphics/mesh_builder.gd": {
-      "coverage_pct": 80,
-      "tested": 28,
+      "coverage_pct": 100,
+      "tested": 35,
       "total": 35,
-      "untested": [
-        "build_ticket_turnstile",
-        "build_subway_bench",
-        "build_vending_machine",
-        "build_stadium_grandstand",
-        "build_stadium_floodlight_tower",
-        "build_track_barrier",
-        "build_grandstand_with_crowd"
-      ]
+      "untested": []
     },
     "res://shared/graphics/model_cache.gd": {
       "coverage_pct": 100,
@@ -403,8 +532,8 @@
     },
     "res://shared/save/save_manager.gd": {
       "coverage_pct": 100,
-      "tested": 8,
-      "total": 8,
+      "tested": 13,
+      "total": 13,
       "untested": []
     },
     "res://shared/settings/settings_manager.gd": {
@@ -446,7 +575,7 @@
       "untested": []
     }
   },
-  "tested_functions": 401,
-  "timestamp": "2026-09-06T16:42:49",
-  "total_functions": 430
+  "tested_functions": 585,
+  "timestamp": "2026-09-07T03:17:45",
+  "total_functions": 604
 }

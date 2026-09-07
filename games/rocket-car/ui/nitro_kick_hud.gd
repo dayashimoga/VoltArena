@@ -215,7 +215,7 @@ func _on_score_event(team_id: int, new_score: int) -> void:
 
 func check_mobile_controls() -> void:
 	var pa = GameConstants.get_autoload(self, "PlatformAdapter")
-	if pa and pa.has_touchscreen():
+	if pa and ("has_touchscreen" in pa and pa.has_touchscreen):
 		touch_controls = TouchControls.new()
 		add_child(touch_controls)
 

@@ -14,6 +14,9 @@ var lap_time_label: Label
 var best_lap_label: Label
 var countdown_panel: PanelContainer
 var countdown_label: Label
+var gantry_lamps: Array[ColorRect] = []
+var wrong_way_panel: PanelContainer
+var wrong_way_label: Label
 var finish_panel: PanelContainer
 var finish_label: Label
 var toast_container: VBoxContainer
@@ -136,7 +139,9 @@ func update_layout_positions() -> void:
 	if minimap_panel and is_instance_valid(minimap_panel):
 		minimap_panel.position = Vector2(24, maxf(vp.y - 200, 24))
 	if countdown_panel and is_instance_valid(countdown_panel):
-		countdown_panel.position = Vector2((vp.x - 280) * 0.5, (vp.y - 90) * 0.35)
+		countdown_panel.position = Vector2((vp.x - 320) * 0.5, (vp.y - 110) * 0.35)
+	if wrong_way_panel and is_instance_valid(wrong_way_panel):
+		wrong_way_panel.position = Vector2((vp.x - 380) * 0.5, 90)
 	if finish_panel and is_instance_valid(finish_panel):
 		finish_panel.position = Vector2((vp.x - 360) * 0.5, (vp.y - 100) * 0.4)
 	if onboarding_overlay and is_instance_valid(onboarding_overlay):
@@ -259,26 +264,54 @@ func setup_hud_layout() -> void:
 	drift_bar.show_percentage = false
 	d_hbox.add_child(drift_bar)
 
-	# Center Countdown Banner
+	# Center Countdown Banner (5-Light Gantry)
 	countdown_panel = PanelContainer.new()
-	countdown_panel.anchor_left = 0.5
-	countdown_panel.anchor_top = 0.35
-	countdown_panel.anchor_right = 0.5
-	countdown_panel.anchor_bottom = 0.35
-	countdown_panel.offset_left = -140
-	countdown_panel.offset_top = -45
-	countdown_panel.offset_right = 140
-	countdown_panel.offset_bottom = 45
+	countdown_panel.custom_minimum_size = Vector2(320, 110)
 	countdown_panel.visible = false
 	add_child(countdown_panel)
 
+	var c_vbox = VBoxContainer.new()
+	c_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	c_vbox.add_theme_constant_override("separation", 8)
+	countdown_panel.add_child(c_vbox)
+
+	var lamp_hbox = HBoxContainer.new()
+	lamp_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	lamp_hbox.add_theme_constant_override("separation", 12)
+	c_vbox.add_child(lamp_hbox)
+
+	gantry_lamps.clear()
+	for i in range(5):
+		var lamp_border = PanelContainer.new()
+		lamp_border.custom_minimum_size = Vector2(34, 34)
+		var lamp = ColorRect.new()
+		lamp.custom_minimum_size = Vector2(30, 30)
+		lamp.color = Color(0.12, 0.14, 0.18, 0.9)
+		lamp_border.add_child(lamp)
+		lamp_hbox.add_child(lamp_border)
+		gantry_lamps.append(lamp)
+
 	countdown_label = Label.new()
-	countdown_label.text = "3"
+	countdown_label.text = "READY"
 	countdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	countdown_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	countdown_label.add_theme_font_size_override("font_size", 42)
+	countdown_label.add_theme_font_size_override("font_size", 36)
 	countdown_label.modulate = Color(1.0, 0.9, 0.2)
-	countdown_panel.add_child(countdown_label)
+	c_vbox.add_child(countdown_label)
+
+	# Wrong Way Warning Banner
+	wrong_way_panel = PanelContainer.new()
+	wrong_way_panel.custom_minimum_size = Vector2(380, 46)
+	wrong_way_panel.visible = false
+	add_child(wrong_way_panel)
+
+	wrong_way_label = Label.new()
+	wrong_way_label.text = "⚠ WRONG WAY — TURN AROUND ⚠"
+	wrong_way_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	wrong_way_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	wrong_way_label.add_theme_font_size_override("font_size", 18)
+	wrong_way_label.modulate = Color(1.0, 0.25, 0.15)
+	wrong_way_panel.add_child(wrong_way_label)
 
 	# Center Finish Banner
 	finish_panel = PanelContainer.new()
@@ -325,7 +358,7 @@ func _process(_delta: float) -> void:
 
 func check_mobile_controls() -> void:
 	var pa = GameConstants.get_autoload(self, "PlatformAdapter")
-	if pa and pa.has_touchscreen():
+	if pa and pa.has_touchscreen:
 		touch_controls = TouchControls.new()
 		add_child(touch_controls)
 
@@ -386,18 +419,29 @@ func update_lap_times(cur_sec: float, best_sec: float) -> void:
 	if best_lap_label and best_sec < 900.0:
 		best_lap_label.text = "BEST: %s" % _format_time(best_sec)
 
+func set_wrong_way(wrong: bool) -> void:
+	if not wrong_way_panel:
+		return
+	if wrong_way_panel.visible != wrong:
+		wrong_way_panel.visible = wrong
+
 func show_countdown(val: Variant) -> void:
 	if not countdown_panel or not countdown_label:
 		return
-	var text: String = str(val)
-	if text == "0":
-		text = "GO!"
+	var text: String = str(val).strip_edges()
 	countdown_panel.visible = true
 	countdown_panel.modulate.a = 1.0
-	countdown_label.text = text
-	if text == "GO!" or text == "GO":
-		countdown_label.modulate = Color(0.0, 1.0, 0.5)
-		countdown_label.add_theme_font_size_override("font_size", 64)
+
+	var inactive_col = Color(0.12, 0.14, 0.18, 0.9)
+	var red_lit_col = Color(1.0, 0.15, 0.1)
+	var green_lit_col = Color(0.0, 1.0, 0.4)
+
+	if text == "GO!" or text == "GO" or text == "0":
+		for lamp in gantry_lamps:
+			lamp.color = green_lit_col
+		countdown_label.text = "GO!"
+		countdown_label.modulate = green_lit_col
+		countdown_label.add_theme_font_size_override("font_size", 48)
 		var tween = create_tween()
 		if tween:
 			tween.tween_property(countdown_panel, "modulate:a", 0.0, 0.8).set_delay(0.6)
@@ -406,13 +450,22 @@ func show_countdown(val: Variant) -> void:
 				countdown_panel.modulate.a = 1.0
 			)
 	else:
+		var c_num = text.to_int()
+		var lit_count = 0
+		if c_num >= 1 and c_num <= 5:
+			lit_count = 6 - c_num
+		elif c_num > 5:
+			lit_count = 1
+
+		for i in range(gantry_lamps.size()):
+			if i < lit_count:
+				gantry_lamps[i].color = red_lit_col
+			else:
+				gantry_lamps[i].color = inactive_col
+
+		countdown_label.text = str(c_num)
 		countdown_label.modulate = Color(1.0, 0.85, 0.15)
-		countdown_label.add_theme_font_size_override("font_size", 54)
-		countdown_label.scale = Vector2(1.2, 1.2)
-		countdown_label.pivot_offset = countdown_label.size * 0.5
-		var tween = create_tween()
-		if tween:
-			tween.tween_property(countdown_label, "scale", Vector2(1.0, 1.0), 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		countdown_label.add_theme_font_size_override("font_size", 38)
 
 func show_finish_banner(pos_text: String) -> void:
 	if not finish_panel:
@@ -509,7 +562,7 @@ func setup_onboarding_overlay() -> void:
 	veh_lbl.add_theme_font_size_override("font_size", 13)
 	veh_box.add_child(veh_lbl)
 
-	var vehs = [["SPEED DEMON (Speeder)", "speeder"], ["TURBO TRUCK (Enforcer)", "enforcer"], ["PHANTOM DRIFT", "phantom"]]
+	var vehs = [["SPEED DEMON (Speeder)", "speeder"], ["TURBO TRUCK (Enforcer)", "enforcer"], ["PHANTOM DRIFT", "phantom"], ["TURBO DEMON (Rocket)", "turbo_demon"]]
 	for v in vehs:
 		var btn = Button.new()
 		btn.text = v[0]

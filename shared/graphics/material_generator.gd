@@ -315,6 +315,79 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.emission_enabled = true
 			mat.emission = Color(1.0, 0.45, 0.0)
 			mat.emission_energy_multiplier = 1.2
+		"ancient_stone":
+			mat.albedo_color = Color(0.68, 0.65, 0.60)
+			mat.metallic = 0.05
+			mat.roughness = 0.88
+		"crystal_cyan":
+			mat.albedo_color = Color(0.2, 0.9, 1.0)
+			mat.emission_enabled = true
+			mat.emission = Color(0.1, 0.95, 1.0)
+			mat.emission_energy_multiplier = 2.6
+			mat.roughness = 0.15
+		"crystal_magenta":
+			mat.albedo_color = Color(0.9, 0.2, 0.85)
+			mat.emission_enabled = true
+			mat.emission = Color(0.95, 0.1, 0.85)
+			mat.emission_energy_multiplier = 2.6
+			mat.roughness = 0.15
+		"temple_gold":
+			mat.albedo_color = Color(0.95, 0.78, 0.25)
+			mat.metallic = 0.92
+			mat.roughness = 0.22
+		"frost_ice":
+			mat.albedo_color = Color(0.85, 0.94, 1.0)
+			mat.metallic = 0.1
+			mat.roughness = 0.14
+		"storm_citadel":
+			mat.albedo_color = Color(0.22, 0.25, 0.30)
+			mat.metallic = 0.55
+			mat.roughness = 0.65
+		"lush_grass":
+			mat.albedo_color = Color(0.28, 0.65, 0.22)
+			mat.roughness = 0.85
+		"wood_bark":
+			mat.albedo_color = Color(0.42, 0.30, 0.20)
+			mat.roughness = 0.92
+		"chassis_carbon":
+			mat.albedo_color = Color(0.14, 0.15, 0.18)
+			mat.metallic = 0.70
+			mat.roughness = 0.32
+		"hazard_yellow":
+			mat.albedo_color = Color(0.95, 0.82, 0.05)
+			mat.metallic = 0.3
+			mat.roughness = 0.4
+		"hydraulic_chrome":
+			mat.albedo_color = Color(0.88, 0.90, 0.95)
+			mat.metallic = 0.96
+			mat.roughness = 0.10
+		"tread_rubber":
+			mat.albedo_color = Color(0.15, 0.15, 0.16)
+			mat.metallic = 0.05
+			mat.roughness = 0.82
+		"copper_core":
+			mat.albedo_color = Color(0.85, 0.52, 0.32)
+			mat.metallic = 0.90
+			mat.roughness = 0.28
+		"savannah_dirt":
+			mat.albedo_color = Color(0.74, 0.56, 0.34)
+			mat.roughness = 0.92
+		"rainforest_canopy":
+			mat.albedo_color = Color(0.12, 0.46, 0.18)
+			mat.roughness = 0.85
+		"alpine_rock":
+			mat.albedo_color = Color(0.50, 0.52, 0.56)
+			mat.roughness = 0.90
+		"tropical_sand":
+			mat.albedo_color = Color(0.92, 0.85, 0.66)
+			mat.roughness = 0.94
+		"wetland_mud":
+			mat.albedo_color = Color(0.32, 0.26, 0.20)
+			mat.roughness = 0.55
+		"water_stream":
+			mat.albedo_color = Color(0.2, 0.65, 0.9, 0.85)
+			mat.metallic = 0.25
+			mat.roughness = 0.08
 		_:
 			mat.albedo_color = Color(0.7, 0.7, 0.7)
 			mat.metallic = 0.5

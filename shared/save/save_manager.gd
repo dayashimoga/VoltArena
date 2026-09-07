@@ -123,3 +123,60 @@ func record_kart_race(track_id: String, lap_time: float, finished_first: bool) -
 	if not stats.has(key) or lap_time < stats[key]:
 		stats[key] = lap_time
 	save_to_disk()
+
+func record_skybound_progress(regions_unlocked: int, shards: int, completed: bool) -> void:
+	if not save_data.has("statistics"):
+		save_data["statistics"] = {}
+	if not save_data["statistics"].has("skybound_odyssey"):
+		save_data["statistics"]["skybound_odyssey"] = {
+			"regions_unlocked": 1,
+			"shards_collected": 0,
+			"odyssey_completed": false
+		}
+	var stats = save_data["statistics"]["skybound_odyssey"]
+	stats["regions_unlocked"] = maxi(stats["regions_unlocked"], regions_unlocked)
+	stats["shards_collected"] = maxi(stats["shards_collected"], shards)
+	if completed:
+		stats["odyssey_completed"] = true
+	save_to_disk()
+
+func record_roboforge_challenge(challenge_id: String, time_taken: float, completed: bool) -> void:
+	if not save_data.has("statistics"):
+		save_data["statistics"] = {}
+	if not save_data["statistics"].has("roboforge_arena"):
+		save_data["statistics"]["roboforge_arena"] = {
+			"challenges_completed": 0,
+			"best_times": {}
+		}
+	var stats = save_data["statistics"]["roboforge_arena"]
+	if completed:
+		stats["challenges_completed"] += 1
+		var times = stats["best_times"]
+		if not times.has(challenge_id) or time_taken < times[challenge_id]:
+			times[challenge_id] = time_taken
+	save_to_disk()
+
+func record_wildcircuit_photo(species_id: String, score: int, best_grade: String) -> void:
+	if not save_data.has("statistics"):
+		save_data["statistics"] = {}
+	if not save_data["statistics"].has("wildcircuit"):
+		save_data["statistics"]["wildcircuit"] = {
+			"species_discovered": 0,
+			"photos": {}
+		}
+	var stats = save_data["statistics"]["wildcircuit"]
+	if not stats["photos"].has(species_id):
+		stats["species_discovered"] += 1
+		stats["photos"][species_id] = {"score": score, "grade": best_grade}
+	else:
+		if score > stats["photos"][species_id]["score"]:
+			stats["photos"][species_id] = {"score": score, "grade": best_grade}
+	save_to_disk()
+
+func set_custom_data(key: String, val: Variant) -> void:
+	save_data[key] = val
+	save_to_disk()
+
+func get_custom_data(key: String, default_val: Variant = null) -> Variant:
+	return save_data.get(key, default_val)
+

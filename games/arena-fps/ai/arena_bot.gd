@@ -15,6 +15,8 @@ var strafe_timer: float = 0.0
 var strafe_dir: float = 1.0
 var character_model: Node3D = null
 var weapon_socket: Node3D = null
+var kill_plane_y: float = -6.0
+var last_safe_grounded_transform: Transform3D = Transform3D.IDENTITY
 
 @export var archetype: String = "assault" # "skirmisher", "assault", "sentinel"
 
@@ -118,7 +120,15 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if not is_on_floor():
-		velocity.y -= 20.0 * delta
+		velocity.y -= 22.0 * delta
+	else:
+		velocity.y = 0.0
+		if global_position.y > kill_plane_y and velocity.length() < 25.0:
+			last_safe_grounded_transform = global_transform
+
+	if global_position.y < kill_plane_y:
+		recover_from_out_of_bounds()
+		return
 
 	if health_component.is_dead:
 		move_and_slide()
@@ -245,6 +255,14 @@ func _on_died(killer: Node) -> void:
 			visible = false
 		)
 		tree.create_timer(4.0).timeout.connect(respawn)
+
+func recover_from_out_of_bounds() -> void:
+	if last_safe_grounded_transform != Transform3D.IDENTITY:
+		global_transform = last_safe_grounded_transform
+		global_position.y += 0.3
+	else:
+		global_position = patrol_target + Vector3.UP * 1.0
+	velocity = Vector3.ZERO
 
 func respawn() -> void:
 	pick_random_patrol()

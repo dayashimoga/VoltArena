@@ -28,7 +28,10 @@ func get_coverage_entries() -> Array:
 				"build_energy_ball", "build_item_box", "build_pickup_mesh",
 				"build_cyber_crate", "build_subway_car_mesh", "build_stadium_goal_mesh",
 				"build_race_gantry_mesh", "build_blast_door_mesh", "build_upgrade_kiosk_mesh",
-				"build_boost_orb_mesh", "build_scrap_gear_mesh", "build_start_gantry"
+				"build_boost_orb_mesh", "build_scrap_gear_mesh", "build_start_gantry",
+				"build_ticket_turnstile", "build_subway_bench", "build_vending_machine",
+				"build_stadium_grandstand", "build_stadium_floodlight_tower",
+				"build_track_barrier", "build_grandstand_with_crowd"
 			]
 		]
 	]

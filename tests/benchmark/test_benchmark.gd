@@ -8,6 +8,9 @@ extends SceneTree
 const ArenaGen = preload("res://games/arena-fps/maps/arena_map_generator.gd")
 const SubwayGen = preload("res://games/subway-survival/maps/subway_generator.gd")
 const TrackGen = preload("res://games/kart-racing/tracks/track_generator.gd")
+const SkyboundWorldGen = preload("res://games/skybound-odyssey/world/skybound_world.gd")
+const Workshop3DGen = preload("res://games/roboforge-arena/workshop/workshop_3d.gd")
+const WildBiomesGen = preload("res://games/wildcircuit/world/wild_biomes.gd")
 const HealthComp = preload("res://shared/combat/health_component.gd")
 const QualityMgr = preload("res://shared/graphics/quality_manager.gd")
 
@@ -24,6 +27,9 @@ func _init() -> void:
 	results["arena_gen_ms"] = bench_gen("Arena Map", ArenaGen)
 	results["subway_gen_ms"] = bench_gen("Subway Tunnel", SubwayGen)
 	results["track_gen_ms"] = bench_gen("Kart Track", TrackGen)
+	results["skybound_gen_ms"] = bench_gen("Skybound World", SkyboundWorldGen)
+	results["roboforge_workshop_ms"] = bench_gen("RoboForge Workshop", Workshop3DGen)
+	results["wildcircuit_biomes_ms"] = bench_gen("WildCircuit Biomes", WildBiomesGen)
 
 	# --- Combat Throughput ---
 	print("\n[SECTION] Combat Throughput")
@@ -76,20 +82,31 @@ func _init() -> void:
 		"ArenaFPS": "res://games/arena-fps/arena_fps_main.gd",
 		"SubwaySurvival": "res://games/subway-survival/subway_main.gd",
 		"RocketCar": "res://games/rocket-car/rocket_car_main.gd",
-		"KartRacing": "res://games/kart-racing/kart_racing_main.gd"
+		"KartRacing": "res://games/kart-racing/kart_racing_main.gd",
+		"SkyboundOdyssey": "res://games/skybound-odyssey/skybound_main.gd",
+		"RoboForgeArena": "res://games/roboforge-arena/roboforge_main.gd",
+		"WildCircuit": "res://games/wildcircuit/wildcircuit_main.gd"
 	}
 	var ttp_budgets = {
 		"ArenaFPS": 1000.0,
 		"SubwaySurvival": 1500.0,
 		"RocketCar": 1000.0,
-		"KartRacing": 2500.0
+		"KartRacing": 2500.0,
+		"SkyboundOdyssey": 2000.0,
+		"RoboForgeArena": 2000.0,
+		"WildCircuit": 2500.0
 	}
 	var ttp_results: Dictionary = {}
 	for scene_name in scenes.keys():
 		var script = load(scenes[scene_name])
 		var t_start = Time.get_ticks_usec()
 		var instance = script.new()
-		instance.setup_scene()
+		if instance.has_method("setup_scene"):
+			instance.setup_scene()
+		elif instance.has_method("setup_game"):
+			instance.setup_game()
+		else:
+			instance._ready()
 		var t_ttp = (Time.get_ticks_usec() - t_start) / 1000.0
 		ttp_results[scene_name] = t_ttp
 		var b = ttp_budgets.get(scene_name, 2000.0)
@@ -142,7 +159,7 @@ func _init() -> void:
 
 	# --- Gate Evaluation ---
 	print("\n==================================================")
-	var gen_pass = results["arena_gen_ms"] < 500.0 and results["subway_gen_ms"] < 1500.0 and results["track_gen_ms"] < 2500.0
+	var gen_pass = results["arena_gen_ms"] < 500.0 and results["subway_gen_ms"] < 1500.0 and results["track_gen_ms"] < 2500.0 and results["skybound_gen_ms"] < 2500.0 and results["roboforge_workshop_ms"] < 2000.0 and results["wildcircuit_biomes_ms"] < 2500.0
 	var combat_pass = results["combat_10k_ms"] < 100.0
 	var mem_pass = results["static_memory_mb"] < 500.0
 	var ttp_pass = true

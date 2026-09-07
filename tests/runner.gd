@@ -38,6 +38,15 @@ const TestNodePoolScript = preload("res://tests/unit/test_node_pool.gd")
 const TestProceduralAnimatorScript = preload("res://tests/unit/test_procedural_animator.gd")
 const TestModelCacheScript = preload("res://tests/unit/test_model_cache.gd")
 
+# --- New Subsystems & 3 New Games (Unit) ---
+const TestQuestSystemScript = preload("res://tests/unit/test_quest_system.gd")
+const TestInventorySystemScript = preload("res://tests/unit/test_inventory_system.gd")
+const TestPuzzleElementsScript = preload("res://tests/unit/test_puzzle_elements.gd")
+const TestSkyboundScript = preload("res://tests/unit/test_skybound.gd")
+const TestRoboForgeScript = preload("res://tests/unit/test_roboforge.gd")
+const TestWildCircuitScript = preload("res://tests/unit/test_wildcircuit.gd")
+const TestEngineSubsystemsScript = preload("res://tests/unit/test_engine_subsystems.gd")
+
 # --- Responsive & Soak ---
 const TestResponsiveUIScript = preload("res://tests/responsive/test_responsive_ui.gd")
 const TestSoakScript = preload("res://tests/performance/test_soak.gd")
@@ -47,6 +56,9 @@ const TestArenaE2EScript = preload("res://tests/e2e/test_arena_e2e.gd")
 const TestSubwayE2EScript = preload("res://tests/e2e/test_subway_e2e.gd")
 const TestRocketE2EScript = preload("res://tests/e2e/test_rocket_e2e.gd")
 const TestKartE2EScript = preload("res://tests/e2e/test_kart_e2e.gd")
+const TestSkyboundE2EScript = preload("res://tests/e2e/test_skybound_e2e.gd")
+const TestRoboForgeE2EScript = preload("res://tests/e2e/test_roboforge_e2e.gd")
+const TestWildCircuitE2EScript = preload("res://tests/e2e/test_wildcircuit_e2e.gd")
 const TestLauncherE2EScript = preload("res://tests/e2e/test_launcher_e2e.gd")
 const TestGameplayScreensScript = preload("res://tests/e2e/test_gameplay_screens.gd")
 
@@ -108,6 +120,14 @@ func _init() -> void:
 		{"name": "NodePool Centralized Service Unit", "instance": TestNodePoolScript.new()},
 		{"name": "Procedural Animator & Shake Unit", "instance": TestProceduralAnimatorScript.new()},
 		{"name": "ModelCache 3D glTF Assets Unit", "instance": TestModelCacheScript.new()},
+		# Subsystems & New Games (Unit)
+		{"name": "Quest System Unit", "instance": TestQuestSystemScript.new()},
+		{"name": "Inventory System Unit", "instance": TestInventorySystemScript.new()},
+		{"name": "Puzzle Elements Unit", "instance": TestPuzzleElementsScript.new()},
+		{"name": "Skybound Odyssey Unit", "instance": TestSkyboundScript.new()},
+		{"name": "RoboForge Arena Unit", "instance": TestRoboForgeScript.new()},
+		{"name": "WildCircuit Unit", "instance": TestWildCircuitScript.new()},
+		{"name": "Engine Subsystems Unit", "instance": TestEngineSubsystemsScript.new()},
 		# Responsive & Soak
 		{"name": "Responsive UI Multi-Resolution", "instance": TestResponsiveUIScript.new()},
 		{"name": "Soak & Stability Lifecycle", "instance": TestSoakScript.new()},
@@ -116,6 +136,9 @@ func _init() -> void:
 		{"name": "Metro Siege E2E", "instance": TestSubwayE2EScript.new()},
 		{"name": "Nitro Kick E2E", "instance": TestRocketE2EScript.new()},
 		{"name": "Drift Storm E2E", "instance": TestKartE2EScript.new()},
+		{"name": "Skybound Odyssey E2E", "instance": TestSkyboundE2EScript.new()},
+		{"name": "RoboForge Arena E2E", "instance": TestRoboForgeE2EScript.new()},
+		{"name": "WildCircuit E2E", "instance": TestWildCircuitE2EScript.new()},
 		{"name": "Launcher E2E", "instance": TestLauncherE2EScript.new()},
 		{"name": "Gameplay Screens Certification E2E", "instance": TestGameplayScreensScript.new()},
 		# Legacy Acceptance

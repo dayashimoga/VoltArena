@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 96.0422163588391,
+  "overall_coverage_pct": 95.5321944809461,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -380,11 +380,12 @@
       "untested": []
     },
     "res://games/strike-vector/player/strike_player.gd": {
-      "coverage_pct": 90,
+      "coverage_pct": 81.8181818181818,
       "tested": 9,
-      "total": 10,
+      "total": 11,
       "untested": [
-        "_init"
+        "_init",
+        "is_valid_grounded"
       ]
     },
     "res://games/strike-vector/player/strike_player_visual.gd": {
@@ -415,10 +416,14 @@
       ]
     },
     "res://games/strike-vector/ui/strike_hud.gd": {
-      "coverage_pct": 100,
-      "tested": 8,
-      "total": 8,
-      "untested": []
+      "coverage_pct": 70,
+      "tested": 7,
+      "total": 10,
+      "untested": [
+        "show_boss_bar",
+        "update_boss_health",
+        "hide_boss_bar"
+      ]
     },
     "res://games/strike-vector/ui/strike_results_screen.gd": {
       "coverage_pct": 100,
@@ -809,7 +814,7 @@
       "untested": []
     }
   },
-  "tested_functions": 728,
-  "timestamp": "2026-09-08T11:56:02",
-  "total_functions": 758
+  "tested_functions": 727,
+  "timestamp": "2026-09-08T13:23:11",
+  "total_functions": 761
 }

@@ -254,11 +254,37 @@ static func create_commander(biome: String) -> CharacterBody3D:
 	_setup_collision(ai, 0.58, 2.05)
 	return ai
 
+const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
+
 static func _attach_humanoid_visual(parent: Node3D, armor_color: Color, visor_color: Color, scale_mod: float) -> Node3D:
 	var root = Node3D.new()
 	root.name = "Visual"
 	root.scale = Vector3(scale_mod, scale_mod, scale_mod)
 
+	# Try authentic rigged character model
+	var char_type = "trooper"
+	if scale_mod > 1.1:
+		char_type = "heavy"
+	elif scale_mod < 0.95:
+		char_type = "scout"
+
+	var model = ModelCacheScript.get_character(char_type)
+	if model:
+		model.name = "CharacterRig"
+		model.rotation_degrees.y = 180.0
+		root.add_child(model)
+
+		# Add handheld weapon model
+		var w_model = ModelCacheScript.get_weapon_model("pulse_rifle")
+		if w_model:
+			w_model.position = Vector3(0.28, 1.0, -0.32)
+			w_model.scale = Vector3(1.0, 1.0, 1.0)
+			root.add_child(w_model)
+
+		parent.add_child(root)
+		return root
+
+	# Fallback high-poly stylized mesh
 	var mat_armor = StandardMaterial3D.new()
 	mat_armor.albedo_color = armor_color
 	mat_armor.metallic = 0.7
@@ -270,30 +296,29 @@ static func _attach_humanoid_visual(parent: Node3D, armor_color: Color, visor_co
 	mat_visor.emission = visor_color
 	mat_visor.emission_energy_multiplier = 3.5
 
-	# Torso
 	var torso = MeshInstance3D.new()
-	var t_box = BoxMesh.new()
-	t_box.size = Vector3(0.52, 0.68, 0.30)
+	var t_box = CapsuleMesh.new()
+	t_box.radius = 0.28
+	t_box.height = 0.85
 	torso.mesh = t_box
 	torso.position = Vector3(0, 1.12, 0)
 	torso.material_override = mat_armor
 	root.add_child(torso)
 
-	# Head
 	var head = MeshInstance3D.new()
-	var h_box = BoxMesh.new()
-	h_box.size = Vector3(0.26, 0.28, 0.26)
+	var h_box = SphereMesh.new()
+	h_box.radius = 0.18
+	h_box.height = 0.36
 	head.mesh = h_box
-	head.position = Vector3(0, 0.48, 0)
+	head.position = Vector3(0, 0.55, 0)
 	head.material_override = mat_armor
 	torso.add_child(head)
 
-	# Visor
 	var visor = MeshInstance3D.new()
 	var v_box = BoxMesh.new()
 	v_box.size = Vector3(0.22, 0.08, 0.10)
 	visor.mesh = v_box
-	visor.position = Vector3(0, 0.02, -0.12)
+	visor.position = Vector3(0, 0.02, -0.14)
 	visor.material_override = mat_visor
 	head.add_child(visor)
 

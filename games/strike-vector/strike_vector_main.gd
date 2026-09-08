@@ -48,6 +48,9 @@ func setup_subsystems() -> void:
 	audio_director.name = "AudioDirector"
 	add_child(audio_director)
 
+	# Setup Global Environment Lighting & Atmosphere
+	_setup_environment_lighting()
+
 	# Setup UI
 	hud = StrikeHUDScript.new()
 	hud.name = "HUD"
@@ -72,6 +75,61 @@ func setup_subsystems() -> void:
 	if im and im.has_method("capture_mouse"):
 		im.capture_mouse(true)
 
+func _setup_environment_lighting() -> void:
+	if has_node("WorldEnvironment"):
+		return
+
+	var we = WorldEnvironment.new()
+	we.name = "WorldEnvironment"
+	var env = Environment.new()
+
+	# Procedural twilight sky with cybernetic horizon glow
+	var sky_mat = ProceduralSkyMaterial.new()
+	sky_mat.sky_top_color = Color(0.04, 0.08, 0.18)
+	sky_mat.sky_horizon_color = Color(0.14, 0.22, 0.35)
+	sky_mat.sky_curve = 0.15
+	sky_mat.ground_bottom_color = Color(0.03, 0.05, 0.08)
+	sky_mat.ground_horizon_color = Color(0.08, 0.14, 0.22)
+	sky_mat.ground_curve = 0.10
+	sky_mat.energy_multiplier = 1.25
+
+	var sky = Sky.new()
+	sky.sky_material = sky_mat
+	env.background_mode = Environment.BG_SKY
+	env.sky = sky
+
+	# Strong ambient illumination for clear tactical readability (no pitch-black corridors)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.26, 0.34, 0.48)
+	env.ambient_light_energy = 1.65
+
+	# Filmic tonemapper with high dynamic range
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.30
+	env.tonemap_white = 4.5
+
+	# Glow bloom on neon signs and muzzle flashes
+	env.glow_enabled = true
+	env.glow_intensity = 0.55
+	env.glow_bloom = 0.20
+
+	# Subtle atmospheric depth fog
+	env.fog_enabled = true
+	env.fog_light_color = Color(0.06, 0.10, 0.18)
+	env.fog_density = 0.0025
+
+	we.environment = env
+	add_child(we)
+
+	# Key Directional Light (Moonlight / City Sky illumination)
+	var dir_light = DirectionalLight3D.new()
+	dir_light.name = "KeyMoonlight"
+	dir_light.light_color = Color(0.78, 0.88, 1.0)
+	dir_light.light_energy = 1.85
+	dir_light.rotation_degrees = Vector3(-55.0, 35.0, 0.0)
+	dir_light.shadow_enabled = true
+	add_child(dir_light)
+
 func load_mission(m_idx: int) -> void:
 	# Ensure subsystems are initialized even if called before _ready()
 	if campaign_mgr == null:
@@ -93,10 +151,10 @@ func load_mission(m_idx: int) -> void:
 	var segs = MissionDefinitionsScript.build_mission_segments(m_idx)
 	mission_streamer.setup_segments(segs)
 
-	# Spawn Player
+	# Spawn Player safely on grounded roadway
 	player_node = StrikePlayerScript.new()
 	player_node.name = "Player"
-	player_node.position = Vector3(0, 0.8, 0)
+	player_node.position = Vector3(0, 0.1, -6.0)
 	add_child(player_node)
 
 	# Connect Player Signals to HUD & Checkpoints

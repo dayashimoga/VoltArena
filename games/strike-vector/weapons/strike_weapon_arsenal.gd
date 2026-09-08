@@ -203,13 +203,65 @@ static func create_tactical_sidearm() -> Node3D:
 	_attach_visual(w, "sidearm", Color(1.0, 1.0, 1.0))
 	return w
 
+const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
+
 static func _attach_visual(parent: Node3D, archetype: String, glow_color: Color) -> void:
 	var root = Node3D.new()
 	root.name = "VisualModel"
 
+	var glb_path = ""
+	var model_scale = Vector3(1.0, 1.0, 1.0)
+	match archetype:
+		"vx7":
+			glb_path = "res://assets/models/weapons/pulse_rifle.glb"
+			model_scale = Vector3(1.2, 1.2, 1.2)
+		"tempest":
+			glb_path = "res://assets/models/weapons/blaster_repeater.glb"
+			model_scale = Vector3(1.1, 1.1, 1.1)
+		"breach":
+			glb_path = "res://assets/models/weapons/scatter_cannon.glb"
+			model_scale = Vector3(1.3, 1.3, 1.3)
+		"atlas":
+			glb_path = "res://assets/models/weapons/rail_driver.glb"
+			model_scale = Vector3(1.1, 1.1, 1.1)
+		"longshot":
+			glb_path = "res://assets/models/weapons/rail_driver.glb"
+			model_scale = Vector3(1.2, 1.2, 1.4)
+		"cyclone":
+			glb_path = "res://assets/models/weapons/pulse_rifle.glb"
+			model_scale = Vector3(1.4, 1.4, 1.3)
+		"arc":
+			glb_path = "res://assets/models/weapons/grenade_launcher.glb"
+			model_scale = Vector3(1.2, 1.2, 1.2)
+		"pulse":
+			glb_path = "res://assets/models/weapons/plasma_cutter.glb"
+			model_scale = Vector3(1.2, 1.2, 1.2)
+		"sidearm":
+			glb_path = "res://assets/models/weapons/blaster.glb"
+			model_scale = Vector3(1.0, 1.0, 1.0)
+		_:
+			glb_path = "res://assets/models/weapons/pulse_rifle.glb"
+
+	var model = ModelCacheScript.get_model(glb_path)
+	if model:
+		model.scale = model_scale
+		model.rotation_degrees.y = 180.0
+		root.add_child(model)
+
+		# Add muzzle point
+		var muzzle = Marker3D.new()
+		muzzle.name = "MuzzlePoint"
+		muzzle.position = Vector3(0, 0.05, -0.45 * model_scale.z)
+		root.add_child(muzzle)
+	else:
+		_build_fallback_weapon_mesh(root, archetype, glow_color)
+
+	parent.add_child(root)
+	parent.weapon_mesh = root
+
+static func _build_fallback_weapon_mesh(root: Node3D, archetype: String, glow_color: Color) -> void:
 	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
 	var mat_hull = MaterialGenerator.get_material("dark_hull")
-
 	var mat_glow = StandardMaterial3D.new()
 	mat_glow.albedo_color = glow_color
 	mat_glow.emission_enabled = true
@@ -218,41 +270,14 @@ static func _attach_visual(parent: Node3D, archetype: String, glow_color: Color)
 
 	match archetype:
 		"vx7", "atlas":
-			# Assault / Battle Rifle frame
 			_add_box(root, Vector3(0.08, 0.12, 0.50), Vector3(0, 0.02, -0.12), mat_hull)
-			_add_box(root, Vector3(0.05, 0.16, 0.08), Vector3(0, -0.14, 0.06), mat_metal) # grip
-			_add_box(root, Vector3(0.045, 0.18, 0.08), Vector3(0, -0.14, -0.10), mat_metal) # mag
-			_add_box(root, Vector3(0.03, 0.03, 0.40), Vector3(0, 0.04, -0.42), mat_metal) # barrel
-			_add_box(root, Vector3(0.02, 0.02, 0.25), Vector3(0, 0.08, -0.15), mat_glow) # rail glow
-		"tempest", "sidearm":
-			# Compact SMG / Pistol frame
-			var l_scale = 0.30 if archetype == "sidearm" else 0.38
-			_add_box(root, Vector3(0.06, 0.10, l_scale), Vector3(0, 0.02, -0.08), mat_hull)
-			_add_box(root, Vector3(0.045, 0.14, 0.06), Vector3(0, -0.12, 0.04), mat_metal) # grip
-			_add_box(root, Vector3(0.025, 0.025, 0.20), Vector3(0, 0.03, -0.22), mat_metal) # barrel
-			_add_box(root, Vector3(0.015, 0.015, 0.18), Vector3(0, 0.06, -0.10), mat_glow) # glow
-		"breach":
-			# Shotgun double barrel pump
-			_add_box(root, Vector3(0.12, 0.14, 0.45), Vector3(0, 0.01, -0.10), mat_hull)
-			_add_box(root, Vector3(0.05, 0.05, 0.44), Vector3(0, 0.05, -0.42), mat_metal) # top barrel
-			_add_box(root, Vector3(0.05, 0.05, 0.44), Vector3(0, -0.02, -0.42), mat_metal) # bottom barrel
-			_add_box(root, Vector3(0.08, 0.07, 0.18), Vector3(0, -0.08, -0.30), mat_glow) # pump grip
-		"longshot", "pulse":
-			# Heavy Marksman / Penetrating Rail chassis
-			_add_box(root, Vector3(0.09, 0.12, 0.60), Vector3(0, 0.02, -0.18), mat_hull)
-			_add_box(root, Vector3(0.025, 0.03, 0.75), Vector3(0.025, 0.03, -0.65), mat_metal) # rail A
-			_add_box(root, Vector3(0.025, 0.03, 0.75), Vector3(-0.025, 0.03, -0.65), mat_metal) # rail B
-			_add_box(root, Vector3(0.02, 0.02, 0.65), Vector3(0, 0.03, -0.65), mat_glow) # inner core
-			_add_box(root, Vector3(0.055, 0.06, 0.16), Vector3(0, 0.12, -0.14), mat_hull) # scope
-		"cyclone", "arc":
-			# Heavy Support / Heavy Launcher
-			_add_box(root, Vector3(0.15, 0.16, 0.52), Vector3(0, 0.03, -0.12), mat_hull)
-			_add_box(root, Vector3(0.14, 0.14, 0.14), Vector3(0, -0.12, -0.06), mat_metal) # drum / cell
-			_add_box(root, Vector3(0.06, 0.06, 0.42), Vector3(0, 0.04, -0.45), mat_metal) # heavy bore
-			_add_box(root, Vector3(0.16, 0.03, 0.32), Vector3(0, 0.04, -0.14), mat_glow) # heat sink
-
-	parent.add_child(root)
-	parent.weapon_mesh = root
+			_add_box(root, Vector3(0.05, 0.16, 0.08), Vector3(0, -0.14, 0.06), mat_metal)
+			_add_box(root, Vector3(0.03, 0.03, 0.40), Vector3(0, 0.04, -0.42), mat_metal)
+			_add_box(root, Vector3(0.02, 0.02, 0.25), Vector3(0, 0.08, -0.15), mat_glow)
+		_:
+			_add_box(root, Vector3(0.08, 0.12, 0.40), Vector3(0, 0.02, -0.10), mat_hull)
+			_add_box(root, Vector3(0.04, 0.14, 0.06), Vector3(0, -0.12, 0.04), mat_metal)
+			_add_box(root, Vector3(0.03, 0.03, 0.25), Vector3(0, 0.03, -0.25), mat_metal)
 
 static func _add_box(parent: Node3D, size: Vector3, pos: Vector3, mat: Material) -> MeshInstance3D:
 	var mi = MeshInstance3D.new()

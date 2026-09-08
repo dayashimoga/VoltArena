@@ -68,6 +68,12 @@ func _ready() -> void:
 	collision_layer = GameConstants.LAYER_PLAYER
 	collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_ENEMIES
 
+	floor_snap_length = 0.45
+	floor_max_angle = deg_to_rad(48.0)
+	safe_margin = 0.08
+	up_direction = Vector3.UP
+	wall_min_slide_angle = deg_to_rad(15.0)
+
 	current_health = max_health
 	current_armor = 50.0
 	safe_ground_position = global_position
@@ -89,7 +95,7 @@ func _setup_collision() -> void:
 	var col = CollisionShape3D.new()
 	col.name = "CollisionShape"
 	var cap = CapsuleShape3D.new()
-	cap.radius = 0.45
+	cap.radius = 0.40
 	cap.height = 1.80
 	col.shape = cap
 	col.position = Vector3(0, 0.90, 0)
@@ -170,9 +176,10 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# Handle anti-fall / abyss protection
-	if is_on_floor():
-		safe_ground_position = global_position
-	elif global_position.y < -25.0:
+	var cur_pos = global_position if is_inside_tree() else position
+	if is_valid_grounded():
+		safe_ground_position = cur_pos
+	elif cur_pos.y < -3.5:
 		recover_to_safe_ground()
 		return
 
@@ -233,6 +240,26 @@ func _physics_process(delta: float) -> void:
 
 	# Weapon firing
 	_handle_weapon_input(delta)
+
+func is_valid_grounded() -> bool:
+	if not is_on_floor():
+		return false
+	var norm = get_floor_normal()
+	return norm.dot(Vector3.UP) > 0.70 and absf(velocity.y) < 2.0
+
+func recover_to_safe_ground() -> void:
+	if is_inside_tree():
+		global_position = safe_ground_position + Vector3(0, 0.6, 0)
+	else:
+		position = safe_ground_position + Vector3(0, 0.6, 0)
+	velocity = Vector3.ZERO
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am and am.has_method("play_sound"):
+		am.play_sound("hit", 0.6)
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus and bus.has_signal("telemetry_event_occurred"):
+		var p_str = str(global_position if is_inside_tree() else position)
+		bus.telemetry_event_occurred.emit("strike_vector_recovery", {"pos": p_str})
 
 func _calculate_world_input_direction(input_vec: Vector2) -> Vector3:
 	var cam = get_viewport().get_camera_3d()
@@ -312,10 +339,6 @@ func _handle_mantle(delta: float) -> void:
 	if mantle_timer <= 0.0:
 		global_position = mantle_target_position
 		is_mantling = false
-
-func recover_to_safe_ground() -> void:
-	global_position = safe_ground_position + Vector3(0, 0.5, 0)
-	velocity = Vector3.ZERO
 
 func take_damage(amount: float, _dealer_name: String = "", _weapon: String = "") -> void:
 	if not is_alive:

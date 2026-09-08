@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 96.0422163588391,
-  "coverage_tested_functions": 728,
-  "coverage_total_functions": 758,
-  "execution_seconds": 22.336,
+  "coverage_percent": 95.5321944809461,
+  "coverage_tested_functions": 727,
+  "coverage_total_functions": 761,
+  "execution_seconds": 34.374,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -242,12 +242,17 @@
     },
     "Strike Vector Campaign Unit": {
       "failed": 0,
-      "passed": 64,
+      "passed": 65,
       "status": "PASS"
     },
     "Strike Vector Player Unit": {
       "failed": 0,
       "passed": 60,
+      "status": "PASS"
+    },
+    "Strike Vector Traversal & Collision Probes": {
+      "failed": 0,
+      "passed": 98,
       "status": "PASS"
     },
     "Telemetry Manager Unit": {
@@ -281,8 +286,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-08T11:56:02",
+  "timestamp": "2026-09-08T13:23:11",
   "total_failed": 0,
-  "total_passed": 1493,
-  "total_suites": 55
+  "total_passed": 1592,
+  "total_suites": 56
 }

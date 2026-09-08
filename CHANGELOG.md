@@ -556,3 +556,31 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Executed master test runner across 55 test suites: **1494 passed assertions with 0 failures (100% pass rate)**.
   - Verified function coverage at **96.0%** (728 / 758 functions), exceeding the 95% target.
   - Validated Missions 1 through 8 end-to-end with zero progression deadlocks or crashes.
+
+## [8.1.0-strike-vector-p0-repair-and-level-rebuild] - 2026-09-08
+
+### Fixed & Enhanced
+- **P0 Player Collision Hardening & Anti-Fall Resolution**:
+  - Standardized player `CharacterBody3D` capsule collider: radius $0.40\text{m}$, height $1.80\text{m}$, centered at $(0, 0.90, 0)$, with the bottom sitting flush at ground level $Y=0.0$.
+  - Calibrated physical stability constants in `strike_player.gd`: `floor_snap_length = 0.45`, `safe_margin = 0.08`, `floor_max_angle = deg_to_rad(48.0)`, and `wall_min_slide_angle = deg_to_rad(15.0)`.
+  - Implemented `is_valid_grounded()` check updating `safe_ground_position` only when grounded on approved floor surfaces.
+  - Implemented `recover_to_safe_ground()` fail-safe triggering immediately when $Y < -3.5\text{m}$, instantly restoring the player to safe grounded coordinates and zeroing velocity.
+  - Moved spawn inland to `Vector3(0, 0.1, -6.0)` inside the roadway bounds, eliminating the zero-boundary drop.
+- **Visual & Modular Level Production Rebuild (Zero BoxMeshes)**:
+  - Completely replaced primitive box corridors in Mission 1 (Urban Blackout) and Missions 2–8 with authentic modular 3D buildings (`building_a.glb` through `building_garage.glb`), `road_lightposts.glb` with active $2.4\text{ energy}$ `OmniLight3D` lamps, parked vehicles (`truck_yellow.glb`, `truck_green.glb`, `truck_red.glb`, `racecar_gp.glb`), ballistic barriers (`barrier_high.glb`), and pipes (`pipe_network.glb`).
+  - Authored a continuous $1.2\text{m}$ thick solid roadway floor slab spanning $\ge 12\text{m}$ behind spawn with $2\text{m}$ segment overlaps between sequential zones.
+  - Installed $8\text{m}$ tall perimeter lateral and rear collision boundary walls to physically prevent out-of-world drops.
+- **Global Lighting Overhaul**:
+  - Added calibrated `WorldEnvironment` in `strike_vector_main.gd` featuring procedural sky, ambient lighting (energy $1.65$, `Color(0.26, 0.34, 0.48)`), filmic tonemapper (exposure $1.30$), glow bloom, and atmospheric fog, ensuring crisp visibility with zero crushed blacks.
+  - Added primary `DirectionalLight3D` moonlight (energy $1.85$, `Color(0.78, 0.88, 1.0)`, shadows enabled).
+- **Rigged Characters & 3D Arsenal**:
+  - Player operative in `strike_player_visual.gd` utilizes rigged humanoid `soldier.glb` with `WeaponSocket` attachment and `AnimationPlayer` state machine (`Idle`, `Walk`, `Run`, `Aim`).
+  - Enemy AI hostiles in `ai_archetypes.gd` utilize rigged `trooper.glb`, `scout.glb`, and `heavy.glb` with synchronized animations.
+  - Replaced box weapons in `strike_weapon_arsenal.gd` with authentic 3D firearm models (`pulse_rifle.glb`, `blaster_repeater.glb`, `scatter_cannon.glb`, `rail_driver.glb`, `grenade_launcher.glb`, `plasma_cutter.glb`, `blaster.glb`).
+- **Compact HUD Redesign**:
+  - Redesigned `strike_hud.gd` into clean perimeter clusters: bottom-left vitals/shield gauge, bottom-right ammo/weapon counter, top-center objective pill, dynamic cyan crosshair, and conditional floating boss bar.
+- **Automated Physical Traversal Probes & Testing**:
+  - Created `games/strike-vector/tests/test_strike_traversal_probes.gd` with 98 automated downward raycast probes verifying ground collision continuity, non-penetrating safe spawn points, and boundary containment across all 8 campaign missions.
+  - Executed master test runner across 56 test suites: **1,592 passed assertions, 0 failed (100% pass rate)**.
+  - Maintained high function coverage at **95.53%** (727 / 761 functions).
+

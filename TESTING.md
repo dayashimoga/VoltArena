@@ -11,11 +11,11 @@ VoltArena enforces strict quality gates:
 
 ## 2. Test Architecture
 
-The master automated test runner is located at `tests/runner.gd`. When executed, it executes 55 modular test suites:
+The master automated test runner is located at `tests/runner.gd`. When executed, it executes 56 modular test suites:
 
 ```
 tests/runner.gd
-├── Unit Test Suites (40 Suites)
+├── Unit Test Suites (41 Suites)
 │   ├── TestHealthComponent, TestWeapons, TestCarPhysics, TestRaceManager, TestSaveManager
 │   ├── TestWaveDirector, TestInputManager, TestAudioManager, TestQualityManager, TestEventBus
 │   ├── TestMaterialGenerator, TestArenaBot, TestEnemyArchetypes, TestKartController, TestBallPhysics
@@ -25,9 +25,10 @@ tests/runner.gd
 │   ├── TestNodePool, TestProceduralAnimator, TestModelCache
 │   ├── TestQuestSystem, TestInventorySystem, TestPuzzleElements, TestEngineSubsystems
 │   ├── TestSkybound, TestRoboForge, TestWildCircuit
-│   ├── TestStrikeCampaignUnit (64 assertions)
+│   ├── TestStrikeCampaignUnit (65 assertions)
 │   ├── TestStrikePlayerUnit (60 assertions)
-│   └── TestStrikeAIUnit (85 assertions)
+│   ├── TestStrikeAIUnit (85 assertions)
+│   └── TestStrikeTraversalProbes (98 assertions)
 ├── Responsive & Soak Suites (2 Suites)
 │   ├── TestResponsiveUI (125 assertions across 5 responsive screen profiles)
 │   └── TestSoak (5 full lifecycle clean runs)
@@ -45,7 +46,7 @@ tests/runner.gd
 └── Legacy Acceptance Suite (1 Suite, 19 assertions)
     └── TestPlatformAcceptance
 ─────────────────────────────────────────────────────────────
-Total: 55 Suites, 1493 Assertions (100% Pass, 0 Failures, 96.0% Function Coverage: 728/758)
+Total: 56 Suites, 1592 Assertions (100% Pass, 0 Failures, 95.53% Function Coverage: 727/761)
 ```
 
 ---

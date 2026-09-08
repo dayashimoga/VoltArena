@@ -534,3 +534,35 @@
   - `artifacts/test-results.json` (55 suites, 1493 assertions passed, 0 failures)
   - `artifacts/coverage-report.json` (96.0% function coverage)
   - All 8 missions verified end-to-end with zero errors or progression deadlocks.
+
+### [2026-09-08 13:25:00 UTC] - Strike Vector P0 Collision Hardening & Production Visual Rebuild
+- **Status**: COMPLETED
+- **Description**:
+  1. **P0 Player Collision Hardening & Anti-Fall**:
+     - Standardized `CharacterBody3D` capsule collision shape: radius $0.40\text{m}$, height $1.80\text{m}$, centered at $(0, 0.90, 0)$ with base sitting flush on ground level $Y=0.0$.
+     - Tuned physics parameters in `strike_player.gd`: `floor_snap_length = 0.45`, `safe_margin = 0.08`, `floor_max_angle = 48.0°`.
+     - Added `is_valid_grounded()` check and `recover_to_safe_ground()` fail-safe triggering immediately if $Y < -3.5\text{m}$.
+     - Relocated player spawn inland to `Vector3(0, 0.1, -6.0)` inside roadway bounds.
+  2. **Modular 3D Environment & Continuous Collision**:
+     - Replaced box corridor geometry in Mission 1 (Urban Blackout) and Missions 2–8 with authentic modular 3D buildings (`building_a.glb` through `building_garage.glb`), `road_lightposts.glb` with active $2.4\text{ energy}$ `OmniLight3D` lamps, parked vehicles (`truck_yellow.glb`, `truck_green.glb`, `truck_red.glb`, `racecar_gp.glb`), ballistic barriers (`barrier_high.glb`), and pipes (`pipe_network.glb`).
+     - Authored $1.2\text{m}$ thick solid roadway floor slab extending $\ge 12\text{m}$ behind spawn with $2\text{m}$ segment overlaps between sequential zones.
+     - Installed $8\text{m}$ tall perimeter lateral and rear boundary collision walls to prevent out-of-world drops.
+  3. **Global Lighting & Visual Overhaul**:
+     - Integrated `WorldEnvironment` with procedural sky, ambient lighting (energy $1.65$, `Color(0.26, 0.34, 0.48)`), filmic tonemapper (exposure $1.30$), glow bloom, and depth fog.
+     - Integrated key `DirectionalLight3D` moonlight (energy $1.85$, `Color(0.78, 0.88, 1.0)`, shadows enabled).
+  4. **Rigged Characters, Firearms & Compact HUD**:
+     - Player operative uses rigged `soldier.glb` with `WeaponSocket` and animation playback (`Idle`, `Walk`, `Run`, `Aim`).
+     - Hostile AI uses rigged `trooper.glb`, `scout.glb`, and `heavy.glb` with synchronized animations.
+     - Weapons use authentic 3D firearm models (`pulse_rifle.glb`, `blaster_repeater.glb`, `scatter_cannon.glb`, `rail_driver.glb`, `grenade_launcher.glb`, `plasma_cutter.glb`, `blaster.glb`).
+     - Compact HUD redesigned into perimeter gauges: bottom-left vitals/armor, bottom-right ammo/weapon, top-center objective pill, dynamic cyan crosshair, and floating boss bar.
+  5. **Automated Physical Traversal Probes & Testing**:
+     - Created `games/strike-vector/tests/test_strike_traversal_probes.gd` with 98 automated downward raycast probes verifying ground collision continuity, non-penetrating safe spawn points, and boundary containment across all 8 campaign missions.
+     - Executed master test runner across 56 test suites: **1,592 passed assertions, 0 failed (100% pass rate)**.
+     - Function coverage verified at **95.53%** (727 / 761 functions).
+     - Packaged fresh standalone executables and web bundles (`export/windows/VoltArena.exe`, `export/web/`, `export/linux/VoltArena.x86_64`).
+- **Evidence**:
+  - `artifacts/test-results.json` (56 suites, 1592 passed assertions, 0 failed)
+  - `artifacts/coverage-report.json` (95.53% function coverage)
+  - `export/windows/VoltArena.exe` (151.6 MB, fresh build)
+  - `export/web/` (Cloudflare-compliant chunks <= 18 MB, reassembler injected)
+

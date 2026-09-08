@@ -28,7 +28,8 @@ tests/runner.gd
 │   ├── TestStrikeCampaignUnit (65 assertions)
 │   ├── TestStrikePlayerUnit (60 assertions)
 │   ├── TestStrikeAIUnit (85 assertions)
-│   └── TestStrikeTraversalProbes (98 assertions)
+│   ├── TestStrikeTraversalProbes (98 assertions)
+│   └── TestStrikeVisualInvariants (94 assertions: transforms, rigs, sockets, nav mesh, HUD)
 ├── Responsive & Soak Suites (2 Suites)
 │   ├── TestResponsiveUI (125 assertions across 5 responsive screen profiles)
 │   └── TestSoak (5 full lifecycle clean runs)
@@ -46,7 +47,7 @@ tests/runner.gd
 └── Legacy Acceptance Suite (1 Suite, 19 assertions)
     └── TestPlatformAcceptance
 ─────────────────────────────────────────────────────────────
-Total: 56 Suites, 1592 Assertions (100% Pass, 0 Failures, 95.53% Function Coverage: 727/761)
+Total: 57 Suites, 1686 Assertions (100% Pass, 0 Failures, 94.6% Function Coverage: 729/771)
 ```
 
 ---

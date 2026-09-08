@@ -56,22 +56,52 @@ var rapid_fire_active: bool = false
 var spread_module_active: bool = false
 var piercing_module_active: bool = false
 
-# Node references
-var muzzle_point: Marker3D
-var weapon_mesh: Node3D
-var owner_player: Node3D
+# Standardized Sockets
+var muzzle_socket: Marker3D = null
+var magazine_socket: Marker3D = null
+var scope_socket: Marker3D = null
+var shell_ejection_socket: Marker3D = null
+var left_hand_ik_target: Marker3D = null
+var muzzle_point: Marker3D = null # backwards-compatible alias
+var weapon_mesh: Node3D = null
+var owner_player: Node3D = null
 
 func _ready() -> void:
 	ammo_in_mag = magazine_capacity
 	reserve_ammo = max_reserve_ammo
-	_setup_muzzle()
+	_setup_sockets()
 
-func _setup_muzzle() -> void:
-	if not muzzle_point:
-		muzzle_point = Marker3D.new()
-		muzzle_point.name = "MuzzlePoint"
-		muzzle_point.position = Vector3(0, 0.05, -0.65)
-		add_child(muzzle_point)
+func _setup_sockets() -> void:
+	if not muzzle_socket:
+		muzzle_socket = Marker3D.new()
+		muzzle_socket.name = "MuzzleSocket"
+		muzzle_socket.position = Vector3(0, 0.05, -0.65)
+		add_child(muzzle_socket)
+		muzzle_point = muzzle_socket
+
+	if not magazine_socket:
+		magazine_socket = Marker3D.new()
+		magazine_socket.name = "MagazineSocket"
+		magazine_socket.position = Vector3(0, -0.15, -0.10)
+		add_child(magazine_socket)
+
+	if not scope_socket:
+		scope_socket = Marker3D.new()
+		scope_socket.name = "ScopeSocket"
+		scope_socket.position = Vector3(0, 0.12, -0.05)
+		add_child(scope_socket)
+
+	if not shell_ejection_socket:
+		shell_ejection_socket = Marker3D.new()
+		shell_ejection_socket.name = "ShellEjectionSocket"
+		shell_ejection_socket.position = Vector3(0.08, 0.06, -0.05)
+		add_child(shell_ejection_socket)
+
+	if not left_hand_ik_target:
+		left_hand_ik_target = Marker3D.new()
+		left_hand_ik_target.name = "LeftHandIKTarget"
+		left_hand_ik_target.position = Vector3(0, -0.05, -0.35)
+		add_child(left_hand_ik_target)
 
 func _process(delta: float) -> void:
 	if fire_cooldown > 0.0:

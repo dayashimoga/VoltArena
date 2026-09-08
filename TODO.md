@@ -566,3 +566,41 @@
   - `export/windows/VoltArena.exe` (151.6 MB, fresh build)
   - `export/web/` (Cloudflare-compliant chunks <= 18 MB, reassembler injected)
 
+### [2026-09-08 14:55:00 UTC] - Strike Vector Transform/Rig Normalization, Navigation HUD & Acceptance Invariants Overhaul
+- **Status**: COMPLETED
+- **Description**:
+  1. **Root-Cause Transform & Rig Normalization**:
+     - Identified that Mixamo animation position tracks in `soldier.glb` were authored in meters $(0, 0.91, 0)$ instead of centimeters $(0, 91.0, 0)$, collapsing joints into the ground when played on rigs imported with $0.01$ scale.
+     - Implemented `_normalize_rig_tracks()` in `model_cache.gd`, scaling tracks by 100 and converting coordinate axes. Normalized right-hand bone height to $\approx 1.02\text{m}$.
+     - Replaced loose markers with `BoneAttachment3D` bound to `mixamorig_RightHand` containing child `WeaponGrip` scaled $\times 100.0$ and rotated $Y=90^\circ$.
+     - Attached all 9 weapons to `WeaponGrip` at `Vector3.ZERO`, eliminating misplaced weapons at feet.
+  2. **Locomotion Input & Directional Visual Facing**:
+     - Fixed camera-relative input direction in `strike_player.gd`: $W \rightarrow +cam\_fwd$, $S \rightarrow -cam\_fwd$, $D \rightarrow +cam\_right$, $A \rightarrow -cam\_right$.
+     - Aligned visual facing with travel velocity (`atan2(-vx, -vz)`) during traversal and locked to camera look yaw during combat ADS/firing.
+  3. **Standardized Sockets & Crosshair Convergence**:
+     - Standardized 5 sockets on `StrikeWeaponBase`: `MuzzleSocket`, `MagazineSocket`, `ScopeSocket`, `ShellEjectionSocket`, and `LeftHandIKTarget`.
+     - Implemented camera-to-muzzle raycast convergence in `StrikePlayer`: projects reticle into 3D world and converges muzzle projectile velocity toward impact point.
+  4. **Human-Scale Urban Street Canyon**:
+     - Scaled modular city buildings in `StrikeEnvironmentBuilder` to $14\text{m} \times 18\text{m}\text{--}24\text{m}$ tall along an $8\text{m}\text{--}10\text{m}$ roadway and $3\text{m}$ sidewalks with physical $8\text{m} \times 16\text{m} \times 8\text{m}$ box colliders.
+     - Replaced primitive boxes with commercial billboards, barricades, emergency vehicles, and $5.5\text{m}$ elevated sodium streetlights.
+  5. **Programmatic Navigation Mesh**:
+     - Implemented deterministic `NavigationRegion3D` and `NavigationMesh` generation across roadways and sidewalks for all 8 campaign biomes, enabling full dynamic AI pathfinding.
+  6. **Tactical Navigation HUD**:
+     - Implemented `StrikeCompassTape` (top-center) with dynamic objective diamond bearing and meter distance.
+     - Implemented `StrikeMinimap` (top-right) with forward chevron, road bounds, objective beacon, extraction LZ, and threat-aware fading hostile blips ($3.0\text{s}$ fade).
+     - Added `StrikeTacticalMap` ($M$ key toggle modal) with milestone progress tracker.
+  7. **Acceptance Invariants Test Suite**:
+     - Created `games/strike-vector/tests/test_strike_visual_invariants.gd` with 94 physical and visual invariant assertions.
+     - Master test runner executed across 57 test suites: **1,686 passed assertions, 0 failed (100% pass rate)**.
+     - Maintained high function coverage at **94.6%** (729 / 771 functions).
+     - Packaged fresh desktop and web builds (`export/windows/VoltArena.exe`, `export/linux/VoltArena.x86_64`, `export/web/`).
+- **Evidence**:
+  - `GAP_ANALYSIS.md` (Forensic gap analysis and remediation matrix)
+  - `PRODUCTION_CERTIFICATION.md` (v7.0.0, 1686/1686 assertions, 100% pass rate)
+  - `artifacts/test-results.json` (57 suites, 1686 assertions, 0 failures)
+  - `artifacts/coverage-report.json` (94.6% function coverage)
+  - `export/windows/VoltArena.exe` (Fresh Windows x86_64 export)
+  - `export/linux/VoltArena.x86_64` (Fresh Linux x86_64 export)
+  - `export/web/` (Cloudflare-compliant Web chunks <= 18 MB with reassembler)
+
+

@@ -74,10 +74,19 @@ func _unhandled_input(event: InputEvent) -> void:
 	if current_mode == CameraMode.SIDE_SCROLL_25D or current_mode == CameraMode.CINEMATIC:
 		return
 
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		var y_dir = 1.0 if invert_y else -1.0
-		yaw -= event.relative.x * mouse_sensitivity
-		pitch = clampf(pitch + event.relative.y * mouse_sensitivity * y_dir, deg_to_rad(PITCH_MIN), deg_to_rad(PITCH_MAX))
+	if event is InputEventMouseButton and event.pressed:
+		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+	if event is InputEventMouseMotion:
+		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or not OS.has_feature("editor"):
+			var y_dir = 1.0 if invert_y else -1.0
+			yaw -= event.relative.x * mouse_sensitivity
+			pitch = clampf(pitch + event.relative.y * mouse_sensitivity * y_dir, deg_to_rad(PITCH_MIN), deg_to_rad(PITCH_MAX))
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(target_player):

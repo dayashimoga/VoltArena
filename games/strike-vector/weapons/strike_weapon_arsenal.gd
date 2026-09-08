@@ -210,48 +210,52 @@ static func _attach_visual(parent: Node3D, archetype: String, glow_color: Color)
 	root.name = "VisualModel"
 
 	var glb_path = ""
-	var model_scale = Vector3(1.0, 1.0, 1.0)
+	var model_scale = Vector3(0.58, 0.58, 0.58)
 	match archetype:
 		"vx7":
 			glb_path = "res://assets/models/weapons/pulse_rifle.glb"
-			model_scale = Vector3(1.2, 1.2, 1.2)
+			model_scale = Vector3(0.58, 0.58, 0.58)
 		"tempest":
 			glb_path = "res://assets/models/weapons/blaster_repeater.glb"
-			model_scale = Vector3(1.1, 1.1, 1.1)
+			model_scale = Vector3(0.54, 0.54, 0.54)
 		"breach":
 			glb_path = "res://assets/models/weapons/scatter_cannon.glb"
-			model_scale = Vector3(1.3, 1.3, 1.3)
+			model_scale = Vector3(0.62, 0.62, 0.62)
 		"atlas":
 			glb_path = "res://assets/models/weapons/rail_driver.glb"
-			model_scale = Vector3(1.1, 1.1, 1.1)
+			model_scale = Vector3(0.58, 0.58, 0.58)
 		"longshot":
 			glb_path = "res://assets/models/weapons/rail_driver.glb"
-			model_scale = Vector3(1.2, 1.2, 1.4)
+			model_scale = Vector3(0.60, 0.60, 0.65)
 		"cyclone":
 			glb_path = "res://assets/models/weapons/pulse_rifle.glb"
-			model_scale = Vector3(1.4, 1.4, 1.3)
+			model_scale = Vector3(0.66, 0.66, 0.66)
 		"arc":
 			glb_path = "res://assets/models/weapons/grenade_launcher.glb"
-			model_scale = Vector3(1.2, 1.2, 1.2)
+			model_scale = Vector3(0.58, 0.58, 0.58)
 		"pulse":
 			glb_path = "res://assets/models/weapons/plasma_cutter.glb"
-			model_scale = Vector3(1.2, 1.2, 1.2)
+			model_scale = Vector3(0.56, 0.56, 0.56)
 		"sidearm":
 			glb_path = "res://assets/models/weapons/blaster.glb"
-			model_scale = Vector3(1.0, 1.0, 1.0)
+			model_scale = Vector3(0.48, 0.48, 0.48)
 		_:
 			glb_path = "res://assets/models/weapons/pulse_rifle.glb"
 
+	parent.scale = model_scale
+	if parent.has_method("_setup_sockets"):
+		parent._setup_sockets()
+
 	var model = ModelCacheScript.get_model(glb_path)
 	if model:
-		model.scale = model_scale
+		model.scale = Vector3.ONE
 		model.rotation_degrees.y = 180.0
 		root.add_child(model)
 
 		# Add muzzle point
 		var muzzle = Marker3D.new()
 		muzzle.name = "MuzzlePoint"
-		muzzle.position = Vector3(0, 0.05, -0.45 * model_scale.z)
+		muzzle.position = Vector3(0, 0.05, -0.45)
 		root.add_child(muzzle)
 	else:
 		_build_fallback_weapon_mesh(root, archetype, glow_color)

@@ -584,3 +584,37 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Executed master test runner across 56 test suites: **1,592 passed assertions, 0 failed (100% pass rate)**.
   - Maintained high function coverage at **95.53%** (727 / 761 functions).
 
+## [8.2.0-strike-vector-transform-rig-and-urban-overhaul] - 2026-09-08
+
+### Fixed & Overhauled
+- **Root-Cause Transform & Rig Normalization**:
+  - Identified that in `soldier.glb`, Mixamo animations (`Aim`, `Fire`, `Reload`, etc.) had position tracks authored in meters $(0, 0.91, 0)$ instead of centimeters, causing the skeleton to collapse into the floor when played on rigs imported with $0.01$ scale.
+  - Implemented `_normalize_rig_tracks()` in `model_cache.gd`, converting keyframes to centimeter scale: `Vector3(val.x * 100, -val.z * 100, val.y * 100)`.
+  - Normalized hand bone and hip positions across all animations, restoring upright posture with average shooting hand height at $1.02\text{m}$.
+- **Locomotion Travel & Facing Invariants**:
+  - Re-engineered camera-relative input in `strike_player.gd`: mapped $W \rightarrow +cam\_fwd$, $S \rightarrow -cam\_fwd$, $D \rightarrow +cam\_right$, $A \rightarrow -cam\_right$.
+  - Fixed visual facing orientation: in traversal mode, character yaw smoothly aligns with travel velocity (`atan2(-vx, -vz)`); in combat ADS/firing mode, yaw locks to camera forward (`atan2(-cam_fwd.x, -cam_fwd.z)`). Operative never faces backward during forward travel.
+- **Weapon Grip Attachment & Socket Invariants**:
+  - Replaced arbitrary markers with a formal `BoneAttachment3D` bound to `mixamorig_RightHand` containing `WeaponGrip` (`Marker3D`).
+  - Calibrated `WeaponGrip.scale = Vector3(100, 100, 100)` to cancel parent character scale, and rotated $Y=90^\circ$ to align barrels strictly with character forward $-Z$.
+  - Enforced runtime parenting invariant: weapons parent to `WeaponGrip` with `position = Vector3.ZERO` and `rotation = Vector3.ZERO`.
+  - Standardized 5 socket markers on `StrikeWeaponBase`: `MuzzleSocket`, `MagazineSocket`, `ScopeSocket`, `ShellEjectionSocket`, and `LeftHandIKTarget`.
+  - Implemented crosshair raycast convergence: camera center ray traces to 3D world target, and muzzle fire converges on the target point to prevent shooting low cover.
+- **Human-Scale Urban Environment & Street Enclosure**:
+  - Scaled modular city buildings in `StrikeEnvironmentBuilder` to human scale ($14\text{m} \times 18\text{m}\text{--}24\text{m}$ tall) along an $8\text{m}\text{--}10\text{m}$ road and $3\text{m}$ sidewalks, creating a continuous urban canyon without void gaps.
+  - Attached physical $8\text{m} \times 16\text{m} \times 8\text{m}$ box colliders to every building facade.
+  - Replaced floating cyan primitives with commercial billboards mounted on facades, emergency military trucks, police barricades, and industrial conduits.
+  - Elevated streetlights to $5.5\text{m}$ height with warm sodium illumination ($2.4\text{ energy}$).
+- **Programmatic Navigation Mesh for AI Pathfinding**:
+  - Implemented `_create_navigation_region()` in `StrikeEnvironmentBuilder` generating instant, deterministic `NavigationMesh` vertices and polygons across roadways and sidewalks for all 8 campaign biomes.
+  - Verified AI enemies dynamically navigate, search, attack, and flank along the path rather than relying on watchdogs.
+- **Tactical Navigation HUD**:
+  - Built `StrikeCompassTape` (top-center): horizontal degree tape with cardinal directions ($N, NE, E, SE, S, SW, W, NW$) and dynamic objective diamond bearing with meter distance.
+  - Built `StrikeMinimap` (top-right): circular radar with player forward chevron, road bounds, objective beacon, extraction LZ, and threat-aware fading hostile blips (fade out over $3.0\text{s}$).
+  - Added `StrikeTacticalMap` ($M$ key toggle): full tactical corridor schematic displaying milestone progression.
+- **Acceptance Invariants Test Suite**:
+  - Created `games/strike-vector/tests/test_strike_visual_invariants.gd` with 94 physical, transform, and visual assertions.
+  - Master test runner executed across 57 test suites: **1,686 passed assertions, 0 failed (100% pass rate)**.
+  - Maintained high function coverage at **94.6%** (729 / 771 functions).
+
+

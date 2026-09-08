@@ -160,8 +160,20 @@ func load_mission(m_idx: int) -> void:
 	# Connect Player Signals to HUD & Checkpoints
 	player_node.health_changed.connect(hud.update_health)
 	player_node.armor_changed.connect(hud.update_armor)
-	player_node.weapon_switched.connect(func(_idx, w_name, ammo, res): hud.update_weapon(w_name, ammo, res))
-	player_node.ammo_updated.connect(func(w_name, ammo, res): hud.update_weapon(w_name, ammo, res))
+	player_node.weapon_switched.connect(func(_idx, w_name, ammo, res):
+		var f_mode = "AUTO"
+		if is_instance_valid(player_node.active_weapon):
+			var w = player_node.active_weapon
+			f_mode = "AUTO" if w.is_automatic else ("BURST" if w.is_burst else ("CHARGE" if w.is_charged else "SEMI"))
+		hud.update_weapon(w_name, ammo, res, f_mode)
+	)
+	player_node.ammo_updated.connect(func(w_name, ammo, res):
+		var f_mode = "AUTO"
+		if is_instance_valid(player_node.active_weapon):
+			var w = player_node.active_weapon
+			f_mode = "AUTO" if w.is_automatic else ("BURST" if w.is_burst else ("CHARGE" if w.is_charged else "SEMI"))
+		hud.update_weapon(w_name, ammo, res, f_mode)
+	)
 	player_node.player_died.connect(_on_player_died)
 
 	# Register initial checkpoint
@@ -181,6 +193,43 @@ func load_mission(m_idx: int) -> void:
 	hud.update_objective(meta["objective"])
 	hud.show_context_alert("DEPLOYED: " + meta["name"].to_upper(), Color(0.2, 1.0, 0.4))
 	audio_director.set_audio_state(StrikeAudioDirectorScript.AudioState.EXPLORATION)
+
+func _process(_delta: float) -> void:
+	if not is_instance_valid(player_node) or not is_instance_valid(hud):
+		return
+
+	var p_pos = player_node.global_position
+	var heading_rad = player_node.rotation.y
+	if is_instance_valid(camera_director) and is_instance_valid(camera_director.camera):
+		var cam_fwd = -camera_director.camera.global_transform.basis.z
+		cam_fwd.y = 0.0
+		if cam_fwd.length_squared() > 0.01:
+			heading_rad = atan2(-cam_fwd.x, -cam_fwd.z)
+
+	var target_pos = Vector3(0, 0, -160.0)
+	var target_name = "DESTROY JAMMER"
+	if is_instance_valid(mission_streamer):
+		var act_seg = mission_streamer.get_active_segment()
+		if act_seg:
+			if act_seg.is_boss_segment:
+				target_pos = act_seg.global_position + Vector3(0, 0, -20.0)
+				target_name = "EXTRACTION ZONE"
+			else:
+				target_pos = act_seg.global_position + Vector3(0, 0, -20.0)
+				target_name = act_seg.segment_name
+
+	var threat_positions: Array = []
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	for enemy in enemies:
+		if is_instance_valid(enemy) and enemy is Node3D:
+			var e_dist = p_pos.distance_to(enemy.global_position)
+			var is_alert = false
+			if enemy.get("current_state") != null and int(enemy.current_state) >= 4:
+				is_alert = true
+			if e_dist <= 24.0 or is_alert:
+				threat_positions.append(enemy.global_position)
+
+	hud.update_navigation_state(p_pos, heading_rad, target_pos, target_name, threat_positions)
 
 func _connect_segment_events() -> void:
 	for seg in mission_streamer.segments:

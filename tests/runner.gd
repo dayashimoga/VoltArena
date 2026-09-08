@@ -53,6 +53,7 @@ const TestStrikePlayerScript = preload("res://games/strike-vector/tests/test_str
 const TestStrikeAIScript = preload("res://games/strike-vector/tests/test_strike_ai_unit.gd")
 const TestStrikeVectorE2EScript = preload("res://games/strike-vector/tests/test_strike_vector_e2e.gd")
 const TestStrikeTraversalProbesScript = preload("res://games/strike-vector/tests/test_strike_traversal_probes.gd")
+const TestStrikeVisualInvariantsScript = preload("res://games/strike-vector/tests/test_strike_visual_invariants.gd")
 
 # --- Responsive & Soak ---
 const TestResponsiveUIScript = preload("res://tests/responsive/test_responsive_ui.gd")
@@ -154,6 +155,7 @@ func _init() -> void:
 		{"name": "Strike Vector AI & Bosses Unit", "instance": TestStrikeAIScript.new()},
 		{"name": "Strike Vector Campaign E2E", "instance": TestStrikeVectorE2EScript.new()},
 		{"name": "Strike Vector Traversal & Collision Probes", "instance": TestStrikeTraversalProbesScript.new()},
+		{"name": "Strike Vector Visual Invariants", "instance": TestStrikeVisualInvariantsScript.new()},
 		# Legacy Acceptance
 		{"name": "Platform Acceptance (Legacy)", "instance": TestAcceptanceScript.new()},
 	]

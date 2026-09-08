@@ -71,6 +71,20 @@ VoltArena delivers four commercially polished, visually dense 3D game experience
   * Low-center-of-gravity racing karts with front splitters, side pods, and exposed engines.
   * Rigged racer drivers with white safety helmets and tinted reflective black visors.
 
+### 2.5 Strike Vector — Urban Blackout & Campaign Biomes
+* **Visual Identity**: Nocturnal military blackout cityscape under hostile surveillance. The aesthetic balances deep shadows with selective high-contrast lighting: warm sodium streetlights, red jammer beacons, and emergency vehicle lights against damp asphalt and concrete.
+* **Human-Scale Architectural Enclosure**:
+  * Modular multi-story buildings ($14\text{m} \times 18\text{m}\text{--}24\text{m}$ tall) line both sides of the $10\text{m}$ roadway with $3\text{m}$ elevated sidewalks, creating an authentic continuous street canyon. No miniature buildings or barren voids.
+  * Every building possesses physical box colliders providing tactical cover.
+* **Environmental Dressing**:
+  * Commercial advertising billboards mounted directly on building facades.
+  * Parked military transport trucks, emergency barricades, industrial conduit routing, and security terminals.
+  * Elevated $5.5\text{m}$ streetlights casting warm amber sodium illumination ($2.4\text{ energy}$, $16\text{m range}$).
+* **Operative & Firearm Aesthetics**:
+  * Skinned cybernetic operative with normalized skeletal proportions and upright combat stance ($1.02\text{m}$ shooting height).
+  * 9 authentic 3D modeled firearms scaled to realistic human dimensions ($0.48\times\text{--}0.66\times$ scale) with 5 standardized sockets (`MuzzleSocket`, `MagazineSocket`, `ScopeSocket`, `ShellEjectionSocket`, `LeftHandIKTarget`).
+  * Crosshair raycast convergence aligning muzzle projectile velocity with third-person reticle.
+
 ---
 
 ## 3. PBR Texture Synthesis & Material Architecture

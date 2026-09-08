@@ -107,6 +107,7 @@ func _setup_visual() -> void:
 	visual = StrikePlayerVisualScript.new()
 	visual.name = "Visual"
 	add_child(visual)
+	visual.build_visual()
 
 func _setup_ledge_detectors() -> void:
 	if has_node("LedgeRayHigh"):
@@ -149,9 +150,18 @@ func select_weapon(index: int) -> void:
 	active_weapon_index = index
 	active_weapon = weapons[active_weapon_index]
 
-	# Attach to visual weapon socket
-	if is_instance_valid(visual) and is_instance_valid(visual.weapon_socket):
-		visual.weapon_socket.add_child(active_weapon)
+	# Attach to visual weapon grip
+	var target_grip = null
+	if is_instance_valid(visual):
+		if "weapon_grip" in visual and is_instance_valid(visual.weapon_grip):
+			target_grip = visual.weapon_grip
+		elif "weapon_socket" in visual and is_instance_valid(visual.weapon_socket):
+			target_grip = visual.weapon_socket
+
+	if is_instance_valid(target_grip):
+		target_grip.add_child(active_weapon)
+		active_weapon.position = Vector3.ZERO
+		active_weapon.rotation = Vector3.ZERO
 	else:
 		add_child(active_weapon)
 
@@ -234,9 +244,25 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-	# Update visual locomotion animations
+	# Facing orientation update
 	if is_instance_valid(visual):
-		visual.update_animation(horiz_vel.length(), is_on_floor(), locomotion.is_sliding, is_crouch, input_vec.x, delta)
+		var is_firing = Input.is_action_pressed("fire")
+		if is_ads or is_firing:
+			# Combat aim mode: face camera yaw
+			var cam = get_viewport().get_camera_3d() if is_inside_tree() else null
+			if cam:
+				var cam_fwd = -cam.global_transform.basis.z
+				cam_fwd.y = 0.0
+				var target_yaw = atan2(-cam_fwd.x, -cam_fwd.z)
+				visual.rotation.y = lerp_angle(visual.rotation.y, target_yaw, 16.0 * delta)
+		elif horiz_vel.length() > 0.3:
+			# Traversal mode: smoothly rotate towards travel direction
+			var target_yaw = atan2(-horiz_vel.x, -horiz_vel.z)
+			visual.rotation.y = lerp_angle(visual.rotation.y, target_yaw, 12.0 * delta)
+
+		# Update visual locomotion animations
+		var local_move = visual.global_transform.basis.inverse() * Vector3(horiz_vel.x, 0, horiz_vel.z)
+		visual.update_animation(horiz_vel.length(), is_on_floor(), locomotion.is_sliding, is_crouch, input_vec.x, delta, is_ads, Input.is_action_pressed("fire"), local_move.normalized())
 
 	# Weapon firing
 	_handle_weapon_input(delta)
@@ -262,9 +288,9 @@ func recover_to_safe_ground() -> void:
 		bus.telemetry_event_occurred.emit("strike_vector_recovery", {"pos": p_str})
 
 func _calculate_world_input_direction(input_vec: Vector2) -> Vector3:
-	var cam = get_viewport().get_camera_3d()
+	var cam = get_viewport().get_camera_3d() if is_inside_tree() else null
 	if not cam:
-		return (transform.basis * Vector3(input_vec.x, 0, input_vec.y)).normalized()
+		return (transform.basis * Vector3(input_vec.x, 0, -input_vec.y)).normalized()
 
 	var cam_fwd = -cam.global_transform.basis.z
 	cam_fwd.y = 0.0
@@ -274,7 +300,9 @@ func _calculate_world_input_direction(input_vec: Vector2) -> Vector3:
 	cam_right.y = 0.0
 	cam_right = cam_right.normalized()
 
-	return (cam_right * input_vec.x + cam_fwd * -input_vec.y).normalized()
+	# W input_vec.y = +1 -> cam_fwd; S input_vec.y = -1 -> -cam_fwd
+	# D input_vec.x = +1 -> cam_right; A input_vec.x = -1 -> -cam_right
+	return (cam_fwd * input_vec.y + cam_right * input_vec.x).normalized()
 
 func _get_input_vector() -> Vector2:
 	var im = GameConstants.get_autoload(self, "InputManager")
@@ -299,20 +327,41 @@ func _handle_weapon_input(delta: float) -> void:
 			select_weapon(i - 1)
 			break
 
-	# Aim origin & direction
-	var cam = get_viewport().get_camera_3d()
-	var aim_origin = cam.global_position if cam else global_position + Vector3(0, 1.4, 0)
-	var aim_dir = -cam.global_transform.basis.z if cam else -global_transform.basis.z
+	# Crosshair raycast convergence to find 3D aim target
+	var cam = get_viewport().get_camera_3d() if is_inside_tree() else null
+	var target_point = Vector3.ZERO
+	if cam:
+		var vp = get_viewport()
+		var center = vp.get_visible_rect().size * 0.5
+		var ray_origin = cam.project_ray_origin(center)
+		var ray_dir = cam.project_ray_normal(center)
+		if is_inside_tree() and get_world_3d():
+			var space = get_world_3d().direct_space_state
+			var query = PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_dir * 150.0)
+			query.collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_ENEMIES
+			query.exclude = [self]
+			var hit = space.intersect_ray(query)
+			if not hit.is_empty():
+				target_point = hit.position
+			else:
+				target_point = ray_origin + ray_dir * 150.0
+		else:
+			target_point = ray_origin + ray_dir * 150.0
+	else:
+		target_point = global_position - global_transform.basis.z * 50.0
+
+	var muzzle_pos = active_weapon.muzzle_socket.global_position if (is_instance_valid(active_weapon.muzzle_socket) and is_inside_tree()) else (global_position + Vector3(0, 1.0, 0))
+	var aim_dir = (target_point - muzzle_pos).normalized() if target_point != muzzle_pos else -global_transform.basis.z
 
 	# Automatic or semi-auto trigger
 	if Input.is_action_pressed("fire"):
 		var is_moving = velocity.length() > 1.0
 		var is_air = not is_on_floor()
-		active_weapon.trigger_pull(aim_origin, aim_dir, is_ads, is_moving, is_air)
+		active_weapon.trigger_pull(muzzle_pos, aim_dir, is_ads, is_moving, is_air)
 	elif Input.is_action_just_released("fire"):
 		var is_moving = velocity.length() > 1.0
 		var is_air = not is_on_floor()
-		active_weapon.trigger_release(aim_origin, aim_dir, is_ads, is_moving, is_air)
+		active_weapon.trigger_release(muzzle_pos, aim_dir, is_ads, is_moving, is_air)
 
 	if Input.is_action_just_pressed("reload"):
 		active_weapon.start_reload()

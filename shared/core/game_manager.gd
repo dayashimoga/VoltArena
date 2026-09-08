@@ -105,9 +105,12 @@ func _handle_strike_vector_cmd(scene: Node, cmd: String) -> void:
 	elif cmd == "advance":
 		if scene.has_method("advance_segment"):
 			scene.advance_segment()
+	elif cmd == "toggle_map":
+		if hud and hud.has_method("toggle_tactical_map"):
+			hud.toggle_tactical_map()
 	elif cmd == "show_results":
 		if results and results.has_method("display_results"):
-			results.display_results(true, {"Mission": "M1 Urban Blackout", "Score": 12500, "Grade": "S", "Result": "VICTORY"})
+			results.display_results({"mission_name": "M1 Urban Blackout", "score": 12500, "grade": "S", "time": 165.0, "kills": 24, "deaths": 0})
 
 func _handle_arena_fps_cmd(scene: Node, cmd: String) -> void:
 	var player = scene.get_node_or_null("Player")

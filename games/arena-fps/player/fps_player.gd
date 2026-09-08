@@ -113,6 +113,12 @@ func setup_weapons() -> void:
 		w.owner_entity = self
 		weapon_holder.add_child(w)
 		w.visible = false
+		w.ammo_updated.connect(func(c: int, mc: int, r: int):
+			if weapons.size() > current_weapon_index and w == weapons[current_weapon_index]:
+				var bus = GameConstants.get_autoload(self, "EventBus")
+				if bus:
+					bus.player_ammo_changed.emit(c, mc, r)
+		)
 		weapons.append(w)
 
 	select_weapon(0)

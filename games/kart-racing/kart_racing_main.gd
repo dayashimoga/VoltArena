@@ -162,6 +162,11 @@ func _process(delta: float) -> void:
 			hud.update_drift_charge(player_kart.drift_charge_time, tier)
 		if hud.has_method("set_wrong_way"):
 			hud.set_wrong_way(player_kart.is_wrong_way)
+		if race_manager:
+			if hud.has_method("update_lap_times"):
+				hud.update_lap_times(race_manager.race_time, player_kart.best_lap_time)
+			if hud.has_method("update_position") and race_manager.has_method("get_racer_position"):
+				hud.update_position(race_manager.get_racer_position(player_kart), race_manager.racers.size())
 
 var camera_override: bool = false
 

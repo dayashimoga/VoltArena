@@ -31,8 +31,8 @@ func initialize_race(all_racers: Array, all_checkpoints: Array) -> void:
 			cp.checkpoint_hit.connect(_on_checkpoint_hit)
 
 	current_state = RaceState.COUNTDOWN
-	countdown_timer = 5.0
-	countdown_tick.emit(5)
+	countdown_timer = 3.0
+	countdown_tick.emit(3)
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am:
 		am.play_sound("countdown_tick", 1.0)
@@ -112,6 +112,10 @@ func update_race_positions() -> void:
 		var r = racers[i]
 		if r.is_player and bus:
 			bus.race_position_updated.emit(r.racer_id, i + 1, racers.size())
+
+func get_racer_position(kart: Node) -> int:
+	var idx = racers.find(kart)
+	return (idx + 1) if idx >= 0 else 1
 
 func finish_race(winner: Node) -> void:
 	current_state = RaceState.FINISHED

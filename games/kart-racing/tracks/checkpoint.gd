@@ -16,8 +16,9 @@ func _ready() -> void:
 func setup_trigger_volume() -> void:
 	var col = CollisionShape3D.new()
 	var box = BoxShape3D.new()
-	box.size = Vector3(checkpoint_width, 6.0, 3.0)
+	box.size = Vector3(checkpoint_width, 6.0, 6.0)
 	col.shape = box
+	col.position = Vector3(0, 0, -3.0) # Extends 6m down the track from the checkpoint position
 	add_child(col)
 
 	# Finish line visual arch if finish line

@@ -103,7 +103,7 @@ func build_circuit() -> void:
 				Vector3(18, 0.0, 45),
 				Vector3(0, 0, 35)
 			]
-			create_box(Vector3(105.0, -1.65, -50.0), Vector3(500.0, 3.0, 500.0), "asphalt")
+			create_box(Vector3(105.0, -1.65, -50.0), Vector3(600.0, 3.0, 600.0), "racing_turf")
 			var neon_props = [
 				[Vector3(-35, 0, -70), "c", Vector3(4, 4, 4)],
 				[Vector3(70, 0, -190), "a", Vector3(5, 8, 5)],
@@ -131,19 +131,51 @@ func build_circuit() -> void:
 		var p2 = circuit_nodes[(i + 1) % circuit_nodes.size()]
 		build_track_segment(p1, p2, i)
 
+	# Checkered Start/Finish Line spanning the asphalt road
+	var fl_overlay = MeshInstance3D.new()
+	var fl_plane = QuadMesh.new()
+	fl_plane.size = Vector2(track_width, 3.0)
+	fl_plane.orientation = PlaneMesh.FACE_Y
+	fl_overlay.mesh = fl_plane
+	fl_overlay.position = circuit_nodes[0] + Vector3(0, 0.02, 0)
+	fl_overlay.material_override = MaterialGenerator.get_material("checkered_flag")
+	add_child(fl_overlay)
+
+	# Painted Starting Grid Boxes along the home straight
+	for grid_idx in range(6):
+		var gz = 6.0 + grid_idx * 3.5
+		var gx = -2.2 if grid_idx % 2 == 0 else 2.2
+		var g_box = MeshInstance3D.new()
+		var g_mesh = QuadMesh.new()
+		g_mesh.size = Vector2(2.4, 3.5)
+		g_mesh.orientation = PlaneMesh.FACE_Y
+		g_box.mesh = g_mesh
+		g_box.position = Vector3(gx, 0.025, gz)
+		g_box.material_override = MaterialGenerator.create_pbr_material(Color(0.96, 0.96, 0.98, 0.85), 0.1, 0.4)
+		add_child(g_box)
+
 	# Production Start/Finish Overhead Gantry with Turbo Kart Rush banner & lights
 	var gantry = MeshBuilder.build_start_gantry(track_width)
 	gantry.position = circuit_nodes[0] + Vector3(0, 0, -2.0)
 	add_child(gantry)
 
-	# Authentic 3D rumble curbs along track
-	var curb_model = ModelCacheScript.get_prop("racing_curb")
-	if curb_model:
-		curb_model.position = circuit_nodes[0] + Vector3(-track_width * 0.5 - 1.5, 0, 0)
-		curb_model.scale = Vector3(2.0, 2.0, 2.0)
-		add_child(curb_model)
+	# Trackside Sponsor Advertising Boards on Barriers along the straight
+	for sb_z in [-35.0, -15.0, 15.0, 35.0]:
+		var sb_l = MeshInstance3D.new()
+		var sb_mesh = BoxMesh.new()
+		sb_mesh.size = Vector3(0.08, 1.1, 8.0)
+		sb_l.mesh = sb_mesh
+		sb_l.position = Vector3(-track_width * 0.5 - 1.25, 0.7, sb_z)
+		sb_l.material_override = MaterialGenerator.get_material("stadium_banner_blue" if sb_z < 0 else "stadium_banner_orange")
+		add_child(sb_l)
 
-	# Production Grandstands with Spectator Crowds along the home straight facing inward toward track
+		var sb_r = MeshInstance3D.new()
+		sb_r.mesh = sb_mesh
+		sb_r.position = Vector3(track_width * 0.5 + 1.25, 0.7, sb_z)
+		sb_r.material_override = MaterialGenerator.get_material("stadium_banner_orange" if sb_z < 0 else "stadium_banner_blue")
+		add_child(sb_r)
+
+	# Production Grandstands with Spectator Crowds along the home straight
 	for z_pos in [-50.0, -25.0, 0.0, 25.0]:
 		var stand_l = MeshBuilder.build_grandstand_with_crowd(24.0, 7.0, 9.0)
 		stand_l.position = Vector3(-track_width * 0.5 - 6.5, 0.0, z_pos)

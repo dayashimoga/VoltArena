@@ -98,3 +98,18 @@ graph TD
 - **Squad Coordinator**: Distributed attack token pool ($N=3$) and lateral flanking slot assignments to prevent chaotic dogpiles.
 - **Perception**: Dynamic Field of View ($110^\circ$), raycast LOS, acoustic hearing events.
 - **Deterministic Watchdog**: 28-second watchdog timer prevents progression deadlocks caused by lost or geometry-stuck enemies.
+- **Navigation Mesh**: Programmatic `NavigationRegion3D` generation provides walkable navigation polygons across roadway and pedestrian corridors for authentic pathfinding.
+
+---
+
+## 7. Tactical Navigation & HUD Architecture
+- **Top-Center Compass Tape**: Real-time degree heading with cardinal markers ($N, NE, E, SE, S, SW, W, NW$) and dynamic objective diamond bearing with range readout (`[◆ JAMMER 128m]`).
+- **Top-Right Radar Minimap**: Circular planar radar tracking player position and forward orientation, road corridor boundaries, objective beacons, and threat-aware hostile blips with a 3.0-second fade timer.
+- **Full Tactical Map (M Key)**: Modal schematic providing bird's-eye view of corridor milestones, active checkpoints, and extraction zones.
+- **Combat Crosshair Convergence**: Camera center raycast calculates 3D point-of-aim at reticle hit, dynamically rotating projectile trajectory from weapon muzzle to impact point, eliminating low-cover clipping.
+
+---
+
+## 8. World Scale & Environmental Storytelling
+- **Human Scale**: Structures scaled to authentic proportions ($14\text{m}$ to $24\text{m}$ tall, $8\text{m}$ roadway, $3\text{m}$ sidewalks) creating dense urban canyons.
+- **Blackout Atmosphere**: Emergency hazard beacons, generator hum, disabled neon signs, burning wreckage, police roadblocks, and volumetric fog conveying blackout crisis.

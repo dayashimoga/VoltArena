@@ -5,28 +5,28 @@
 VoltArena is built on a modular, decoupled, single-binary architecture powered by **Godot 4.3 Stable**. The suite utilizes an event-driven pub/sub architecture centered around global singletons, shared foundation libraries, and self-contained game modules.
 
 ```
-+-----------------------------------------------------------------------------------------+
-|                                   VOLTARENA LAUNCHER                                    |
-|                       (7-Game Responsive Carousel, Hot-Swap Loader)                      |
-+-----------------------------------------------------------------------------------------+
-    |           |            |            |             |              |             |
-    v           v            v            v             v              v             v
-+-------+   +-------+   +---------+   +-------+   +-----------+   +----------+   +---------+
-| IRON  |   | METRO |   |  NITRO  |   | DRIFT |   | SKYBOUND  |   | ROBOFORGE|   |  WILD   |
-|CRUCIBLE|  | SIEGE |   |  KICK   |   | STORM |   |  ODYSSEY  |   |  ARENA   |   | CIRCUIT |
-| (FPS) |   |(Survival) | (Rocket)|   | (Kart)|   |(Platform) |   | (Sandbox)|   | (Safari)|
-+-------+   +-------+   +---------+   +-------+   +-----------+   +----------+   +---------+
-    \           \            \            |            /              /             /
-     \           \            \           |           /              /             /
-      +---------------------------------------------------------------------------+
-      |                       SHARED FOUNDATION SUBSYSTEMS                        |
-      |---------------------------------------------------------------------------|
-      | GameManager       | EventBus          | AssetLoader      | QuestManager   |
-      | SettingsManager   | SaveManager       | AudioManager     | InventorySystem|
-      | InputManager      | QualityManager    | PlatformAdapter  | OrbitCamera3D  |
-      | MaterialGenerator | ThemeGenerator    | TelemetryManager | DayNightCycle3D|
-      | InteractionArea3D | PuzzleElements    | TextureSynth     | ModelCache     |
-      +---------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------------+
+|                                          VOLTARENA LAUNCHER                                           |
+|                             (8-Game Responsive Carousel, Hot-Swap Loader)                             |
++-------------------------------------------------------------------------------------------------------+
+    |           |            |            |             |              |             |              |
+    v           v            v            v             v              v             v              v
++-------+   +-------+   +---------+   +-------+   +-----------+   +----------+   +---------+    +---------+
+| IRON  |   | METRO |   |  NITRO  |   | DRIFT |   | SKYBOUND  |   | ROBOFORGE|   |  WILD   |    | STRIKE  |
+|CRUCIBLE|  | SIEGE |   |  KICK   |   | STORM |   |  ODYSSEY  |   |  ARENA   |   | CIRCUIT |    | VECTOR  |
+| (FPS) |   |(Survival) | (Rocket)|   | (Kart)|   |(Platform) |   | (Sandbox)|   | (Safari)|    |(Campaign|
++-------+   +-------+   +---------+   +-------+   +-----------+   +----------+   +---------+    +---------+
+    \           \            \            |            /              /             /              /
+     \           \            \           |           /              /             /              /
+      +------------------------------------------------------------------------------------------+
+      |                               SHARED FOUNDATION SUBSYSTEMS                               |
+      |------------------------------------------------------------------------------------------|
+      | GameManager       | EventBus          | AssetLoader      | QuestManager    | CameraDir   |
+      | SettingsManager   | SaveManager       | AudioManager     | InventorySystem | Checkpoint  |
+      | InputManager      | QualityManager    | PlatformAdapter  | OrbitCamera3D   | Streamer    |
+      | MaterialGenerator | ThemeGenerator    | TelemetryManager | DayNightCycle3D | EncounterDir|
+      | InteractionArea3D | PuzzleElements    | TextureSynth     | ModelCache      | AIArchetypes|
+      +------------------------------------------------------------------------------------------+
 ```
 
 ---
@@ -159,12 +159,22 @@ The physics world is partitioned into 12 strict collision layers configured in `
 * **Field Journal (`FieldJournal`)**: Serialized catalog documenting species descriptions, behavior milestones, high-scoring photo captures, and star ratings.
 * **Expedition ATV (`ExplorerATV`)**: Physical traversal vehicle with independent 4-wheel suspension simulation, steering geometry, turbo boost, and terrain climbing capability.
 
+### 6.4 Strike Vector (Forward-Moving 3D Run-and-Gun Campaign)
+* **Forward Locomotion & Kinematics (`StrikePlayer` & `PlayerLocomotion`)**: CharacterBody3D locomotion implementing 8-direction navigation, sprint (10.5 m/s), slide, crouch, dodge roll, ledge mantling, variable jump with 0.15s coyote and jump buffering, and anti-fall recovery at $Y < -15.0\text{m}$.
+* **Async Mission Streaming (`MissionStreamer` & `SegmentManager`)**: Coordinates multi-segment mission streaming keeping active + next segments resident in memory (`LOCKED -> PRELOADED -> ACTIVE -> COMPLETE -> EXITED -> UNLOADED`) to eliminate void transitions and prevent memory leaks.
+* **Forward Firefight Orchestrator (`EncounterDirector`)**: Data-driven localized encounter controller managing exit barriers, wave reinforcements, squad coordination tokens, and deterministic 28s stuck watchdog recovery.
+* **9-Weapon Production Arsenal (`StrikeWeaponArsenal` & `StrikeWeaponBase`)**: Features VX-7, Tempest, Breach, Atlas, Longshot, Cyclone, Arc Launcher, Pulse Cannon, and Tactical Sidearm with procedural models, recoil kickback, spread cones, ADS multipliers, and attachment upgrades.
+* **10 Enemy Archetypes & Squad Coordinator (`AIArchetypes`, `StrikeAIBase`, `SquadCoordinator`)**: BehaviorTree/HFSM covering Rifle Trooper, Rusher, Heavy, Marksman, Shield, Grenadier, Drone, Turret, Elite, and Commander with token-based attack concurrency.
+* **Multi-Phase Boss Framework (`StrikeBossBase` & `BossArchetypes`)**: 8 distinct mission bosses with telegraph warnings, attack patterns, shield defense, weakness exposure windows, and multi-phase transformations.
+* **Dynamic Camera System (`CameraDirector`)**: 7 camera modes (Third-person, ADS, 2.5D side-scroller, corridor chase, vehicle, boss, cinematic) with collision-avoiding spring arm.
+* **Checkpoint & Save Persistence (`CheckpointManager`)**: Real-time checkpoint registration, safe-ground respawn restoration, and career mission grading persistence.
+
 ---
 
 ## 7. Universal Launcher Architecture
 
 The top-level `Launcher` (`launcher/launcher.tscn`) acts as the master coordinator:
-* **7-Game Carousel**: Responsive horizontal/grid card layout supporting keyboard, gamepad, and mouse navigation.
+* **8-Game Carousel**: Responsive horizontal/grid card layout supporting keyboard, gamepad, and mouse navigation across all 8 titles.
 * **State & Metadata Preview**: Displays title, genre tags, active controls, description, career records, and visual dossier for the highlighted game.
 * **Hot-Swap Engine**: Uses `GameManager.load_game_scene()` for asynchronous resource streaming and clean garbage collection during transitions.
 * **Universal In-Game Pause & Overlay**: Every game includes a unified `PauseMenu` that provides "Resume", "Restart", and "Quit to Launcher" with zero memory leaks.

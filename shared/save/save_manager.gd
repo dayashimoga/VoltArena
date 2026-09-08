@@ -37,6 +37,17 @@ func get_default_save() -> Dictionary:
 				"best_lap_canyon": 999.0,
 				"best_lap_city": 999.0,
 				"best_lap_mountain": 999.0
+			},
+			"strike_vector": {
+				"missions_completed": 0,
+				"highest_mission": 1,
+				"current_segment": 0,
+				"current_checkpoint": 0,
+				"total_score": 0,
+				"unlocked_weapons": ["vx7_assault", "tactical_sidearm"],
+				"weapon_upgrades": {},
+				"collectibles_found": 0,
+				"best_grades": {}
 			}
 		},
 		"unlocked_items": {
@@ -179,4 +190,36 @@ func set_custom_data(key: String, val: Variant) -> void:
 
 func get_custom_data(key: String, default_val: Variant = null) -> Variant:
 	return save_data.get(key, default_val)
+
+func record_strike_vector_mission(mission_id: int, score: int, grade: String, completed: bool = true) -> void:
+	if not save_data.has("statistics"):
+		save_data["statistics"] = {}
+	if not save_data["statistics"].has("strike_vector"):
+		save_data["statistics"]["strike_vector"] = get_default_save()["statistics"]["strike_vector"]
+	var stats = save_data["statistics"]["strike_vector"]
+	if completed:
+		stats["missions_completed"] = maxi(stats.get("missions_completed", 0), mission_id)
+		stats["highest_mission"] = maxi(stats.get("highest_mission", 1), mission_id + 1)
+	stats["total_score"] = stats.get("total_score", 0) + score
+	var grades = stats.get("best_grades", {})
+	var m_key = str(mission_id)
+	grades[m_key] = grade
+	stats["best_grades"] = grades
+	save_to_disk()
+
+func save_strike_vector_checkpoint(mission_id: int, segment_idx: int, checkpoint_idx: int) -> void:
+	if not save_data.has("statistics"):
+		save_data["statistics"] = {}
+	if not save_data["statistics"].has("strike_vector"):
+		save_data["statistics"]["strike_vector"] = get_default_save()["statistics"]["strike_vector"]
+	var stats = save_data["statistics"]["strike_vector"]
+	stats["highest_mission"] = maxi(stats.get("highest_mission", 1), mission_id)
+	stats["current_segment"] = segment_idx
+	stats["current_checkpoint"] = checkpoint_idx
+	save_to_disk()
+
+func get_strike_vector_stats() -> Dictionary:
+	if save_data.has("statistics") and save_data["statistics"].has("strike_vector"):
+		return save_data["statistics"]["strike_vector"]
+	return get_default_save()["statistics"]["strike_vector"]
 

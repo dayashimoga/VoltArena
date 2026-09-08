@@ -76,6 +76,23 @@ Integrity verification is automated via `scripts/asset_quality_gate.py` and `scr
 | `res://assets/models/environment/track_curb_curved.glb` | `track_curb_curved.glb` | 480 | 380 | GLB | CC0 | Banked corner rumble curb for apex guidance |
 | `res://assets/models/environment/track_item_box.glb` | `track_item_box.glb` | 760 | 610 | GLB | CC0 | Translucent rotating mystery item crate with question mark emblem |
 
+### 2.8 Strike Vector (Forward-Moving Run-and-Gun Shooter)
+| Asset Path / Procedural Generator | Identifier | Triangles | Vertices | Format / Architecture | License | Purpose / Description |
+| :--- | :--- | :---: | :---: | :---: | :---: | :--- |
+| `games/strike-vector/player/strike_player_visual.gd` | `strike_operative` | 3,840 | 2,920 | Procedural PBR Skinned Rig | MIT | Cybernetic forward operative with segmented armor, visor, and weapon socket |
+| `games/strike-vector/weapons/strike_weapon_arsenal.gd` | `vx7_assault_rifle` | 1,420 | 1,120 | MeshBuilder PBR Asset | MIT | Balanced automatic rifle with top optic rail and heat shield |
+| `games/strike-vector/weapons/strike_weapon_arsenal.gd` | `tempest_smg` | 980 | 760 | MeshBuilder PBR Asset | MIT | Compact bullpup submachine gun with high fire rate |
+| `games/strike-vector/weapons/strike_weapon_arsenal.gd` | `breach_shotgun` | 1,120 | 890 | MeshBuilder PBR Asset | MIT | Dual-barrel heavy tactical shotgun with heat dissipation fins |
+| `games/strike-vector/weapons/strike_weapon_arsenal.gd` | `atlas_battle_rifle` | 1,560 | 1,220 | MeshBuilder PBR Asset | MIT | High-caliber battle rifle with heavy receiver and bipod mount |
+| `games/strike-vector/weapons/strike_weapon_arsenal.gd` | `longshot_marksman` | 1,840 | 1,410 | MeshBuilder PBR Asset | MIT | Precision designated marksman rifle with extended suppressor & optic |
+| `games/strike-vector/weapons/strike_weapon_arsenal.gd` | `cyclone_lmg` | 2,120 | 1,650 | MeshBuilder PBR Asset | MIT | Heavy squad automatic weapon with drum magazine and dual vents |
+| `games/strike-vector/weapons/strike_weapon_arsenal.gd` | `arc_launcher` | 1,940 | 1,520 | MeshBuilder PBR Asset | MIT | Plasma arcing launcher with magnetic containment coils |
+| `games/strike-vector/weapons/strike_weapon_arsenal.gd` | `pulse_cannon` | 2,340 | 1,820 | MeshBuilder PBR Asset | MIT | High-energy charged particle cannon with forward focusing rings |
+| `games/strike-vector/weapons/strike_weapon_arsenal.gd` | `tactical_sidearm` | 640 | 510 | MeshBuilder PBR Asset | MIT | Rapid-draw polymer tactical pistol with underbarrel laser guide |
+| `games/strike-vector/ai/ai_archetypes.gd` | `10_enemy_archetypes` | 2,400–4,800 | 1,800–3,600 | Modular PBR Assemblies | MIT | Rifle Trooper, Rusher, Heavy, Marksman, Shield Unit, Grenadier, Combat Drone, Heavy Turret, Elite Vanguard, Field Commander |
+| `games/strike-vector/bosses/boss_archetypes.gd` | `8_mission_bosses` | 5,200–12,400 | 4,100–9,800 | Multi-mesh Dynamic Bosses | MIT | Mech, Attack VTOL, Cargo Loader, Armored Convoy, Walker, Robot, Aerial Platform, Command Mech |
+| `games/strike-vector/environment/strike_environment_builder.gd` | `8_biome_environments` | Modular | Modular | PBR Biome Engine | MIT | Urban Blackout, Rail Bridge, Harbor Cranes, Desert Convoy, Arctic Base, Megafactory, Sky Fortress, Citadel |
+
 ---
 
 ## 3. Cryptographic Verification & Quality Gate

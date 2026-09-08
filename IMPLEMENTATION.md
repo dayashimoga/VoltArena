@@ -145,4 +145,25 @@ VoltArena was developed in a multi-phase engineering process adhering strictly t
   - Updated `scripts/certifier.py` to enforce G0–G9 verification (RUNTIME_VERIFIED) while isolating G10 Human Reference-Board Visual Acceptance (HUMAN-VALIDATION-REQUIRED).
   - Verified 41 test suites, 857 assertions (100% pass rate), 93.91% function coverage (401 / 427 functions), and 986.2 FPS sim throughput with 0 stutters.
 
+### Phase 15: Strike Vector — 3D Forward-Moving Run-and-Gun Campaign Production Implementation
+* **Campaign & Streaming Architecture**:
+  - Engineered continuous forward level progression engine across 8 distinct missions (`games/strike-vector/missions/mission_1_urban_blackout.gd` through `mission_8_final_citadel.gd`).
+  - Implemented `MissionStreamer` with active + next segment residency and safe unloading, preventing geometry dropouts or memory bloat.
+  - Built 7-state `SegmentManager` (`LOCKED`, `PRELOADED`, `ENTERED`, `ACTIVE`, `COMPLETE`, `EXITED`, `UNLOADED`).
+  - Added `EncounterDirector` with localized dynamic boundary locks, reinforcement wave sequencing, route clearance audio, and a 28s deterministic watchdog recovery.
+* **Player Controller & Camera Director**:
+  - Developed responsive `CharacterBody3D` locomotion (`player_locomotion.gd`): walk, sprint, crouch, jump with 0.15s coyote & jump buffering, slide-fire, dodge-roll, ledge mantling, anti-fall recovery.
+  - Integrated 60% armor absorption layer and `StrikePlayerVisual` cybernetic skinned mesh rig.
+  - Built `CameraDirector` with 7 transition modes and SpringArm3D obstacle collision avoidance.
+* **Weapons Arsenal & Arcade Power Modules**:
+  - Designed 9 original weapons (`strike_weapon_arsenal.gd`): VX-7, Tempest, Breach, Atlas, Longshot, Cyclone, Arc Launcher, Pulse Cannon, Tactical Sidearm.
+  - Implemented hitscan & projectile sweep raycasting with penetration, splash AoE, recoil, and spread falloff.
+  - Created 6 arcade power modules: Rapid Fire, Spread Module, Piercing Module, Shield Overcharge, Overdrive, Support Drone.
+* **10-State AI HFSM & Boss Architecture**:
+  - Created 10 enemy archetypes with HFSM and `SquadCoordinator` concurrency management.
+  - Developed 8 multi-phase bosses (`boss_archetypes.gd`) featuring telegraphing, evasive maneuvering, weakpoint exposure, and phase transitions.
+* **Verification & Testing**:
+  - Added 4 test suites: `test_strike_campaign_unit.gd`, `test_strike_player_unit.gd`, `test_strike_ai_unit.gd`, and `test_strike_vector_e2e.gd`.
+  - 1493/1493 assertions passing across 55 suites with 96.0% overall function coverage.
+
 

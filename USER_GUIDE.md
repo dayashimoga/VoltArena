@@ -1,18 +1,22 @@
 # VoltArena — User Guide & Platform Manual
 
 ## 1. Welcome to VoltArena
-**VoltArena** is a unified 3D gaming arcade featuring four distinct titles accessible through an interactive cyberpunk launcher.
+**VoltArena** is a unified 3D gaming arcade featuring eight distinct titles accessible through an interactive cyberpunk launcher.
 
 ---
 
 ## 2. Navigating the Launcher
 
 Upon launching VoltArena, you are greeted by the 3D Holographic Menu:
-* **Game Carousel**: The 4 games are displayed as interactive holographic cards:
+* **Game Carousel**: The 8 games are displayed as interactive holographic cards:
   1. **Iron Crucible** (Tactical Arena FPS)
   2. **Metro Siege** (Subway Survival FPS)
   3. **Nitro Kick** (Rocket-Car Football)
   4. **Drift Storm** (Arcade Kart Racing)
+  5. **Skybound Odyssey** (3D Open-Air Adventure Platformer)
+  6. **RoboForge Arena** (Combat Robot Builder & Physics Battler)
+  7. **WildCircuit** (Wildlife Safari & Photography Traversal)
+  8. **Strike Vector** (Forward-Moving Run-and-Gun Shooter)
 * **Launching a Game**: Click on any game card or press the corresponding **PLAY** button. The game assets will instantly load without scene hitches.
 * **Global Settings**: Click the **SETTINGS** button in the upper-right corner to configure graphics quality presets (Low, Medium, High, Ultra), audio volume sliders (Master, Music, SFX), and mouse sensitivity.
 
@@ -78,4 +82,10 @@ When a match concludes (time runs out, all waves survived, race finished, or goa
 ### 6.4 Drift Storm
 * **Mini-Turbo Timing**: Initiate drifts early before hairpin bends; hold drift angle until purple sparks erupt for a tier-3 speed surge down the following straight.
 * **Powerup Management**: Hold the Plasma Shield powerup when leading the pack to counter incoming Seeker Missiles.
+
+### 6.5 Strike Vector
+* **Forward Momentum**: Never linger in cleared zones. Advancing into the next sector triggers segment preloading and route progression.
+* **Slide-Fire & Dodge-Roll**: Combine sprint with crouch (`Shift` + `C`) to slide-fire underneath incoming projectile barrages. Tap `Ctrl` or double-tap direction to dodge-roll away from grenade blast radii.
+* **Weakpoint Prioritization**: Aim for glowing head units and heat sinks on Elites and Mechs for $2.0\times$ to $2.5\times$ damage multipliers.
+* **Power Module Combos**: Stacking Piercing Module with Overdrive turns high-density enemy choke-points into instant multi-kill score bonuses.
 

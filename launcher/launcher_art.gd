@@ -16,6 +16,8 @@ static func create_game_banner(game_id: String, width: int = 360, height: int = 
 			_paint_nitro_kick(image, width, height)
 		"kart_racing", "drift_storm":
 			_paint_drift_storm(image, width, height)
+		"strike_vector":
+			_paint_strike_vector(image, width, height)
 		_:
 			_paint_default_banner(image, width, height)
 
@@ -223,6 +225,88 @@ static func _paint_drift_storm(img: Image, w: int, h: int) -> void:
 					base_r = 0.92 if is_red else 0.96
 					base_g = 0.18 if is_red else 0.96
 					base_b = 0.18 if is_red else 0.96
+
+			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
+
+static func _paint_strike_vector(img: Image, w: int, h: int) -> void:
+	# Strike Vector: High-speed forward-moving sci-fi run-and-gun perspective
+	# Atmospheric twilight sky, high-tech urban skyscrapers, forward road vanishing point, and orange/cyan weapon tracers
+	var vp_x = float(w) * 0.5
+	var vp_y = float(h) * 0.42
+
+	for y in range(h):
+		var v: float = float(y) / float(h)
+		for x in range(w):
+			var u: float = float(x) / float(w)
+			var base_r: float = 0.08
+			var base_g: float = 0.09
+			var base_b: float = 0.14
+
+			if y < h * 0.42:
+				# Sky gradient with atmospheric dusk haze
+				base_r = lerp(0.12, 0.45, v / 0.42)
+				base_g = lerp(0.10, 0.22, v / 0.42)
+				base_b = lerp(0.25, 0.38, v / 0.42)
+
+				# Skyscraper silhouettes on left and right flanks
+				var flank_dist = abs(u - 0.5)
+				if flank_dist > 0.28:
+					var building_step = int(x / 24) * 24
+					var building_height = (sin(building_step * 0.12) * 0.5 + 0.5) * h * 0.35
+					if y > (h * 0.42 - building_height):
+						base_r = 0.05
+						base_g = 0.06
+						base_b = 0.10
+						if (x % 6 == 0) and (y % 8 == 0) and ((x + y) % 5 == 0):
+							base_r += 0.4
+							base_g += 0.5
+							base_b += 0.7
+			else:
+				# Forward perspective road / combat corridor
+				var road_t = (y - vp_y) / (h - vp_y)
+				base_r = lerp(0.12, 0.20, road_t)
+				base_g = lerp(0.13, 0.22, road_t)
+				base_b = lerp(0.16, 0.28, road_t)
+
+				# Road perspective lines receding to vanishing point
+				var dx = (x - vp_x) / (road_t + 0.01)
+				if abs(dx) < 180.0:
+					# Road lane lines
+					if abs(dx) < 8.0 and (y % 16 < 9):
+						base_r = 1.0
+						base_g = 0.75
+						base_b = 0.15
+					elif abs(abs(dx) - 80.0) < 6.0:
+						base_r = 0.1
+						base_g = 0.85
+						base_b = 0.95
+					elif abs(abs(dx) - 160.0) < 12.0:
+						# Outer barrier
+						base_r = 0.3
+						base_g = 0.35
+						base_b = 0.45
+
+			# Forward Tracers / Laser Fire
+			var tracer1 = abs((y - vp_y) * 1.6 - (x - vp_x))
+			if tracer1 < 3.5 and y > vp_y + 15:
+				var glow = 1.0 - (tracer1 / 3.5)
+				base_r = lerp(base_r, 1.0, glow)
+				base_g = lerp(base_g, 0.45, glow)
+				base_b = lerp(base_b, 0.1, glow)
+
+			var tracer2 = abs((y - vp_y) * -1.8 - (x - vp_x))
+			if tracer2 < 3.0 and y > vp_y + 20:
+				var glow2 = 1.0 - (tracer2 / 3.0)
+				base_r = lerp(base_r, 0.1, glow2)
+				base_g = lerp(base_g, 0.95, glow2)
+				base_b = lerp(base_b, 1.0, glow2)
+
+			# Central Holo Targeting Crosshair
+			var center_d = Vector2(x - vp_x, y - (vp_y + 10)).length()
+			if abs(center_d - 16.0) < 1.8 or (center_d < 3.0):
+				base_r = lerp(base_r, 1.0, 0.9)
+				base_g = lerp(base_g, 0.35, 0.9)
+				base_b = lerp(base_b, 0.1, 0.9)
 
 			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
 

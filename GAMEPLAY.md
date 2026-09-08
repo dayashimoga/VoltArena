@@ -167,17 +167,63 @@ graph LR
 
 ---
 
-## 9. Complete Controls Reference
+---
 
-| Action | Iron Crucible / Metro Siege | Nitro Kick | Drift Storm | Skybound Odyssey | RoboForge Arena | WildCircuit |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Move / Steer** | `W`, `A`, `S`, `D` | `W`, `S` (Throttle), `A`, `D` | `W`, `S` (Throttle), `A`, `D` | `W`, `A`, `S`, `D` | `W`, `A`, `S`, `D` | `W`, `A`, `S`, `D` |
-| **Look / Orbit** | Mouse Movement | Mouse Orbit | Dynamic Chase | Mouse Orbit | 360° Workshop Cam | Mouse Orbit |
-| **Jump / Boost** | `Space` (Jump) | `Space` (Jump / Flip) | `Space` (Drift) | `Space` (Jump / Mantle)| `Space` (Activate Tool) | `Space` (ATV Brake / Jump)|
-| **Sprint / Nitro**| `Shift` (Sprint) | `Shift` (Boost) | `Shift` (Drift) | `Shift` (Sprint / Glide)| `Shift` (Booster) | `Shift` (ATV Turbo / Sprint)|
-| **Action 1** | Left Mouse (Fire) | Left Mouse (Boost) | `E` / Click (Use Item) | `E` (Interact / Action)| Left Click (Mount Part)| Left Mouse (Snap Photo) |
-| **Action 2** | Right Mouse (ADS) | Right Mouse (Ball Cam)| `R` (Recovery) | Right Mouse (Grapple) | Right Click (Rotate Bay)| Right Mouse (Viewfinder Zoom)|
-| **Zoom / Tool** | Mouse Wheel (Switch) | — | — | Mouse Wheel (Cam Zoom) | Mouse Wheel (Bay Zoom)| Mouse Wheel (24-300mm Zoom)|
-| **Journal / Kiosk**| `E` (Kiosk / Use) | — | — | `Tab` / `Q` (Quests) | `Tab` (Challenges) | `J` (Field Journal) |
-| **Reset / Recover**| `R` (Reload) | `R` (Reset Car) | `R` (Reset Kart) | Safe Ground Auto | `R` (Reset Course) | `R` (Flip ATV) |
-| **Pause Menu** | `Escape` | `Escape` | `Escape` | `Escape` | `Escape` | `Escape` |
+## 9. Strike Vector — Forward-Moving Run-and-Gun Shooter
+
+### 9.1 Game Objective & Forward Progression Loop
+* **Objective**: Complete an 8-mission continuous forward assault through enemy-occupied sectors. Eliminate localized hostiles, overcome dynamic environmental hazards and set-pieces, defeat multi-phase sector bosses, and reach extraction.
+* **Core Progression Loop**:
+  $$\text{DEPLOY} \longrightarrow \text{ADVANCE} \longrightarrow \text{ENCOUNTER} \longrightarrow \text{CLEAR ROUTE} \longrightarrow \text{TRAVERSE} \longrightarrow \text{NEW SCENE} \longrightarrow \text{CHECKPOINT} \longrightarrow \text{BOSS} \longrightarrow \text{EXTRACT}$$
+* **Progression Safeguards**:
+  * **Level Streaming**: Active segment + next resident segment preloaded; safe despawn of distant segments.
+  * **Watchdog Determinism**: 28-second encounter watchdog recovers stuck or unreachable units, ensuring routes unlock reliably.
+  * **Anti-Fall Recovery**: Automatic height boundary monitoring resets fallen operatives to last grounded checkpoint coordinates.
+
+### 9.2 The 8-Mission Campaign
+1. **Urban Blackout**: City streets, commercial alleys, shopping interior, rooftop traversal, plaza evacuation. Mini-boss: Heavy Mech; Boss: Attack VTOL.
+2. **High-Speed Rail**: High-speed station, carriage interiors, wind-swept train roof, cargo cars, rail bridge. Mini-boss: Armored Drone; Boss: Gunship Cruiser.
+3. **Harbor Assault**: Container docks, warehouses, gantry crane yard, drydock shipyard, cargo vessel. Mini-boss: Cargo Loader Mech; Boss: Harbor Battleship Turret.
+4. **Desert Convoy**: Dust settlement, canyon narrows, moving armored convoy, refinery pipelines. Mini-boss: Convoy Escort Tank; Boss: Armored Battle Train.
+5. **Arctic Installation**: Frozen tundra, perimeter checkpoint, research complex, subterranean ice cavern, radar launchpad. Mini-boss: Cryo Walker; Boss: Sub-Zero Fortress Mech.
+6. **Megafactory**: Logistics bay, robotic assembly line, conveyor belts, smelter furnace, automated control center. Mini-boss: Industrial Crane Bot; Boss: Assembly Core Sentinel.
+7. **Sky Fortress**: Aerial insertion, exterior catwalks, hangar deck, conduits, reactor ring, bridge deck. Mini-boss: Interceptor Drone; Boss: Fortress Command Core.
+8. **Final Citadel**: Trench approach, vehicle bay, citadel corridors, inner sanctum, grand spire, extraction flight. Mini-boss: Elite Praetorian; Boss: Overlord Titan (Multi-Phase).
+
+### 9.3 Arsenal & Arcade Power Modules
+* **9 Original Weapons**:
+  1. *VX-7 Assault Rifle*: Balanced automatic, versatile for mid-range skirmishes.
+  2. *Tempest SMG*: Extreme rate of fire and high mobility for point-blank breaches.
+  3. *Breach Shotgun*: High spread, devastating close-range stopping power.
+  4. *Atlas Battle Rifle*: Precision 3-round burst / heavy semi-auto for marksman engagements.
+  5. *Longshot Marksman*: Heavy designated precision rifle with $2.5\times$ weakpoint multiplier.
+  6. *Cyclone LMG*: Large 100-round drum magazine for sustained suppression fire.
+  7. *Arc Launcher*: Energy projectile firing arcing plasma spheres with splash damage.
+  8. *Pulse Cannon*: High-impact penetrating energy beam capable of piercing cover.
+  9. *Tactical Sidearm*: Ultra-fast draw backup pistol with infinite reserve ammo.
+* **6 Arcade Power Modules**:
+  * *Rapid Fire*: $+50\%$ firing rate for 12 seconds.
+  * *Spread Module*: Triple projectile spread pattern with bonus coverage.
+  * *Piercing Module*: Bullets pierce through dynamic cover and hostiles.
+  * *Shield Overcharge*: Generates a 75-point temporary force barrier.
+  * *Overdrive*: $+35\%$ movement sprint speed and instantaneous weapon reload.
+  * *Support Drone*: Deploys an automated orbital drone providing fire assistance.
+
+---
+
+## 10. Complete Controls Reference
+
+| Action | Iron Crucible / Metro Siege | Strike Vector | Nitro Kick | Drift Storm | Skybound Odyssey | RoboForge Arena | WildCircuit |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Move / Steer** | `W`, `A`, `S`, `D` | `W`, `A`, `S`, `D` | `W`, `S` (Throttle), `A`, `D` | `W`, `S` (Throttle), `A`, `D` | `W`, `A`, `S`, `D` | `W`, `A`, `S`, `D` | `W`, `A`, `S`, `D` |
+| **Look / Orbit** | Mouse Movement | Mouse Aim / Turn | Mouse Orbit | Dynamic Chase | Mouse Orbit | 360° Workshop Cam | Mouse Orbit |
+| **Jump / Boost** | `Space` (Jump) | `Space` (Jump / Mantle)| `Space` (Jump / Flip) | `Space` (Drift) | `Space` (Jump / Mantle)| `Space` (Activate Tool) | `Space` (ATV Brake / Jump)|
+| **Sprint / Nitro**| `Shift` (Sprint) | `Shift` (Sprint / Slide)| `Shift` (Boost) | `Shift` (Drift) | `Shift` (Sprint / Glide)| `Shift` (Booster) | `Shift` (ATV Turbo / Sprint)|
+| **Action 1** | Left Mouse (Fire) | Left Mouse (Fire Weapon)| Left Mouse (Boost) | `E` / Click (Use Item) | `E` (Interact / Action)| Left Click (Mount Part)| Left Mouse (Snap Photo) |
+| **Action 2** | Right Mouse (ADS) | Right Mouse (ADS Zoom) | Right Mouse (Ball Cam)| `R` (Recovery) | Right Mouse (Grapple) | Right Click (Rotate Bay)| Right Mouse (Viewfinder Zoom)|
+| **Crouch / Roll**| `C` (Crouch) | `C` / `Ctrl` (Crouch/Roll)| — | — | — | — | — |
+| **Switch Weapon**| `1`-`5` / Scroll | `1`-`9` / Scroll | — | — | Mouse Wheel (Cam Zoom) | Mouse Wheel (Bay Zoom)| Mouse Wheel (24-300mm Zoom)|
+| **Grenade / Power**| `G` (Grenade) | `G` (Toss Grenade) | — | — | — | — | — |
+| **Reload** | `R` (Reload) | `R` (Reload Magazine) | `R` (Reset Car) | `R` (Reset Kart) | Safe Ground Auto | `R` (Reset Course) | `R` (Flip ATV) |
+| **Pause Menu** | `Escape` | `Escape` | `Escape` | `Escape` | `Escape` | `Escape` | `Escape` |
+

@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 96.6942148760331,
+  "overall_coverage_pct": 96.0422163588391,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -222,6 +222,238 @@
       "tested": 8,
       "total": 8,
       "untested": []
+    },
+    "res://games/strike-vector/ai/ai_archetypes.gd": {
+      "coverage_pct": 100,
+      "tested": 12,
+      "total": 12,
+      "untested": []
+    },
+    "res://games/strike-vector/ai/squad_coordinator.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/strike-vector/ai/strike_ai_base.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/strike-vector/audio/strike_audio_director.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/strike-vector/bosses/boss_archetypes.gd": {
+      "coverage_pct": 100,
+      "tested": 9,
+      "total": 9,
+      "untested": []
+    },
+    "res://games/strike-vector/bosses/strike_boss_base.gd": {
+      "coverage_pct": 80,
+      "tested": 4,
+      "total": 5,
+      "untested": [
+        "_init"
+      ]
+    },
+    "res://games/strike-vector/camera/camera_director.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/strike-vector/campaign/campaign_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/strike-vector/campaign/checkpoint_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/strike-vector/campaign/encounter_director.gd": {
+      "coverage_pct": 83.3333333333333,
+      "tested": 5,
+      "total": 6,
+      "untested": [
+        "_init"
+      ]
+    },
+    "res://games/strike-vector/campaign/mission_manager.gd": {
+      "coverage_pct": 87.5,
+      "tested": 7,
+      "total": 8,
+      "untested": [
+        "_init"
+      ]
+    },
+    "res://games/strike-vector/campaign/mission_streamer.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/strike-vector/campaign/segment_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/strike-vector/environment/destructible_prop.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/strike-vector/environment/strike_environment_builder.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/strike-vector/missions/mission_1_urban_blackout.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/strike-vector/missions/mission_2_high_speed_rail.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/strike-vector/missions/mission_3_harbor_assault.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/strike-vector/missions/mission_4_desert_convoy.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/strike-vector/missions/mission_5_arctic_installation.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/strike-vector/missions/mission_6_megafactory.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/strike-vector/missions/mission_7_sky_fortress.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/strike-vector/missions/mission_8_final_citadel.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/strike-vector/missions/mission_definitions.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/strike-vector/player/player_locomotion.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://games/strike-vector/player/strike_player.gd": {
+      "coverage_pct": 90,
+      "tested": 9,
+      "total": 10,
+      "untested": [
+        "_init"
+      ]
+    },
+    "res://games/strike-vector/player/strike_player_visual.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/strike-vector/setpieces/setpiece_director.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/strike-vector/strike_vector_main.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/strike-vector/ui/strike_campaign_menu.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 2,
+      "untested": [
+        "_ready",
+        "setup_ui"
+      ]
+    },
+    "res://games/strike-vector/ui/strike_hud.gd": {
+      "coverage_pct": 100,
+      "tested": 8,
+      "total": 8,
+      "untested": []
+    },
+    "res://games/strike-vector/ui/strike_results_screen.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/strike-vector/weapons/strike_pickup.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/strike-vector/weapons/strike_weapon_arsenal.gd": {
+      "coverage_pct": 100,
+      "tested": 11,
+      "total": 11,
+      "untested": []
+    },
+    "res://games/strike-vector/weapons/strike_weapon_base.gd": {
+      "coverage_pct": 100,
+      "tested": 10,
+      "total": 10,
+      "untested": []
+    },
+    "res://games/strike-vector/weapons/weapon_projectile.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 4,
+      "untested": [
+        "_ready",
+        "setup_visuals",
+        "init_projectile",
+        "_physics_process"
+      ]
     },
     "res://games/subway-survival/enemies/bio_colossus.gd": {
       "coverage_pct": 100,
@@ -534,8 +766,8 @@
     },
     "res://shared/save/save_manager.gd": {
       "coverage_pct": 100,
-      "tested": 13,
-      "total": 13,
+      "tested": 16,
+      "total": 16,
       "untested": []
     },
     "res://shared/settings/settings_manager.gd": {
@@ -577,7 +809,7 @@
       "untested": []
     }
   },
-  "tested_functions": 585,
-  "timestamp": "2026-09-08T10:23:53",
-  "total_functions": 605
+  "tested_functions": 728,
+  "timestamp": "2026-09-08T11:56:02",
+  "total_functions": 758
 }

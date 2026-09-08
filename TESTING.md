@@ -11,11 +11,11 @@ VoltArena enforces strict quality gates:
 
 ## 2. Test Architecture
 
-The master automated test runner is located at `tests/runner.gd`. When executed, it executes 51 modular test suites:
+The master automated test runner is located at `tests/runner.gd`. When executed, it executes 55 modular test suites:
 
 ```
 tests/runner.gd
-├── Unit Test Suites (37 Suites)
+├── Unit Test Suites (40 Suites)
 │   ├── TestHealthComponent, TestWeapons, TestCarPhysics, TestRaceManager, TestSaveManager
 │   ├── TestWaveDirector, TestInputManager, TestAudioManager, TestQualityManager, TestEventBus
 │   ├── TestMaterialGenerator, TestArenaBot, TestEnemyArchetypes, TestKartController, TestBallPhysics
@@ -25,23 +25,27 @@ tests/runner.gd
 │   ├── TestNodePool, TestProceduralAnimator, TestModelCache
 │   ├── TestQuestSystem, TestInventorySystem, TestPuzzleElements, TestEngineSubsystems
 │   ├── TestSkybound, TestRoboForge, TestWildCircuit
+│   ├── TestStrikeCampaignUnit (64 assertions)
+│   ├── TestStrikePlayerUnit (60 assertions)
+│   └── TestStrikeAIUnit (85 assertions)
 ├── Responsive & Soak Suites (2 Suites)
 │   ├── TestResponsiveUI (125 assertions across 5 responsive screen profiles)
 │   └── TestSoak (5 full lifecycle clean runs)
-├── E2E Gameplay Test Suites (9 Suites)
+├── E2E Gameplay Test Suites (10 Suites)
 │   ├── TestArenaE2E (76 assertions)
 │   ├── TestSubwayE2E (36 assertions)
 │   ├── TestRocketE2E (46 assertions)
 │   ├── TestKartE2E (67 assertions)
-│   ├── TestLauncherE2E (77 assertions)
+│   ├── TestLauncherE2E (84 assertions)
 │   ├── TestGameplayScreens (32 assertions)
 │   ├── TestSkyboundE2E (14 assertions)
 │   ├── TestRoboForgeE2E (2 assertions)
-│   └── TestWildCircuitE2E (2 assertions)
+│   ├── TestWildCircuitE2E (2 assertions)
+│   └── TestStrikeVectorE2E (224 assertions across Missions 1–8)
 └── Legacy Acceptance Suite (1 Suite, 19 assertions)
     └── TestPlatformAcceptance
 ─────────────────────────────────────────────────────────────
-Total: 51 Suites, 1043 Assertions (100% Pass, 0 Failures, 96.85% Function Coverage: 585/604)
+Total: 55 Suites, 1493 Assertions (100% Pass, 0 Failures, 96.0% Function Coverage: 728/758)
 ```
 
 ---
@@ -54,7 +58,7 @@ Total: 51 Suites, 1043 Assertions (100% Pass, 0 Failures, 96.85% Function Covera
 * **`test_puzzle_elements.gd`**: Validates physics-driven `PressurePlate` activation, `PuzzleSwitch` toggling, `PuzzleDoor` locking/unlocking, and `WindCurrent` lift impulses.
 * **`test_engine_subsystems.gd`**: Validates `OrbitCamera3D` raycasting collision avoidance, `DayNightCycle3D` 24-hour celestial orbit and lighting transitions, and `InteractionArea3D` prompt triggering.
 
-### 3.2 7-Game Unit & E2E Suites
+### 3.2 8-Game Unit & E2E Suites
 * **Iron Crucible (`test_weapons_system.gd`, `test_arena_bot.gd`, `test_arena_e2e.gd`)**: Validates all 5 weapon ballistics, bot navigation/firing/kill-plane recovery, Citadel/Foundry/Sektor perimeter seals, and 5 game modes.
 * **Metro Siege (`test_enemy_archetypes.gd`, `test_wave_director.gd`, `test_subway_e2e.gd`)**: Validates 5 mutant archetypes (including BioColossus 1,200 HP boss), 10-wave horde escalation, scrap economy, kiosk upgrades, and train evacuation.
 * **Nitro Kick (`test_car_physics.gd`, `test_ball_physics.gd`, `test_nitro_kick_e2e.gd`)**: Validates vehicular drift (1.75x multiplier), double jump, 3D aerial orientation with local transforms, team formations (1v1, 2v2, 3v3), overtime sudden death, and continuous collision detection.
@@ -62,7 +66,8 @@ Total: 51 Suites, 1043 Assertions (100% Pass, 0 Failures, 96.85% Function Covera
 * **Skybound Odyssey (`test_skybound.gd`, `test_skybound_e2e.gd`)**: Validates locomotion, variable jump, double jump, ledge mantling, glider flight aerodynamics, grapple mechanics, 5 interconnected regions, and shard collection.
 * **RoboForge Arena (`test_roboforge.gd`, `test_roboforge_e2e.gd`)**: Validates 3 chassis types, 3 drive types, 3 power cores, 5 functional tools, dynamic mass/speed/torque recalculation, 3D workshop bay, and 7 challenge courses.
 * **WildCircuit (`test_wildcircuit.gd`, `test_wildcircuit_e2e.gd`)**: Validates 5 biomes, 9 animal species with 8-state finite state machines, optical viewfinder photography (24-300mm zoom), deterministic photo scoring, and expedition ATV traversal.
-* **Universal Launcher (`test_launcher_e2e.gd`, `test_responsive_ui.gd`)**: Validates 7-game carousel navigation, game metadata previews, responsive screen scaling, and hot-swapping.
+* **Strike Vector (`test_strike_campaign_unit.gd`, `test_strike_player_unit.gd`, `test_strike_ai_unit.gd`, `test_strike_vector_e2e.gd`)**: Validates continuous forward progression across Missions 1–8, level streaming residency, 7-state segment state machine, 28s watchdog encounter recovery, 9 original weapons with ballistic/projectile physics, 6 arcade modules, 10-state AI HFSM with squad coordination tokens, 8 multi-phase bosses, interactive set-pieces, checkpoint persistence, and grading calculator.
+* **Universal Launcher (`test_launcher_e2e.gd`, `test_responsive_ui.gd`)**: Validates 8-game carousel navigation, game metadata previews, responsive screen scaling, and hot-swapping.
 
 ---
 

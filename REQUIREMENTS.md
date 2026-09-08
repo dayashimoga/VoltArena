@@ -1,7 +1,7 @@
 # VoltArena — Platform Requirements Specification
 
 ## 1. Executive Summary
-This document specifies the technical, functional, architectural, performance, and deployment requirements for the **VoltArena** 3D Game Suite. VoltArena delivers a unified cross-platform game environment comprising seven distinct, completely original 3D titles:
+This document specifies the technical, functional, architectural, performance, and deployment requirements for the **VoltArena** 3D Game Suite. VoltArena delivers a unified cross-platform game environment comprising eight distinct, completely original 3D titles:
 1. **Iron Crucible** (Tactical Arena FPS)
 2. **Metro Siege** (Subway Wave Survival FPS)
 3. **Nitro Kick** (Rocket-Car Arena Football)
@@ -9,6 +9,7 @@ This document specifies the technical, functional, architectural, performance, a
 5. **Skybound Odyssey** (Open-Air 3D Platformer)
 6. **RoboForge Arena** (Modular Physics Construction Sandbox)
 7. **WildCircuit** (Wildlife Safari & Photography Traversal)
+8. **Strike Vector** (Forward-Moving 3D Run-and-Gun Campaign)
 
 ---
 
@@ -17,7 +18,7 @@ This document specifies the technical, functional, architectural, performance, a
 * **FR-02: Production 3D Asset System**: All player-visible characters, weapons, vehicles, architecture, and major environmental objects must utilize production-quality 3D assets (`.glb` format) and procedural PBR material systems. Assets are vendored offline under permissive licenses (CC0 / MIT) in `res://assets/models/`, tracked with SHA-256 integrity checksums in `assets/asset-manifest.json`, eliminating raw blockout placeholders in active gameplay scenes.
 * **FR-03: Original Intellectual Property**: The games must avoid copying proprietary names, characters, maps, audio, branding, or code from existing commercial titles.
 * **FR-04: Cross-Platform Target**: Must compile to and execute reliably on Web (WASM / WebGL2), Linux (x86_64), Windows (x86_64), and Android (ARM64).
-* **FR-05: Single Unified Project**: All seven games must reside within a single Godot 4.3 project sharing unified input, graphics, audio, UI themes, and save architectures.
+* **FR-05: Single Unified Project**: All eight games must reside within a single Godot 4.3 project sharing unified input, graphics, audio, UI themes, and save architectures.
 
 ---
 
@@ -85,7 +86,17 @@ This document specifies the technical, functional, architectural, performance, a
 * **FR-WILD-04 (Deterministic Scoring)**: Photo scoring engine evaluating framing, centering, subject distance, species rarity, and action state multiplier (1 to 5 star rating).
 * **FR-WILD-05 (Field Journal & Traversal)**: Comprehensive field journal tracking photographed species and high scores; explorer ATV with realistic suspension, hill climbing, and headlight illumination.
 
-### 3.8 Shared Platform Subsystems
+### 3.8 Game 8: Strike Vector (Forward-Moving 3D Run-and-Gun Campaign)
+* **FR-STRIKE-01 (Continuous Forward Locomotion)**: CharacterBody3D locomotion with walk, run, sprint, crouch, slide, jump with 0.15s coyote and jump buffering, dodge/roll, ledge mantle recovery, and anti-fall recovery at $Y < -15.0\text{m}$.
+* **FR-STRIKE-02 (8-Mission Production Campaign)**: 8 continuous forward-advancing missions (Urban Blackout, High-Speed Rail, Harbor Assault, Desert Convoy, Arctic Installation, Megafactory, Sky Fortress, Final Citadel) each with $\ge 5$ connected segments, $\ge 2$ interactive set-pieces, and unique biome-specific architecture.
+* **FR-STRIKE-03 (9-Weapon High-Quality Arsenal)**: VX-7 Assault Rifle, Tempest SMG, Breach Shotgun, Atlas Battle Rifle, Longshot Marksman, Cyclone LMG, Arc Launcher, Pulse Cannon, Tactical Sidearm with distinct procedural models, recoil, spread, projectile/hitscan logic, reload states, and upgrade attachments.
+* **FR-STRIKE-04 (10 Enemy Archetypes & Squad Coordinator)**: Rifle Trooper, Rusher, Heavy, Marksman, Shield Unit, Grenadier, Drone, Turret, Elite, Commander with 10-state HFSM, perception cones, cover/flanking, and attack slot tokens.
+* **FR-STRIKE-05 (Multi-Phase Boss Encounters)**: Unique boss per mission (Urban Jammer Mech, VTOL Gunship, Gantry Titan, Battle Rig, Sub-Zero Walker, Megafactory Automaton, Sky Core, 3-Phase Citadel Overlord) with telegraph, attack, counter, weakness exposed, and multi-phase progression.
+* **FR-STRIKE-06 (Forward Encounter Director & Streamer)**: Preloading streaming, resident active + next segments, locked barriers, reinforcements, deterministic watchdog recovery.
+* **FR-STRIKE-07 (Camera Director & Dynamic Transitions)**: 7 camera modes (Third-person, ADS, 2.5D side-scroll, corridor chase, vehicle, boss, cinematic) with spring-arm collision avoidance.
+* **FR-STRIKE-08 (Save & Checkpoint Persistence)**: Mid-mission checkpoint restoration and campaign progression saving.
+
+### 3.9 Shared Platform Subsystems
 * **FR-SYS-01 (Quest System)**: Universal `QuestManager` supporting linear and branching quests, multi-stage objectives, signal callbacks, and state serialization.
 * **FR-SYS-02 (Inventory System)**: Universal `InventorySystem` with grid/stack management, equipment slots, item weight, and traversal gear unlocks.
 * **FR-SYS-03 (Orbit Camera)**: `OrbitCamera3D` with spring-arm raycast obstacle avoidance, mouse/gamepad rotation, pitch clamping, and distance zoom.
@@ -93,8 +104,8 @@ This document specifies the technical, functional, architectural, performance, a
 * **FR-SYS-05 (Puzzle Elements)**: Reusable physics-driven `PressurePlate`, `PuzzleSwitch`, `PuzzleDoor`, `WindCurrent`, and `GrappleAnchor`.
 * **FR-SYS-06 (Material Generator)**: Procedural PBR material generator producing 18 rich surface textures (metals, concrete, dirt, grass, glass, energy grids).
 
-### 3.9 Universal Launcher
-* **FR-LAUNCH-01 (7-Game Carousel)**: Responsive 7-game 3D carousel with keyboard, gamepad, and mouse navigation, live preview metadata, career statistics, and instant hot-swapping between all titles.
+### 3.10 Universal Launcher
+* **FR-LAUNCH-01 (8-Game Carousel)**: Responsive 8-game 3D carousel with keyboard, gamepad, and mouse navigation, live preview metadata, career statistics, and instant hot-swapping between all titles.
 
 ---
 

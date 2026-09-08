@@ -532,13 +532,27 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - `MaterialGenerator` (`shared/graphics/material_generator.gd`): 18 rich procedural PBR materials.
 - **Universal Launcher Expansion**:
   - 7-game responsive carousel supporting hot-swapping, live metadata previews, and career statistics.
-- **Quality Assurance & Verification**:
-  - Expanded test runner to 51 test suites, achieving **1043 passed assertions with 0 failures (100% pass rate)**.
-  - Code coverage increased to **96.85% (585 / 604 functions covered)**, surpassing the 90.0% requirement.
-  - Performance benchmark verified **1028.8 FPS** simulation frame rate, P50: 0.97ms, P95: 1.47ms, P99: 1.79ms, 0 stutters, and 22.3 MB static heap memory.
-  - Benchmarked procedural world generation and time-to-playable across all 7 titles.
+## [8.0.0-strike-vector-production] - 2026-09-08
 
-
-
-
-
+### Added
+- **New Title: STRIKE VECTOR (Forward-Moving Run-and-Gun 3D Shooter)**:
+  - Built an 8-mission forward-moving campaign (Urban Blackout, High-Speed Rail, Harbor Assault, Desert Convoy, Arctic Installation, Megafactory, Sky Fortress, Final Citadel) with continuous forward advance, location-specific enemies, traversal, dynamic set-pieces, and unique bosses.
+  - Implemented `MissionStreamer` with active + next segment preloading and safe unloading, preventing geometry dropouts and memory leaks.
+  - Implemented 7-state `SegmentManager` (`LOCKED`, `PRELOADED`, `ENTERED`, `ACTIVE`, `COMPLETE`, `EXITED`, `UNLOADED`).
+  - Implemented data-driven `EncounterDirector` with localized dynamic boundary locks, reinforcement wave sequencing, route clearance audio, and a 28s deterministic watchdog recovery.
+  - Designed responsive CharacterBody3D locomotion (`PlayerLocomotion`): walk, sprint, crouch, jump with 0.15s coyote & jump buffering, slide-fire, dodge-roll, ledge mantling, anti-fall recovery.
+  - Built `CameraDirector` with 7 camera modes (`THIRD_PERSON_COMBAT`, `ADS_SHOULDER`, `SIDE_SCROLLER_25D`, `FORWARD_CORRIDOR`, `VEHICLE_CHASE`, `BOSS_ARENA`, `CINEMATIC_TRANSITION`) with SpringArm3D obstacle collision avoidance.
+  - Designed 9 original weapons with ballistic/projectile physics and distinct 3D visual models: VX-7 Assault Rifle, Tempest SMG, Breach Shotgun, Atlas Battle Rifle, Longshot Marksman, Cyclone LMG, Arc Launcher, Pulse Cannon, Tactical Sidearm.
+  - Implemented 6 arcade power modules: Rapid Fire, Spread Module, Piercing Module, Shield Overcharge, Overdrive, Support Drone.
+  - Built 10-state enemy AI HFSM (`IDLE`, `PATROL`, `SUSPICIOUS`, `INVESTIGATE`, `ALERT`, `COVER_FLANK`, `AIM`, `ATTACK`, `REPOSITION`, `SEARCH`) with `SquadCoordinator` attack tokens and flanking slots across 10 distinct enemy archetypes.
+  - Built 8 multi-phase bosses (`boss_archetypes.gd`) featuring telegraphing, evasive maneuvering, weakpoint exposure, and phase transitions.
+  - Built `StrikeVectorMain` orchestrator integrating `StrikeHUD`, `StrikeCampaignMenu`, `StrikePauseMenu`, `StrikeResultsScreen`, and save/checkpoint persistence in `SaveManager`.
+- **VoltArena Shared Subsystems Integration**:
+  - Registered `strike_vector` in `GameConstants` and `GameManager`.
+  - Added 8th game card to `Launcher` carousel with metadata, controls reference, stats, and procedural cyan/orange vector banner.
+  - Expanded `SaveManager` with checkpoint persistence, mission grading, and high scores.
+- **Testing & Quality Assurance**:
+  - Added 4 test suites: `test_strike_campaign_unit.gd` (65 assertions), `test_strike_player_unit.gd` (60 assertions), `test_strike_ai_unit.gd` (85 assertions), and `test_strike_vector_e2e.gd` (224 assertions).
+  - Executed master test runner across 55 test suites: **1494 passed assertions with 0 failures (100% pass rate)**.
+  - Verified function coverage at **96.0%** (728 / 758 functions), exceeding the 95% target.
+  - Validated Missions 1 through 8 end-to-end with zero progression deadlocks or crashes.

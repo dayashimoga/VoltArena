@@ -50,6 +50,11 @@ At 60 FPS, the maximum frame budget is **16.67 milliseconds**:
 ### 3.4 Procedural In-Memory Audio Buffers
 * Sound effects are generated as pure PCM waveforms upon engine startup. Zero audio decoding (MP3/OGG) occurs during active gameplay, eliminating frame drops during heavy firefights.
 
+### 3.5 Strike Vector Asynchronous Streaming & AI Budgeting
+* **Dynamic Level Streaming**: Operates with an active segment + next preloaded segment sliding window. Completed segments are safely unparented and freed after safe player transit, bounding VRAM and polygon count.
+* **AI Concurrency & Watchdog Budgeting**: Enemy perception (FOV raycasting and hearing) is evaluated on staggered tick cycles. The 28s watchdog runs at 1 Hz, consuming $< 0.05\text{ ms}$ of frame budget.
+* **Projectile Swept-Raycast Pooling**: Sweep raycasts eliminate tunneling without expensive full physics continuous collision checks for bullet hitscan.
+
 ---
 
 ## 4. Running Performance Benchmarks

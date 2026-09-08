@@ -84,6 +84,30 @@ func handle_exec_cmd(cmd: String) -> void:
 			_handle_rocket_car_cmd(scene, cmd)
 		"kart_racing":
 			_handle_kart_cmd(scene, cmd)
+		"strike_vector":
+			_handle_strike_vector_cmd(scene, cmd)
+
+func _handle_strike_vector_cmd(scene: Node, cmd: String) -> void:
+	var player = scene.get_node_or_null("Player")
+	var hud = scene.get_node_or_null("HUD")
+	var results = scene.get_node_or_null("ResultsScreen")
+
+	if cmd.begins_with("weapon_"):
+		var idx = cmd.substr(7).to_int()
+		if player and player.has_method("select_weapon"):
+			player.select_weapon(idx)
+	elif cmd == "fire":
+		if player and player.has_method("fire_weapon"):
+			player.fire_weapon()
+	elif cmd == "jump":
+		if player and player.has_method("trigger_jump"):
+			player.trigger_jump()
+	elif cmd == "advance":
+		if scene.has_method("advance_segment"):
+			scene.advance_segment()
+	elif cmd == "show_results":
+		if results and results.has_method("display_results"):
+			results.display_results(true, {"Mission": "M1 Urban Blackout", "Score": 12500, "Grade": "S", "Result": "VICTORY"})
 
 func _handle_arena_fps_cmd(scene: Node, cmd: String) -> void:
 	var player = scene.get_node_or_null("Player")
@@ -464,6 +488,9 @@ func start_game(game_id: String) -> void:
 		"wildcircuit":
 			scene_path = "res://games/wildcircuit/wildcircuit_main.tscn"
 			music_track = "metro_siege"
+		"strike_vector":
+			scene_path = "res://games/strike-vector/strike_vector_main.tscn"
+			music_track = "iron_crucible"
 		_:
 			push_error("Unknown game ID: " + game_id)
 			return

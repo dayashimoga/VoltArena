@@ -63,7 +63,7 @@ func test_launcher_screen() -> void:
 	launcher.setup_launcher_ui()
 
 	assert_true(launcher.game_cards_container != null, "Launcher cards container present")
-	assert_eq(launcher.game_cards_container.get_child_count(), 7, "All 7 game cards rendered")
+	assert_eq(launcher.game_cards_container.get_child_count(), launcher.games_meta.size(), "All game cards rendered")
 
 	# Generate 1280x720 high-fidelity capture of the responsive launcher
 	var w = 1280

@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 96.6942148760331,
-  "coverage_tested_functions": 585,
-  "coverage_total_functions": 605,
-  "execution_seconds": 20.593,
+  "coverage_percent": 96.0422163588391,
+  "coverage_tested_functions": 728,
+  "coverage_total_functions": 758,
+  "execution_seconds": 22.336,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -92,7 +92,7 @@
     },
     "Launcher E2E": {
       "failed": 0,
-      "passed": 77,
+      "passed": 84,
       "status": "PASS"
     },
     "LauncherArt Vector Graphics Unit": {
@@ -187,7 +187,7 @@
     },
     "Responsive UI Multi-Resolution": {
       "failed": 0,
-      "passed": 125,
+      "passed": 135,
       "status": "PASS"
     },
     "RoboForge Arena E2E": {
@@ -230,6 +230,26 @@
       "passed": 5,
       "status": "PASS"
     },
+    "Strike Vector AI & Bosses Unit": {
+      "failed": 0,
+      "passed": 85,
+      "status": "PASS"
+    },
+    "Strike Vector Campaign E2E": {
+      "failed": 0,
+      "passed": 224,
+      "status": "PASS"
+    },
+    "Strike Vector Campaign Unit": {
+      "failed": 0,
+      "passed": 64,
+      "status": "PASS"
+    },
+    "Strike Vector Player Unit": {
+      "failed": 0,
+      "passed": 60,
+      "status": "PASS"
+    },
     "Telemetry Manager Unit": {
       "failed": 0,
       "passed": 15,
@@ -261,8 +281,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-08T10:23:53",
+  "timestamp": "2026-09-08T11:56:02",
   "total_failed": 0,
-  "total_passed": 1043,
-  "total_suites": 51
+  "total_passed": 1493,
+  "total_suites": 55
 }

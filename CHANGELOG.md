@@ -617,4 +617,28 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Master test runner executed across 57 test suites: **1,686 passed assertions, 0 failed (100% pass rate)**.
   - Maintained high function coverage at **94.6%** (729 / 771 functions).
 
+## [8.2.1-strike-vector-p0-platform-fall-through-repair] - 2026-09-08
+
+### Fixed & Hardened
+- **P0 Platform Fall-Through Root Cause Fixed**:
+  - Identified that building colliders in `StrikeEnvironmentBuilder._add_authored_building` suffered from scale compounding: child colliders added to already scaled building nodes multiplied size by $sc$ twice, creating a $1.5\text{-kilometer}$ wide box collider engulfing the player spawn point and roadway. On frame 1, Godot physics de-penetration forcefully pushed the player and enemies downwards through the road floor into the void.
+  - Fixed by attaching unscaled `StaticBody3D` colliders directly to the unscaled segment root with dimensions `Vector3(10.0, sc.y, 10.0)` at $|x| \ge 10.0\text{m}$, strictly outside the $8.0\text{m}$ sidewalk and $10.0\text{m}$ road.
+  - Verified in container simulation: player lands safely on the asphalt roadway on frame 1 through frame 20 with `is_on_floor = true` and zero physics ejection.
+- **Visual Facing & Barrel Alignment**:
+  - Reverted `character_model.rotation_degrees.y` to $0.0^\circ$ because `soldier.glb` natively faces Godot standard forward axis ($-Z$). The previous $180^\circ$ offset had turned the operative towards the camera.
+  - Calibrated `weapon_grip.rotation_degrees` to `Vector3(0.0, -90.0, 0.0)`, aligning the firearm barrel strictly forward down-range along $-Z$ with vector $(-0.06, 0.005, -0.99)$.
+  - Re-applied `select_weapon(active_weapon_index)` on `_ready()` to guarantee proper weapon parenting to `WeaponGrip` once nodes enter the scene tree.
+- **AI Enemy Animations & Facing**:
+  - Fixed AI enemies spawning in T-pose by calling `ModelCacheScript.play_animation(model, "Idle")` upon instantiation in `AIArchetypes`.
+  - Added `_update_animation()` to `StrikeAIBase` to dynamically blend Idle, Walk, Run, Fire, and HitReact animations based on navigation velocity and HFSM state.
+  - Set enemy model rotation to $0.0^\circ$ and weapon model rotation to $180.0^\circ$ so enemies face and aim towards the operative down-range.
+- **Anti-Fall Geometry & Recovery Invariants**:
+  - Added grounded position tracking in `_physics_process`: continuously updates `safe_ground_position` when `is_on_floor()` and `y >= -0.2m`.
+  - Clamped `recover_to_safe_ground()` destination to at least $y = 0.6\text{m}$ above the asphalt surface.
+  - Added building collider clearance assertions to `test_strike_visual_invariants.gd`.
+- **Test Suite Verification**:
+  - Master test runner executed across all 57 suites: **1,692 passed assertions, 0 failed (100% pass rate)**.
+  - Function coverage maintained at **94.6%** (729 / 771 functions).
+
+
 

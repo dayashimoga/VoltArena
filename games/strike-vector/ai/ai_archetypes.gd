@@ -271,14 +271,16 @@ static func _attach_humanoid_visual(parent: Node3D, armor_color: Color, visor_co
 	var model = ModelCacheScript.get_character(char_type)
 	if model:
 		model.name = "CharacterRig"
-		model.rotation_degrees.y = 180.0
+		model.rotation_degrees.y = 0.0
 		root.add_child(model)
+		ModelCacheScript.play_animation(model, "Idle")
 
 		# Add handheld weapon model
 		var w_model = ModelCacheScript.get_weapon_model("pulse_rifle")
 		if w_model:
 			w_model.position = Vector3(0.28, 1.0, -0.32)
 			w_model.scale = Vector3(1.0, 1.0, 1.0)
+			w_model.rotation_degrees.y = 180.0
 			root.add_child(w_model)
 
 		parent.add_child(root)

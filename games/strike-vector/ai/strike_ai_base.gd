@@ -9,6 +9,7 @@ signal state_changed(old_state: AIState, new_state: AIState)
 signal died(enemy_type: String, score_value: int)
 
 const WeaponProjectileScript = preload("res://games/strike-vector/weapons/weapon_projectile.gd")
+const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
 
 enum AIState {
 	IDLE,
@@ -124,6 +125,7 @@ func _physics_process(delta: float) -> void:
 	_watchdog_stuck_recovery(delta)
 
 	move_and_slide()
+	_update_animation()
 
 func _find_player_target() -> void:
 	if is_instance_valid(target_player):
@@ -374,3 +376,18 @@ func _watchdog_stuck_recovery(delta: float) -> void:
 				global_position += nudge
 		last_watchdog_pos = global_position
 		stuck_watchdog_timer = 0.0
+
+func _update_animation() -> void:
+	var rig = find_child("CharacterRig", true, false) as Node3D
+	if not rig:
+		return
+	if not is_alive:
+		ModelCacheScript.play_animation(rig, "HitReact")
+	elif current_state == AIState.ATTACK:
+		ModelCacheScript.play_animation(rig, "Fire")
+	elif velocity.length() > 2.0:
+		ModelCacheScript.play_animation(rig, "Run")
+	elif velocity.length() > 0.3:
+		ModelCacheScript.play_animation(rig, "Walk")
+	else:
+		ModelCacheScript.play_animation(rig, "Idle")

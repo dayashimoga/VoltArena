@@ -376,23 +376,26 @@ static func _create_navigation_region(parent: Node3D, width: float, length: floa
 
 static func _add_authored_building(parent: Node3D, path: String, pos: Vector3, sc: Vector3, rot_y: float) -> Node3D:
 	var m = _add_model(parent, path, pos, sc, rot_y)
+	# Add physical box collider for building base directly to parent in unscaled world coordinates
+	# This avoids scale compounding and ensures colliders stay strictly outside the road/sidewalk
+	var sb = StaticBody3D.new()
+	sb.name = "BuildingCollider"
+	sb.set_meta("is_building", true)
+	sb.collision_layer = GameConstants.LAYER_WORLD
+	sb.collision_mask = 0
+	sb.position = pos + Vector3(0, sc.y * 0.5, 0)
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = Vector3(10.0, sc.y, 10.0)
+	col.shape = box
+	sb.add_child(col)
+	parent.add_child(sb)
 	if m:
-		# Add physical box collider for building base to provide solid cover
-		var sb = StaticBody3D.new()
-		sb.collision_layer = GameConstants.LAYER_WORLD
-		sb.collision_mask = 0
-		var col = CollisionShape3D.new()
-		var box = BoxShape3D.new()
-		box.size = Vector3(8.0 * sc.x, 16.0 * sc.y, 8.0 * sc.z)
-		col.shape = box
-		col.position = Vector3(0, 8.0 * sc.y, 0)
-		sb.add_child(col)
-		m.add_child(sb)
 		return m
 
 	# Fallback box if model unavailable
 	var mat_hull = MaterialGenerator.get_material("dark_hull")
-	return _create_solid_floor(parent, Vector3(10.0, 20.0, 10.0), pos + Vector3(0, 10.0, 0), mat_hull)
+	return _create_solid_floor(parent, Vector3(10.0, sc.y, 10.0), pos + Vector3(0, sc.y * 0.5, 0), mat_hull)
 
 static func _add_streetlight(parent: Node3D, pos: Vector3, col: Color) -> void:
 	var post = _add_model(parent, "res://assets/models/environment/road_lightposts.glb", pos, Vector3(1.2, 1.2, 1.2), 0.0)

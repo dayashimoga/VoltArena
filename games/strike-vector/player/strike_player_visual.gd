@@ -28,7 +28,7 @@ func build_visual() -> void:
 	character_model = ModelCacheScript.get_character("soldier")
 	if character_model:
 		character_model.name = "SoldierRig"
-		character_model.rotation_degrees.y = 180.0 # Align model front with Godot forward (-Z)
+		character_model.rotation_degrees.y = 0.0 # Model natively faces Godot forward (-Z)
 		add_child(character_model)
 
 		# 2. Attach WeaponGrip to Skeleton Right Hand Bone
@@ -39,6 +39,7 @@ func build_visual() -> void:
 				right_hand_att = BoneAttachment3D.new()
 				right_hand_att.name = "RightHandAttachment"
 				right_hand_att.bone_name = "mixamorig_RightHand"
+				right_hand_att.bone_idx = bone_idx
 				skeleton.add_child(right_hand_att)
 
 				weapon_grip = Marker3D.new()
@@ -46,7 +47,7 @@ func build_visual() -> void:
 				# Character rig has scale (0.01, 0.01, 0.01), so compensate scale to 1.0 world units
 				weapon_grip.scale = Vector3(100.0, 100.0, 100.0)
 				# Align weapon barrel with character forward axis (-Z)
-				weapon_grip.rotation_degrees = Vector3(0.0, 90.0, 0.0)
+				weapon_grip.rotation_degrees = Vector3(0.0, -90.0, 0.0)
 				right_hand_att.add_child(weapon_grip)
 
 				weapon_socket = weapon_grip

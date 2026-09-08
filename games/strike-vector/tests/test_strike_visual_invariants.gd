@@ -113,8 +113,8 @@ func test_weapon_grip_attachment_invariants() -> void:
 	if visual.weapon_grip != null:
 		# Weapon grip scale should be 100 to compensate for parent Character 0.01 scale
 		_assert(visual.weapon_grip.scale.is_equal_approx(Vector3(100.0, 100.0, 100.0)), "WeaponGrip scale must be Vector3(100, 100, 100) to ensure human-scale weapons")
-		# Weapon grip rotation should be 90 deg around Y to align barrel with character forward
-		_assert(is_equal_approx(visual.weapon_grip.rotation_degrees.y, 90.0), "WeaponGrip rotation_degrees.y must be 90 to align barrel forward (-Z)")
+		# Weapon grip rotation should be -90 deg around Y to align barrel with character forward (-Z)
+		_assert(is_equal_approx(visual.weapon_grip.rotation_degrees.y, -90.0), "WeaponGrip rotation_degrees.y must be -90 to align barrel forward (-Z)")
 
 	# Test Weapon Parenting
 	var player = StrikePlayerScript.new()
@@ -245,7 +245,14 @@ func test_anti_fall_collision_invariants() -> void:
 	player.recover_to_safe_ground()
 
 	_assert(player.position.y >= 0.0, "Player must recover above ground level when falling out of bounds")
-	_assert(player.position.distance_to(player.safe_ground_position + Vector3(0, 0.6, 0)) < 0.1, "Player must recover to recorded safe ground position")
+	_assert(player.position.distance_to(player.safe_ground_position + Vector3(0, 0.5, 0)) < 0.1, "Player must recover to recorded safe ground position")
+
+	# Test that building colliders do not overlap roadway or player spawn point
+	var env = StrikeEnvironmentBuilder.build_segment_environment("urban", 0, 40.0, 14.0)
+	for child in env.get_children():
+		if child is StaticBody3D and child.has_meta("is_building"):
+			_assert(absf(child.position.x) >= 14.0, "Building colliders must be strictly outside roadway and sidewalks (|x| >= 14m), found at: " + str(child.position.x))
+	env.queue_free()
 
 	player.queue_free()
 

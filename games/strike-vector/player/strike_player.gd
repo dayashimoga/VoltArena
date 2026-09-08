@@ -88,6 +88,8 @@ func _ready() -> void:
 		_setup_ledge_detectors()
 	if weapons.is_empty():
 		_setup_weapons()
+	else:
+		select_weapon(active_weapon_index)
 
 func _setup_collision() -> void:
 	if has_node("CollisionShape"):
@@ -244,6 +246,12 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	# Track grounded safe transform and auto-recover if anomalous fall occurs
+	if is_on_floor() and (global_position.y if is_inside_tree() else position.y) >= -0.2:
+		safe_ground_position = global_position if is_inside_tree() else position
+	elif (global_position.y if is_inside_tree() else position.y) < -6.0:
+		recover_to_safe_ground()
+
 	# Facing orientation update
 	if is_instance_valid(visual):
 		var is_firing = Input.is_action_pressed("fire")
@@ -274,10 +282,12 @@ func is_valid_grounded() -> bool:
 	return norm.dot(Vector3.UP) > 0.70 and absf(velocity.y) < 2.0
 
 func recover_to_safe_ground() -> void:
+	var target_safe = safe_ground_position
+	target_safe.y = maxf(target_safe.y, 0.1)
 	if is_inside_tree():
-		global_position = safe_ground_position + Vector3(0, 0.6, 0)
+		global_position = target_safe + Vector3(0, 0.5, 0)
 	else:
-		position = safe_ground_position + Vector3(0, 0.6, 0)
+		position = target_safe + Vector3(0, 0.5, 0)
 	velocity = Vector3.ZERO
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am and am.has_method("play_sound"):

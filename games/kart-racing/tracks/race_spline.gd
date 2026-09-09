@@ -49,11 +49,13 @@ func build_from_nodes(nodes: Array[Vector3], width: float = 14.0) -> void:
 		var out_handle = tangent * handle_len
 		curve.add_point(curr, in_handle, out_handle)
 
-	# Close the loop by connecting end back to start
+	# Close the loop by connecting end back to start with identical smooth tangents
 	var dir_close_in = (nodes[0] - nodes[n - 1]).normalized()
 	var dir_close_out = (nodes[1] - nodes[0]).normalized()
 	var close_tangent = (dir_close_in + dir_close_out).normalized()
 	var close_handle = minf(nodes[0].distance_to(nodes[n - 1]), nodes[0].distance_to(nodes[1])) * 0.35
+	curve.set_point_in(0, -close_tangent * close_handle)
+	curve.set_point_out(0, close_tangent * close_handle)
 	curve.add_point(nodes[0], -close_tangent * close_handle, close_tangent * close_handle)
 
 	curve.bake_interval = 1.0
@@ -74,8 +76,8 @@ func build_from_nodes(nodes: Array[Vector3], width: float = 14.0) -> void:
 		var next_dist = fposmod(dist + 0.5, track_length)
 		var next_pos = curve.sample_baked(next_dist)
 		var tangent = (next_pos - pos).normalized()
-		if tangent.length_squared() < 0.001:
-			tangent = Vector3(0, 0, -1)
+		if tangent.length_squared() < 0.001 or dist >= track_length - 0.6:
+			tangent = close_tangent
 
 		var up = Vector3.UP
 		# Banking/slope calculation: align up with normal if track climbs
@@ -137,7 +139,7 @@ func get_closest_distance(pos: Vector3) -> float:
 			best_idx = i
 			best_dist = samples[i]["dist"]
 
-	# Fine-tune between best_idx and neighbors
+	# Fine-tune between best_idx and neighbors with proper circular wrapping
 	var prev_idx = posmod(best_idx - 1, sample_count)
 	var next_idx = posmod(best_idx + 1, sample_count)
 	var p_prev = samples[prev_idx]["pos"]
@@ -154,13 +156,27 @@ func get_closest_distance(pos: Vector3) -> float:
 		var t2 = clampf((pos - p_curr).dot(seg2) / l2_sq, 0.0, 1.0)
 		var proj2 = p_curr + seg2 * t2
 		if (pos - proj2).length_squared() < min_sq:
-			return fposmod(samples[best_idx]["dist"] + t2 * (samples[next_idx]["dist"] - samples[best_idx]["dist"]), track_length)
+			var d_curr = samples[best_idx]["dist"]
+			var d_next = samples[next_idx]["dist"]
+			var delta_d = d_next - d_curr
+			if delta_d < -track_length * 0.5:
+				delta_d += track_length
+			elif delta_d > track_length * 0.5:
+				delta_d -= track_length
+			return fposmod(d_curr + t2 * delta_d, track_length)
 
 	if l1_sq > 0.001:
 		var t1 = clampf((pos - p_prev).dot(seg1) / l1_sq, 0.0, 1.0)
 		var proj1 = p_prev + seg1 * t1
 		if (pos - proj1).length_squared() < min_sq:
-			return fposmod(samples[prev_idx]["dist"] + t1 * (samples[best_idx]["dist"] - samples[prev_idx]["dist"]), track_length)
+			var d_prev = samples[prev_idx]["dist"]
+			var d_curr = samples[best_idx]["dist"]
+			var delta_d = d_curr - d_prev
+			if delta_d < -track_length * 0.5:
+				delta_d += track_length
+			elif delta_d > track_length * 0.5:
+				delta_d -= track_length
+			return fposmod(d_prev + t1 * delta_d, track_length)
 
 	return best_dist
 
@@ -227,10 +243,42 @@ func get_progress(pos: Vector3) -> float:
 	var s = get_closest_distance(pos)
 	return s / track_length if track_length > 0.0 else 0.0
 
-## Get closest safe respawn transform
+## Sample forward along the spline guaranteeing lookahead distance is strictly ahead in track flow
+func sample_lookahead_forward(current_s: float, lookahead: float) -> Dictionary:
+	var forward_s = current_s + maxf(lookahead, 1.0)
+	return sample_at_distance(forward_s)
+
+## Compute signed forward distance along closed track from s1 to s2 (positive = s2 is ahead)
+func get_forward_delta(s1: float, s2: float) -> float:
+	var delta = s2 - s1
+	if delta < -track_length * 0.5:
+		delta += track_length
+	elif delta > track_length * 0.5:
+		delta -= track_length
+	return delta
+
+## Generate authoritative 2D points for minimap display matching the exact racing line
+func get_minimap_points(point_count: int = 64) -> PackedVector2Array:
+	var pts = PackedVector2Array()
+	if track_length <= 0.0 or sample_count == 0:
+		return pts
+	var step_d = track_length / float(point_count)
+	for i in range(point_count):
+		var d = float(i) * step_d
+		var s_data = sample_at_distance(d)
+		pts.append(Vector2(s_data["pos"].x, s_data["pos"].z))
+	return pts
+
+## Get closest safe respawn transform facing strictly forward along track flow
 func get_safe_respawn_transform(pos: Vector3) -> Transform3D:
 	if respawn_points.is_empty():
-		return Transform3D(Basis(), pos)
+		var fallback_s = get_closest_distance(pos)
+		var s_data = sample_at_distance(fallback_s)
+		var basis = Basis()
+		basis.z = -s_data["tangent"]
+		basis.y = s_data["normal"]
+		basis.x = s_data["binormal"]
+		return Transform3D(basis.orthonormalized(), s_data["pos"] + Vector3.UP * 0.35)
 
 	var best_tr = respawn_points[0]
 	var min_d = INF
@@ -240,3 +288,4 @@ func get_safe_respawn_transform(pos: Vector3) -> Transform3D:
 			min_d = d
 			best_tr = tr
 	return best_tr
+

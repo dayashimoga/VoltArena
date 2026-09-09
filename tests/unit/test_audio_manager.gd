@@ -13,6 +13,7 @@ func run_tests() -> Dictionary:
 	test_procedural_generation()
 	test_sound_playback()
 	test_music_playback()
+	test_engine_audio()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -23,7 +24,8 @@ func get_coverage_entries() -> Array:
 			"play_sound", "play_sfx", "play_sound_3d", "create_synth_sound",
 			"create_noise_burst", "create_two_tone_sound", "create_click_sound",
 			"create_music_track", "play_music", "stop_music", "set_bus_volume",
-			"stop_all"
+			"stop_all", "create_engine_loop_sound", "start_engine_sound",
+			"update_engine_rpm", "stop_engine_sound"
 		]
 	]]
 
@@ -94,4 +96,20 @@ func test_music_playback() -> void:
 	assert_true(am.bgm_player.stream != null, "Music stream should be assigned")
 	am.stop_music()
 	assert_true(not am.bgm_player.playing, "Music should not be playing")
+	am.queue_free()
+
+func test_engine_audio() -> void:
+	var am = AudioManagerScript.new()
+	am.setup_players()
+	var stream = am.create_engine_loop_sound()
+	assert_true(stream != null, "create_engine_loop_sound must generate AudioStream")
+
+	am.start_engine_sound()
+	assert_true(am.engine_sfx_player != null, "engine_sfx_player must exist")
+
+	am.update_engine_rpm(0.8, true)
+	assert_true(am.engine_sfx_player.pitch_scale > 0.0, "update_engine_rpm must update pitch")
+
+	am.stop_engine_sound()
+	assert_true(not am.engine_sfx_player.playing, "stop_engine_sound must stop player")
 	am.queue_free()

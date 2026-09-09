@@ -4,6 +4,7 @@ extends RefCounted
 const PickupBaseScript = preload("res://games/arena-fps/pickups/pickup_base.gd")
 const PowerUpItemScript = preload("res://games/kart-racing/powerups/powerup_item.gd")
 const KartControllerScript = preload("res://games/kart-racing/kart/kart_controller.gd")
+const ScrapPickupScript = preload("res://games/subway-survival/game/scrap_pickup.gd")
 
 var assertions_passed: int = 0
 var assertions_failed: int = 0
@@ -13,6 +14,7 @@ func run_tests() -> Dictionary:
 	test_pickup_consume_and_respawn()
 	test_pickup_process_bobbing()
 	test_powerup_item()
+	test_scrap_pickup()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -24,6 +26,10 @@ func get_coverage_entries() -> Array:
 		[
 			"res://games/kart-racing/powerups/powerup_item.gd",
 			["setup_visual", "_process"]
+		],
+		[
+			"res://games/subway-survival/game/scrap_pickup.gd",
+			["_ready", "_process"]
 		]
 	]
 
@@ -74,3 +80,11 @@ func test_powerup_item() -> void:
 	item._process(0.016)
 	assert_true(item.is_active, "Powerup item must start active")
 	item.queue_free()
+
+func test_scrap_pickup() -> void:
+	var scrap = ScrapPickupScript.new()
+	scrap._ready()
+	assert_true(scrap.gear_mesh != null, "Scrap pickup must have gear mesh")
+	assert_true(scrap.scrap_amount > 0, "Scrap amount must be positive")
+	scrap._process(0.016)
+	scrap.queue_free()

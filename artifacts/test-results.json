@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 96.4285714285714,
-  "coverage_tested_functions": 756,
-  "coverage_total_functions": 784,
-  "execution_seconds": 61.792,
+  "coverage_percent": 97.394540942928,
+  "coverage_tested_functions": 785,
+  "coverage_total_functions": 806,
+  "execution_seconds": 60.28,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -17,7 +17,7 @@
     },
     "Audio Manager Unit": {
       "failed": 0,
-      "passed": 14,
+      "passed": 18,
       "status": "PASS"
     },
     "Ball Physics Unit": {
@@ -37,12 +37,12 @@
     },
     "Drift Storm Runtime Acceptance (P0 Gates)": {
       "failed": 0,
-      "passed": 57,
+      "passed": 100,
       "status": "PASS"
     },
     "Enemy Archetypes Unit": {
       "failed": 0,
-      "passed": 16,
+      "passed": 18,
       "status": "PASS"
     },
     "Engine Subsystems Unit": {
@@ -117,7 +117,7 @@
     },
     "MeshBuilder 3D Assets Unit": {
       "failed": 0,
-      "passed": 28,
+      "passed": 39,
       "status": "PASS"
     },
     "Metro Siege E2E": {
@@ -147,7 +147,7 @@
     },
     "Pickups & Powerups Unit": {
       "failed": 0,
-      "passed": 11,
+      "passed": 13,
       "status": "PASS"
     },
     "Platform Acceptance (Legacy)": {
@@ -167,7 +167,7 @@
     },
     "Projectiles & Weapons Unit": {
       "failed": 0,
-      "passed": 16,
+      "passed": 17,
       "status": "PASS"
     },
     "Puzzle Elements Unit": {
@@ -301,8 +301,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-09T07:57:17",
+  "timestamp": "2026-09-09T10:24:28",
   "total_failed": 0,
-  "total_passed": 1783,
+  "total_passed": 1846,
   "total_suites": 59
 }

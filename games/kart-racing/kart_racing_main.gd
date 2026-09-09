@@ -9,8 +9,9 @@ const DriftStormHUDScript = preload("res://games/kart-racing/ui/drift_storm_hud.
 const PauseMenuScript = preload("res://shared/ui/pause_menu.gd")
 const ResultsScreenScript = preload("res://shared/ui/results_screen.gd")
 
-@export var selected_track: String = "metropolis" # "metropolis", "canyon", "frozen"
-@export var selected_kart: String = "speeder" # "speeder", "phantom", "enforcer"
+@export var selected_track: String = "speedway" # "speedway", "sunset_coast", "canyon", "skyline", "alpine_rush", "storm_harbor"
+@export var selected_kart: String = "speeder" # "speeder", "phantom", "enforcer", "turbo_demon", "formula"
+@export var game_mode: String = "quick_race" # "quick_race", "championship", "time_trial", "drift_challenge", "elimination", "item_race"
 @export var ai_racer_count: int = 5
 
 var player_kart: Node3D
@@ -84,7 +85,7 @@ func setup_scene() -> void:
 		Vector3(2.2, 0.08, 23.5)
 	]
 	var ai_names = ["Apex Nova", "Blaze Raptor", "Viper Strike", "Turbo Titan", "Cyber Ghost"]
-	var ai_types = ["speeder", "phantom", "enforcer", "turbo_demon", "phantom"]
+	var ai_types = ["phantom", "enforcer", "turbo_demon", "formula", "speeder"]
 	var ai_offsets = [-1.8, 1.8, -0.9, 0.9, 0.0]
 	for i in range(min(ai_racer_count, grid_slots.size())):
 		var ai_kart = KartControllerScript.new()
@@ -199,7 +200,7 @@ func _on_race_finished(winner: Node) -> void:
 	var best_lap = player_kart.best_lap_time
 	var sm = GameConstants.get_autoload(self, "SaveManager")
 	if sm:
-		sm.record_kart_race("canyon", best_lap, won)
+		sm.record_kart_race(selected_track, best_lap, won)
 
 	results_screen.display_results(won, {
 		"Position": "1st Place (WINNER!)" if won else "Finished",

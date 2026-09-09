@@ -230,12 +230,12 @@ func setup_hud_layout() -> void:
 	r_vbox.add_child(sep)
 
 	powerup_panel = PanelContainer.new()
+	powerup_panel.visible = false # Hidden in non-item modes
 	r_vbox.add_child(powerup_panel)
 
 	powerup_label = Label.new()
-	powerup_label.text = "[ NO ITEM ]"
+	powerup_label.text = ""
 	powerup_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	powerup_label.modulate = Color(0.6, 0.65, 0.75)
 	powerup_panel.add_child(powerup_label)
 
 	# Bottom Right: Speedometer & Drift Charge
@@ -422,12 +422,14 @@ func update_drift_charge(charge: float, tier: int) -> void:
 				drift_label.modulate = Color(0.6, 0.6, 0.6)
 
 func update_powerup(p_name: String) -> void:
-	if not powerup_label:
+	if not powerup_label or not powerup_panel:
 		return
 	if p_name.is_empty():
+		powerup_panel.visible = false
 		powerup_label.text = "[ NO ITEM ]"
 		powerup_label.modulate = Color(0.6, 0.65, 0.75)
 	else:
+		powerup_panel.visible = true
 		powerup_label.text = "[ %s ]" % p_name.to_upper()
 		powerup_label.modulate = Color(1.0, 0.9, 0.2)
 
@@ -502,6 +504,8 @@ func show_toast(msg: String, col: Color = Color.WHITE) -> void:
 	tween.tween_property(lbl, "modulate:a", 0.0, 2.5).set_delay(1.5)
 	tween.tween_callback(lbl.queue_free)
 
+var stat_bars: Dictionary = {}
+
 func setup_onboarding_overlay() -> void:
 	onboarding_overlay = PanelContainer.new()
 	onboarding_overlay.name = "OnboardingOverlay"
@@ -509,91 +513,165 @@ func setup_onboarding_overlay() -> void:
 	onboarding_overlay.anchor_top = 0.5
 	onboarding_overlay.anchor_right = 0.5
 	onboarding_overlay.anchor_bottom = 0.5
-	onboarding_overlay.offset_left = -330
-	onboarding_overlay.offset_top = -180
-	onboarding_overlay.offset_right = 330
-	onboarding_overlay.offset_bottom = 180
+	onboarding_overlay.offset_left = -390
+	onboarding_overlay.offset_top = -250
+	onboarding_overlay.offset_right = 390
+	onboarding_overlay.offset_bottom = 250
 	add_child(onboarding_overlay)
 
 	var vbox = VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_theme_constant_override("separation", 8)
+	vbox.add_theme_constant_override("separation", 6)
 	onboarding_overlay.add_child(vbox)
 
 	var title = Label.new()
-	title.text = "DRIFT STORM — ARCADE KART RACING"
+	title.text = "DRIFT STORM — ARCADE RACING CHAMPIONSHIP"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_font_size_override("font_size", 20)
 	title.modulate = Color(0.2, 0.9, 1.0)
 	vbox.add_child(title)
 
-	var sub = Label.new()
-	sub.text = "HIGH-OCTANE DRIFT CIRCUIT"
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.add_theme_font_size_override("font_size", 15)
-	sub.modulate = Color(0.8, 0.85, 0.95)
-	vbox.add_child(sub)
+	# 1. Mode Selection Row
+	var mode_box = HBoxContainer.new()
+	mode_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	mode_box.add_theme_constant_override("separation", 6)
+	vbox.add_child(mode_box)
 
-	var obj_lbl = Label.new()
-	obj_lbl.text = "OBJECTIVE: COMPLETE 3 LAPS — CROSS THE FINISH LINE 1ST!"
-	obj_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	obj_lbl.add_theme_font_size_override("font_size", 14)
-	obj_lbl.modulate = Color(1.0, 0.85, 0.2)
-	vbox.add_child(obj_lbl)
+	var mode_lbl = Label.new()
+	mode_lbl.text = "MODE:"
+	mode_lbl.modulate = Color(0.9, 0.6, 1.0)
+	mode_lbl.add_theme_font_size_override("font_size", 12)
+	mode_box.add_child(mode_lbl)
 
-	# Track Selection Row
+	var modes = [
+		["QUICK RACE", "quick_race"],
+		["CHAMPIONSHIP", "championship"],
+		["TIME TRIAL", "time_trial"],
+		["DRIFT ATTACK", "drift_challenge"],
+		["ELIMINATION", "elimination"],
+		["ITEM RACE", "item_race"]
+	]
+	for m in modes:
+		var btn = Button.new()
+		btn.text = m[0]
+		btn.add_theme_font_size_override("font_size", 10)
+		btn.pressed.connect(func():
+			var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+			if tree:
+				var km = tree.root.find_child("KartRacingMain", true, false)
+				if km:
+					km.set("game_mode", m[1])
+					if m[1] == "item_race":
+						if powerup_panel: powerup_panel.visible = true
+					else:
+						if powerup_panel: powerup_panel.visible = false
+					show_toast("MODE: " + m[0], Color(0.9, 0.6, 1.0))
+		)
+		mode_box.add_child(btn)
+
+	# 2. Track Selection Row (6 Distinct Playable Environments)
 	var trk_box = HBoxContainer.new()
 	trk_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	trk_box.add_theme_constant_override("separation", 10)
+	trk_box.add_theme_constant_override("separation", 5)
 	vbox.add_child(trk_box)
 
 	var trk_lbl = Label.new()
 	trk_lbl.text = "TRACK:"
 	trk_lbl.modulate = Color(0.2, 0.9, 1.0)
-	trk_lbl.add_theme_font_size_override("font_size", 13)
+	trk_lbl.add_theme_font_size_override("font_size", 12)
 	trk_box.add_child(trk_lbl)
 
-	var tracks = [["NEON CIRCUIT", "neon"], ["CANYON RUN", "canyon"], ["SKYLINE DRIFT", "skyline"]]
+	var tracks = [
+		["SPEEDWAY", "speedway"],
+		["SUNSET COAST", "sunset_coast"],
+		["CANYON", "canyon"],
+		["METRO NIGHT", "skyline"],
+		["ALPINE RUSH", "alpine_rush"],
+		["STORM HARBOR", "storm_harbor"]
+	]
 	for t in tracks:
 		var btn = Button.new()
 		btn.text = t[0]
-		btn.add_theme_font_size_override("font_size", 12)
+		btn.add_theme_font_size_override("font_size", 10)
 		btn.pressed.connect(func():
 			var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
 			if tree:
 				var km = tree.root.find_child("KartRacingMain", true, false)
 				if km and km.has_method("select_track"):
 					km.select_track(t[1])
-					show_toast("TRACK SELECTED: " + t[0], Color(0.2, 0.9, 1.0))
+					show_toast("TRACK: " + t[0], Color(0.2, 0.9, 1.0))
 		)
 		trk_box.add_child(btn)
 
-	# Vehicle Selection Row
+	# 3. Vehicle Selection Row (5 Distinct Vehicle Classes)
 	var veh_box = HBoxContainer.new()
 	veh_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	veh_box.add_theme_constant_override("separation", 10)
+	veh_box.add_theme_constant_override("separation", 6)
 	vbox.add_child(veh_box)
 
 	var veh_lbl = Label.new()
 	veh_lbl.text = "VEHICLE:"
 	veh_lbl.modulate = Color(1.0, 0.8, 0.2)
-	veh_lbl.add_theme_font_size_override("font_size", 13)
+	veh_lbl.add_theme_font_size_override("font_size", 12)
 	veh_box.add_child(veh_lbl)
 
-	var vehs = [["SPEED DEMON (Speeder)", "speeder"], ["TURBO TRUCK (Enforcer)", "enforcer"], ["PHANTOM DRIFT", "phantom"], ["TURBO DEMON (Rocket)", "turbo_demon"]]
+	var vehs = [
+		["SPEEDER (Kart)", "speeder"],
+		["PHANTOM (Tuner)", "phantom"],
+		["ENFORCER (Buggy)", "enforcer"],
+		["TURBO DEMON (EV)", "turbo_demon"],
+		["FORMULA APEX", "formula"]
+	]
+
+	var vehicle_stats_map = {
+		"speeder": {"speed": 82, "accel": 80, "handling": 90, "drift": 80, "boost": 80},
+		"phantom": {"speed": 90, "accel": 75, "handling": 82, "drift": 96, "boost": 88},
+		"enforcer": {"speed": 78, "accel": 88, "handling": 76, "drift": 70, "boost": 75},
+		"turbo_demon": {"speed": 100, "accel": 92, "handling": 85, "drift": 75, "boost": 100},
+		"formula": {"speed": 96, "accel": 100, "handling": 100, "drift": 85, "boost": 86}
+	}
+
 	for v in vehs:
 		var btn = Button.new()
 		btn.text = v[0]
-		btn.add_theme_font_size_override("font_size", 12)
+		btn.add_theme_font_size_override("font_size", 10)
 		btn.pressed.connect(func():
 			var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
 			if tree:
 				var km = tree.root.find_child("KartRacingMain", true, false)
 				if km and km.has_method("select_kart"):
 					km.select_kart(v[1])
-					show_toast("VEHICLE SELECTED: " + v[0], Color(1.0, 0.85, 0.2))
+					show_toast("VEHICLE: " + v[0], Color(1.0, 0.85, 0.2))
+					_update_stat_bars(vehicle_stats_map[v[1]])
 		)
 		veh_box.add_child(btn)
+
+	# 4. Vehicle Performance Stats Bars
+	var stats_box = HBoxContainer.new()
+	stats_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	stats_box.add_theme_constant_override("separation", 12)
+	vbox.add_child(stats_box)
+
+	var stat_names = ["SPEED", "ACCEL", "HANDLING", "DRIFT", "BOOST"]
+	for sn in stat_names:
+		var s_item = VBoxContainer.new()
+		s_item.alignment = BoxContainer.ALIGNMENT_CENTER
+		var slbl = Label.new()
+		slbl.text = sn
+		slbl.add_theme_font_size_override("font_size", 10)
+		slbl.modulate = Color(0.7, 0.8, 0.9)
+		s_item.add_child(slbl)
+
+		var bar = ProgressBar.new()
+		bar.custom_minimum_size = Vector2(85, 8)
+		bar.max_value = 100.0
+		bar.value = 80.0
+		bar.show_percentage = false
+		s_item.add_child(bar)
+		stats_box.add_child(s_item)
+		stat_bars[sn.to_lower()] = bar
+
+	_update_stat_bars(vehicle_stats_map["speeder"])
 
 	var sep = HSeparator.new()
 	vbox.add_child(sep)
@@ -607,19 +685,19 @@ func setup_onboarding_overlay() -> void:
 		["W / S", "Accelerate / Reverse & Brake"],
 		["A / D", "Steering Left / Right"],
 		["SHIFT", "Drift (Hold through turns for Mini-Turbo Sparks)"],
-		["SPACE", "Activate Collected PowerUp (Boost/Shield/EMP)"]
+		["SPACE", "Item / Boost Activation"]
 	]
 	for c in controls_data:
 		var k = Label.new()
 		k.text = c[0] + "  "
 		k.modulate = Color(0.0, 1.0, 0.8)
-		k.add_theme_font_size_override("font_size", 13)
+		k.add_theme_font_size_override("font_size", 12)
 		ctrl_grid.add_child(k)
 
 		var a = Label.new()
 		a.text = c[1]
 		a.modulate = Color.WHITE
-		a.add_theme_font_size_override("font_size", 13)
+		a.add_theme_font_size_override("font_size", 12)
 		ctrl_grid.add_child(a)
 
 	var start_btn = Button.new()
@@ -628,6 +706,11 @@ func setup_onboarding_overlay() -> void:
 	start_btn.modulate = Color(0.2, 1.0, 0.5)
 	start_btn.pressed.connect(dismiss_onboarding)
 	vbox.add_child(start_btn)
+
+func _update_stat_bars(stats: Dictionary) -> void:
+	for k in stats.keys():
+		if stat_bars.has(k):
+			stat_bars[k].value = stats[k]
 
 func dismiss_onboarding() -> void:
 	if is_instance_valid(onboarding_overlay):

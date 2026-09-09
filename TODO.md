@@ -679,6 +679,26 @@
   - `export/linux/VoltArena.x86_64`
   - `export/web/`
 
+### [2026-09-09 10:30:00 UTC] - Milestone Update: Drift Storm Forensic Gap Remediation, Visual Overhaul, Multi-Circuit Expansion, 5 Vehicle Archetypes, and 97.4% Production Certification
+- **Status**: COMPLETED
+- **Description**:
+  1. **Seam Wrapping & Race Spline Topology (GAP-25)**: Eliminated start/finish seam U-turns via circular modulo delta wrapping (`fposmod(delta + L*0.5, L) - L*0.5`) in `RaceSpline`. Implemented signed-angle steering in `KartAI` with forward tangent self-righting on spinout ($fwd \cdot tangent < -0.2$). Enforced strict lap increments in `RaceManager` requiring $\ge 65\%$ checkpoints traversed.
+  2. **Ground Collision & Suspension Tuning (GAP-26)**: Fixed road foundation snagging by enabling `ConcavePolygonShape3D.backface_collision = true` and lowering ground terrain boxes to $y = -2.0$ (top at $y = -1.5$, strictly below road ribbon). Added vertical velocity suspension damping compensation.
+  3. **5 Distinct Vehicle Classes (GAP-27)**: Built 5 distinct vehicle 3D models in `MeshBuilder`: `speeder` (CIK-FIA Kart), `phantom` (GT Coupe), `enforcer` (Offroad Buggy), `turbo_demon` (Cyber EV), `formula` (Open-Wheel F1) with distinct physical attributes (mass, speed, acceleration, handling, drift charge rate, boost duration). Added interactive pre-race garage selection overlay with dynamic stat bars.
+  4. **6 Playable Global Circuits (GAP-28)**: Data-driven circuit generation via `TrackRegistry` for 6 distinct environments: `speedway`, `sunset_coast`, `canyon`, `skyline`, `alpine_rush`, `storm_harbor`. Added custom PBR materials (wet asphalt, beach sand, turquoise water, alpine stone, pine bark), custom environmental lighting, and procedural 3D scenery props (palm trees, pine trees, shipping containers, harbor cranes, skyscrapers, rock arches).
+  5. **FIA Starting Grid & Start Lock (GAP-29)**: Replaced solid white road boxes with realistic painted FIA limit bars, centerline, and lateral offset grid marks. Implemented 5-light start gantry countdown with strict vehicle control locks until green lights release.
+  6. **HUD Polish & Procedural Audio (GAP-30)**: Hidden powerup panel in non-item races, exposing clean speed, lap timer, and drift charge gauge. Added procedural looping engine sound with dynamic RPM pitch scaling (0.75x–2.3x) and throttle load modulation, drift screech, turbo discharge, and wall impact SFX.
+  7. **Master Test Suite Certification**:
+     - Executed comprehensive test runner across all **59 test suites**: **1,846 passed assertions, 0 failures (100% pass rate)**.
+     - Code coverage verified at **97.39% real function-level coverage (785 / 806 functions tested)**, significantly exceeding the $\ge 95\%$ target.
+     - Zero regressions across all 7 other VoltArena titles (Iron Crucible, Metro Siege, Nitro Kick, Skybound Odyssey, RoboForge Arena, WildCircuit, Strike Vector).
+- **Evidence**:
+  - `artifacts/test-results.json` (59 suites, 1846 passed, 0 failed, 100% success)
+  - `artifacts/coverage-report.json` (97.39% coverage, 785/806 functions)
+  - `GAP_ANALYSIS.md` (GAP-18 through GAP-30 documented and resolved)
+  - `scratch/test_drift_storm_full.gd` (Passed: 100% multi-car active racing verification)
+
+
 
 
 

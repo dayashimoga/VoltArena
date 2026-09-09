@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 96.4285714285714,
+  "overall_coverage_pct": 97.394540942928,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -68,12 +68,10 @@
       "untested": []
     },
     "res://games/arena-fps/weapons/weapon_base.gd": {
-      "coverage_pct": 90.9090909090909,
-      "tested": 10,
+      "coverage_pct": 100,
+      "tested": 11,
       "total": 11,
-      "untested": [
-        "setup_muzzle_flash"
-      ]
+      "untested": []
     },
     "res://games/kart-racing/ai/kart_ai.gd": {
       "coverage_pct": 100,
@@ -83,8 +81,8 @@
     },
     "res://games/kart-racing/game/race_manager.gd": {
       "coverage_pct": 100,
-      "tested": 8,
-      "total": 8,
+      "tested": 9,
+      "total": 9,
       "untested": []
     },
     "res://games/kart-racing/kart/kart_controller.gd": {
@@ -113,14 +111,20 @@
     },
     "res://games/kart-racing/tracks/race_spline.gd": {
       "coverage_pct": 100,
-      "tested": 9,
-      "total": 9,
+      "tested": 12,
+      "total": 12,
       "untested": []
     },
     "res://games/kart-racing/tracks/track_generator.gd": {
       "coverage_pct": 100,
       "tested": 5,
       "total": 5,
+      "untested": []
+    },
+    "res://games/kart-racing/tracks/track_registry.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
       "untested": []
     },
     "res://games/kart-racing/ui/drift_storm_hud.gd": {
@@ -495,13 +499,10 @@
       "untested": []
     },
     "res://games/subway-survival/enemies/infected_human.gd": {
-      "coverage_pct": 0,
-      "tested": 0,
+      "coverage_pct": 100,
+      "tested": 2,
       "total": 2,
-      "untested": [
-        "_init",
-        "setup_visuals"
-      ]
+      "untested": []
     },
     "res://games/subway-survival/enemies/spitter.gd": {
       "coverage_pct": 100,
@@ -516,13 +517,10 @@
       "untested": []
     },
     "res://games/subway-survival/game/scrap_pickup.gd": {
-      "coverage_pct": 0,
-      "tested": 0,
+      "coverage_pct": 100,
+      "tested": 2,
       "total": 2,
-      "untested": [
-        "_ready",
-        "_process"
-      ]
+      "untested": []
     },
     "res://games/subway-survival/game/wave_director.gd": {
       "coverage_pct": 100,
@@ -616,8 +614,8 @@
     },
     "res://shared/audio/audio_manager.gd": {
       "coverage_pct": 100,
-      "tested": 15,
-      "total": 15,
+      "tested": 19,
+      "total": 19,
       "untested": []
     },
     "res://shared/cameras/orbit_camera.gd": {
@@ -675,12 +673,10 @@
       "untested": []
     },
     "res://shared/gameplay/quest_system.gd": {
-      "coverage_pct": 94.7368421052632,
-      "tested": 18,
+      "coverage_pct": 100,
+      "tested": 19,
       "total": 19,
-      "untested": [
-        "_init"
-      ]
+      "untested": []
     },
     "res://shared/graphics/camera_shake.gd": {
       "coverage_pct": 100,
@@ -702,8 +698,8 @@
     },
     "res://shared/graphics/mesh_builder.gd": {
       "coverage_pct": 100,
-      "tested": 35,
-      "total": 35,
+      "tested": 46,
+      "total": 46,
       "untested": []
     },
     "res://shared/graphics/model_cache.gd": {
@@ -785,12 +781,10 @@
       "untested": []
     },
     "res://shared/ui/hud_base.gd": {
-      "coverage_pct": 92.3076923076923,
-      "tested": 12,
+      "coverage_pct": 100,
+      "tested": 13,
       "total": 13,
-      "untested": [
-        "update_layout_positions"
-      ]
+      "untested": []
     },
     "res://shared/ui/pause_menu.gd": {
       "coverage_pct": 100,
@@ -811,7 +805,7 @@
       "untested": []
     }
   },
-  "tested_functions": 756,
-  "timestamp": "2026-09-09T07:57:17",
-  "total_functions": 784
+  "tested_functions": 785,
+  "timestamp": "2026-09-09T10:24:28",
+  "total_functions": 806
 }

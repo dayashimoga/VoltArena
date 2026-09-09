@@ -107,9 +107,17 @@ graph TD
 - **Top-Right Radar Minimap**: Circular planar radar tracking player position and forward orientation, road corridor boundaries, objective beacons, and threat-aware hostile blips with a 3.0-second fade timer.
 - **Full Tactical Map (M Key)**: Modal schematic providing bird's-eye view of corridor milestones, active checkpoints, and extraction zones.
 - **Combat Crosshair Convergence**: Camera center raycast calculates 3D point-of-aim at reticle hit, dynamically rotating projectile trajectory from weapon muzzle to impact point, eliminating low-cover clipping.
+- **Directional Threat Indicators**: `StrikeDirectionalDamageIndicator` calculates the screen-space angular bearing of attackers, rendering glowing threat arcs around the reticle and pulsing a red peripheral vignette on damage.
 
 ---
 
 ## 8. World Scale & Environmental Storytelling
-- **Human Scale**: Structures scaled to authentic proportions ($14\text{m}$ to $24\text{m}$ tall, $8\text{m}$ roadway, $3\text{m}$ sidewalks) creating dense urban canyons.
-- **Blackout Atmosphere**: Emergency hazard beacons, generator hum, disabled neon signs, burning wreckage, police roadblocks, and volumetric fog conveying blackout crisis.
+- **Metric Scale Standard**: 1 Godot unit = 1 metre convention enforced throughout all assets.
+  - Human Operative: $1.80\text{m}$ height, $0.40\text{m}$ radius capsule.
+  - Vehicles: Authentic proportions: Enforcer patrol cruiser $4.56\text{m} \times 2.08\text{m} \times 2.0\text{m}$; Heavy utility truck $6.16\text{m} \times 3.3\text{m} \times 3.19\text{m}$.
+  - Street Hierarchy: $14.0\text{m}$ wide two-lane asphalt roadway with $3.5\text{m}$ sidewalks ($21.0\text{m}$ total canyon width), enclosed by $14\text{m}\text{--}24\text{m}$ multi-story buildings.
+- **Blackout Atmosphere**:
+  - Deep midnight sky lighting (energy $0.35$, directional moonlight $0.85$) with atmospheric distance fog (density $0.0035$).
+  - Dark grimy concrete facades and weathered carbon steel replacing bright pastel townhouses.
+  - Blinking orange/red hazard beacons on roadblocks and disabled emergency vehicle lightbars.
+  - Disabled commercial neon signage, burning debris, and selective emergency lighting.

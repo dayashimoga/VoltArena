@@ -19,6 +19,7 @@ var compass_tape: StrikeCompassTape
 var minimap: StrikeMinimap
 var tactical_map: StrikeTacticalMap
 var crosshair: StrikeCrosshair
+var damage_indicator: StrikeDirectionalDamageIndicator
 
 # Bottom-left Status
 var health_bar: ProgressBar
@@ -91,6 +92,65 @@ class StrikeCrosshair extends Control:
 			draw_line(Vector2(h_l, -h_l), Vector2(h_s, -h_s), hit_col, 2.0)
 			draw_line(Vector2(-h_l, h_l), Vector2(-h_s, h_s), hit_col, 2.0)
 			draw_line(Vector2(h_l, h_l), Vector2(h_s, h_s), hit_col, 2.0)
+
+# ==============================================================================
+# SUBCOMPONENT: DIRECTIONAL DAMAGE INDICATOR
+# ==============================================================================
+class StrikeDirectionalDamageIndicator extends Control:
+	var active_indicators: Array = []
+	var vignette_alpha: float = 0.0
+
+	func add_hit(hit_dir_angle: float) -> void:
+		active_indicators.append({
+			"angle_rad": hit_dir_angle,
+			"alpha": 1.0,
+			"lifetime": 1.2
+		})
+		vignette_alpha = 0.45
+		queue_redraw()
+
+	func _process(delta: float) -> void:
+		var redraw_needed = false
+		if vignette_alpha > 0.0:
+			vignette_alpha = maxf(0.0, vignette_alpha - delta * 1.5)
+			redraw_needed = true
+
+		var expired = []
+		for ind in active_indicators:
+			ind.lifetime -= delta
+			ind.alpha = clampf(ind.lifetime / 1.2, 0.0, 1.0)
+			redraw_needed = true
+			if ind.lifetime <= 0.0:
+				expired.append(ind)
+
+		for exp_ind in expired:
+			active_indicators.erase(exp_ind)
+
+		if redraw_needed:
+			queue_redraw()
+
+	func _draw() -> void:
+		var center = size * 0.5
+		var radius = 64.0
+
+		if vignette_alpha > 0.01:
+			var vig_col = Color(0.85, 0.05, 0.05, vignette_alpha * 0.35)
+			draw_rect(Rect2(Vector2.ZERO, size), vig_col, false, 8.0)
+
+		for ind in active_indicators:
+			var angle = ind.angle_rad
+			var col = Color(1.0, 0.12, 0.08, ind.alpha * 0.90)
+			var col_glow = Color(1.0, 0.45, 0.1, ind.alpha * 0.50)
+
+			var start_ang = angle - 0.28
+			var end_ang = angle + 0.28
+			draw_arc(center, radius, start_ang, end_ang, 12, col, 4.0)
+			draw_arc(center, radius + 2.0, start_ang, end_ang, 12, col_glow, 2.0)
+
+			var tip = center + Vector2(cos(angle), sin(angle)) * (radius + 14.0)
+			var left_pt = center + Vector2(cos(angle - 0.15), sin(angle - 0.15)) * (radius + 4.0)
+			var right_pt = center + Vector2(cos(angle + 0.15), sin(angle + 0.15)) * (radius + 4.0)
+			draw_colored_polygon(PackedVector2Array([tip, left_pt, right_pt]), col)
 
 # ==============================================================================
 # SUBCOMPONENT 2: COMPASS TAPE (TOP-CENTER)
@@ -361,6 +421,7 @@ func _ready() -> void:
 	setup_hud()
 
 func setup_hud() -> void:
+	_setup_damage_indicator()
 	_setup_crosshair()
 	_setup_compass_tape()
 	_setup_minimap()
@@ -758,3 +819,22 @@ func update_boss_health(current: float, phase: int) -> void:
 func hide_boss_bar() -> void:
 	if is_instance_valid(boss_panel):
 		boss_panel.visible = false
+
+func _setup_damage_indicator() -> void:
+	damage_indicator = StrikeDirectionalDamageIndicator.new()
+	damage_indicator.name = "DamageIndicator"
+	damage_indicator.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	damage_indicator.mouse_filter = MOUSE_FILTER_IGNORE
+	add_child(damage_indicator)
+
+func trigger_damage_feedback(attacker_pos: Vector3, player_pos: Vector3, cam_yaw: float) -> void:
+	if not is_instance_valid(damage_indicator):
+		_setup_damage_indicator()
+	if is_instance_valid(damage_indicator):
+		var rel = attacker_pos - player_pos
+		var forward = Vector3(-sin(cam_yaw), 0, -cos(cam_yaw))
+		var right = Vector3(cos(cam_yaw), 0, -sin(cam_yaw))
+		var dot_fwd = rel.dot(forward)
+		var dot_right = rel.dot(right)
+		var screen_angle = atan2(dot_right, -dot_fwd) - PI * 0.5
+		damage_indicator.add_hit(screen_angle)

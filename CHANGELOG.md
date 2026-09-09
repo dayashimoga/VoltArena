@@ -640,5 +640,41 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Master test runner executed across all 57 suites: **1,692 passed assertions, 0 failed (100% pass rate)**.
   - Function coverage maintained at **94.6%** (729 / 771 functions).
 
+## [8.3.0-strike-vector-p0-firing-combat-worldscale-overhaul] - 2026-09-09
+
+### Fixed & Re-Engineered
+- **P0 Firing Pose Stability & Root-Transform Normalization**:
+  - Resolved root cause where firing the VX-7 rifle pitched the operative $90^\circ$ backward onto their back ("sleeping" horizontally) on every shot.
+  - Mixamo animation tracks in `soldier.glb` for `Aim`, `Fire`, and `Reload` contained un-normalized keyframes for `mixamorig_Hips` at $0^\circ$ pitch (contrasting with `Idle`/`Run`'s $-90^\circ$).
+  - Implemented `_normalize_rig_tracks()` in `shared/graphics/model_cache.gd`: completely strips `mixamorig_Hips` and leg bone tracks from upper-body combat actions (`aim`, `fire`, `reload`, `hit`, `shoot`), strictly confining animations to `mixamorig_Spine` and descendant upper-body bones.
+  - Validated across 100 consecutive shots with moving/ADS: `min_up_dot = 1.0` (zero horizontal pitch/roll).
+- **P0 Weapon Rig Integration & Natural Hand Grip Alignment**:
+  - Fixed weapon tilted upside-down and floating on torso/hip.
+  - Calibrated `WeaponGrip.rotation_degrees = Vector3(90.0, 90.0, 0.0)` with palm offset `Vector3(0.04, -0.02, 0.05)`, aligning barrel forward down-range along player $-Z$ (angle error $0.027^\circ$).
+  - Validated hand-to-weapon distance at $0.00\text{m}$, barrel forward dot $= 1.00$.
+- **P0 Physical Combat & Hit Registration Pipeline**:
+  - Resolved root cause where enemy bullets flew past and through the player without inflicting damage or decreasing HP/shield.
+  - Fixed boolean precedence error in `games/strike-vector/weapons/weapon_projectile.gd`: `str(shooter.name) if is_instance_valid(shooter) else "Player"` eliminates runtime type error on hit.
+  - Explicitly configured `StrikePlayer` `collision_layer = GameConstants.LAYER_PLAYER` (2) and `collision_mask = LAYER_WORLD | LAYER_ENEMIES | LAYER_PICKUPS`.
+  - Connected bullet impact to `take_damage`: shield absorbs 60% (50 -> 38), HP absorbs 40% (100 -> 92), and `damage_taken` signal emits.
+  - Verified solid world obstacles block projectiles completely with zero bleed-through.
+- **P0 World Metric Scale & Believable Proportions**:
+  - Established project-wide metric standard: 1 Godot unit = 1 metre.
+  - Replaced miniature $1.2\text{m}$ go-kart with authentic patrol cruiser `rocket_car_enforcer.glb` at scale $1.6$ ($4.56\text{m} \times 2.08\text{m} \times 2.0\text{m}$).
+  - Scaled heavy utility trucks to scale $2.2$ ($6.16\text{m} \times 3.3\text{m} \times 3.19\text{m}$).
+  - Widened roadway to authentic 14m two-lane street with 3.5m sidewalks (21m canyon).
+  - Standardized player collision capsule to height $1.80\text{m}$, radius $0.40\text{m}$.
+- **Threat Readability & Directional Damage Feedback**:
+  - Implemented `StrikeDirectionalDamageIndicator` class in `strike_hud.gd`: calculates angular bearing between camera forward and attacker position, rendering glowing red/amber threat arcs around reticle plus red peripheral vignette pulse.
+- **Urban Blackout Visual Overhaul**:
+  - Overrode pastel colors with dark grimy concrete and weathered carbon steel materials (`_apply_dark_building_facade`).
+  - Rebalanced lighting to deep midnight blue (`0.01, 0.03, 0.08`), ambient energy $0.35$, directional moonlight $0.85$, and atmospheric distance fog ($0.0035$).
+  - Added blinking orange/red hazard beacons to roadblocks and emergency vehicle lightbars.
+- **Runtime Acceptance Suite & Test Hardening**:
+  - Authored `TestStrikeRuntimeAcceptance` with 7 P0 gate test methods covering firing stability, hand attachment, projectile damage, obstacle blocking, metric scale, HUD damage feedback, and floor continuity.
+  - Integrated into master test runner `tests/runner.gd`: **58 test suites, 1,726 passed assertions, 0 failures (100% pass rate)**.
+  - Expanded function test coverage to **96.1%** (744 / 774 functions).
+  - Successfully exported fresh desktop binaries (`VoltArena.exe` 151.8 MB, `VoltArena.x86_64` 133.7 MB) and Cloudflare-compliant Web packages (chunks $\le 18$ MB).
+
 
 

@@ -56,14 +56,22 @@ func init_projectile(dir: Vector3, spd: float, dmg: float, col: Color, wep_name:
 
 	# Align with flight direction
 	if direction.length_squared() > 0.001:
-		look_at(global_position + direction, Vector3.UP)
+		if is_inside_tree():
+			look_at(global_position + direction, Vector3.UP)
+		else:
+			transform = transform.looking_at(position + direction, Vector3.UP)
 
 func _physics_process(delta: float) -> void:
 	var move_dist = speed * delta
-	var next_pos = global_position + direction * move_dist
+	var next_pos = (global_position if is_inside_tree() else position) + direction * move_dist
 
 	# Continuous raycast sweep to prevent tunneling through high-speed targets
-	var space_state = get_world_3d().direct_space_state if get_world_3d() else null
+	var space_state: PhysicsDirectSpaceState3D = null
+	if is_inside_tree():
+		var vp = get_viewport()
+		if vp and vp.find_world_3d():
+			space_state = vp.find_world_3d().direct_space_state
+
 	if space_state:
 		var query = PhysicsRayQueryParameters3D.create(global_position, next_pos)
 		query.collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES
@@ -93,10 +101,11 @@ func _handle_hit(hit_result: Dictionary) -> void:
 			weak_multiplier = 2.0
 
 		var total_dmg = damage * weak_multiplier
+		var shooter_name: String = str(shooter.name) if is_instance_valid(shooter) else "Player"
 		if collider.has_method("take_damage"):
-			collider.take_damage(total_dmg, is_instance_valid(shooter) and shooter.name or "Player", weapon_name)
+			collider.take_damage(total_dmg, shooter_name, weapon_name)
 		elif collider.get_parent() and collider.get_parent().has_method("take_damage"):
-			collider.get_parent().take_damage(total_dmg, is_instance_valid(shooter) and shooter.name or "Player", weapon_name)
+			collider.get_parent().take_damage(total_dmg, shooter_name, weapon_name)
 
 	# Explosive Splash Damage
 	if is_explosive and explosion_radius > 0.0:
@@ -125,7 +134,8 @@ func _trigger_splash_damage(epicenter: Vector3) -> void:
 				var falloff = 1.0 - (dist / explosion_radius)
 				var splash_dmg = damage * falloff
 				if target.has_method("take_damage"):
-					target.take_damage(splash_dmg, is_instance_valid(shooter) and shooter.name or "Player", weapon_name)
+					var shooter_name: String = str(shooter.name) if is_instance_valid(shooter) else "Player"
+					target.take_damage(splash_dmg, shooter_name, weapon_name)
 
 	# Audio explosion
 	var am = GameConstants.get_autoload(self, "AudioManager")
@@ -134,7 +144,7 @@ func _trigger_splash_damage(epicenter: Vector3) -> void:
 
 func _spawn_impact_fx(pos: Vector3, normal: Vector3) -> void:
 	var root = get_parent()
-	if not root:
+	if not root or not is_inside_tree():
 		return
 
 	# Impact Spark Flash
@@ -152,7 +162,7 @@ func _spawn_impact_fx(pos: Vector3, normal: Vector3) -> void:
 	s_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	spark.material_override = s_mat
 
-	spark.global_position = pos + normal * 0.05
+	spark.position = pos + normal * 0.05
 	root.add_child(spark)
 
 	# Quick fade out

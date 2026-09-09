@@ -15,7 +15,7 @@ The master automated test runner is located at `tests/runner.gd`. When executed,
 
 ```
 tests/runner.gd
-├── Unit Test Suites (41 Suites)
+├── Unit Test Suites (42 Suites)
 │   ├── TestHealthComponent, TestWeapons, TestCarPhysics, TestRaceManager, TestSaveManager
 │   ├── TestWaveDirector, TestInputManager, TestAudioManager, TestQualityManager, TestEventBus
 │   ├── TestMaterialGenerator, TestArenaBot, TestEnemyArchetypes, TestKartController, TestBallPhysics
@@ -29,9 +29,10 @@ tests/runner.gd
 │   ├── TestStrikePlayerUnit (60 assertions)
 │   ├── TestStrikeAIUnit (85 assertions)
 │   ├── TestStrikeTraversalProbes (98 assertions)
-│   └── TestStrikeVisualInvariants (94 assertions: transforms, rigs, sockets, nav mesh, HUD)
+│   ├── TestStrikeVisualInvariants (94 assertions: transforms, rigs, sockets, nav mesh, HUD)
+│   └── TestStrikeRuntimeAcceptance (25 assertions: 100-shot firing pose stability, weapon grip alignment, physical projectile damage, obstacle blocking, metric scale, HUD threat indicator, roadway continuity)
 ├── Responsive & Soak Suites (2 Suites)
-│   ├── TestResponsiveUI (125 assertions across 5 responsive screen profiles)
+│   ├── TestResponsiveUI (135 assertions across 5 responsive screen profiles)
 │   └── TestSoak (5 full lifecycle clean runs)
 ├── E2E Gameplay Test Suites (10 Suites)
 │   ├── TestArenaE2E (76 assertions)
@@ -47,7 +48,7 @@ tests/runner.gd
 └── Legacy Acceptance Suite (1 Suite, 19 assertions)
     └── TestPlatformAcceptance
 ─────────────────────────────────────────────────────────────
-Total: 57 Suites, 1686 Assertions (100% Pass, 0 Failures, 94.6% Function Coverage: 729/771)
+Total: 58 Suites, 1726 Assertions (100% Pass, 0 Failures, 96.1% Function Coverage: 744/774)
 ```
 
 ---

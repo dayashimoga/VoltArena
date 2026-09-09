@@ -20,7 +20,7 @@ func get_coverage_entries() -> Array:
 		"res://shared/audio/audio_manager.gd",
 		[
 			"_ready", "setup_players", "generate_all_procedural_sounds",
-			"play_sound", "play_sound_3d", "create_synth_sound",
+			"play_sound", "play_sfx", "play_sound_3d", "create_synth_sound",
 			"create_noise_burst", "create_two_tone_sound", "create_click_sound",
 			"create_music_track", "play_music", "stop_music", "set_bus_volume",
 			"stop_all"
@@ -81,6 +81,7 @@ func test_sound_playback() -> void:
 	am.setup_players()
 	am.generate_all_procedural_sounds()
 	am.play_sound("laser_fire")
+	am.play_sfx("laser_fire")
 	am.play_sound_3d("laser_fire", Vector3.ZERO)
 	am.stop_all()
 	assert_true(true, "Sound playback calls and stop_all must succeed")

@@ -11,6 +11,7 @@ signal weapon_switched(weapon_index: int, weapon_name: String, ammo: int, reserv
 signal ammo_updated(weapon_name: String, ammo: int, reserve: int)
 signal arcade_module_activated(module_name: String, duration: float)
 signal score_gained(amount: int, combo_mult: float)
+signal damage_taken(amount: float, dealer_name: String, weapon: String, hit_pos: Vector3)
 signal player_died()
 
 const StrikeWeaponArsenalScript = preload("res://games/strike-vector/weapons/strike_weapon_arsenal.gd")
@@ -92,6 +93,8 @@ func _ready() -> void:
 		select_weapon(active_weapon_index)
 
 func _setup_collision() -> void:
+	collision_layer = GameConstants.LAYER_PLAYER
+	collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_ENEMIES | GameConstants.LAYER_PICKUPS
 	if has_node("CollisionShape"):
 		return
 	var col = CollisionShape3D.new()
@@ -426,6 +429,7 @@ func take_damage(amount: float, _dealer_name: String = "", _weapon: String = "")
 	current_health = maxf(0.0, current_health - health_absorb)
 	health_changed.emit(current_health, max_health)
 	armor_changed.emit(current_armor, max_armor)
+	damage_taken.emit(amount, _dealer_name, _weapon, global_position if is_inside_tree() else position)
 
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am and am.has_method("play_sound"):

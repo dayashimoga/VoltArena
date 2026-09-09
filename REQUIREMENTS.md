@@ -95,6 +95,12 @@ This document specifies the technical, functional, architectural, performance, a
 * **FR-STRIKE-06 (Forward Encounter Director & Streamer)**: Preloading streaming, resident active + next segments, locked barriers, reinforcements, deterministic watchdog recovery.
 * **FR-STRIKE-07 (Camera Director & Dynamic Transitions)**: 7 camera modes (Third-person, ADS, 2.5D side-scroll, corridor chase, vehicle, boss, cinematic) with spring-arm collision avoidance.
 * **FR-STRIKE-08 (Save & Checkpoint Persistence)**: Mid-mission checkpoint restoration and campaign progression saving.
+* **FR-STRIKE-09 (Character Rig & Firing Pose Stability)**: Rig tracks must isolate combat actions (`aim`, `fire`, `reload`) to upper-body bones (`mixamorig_Spine` and descendants), never modifying root hip pitch or rotating skeleton into horizontal poses. Up-vector dot product must remain $\ge 0.95$ across 100+ consecutive shots.
+* **FR-STRIKE-10 (Weapon Attachment & Barrel Alignment)**: Firearms must attach to right hand bone attachment via calibrated `WeaponGrip`, with barrel forward strictly aligned down-range along player $-Z$ (angular error $\le 1.0^\circ$). Standardized sockets (`MuzzleSocket`, `MagazineSocket`, `ScopeSocket`, `ShellEjectionSocket`, `LeftHandIKTarget`).
+* **FR-STRIKE-11 (World Metric Scale Standard)**: 1 Godot unit = 1 metre convention. Human $1.7\text{m}\text{--}1.9\text{m}$; Patrol car $4.0\text{m}\text{--}5.5\text{m}$ length, $1.4\text{m}\text{--}2.4\text{m}$ height; Heavy truck $5.5\text{m}\text{--}7.0\text{m}$ length; Two-lane roadway $\ge 13.5\text{m}$ width with 3.5m sidewalks.
+* **FR-STRIKE-12 (Physical Combat & Hit Registration)**: Ballistic projectiles continuous sweep raycast with valid collision layers (`LAYER_PLAYER = 2`, `LAYER_ENEMIES = 4`, `LAYER_WORLD = 1`). Bullets physically register hits on player, deducting 60% shield and 40% HP, emitting `damage_taken` signal. Solid walls block projectiles completely.
+* **FR-STRIKE-13 (Threat Readability & Directional Damage Feedback)**: Directional damage indicator on HUD showing glowing threat arcs pointing toward attacker bearing, plus red peripheral vignette pulse.
+* **FR-STRIKE-14 (Urban Blackout Visual Aesthetic)**: Dark weathered concrete, carbon steel, midnight sky lighting, emergency orange/red hazard beacons, and distance atmospheric fog.
 
 ### 3.9 Shared Platform Subsystems
 * **FR-SYS-01 (Quest System)**: Universal `QuestManager` supporting linear and branching quests, multi-stage objectives, signal callbacks, and state serialization.

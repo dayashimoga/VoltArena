@@ -189,7 +189,7 @@ func _apply_spread(dir: Vector3, spread_deg: float) -> Vector3:
 
 func _spawn_bullet(origin: Vector3, dir: Vector3, dmg: float) -> void:
 	var proj = WeaponProjectile.new()
-	var spawn_pos = muzzle_point.global_position if is_instance_valid(muzzle_point) else global_position
+	var spawn_pos = muzzle_point.global_position if (is_instance_valid(muzzle_point) and is_inside_tree()) else (global_position if is_inside_tree() else position)
 	proj.position = spawn_pos
 	proj.shooter = owner_player
 

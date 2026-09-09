@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 94.5525291828794,
+  "overall_coverage_pct": 96.1240310077519,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -380,12 +380,11 @@
       "untested": []
     },
     "res://games/strike-vector/player/strike_player.gd": {
-      "coverage_pct": 81.8181818181818,
-      "tested": 9,
+      "coverage_pct": 90.9090909090909,
+      "tested": 10,
       "total": 11,
       "untested": [
-        "_init",
-        "is_valid_grounded"
+        "_init"
       ]
     },
     "res://games/strike-vector/player/strike_player_visual.gd": {
@@ -418,11 +417,13 @@
       ]
     },
     "res://games/strike-vector/ui/strike_hud.gd": {
-      "coverage_pct": 47.3684210526316,
-      "tested": 9,
-      "total": 19,
+      "coverage_pct": 45.4545454545455,
+      "tested": 10,
+      "total": 22,
       "untested": [
         "trigger_hit",
+        "_process",
+        "add_hit",
         "_process",
         "_process",
         "_init",
@@ -459,14 +460,12 @@
       "untested": []
     },
     "res://games/strike-vector/weapons/weapon_projectile.gd": {
-      "coverage_pct": 0,
-      "tested": 0,
+      "coverage_pct": 50,
+      "tested": 2,
       "total": 4,
       "untested": [
         "_ready",
-        "setup_visuals",
-        "init_projectile",
-        "_physics_process"
+        "setup_visuals"
       ]
     },
     "res://games/subway-survival/enemies/bio_colossus.gd": {
@@ -614,12 +613,10 @@
       "untested": []
     },
     "res://shared/audio/audio_manager.gd": {
-      "coverage_pct": 93.3333333333333,
-      "tested": 14,
+      "coverage_pct": 100,
+      "tested": 15,
       "total": 15,
-      "untested": [
-        "play_sfx"
-      ]
+      "untested": []
     },
     "res://shared/cameras/orbit_camera.gd": {
       "coverage_pct": 100,
@@ -670,28 +667,17 @@
       "untested": []
     },
     "res://shared/gameplay/puzzle_elements.gd": {
-      "coverage_pct": 55.5555555555556,
-      "tested": 5,
+      "coverage_pct": 100,
+      "tested": 9,
       "total": 9,
-      "untested": [
-        "_init",
-        "toggle",
-        "register_trigger",
-        "_physics_process"
-      ]
+      "untested": []
     },
     "res://shared/gameplay/quest_system.gd": {
-      "coverage_pct": 63.1578947368421,
-      "tested": 12,
+      "coverage_pct": 94.7368421052632,
+      "tested": 18,
       "total": 19,
       "untested": [
-        "_init",
-        "advance",
-        "to_dict",
-        "from_dict",
-        "is_all_objectives_complete",
-        "to_dict",
-        "from_dict"
+        "_init"
       ]
     },
     "res://shared/graphics/camera_shake.gd": {
@@ -823,7 +809,7 @@
       "untested": []
     }
   },
-  "tested_functions": 729,
-  "timestamp": "2026-09-08T16:58:53",
-  "total_functions": 771
+  "tested_functions": 744,
+  "timestamp": "2026-09-09T06:17:49",
+  "total_functions": 774
 }

@@ -83,49 +83,49 @@ func _setup_environment_lighting() -> void:
 	we.name = "WorldEnvironment"
 	var env = Environment.new()
 
-	# Procedural twilight sky with cybernetic horizon glow
+	# Procedural midnight sky with dark atmospheric horizon
 	var sky_mat = ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.04, 0.08, 0.18)
-	sky_mat.sky_horizon_color = Color(0.14, 0.22, 0.35)
-	sky_mat.sky_curve = 0.15
-	sky_mat.ground_bottom_color = Color(0.03, 0.05, 0.08)
-	sky_mat.ground_horizon_color = Color(0.08, 0.14, 0.22)
-	sky_mat.ground_curve = 0.10
-	sky_mat.energy_multiplier = 1.25
+	sky_mat.sky_top_color = Color(0.01, 0.03, 0.08)
+	sky_mat.sky_horizon_color = Color(0.06, 0.10, 0.18)
+	sky_mat.sky_curve = 0.12
+	sky_mat.ground_bottom_color = Color(0.02, 0.03, 0.05)
+	sky_mat.ground_horizon_color = Color(0.04, 0.07, 0.12)
+	sky_mat.ground_curve = 0.08
+	sky_mat.energy_multiplier = 0.60
 
 	var sky = Sky.new()
 	sky.sky_material = sky_mat
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 
-	# Strong ambient illumination for clear tactical readability (no pitch-black corridors)
+	# Moody, tactical ambient illumination for Urban Blackout
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.26, 0.34, 0.48)
-	env.ambient_light_energy = 1.65
+	env.ambient_light_color = Color(0.12, 0.16, 0.24)
+	env.ambient_light_energy = 0.35
 
 	# Filmic tonemapper with high dynamic range
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 1.30
-	env.tonemap_white = 4.5
+	env.tonemap_exposure = 1.15
+	env.tonemap_white = 4.0
 
 	# Glow bloom on neon signs and muzzle flashes
 	env.glow_enabled = true
-	env.glow_intensity = 0.55
-	env.glow_bloom = 0.20
+	env.glow_intensity = 0.65
+	env.glow_bloom = 0.25
 
-	# Subtle atmospheric depth fog
+	# Subtle atmospheric blackout depth fog
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.06, 0.10, 0.18)
-	env.fog_density = 0.0025
+	env.fog_light_color = Color(0.04, 0.06, 0.12)
+	env.fog_density = 0.0035
 
 	we.environment = env
 	add_child(we)
 
-	# Key Directional Light (Moonlight / City Sky illumination)
+	# Directional Moonlight
 	var dir_light = DirectionalLight3D.new()
 	dir_light.name = "KeyMoonlight"
-	dir_light.light_color = Color(0.78, 0.88, 1.0)
-	dir_light.light_energy = 1.85
+	dir_light.light_color = Color(0.70, 0.82, 0.96)
+	dir_light.light_energy = 0.85
 	dir_light.rotation_degrees = Vector3(-55.0, 35.0, 0.0)
 	dir_light.shadow_enabled = true
 	add_child(dir_light)
@@ -160,6 +160,23 @@ func load_mission(m_idx: int) -> void:
 	# Connect Player Signals to HUD & Checkpoints
 	player_node.health_changed.connect(hud.update_health)
 	player_node.armor_changed.connect(hud.update_armor)
+	player_node.damage_taken.connect(func(_amt, _dealer, _wep, _pos):
+		var threat_pos = Vector3.ZERO
+		var closest_dist = 9999.0
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			if is_instance_valid(enemy) and enemy is Node3D:
+				var d = player_node.global_position.distance_to(enemy.global_position)
+				if d < closest_dist:
+					closest_dist = d
+					threat_pos = enemy.global_position
+		if closest_dist > 60.0:
+			threat_pos = player_node.global_position - player_node.global_transform.basis.z * 12.0
+		var cam_yaw = player_node.rotation.y
+		if is_instance_valid(camera_director) and is_instance_valid(camera_director.camera):
+			var cam_fwd = -camera_director.camera.global_transform.basis.z
+			cam_yaw = atan2(-cam_fwd.x, -cam_fwd.z)
+		hud.trigger_damage_feedback(threat_pos, player_node.global_position, cam_yaw)
+	)
 	player_node.weapon_switched.connect(func(_idx, w_name, ammo, res):
 		var f_mode = "AUTO"
 		if is_instance_valid(player_node.active_weapon):

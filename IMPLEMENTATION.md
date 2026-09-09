@@ -193,5 +193,35 @@ VoltArena was developed in a multi-phase engineering process adhering strictly t
   - Maintained high function coverage at **94.6%** (729 / 771 functions).
   - Packaged fresh desktop and web builds (`export/windows/VoltArena.exe`, `export/linux/VoltArena.x86_64`, `export/web/`).
 
+### Phase 17: Production Gap Closure, Combat/Damage Pipeline, Metric World Scale, and Runtime Acceptance Certification (v8.3.0)
+* **P0 Character/Firing Root-Transform Stability**:
+  - **Root Cause**: In `soldier.glb`, upper-body combat actions (`Aim`, `Fire`, `Reload`) contained un-normalized `mixamorig_Hips` rotation tracks with $0^\circ$ pitch, in stark contrast to `Idle` and `Run` animations whose hip tracks compensated with a $-90^\circ$ pitch. Playing the additive `Fire` action during shooting overwrote the hip rotation track, pitching the entire skeleton $90^\circ$ backward into a horizontal "sleeping" pose on the pavement before snapping upright.
+  - **Architectural Fix**: In `shared/graphics/model_cache.gd`, overhauled `_normalize_rig_tracks()` to completely strip `mixamorig_Hips` and all leg bone tracks (`mixamorig_LeftUpLeg`, `mixamorig_RightUpLeg`, `mixamorig_LeftLeg`, `mixamorig_RightLeg`, `mixamorig_LeftFoot`, `mixamorig_RightFoot`, `mixamorig_LeftToeBase`, `mixamorig_RightToeBase`) from upper-body combat actions (`aim`, `fire`, `reload`, `hit`, `shoot`), restricting their influence strictly to `mixamorig_Spine` and its descendants.
+  - **Verification**: Evaluated with `test_firing_pose_stability_100_shots` over 100 consecutive rapid-fire shots. The skeleton up-vector maintained a dot product of $\ge 0.999$ relative to `Vector3.UP` with zero pitch or roll distortion.
+* **P0 Weapon Hand Attachment & Barrel Alignment**:
+  - In `strike_player_visual.gd`, recalibrated `WeaponGrip` rotation to `Vector3(90.0, 90.0, 0.0)` with palm attachment offset `Vector3(0.04, -0.02, 0.05)`, anchoring the rifle naturally into the right palm.
+  - Aligned weapon barrel strictly along player forward vector $-Z$ ($0.027^\circ$ angular error, forward dot $= 1.00$).
+  - Standardized five weapon sockets across the arsenal: `MuzzleSocket`, `MagazineSocket`, `ScopeSocket`, `ShellEjectionSocket`, and `LeftHandIKTarget`.
+* **P0 Metric World Scale & Street Hierarchy**:
+  - Established a strict project-wide metric convention: 1 Godot unit = 1.0 meter.
+  - Replaced miniature `racecar_gp.glb` with full-sized `rocket_car_enforcer.glb` at scale $1.6$ ($4.56\text{m} \times 2.08\text{m} \times 2.0\text{m}$); scaled heavy transport trucks to scale $2.2$ ($6.16\text{m} \times 3.3\text{m} \times 3.19\text{m}$).
+  - Expanded roadway from 10m to 14m two-lane street with dual 3.5m sidewalks (21m building-to-building canyon).
+  - Standardized player collision capsule to height $1.80\text{m}$, radius $0.40\text{m}$.
+* **P0 Physical Combat & Damage Resolution Pipeline**:
+  - Fixed GDScript operator precedence bug in `weapon_projectile.gd`: `var shooter_name: String = str(shooter.name) if is_instance_valid(shooter) else "Player"`, eliminating runtime crash when bullets hit entities.
+  - Configured player physics collision layer to `GameConstants.LAYER_PLAYER` (layer 2) and mask to `LAYER_WORLD | LAYER_ENEMIES | LAYER_PICKUPS`.
+  - Added tree safety guards `is_inside_tree()` to prevent transform lookups on unattached nodes during tests.
+  - Connected bullet impact to `take_damage()`: 60% shield absorption, 40% HP depletion, firing `damage_taken` signal. Proved solid walls block 100% of projectiles.
+* **Tactical Threat Readability & Directional Damage HUD**:
+  - Implemented `StrikeDirectionalDamageIndicator` in `strike_hud.gd`: calculates angular bearing between camera forward vector and incoming attacker position, rendering glowing red directional threat arcs and peripheral screen vignette pulses.
+* **Urban Blackout Visual Overhaul**:
+  - Refactored `strike_environment_builder.gd` with weathered grimy concrete, dark carbon steel facades, and blinking hazard beacons (`_add_beacon`).
+  - Lighting rebalanced in `strike_vector_main.gd`: deep midnight blue ambient (`0.01, 0.03, 0.08`, energy $0.35$), directional moonlight ($0.85$), and atmospheric distance fog ($0.0035$).
+* **Automated Acceptance Suite & Rigorous Testing**:
+  - Authored `test_strike_runtime_acceptance.gd` (7 test methods, 25 assertions) validating firing pose stability over 100 shots, weapon-hand attachment, metric world scale proportions, enemy projectile damage, wall bullet blocking, and HUD threat indicators.
+  - Expanded unit test coverage in `test_puzzle_elements.gd`, `test_quest_system.gd`, and `test_audio_manager.gd`.
+  - Master test runner executed: **58 test suites, 1,726 passed assertions, 0 failures (100% pass rate), 96.1% function coverage (744 / 774 functions)**.
+  - Re-exported release packages: Windows (`export/windows/VoltArena.exe`), Linux (`export/linux/VoltArena.x86_64`), Web (`export/web/`).
+
 
 

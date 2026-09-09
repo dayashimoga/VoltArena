@@ -46,8 +46,8 @@ func build_visual() -> void:
 				weapon_grip.name = "WeaponGrip"
 				# Character rig has scale (0.01, 0.01, 0.01), so compensate scale to 1.0 world units
 				weapon_grip.scale = Vector3(100.0, 100.0, 100.0)
-				# Align weapon barrel with character forward axis (-Z)
-				weapon_grip.rotation_degrees = Vector3(0.0, -90.0, 0.0)
+				# Align weapon barrel with character forward axis (-Z) and top along (+Y)
+				weapon_grip.rotation_degrees = Vector3(90.0, 90.0, 0.0)
 				right_hand_att.add_child(weapon_grip)
 
 				weapon_socket = weapon_grip

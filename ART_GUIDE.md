@@ -72,17 +72,20 @@ VoltArena delivers four commercially polished, visually dense 3D game experience
   * Rigged racer drivers with white safety helmets and tinted reflective black visors.
 
 ### 2.5 Strike Vector — Urban Blackout & Campaign Biomes
-* **Visual Identity**: Nocturnal military blackout cityscape under hostile surveillance. The aesthetic balances deep shadows with selective high-contrast lighting: warm sodium streetlights, red jammer beacons, and emergency vehicle lights against damp asphalt and concrete.
-* **Human-Scale Architectural Enclosure**:
-  * Modular multi-story buildings ($14\text{m} \times 18\text{m}\text{--}24\text{m}$ tall) line both sides of the $10\text{m}$ roadway with $3\text{m}$ elevated sidewalks, creating an authentic continuous street canyon. No miniature buildings or barren voids.
-  * Every building possesses physical box colliders providing tactical cover.
-* **Environmental Dressing**:
-  * Commercial advertising billboards mounted directly on building facades.
-  * Parked military transport trucks, emergency barricades, industrial conduit routing, and security terminals.
-  * Elevated $5.5\text{m}$ streetlights casting warm amber sodium illumination ($2.4\text{ energy}$, $16\text{m range}$).
+* **Visual Identity**: Nocturnal military blackout cityscape under hostile electronic warfare. The aesthetic balances deep shadows with selective emergency illumination: blinking hazard beacons, amber streetlights, disabled transport vehicles, and emergency barricades against weathered concrete and dark asphalt.
+* **Metric Scale Hierarchy (1 Godot unit = 1 Metre)**:
+  * Human operative: $1.80\text{m}$ height, $0.40\text{m}$ radius capsule.
+  * Vehicles: Authentic full-scale proportions: Enforcer patrol cruiser at $1.6\times$ scale ($4.56\text{m}$ length, $2.08\text{m}$ width, $2.0\text{m}$ height) and heavy utility trucks at $2.2\times$ scale ($6.16\text{m}$ length, $3.3\text{m}$ width, $3.19\text{m}$ height).
+  * Street Hierarchy: $14.0\text{m}$ wide two-lane roadway with $3.5\text{m}$ sidewalks ($21.0\text{m}$ total canyon width), lined by $14\text{m}\text{--}24\text{m}$ multi-story buildings with physical box colliders.
+* **Materials & Blackout Palette**:
+  * Dark grimy concrete facades (`grimy_concrete`) and weathered carbon steel (`sci_fi_metal`) replacing bright pastel townhouses.
+  * Blinking orange/red hazard beacons (`_add_beacon`) mounted on concrete road barriers and emergency vehicles.
+  * Deep midnight sky lighting (ambient energy $0.35$, directional moonlight $0.85$) with atmospheric distance fog ($0.0035$).
 * **Operative & Firearm Aesthetics**:
   * Skinned cybernetic operative with normalized skeletal proportions and upright combat stance ($1.02\text{m}$ shooting height).
-  * 9 authentic 3D modeled firearms scaled to realistic human dimensions ($0.48\times\text{--}0.66\times$ scale) with 5 standardized sockets (`MuzzleSocket`, `MagazineSocket`, `ScopeSocket`, `ShellEjectionSocket`, `LeftHandIKTarget`).
+  * Firing animation isolation: `_normalize_rig_tracks()` strips `mixamorig_Hips` and leg bone tracks from combat actions, maintaining upright posture across 100+ consecutive shots (`min_up_dot = 1.0`).
+  * 9 authentic 3D modeled firearms attached to right-hand `WeaponGrip` with calibrated rotation `Vector3(90, 90, 0)` and palm offset, aligning barrel strictly forward down-range along $-Z$ ($0.027^\circ$ angular error).
+  * 5 standardized sockets (`MuzzleSocket`, `MagazineSocket`, `ScopeSocket`, `ShellEjectionSocket`, `LeftHandIKTarget`).
   * Crosshair raycast convergence aligning muzzle projectile velocity with third-person reticle.
 
 ---

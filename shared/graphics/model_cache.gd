@@ -405,6 +405,16 @@ static func _normalize_rig_tracks(anim: AnimationPlayer) -> void:
 		var a = anim.get_animation(a_name)
 		if not a:
 			continue
+		var a_lower = a_name.to_lower()
+		var is_action = ("aim" in a_lower or "fire" in a_lower or "reload" in a_lower or "hit" in a_lower or "shoot" in a_lower)
+		if is_action:
+			# Isolate upper-body bones: strip hips and lower limbs so actions never pitch or rotate the skeleton horizontally
+			for t in range(a.get_track_count() - 1, -1, -1):
+				var p = str(a.track_get_path(t))
+				if "mixamorig_Hips" in p or "Leg" in p or "Foot" in p or "Toe" in p:
+					a.remove_track(t)
+			continue
+
 		for t in range(a.get_track_count()):
 			if "mixamorig_Hips" in str(a.track_get_path(t)) and a.track_get_type(t) == Animation.TYPE_POSITION_3D:
 				var k_count = a.track_get_key_count(t)

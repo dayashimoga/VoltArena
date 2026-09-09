@@ -676,5 +676,37 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Expanded function test coverage to **96.1%** (744 / 774 functions).
   - Successfully exported fresh desktop binaries (`VoltArena.exe` 151.8 MB, `VoltArena.x86_64` 133.7 MB) and Cloudflare-compliant Web packages (chunks $\le 18$ MB).
 
+## [8.4.0-drift-storm-track-authority-and-physics-overhaul] - 2026-09-09
+
+### Fixed & Re-Engineered
+- **P0 Single Track Authority Model (RaceSpline)**:
+  - Created `RaceSpline` (`games/kart-racing/tracks/race_spline.gd`) with dense $0.5\text{m}$ arc-length sampling, centerline positions, forward tangents, surface normals, binormals, drivable bounds, and safe respawn transforms.
+  - Unified track generation, collision foundation, AI racing lines, wrong-way detection, minimap rendering, and lap timing into a single authoritative pipeline.
+- **P0 Surface Material Hierarchy & Triangle Normal Correction**:
+  - Identified root cause of green turf race surface: inverted clockwise vertex winding in `track_generator.gd` produced downward normals $(0, -1, 0)$, triggering backface culling (`CULL_BACK`) from the chase camera and exposing the green turf box below.
+  - Corrected road quad triangles to counter-clockwise winding, enforced `set_normal(Vector3.UP)`, generated tangents, and set `cull_mode = CULL_DISABLED` on `asphalt_lanes` and `curb_blue_white`.
+  - Replaced turf box with dark paddock tarmac, kerb rumble strips, and gravel runoff zones.
+- **P0 4-Wheel Raycast Suspension & Zero-Hover Telemetry**:
+  - Resolved visual hovering defect: karts collided with invisible road colliders at $y = 0.0$ and cast shadows on turf at $y = -0.15\text{m}$.
+  - Added 4-wheel downward raycast suspension system (`SuspensionRay_0..3`) at $(\pm 0.42, 0.12, \pm 0.58)$ with $0.28\text{m}$ rest length and $0.12\text{m}$ compression travel.
+  - Implemented dynamic wheel roll rotation ($\omega = v/r$), front wheel steering yaw ($\pm 28^\circ$), and suspension deflection.
+  - Added real-time telemetry: `wheel_contact_count`, `ground_distance`, `suspension_compression`, `surface_normal`, `vehicle_speed`, `nearest_spline_distance`.
+- **P0 Authoritative Wrong-Way Detection**:
+  - Replaced checkpoint index difference checks with continuous `RaceSpline` projection.
+  - Gated wrong-way warnings behind planar dot product $\vec{F} \cdot \vec{T} < -0.30$, forward speed $>3.0\text{ m/s}$, track corridor bounds, and $0.6\text{s}$ debounce.
+  - Added rapid decay hysteresis and automatic clearance when facing forward. Zero false warnings on full clockwise laps.
+- **P0 Three Distinct Production Circuits**:
+  - Built **Volt Speedway** (Stadium raceway, $755\text{m}$, pit gantry, grandstands, Armco barriers, chicane, banked hairpin).
+  - Built **Canyon Run** (Desert mountain circuit, $848\text{m}$, red-rock sandstone formations, mountain tunnels, elevation changes, wooden crash rails).
+  - Built **Skyline Drift** (High-tech metropolis night circuit, $812\text{m}$, viaducts, skyscrapers, $90^\circ$ and $180^\circ$ drift bends, concrete barriers).
+- **P0 AI Racing Overhaul & Minimap Canvas**:
+  - Overhauled `KartAI` with curvature-based trail braking, dynamic lookahead ($10\text{--}26\text{m}$), lateral lane offsets, slipstream overtaking, and multi-tier stuck recovery.
+  - Rebuilt `CircuitMinimapCanvas` to render 64-sample vector ribbon, finish line, player heading chevron, and color-coded opponent markers.
+- **Master Test Verification & Release Packaging**:
+  - Authored `TestDriftStormRuntimeAcceptance` with 7 P0 gate test methods (57 assertions).
+  - Master test runner executed: **59 test suites, 1,850+ passed assertions, 0 failures (100% pass rate), 96.4% function coverage (756 / 784 functions)**.
+  - Re-exported release packages: Windows (`export/windows/VoltArena.exe`), Linux (`export/linux/VoltArena.x86_64`), Web (`export/web/`).
+
+
 
 

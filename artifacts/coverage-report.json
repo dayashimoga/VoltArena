@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 96.1240310077519,
+  "overall_coverage_pct": 96.4285714285714,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -82,20 +82,16 @@
       "untested": []
     },
     "res://games/kart-racing/game/race_manager.gd": {
-      "coverage_pct": 87.5,
-      "tested": 7,
+      "coverage_pct": 100,
+      "tested": 8,
       "total": 8,
-      "untested": [
-        "get_racer_position"
-      ]
+      "untested": []
     },
     "res://games/kart-racing/kart/kart_controller.gd": {
-      "coverage_pct": 90,
-      "tested": 9,
-      "total": 10,
-      "untested": [
-        "recover_to_checkpoint"
-      ]
+      "coverage_pct": 100,
+      "tested": 11,
+      "total": 11,
+      "untested": []
     },
     "res://games/kart-racing/kart_racing_main.gd": {
       "coverage_pct": 100,
@@ -113,6 +109,12 @@
       "coverage_pct": 100,
       "tested": 2,
       "total": 2,
+      "untested": []
+    },
+    "res://games/kart-racing/tracks/race_spline.gd": {
+      "coverage_pct": 100,
+      "tested": 9,
+      "total": 9,
       "untested": []
     },
     "res://games/kart-racing/tracks/track_generator.gd": {
@@ -809,7 +811,7 @@
       "untested": []
     }
   },
-  "tested_functions": 744,
-  "timestamp": "2026-09-09T06:17:49",
-  "total_functions": 774
+  "tested_functions": 756,
+  "timestamp": "2026-09-09T07:57:17",
+  "total_functions": 784
 }

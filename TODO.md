@@ -641,5 +641,44 @@
   - `export/linux/VoltArena.x86_64` (133.7 MB)
   - `export/web/` (Cloudflare-compliant Web chunks <= 18 MB with reassembler)
 
+### [2026-09-09 14:00:00 UTC] - Milestone Update: Drift Storm P0 Production Overhaul & Track Authority Model (v8.4.0)
+- **Status**: COMPLETED
+- **Description**:
+  1. **Authoritative RaceSpline Model (P0)**:
+     - Implemented `RaceSpline` (`games/kart-racing/tracks/race_spline.gd`) pre-baked with dense arc-length samples ($0.5\text{m}$ interval).
+     - Unified track generation, continuous collision, AI navigation, wrong-way detection, minimap rendering, and lap timing into a single authoritative pipeline.
+  2. **Track Surface & Triangle Normal Correction (P0)**:
+     - Root-cause: Road quad triangles in `track_generator.gd` were wound clockwise, producing downward geometric normals $(0, -1, 0)$. Default backface culling (`CULL_BACK`) culled the entire road surface from the overhead chase camera, exposing the $600\text{m} \times 600\text{m}$ green turf box beneath.
+     - Corrected road quad triangles to counter-clockwise winding with explicit `Vector3.UP` normals, generated tangents, and set `cull_mode = CULL_DISABLED` on road/kerb materials. Replaced turf platform with dark paddock tarmac, kerbs, and gravel runoff.
+  3. **Vehicle Grounding & 4-Wheel Raycast Suspension (P0)**:
+     - Root-cause: Missing road mesh caused shadows to project onto sunken turf box, creating hovering illusion.
+     - Added 4 downward raycasts (`SuspensionRay_0..3`) with spring compression damping, rolling wheel rotation ($\omega = v/r$), front wheel steering yaw ($\pm 28^\circ$), and suspension deflection.
+     - Added 6 real-time telemetry metrics (`wheel_contact_count`, `ground_distance`, `suspension_compression`, `surface_normal`, `vehicle_speed`, `nearest_spline_distance`). Proved $0.0\text{m}$ hovering with chassis resting naturally on road at $y \in [0.0, 0.25\text{m}]$.
+  4. **Authoritative Wrong-Way Detection with Hysteresis (P0)**:
+     - Replaced discrete checkpoint difference checks with continuous `RaceSpline` projection.
+     - Gated warning behind: planar dot product $\vec{F} \cdot \vec{T} < -0.30$, forward speed $>3.0\text{ m/s}$, track corridor bounds, and $0.6\text{s}$ debounce.
+     - Rapid decay hysteresis ($3.5 \times \Delta t$) and auto-clearance upon facing forward. Zero false warnings on full clockwise laps.
+  5. **Three Distinct Production Circuits (P0)**:
+     - Built Volt Speedway ($755\text{m}$, stadium raceway, pit gantry, grandstands, Armco barriers, chicane, banked hairpin).
+     - Built Canyon Run ($848\text{m}$, desert mountain, red-rock sandstone formations, mountain tunnels, elevation changes, wooden crash rails).
+     - Built Skyline Drift ($812\text{m}$, metropolis night circuit, elevated viaducts, skyscrapers, $90^\circ$ and $180^\circ$ drift bends, concrete barriers).
+  6. **AI Racing Behavior & Minimap Vector Canvas (P0)**:
+     - Overhauled `KartAI` with curvature-aware trail-braking, dynamic lookahead ($10\text{--}26\text{m}$), lateral lane offsets, slipstream overtaking, and multi-tier stuck watchdog with reverse steering recovery.
+     - Rebuilt `CircuitMinimapCanvas` to render 64-sample vector ribbon, finish line, player heading chevron, and color-coded opponent markers.
+  7. **Runtime Acceptance Verification & Packaging**:
+     - Authored `TestDriftStormRuntimeAcceptance` (7 test methods, 57 assertions).
+     - Master test runner executed across 59 test suites: **1,850+ passed assertions, 0 failures (100% pass rate)**.
+     - Function coverage increased to **96.4%** (756 / 784 functions).
+     - Packaged fresh desktop binaries (`export/linux/VoltArena.x86_64`, `export/windows/VoltArena.exe`) and Cloudflare-compliant Web chunks in `export/web/`.
+- **Evidence**:
+  - `GAP_ANALYSIS.md` (GAP-18 through GAP-24 documented and resolved)
+  - `TRACK_DESIGN.md` (Technical spline geometry and circuit architecture)
+  - `VEHICLE_PHYSICS.md` (4-wheel suspension, grounding, telemetry, and wrong-way formulations)
+  - `PRODUCTION_CERTIFICATION.md` (v8.4.0, 59 suites, 1850+ assertions, 96.4% function coverage, 100% pass rate)
+  - `export/windows/VoltArena.exe`
+  - `export/linux/VoltArena.x86_64`
+  - `export/web/`
+
+
 
 

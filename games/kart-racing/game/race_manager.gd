@@ -103,10 +103,33 @@ func on_kart_hit_checkpoint(kart: Node, checkpoint_idx: int) -> void:
 	_on_checkpoint_hit(kart, checkpoint_idx)
 
 func update_race_positions() -> void:
-	# Sort racers by total progress score
-	racers.sort_custom(func(a, b):
-		return a.total_checkpoints_hit > b.total_checkpoints_hit
-	)
+	var spline: RefCounted = null
+	var p = get_parent()
+	while p:
+		var tg = p.get_node_or_null("TrackGenerator")
+		if tg and tg.get("race_spline"):
+			spline = tg.race_spline
+			break
+		p = p.get_parent()
+	if not spline and get_tree() and get_tree().root:
+		var tg = get_tree().root.find_child("TrackGenerator", true, false)
+		if tg and tg.get("race_spline"):
+			spline = tg.race_spline
+
+	if spline and spline.track_length > 0.0:
+		var track_len = spline.track_length
+		racers.sort_custom(func(a, b):
+			var a_pos = a.global_position if a.is_inside_tree() else a.position
+			var b_pos = b.global_position if b.is_inside_tree() else b.position
+			var prog_a = float(a.current_lap - 1) * track_len + spline.get_closest_distance(a_pos)
+			var prog_b = float(b.current_lap - 1) * track_len + spline.get_closest_distance(b_pos)
+			return prog_a > prog_b
+		)
+	else:
+		racers.sort_custom(func(a, b):
+			return a.total_checkpoints_hit > b.total_checkpoints_hit
+		)
+
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	for i in range(racers.size()):
 		var r = racers[i]

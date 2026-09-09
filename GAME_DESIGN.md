@@ -121,3 +121,56 @@ graph TD
   - Dark grimy concrete facades and weathered carbon steel replacing bright pastel townhouses.
   - Blinking orange/red hazard beacons on roadblocks and disabled emergency vehicle lightbars.
   - Disabled commercial neon signage, burning debris, and selective emergency lighting.
+
+---
+
+## 9. Drift Storm — Arcade Kart Racing (Title 4)
+
+### 9.1 Title Overview & Core Gameplay Loop
+* **Title**: DRIFT STORM
+* **Genre**: High-Octane Arcade Kart Racing
+* **Platform**: Godot 4.3 Stable (GL Compatibility, Desktop & Web)
+* **Core Loop**:
+  ```mermaid
+  graph TD
+      Select[Select Vehicle & Circuit] --> Grid[Grid Spawn & Starting Light Gantry]
+      Grid --> Countdown[3-2-1-GO Simultaneous Release]
+      Countdown --> Race[3-Lap Multi-Tier Competition]
+      Race --> Drift[Powerslide & Mini-Turbo Generation]
+      Drift --> Overtake[Slipstream & Overtake Competitors]
+      Overtake --> Gates[Continuous Checkpoint Progression]
+      Gates --> Lap[Complete 3 Laps]
+      Lap --> Finish[Checkered Flag & Final Results]
+      Finish --> Podium[Podium Ceremony & Leaderboard Save]
+  ```
+
+### 9.2 Authoritative RaceSpline & Track Hierarchy
+All race mechanics derive strictly from a single authoritative `RaceSpline` model:
+- Dense arc-length sample cache ($0.5\text{m}$ resolution) providing centerline position $\vec{P}(s)$, forward tangent $\vec{T}(s)$, surface normal $\vec{N}(s)$, lateral binormal $\vec{B}(s)$, and drivable width bounds.
+- Eliminates fragmented logic across collision, AI navigation lines, wrong-way detection, minimap generation, and position tracking.
+- Watertight collision generated via continuous road foundations with zero internal seams or collision steps.
+
+### 9.3 Three Production Circuits
+1. **Volt Speedway**: Professional Grand Prix stadium raceway ($755\text{m}$, 504 samples), high-speed pit straight, start/finish gantry, spectator grandstands, Armco barriers, asphalt ribbon with blue/white kerb strips, chicane and banked hairpin.
+2. **Canyon Run**: Rugged mountain desert circuit ($848\text{m}$, 566 samples), red-rock sandstone formations, mountain tunnels, elevation changes, wooden crash rails, and gravel runoff.
+3. **Skyline Drift**: High-tech metropolis night circuit ($812\text{m}$, 542 samples), elevated highway overpasses, neon-lit skyscrapers, tight $90^\circ$ and $180^\circ$ drift bends, concrete barriers, and street lighting.
+
+### 9.4 Vehicle Archetypes & 4-Wheel Physics
+- **4 Archetypes**:
+  - *Phantom*: Top speed $30\text{ m/s}$, mass $750\text{ kg}$, straight-line specialist.
+  - *Enforcer*: High acceleration $28\text{ m/s}^2$, mass $920\text{ kg}$, corner exit torque.
+  - *Drifter*: Drift boost multiplier $1.35$, steering $3.0\text{ rad/s}$, mini-turbo master.
+  - *All-Rounder*: Balanced attributes ($26\text{ m/s}$ top speed, $25\text{ m/s}^2$ accel) for all circuits.
+- **Physics Suspension**: 4 physical raycasts at wheel contact patches with spring-damper compression ($0.28\text{m}$ rest, $0.12\text{m}$ travel), rolling wheel animation ($\omega = v/r$), front wheel steering yaw ($\pm 28^\circ$), and zero hover ($y = 0.08\text{m}$ chassis rest).
+- **Telemetry System**: Real-time tracking of `wheel_contact_count`, `ground_distance`, `suspension_compression`, `surface_normal`, `vehicle_speed`, and `nearest_spline_distance`.
+
+### 9.5 Authoritative Wrong-Way System
+- Continuous planar projection of forward vector $\vec{F}$ against spline tangent $\vec{T}$.
+- Triggers **ONLY** when: $\vec{F} \cdot \vec{T} < -0.30$, forward speed $>3.0\text{ m/s}$, vehicle is within track corridor, and condition persists $>0.6\text{s}$.
+- Rapid decay hysteresis and immediate auto-clearance upon facing forward. Zero false warnings on valid clockwise laps.
+
+### 9.6 AI Competitors & HUD
+- **AI Navigation**: Curvature-aware lookahead steering ($10\text{--}26\text{m}$), trail-braking, lateral lane separation, slipstream draft overtaking, and stuck watchdog unjamming.
+- **Dynamic Minimap Canvas**: 64-sample vector track ribbon with player chevron, finish line, and real-time color-coded opponent markers derived directly from `RaceSpline`.
+- **Race Position**: Continuous distance-based progress sorting: $\text{prog} = (\text{lap}-1) \cdot L + s$.
+

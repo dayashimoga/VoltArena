@@ -96,6 +96,7 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.albedo_texture = TexSynth.get_texture("curb_stripes_red_white")
 			mat.roughness = 0.60
 			mat.metallic = 0.05
+			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 			mat.uv1_scale = Vector3(8.0, 1.0, 1.0)
 		"asphalt_lanes":
 			mat.albedo_color = Color(0.95, 0.95, 0.98)
@@ -104,6 +105,7 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.normal_texture = TexSynth.get_texture("asphalt_normal")
 			mat.metallic = 0.12
 			mat.roughness = 0.72
+			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 		"racing_barrier", "armco_barrier":
 			mat.albedo_color = Color(0.90, 0.92, 0.95)
 			mat.albedo_texture = TexSynth.get_texture("armco_barrier_albedo")

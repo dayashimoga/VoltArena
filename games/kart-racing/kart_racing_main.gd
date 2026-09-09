@@ -113,6 +113,8 @@ func setup_scene() -> void:
 	track_generator.track_theme = selected_track
 	track_generator.track_built.connect(_on_track_built)
 	add_child(track_generator)
+	if not is_inside_tree():
+		track_generator._ready()
 
 func _on_track_built(waypoints: Array, checkpoints: Array) -> void:
 	# Provide waypoints to AI
@@ -179,13 +181,18 @@ func update_camera(delta: float) -> void:
 	var k_pos = player_kart.global_position if player_kart.is_inside_tree() else player_kart.position
 	var k_fwd = -player_kart.global_transform.basis.z if player_kart.is_inside_tree() else -player_kart.transform.basis.z
 
-	var target_cam = k_pos - k_fwd * 6.5 + Vector3(0, 2.8, 0)
+	# Dynamic speed-based FOV and lookahead
+	var speed_ratio = clampf(absf(player_kart.forward_speed) / 38.0, 0.0, 1.0)
+	var target_fov = lerpf(70.0, 84.0, speed_ratio)
+	camera.fov = lerpf(camera.fov, target_fov, delta * 5.0)
+
+	var target_cam = k_pos - k_fwd * (6.5 + speed_ratio * 1.5) + Vector3(0, 2.6, 0)
 	if camera.is_inside_tree():
-		camera.global_position = camera.global_position.lerp(target_cam, delta * 10.0)
-		camera.look_at(k_pos + Vector3(0, 1.0, 0), Vector3.UP)
+		camera.global_position = camera.global_position.lerp(target_cam, delta * 12.0)
+		camera.look_at(k_pos + Vector3(0, 0.9, 0), Vector3.UP)
 	else:
-		camera.position = camera.position.lerp(target_cam, delta * 10.0)
-		camera.look_at_from_position(camera.position, k_pos + Vector3(0, 1.0, 0), Vector3.UP)
+		camera.position = camera.position.lerp(target_cam, delta * 12.0)
+		camera.look_at_from_position(camera.position, k_pos + Vector3(0, 0.9, 0), Vector3.UP)
 
 func _on_race_finished(winner: Node) -> void:
 	var won = (winner == player_kart)

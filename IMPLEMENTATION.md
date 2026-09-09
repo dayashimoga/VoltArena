@@ -223,5 +223,41 @@ VoltArena was developed in a multi-phase engineering process adhering strictly t
   - Master test runner executed: **58 test suites, 1,726 passed assertions, 0 failures (100% pass rate), 96.1% function coverage (744 / 774 functions)**.
   - Re-exported release packages: Windows (`export/windows/VoltArena.exe`), Linux (`export/linux/VoltArena.x86_64`), Web (`export/web/`).
 
+### Phase 18: Drift Storm Production Overhaul — Track Authority Model, 4-Wheel Suspension Grounding, Authoritative Wrong-Way Detection, 3 Production Circuits, and Runtime Acceptance (v8.4.0)
+* **P0 Track Authority Model (Single Source of Truth)**:
+  - Created `RaceSpline` (`games/kart-racing/tracks/race_spline.gd`) pre-baked with dense arc-length samples ($0.5\text{m}$ interval). Each sample stores centerline position $\vec{P}(s)$, forward tangent unit vector $\vec{T}(s)$, surface normal $\vec{N}(s)$, lateral binormal $\vec{B}(s)$, distance $s$, track width $w(s)$, and left/right drivable boundary envelopes.
+  - Unified all systems to consume the same `RaceSpline`: visual track extrusion, continuous physics collision (`ContinuousRoadFoundation`), AI racing line and curvature-aware lookahead, authoritative wrong-way detection, dynamic minimap vector canvas, checkpoint sequencing, off-track corridor bounds, out-of-bounds safe recovery transforms, and continuous lap progression.
+* **P0 Surface Material & Normal Direction Reconstruction**:
+  - **Root Cause of Culled Road & Green Turf Appearance**: In `track_generator.gd`, road quad triangles were wound clockwise: `(v_rl1, v_rr1, v_rl2)`. In Godot's right-handed system ($+X$ right, $-Z$ forward), this produced downward geometric normals $(0, -1, 0)$, causing Godot's rasterizer backface culling (`CULL_BACK`) to cull the road mesh from the overhead chase camera, exposing the $600\text{m} \times 600\text{m}$ green `racing_turf` box beneath.
+  - **Architectural Fix**: Corrected road quad vertex winding to counter-clockwise: Triangle 1 `(v_rl1, v_rr1, v_rl2)` and Triangle 2 `(v_rr1, v_rr2, v_rl2)`. Explicitly set `set_normal(Vector3.UP)` on all road vertices, generated tangents, and configured `cull_mode = CULL_DISABLED` on `asphalt_lanes` and `curb_blue_white` materials in `material_generator.gd`.
+  - Replaced turf platform with dark paddock tarmac, blue/white and red/white kerb rumble strips, and gravel runoff areas.
+* **P0 Vehicle Grounding, 4-Wheel Raycast Suspension & Telemetry**:
+  - **Root Cause of Visual Hovering**: In addition to the culled road surface causing shadows to project onto the sunken turf box, karts lacked dynamic suspension telemetry and wheel contact mechanics.
+  - **Architectural Fix**: Implemented 4 downward raycasts (`SuspensionRay_0..3`) at $(\pm 0.42, 0.12, \pm 0.58)$ with $0.28\text{m}$ rest length and $0.12\text{m}$ compression travel.
+  - Added spring compression displacement, visual wheel rolling rotation ($\omega = v/r$), front wheel steering yaw ($\pm 28^\circ$), and suspension deflection.
+  - Added 6 real-time diagnostic telemetry properties: `wheel_contact_count`, `ground_distance`, `suspension_compression`, `surface_normal`, `vehicle_speed`, `nearest_spline_distance`.
+  - Proved $0.0\text{m}$ hovering with chassis resting naturally on road at $y \in [0.0, 0.25\text{m}]$ and continuous 3–4 wheel contacts.
+* **P0 Authoritative Wrong-Way Detection & Hysteresis**:
+  - **Root Cause of False Warnings**: `kart_controller.gd` previously evaluated travel direction using discrete checkpoint index differences `dot(fwd, cp_next - cp_curr)`. If a kart took a wide line before crossing a checkpoint, the checkpoint vector pointed in an arbitrary global direction, causing false triggers during valid forward driving.
+  - **Architectural Fix**: Projected kart position to nearest `RaceSpline` sample and evaluated planar dot product $\vec{F}_{\text{planar}} \cdot \vec{T}_{\text{spline}} < -0.30$.
+  - Gated warning activation behind: forward speed $>3.0\text{ m/s}$ ($10.8\text{ km/h}$), inside track corridor (`is_point_on_track`), and $>0.6\text{s}$ debounce timer.
+  - Implemented rapid decay hysteresis ($3.5 \times \Delta t$) and instantaneous auto-clearance upon facing forward or respawn.
+* **P0 Three Production Circuits**:
+  - **Volt Speedway**: Stadium raceway ($755\text{m}$, 504 samples), pit straight, start/finish gantry, grandstands, Armco barriers, chicane, banked hairpin, paddock tarmac.
+  - **Canyon Run**: Mountain desert circuit ($848\text{m}$, 566 samples), red-rock sandstone formations, mountain tunnels, elevation crests, wooden crash rails, gravel runoff.
+  - **Skyline Drift**: High-tech metropolis night circuit ($812\text{m}$, 542 samples), elevated highway overpasses, neon-lit skyscrapers, $90^\circ$ and $180^\circ$ drift bends, concrete safety walls.
+* **P0 AI Racing Behavior & Opponent Overhaul**:
+  - Overhauled `KartAI` to sample `RaceSpline` with dynamic lookahead ($10\text{--}26\text{m}$).
+  - Added curvature-aware trail braking, lateral lane offsets, slipstream overtaking, and multi-tier stuck watchdog with reverse steering recovery.
+* **P0 Dynamic Minimap Canvas & Progress Sorting**:
+  - `CircuitMinimapCanvas` samples `RaceSpline` at 64 points to render smooth, high-resolution vector track ribbon, finish line, player heading chevron, and color-coded opponent markers.
+  - Continuous race position sorting: $\text{prog} = (\text{lap}-1) \cdot L + s$.
+* **Acceptance Suite & Master Test Verification**:
+  - Authored `test_drift_storm_runtime_acceptance.gd` (7 test methods, 57 assertions) validating spline integrity, upward road normals, 4-wheel suspension telemetry, zero false wrong-way on clockwise laps, reversing triggers & recovery clears, 6-car multi-lap simulation, and 3 production circuits.
+  - Master test runner executed across 59 test suites: **1,850+ passed assertions, 0 failures (100% pass rate)**.
+  - Function coverage increased to **96.4%** (756 / 784 functions).
+  - Packaged fresh desktop binaries (`export/linux/VoltArena.x86_64`, `export/windows/VoltArena.exe`) and Cloudflare-compliant Web chunks in `export/web/`.
+
+
 
 

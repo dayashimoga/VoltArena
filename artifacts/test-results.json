@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 96.1240310077519,
-  "coverage_tested_functions": 744,
-  "coverage_total_functions": 774,
-  "execution_seconds": 45.11,
+  "coverage_percent": 96.4285714285714,
+  "coverage_tested_functions": 756,
+  "coverage_total_functions": 784,
+  "execution_seconds": 61.792,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -33,6 +33,11 @@
     "Drift Storm E2E": {
       "failed": 0,
       "passed": 67,
+      "status": "PASS"
+    },
+    "Drift Storm Runtime Acceptance (P0 Gates)": {
+      "failed": 0,
+      "passed": 57,
       "status": "PASS"
     },
     "Enemy Archetypes Unit": {
@@ -296,8 +301,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-09T06:17:49",
+  "timestamp": "2026-09-09T07:57:17",
   "total_failed": 0,
-  "total_passed": 1726,
-  "total_suites": 58
+  "total_passed": 1783,
+  "total_suites": 59
 }

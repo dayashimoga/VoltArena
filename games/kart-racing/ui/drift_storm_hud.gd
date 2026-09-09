@@ -42,10 +42,17 @@ class CircuitMinimapCanvas extends Control:
 		if not tree:
 			return
 
-		if circuit_waypoints.is_empty():
-			var tg = tree.root.find_child("TrackGenerator", true, false)
-			if tg and not tg.waypoints.is_empty():
-				circuit_waypoints = tg.waypoints
+		var tg = tree.root.find_child("TrackGenerator", true, false) if tree and tree.root else null
+		var spline = tg.get("race_spline") if tg else null
+
+		if spline and spline.samples.size() >= 10:
+			if circuit_waypoints.is_empty():
+				var n_pts = 64
+				for j in range(n_pts):
+					var s = (float(j) / float(n_pts)) * spline.track_length
+					circuit_waypoints.append(spline.sample_at_distance(s)["pos"])
+		elif circuit_waypoints.is_empty() and tg and not tg.waypoints.is_empty():
+			circuit_waypoints = tg.waypoints
 
 		if circuit_waypoints.size() < 3:
 			return
@@ -80,17 +87,28 @@ class CircuitMinimapCanvas extends Control:
 		for i in range(num_pts):
 			var p1 = to_canvas.call(circuit_waypoints[i])
 			var p2 = to_canvas.call(circuit_waypoints[(i + 1) % num_pts])
-			draw_line(p1, p2, Color(0.18, 0.45, 0.75, 0.9), 3.5)
+			draw_line(p1, p2, Color(0.20, 0.48, 0.85, 0.95), 4.0)
 
+		# Start/Finish line marker on map
 		if num_pts > 0:
 			var s_pos = to_canvas.call(circuit_waypoints[0])
-			draw_circle(s_pos, 4.0, Color(1.0, 1.0, 1.0))
+			draw_circle(s_pos, 4.5, Color(1.0, 1.0, 1.0))
 
+		# AI opponents with distinct livery colors
+		var ai_colors = [
+			Color(1.0, 0.45, 0.05), # Blaze Orange
+			Color(0.95, 0.15, 0.25), # Crimson Red
+			Color(0.80, 0.20, 1.0),  # Neon Purple
+			Color(0.20, 0.95, 0.35), # Acid Green
+			Color(1.0, 0.85, 0.10)   # Solar Gold
+		]
 		var ai_list = tree.get_nodes_in_group("ai_racers")
-		for ai in ai_list:
+		for idx in range(ai_list.size()):
+			var ai = ai_list[idx]
 			if is_instance_valid(ai):
 				var ai_pos = to_canvas.call(ai.global_position)
-				draw_circle(ai_pos, 3.5, Color(1.0, 0.35, 0.15))
+				var c = ai_colors[idx % ai_colors.size()]
+				draw_circle(ai_pos, 3.5, c)
 
 		if not is_instance_valid(player_ref):
 			var p_list = tree.get_nodes_in_group("players")
@@ -102,9 +120,9 @@ class CircuitMinimapCanvas extends Control:
 			var p_fwd = -player_ref.global_transform.basis.z
 			p_fwd.y = 0.0
 			p_fwd = p_fwd.normalized()
-			var p_arrow = Vector2(p_fwd.x, p_fwd.z) * 8.0
-			draw_circle(p_pos, 5.0, Color(0.2, 1.0, 0.4))
-			draw_line(p_pos, p_pos + p_arrow, Color(0.2, 1.0, 0.4), 2.0)
+			var p_arrow = Vector2(p_fwd.x, p_fwd.z) * 9.0
+			draw_circle(p_pos, 5.0, Color(0.0, 0.95, 1.0)) # Volt Cyan
+			draw_line(p_pos, p_pos + p_arrow, Color(1.0, 1.0, 1.0), 2.5)
 
 func _ready() -> void:
 	anchor_right = 1.0

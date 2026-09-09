@@ -65,6 +65,7 @@ const TestArenaE2EScript = preload("res://tests/e2e/test_arena_e2e.gd")
 const TestSubwayE2EScript = preload("res://tests/e2e/test_subway_e2e.gd")
 const TestRocketE2EScript = preload("res://tests/e2e/test_rocket_e2e.gd")
 const TestKartE2EScript = preload("res://tests/e2e/test_kart_e2e.gd")
+const TestDriftStormRuntimeAcceptanceScript = preload("res://games/kart-racing/tests/test_drift_storm_runtime_acceptance.gd")
 const TestSkyboundE2EScript = preload("res://tests/e2e/test_skybound_e2e.gd")
 const TestRoboForgeE2EScript = preload("res://tests/e2e/test_roboforge_e2e.gd")
 const TestWildCircuitE2EScript = preload("res://tests/e2e/test_wildcircuit_e2e.gd")
@@ -145,6 +146,7 @@ func _init() -> void:
 		{"name": "Metro Siege E2E", "instance": TestSubwayE2EScript.new()},
 		{"name": "Nitro Kick E2E", "instance": TestRocketE2EScript.new()},
 		{"name": "Drift Storm E2E", "instance": TestKartE2EScript.new()},
+		{"name": "Drift Storm Runtime Acceptance (P0 Gates)", "instance": TestDriftStormRuntimeAcceptanceScript.new()},
 		{"name": "Skybound Odyssey E2E", "instance": TestSkyboundE2EScript.new()},
 		{"name": "RoboForge Arena E2E", "instance": TestRoboForgeE2EScript.new()},
 		{"name": "WildCircuit E2E", "instance": TestWildCircuitE2EScript.new()},

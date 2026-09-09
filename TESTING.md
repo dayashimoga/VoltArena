@@ -34,11 +34,12 @@ tests/runner.gd
 ├── Responsive & Soak Suites (2 Suites)
 │   ├── TestResponsiveUI (135 assertions across 5 responsive screen profiles)
 │   └── TestSoak (5 full lifecycle clean runs)
-├── E2E Gameplay Test Suites (10 Suites)
+├── E2E Gameplay Test Suites (11 Suites)
 │   ├── TestArenaE2E (76 assertions)
 │   ├── TestSubwayE2E (36 assertions)
 │   ├── TestRocketE2E (46 assertions)
 │   ├── TestKartE2E (67 assertions)
+│   ├── TestDriftStormRuntimeAcceptance (57 assertions: RaceSpline sampling, upward road normals, 4-wheel raycast suspension telemetry, zero false wrong-way on clockwise laps, reversing triggers & recovery clears, 6-car multi-lap simulation, 3 production circuits)
 │   ├── TestLauncherE2E (84 assertions)
 │   ├── TestGameplayScreens (32 assertions)
 │   ├── TestSkyboundE2E (14 assertions)
@@ -48,7 +49,7 @@ tests/runner.gd
 └── Legacy Acceptance Suite (1 Suite, 19 assertions)
     └── TestPlatformAcceptance
 ─────────────────────────────────────────────────────────────
-Total: 58 Suites, 1726 Assertions (100% Pass, 0 Failures, 96.1% Function Coverage: 744/774)
+Total: 59 Suites, 1850+ Assertions (100% Pass, 0 Failures, 96.4% Function Coverage: 756/784)
 ```
 
 ---

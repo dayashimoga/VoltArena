@@ -45,6 +45,27 @@
 | **Use Powerup** | `E` or `Right Mouse Button` | Fire or deploy collected powerup item |
 | **Look Back** | `C` | Glance backward at trailing racers |
 
+### 1.4 Third-Person Run-and-Gun (Strike Vector)
+| Action | Key / Mouse Binding | Description |
+| :--- | :--- | :--- |
+| **Move Forward** | `W` / `Up Arrow` | Move forward along camera heading |
+| **Move Backward** | `S` / `Down Arrow` | Move backward along camera heading |
+| **Strafe Left / Right** | `A` / `D` | Step left or right |
+| **Camera Look / Aim** | `Mouse Movement` | Orbit third-person shoulder camera (click to lock cursor) |
+| **Primary Fire** | `Left Mouse Button` | Fire active weapon with crosshair convergence |
+| **Aim Down Sights (ADS)**| `Right Mouse Button` | Shoulder zoom, tightens spread, locks character yaw to aim |
+| **Sprint** | `Left Shift` | Sprint forward at $9.2\text{ m/s}$ |
+| **Crouch / Slide** | `C` or `Left Ctrl` | Crouch; trigger slide-fire when running fast |
+| **Jump** | `Space` | Jump vertically with 0.15s coyote & input buffering |
+| **Dodge Roll** | `Q` or `Shift` + Direction | Rapid evasive roll |
+| **Ledge Mantle** | `Auto` | Mantle onto elevated cover or container edges |
+| **Reload** | `R` | Reload weapon magazine |
+| **Grenade** | `G` | Throw offensive fragmentation grenade |
+| **Select Weapons 1–9** | `1` through `9` | Instant access to 9 distinct firearms |
+| **Cycle Weapon** | `Mouse Wheel Up / Down` | Cycle weapon inventory |
+| **Tactical Satellite Map**| `M` | Toggle full-screen tactical mission schematic |
+| **Pause Menu** | `Escape` | Open in-game menu and release mouse cursor |
+
 ---
 
 ## 2. Gamepad / Controller Mappings (Xbox / PlayStation)

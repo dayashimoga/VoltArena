@@ -393,7 +393,37 @@ static func _ensure_animation_player(root: Node3D) -> AnimationPlayer:
 			break
 	if not anim:
 		anim = root.find_child("*AnimationPlayer*", true, false) as AnimationPlayer
+	if anim:
+		_normalize_rig_tracks(anim)
 	return anim
+
+static func _normalize_rig_tracks(anim: AnimationPlayer) -> void:
+	if not anim or anim.has_meta("tracks_normalized"):
+		return
+	anim.set_meta("tracks_normalized", true)
+	for a_name in anim.get_animation_list():
+		var a = anim.get_animation(a_name)
+		if not a:
+			continue
+		var a_lower = a_name.to_lower()
+		var is_action = ("aim" in a_lower or "fire" in a_lower or "reload" in a_lower or "hit" in a_lower or "shoot" in a_lower)
+		if is_action:
+			# Isolate upper-body bones: strip hips and lower limbs so actions never pitch or rotate the skeleton horizontally
+			for t in range(a.get_track_count() - 1, -1, -1):
+				var p = str(a.track_get_path(t))
+				if "mixamorig_Hips" in p or "Leg" in p or "Foot" in p or "Toe" in p:
+					a.remove_track(t)
+			continue
+
+		for t in range(a.get_track_count()):
+			if "mixamorig_Hips" in str(a.track_get_path(t)) and a.track_get_type(t) == Animation.TYPE_POSITION_3D:
+				var k_count = a.track_get_key_count(t)
+				if k_count > 0:
+					var k0: Vector3 = a.track_get_key_value(t, 0)
+					if k0.z < 10.0 and k0.y > 0.5:
+						for k in range(k_count):
+							var val: Vector3 = a.track_get_key_value(t, k)
+							a.track_set_key_value(t, k, Vector3(val.x * 100.0, -val.z * 100.0, val.y * 100.0))
 
 static func play_animation(root: Node3D, anim_name: String, blend_time: float = 0.2) -> bool:
 	if not root or not is_instance_valid(root):
@@ -413,7 +443,24 @@ static func _resolve_animation_name(anim: AnimationPlayer, generic_name: String)
 	var anim_list = anim.get_animation_list()
 	var g_lower = generic_name.to_lower()
 
-	# 1. Locomotion / Moving requests (walk, run, sprint, patrol, seek, strafe)
+	# 1. Direct exact or case-insensitive match
+	if anim.has_animation(generic_name):
+		return generic_name
+	for a in anim_list:
+		if a.to_lower() == g_lower:
+			return a
+
+	# 2. Locomotion / Moving requests (walk, run, sprint, patrol, seek, strafe)
+	if "strafeleft" in g_lower:
+		for a in anim_list:
+			if "strafeleft" in a.to_lower(): return a
+	if "straferight" in g_lower:
+		for a in anim_list:
+			if "straferight" in a.to_lower(): return a
+	if "walkback" in g_lower or "back" in g_lower:
+		for a in anim_list:
+			if "walkback" in a.to_lower() or "back" in a.to_lower(): return a
+
 	if "run" in g_lower or "sprint" in g_lower or "seek" in g_lower or "chase" in g_lower:
 		for a in anim_list:
 			if a.to_lower() == "run" or ("run" in a.to_lower() and "walk" not in a.to_lower()):
@@ -430,18 +477,24 @@ static func _resolve_animation_name(anim: AnimationPlayer, generic_name: String)
 			if "run" in a.to_lower():
 				return a
 
-	# 2. Idle requests
+	# 3. Idle requests
 	if "idle" in g_lower or "rest" in g_lower or "stand" in g_lower:
 		for a in anim_list:
 			if "idle" in a.to_lower():
 				return a
 
-	# 3. Direct exact match check (excluding known non-upright collapsed tracks in Vanguard rig)
-	var blacklisted = ["aim", "hitreact", "fire", "reload", "strafeleft", "straferight", "walkback", "turnleft", "turnright"]
-	if anim.has_animation(generic_name) and generic_name.to_lower() not in blacklisted:
-		return generic_name
+	# 4. Action requests (aim, fire, reload)
+	if "aim" in g_lower:
+		for a in anim_list:
+			if "aim" in a.to_lower(): return a
+	if "fire" in g_lower or "shoot" in g_lower or "attack" in g_lower:
+		for a in anim_list:
+			if "fire" in a.to_lower(): return a
+	if "reload" in g_lower:
+		for a in anim_list:
+			if "reload" in a.to_lower(): return a
 
-	# 4. Safe upright fallback: prioritize verified upright animations (Idle, Walk, Run)
+	# 5. Safe upright fallback: prioritize verified upright animations (Idle, Walk, Run)
 	for a in anim_list:
 		if "idle" in a.to_lower():
 			return a

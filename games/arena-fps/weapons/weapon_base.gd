@@ -102,14 +102,17 @@ func trigger_fire(camera_ray_origin: Vector3, camera_ray_dir: Vector3) -> bool:
 					muzzle_light.visible = false
 			)
 
-	# Calculate spread
-	var spread_rad = deg_to_rad(spread_angle_deg)
-	var spread_offset = Vector3(
-		randf_range(-spread_rad, spread_rad),
-		randf_range(-spread_rad, spread_rad),
-		0.0
-	)
-	var final_dir = (camera_ray_dir + spread_offset).normalized()
+	# Calculate spread relative to camera orientation basis
+	var final_dir = camera_ray_dir.normalized()
+	if spread_angle_deg > 0.001:
+		var spread_rad = deg_to_rad(spread_angle_deg)
+		var fwd = final_dir
+		var up = Vector3.UP if absf(fwd.y) < 0.99 else Vector3.RIGHT
+		var right = fwd.cross(up).normalized()
+		var cam_up = right.cross(fwd).normalized()
+		var ox = randf_range(-spread_rad, spread_rad)
+		var oy = randf_range(-spread_rad, spread_rad)
+		final_dir = (fwd + right * ox + cam_up * oy).normalized()
 
 	if is_hitscan:
 		perform_hitscan(camera_ray_origin, final_dir)
@@ -140,7 +143,27 @@ func perform_hitscan(origin: Vector3, dir: Vector3) -> void:
 	var end_point = origin + dir * 200.0
 	var exclude = [owner_entity.get_rid()] if owner_entity else []
 	var query = PhysicsRayQueryParameters3D.create(origin, end_point, GameConstants.LAYER_WORLD | GameConstants.LAYER_ENEMIES | GameConstants.LAYER_PLAYER, exclude)
+	query.hit_from_inside = true
 	var result = space.intersect_ray(query)
+
+	# Fallback for point-blank combat (< 3.0m) where character capsule may start around or overlap the camera
+	if result.is_empty():
+		var shape_query = PhysicsShapeQueryParameters3D.new()
+		var sphere = SphereShape3D.new()
+		sphere.radius = 0.45
+		shape_query.shape = sphere
+		shape_query.transform = Transform3D(Basis(), origin + dir * 1.5)
+		shape_query.collision_mask = GameConstants.LAYER_ENEMIES | GameConstants.LAYER_PLAYER
+		shape_query.exclude = exclude
+		var hits = space.intersect_shape(shape_query, 4)
+		for hit in hits:
+			var col = hit.collider
+			if col and col != owner_entity:
+				result = {
+					"collider": col,
+					"position": col.global_position + Vector3(0, 1.2, 0)
+				}
+				break
 
 	if not result.is_empty():
 		var col = result.collider

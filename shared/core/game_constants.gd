@@ -16,6 +16,7 @@ const GAME_ARENA_FPS: String = "arena_fps"
 const GAME_SUBWAY_SURVIVAL: String = "subway_survival"
 const GAME_ROCKET_CAR: String = "rocket_car"
 const GAME_KART_RACING: String = "kart_racing"
+const GAME_STRIKE_VECTOR: String = "strike_vector"
 
 # Game States
 enum GameState {

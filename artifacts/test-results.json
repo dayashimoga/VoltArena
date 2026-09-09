@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 96.8543046357616,
-  "coverage_tested_functions": 585,
-  "coverage_total_functions": 604,
-  "execution_seconds": 18.903,
+  "coverage_percent": 96.1240310077519,
+  "coverage_tested_functions": 744,
+  "coverage_total_functions": 774,
+  "execution_seconds": 45.11,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -92,7 +92,7 @@
     },
     "Launcher E2E": {
       "failed": 0,
-      "passed": 77,
+      "passed": 84,
       "status": "PASS"
     },
     "LauncherArt Vector Graphics Unit": {
@@ -167,7 +167,7 @@
     },
     "Puzzle Elements Unit": {
       "failed": 0,
-      "passed": 4,
+      "passed": 13,
       "status": "PASS"
     },
     "Quality Manager Unit": {
@@ -187,7 +187,7 @@
     },
     "Responsive UI Multi-Resolution": {
       "failed": 0,
-      "passed": 125,
+      "passed": 135,
       "status": "PASS"
     },
     "RoboForge Arena E2E": {
@@ -230,6 +230,41 @@
       "passed": 5,
       "status": "PASS"
     },
+    "Strike Vector AI & Bosses Unit": {
+      "failed": 0,
+      "passed": 85,
+      "status": "PASS"
+    },
+    "Strike Vector Campaign E2E": {
+      "failed": 0,
+      "passed": 224,
+      "status": "PASS"
+    },
+    "Strike Vector Campaign Unit": {
+      "failed": 0,
+      "passed": 65,
+      "status": "PASS"
+    },
+    "Strike Vector Player Unit": {
+      "failed": 0,
+      "passed": 60,
+      "status": "PASS"
+    },
+    "Strike Vector Runtime Acceptance (P0 Gates)": {
+      "failed": 0,
+      "passed": 25,
+      "status": "PASS"
+    },
+    "Strike Vector Traversal & Collision Probes": {
+      "failed": 0,
+      "passed": 98,
+      "status": "PASS"
+    },
+    "Strike Vector Visual Invariants": {
+      "failed": 0,
+      "passed": 100,
+      "status": "PASS"
+    },
     "Telemetry Manager Unit": {
       "failed": 0,
       "passed": 15,
@@ -261,8 +296,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-07T03:17:45",
+  "timestamp": "2026-09-09T06:17:49",
   "total_failed": 0,
-  "total_passed": 1043,
-  "total_suites": 51
+  "total_passed": 1726,
+  "total_suites": 58
 }

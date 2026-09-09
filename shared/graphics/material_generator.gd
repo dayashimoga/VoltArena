@@ -91,25 +91,38 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.roughness = 0.50
 			mat.uv1_triplanar = true
 			mat.uv1_scale = Vector3(1.0, 1.0, 1.0)
-		"curb_blue_white":
+		"curb_blue_white", "curb_red_white", "curb_stripes":
 			mat.albedo_color = Color(1.0, 1.0, 1.0)
-			mat.albedo_texture = TexSynth.get_texture("curb_stripes_blue_white")
+			mat.albedo_texture = TexSynth.get_texture("curb_stripes_red_white")
 			mat.roughness = 0.60
+			mat.metallic = 0.05
 			mat.uv1_scale = Vector3(8.0, 1.0, 1.0)
 		"asphalt_lanes":
-			mat.albedo_color = Color(0.90, 0.92, 0.95)
+			mat.albedo_color = Color(0.95, 0.95, 0.98)
 			mat.albedo_texture = TexSynth.get_texture("asphalt_lanes_albedo")
 			mat.normal_enabled = true
 			mat.normal_texture = TexSynth.get_texture("asphalt_normal")
-			mat.metallic = 0.10
-			mat.roughness = 0.75
-		"racing_barrier":
-			mat.albedo_color = Color(0.20, 0.25, 0.32)
-			mat.metallic = 0.85
-			mat.roughness = 0.25
-			mat.emission_enabled = true
-			mat.emission = Color(0.0, 0.85, 1.0)
-			mat.emission_energy_multiplier = 0.9
+			mat.metallic = 0.12
+			mat.roughness = 0.72
+		"racing_barrier", "armco_barrier":
+			mat.albedo_color = Color(0.90, 0.92, 0.95)
+			mat.albedo_texture = TexSynth.get_texture("armco_barrier_albedo")
+			mat.metallic = 0.75
+			mat.roughness = 0.35
+		"racing_turf", "track_grass":
+			mat.albedo_color = Color(1.0, 1.0, 1.0)
+			mat.albedo_texture = TexSynth.get_texture("racing_turf_albedo")
+			mat.roughness = 0.88
+			mat.metallic = 0.02
+			mat.uv1_triplanar = true
+			mat.uv1_scale = Vector3(0.2, 0.2, 0.2)
+		"gravel_trap":
+			mat.albedo_color = Color(1.0, 1.0, 1.0)
+			mat.albedo_texture = TexSynth.get_texture("gravel_trap_albedo")
+			mat.roughness = 0.95
+			mat.metallic = 0.02
+			mat.uv1_triplanar = true
+			mat.uv1_scale = Vector3(0.25, 0.25, 0.25)
 		"checkered_flag":
 			mat.albedo_texture = TexSynth.get_texture("checkered_flag_albedo")
 			mat.roughness = 0.5

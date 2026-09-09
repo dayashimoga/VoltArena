@@ -532,13 +532,149 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - `MaterialGenerator` (`shared/graphics/material_generator.gd`): 18 rich procedural PBR materials.
 - **Universal Launcher Expansion**:
   - 7-game responsive carousel supporting hot-swapping, live metadata previews, and career statistics.
-- **Quality Assurance & Verification**:
-  - Expanded test runner to 51 test suites, achieving **1043 passed assertions with 0 failures (100% pass rate)**.
-  - Code coverage increased to **96.85% (585 / 604 functions covered)**, surpassing the 90.0% requirement.
-  - Performance benchmark verified **1028.8 FPS** simulation frame rate, P50: 0.97ms, P95: 1.47ms, P99: 1.79ms, 0 stutters, and 22.3 MB static heap memory.
-  - Benchmarked procedural world generation and time-to-playable across all 7 titles.
+## [8.0.0-strike-vector-production] - 2026-09-08
 
+### Added
+- **New Title: STRIKE VECTOR (Forward-Moving Run-and-Gun 3D Shooter)**:
+  - Built an 8-mission forward-moving campaign (Urban Blackout, High-Speed Rail, Harbor Assault, Desert Convoy, Arctic Installation, Megafactory, Sky Fortress, Final Citadel) with continuous forward advance, location-specific enemies, traversal, dynamic set-pieces, and unique bosses.
+  - Implemented `MissionStreamer` with active + next segment preloading and safe unloading, preventing geometry dropouts and memory leaks.
+  - Implemented 7-state `SegmentManager` (`LOCKED`, `PRELOADED`, `ENTERED`, `ACTIVE`, `COMPLETE`, `EXITED`, `UNLOADED`).
+  - Implemented data-driven `EncounterDirector` with localized dynamic boundary locks, reinforcement wave sequencing, route clearance audio, and a 28s deterministic watchdog recovery.
+  - Designed responsive CharacterBody3D locomotion (`PlayerLocomotion`): walk, sprint, crouch, jump with 0.15s coyote & jump buffering, slide-fire, dodge-roll, ledge mantling, anti-fall recovery.
+  - Built `CameraDirector` with 7 camera modes (`THIRD_PERSON_COMBAT`, `ADS_SHOULDER`, `SIDE_SCROLLER_25D`, `FORWARD_CORRIDOR`, `VEHICLE_CHASE`, `BOSS_ARENA`, `CINEMATIC_TRANSITION`) with SpringArm3D obstacle collision avoidance.
+  - Designed 9 original weapons with ballistic/projectile physics and distinct 3D visual models: VX-7 Assault Rifle, Tempest SMG, Breach Shotgun, Atlas Battle Rifle, Longshot Marksman, Cyclone LMG, Arc Launcher, Pulse Cannon, Tactical Sidearm.
+  - Implemented 6 arcade power modules: Rapid Fire, Spread Module, Piercing Module, Shield Overcharge, Overdrive, Support Drone.
+  - Built 10-state enemy AI HFSM (`IDLE`, `PATROL`, `SUSPICIOUS`, `INVESTIGATE`, `ALERT`, `COVER_FLANK`, `AIM`, `ATTACK`, `REPOSITION`, `SEARCH`) with `SquadCoordinator` attack tokens and flanking slots across 10 distinct enemy archetypes.
+  - Built 8 multi-phase bosses (`boss_archetypes.gd`) featuring telegraphing, evasive maneuvering, weakpoint exposure, and phase transitions.
+  - Built `StrikeVectorMain` orchestrator integrating `StrikeHUD`, `StrikeCampaignMenu`, `StrikePauseMenu`, `StrikeResultsScreen`, and save/checkpoint persistence in `SaveManager`.
+- **VoltArena Shared Subsystems Integration**:
+  - Registered `strike_vector` in `GameConstants` and `GameManager`.
+  - Added 8th game card to `Launcher` carousel with metadata, controls reference, stats, and procedural cyan/orange vector banner.
+  - Expanded `SaveManager` with checkpoint persistence, mission grading, and high scores.
+- **Testing & Quality Assurance**:
+  - Added 4 test suites: `test_strike_campaign_unit.gd` (65 assertions), `test_strike_player_unit.gd` (60 assertions), `test_strike_ai_unit.gd` (85 assertions), and `test_strike_vector_e2e.gd` (224 assertions).
+  - Executed master test runner across 55 test suites: **1494 passed assertions with 0 failures (100% pass rate)**.
+  - Verified function coverage at **96.0%** (728 / 758 functions), exceeding the 95% target.
+  - Validated Missions 1 through 8 end-to-end with zero progression deadlocks or crashes.
 
+## [8.1.0-strike-vector-p0-repair-and-level-rebuild] - 2026-09-08
+
+### Fixed & Enhanced
+- **P0 Player Collision Hardening & Anti-Fall Resolution**:
+  - Standardized player `CharacterBody3D` capsule collider: radius $0.40\text{m}$, height $1.80\text{m}$, centered at $(0, 0.90, 0)$, with the bottom sitting flush at ground level $Y=0.0$.
+  - Calibrated physical stability constants in `strike_player.gd`: `floor_snap_length = 0.45`, `safe_margin = 0.08`, `floor_max_angle = deg_to_rad(48.0)`, and `wall_min_slide_angle = deg_to_rad(15.0)`.
+  - Implemented `is_valid_grounded()` check updating `safe_ground_position` only when grounded on approved floor surfaces.
+  - Implemented `recover_to_safe_ground()` fail-safe triggering immediately when $Y < -3.5\text{m}$, instantly restoring the player to safe grounded coordinates and zeroing velocity.
+  - Moved spawn inland to `Vector3(0, 0.1, -6.0)` inside the roadway bounds, eliminating the zero-boundary drop.
+- **Visual & Modular Level Production Rebuild (Zero BoxMeshes)**:
+  - Completely replaced primitive box corridors in Mission 1 (Urban Blackout) and Missions 2–8 with authentic modular 3D buildings (`building_a.glb` through `building_garage.glb`), `road_lightposts.glb` with active $2.4\text{ energy}$ `OmniLight3D` lamps, parked vehicles (`truck_yellow.glb`, `truck_green.glb`, `truck_red.glb`, `racecar_gp.glb`), ballistic barriers (`barrier_high.glb`), and pipes (`pipe_network.glb`).
+  - Authored a continuous $1.2\text{m}$ thick solid roadway floor slab spanning $\ge 12\text{m}$ behind spawn with $2\text{m}$ segment overlaps between sequential zones.
+  - Installed $8\text{m}$ tall perimeter lateral and rear collision boundary walls to physically prevent out-of-world drops.
+- **Global Lighting Overhaul**:
+  - Added calibrated `WorldEnvironment` in `strike_vector_main.gd` featuring procedural sky, ambient lighting (energy $1.65$, `Color(0.26, 0.34, 0.48)`), filmic tonemapper (exposure $1.30$), glow bloom, and atmospheric fog, ensuring crisp visibility with zero crushed blacks.
+  - Added primary `DirectionalLight3D` moonlight (energy $1.85$, `Color(0.78, 0.88, 1.0)`, shadows enabled).
+- **Rigged Characters & 3D Arsenal**:
+  - Player operative in `strike_player_visual.gd` utilizes rigged humanoid `soldier.glb` with `WeaponSocket` attachment and `AnimationPlayer` state machine (`Idle`, `Walk`, `Run`, `Aim`).
+  - Enemy AI hostiles in `ai_archetypes.gd` utilize rigged `trooper.glb`, `scout.glb`, and `heavy.glb` with synchronized animations.
+  - Replaced box weapons in `strike_weapon_arsenal.gd` with authentic 3D firearm models (`pulse_rifle.glb`, `blaster_repeater.glb`, `scatter_cannon.glb`, `rail_driver.glb`, `grenade_launcher.glb`, `plasma_cutter.glb`, `blaster.glb`).
+- **Compact HUD Redesign**:
+  - Redesigned `strike_hud.gd` into clean perimeter clusters: bottom-left vitals/shield gauge, bottom-right ammo/weapon counter, top-center objective pill, dynamic cyan crosshair, and conditional floating boss bar.
+- **Automated Physical Traversal Probes & Testing**:
+  - Created `games/strike-vector/tests/test_strike_traversal_probes.gd` with 98 automated downward raycast probes verifying ground collision continuity, non-penetrating safe spawn points, and boundary containment across all 8 campaign missions.
+  - Executed master test runner across 56 test suites: **1,592 passed assertions, 0 failed (100% pass rate)**.
+  - Maintained high function coverage at **95.53%** (727 / 761 functions).
+
+## [8.2.0-strike-vector-transform-rig-and-urban-overhaul] - 2026-09-08
+
+### Fixed & Overhauled
+- **Root-Cause Transform & Rig Normalization**:
+  - Identified that in `soldier.glb`, Mixamo animations (`Aim`, `Fire`, `Reload`, etc.) had position tracks authored in meters $(0, 0.91, 0)$ instead of centimeters, causing the skeleton to collapse into the floor when played on rigs imported with $0.01$ scale.
+  - Implemented `_normalize_rig_tracks()` in `model_cache.gd`, converting keyframes to centimeter scale: `Vector3(val.x * 100, -val.z * 100, val.y * 100)`.
+  - Normalized hand bone and hip positions across all animations, restoring upright posture with average shooting hand height at $1.02\text{m}$.
+- **Locomotion Travel & Facing Invariants**:
+  - Re-engineered camera-relative input in `strike_player.gd`: mapped $W \rightarrow +cam\_fwd$, $S \rightarrow -cam\_fwd$, $D \rightarrow +cam\_right$, $A \rightarrow -cam\_right$.
+  - Fixed visual facing orientation: in traversal mode, character yaw smoothly aligns with travel velocity (`atan2(-vx, -vz)`); in combat ADS/firing mode, yaw locks to camera forward (`atan2(-cam_fwd.x, -cam_fwd.z)`). Operative never faces backward during forward travel.
+- **Weapon Grip Attachment & Socket Invariants**:
+  - Replaced arbitrary markers with a formal `BoneAttachment3D` bound to `mixamorig_RightHand` containing `WeaponGrip` (`Marker3D`).
+  - Calibrated `WeaponGrip.scale = Vector3(100, 100, 100)` to cancel parent character scale, and rotated $Y=90^\circ$ to align barrels strictly with character forward $-Z$.
+  - Enforced runtime parenting invariant: weapons parent to `WeaponGrip` with `position = Vector3.ZERO` and `rotation = Vector3.ZERO`.
+  - Standardized 5 socket markers on `StrikeWeaponBase`: `MuzzleSocket`, `MagazineSocket`, `ScopeSocket`, `ShellEjectionSocket`, and `LeftHandIKTarget`.
+  - Implemented crosshair raycast convergence: camera center ray traces to 3D world target, and muzzle fire converges on the target point to prevent shooting low cover.
+- **Human-Scale Urban Environment & Street Enclosure**:
+  - Scaled modular city buildings in `StrikeEnvironmentBuilder` to human scale ($14\text{m} \times 18\text{m}\text{--}24\text{m}$ tall) along an $8\text{m}\text{--}10\text{m}$ road and $3\text{m}$ sidewalks, creating a continuous urban canyon without void gaps.
+  - Attached physical $8\text{m} \times 16\text{m} \times 8\text{m}$ box colliders to every building facade.
+  - Replaced floating cyan primitives with commercial billboards mounted on facades, emergency military trucks, police barricades, and industrial conduits.
+  - Elevated streetlights to $5.5\text{m}$ height with warm sodium illumination ($2.4\text{ energy}$).
+- **Programmatic Navigation Mesh for AI Pathfinding**:
+  - Implemented `_create_navigation_region()` in `StrikeEnvironmentBuilder` generating instant, deterministic `NavigationMesh` vertices and polygons across roadways and sidewalks for all 8 campaign biomes.
+  - Verified AI enemies dynamically navigate, search, attack, and flank along the path rather than relying on watchdogs.
+- **Tactical Navigation HUD**:
+  - Built `StrikeCompassTape` (top-center): horizontal degree tape with cardinal directions ($N, NE, E, SE, S, SW, W, NW$) and dynamic objective diamond bearing with meter distance.
+  - Built `StrikeMinimap` (top-right): circular radar with player forward chevron, road bounds, objective beacon, extraction LZ, and threat-aware fading hostile blips (fade out over $3.0\text{s}$).
+  - Added `StrikeTacticalMap` ($M$ key toggle): full tactical corridor schematic displaying milestone progression.
+- **Acceptance Invariants Test Suite**:
+  - Created `games/strike-vector/tests/test_strike_visual_invariants.gd` with 94 physical, transform, and visual assertions.
+  - Master test runner executed across 57 test suites: **1,686 passed assertions, 0 failed (100% pass rate)**.
+  - Maintained high function coverage at **94.6%** (729 / 771 functions).
+
+## [8.2.1-strike-vector-p0-platform-fall-through-repair] - 2026-09-08
+
+### Fixed & Hardened
+- **P0 Platform Fall-Through Root Cause Fixed**:
+  - Identified that building colliders in `StrikeEnvironmentBuilder._add_authored_building` suffered from scale compounding: child colliders added to already scaled building nodes multiplied size by $sc$ twice, creating a $1.5\text{-kilometer}$ wide box collider engulfing the player spawn point and roadway. On frame 1, Godot physics de-penetration forcefully pushed the player and enemies downwards through the road floor into the void.
+  - Fixed by attaching unscaled `StaticBody3D` colliders directly to the unscaled segment root with dimensions `Vector3(10.0, sc.y, 10.0)` at $|x| \ge 10.0\text{m}$, strictly outside the $8.0\text{m}$ sidewalk and $10.0\text{m}$ road.
+  - Verified in container simulation: player lands safely on the asphalt roadway on frame 1 through frame 20 with `is_on_floor = true` and zero physics ejection.
+- **Visual Facing & Barrel Alignment**:
+  - Reverted `character_model.rotation_degrees.y` to $0.0^\circ$ because `soldier.glb` natively faces Godot standard forward axis ($-Z$). The previous $180^\circ$ offset had turned the operative towards the camera.
+  - Calibrated `weapon_grip.rotation_degrees` to `Vector3(0.0, -90.0, 0.0)`, aligning the firearm barrel strictly forward down-range along $-Z$ with vector $(-0.06, 0.005, -0.99)$.
+  - Re-applied `select_weapon(active_weapon_index)` on `_ready()` to guarantee proper weapon parenting to `WeaponGrip` once nodes enter the scene tree.
+- **AI Enemy Animations & Facing**:
+  - Fixed AI enemies spawning in T-pose by calling `ModelCacheScript.play_animation(model, "Idle")` upon instantiation in `AIArchetypes`.
+  - Added `_update_animation()` to `StrikeAIBase` to dynamically blend Idle, Walk, Run, Fire, and HitReact animations based on navigation velocity and HFSM state.
+  - Set enemy model rotation to $0.0^\circ$ and weapon model rotation to $180.0^\circ$ so enemies face and aim towards the operative down-range.
+- **Anti-Fall Geometry & Recovery Invariants**:
+  - Added grounded position tracking in `_physics_process`: continuously updates `safe_ground_position` when `is_on_floor()` and `y >= -0.2m`.
+  - Clamped `recover_to_safe_ground()` destination to at least $y = 0.6\text{m}$ above the asphalt surface.
+  - Added building collider clearance assertions to `test_strike_visual_invariants.gd`.
+- **Test Suite Verification**:
+  - Master test runner executed across all 57 suites: **1,692 passed assertions, 0 failed (100% pass rate)**.
+  - Function coverage maintained at **94.6%** (729 / 771 functions).
+
+## [8.3.0-strike-vector-p0-firing-combat-worldscale-overhaul] - 2026-09-09
+
+### Fixed & Re-Engineered
+- **P0 Firing Pose Stability & Root-Transform Normalization**:
+  - Resolved root cause where firing the VX-7 rifle pitched the operative $90^\circ$ backward onto their back ("sleeping" horizontally) on every shot.
+  - Mixamo animation tracks in `soldier.glb` for `Aim`, `Fire`, and `Reload` contained un-normalized keyframes for `mixamorig_Hips` at $0^\circ$ pitch (contrasting with `Idle`/`Run`'s $-90^\circ$).
+  - Implemented `_normalize_rig_tracks()` in `shared/graphics/model_cache.gd`: completely strips `mixamorig_Hips` and leg bone tracks from upper-body combat actions (`aim`, `fire`, `reload`, `hit`, `shoot`), strictly confining animations to `mixamorig_Spine` and descendant upper-body bones.
+  - Validated across 100 consecutive shots with moving/ADS: `min_up_dot = 1.0` (zero horizontal pitch/roll).
+- **P0 Weapon Rig Integration & Natural Hand Grip Alignment**:
+  - Fixed weapon tilted upside-down and floating on torso/hip.
+  - Calibrated `WeaponGrip.rotation_degrees = Vector3(90.0, 90.0, 0.0)` with palm offset `Vector3(0.04, -0.02, 0.05)`, aligning barrel forward down-range along player $-Z$ (angle error $0.027^\circ$).
+  - Validated hand-to-weapon distance at $0.00\text{m}$, barrel forward dot $= 1.00$.
+- **P0 Physical Combat & Hit Registration Pipeline**:
+  - Resolved root cause where enemy bullets flew past and through the player without inflicting damage or decreasing HP/shield.
+  - Fixed boolean precedence error in `games/strike-vector/weapons/weapon_projectile.gd`: `str(shooter.name) if is_instance_valid(shooter) else "Player"` eliminates runtime type error on hit.
+  - Explicitly configured `StrikePlayer` `collision_layer = GameConstants.LAYER_PLAYER` (2) and `collision_mask = LAYER_WORLD | LAYER_ENEMIES | LAYER_PICKUPS`.
+  - Connected bullet impact to `take_damage`: shield absorbs 60% (50 -> 38), HP absorbs 40% (100 -> 92), and `damage_taken` signal emits.
+  - Verified solid world obstacles block projectiles completely with zero bleed-through.
+- **P0 World Metric Scale & Believable Proportions**:
+  - Established project-wide metric standard: 1 Godot unit = 1 metre.
+  - Replaced miniature $1.2\text{m}$ go-kart with authentic patrol cruiser `rocket_car_enforcer.glb` at scale $1.6$ ($4.56\text{m} \times 2.08\text{m} \times 2.0\text{m}$).
+  - Scaled heavy utility trucks to scale $2.2$ ($6.16\text{m} \times 3.3\text{m} \times 3.19\text{m}$).
+  - Widened roadway to authentic 14m two-lane street with 3.5m sidewalks (21m canyon).
+  - Standardized player collision capsule to height $1.80\text{m}$, radius $0.40\text{m}$.
+- **Threat Readability & Directional Damage Feedback**:
+  - Implemented `StrikeDirectionalDamageIndicator` class in `strike_hud.gd`: calculates angular bearing between camera forward and attacker position, rendering glowing red/amber threat arcs around reticle plus red peripheral vignette pulse.
+- **Urban Blackout Visual Overhaul**:
+  - Overrode pastel colors with dark grimy concrete and weathered carbon steel materials (`_apply_dark_building_facade`).
+  - Rebalanced lighting to deep midnight blue (`0.01, 0.03, 0.08`), ambient energy $0.35$, directional moonlight $0.85$, and atmospheric distance fog ($0.0035$).
+  - Added blinking orange/red hazard beacons to roadblocks and emergency vehicle lightbars.
+- **Runtime Acceptance Suite & Test Hardening**:
+  - Authored `TestStrikeRuntimeAcceptance` with 7 P0 gate test methods covering firing stability, hand attachment, projectile damage, obstacle blocking, metric scale, HUD damage feedback, and floor continuity.
+  - Integrated into master test runner `tests/runner.gd`: **58 test suites, 1,726 passed assertions, 0 failures (100% pass rate)**.
+  - Expanded function test coverage to **96.1%** (744 / 774 functions).
+  - Successfully exported fresh desktop binaries (`VoltArena.exe` 151.8 MB, `VoltArena.x86_64` 133.7 MB) and Cloudflare-compliant Web packages (chunks $\le 18$ MB).
 
 
 

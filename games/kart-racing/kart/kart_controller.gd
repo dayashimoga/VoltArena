@@ -51,7 +51,7 @@ var last_valid_checkpoint_pos: Vector3 = Vector3.ZERO
 var last_valid_checkpoint_rot: float = 0.0
 
 var kart_visual: Node3D
-var front_wheels: Array[MeshInstance3D] = []
+var front_wheels: Array[Node3D] = []
 
 func _ready() -> void:
 	collision_layer = GameConstants.LAYER_PLAYER if is_player else GameConstants.LAYER_ENEMIES
@@ -126,43 +126,31 @@ func setup_kart_visual() -> void:
 		kart_visual.queue_free()
 		front_wheels.clear()
 
-	var vehicle_key = "kart_speedster"
-	if is_player:
-		match kart_type:
-			"phantom": vehicle_key = "kart_drift"
-			"enforcer": vehicle_key = "kart_muscle"
-			"turbo_demon": vehicle_key = "kart_turbo"
-			_: vehicle_key = "kart_speedster"
-	else:
-		match racer_id % 4:
-			0: vehicle_key = "kart_speedster"
-			1: vehicle_key = "kart_drift"
-			2: vehicle_key = "kart_muscle"
-			3: vehicle_key = "kart_turbo"
+	var kart_col = Color(0.0, 0.88, 1.0) # Player 1: Volt Cyan
+	if not is_player:
+		match racer_id % 5:
+			1: kart_col = Color(1.0, 0.45, 0.05) # Blaze Orange (Apex Nova)
+			2: kart_col = Color(0.95, 0.15, 0.25) # Crimson Red (Blaze Raptor)
+			3: kart_col = Color(0.80, 0.20, 1.0)  # Neon Purple (Viper Strike)
+			4: kart_col = Color(0.20, 0.95, 0.35) # Acid Green (Turbo Titan)
+			_: kart_col = Color(1.0, 0.85, 0.10) # Solar Gold (Cyber Ghost)
 
-	var prod_model = ModelCacheScript.get_vehicle(vehicle_key)
-	if prod_model:
-		kart_visual = prod_model
-		kart_visual.scale = Vector3(1.2, 1.2, 1.2)
-		kart_visual.position = Vector3(0, 0.05, 0)
-	else:
-		var kart_col = Color(0.2, 1.0, 0.5) if is_player else (Color(1.0, 0.5, 0.0) if racer_id == 1 else (Color(0.8, 0.2, 1.0) if racer_id == 2 else Color(0.0, 0.85, 1.0)))
-		kart_visual = MeshBuilder.build_drift_kart(kart_col, kart_type)
-
+	kart_visual = MeshBuilder.build_drift_kart(kart_col, kart_type, racer_id if not is_player else 7)
+	kart_visual.position = Vector3.ZERO
 	add_child(kart_visual)
 
 	for child in kart_visual.get_children():
-		if child.name.begins_with("FrontWheel") and child is MeshInstance3D:
+		if child.name.begins_with("FrontWheel") and child is Node3D:
 			front_wheels.append(child)
 
-	# Collision - Vertical SphereShape3D for 100% seam/edge-free gliding
+	# Collision - Low center-of-gravity sphere with bottom touching ground at y=0.0
 	if not has_node("KartCollision"):
 		var col = CollisionShape3D.new()
 		col.name = "KartCollision"
 		var sphere = SphereShape3D.new()
-		sphere.radius = 0.50
+		sphere.radius = 0.38
 		col.shape = sphere
-		col.position = Vector3(0, 0.50, 0)
+		col.position = Vector3(0, 0.38, 0)
 		add_child(col)
 
 func _physics_process(delta: float) -> void:
@@ -239,6 +227,21 @@ func handle_player_input(delta: float) -> void:
 	apply_kart_controls(throttle, steer, want_drift, delta)
 
 func apply_kart_controls(throttle: float, steer: float, want_drift: bool, delta: float) -> void:
+	# Check race manager state to lock throttle during countdown
+	var rm: Node = null
+	var p = get_parent()
+	while p:
+		rm = p.get_node_or_null("RaceManager")
+		if rm:
+			break
+		p = p.get_parent()
+	if not rm and get_tree() and get_tree().root:
+		rm = get_tree().root.find_child("RaceManager", true, false)
+
+	if rm and rm.get("current_state") == 0: # RaceState.COUNTDOWN
+		throttle = 0.0
+		forward_speed = 0.0
+
 	# Drift mechanics handling
 	if want_drift and abs(steer) > 0.2 and is_on_floor() and forward_speed > 10.0:
 		if not is_drifting:
@@ -328,12 +331,11 @@ var is_wrong_way: bool = false
 var wrong_way_timer: float = 0.0
 
 func _check_wrong_way(delta: float) -> void:
-	if not is_player or forward_speed < 4.0:
+	if not is_player or absf(forward_speed) < 3.0:
 		is_wrong_way = false
 		wrong_way_timer = 0.0
 		return
 
-	# Compare forward vector with tangent towards next checkpoint
 	var rm: Node = null
 	var p_node = get_parent()
 	if p_node:
@@ -341,23 +343,36 @@ func _check_wrong_way(delta: float) -> void:
 	if not rm and get_tree() and get_tree().root:
 		rm = get_tree().root.find_child("RaceManager", true, false)
 
-	if not rm or rm.checkpoints.is_empty():
+	if not rm or rm.checkpoints.size() < 2:
 		return
 
-	var cp_idx = next_checkpoint_index % rm.checkpoints.size()
-	var cp_node = rm.checkpoints[cp_idx]
-	if not is_instance_valid(cp_node):
+	var n_cp = rm.checkpoints.size()
+	var curr_cp_idx = posmod(next_checkpoint_index - 1, n_cp)
+	var next_cp_idx = posmod(next_checkpoint_index, n_cp)
+	var cp_curr = rm.checkpoints[curr_cp_idx]
+	var cp_next = rm.checkpoints[next_cp_idx]
+	if not is_instance_valid(cp_curr) or not is_instance_valid(cp_next):
 		return
 
-	var to_next_cp = (cp_node.global_position - global_position).normalized()
+	# Track segment tangent vector along race direction
+	var track_tangent = cp_next.global_position - cp_curr.global_position
+	track_tangent.y = 0.0
+	if track_tangent.length_squared() < 0.1:
+		return
+	track_tangent = track_tangent.normalized()
+
 	var fwd = -global_transform.basis.z
-	var dot = fwd.dot(to_next_cp)
+	fwd.y = 0.0
+	fwd = fwd.normalized()
 
-	if dot < -0.4:
+	var dot = fwd.dot(track_tangent)
+
+	# Only flag wrong-way if driving backwards against track flow for sustained time
+	if dot < -0.35 and forward_speed > 2.0:
 		wrong_way_timer += delta
-		if wrong_way_timer > 0.8:
+		if wrong_way_timer > 0.6:
 			is_wrong_way = true
 	else:
-		wrong_way_timer = maxf(0.0, wrong_way_timer - delta * 3.0)
+		wrong_way_timer = maxf(0.0, wrong_way_timer - delta * 3.5)
 		if wrong_way_timer <= 0.0:
 			is_wrong_way = false

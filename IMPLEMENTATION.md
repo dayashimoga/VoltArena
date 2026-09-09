@@ -145,4 +145,83 @@ VoltArena was developed in a multi-phase engineering process adhering strictly t
   - Updated `scripts/certifier.py` to enforce G0–G9 verification (RUNTIME_VERIFIED) while isolating G10 Human Reference-Board Visual Acceptance (HUMAN-VALIDATION-REQUIRED).
   - Verified 41 test suites, 857 assertions (100% pass rate), 93.91% function coverage (401 / 427 functions), and 986.2 FPS sim throughput with 0 stutters.
 
+### Phase 15: Strike Vector — 3D Forward-Moving Run-and-Gun Campaign Production Implementation
+* **Campaign & Streaming Architecture**:
+  - Engineered continuous forward level progression engine across 8 distinct missions (`games/strike-vector/missions/mission_1_urban_blackout.gd` through `mission_8_final_citadel.gd`).
+  - Implemented `MissionStreamer` with active + next segment residency and safe unloading, preventing geometry dropouts or memory bloat.
+  - Built 7-state `SegmentManager` (`LOCKED`, `PRELOADED`, `ENTERED`, `ACTIVE`, `COMPLETE`, `EXITED`, `UNLOADED`).
+  - Added `EncounterDirector` with localized dynamic boundary locks, reinforcement wave sequencing, route clearance audio, and a 28s deterministic watchdog recovery.
+* **Player Controller & Camera Director**:
+  - Developed responsive `CharacterBody3D` locomotion (`player_locomotion.gd`): walk, sprint, crouch, jump with 0.15s coyote & jump buffering, slide-fire, dodge-roll, ledge mantling, anti-fall recovery.
+  - Integrated 60% armor absorption layer and `StrikePlayerVisual` cybernetic skinned mesh rig.
+  - Built `CameraDirector` with 7 transition modes and SpringArm3D obstacle collision avoidance.
+* **Weapons Arsenal & Arcade Power Modules**:
+  - Designed 9 original weapons (`strike_weapon_arsenal.gd`): VX-7, Tempest, Breach, Atlas, Longshot, Cyclone, Arc Launcher, Pulse Cannon, Tactical Sidearm.
+  - Implemented hitscan & projectile sweep raycasting with penetration, splash AoE, recoil, and spread falloff.
+  - Created 6 arcade power modules: Rapid Fire, Spread Module, Piercing Module, Shield Overcharge, Overdrive, Support Drone.
+* **10-State AI HFSM & Boss Architecture**:
+  - Created 10 enemy archetypes with HFSM and `SquadCoordinator` concurrency management.
+  - Developed 8 multi-phase bosses (`boss_archetypes.gd`) featuring telegraphing, evasive maneuvering, weakpoint exposure, and phase transitions.
+* **Verification & Testing**:
+  - Added 4 test suites: `test_strike_campaign_unit.gd`, `test_strike_player_unit.gd`, `test_strike_ai_unit.gd`, and `test_strike_vector_e2e.gd`.
+  - 1493/1493 assertions passing across 55 suites with 96.0% overall function coverage.
+
+### Phase 16: Strike Vector — Transform/Rig Normalization, Urban Blackout & Navigation HUD Overhaul
+* **Root-Cause Transform & Rig Normalization**:
+  - Diagnosed that Mixamo animation position tracks in `soldier.glb` were authored in meters $(0, 0.91, 0)$ instead of centimeters $(0, 91.0, 0)$, collapsing joints into the floor when played on rigs imported with $0.01$ scale.
+  - Implemented `_normalize_rig_tracks()` in `model_cache.gd`, scaling position tracks by 100 and remapping axes. Restored upright posture with hand bone shooting height at $1.02\text{m}$.
+  - Replaced loose markers with `BoneAttachment3D` bound to `mixamorig_RightHand` containing child `WeaponGrip` scaled $\times 100.0$ and rotated $Y=90^\circ$.
+  - Attached all 9 weapons to `WeaponGrip` at `Vector3.ZERO`, eliminating misplaced weapons at feet.
+* **Locomotion Input & Directional Visual Facing**:
+  - Fixed camera-relative input direction in `strike_player.gd`: $W \rightarrow +cam\_fwd$, $S \rightarrow -cam\_fwd$, $D \rightarrow +cam\_right$, $A \rightarrow -cam\_right$.
+  - Aligned visual facing with travel velocity (`atan2(-vx, -vz)`) during traversal and locked to camera look yaw during combat ADS/firing.
+* **Standardized Sockets & Crosshair Convergence**:
+  - Standardized 5 sockets on `StrikeWeaponBase`: `MuzzleSocket`, `MagazineSocket`, `ScopeSocket`, `ShellEjectionSocket`, and `LeftHandIKTarget`.
+  - Implemented camera-to-muzzle raycast convergence in `StrikePlayer`: projects reticle into 3D world and converges muzzle projectile velocity toward impact point.
+* **Human-Scale Urban Street Canyon**:
+  - Scaled modular city buildings in `StrikeEnvironmentBuilder` to $14\text{m} \times 18\text{m}\text{--}24\text{m}$ tall along an $8\text{m}\text{--}10\text{m}$ roadway and $3\text{m}$ sidewalks with physical $8\text{m} \times 16\text{m} \times 8\text{m}$ box colliders.
+  - Replaced primitive boxes with commercial billboards, barricades, emergency vehicles, and $5.5\text{m}$ elevated sodium streetlights.
+* **Programmatic Navigation Mesh**:
+  - Implemented deterministic `NavigationRegion3D` and `NavigationMesh` generation across roadways and sidewalks for all 8 campaign biomes, enabling full dynamic AI pathfinding.
+* **Tactical Navigation HUD**:
+  - Implemented `StrikeCompassTape` (top-center) with dynamic objective diamond bearing and meter distance.
+  - Implemented `StrikeMinimap` (top-right) with forward chevron, road bounds, objective beacon, extraction LZ, and threat-aware fading hostile blips ($3.0\text{s}$ fade).
+  - Added `StrikeTacticalMap` ($M$ key toggle modal) with milestone progress tracker.
+* **Acceptance Invariants Test Suite**:
+  - Created `games/strike-vector/tests/test_strike_visual_invariants.gd` with 94 physical and visual invariant assertions.
+  - Master test runner executed across 57 test suites: **1,686 passed assertions, 0 failed (100% pass rate)**.
+  - Maintained high function coverage at **94.6%** (729 / 771 functions).
+  - Packaged fresh desktop and web builds (`export/windows/VoltArena.exe`, `export/linux/VoltArena.x86_64`, `export/web/`).
+
+### Phase 17: Production Gap Closure, Combat/Damage Pipeline, Metric World Scale, and Runtime Acceptance Certification (v8.3.0)
+* **P0 Character/Firing Root-Transform Stability**:
+  - **Root Cause**: In `soldier.glb`, upper-body combat actions (`Aim`, `Fire`, `Reload`) contained un-normalized `mixamorig_Hips` rotation tracks with $0^\circ$ pitch, in stark contrast to `Idle` and `Run` animations whose hip tracks compensated with a $-90^\circ$ pitch. Playing the additive `Fire` action during shooting overwrote the hip rotation track, pitching the entire skeleton $90^\circ$ backward into a horizontal "sleeping" pose on the pavement before snapping upright.
+  - **Architectural Fix**: In `shared/graphics/model_cache.gd`, overhauled `_normalize_rig_tracks()` to completely strip `mixamorig_Hips` and all leg bone tracks (`mixamorig_LeftUpLeg`, `mixamorig_RightUpLeg`, `mixamorig_LeftLeg`, `mixamorig_RightLeg`, `mixamorig_LeftFoot`, `mixamorig_RightFoot`, `mixamorig_LeftToeBase`, `mixamorig_RightToeBase`) from upper-body combat actions (`aim`, `fire`, `reload`, `hit`, `shoot`), restricting their influence strictly to `mixamorig_Spine` and its descendants.
+  - **Verification**: Evaluated with `test_firing_pose_stability_100_shots` over 100 consecutive rapid-fire shots. The skeleton up-vector maintained a dot product of $\ge 0.999$ relative to `Vector3.UP` with zero pitch or roll distortion.
+* **P0 Weapon Hand Attachment & Barrel Alignment**:
+  - In `strike_player_visual.gd`, recalibrated `WeaponGrip` rotation to `Vector3(90.0, 90.0, 0.0)` with palm attachment offset `Vector3(0.04, -0.02, 0.05)`, anchoring the rifle naturally into the right palm.
+  - Aligned weapon barrel strictly along player forward vector $-Z$ ($0.027^\circ$ angular error, forward dot $= 1.00$).
+  - Standardized five weapon sockets across the arsenal: `MuzzleSocket`, `MagazineSocket`, `ScopeSocket`, `ShellEjectionSocket`, and `LeftHandIKTarget`.
+* **P0 Metric World Scale & Street Hierarchy**:
+  - Established a strict project-wide metric convention: 1 Godot unit = 1.0 meter.
+  - Replaced miniature `racecar_gp.glb` with full-sized `rocket_car_enforcer.glb` at scale $1.6$ ($4.56\text{m} \times 2.08\text{m} \times 2.0\text{m}$); scaled heavy transport trucks to scale $2.2$ ($6.16\text{m} \times 3.3\text{m} \times 3.19\text{m}$).
+  - Expanded roadway from 10m to 14m two-lane street with dual 3.5m sidewalks (21m building-to-building canyon).
+  - Standardized player collision capsule to height $1.80\text{m}$, radius $0.40\text{m}$.
+* **P0 Physical Combat & Damage Resolution Pipeline**:
+  - Fixed GDScript operator precedence bug in `weapon_projectile.gd`: `var shooter_name: String = str(shooter.name) if is_instance_valid(shooter) else "Player"`, eliminating runtime crash when bullets hit entities.
+  - Configured player physics collision layer to `GameConstants.LAYER_PLAYER` (layer 2) and mask to `LAYER_WORLD | LAYER_ENEMIES | LAYER_PICKUPS`.
+  - Added tree safety guards `is_inside_tree()` to prevent transform lookups on unattached nodes during tests.
+  - Connected bullet impact to `take_damage()`: 60% shield absorption, 40% HP depletion, firing `damage_taken` signal. Proved solid walls block 100% of projectiles.
+* **Tactical Threat Readability & Directional Damage HUD**:
+  - Implemented `StrikeDirectionalDamageIndicator` in `strike_hud.gd`: calculates angular bearing between camera forward vector and incoming attacker position, rendering glowing red directional threat arcs and peripheral screen vignette pulses.
+* **Urban Blackout Visual Overhaul**:
+  - Refactored `strike_environment_builder.gd` with weathered grimy concrete, dark carbon steel facades, and blinking hazard beacons (`_add_beacon`).
+  - Lighting rebalanced in `strike_vector_main.gd`: deep midnight blue ambient (`0.01, 0.03, 0.08`, energy $0.35$), directional moonlight ($0.85$), and atmospheric distance fog ($0.0035$).
+* **Automated Acceptance Suite & Rigorous Testing**:
+  - Authored `test_strike_runtime_acceptance.gd` (7 test methods, 25 assertions) validating firing pose stability over 100 shots, weapon-hand attachment, metric world scale proportions, enemy projectile damage, wall bullet blocking, and HUD threat indicators.
+  - Expanded unit test coverage in `test_puzzle_elements.gd`, `test_quest_system.gd`, and `test_audio_manager.gd`.
+  - Master test runner executed: **58 test suites, 1,726 passed assertions, 0 failures (100% pass rate), 96.1% function coverage (744 / 774 functions)**.
+  - Re-exported release packages: Windows (`export/windows/VoltArena.exe`), Linux (`export/linux/VoltArena.x86_64`), Web (`export/web/`).
+
+
 

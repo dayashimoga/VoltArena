@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: write
+  actions: write
+  packages: write
+  checks: write
+  pull-requests: write
+  pages: write
+  id-token: write
+
 env:
   GODOT_VERSION: "4.3"
   GODOT_CI_IMAGE: "barichello/godot-ci:4.3"
@@ -51,13 +60,22 @@ jobs:
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: test-results
           path: |
             artifacts/test-results.json
             artifacts/coverage-report.json
             artifacts/responsive-results.json
-            artifacts/screenshots/
+          retention-days: 2
+      - name: Upload screenshots (debug)
+        uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true
+        with:
+          name: test-screenshots
+          path: artifacts/screenshots/
+          retention-days: 1
 
   # ============================================
   # STAGE 3: COVERAGE ANALYSIS
@@ -96,9 +114,11 @@ jobs:
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: coverage-report
           path: artifacts/coverage-report.json
+          retention-days: 2
 
   # ============================================
   # STAGE 4: PERFORMANCE BENCHMARKS
@@ -117,9 +137,11 @@ jobs:
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: benchmark-results
           path: artifacts/benchmark-results.json
+          retention-days: 2
 
   # ============================================
   # STAGE 5: WEB EXPORT
@@ -168,9 +190,11 @@ jobs:
           fi
       - name: Upload web export
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: web-export
           path: export/web/
+          retention-days: 2
 
   # ============================================
   # STAGE 6: LINUX EXPORT
@@ -195,9 +219,11 @@ jobs:
         run: godot --headless --export-release "Linux" export/linux/VoltArena.x86_64 2>&1 || true
       - name: Upload Linux build
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: linux-build
           path: export/linux/
+          retention-days: 2
 
   # ============================================
   # STAGE 7: WINDOWS EXPORT
@@ -222,9 +248,11 @@ jobs:
         run: godot --headless --export-release "Windows" export/windows/VoltArena.exe 2>&1 || true
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: windows-build
           path: export/windows/
+          retention-days: 2
 
   # ============================================
   # STAGE 8: macOS EXPORT
@@ -254,9 +282,11 @@ jobs:
       - name: Upload macOS build
         uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: macos-build
           path: export/macos/
+          retention-days: 2
 
   # ============================================
   # STAGE 9: ANDROID BUILD
@@ -303,9 +333,11 @@ jobs:
       - name: Upload Android build
         uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: android-build
           path: export/android/
+          retention-days: 2
 
   # ============================================
   # STAGE 10: ANDROID EMULATOR TESTING
@@ -347,10 +379,12 @@ jobs:
       - name: Upload Android test artifacts
         uses: actions/upload-artifact@v4
         if: always() && steps.check_apk.outputs.apk_exists == 'true'
+        continue-on-error: true
         with:
           name: android-emulator-results
           path: artifacts/
           if-no-files-found: ignore
+          retention-days: 2
 
   # ============================================
   # STAGE 11: BROWSER E2E (Playwright)
@@ -386,9 +420,11 @@ jobs:
       - name: Upload browser test results
         uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: browser-e2e-results
           path: tests/web/test-results/
+          retention-days: 2
 
   # ============================================
   # STAGE 12: SECURITY & SBOM
@@ -427,9 +463,11 @@ jobs:
           echo '{"status": "PASS", "licenses": ["MIT", "Apache-2.0"]}' > artifacts/license-report.json
       - name: Upload security artifacts
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: security-artifacts
           path: artifacts/
+          retention-days: 2
 
   # ============================================
   # STAGE 13: DEPLOY TO CLOUDFLARE
@@ -500,6 +538,7 @@ jobs:
         run: pip install pillow numpy
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           path: artifacts/
           merge-multiple: true
@@ -525,11 +564,13 @@ jobs:
         run: python3 scripts/certifier.py
       - name: Upload certification
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: production-certification
           path: |
             artifacts/production-certification.json
             artifacts/production-certification.html
+          retention-days: 7
 
   # ============================================
   # STAGE 16: RELEASE PACKAGING
@@ -555,6 +596,8 @@ jobs:
           done
       - name: Upload release
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: release-bundle
           path: release/
+          retention-days: 7

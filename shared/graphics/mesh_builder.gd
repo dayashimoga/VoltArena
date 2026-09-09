@@ -783,76 +783,207 @@ static func build_stadium_floodlight_tower(height: float = 24.0) -> Node3D:
 # 6. DRIFT STORM RACING KARTS & TRACK PROPS
 # ==============================================================================
 
-static func build_drift_kart(kart_color: Color = Color(0.2, 1.0, 0.5), _kart_type: String = "speeder") -> Node3D:
+static func build_drift_kart(kart_color: Color = Color(0.0, 0.85, 1.0), _kart_type: String = "speeder", number_id: int = 7) -> Node3D:
 	var kart = Node3D.new()
 	kart.name = "DriftKartVisual"
 
-	var mat_body = MaterialGenerator.create_pbr_material(kart_color, 0.82, 0.25, kart_color, 0.4)
-	var mat_frame = MaterialGenerator.get_material("sci_fi_metal")
-	var mat_hull = MaterialGenerator.get_material("dark_hull")
-	var mat_tire = MaterialGenerator.get_material("asphalt_track")
+	# High-grade motorsport materials
+	var mat_body = MaterialGenerator.create_pbr_material(kart_color, 0.75, 0.22, kart_color, 0.3)
+	var mat_accent = MaterialGenerator.create_pbr_material(Color(0.96, 0.96, 0.98), 0.50, 0.30)
+	var mat_chassis = MaterialGenerator.create_pbr_material(Color(0.12, 0.14, 0.16), 0.85, 0.35)
+	var mat_carbon = MaterialGenerator.create_pbr_material(Color(0.08, 0.09, 0.10), 0.30, 0.40)
+	var mat_chrome = MaterialGenerator.create_pbr_material(Color(0.92, 0.94, 0.98), 0.95, 0.08)
+	var mat_gold = MaterialGenerator.create_pbr_material(Color(1.0, 0.78, 0.15), 0.90, 0.20)
+	var mat_tire = MaterialGenerator.create_pbr_material(Color(0.09, 0.09, 0.10), 0.05, 0.82)
+	var mat_rim = MaterialGenerator.create_pbr_material(Color(0.70, 0.65, 0.55), 0.85, 0.25)
+	var mat_helmet = MaterialGenerator.create_pbr_material(Color(0.96, 0.96, 0.98), 0.60, 0.18)
+	var mat_visor = MaterialGenerator.create_pbr_material(Color(0.05, 0.08, 0.14), 0.95, 0.06, Color(0.1, 0.6, 0.9), 0.4)
+	var mat_gloves = MaterialGenerator.create_pbr_material(Color(0.95, 0.18, 0.18), 0.20, 0.50)
+	var mat_radiator = MaterialGenerator.create_pbr_material(Color(0.75, 0.78, 0.82), 0.85, 0.30)
 
-	# Tubular Steel Spaceframe Chassis
-	_add_box(kart, Vector3(1.30, 0.24, 2.60), Vector3(0, 0.26, 0), mat_frame)
-	# Front Nose Fairing with Aerodynamic Splitter
-	_add_box(kart, Vector3(1.20, 0.22, 0.75), Vector3(0, 0.28, -1.22), mat_body)
-	_add_box(kart, Vector3(1.35, 0.06, 0.28), Vector3(0, 0.18, -1.55), mat_hull)
-	# Side Pods with Radiator Intake Ducts
+	# 1. Tubular Chromoly Steel Spaceframe Chassis (Ground clearance 0.06m)
+	# Left & Right main chassis rails
+	for side in [-0.28, 0.28]:
+		_add_box(kart, Vector3(0.04, 0.04, 1.45), Vector3(side, 0.07, 0.0), mat_chassis)
+	# Cross members
+	_add_box(kart, Vector3(0.60, 0.04, 0.04), Vector3(0, 0.07, -0.62), mat_chassis) # Front axle support
+	_add_box(kart, Vector3(0.60, 0.04, 0.04), Vector3(0, 0.07, 0.15), mat_chassis)  # Seat support
+	_add_box(kart, Vector3(0.64, 0.04, 0.04), Vector3(0, 0.07, 0.62), mat_chassis)  # Rear axle crossmember
+
+	# Front tubular bumper hoop
+	_add_box(kart, Vector3(0.90, 0.035, 0.035), Vector3(0, 0.09, -1.05), mat_chassis)
+	for side in [-0.44, 0.44]:
+		var f_arm = _add_box(kart, Vector3(0.035, 0.035, 0.42), Vector3(side, 0.08, -0.84), mat_chassis)
+		f_arm.rotation_degrees.y = -side * 18.0
+
+	# Side nerf protection bars (protecting the sidepods)
+	for side in [-0.58, 0.58]:
+		_add_box(kart, Vector3(0.035, 0.035, 0.88), Vector3(side, 0.09, 0.0), mat_chassis)
+		var f_mount = _add_box(kart, Vector3(0.28, 0.035, 0.035), Vector3(side * 0.72, 0.09, -0.38), mat_chassis)
+		var r_mount = _add_box(kart, Vector3(0.28, 0.035, 0.035), Vector3(side * 0.72, 0.09, 0.38), mat_chassis)
+
+	# Rear wrap-around double-tube plastic/steel bumper
+	_add_box(kart, Vector3(1.22, 0.06, 0.06), Vector3(0, 0.14, 0.82), mat_chassis)
+	_add_box(kart, Vector3(1.26, 0.05, 0.05), Vector3(0, 0.07, 0.84), mat_chassis)
+	for side in [-0.52, 0.52]:
+		_add_box(kart, Vector3(0.05, 0.12, 0.22), Vector3(side, 0.10, 0.72), mat_chassis)
+
+	# 2. CIK-FIA Style Aerodynamic Front Nosecone & Splitter
+	# Slanted aerodynamic nose fairing
+	var nose = _add_box(kart, Vector3(0.88, 0.14, 0.55), Vector3(0, 0.15, -0.88), mat_body)
+	nose.rotation_degrees.x = 12.0
+	# Lower aerodynamic black front splitter wing
+	_add_box(kart, Vector3(1.08, 0.03, 0.26), Vector3(0, 0.045, -1.02), mat_carbon)
+	# Center upright front number plate with white accent
+	var num_plate = _add_box(kart, Vector3(0.26, 0.22, 0.04), Vector3(0, 0.28, -0.66), mat_accent)
+	num_plate.rotation_degrees.x = -18.0
+	var num_core = _add_box(kart, Vector3(0.22, 0.18, 0.045), Vector3(0, 0.28, -0.66), mat_carbon)
+	num_core.rotation_degrees.x = -18.0
+
+	# 3. Sculpted Aerodynamic Left & Right Sidepods
 	for side in [-1.0, 1.0]:
-		_add_box(kart, Vector3(0.28, 0.26, 1.35), Vector3(side * 0.72, 0.30, 0), mat_body)
-		_add_box(kart, Vector3(0.24, 0.18, 0.08), Vector3(side * 0.72, 0.30, -0.68), mat_hull)
-	# Contoured Racing Bucket Seat
-	_add_box(kart, Vector3(0.55, 0.55, 0.48), Vector3(0, 0.52, 0.22), mat_hull)
-	# Helmeted Driver Silhouette
-	var driver_head = _add_sphere(kart, 0.18, Vector3(0, 0.98, 0.22), mat_body)
-	driver_head.name = "DriverHead"
-	_add_box(kart, Vector3(0.22, 0.08, 0.08), Vector3(0, 0.98, 0.08), mat_hull)
-	_add_box(kart, Vector3(0.42, 0.36, 0.28), Vector3(0, 0.68, 0.22), mat_hull)
-	# Driver Arms reaching for Steering Wheel
-	var arm_l = _add_box(kart, Vector3(0.08, 0.08, 0.42), Vector3(-0.18, 0.64, -0.06), mat_hull)
-	arm_l.rotation_degrees.x = -22.0
-	var arm_r = _add_box(kart, Vector3(0.08, 0.08, 0.42), Vector3(0.18, 0.64, -0.06), mat_hull)
-	arm_r.rotation_degrees.x = -22.0
-	# Angled Steering Column & Wheel
-	var col = _add_cyl(kart, 0.02, 0.02, 0.42, Vector3(0, 0.50, -0.25), mat_frame)
-	col.rotation_degrees.x = 42.0
+		# Sidepod main sculpted body
+		var pod = _add_box(kart, Vector3(0.25, 0.18, 0.86), Vector3(side * 0.54, 0.16, 0.0), mat_body)
+		# Front air intake scoop
+		var scoop = _add_box(kart, Vector3(0.23, 0.14, 0.08), Vector3(side * 0.54, 0.16, -0.44), mat_carbon)
+		# Speed livery racing stripes
+		_add_box(kart, Vector3(0.03, 0.06, 0.88), Vector3(side * 0.67, 0.18, 0.0), mat_accent)
+
+	# 4. Floor Tray & Driver Cockpit
+	# Textured aluminum floor pan
+	_add_box(kart, Vector3(0.52, 0.015, 0.82), Vector3(0, 0.05, -0.28), mat_carbon)
+	# Chrome accelerator and brake foot pedals
+	var pedal_r = _add_box(kart, Vector3(0.05, 0.12, 0.02), Vector3(0.14, 0.12, -0.65), mat_chrome)
+	pedal_r.rotation_degrees.x = -25.0
+	var pedal_l = _add_box(kart, Vector3(0.06, 0.12, 0.02), Vector3(-0.14, 0.12, -0.65), mat_chrome)
+	pedal_l.rotation_degrees.x = -25.0
+
+	# Molded Carbon-Fiber Racing Bucket Seat
+	var seat_base = _add_box(kart, Vector3(0.44, 0.12, 0.36), Vector3(0, 0.12, 0.06), mat_carbon)
+	var seat_back = _add_box(kart, Vector3(0.42, 0.38, 0.10), Vector3(0, 0.29, 0.22), mat_carbon)
+	seat_back.rotation_degrees.x = 22.0
+	var seat_rib_l = _add_box(kart, Vector3(0.08, 0.30, 0.26), Vector3(-0.21, 0.24, 0.12), mat_carbon)
+	var seat_rib_r = _add_box(kart, Vector3(0.08, 0.30, 0.26), Vector3(0.21, 0.24, 0.12), mat_carbon)
+
+	# Angled Steering Column
+	var col = _add_cyl(kart, 0.018, 0.018, 0.40, Vector3(0, 0.28, -0.25), mat_chassis)
+	col.rotation_degrees.x = 38.0
+
+	# Steering Wheel Hub & Competition Butterfly Steering Wheel
 	var wheel_hub = Node3D.new()
 	wheel_hub.name = "SteeringWheelHub"
-	wheel_hub.position = Vector3(0, 0.66, -0.38)
+	wheel_hub.position = Vector3(0, 0.42, -0.38)
 	kart.add_child(wheel_hub)
-	var st_wheel = _add_cyl(wheel_hub, 0.15, 0.15, 0.03, Vector3.ZERO, mat_hull)
-	st_wheel.rotation_degrees.x = 45.0
-	# Exposed Rear High-Output Engine Block
-	_add_box(kart, Vector3(0.58, 0.42, 0.48), Vector3(0, 0.44, 0.88), mat_frame)
-	# Dual Chrome Exhaust Pipes
-	for ex in [-0.20, 0.20]:
-		var exh = _add_cyl(kart, 0.045, 0.045, 0.35, Vector3(ex, 0.38, 1.25), mat_frame)
-		exh.rotation_degrees.x = 90.0
-		exh.name = "Exhaust_" + ("L" if ex < 0 else "R")
-	# High-Downforce Rear Wing
-	_add_box(kart, Vector3(1.35, 0.06, 0.32), Vector3(0, 0.82, 1.18), mat_body)
-	_add_box(kart, Vector3(0.06, 0.40, 0.12), Vector3(-0.48, 0.62, 1.15), mat_frame)
-	_add_box(kart, Vector3(0.06, 0.40, 0.12), Vector3(0.48, 0.62, 1.15), mat_frame)
 
-	# 4 Wide Slick Racing Tires on Alloy Wheels
-	var tire_offsets = [
-		Vector3(-0.76, 0.28, -0.88),
-		Vector3(0.76, 0.28, -0.88),
-		Vector3(-0.80, 0.32, 0.88),
-		Vector3(0.80, 0.32, 0.88)
+	var st_center = _add_box(wheel_hub, Vector3(0.12, 0.06, 0.02), Vector3.ZERO, mat_carbon)
+	st_center.rotation_degrees.x = 38.0
+	var st_grip_l = _add_cyl(wheel_hub, 0.018, 0.018, 0.18, Vector3(-0.12, 0, 0), mat_carbon)
+	st_grip_l.rotation_degrees.x = 38.0
+	var st_grip_r = _add_cyl(wheel_hub, 0.018, 0.018, 0.18, Vector3(0.12, 0, 0), mat_carbon)
+	st_grip_r.rotation_degrees.x = 38.0
+	# Digital LCD Telemetry Gauge Display on wheel
+	var lcd = _add_box(wheel_hub, Vector3(0.08, 0.045, 0.01), Vector3(0, 0.02, -0.015), mat_visor)
+	lcd.rotation_degrees.x = 38.0
+
+	# 5. Racing Driver (Nomex Suit, Full-Face Helmet, Visor, Gloved Hands)
+	# Driver Torso strapped into seat
+	var torso = _add_box(kart, Vector3(0.36, 0.36, 0.24), Vector3(0, 0.32, 0.10), mat_body)
+	torso.rotation_degrees.x = 18.0
+	# Shoulder safety harness straps
+	_add_box(kart, Vector3(0.08, 0.38, 0.04), Vector3(-0.10, 0.33, 0.11), mat_accent).rotation_degrees.x = 18.0
+	_add_box(kart, Vector3(0.08, 0.38, 0.04), Vector3(0.10, 0.33, 0.11), mat_accent).rotation_degrees.x = 18.0
+
+	# Aerodynamic Racing Helmet
+	var head_node = Node3D.new()
+	head_node.name = "DriverHead"
+	head_node.position = Vector3(0, 0.58, 0.10)
+	kart.add_child(head_node)
+
+	var helmet_shell = _add_sphere(head_node, 0.135, Vector3.ZERO, mat_helmet)
+	helmet_shell.scale = Vector3(0.92, 1.05, 1.15)
+	# Helmet chin bar
+	var chin_bar = _add_box(head_node, Vector3(0.16, 0.08, 0.12), Vector3(0, -0.06, -0.08), mat_helmet)
+	# Iridium Mirrored Visor Band with subtle curvature
+	var visor_mesh = _add_box(head_node, Vector3(0.20, 0.075, 0.06), Vector3(0, 0.01, -0.115), mat_visor)
+	visor_mesh.rotation_degrees.x = -8.0
+
+	# Driver Arms & Gloved Hands on Steering Wheel
+	var arm_l = _add_box(kart, Vector3(0.07, 0.07, 0.34), Vector3(-0.16, 0.38, -0.14), mat_body)
+	arm_l.rotation_degrees = Vector3(22.0, 15.0, 0.0)
+	var glove_l = _add_sphere(kart, 0.045, Vector3(-0.12, 0.42, -0.34), mat_gloves)
+
+	var arm_r = _add_box(kart, Vector3(0.07, 0.07, 0.34), Vector3(0.16, 0.38, -0.14), mat_body)
+	arm_r.rotation_degrees = Vector3(22.0, -15.0, 0.0)
+	var glove_r = _add_sphere(kart, 0.045, Vector3(0.12, 0.42, -0.34), mat_gloves)
+
+	# 6. High-Output 125cc Racing Engine & Drivetrain (Rear Right)
+	# Engine crankcase and cylinder
+	_add_box(kart, Vector3(0.22, 0.20, 0.22), Vector3(0.28, 0.17, 0.42), mat_chassis)
+	var cyl_head = _add_box(kart, Vector3(0.16, 0.12, 0.16), Vector3(0.28, 0.29, 0.42), mat_radiator)
+	# Cylinder cooling fins
+	for fin_y in [0.26, 0.29, 0.32]:
+		_add_box(kart, Vector3(0.19, 0.015, 0.19), Vector3(0.28, fin_y, 0.42), mat_radiator)
+
+	# Side-Mounted Aluminum Racing Radiator (right sidepod)
+	_add_box(kart, Vector3(0.06, 0.22, 0.26), Vector3(0.40, 0.22, 0.24), mat_radiator)
+	_add_box(kart, Vector3(0.02, 0.04, 0.04), Vector3(0.40, 0.34, 0.24), mat_gloves) # Red radiator cap
+
+	# Polished Chrome Expansion-Chamber Exhaust Pipe
+	# Manifold curving back from cylinder
+	var exh_1 = _add_cyl(kart, 0.028, 0.032, 0.24, Vector3(0.26, 0.28, 0.54), mat_chrome)
+	exh_1.rotation_degrees.x = 90.0
+	# Fat expansion chamber body sweeping across center
+	var exh_chamber = _add_cyl(kart, 0.055, 0.045, 0.38, Vector3(0.08, 0.24, 0.62), mat_chrome)
+	exh_chamber.rotation_degrees.z = 85.0
+	exh_chamber.rotation_degrees.y = -12.0
+	# Chrome exhaust silencer canister on left
+	var silencer = _add_cyl(kart, 0.038, 0.038, 0.30, Vector3(-0.24, 0.22, 0.74), mat_chrome)
+	silencer.rotation_degrees.x = 90.0
+
+	# Solid Steel Rear Axle & Gold Drive Chain
+	var rear_axle = _add_cyl(kart, 0.022, 0.022, 1.28, Vector3(0, 0.16, 0.62), mat_chassis)
+	rear_axle.rotation_degrees.z = 90.0
+	# Gold sprocket & chain
+	var sprocket = _add_cyl(kart, 0.075, 0.075, 0.02, Vector3(0.24, 0.16, 0.62), mat_gold)
+	sprocket.rotation_degrees.z = 90.0
+	# Vented steel rear brake disc & red caliper
+	var disc = _add_cyl(kart, 0.085, 0.085, 0.015, Vector3(-0.16, 0.16, 0.62), mat_chrome)
+	disc.rotation_degrees.z = 90.0
+	_add_box(kart, Vector3(0.04, 0.07, 0.06), Vector3(-0.16, 0.21, 0.64), mat_gloves)
+
+	# 7. Four Wide Slick Racing Tires on Alloy Rims (Perfect Ground Touch at y=0.0)
+	var front_r = 0.15 # Radius: 15cm
+	var front_w = 0.16 # Width: 16cm
+	var rear_r = 0.16  # Radius: 16cm
+	var rear_w = 0.24  # Fat rear slick: 24cm width
+
+	var wheel_configs = [
+		{"name": "FrontWheel_0", "pos": Vector3(-0.58, front_r, -0.62), "r": front_r, "w": front_w, "is_front": true},
+		{"name": "FrontWheel_1", "pos": Vector3(0.58, front_r, -0.62),  "r": front_r, "w": front_w, "is_front": true},
+		{"name": "RearWheel_0",  "pos": Vector3(-0.64, rear_r, 0.62),   "r": rear_r,  "w": rear_w,  "is_front": false},
+		{"name": "RearWheel_1",  "pos": Vector3(0.64, rear_r, 0.62),    "r": rear_r,  "w": rear_w,  "is_front": false}
 	]
-	for i in range(tire_offsets.size()):
-		var tp = tire_offsets[i]
+
+	for cfg in wheel_configs:
 		var w_node = Node3D.new()
-		w_node.name = "FrontWheel_%d" % i if i < 2 else "RearWheel_%d" % (i - 2)
-		w_node.position = tp
+		w_node.name = cfg["name"]
+		w_node.position = cfg["pos"]
 		kart.add_child(w_node)
 
-		var radius = 0.28 if i < 2 else 0.32
-		var tire = _add_cyl(w_node, radius, radius, 0.28, Vector3.ZERO, mat_tire)
+		var r: float = cfg["r"]
+		var w: float = cfg["w"]
+
+		# Matte black competition slick rubber tire
+		var tire = _add_cyl(w_node, r, r, w, Vector3.ZERO, mat_tire)
 		tire.rotation_degrees.z = 90.0
-		var rim = _add_cyl(w_node, radius * 0.75, radius * 0.75, 0.30, Vector3.ZERO, mat_frame)
+
+		# Multi-spoke alloy racing wheel rim
+		var rim = _add_cyl(w_node, r * 0.72, r * 0.72, w + 0.015, Vector3.ZERO, mat_rim)
 		rim.rotation_degrees.z = 90.0
+
+		# Center lock anodized axle nut
+		var nut = _add_cyl(w_node, 0.032, 0.032, w + 0.03, Vector3.ZERO, mat_gold)
+		nut.rotation_degrees.z = 90.0
 
 	return kart
 

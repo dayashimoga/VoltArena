@@ -83,8 +83,11 @@ func _physics_process(delta: float) -> void:
 	to_wp.y = 0.0
 	var dist = to_wp.length()
 
-	# Anticipate turn and advance waypoint
-	if dist < 12.0:
+	# Anticipate turn and advance waypoint based on proximity or segment progress
+	var to_raw = kart_pos - raw_wp
+	to_raw.y = 0.0
+	var seg_progress = seg_tangent.dot(to_raw)
+	if dist < 14.0 or seg_progress > 2.0:
 		current_waypoint_index = (current_waypoint_index + 1) % n_pts
 		raw_wp = waypoints[current_waypoint_index]
 		next_wp = waypoints[(current_waypoint_index + 1) % n_pts]
@@ -145,10 +148,9 @@ func _physics_process(delta: float) -> void:
 	elif abs(dot_right) > 0.25:
 		throttle_input = 0.88
 
-	# Waypoint behind car recovery
-	if dot_fwd < 0.0:
-		steer_input = -1.0 if dot_right >= 0.0 else 1.0
-		throttle_input = 0.60
+	# Waypoint behind car recovery: advance to next waypoint ahead
+	if dot_fwd < 0.0 and dist < 20.0:
+		current_waypoint_index = (current_waypoint_index + 1) % n_pts
 
 	# Overtaking and opponent avoidance
 	dynamic_overtake_offset = move_toward(dynamic_overtake_offset, 0.0, delta * 0.8)

@@ -31,10 +31,10 @@ class MetroCrosshairControl extends Control:
 		var col = Color(1.0, 0.2, 0.3, 0.85)
 		var length = 9.0
 		var offset = spread
-		draw_line(Vector2(0, -offset - length), Vector2(0, -offset), col, 1.5)
-		draw_line(Vector2(0, offset), Vector2(0, offset + length), col, 1.5)
-		draw_line(Vector2(-offset - length, 0), Vector2(-offset, 0), col, 1.5)
-		draw_line(Vector2(offset, 0), Vector2(offset + length), col, 1.5)
+		draw_line(Vector2(0.0, -offset - length), Vector2(0.0, -offset), col, 1.5)
+		draw_line(Vector2(0.0, offset), Vector2(0.0, offset + length), col, 1.5)
+		draw_line(Vector2(-offset - length, 0.0), Vector2(-offset, 0.0), col, 1.5)
+		draw_line(Vector2(offset, 0.0), Vector2(offset + length, 0.0), col, 1.5)
 
 var crosshair_spread: float = 8.0
 

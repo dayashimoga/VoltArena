@@ -23,7 +23,8 @@ func get_coverage_entries() -> Array:
 			"register_quest", "create_and_register_quest", "start_quest",
 			"advance_objective", "complete_quest", "fail_quest",
 			"get_quest", "get_active_quests", "get_completed_quests",
-			"is_quest_completed", "serialize_save_data", "deserialize_save_data"
+			"is_quest_completed", "serialize_save_data", "deserialize_save_data",
+			"advance", "to_dict", "from_dict", "is_all_objectives_complete"
 		]
 	]]
 
@@ -117,5 +118,19 @@ func test_serialization() -> void:
 	var q_restored = qm2.get_quest("q_save")
 	assert_true(q_restored != null, "Restored quest should exist")
 	assert_eq(q_restored.get_objective("step").current_count, 4, "Restored objective progress should be 4")
+
+	# Test direct Quest and Objective serialization and helper methods
+	var raw_dict = q.to_dict()
+	assert_true(raw_dict.has("id"), "Quest to_dict should contain id")
+	assert_true(not q.is_all_objectives_complete(), "q should not be all complete yet")
+
+	var single_obj = q.get_objective("step")
+	assert_true(single_obj != null, "Objective step should exist")
+	var obj_dict = single_obj.to_dict()
+	var restored_obj = QuestManagerScript.Objective.from_dict(obj_dict)
+	assert_eq(restored_obj.current_count, 4, "Objective restored count should match")
+	restored_obj.advance(6)
+	assert_true(restored_obj.is_completed, "Advancing objective to req should complete it")
+
 	qm.queue_free()
 	qm2.queue_free()

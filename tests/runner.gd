@@ -47,6 +47,15 @@ const TestRoboForgeScript = preload("res://tests/unit/test_roboforge.gd")
 const TestWildCircuitScript = preload("res://tests/unit/test_wildcircuit.gd")
 const TestEngineSubsystemsScript = preload("res://tests/unit/test_engine_subsystems.gd")
 
+# --- Strike Vector Test Suites ---
+const TestStrikeCampaignScript = preload("res://games/strike-vector/tests/test_strike_campaign_unit.gd")
+const TestStrikePlayerScript = preload("res://games/strike-vector/tests/test_strike_player_unit.gd")
+const TestStrikeAIScript = preload("res://games/strike-vector/tests/test_strike_ai_unit.gd")
+const TestStrikeVectorE2EScript = preload("res://games/strike-vector/tests/test_strike_vector_e2e.gd")
+const TestStrikeTraversalProbesScript = preload("res://games/strike-vector/tests/test_strike_traversal_probes.gd")
+const TestStrikeVisualInvariantsScript = preload("res://games/strike-vector/tests/test_strike_visual_invariants.gd")
+const TestStrikeRuntimeAcceptanceScript = preload("res://games/strike-vector/tests/test_strike_runtime_acceptance.gd")
+
 # --- Responsive & Soak ---
 const TestResponsiveUIScript = preload("res://tests/responsive/test_responsive_ui.gd")
 const TestSoakScript = preload("res://tests/performance/test_soak.gd")
@@ -141,6 +150,14 @@ func _init() -> void:
 		{"name": "WildCircuit E2E", "instance": TestWildCircuitE2EScript.new()},
 		{"name": "Launcher E2E", "instance": TestLauncherE2EScript.new()},
 		{"name": "Gameplay Screens Certification E2E", "instance": TestGameplayScreensScript.new()},
+		# Strike Vector Suites
+		{"name": "Strike Vector Campaign Unit", "instance": TestStrikeCampaignScript.new()},
+		{"name": "Strike Vector Player Unit", "instance": TestStrikePlayerScript.new()},
+		{"name": "Strike Vector AI & Bosses Unit", "instance": TestStrikeAIScript.new()},
+		{"name": "Strike Vector Campaign E2E", "instance": TestStrikeVectorE2EScript.new()},
+		{"name": "Strike Vector Traversal & Collision Probes", "instance": TestStrikeTraversalProbesScript.new()},
+		{"name": "Strike Vector Visual Invariants", "instance": TestStrikeVisualInvariantsScript.new()},
+		{"name": "Strike Vector Runtime Acceptance (P0 Gates)", "instance": TestStrikeRuntimeAcceptanceScript.new()},
 		# Legacy Acceptance
 		{"name": "Platform Acceptance (Legacy)", "instance": TestAcceptanceScript.new()},
 	]

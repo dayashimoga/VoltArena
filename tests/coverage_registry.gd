@@ -19,7 +19,8 @@ const SCAN_DIRS: Array[String] = [
 ]
 
 const EXCLUDE_PATTERNS: Array[String] = [
-	"res://tests/"
+	"res://tests/",
+	"/tests/"
 ]
 
 func build_inventory() -> void:
@@ -44,7 +45,7 @@ func _scan_directory(path: String) -> void:
 
 func _scan_script_file(file_path: String) -> void:
 	for pattern in EXCLUDE_PATTERNS:
-		if file_path.begins_with(pattern):
+		if file_path.begins_with(pattern) or pattern in file_path:
 			return
 
 	var file = FileAccess.open(file_path, FileAccess.READ)

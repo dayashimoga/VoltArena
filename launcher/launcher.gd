@@ -79,6 +79,15 @@ var games_meta = [
 		"tags": ["EXPLORATION", "PHOTOGRAPHY", "WILDLIFE", "PEACEFUL"],
 		"color": Color(0.3, 1.0, 0.4),
 		"scene": "res://games/wildcircuit/wildcircuit_main.tscn"
+	},
+	{
+		"id": "strike_vector",
+		"title": "STRIKE VECTOR",
+		"tagline": "Forward Run-and-Gun Campaign",
+		"desc": "Advance through 8 cinematic combat zones with high-speed traversal, 9 heavy weapons, tactical squad AI, set-pieces, and epic multi-phase boss encounters.",
+		"tags": ["CAMPAIGN", "RUN-AND-GUN", "BOSSES", "WEAPONS"],
+		"color": Color(1.0, 0.45, 0.1),
+		"scene": "res://games/strike-vector/strike_vector_main.tscn"
 	}
 ]
 

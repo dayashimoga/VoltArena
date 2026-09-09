@@ -1,7 +1,7 @@
 # VoltArena — Platform Requirements Specification
 
 ## 1. Executive Summary
-This document specifies the technical, functional, architectural, performance, and deployment requirements for the **VoltArena** 3D Game Suite. VoltArena delivers a unified cross-platform game environment comprising seven distinct, completely original 3D titles:
+This document specifies the technical, functional, architectural, performance, and deployment requirements for the **VoltArena** 3D Game Suite. VoltArena delivers a unified cross-platform game environment comprising eight distinct, completely original 3D titles:
 1. **Iron Crucible** (Tactical Arena FPS)
 2. **Metro Siege** (Subway Wave Survival FPS)
 3. **Nitro Kick** (Rocket-Car Arena Football)
@@ -9,6 +9,7 @@ This document specifies the technical, functional, architectural, performance, a
 5. **Skybound Odyssey** (Open-Air 3D Platformer)
 6. **RoboForge Arena** (Modular Physics Construction Sandbox)
 7. **WildCircuit** (Wildlife Safari & Photography Traversal)
+8. **Strike Vector** (Forward-Moving 3D Run-and-Gun Campaign)
 
 ---
 
@@ -17,7 +18,7 @@ This document specifies the technical, functional, architectural, performance, a
 * **FR-02: Production 3D Asset System**: All player-visible characters, weapons, vehicles, architecture, and major environmental objects must utilize production-quality 3D assets (`.glb` format) and procedural PBR material systems. Assets are vendored offline under permissive licenses (CC0 / MIT) in `res://assets/models/`, tracked with SHA-256 integrity checksums in `assets/asset-manifest.json`, eliminating raw blockout placeholders in active gameplay scenes.
 * **FR-03: Original Intellectual Property**: The games must avoid copying proprietary names, characters, maps, audio, branding, or code from existing commercial titles.
 * **FR-04: Cross-Platform Target**: Must compile to and execute reliably on Web (WASM / WebGL2), Linux (x86_64), Windows (x86_64), and Android (ARM64).
-* **FR-05: Single Unified Project**: All seven games must reside within a single Godot 4.3 project sharing unified input, graphics, audio, UI themes, and save architectures.
+* **FR-05: Single Unified Project**: All eight games must reside within a single Godot 4.3 project sharing unified input, graphics, audio, UI themes, and save architectures.
 
 ---
 
@@ -85,7 +86,23 @@ This document specifies the technical, functional, architectural, performance, a
 * **FR-WILD-04 (Deterministic Scoring)**: Photo scoring engine evaluating framing, centering, subject distance, species rarity, and action state multiplier (1 to 5 star rating).
 * **FR-WILD-05 (Field Journal & Traversal)**: Comprehensive field journal tracking photographed species and high scores; explorer ATV with realistic suspension, hill climbing, and headlight illumination.
 
-### 3.8 Shared Platform Subsystems
+### 3.8 Game 8: Strike Vector (Forward-Moving 3D Run-and-Gun Campaign)
+* **FR-STRIKE-01 (Continuous Forward Locomotion)**: CharacterBody3D locomotion with walk, run, sprint, crouch, slide, jump with 0.15s coyote and jump buffering, dodge/roll, ledge mantle recovery, and anti-fall recovery at $Y < -15.0\text{m}$.
+* **FR-STRIKE-02 (8-Mission Production Campaign)**: 8 continuous forward-advancing missions (Urban Blackout, High-Speed Rail, Harbor Assault, Desert Convoy, Arctic Installation, Megafactory, Sky Fortress, Final Citadel) each with $\ge 5$ connected segments, $\ge 2$ interactive set-pieces, and unique biome-specific architecture.
+* **FR-STRIKE-03 (9-Weapon High-Quality Arsenal)**: VX-7 Assault Rifle, Tempest SMG, Breach Shotgun, Atlas Battle Rifle, Longshot Marksman, Cyclone LMG, Arc Launcher, Pulse Cannon, Tactical Sidearm with distinct procedural models, recoil, spread, projectile/hitscan logic, reload states, and upgrade attachments.
+* **FR-STRIKE-04 (10 Enemy Archetypes & Squad Coordinator)**: Rifle Trooper, Rusher, Heavy, Marksman, Shield Unit, Grenadier, Drone, Turret, Elite, Commander with 10-state HFSM, perception cones, cover/flanking, and attack slot tokens.
+* **FR-STRIKE-05 (Multi-Phase Boss Encounters)**: Unique boss per mission (Urban Jammer Mech, VTOL Gunship, Gantry Titan, Battle Rig, Sub-Zero Walker, Megafactory Automaton, Sky Core, 3-Phase Citadel Overlord) with telegraph, attack, counter, weakness exposed, and multi-phase progression.
+* **FR-STRIKE-06 (Forward Encounter Director & Streamer)**: Preloading streaming, resident active + next segments, locked barriers, reinforcements, deterministic watchdog recovery.
+* **FR-STRIKE-07 (Camera Director & Dynamic Transitions)**: 7 camera modes (Third-person, ADS, 2.5D side-scroll, corridor chase, vehicle, boss, cinematic) with spring-arm collision avoidance.
+* **FR-STRIKE-08 (Save & Checkpoint Persistence)**: Mid-mission checkpoint restoration and campaign progression saving.
+* **FR-STRIKE-09 (Character Rig & Firing Pose Stability)**: Rig tracks must isolate combat actions (`aim`, `fire`, `reload`) to upper-body bones (`mixamorig_Spine` and descendants), never modifying root hip pitch or rotating skeleton into horizontal poses. Up-vector dot product must remain $\ge 0.95$ across 100+ consecutive shots.
+* **FR-STRIKE-10 (Weapon Attachment & Barrel Alignment)**: Firearms must attach to right hand bone attachment via calibrated `WeaponGrip`, with barrel forward strictly aligned down-range along player $-Z$ (angular error $\le 1.0^\circ$). Standardized sockets (`MuzzleSocket`, `MagazineSocket`, `ScopeSocket`, `ShellEjectionSocket`, `LeftHandIKTarget`).
+* **FR-STRIKE-11 (World Metric Scale Standard)**: 1 Godot unit = 1 metre convention. Human $1.7\text{m}\text{--}1.9\text{m}$; Patrol car $4.0\text{m}\text{--}5.5\text{m}$ length, $1.4\text{m}\text{--}2.4\text{m}$ height; Heavy truck $5.5\text{m}\text{--}7.0\text{m}$ length; Two-lane roadway $\ge 13.5\text{m}$ width with 3.5m sidewalks.
+* **FR-STRIKE-12 (Physical Combat & Hit Registration)**: Ballistic projectiles continuous sweep raycast with valid collision layers (`LAYER_PLAYER = 2`, `LAYER_ENEMIES = 4`, `LAYER_WORLD = 1`). Bullets physically register hits on player, deducting 60% shield and 40% HP, emitting `damage_taken` signal. Solid walls block projectiles completely.
+* **FR-STRIKE-13 (Threat Readability & Directional Damage Feedback)**: Directional damage indicator on HUD showing glowing threat arcs pointing toward attacker bearing, plus red peripheral vignette pulse.
+* **FR-STRIKE-14 (Urban Blackout Visual Aesthetic)**: Dark weathered concrete, carbon steel, midnight sky lighting, emergency orange/red hazard beacons, and distance atmospheric fog.
+
+### 3.9 Shared Platform Subsystems
 * **FR-SYS-01 (Quest System)**: Universal `QuestManager` supporting linear and branching quests, multi-stage objectives, signal callbacks, and state serialization.
 * **FR-SYS-02 (Inventory System)**: Universal `InventorySystem` with grid/stack management, equipment slots, item weight, and traversal gear unlocks.
 * **FR-SYS-03 (Orbit Camera)**: `OrbitCamera3D` with spring-arm raycast obstacle avoidance, mouse/gamepad rotation, pitch clamping, and distance zoom.
@@ -93,8 +110,8 @@ This document specifies the technical, functional, architectural, performance, a
 * **FR-SYS-05 (Puzzle Elements)**: Reusable physics-driven `PressurePlate`, `PuzzleSwitch`, `PuzzleDoor`, `WindCurrent`, and `GrappleAnchor`.
 * **FR-SYS-06 (Material Generator)**: Procedural PBR material generator producing 18 rich surface textures (metals, concrete, dirt, grass, glass, energy grids).
 
-### 3.9 Universal Launcher
-* **FR-LAUNCH-01 (7-Game Carousel)**: Responsive 7-game 3D carousel with keyboard, gamepad, and mouse navigation, live preview metadata, career statistics, and instant hot-swapping between all titles.
+### 3.10 Universal Launcher
+* **FR-LAUNCH-01 (8-Game Carousel)**: Responsive 8-game 3D carousel with keyboard, gamepad, and mouse navigation, live preview metadata, career statistics, and instant hot-swapping between all titles.
 
 ---
 
@@ -168,11 +185,18 @@ This document specifies the technical, functional, architectural, performance, a
 | **FR-SYS-04**  | Shared Day/Night Cycle | 24-hour celestial orbit, smooth light transitions | **RUNTIME_VERIFIED** | `DayNightCycle3D` tested in `TestEngineSubsystems` |
 | **FR-SYS-05**  | Shared Puzzle Elements | Plates, switches, doors, updrafts, grapple anchors | **RUNTIME_VERIFIED** | `PuzzleElements` tested in `TestPuzzleElements` |
 | **FR-SYS-06**  | Shared Material Gen | 18 procedural PBR materials (metals, terrain, FX) | **RUNTIME_VERIFIED** | `MaterialGenerator` tested in `TestMaterialGenerator` |
-| **FR-LAUNCH-01**| Universal Launcher | 7-game carousel, metadata, stats, responsive UI | **RUNTIME_VERIFIED** | 7 games verified in `TestLauncherE2E` |
+| **FR-LAUNCH-01**| Universal Launcher | 8-game carousel, metadata, stats, responsive UI | **RUNTIME_VERIFIED** | 8 games verified in `TestLauncherE2E` |
+| **FR-STRIKE-01**| Strike Vector Campaign | 8 continuous missions with segment streaming & checkpoints | **RUNTIME_VERIFIED** | Verified in `TestStrikeCampaignUnit` & `TestStrikeVectorE2E` |
+| **FR-STRIKE-02**| TPS Controls & Rigging | Forward travel, facing alignment, BoneAttachment3D, upright rig | **RUNTIME_VERIFIED** | Verified in `TestStrikeVisualInvariants` (94 assertions) |
+| **FR-STRIKE-03**| 9-Weapon Arsenal & Sockets| 9 firearms, 5 sockets, crosshair raycast convergence | **RUNTIME_VERIFIED** | Verified in `TestStrikePlayerUnit` & `TestStrikeVisualInvariants` |
+| **FR-STRIKE-04**| Human-Scale Urban Biome | 14m–24m buildings, physical box colliders, zero-fall walls | **RUNTIME_VERIFIED** | Verified in `TestStrikeTraversalProbes` & `TestStrikeVisualInvariants` |
+| **FR-STRIKE-05**| NavigationMesh & AI HFSM | Programmatic NavMesh across all biomes, 10-state enemy AI | **RUNTIME_VERIFIED** | Verified in `TestStrikeAIUnit` & `TestStrikeVisualInvariants` |
+| **FR-STRIKE-06**| Tactical Navigation HUD | Top compass tape, radar with threat fading, tactical map ($M$) | **RUNTIME_VERIFIED** | Verified in `TestStrikeVisualInvariants` |
 | **NFR-PERF-01**| Frame Rate | Stable 60+ FPS rendered gameplay, >1000 FPS sim | **RUNTIME_VERIFIED** | 1028.8 FPS benchmarked in `TestBenchmark` |
-| **NFR-PERF-02**| ProcGen Execution | Map and circuit generation under 2,500ms | **RUNTIME_VERIFIED** | Arena: 75.8ms, Subway: 540.4ms, Track: 362.6ms, Skybound: 3.4ms, RoboForge: 0.6ms, WildCircuit: 3.4ms |
+| **NFR-PERF-02**| ProcGen Execution | Map and circuit generation under 2,500ms | **RUNTIME_VERIFIED** | All biomes generated under 2,500ms |
 | **NFR-PERF-03**| Memory Budget | Heap under 500MB | **RUNTIME_VERIFIED** | 22.3 MB static heap footprint |
 | **NFR-WEB-01** | Cloudflare 25MB Limit | All individual deployed files $\le 25.0$ MB | **RUNTIME_VERIFIED** | `index.pck` and `index.wasm` split into <= 18MB chunks, all files PASS |
-| **NFR-QA-01**  | Test Pass Rate | 100% assertions passing | **RUNTIME_VERIFIED** | 51/51 suites, 1043/1043 assertions PASS (0 failures) |
-| **NFR-QA-02**  | Code Coverage | $> 90.0\%$ function coverage | **RUNTIME_VERIFIED** | **96.85% coverage (585 / 604 functions)** |
+| **NFR-QA-01**  | Test Pass Rate | 100% assertions passing | **RUNTIME_VERIFIED** | 57/57 suites, 1686/1686 assertions PASS (0 failures) |
+| **NFR-QA-02**  | Code Coverage | $> 90.0\%$ function coverage | **RUNTIME_VERIFIED** | **94.6% coverage (729 / 771 functions)** |
 | **NFR-GATE-01**| Production Gates | G0-G10 verified, zero automatable failures | **RUNTIME_VERIFIED** | Automated certification passed with exit code 0 |
+

@@ -59,6 +59,22 @@
 * **Cause**: Checking `is_kickoff_pause` immediately following a goal event must be synchronous.
 * **Resolution**: `reset_kickoff()` must be invoked synchronously inside `_on_goal_scored()` with `is_kickoff_pause = true` set immediately, while scene timers manage the visual countdown hold.
 
+---
+
+## 4. Strike Vector 3D Character, Rigging & Camera Gotchas
+
+### Gotcha: Mixamo Hips Position Track Units vs Character Scale
+* **Cause**: Mixamo animations (e.g. `Aim`, `Fire`, `Reload`) authored in meters $(0, 0.91, 0)$ collapse skeletal rigs into the ground when played on character models imported at $0.01$ scale.
+* **Resolution**: `ModelCache` detects and normalizes position tracks in `_normalize_rig_tracks()` by converting keys from meters to centimeters: `Vector3(val.x * 100, -val.z * 100, val.y * 100)`.
+
+### Gotcha: BoneAttachment3D Child Scale Inheritance
+* **Cause**: Skeletons inside $0.01$-scaled root nodes propagate that scale down to `BoneAttachment3D`. Any weapon attached directly shrinks to microscopic size near the operative's feet.
+* **Resolution**: Create an intermediate `WeaponGrip` (`Marker3D`) under `BoneAttachment3D` with scale `Vector3(100.0, 100.0, 100.0)` and rotation $Y=90.0^\circ$ to restore true human scale and align the barrel strictly with character forward $-Z$.
+
+### Gotcha: Third-Person Crosshair Raycast Parallax
+* **Cause**: In third-person shoulder view, projecting projectiles straight along the weapon barrel forward vector causes bullets to hit nearby railings or low cover instead of the crosshair target.
+* **Resolution**: Raycast from camera center into the 3D world to determine the target impact point, then converge muzzle projectile velocity toward that target point.
+
 ### Gotcha: Hexagonal Grid Boundary Rendering
 * **Cause**: Checking Euclidean distance only from hexagon vertices (`>= side - 4.0`) leaves flat edges unrendered.
 * **Resolution**: Use exact distance to the hexagon edge plane: `24.25 - max(dx*0.866025, dx*0.433013 + dy*0.75)`.

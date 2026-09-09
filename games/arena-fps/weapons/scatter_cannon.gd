@@ -33,14 +33,16 @@ func trigger_fire(camera_ray_origin: Vector3, camera_ray_dir: Vector3) -> bool:
 		am.play_sound(sound_name)
 
 	# Fire multiple pellets
+	var fwd = camera_ray_dir.normalized()
+	var up = Vector3.UP if absf(fwd.y) < 0.99 else Vector3.RIGHT
+	var right = fwd.cross(up).normalized()
+	var cam_up = right.cross(fwd).normalized()
+	var spread_rad = deg_to_rad(spread_angle_deg)
+
 	for i in range(pellets_count):
-		var spread_rad = deg_to_rad(spread_angle_deg)
-		var spread_offset = Vector3(
-			randf_range(-spread_rad, spread_rad),
-			randf_range(-spread_rad, spread_rad),
-			0.0
-		)
-		var pellet_dir = (camera_ray_dir + spread_offset).normalized()
+		var ox = randf_range(-spread_rad, spread_rad)
+		var oy = randf_range(-spread_rad, spread_rad)
+		var pellet_dir = (fwd + right * ox + cam_up * oy).normalized()
 		perform_hitscan(camera_ray_origin, pellet_dir)
 
 	if owner_entity and owner_entity.has_method("apply_recoil"):

@@ -53,6 +53,14 @@ static func get_texture(texture_id: String) -> ImageTexture:
 			tex = _build_curb_stripes_albedo()
 		"curb_stripes_blue_white":
 			tex = _build_curb_stripes_blue_white()
+		"curb_stripes_red_white":
+			tex = _build_curb_stripes_red_white()
+		"armco_barrier_albedo":
+			tex = _build_armco_barrier_albedo()
+		"racing_turf_albedo":
+			tex = _build_racing_turf_albedo()
+		"gravel_trap_albedo":
+			tex = _build_gravel_trap_albedo()
 		"tactile_bump_albedo":
 			tex = _build_tactile_bump_albedo()
 		"asphalt_lanes_albedo":
@@ -510,8 +518,98 @@ static func _build_curb_stripes_blue_white() -> ImageTexture:
 	var white = Color(0.96, 0.96, 0.98)
 	for y in range(h):
 		for x in range(w):
-			var stripe = (x / 16) % 2 == 0
+			var stripe = ((x + y) / 16) % 2 == 0
 			img.set_pixel(x, y, blue if stripe else white)
+	return ImageTexture.create_from_image(img)
+
+static func _build_curb_stripes_red_white() -> ImageTexture:
+	var w = 64
+	var h = 64
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var red = Color(0.88, 0.12, 0.14)
+	var white = Color(0.96, 0.96, 0.98)
+	var shadow = Color(0.08, 0.08, 0.10, 0.3)
+	for y in range(h):
+		var edge_shade = 1.0 - (y / float(h)) * 0.2
+		for x in range(w):
+			var stripe = ((x + y) / 16) % 2 == 0
+			var c = (red if stripe else white) * edge_shade
+			# Slight bevel ridge
+			if (x + y) % 16 == 0:
+				c = c * 0.75
+			img.set_pixel(x, y, c)
+	return ImageTexture.create_from_image(img)
+
+static func _build_armco_barrier_albedo() -> ImageTexture:
+	var w = 128
+	var h = 64
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var steel_base = Color(0.68, 0.72, 0.76)
+	var steel_dark = Color(0.38, 0.42, 0.46)
+	var steel_bright = Color(0.88, 0.90, 0.94)
+	var post_color = Color(0.28, 0.30, 0.34)
+	var reflector_amber = Color(1.0, 0.65, 0.05)
+	var reflector_red = Color(0.95, 0.15, 0.15)
+
+	for y in range(h):
+		# W-beam corrugation profile (two concave troughs and center ridge)
+		var norm_y = float(y) / float(h)
+		var w_wave = sin(norm_y * TAU * 2.0)
+		var beam_col = steel_base.lerp(steel_bright, maxf(0.0, w_wave) * 0.4).lerp(steel_dark, maxf(0.0, -w_wave) * 0.5)
+
+		# Top / Bottom lips
+		if y < 4 or y >= h - 4:
+			beam_col = steel_dark
+
+		for x in range(w):
+			var col = beam_col
+			# Vertical I-beam post every 64 pixels
+			if x % 64 < 4:
+				col = post_color
+			# Hex bolt rivets on posts
+			elif (x % 64 >= 4 and x % 64 <= 6) and (y == 20 or y == 44):
+				col = Color(0.18, 0.20, 0.22)
+			# Safety Reflector Strip on center ridge
+			if y >= 30 and y <= 34 and (x % 32 >= 12 and x % 32 <= 20):
+				col = reflector_amber if (x / 32) % 2 == 0 else reflector_red
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+static func _build_racing_turf_albedo() -> ImageTexture:
+	var w = 128
+	var h = 128
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var grass_dark = Color(0.16, 0.38, 0.14)
+	var grass_light = Color(0.22, 0.48, 0.18)
+	var earth = Color(0.28, 0.24, 0.16)
+	for y in range(h):
+		var stripe = ((y / 16) % 2) == 0
+		var base = grass_light if stripe else grass_dark
+		for x in range(w):
+			var grain = (float((x * 37 + y * 43) % 47) / 47.0 - 0.5) * 0.08
+			var col = base + Color(grain * 0.8, grain * 1.2, grain * 0.5)
+			if (x * 13 + y * 17) % 73 == 0:
+				col = col.lerp(earth, 0.4)
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+static func _build_gravel_trap_albedo() -> ImageTexture:
+	var w = 128
+	var h = 128
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var gravel_tan = Color(0.72, 0.58, 0.42)
+	var gravel_red = Color(0.62, 0.42, 0.32)
+	var gravel_dark = Color(0.40, 0.32, 0.26)
+	for y in range(h):
+		for x in range(w):
+			var n = (x * 19 + y * 31) % 17
+			var col = gravel_tan
+			if n < 5:
+				col = gravel_red
+			elif n < 8:
+				col = gravel_dark
+			var grain = (float((x * 7 + y * 11) % 23) / 23.0 - 0.5) * 0.06
+			img.set_pixel(x, y, col + Color(grain, grain, grain))
 	return ImageTexture.create_from_image(img)
 
 static func _build_tactile_bump_albedo() -> ImageTexture:
@@ -533,20 +631,29 @@ static func _build_asphalt_lanes_albedo() -> ImageTexture:
 	var w = 128
 	var h = 128
 	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
-	var dark_asphalt = Color(0.18, 0.20, 0.23)
-	var white_line = Color(0.95, 0.96, 0.98)
-	var curb_edge = Color(0.12, 0.14, 0.16)
+	var base_asphalt = Color(0.20, 0.22, 0.24)
+	var rubber_groove = Color(0.11, 0.12, 0.13) # Heavy tire wear groove on racing line
+	var white_line = Color(0.96, 0.96, 0.98)
+
 	for y in range(h):
-		var dashed = (y % 32) < 18
+		var dashed = (y % 32) < 20
 		for x in range(w):
-			var grain = (float((x * 19 + y * 23) % 29) / 29.0 - 0.5) * 0.03
-			var col = dark_asphalt + Color(grain, grain, grain)
-			# Outer edge lines
+			var grain = (float((x * 19 + y * 23) % 29) / 29.0 - 0.5) * 0.035
+			var col = base_asphalt + Color(grain, grain, grain)
+
+			# Rubbered-in racing groove along left lane (x: 24-44) and right lane (x: 84-104)
+			var in_left_groove = (x >= 24 and x <= 44)
+			var in_right_groove = (x >= 84 and x <= 104)
+			if in_left_groove or in_right_groove:
+				col = col.lerp(rubber_groove, 0.75)
+
+			# Crisp White Outer boundary edge lines
 			if x < 4 or x >= w - 4:
 				col = white_line
-			# Center dashed lane divider
+			# Center dashed racing dividing line
 			elif x >= 62 and x <= 66 and dashed:
 				col = white_line
+
 			img.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(img)
 

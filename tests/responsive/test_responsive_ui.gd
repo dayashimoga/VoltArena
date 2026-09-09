@@ -65,7 +65,7 @@ func test_launcher_responsive_resolutions() -> void:
 		launcher.update_responsive_layout(res["size"])
 
 		assert_true(launcher.game_cards_container != null, "%s: Game cards container must exist" % res["name"])
-		assert_true(launcher.game_cards_container.get_child_count() == 7, "%s: Must have 7 game cards" % res["name"])
+		assert_true(launcher.game_cards_container.get_child_count() == launcher.games_meta.size(), "%s: Must have %d game cards" % [res["name"], launcher.games_meta.size()])
 
 		# Verify all game cards have positive non-zero minimum size
 		for card in launcher.game_cards_container.get_children():

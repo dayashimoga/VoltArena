@@ -153,6 +153,19 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.emission_texture = TexSynth.get_texture("stadium_score_banner_blue")
 			mat.emission_energy_multiplier = 0.8
 			mat.roughness = 0.3
+		"arena_glass":
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat.albedo_color = Color(0.15, 0.45, 0.75, 0.22)
+			mat.metallic = 0.85
+			mat.roughness = 0.08
+			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		"arena_energy_grid":
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat.albedo_color = Color(0.10, 0.70, 1.0, 0.30)
+			mat.emission_enabled = true
+			mat.emission = Color(0.08, 0.60, 0.95)
+			mat.emission_energy_multiplier = 1.6
+			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 		"gold_pickup":
 			mat.albedo_color = Color(1.0, 0.88, 0.15)
 			mat.metallic = 0.95

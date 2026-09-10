@@ -14,6 +14,10 @@ const ResultsScreenScript = preload("res://shared/ui/results_screen.gd")
 @export var game_mode: String = "quick_race" # "quick_race", "championship", "time_trial", "drift_challenge", "elimination", "item_race"
 @export var ai_racer_count: int = 5
 
+enum State { PRE_RACE, COUNTDOWN, RACING, FINISHED }
+var current_state: State = State.PRE_RACE
+var is_race_started: bool = false
+
 var player_kart: Node3D
 var ai_karts: Array[Node3D] = []
 var all_karts: Array[Node3D] = []
@@ -35,6 +39,8 @@ func setup_scene() -> void:
 		hud = DriftStormHUDScript.new()
 		hud.name = "HUD"
 		add_child(hud)
+		if not is_inside_tree():
+			hud._ready()
 
 	if not pause_menu:
 		pause_menu = PauseMenuScript.new()
@@ -72,9 +78,8 @@ func setup_scene() -> void:
 	camera = Camera3D.new()
 	camera.name = "KartCamera"
 	camera.current = true
-	camera.global_position = Vector3(-2.2, 2.2, 11.5)
-	camera.look_at(Vector3(-2.2, 0.8, 6.0), Vector3.UP)
 	add_child(camera)
+	camera.look_at_from_position(Vector3(-2.2, 2.2, 11.5), Vector3(-2.2, 0.8, 6.0), Vector3.UP)
 
 	# 5 Competitive AI Racers - Staggered starting grid behind start line
 	var grid_slots = [
@@ -133,21 +138,80 @@ func _on_track_built(waypoints: Array, checkpoints: Array) -> void:
 				if "waypoints" in child:
 					child.waypoints = typed_waypoints
 
-	# Initialize race manager with participants and checkpoints
-	race_manager.countdown_tick.connect(func(count: int):
-		if hud and hud.has_method("show_countdown"):
-			hud.show_countdown(str(count))
-	)
-	race_manager.race_started.connect(func():
-		if hud and hud.has_method("show_countdown"):
-			hud.show_countdown("GO!")
-		if hud and hud.has_method("dismiss_onboarding"):
-			hud.dismiss_onboarding()
-	)
+	# Connect race manager signals if not already connected
+	if race_manager:
+		race_manager.racers = all_karts
+		race_manager.checkpoints = checkpoints
+		for cp in checkpoints:
+			if cp and not cp.checkpoint_hit.is_connected(race_manager._on_checkpoint_hit):
+				cp.checkpoint_hit.connect(race_manager._on_checkpoint_hit)
+		race_manager.process_mode = Node.PROCESS_MODE_DISABLED
+		if not race_manager.countdown_tick.is_connected(_on_countdown_tick):
+			race_manager.countdown_tick.connect(_on_countdown_tick)
+		if not race_manager.race_started.is_connected(_on_race_started):
+			race_manager.race_started.connect(_on_race_started)
 
-	race_manager.initialize_race(all_karts, checkpoints)
+	reposition_karts_on_grid()
+
+func _on_countdown_tick(count: int) -> void:
+	if hud and hud.has_method("show_countdown"):
+		hud.show_countdown(str(count))
+
+func _on_race_started() -> void:
+	current_state = State.RACING
+	if race_manager:
+		race_manager.process_mode = Node.PROCESS_MODE_INHERIT
+	if hud and hud.has_method("show_countdown"):
+		hud.show_countdown("GO!")
+	if hud and hud.has_method("dismiss_onboarding"):
+		hud.dismiss_onboarding()
+
+func start_race() -> void:
+	if current_state != State.PRE_RACE:
+		return
+	current_state = State.COUNTDOWN
+	is_race_started = true
+	if hud and hud.has_method("dismiss_onboarding"):
+		hud.dismiss_onboarding()
+	if race_manager:
+		race_manager.process_mode = Node.PROCESS_MODE_INHERIT
+		var cps = track_generator.checkpoints if (track_generator and not track_generator.checkpoints.is_empty()) else race_manager.checkpoints
+		race_manager.initialize_race(all_karts, cps)
+
+func reposition_karts_on_grid() -> void:
+	if not track_generator:
+		return
+	var spline = track_generator.get("race_spline")
+	if not spline or spline.track_length <= 0.0:
+		return
+	var t_len = spline.track_length
+	for i in range(all_karts.size()):
+		var kart = all_karts[i]
+		if not is_instance_valid(kart):
+			continue
+		var grid_dist = fposmod(t_len - (5.0 + i * 3.5), t_len)
+		var samp = spline.sample_at_distance(grid_dist)
+		var lat_sign = -1.0 if i % 2 == 0 else 1.0
+		var pos = samp["pos"] + samp["binormal"] * (lat_sign * 2.2) + Vector3(0, 0.08, 0)
+		kart.global_position = pos
+		if samp["tangent"].length_squared() > 0.01:
+			kart.look_at(pos + samp["tangent"], samp["normal"])
+		kart.forward_speed = 0.0
+		kart.velocity = Vector3.ZERO
 
 func _process(delta: float) -> void:
+	if current_state == State.PRE_RACE:
+		if is_instance_valid(player_kart):
+			player_kart.forward_speed = 0.0
+			player_kart.velocity = Vector3.ZERO
+			var k_pos = player_kart.global_position if player_kart.is_inside_tree() else player_kart.position
+			var angle = Time.get_ticks_msec() * 0.00035
+			var cam_offset = Vector3(sin(angle) * 5.8, 2.2, cos(angle) * 5.8)
+			if camera and camera.is_inside_tree():
+				camera.global_position = k_pos + cam_offset
+				camera.look_at(k_pos + Vector3(0, 0.8, 0), Vector3.UP)
+		return
+
 	update_camera(delta)
 	if hud and is_instance_valid(player_kart):
 		if hud.has_method("update_speed"):
@@ -196,6 +260,7 @@ func update_camera(delta: float) -> void:
 		camera.look_at_from_position(camera.position, k_pos + Vector3(0, 0.9, 0), Vector3.UP)
 
 func _on_race_finished(winner: Node) -> void:
+	current_state = State.FINISHED
 	var won = (winner == player_kart)
 	var best_lap = player_kart.best_lap_time
 	var sm = GameConstants.get_autoload(self, "SaveManager")
@@ -227,8 +292,10 @@ func select_track(track_name: String) -> void:
 		for child in track_generator.get_children():
 			child.queue_free()
 		track_generator.build_circuit()
+		reposition_karts_on_grid()
 
 func select_kart(kart_name: String) -> void:
 	selected_kart = kart_name
 	if player_kart and is_instance_valid(player_kart) and player_kart.has_method("set_kart_type"):
 		player_kart.set_kart_type(selected_kart)
+

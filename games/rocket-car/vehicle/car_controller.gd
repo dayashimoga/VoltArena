@@ -20,6 +20,7 @@ signal boost_updated(current_boost: float, max_boost: float)
 
 @export var team_id: int = 0 # 0: Blue Team, 1: Orange Team
 @export var is_player_controlled: bool = true
+@export var vehicle_archetype: String = "sports_coupe"
 
 var car_visual: Node3D
 var is_boosting: bool = false
@@ -33,39 +34,89 @@ func _ready() -> void:
 	collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_BALL | GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES
 	setup_car_visual()
 
+func set_vehicle_archetype(new_archetype: String) -> void:
+	vehicle_archetype = new_archetype
+	setup_car_visual()
+
+func apply_archetype_stats() -> void:
+	match vehicle_archetype.to_lower():
+		"rally_buggy", "dune_raider", "buggy":
+			max_speed = 25.0
+			boost_speed = 38.0
+			acceleration = 26.0
+			brake_deceleration = 36.0
+			steer_speed = 3.4
+			jump_impulse = 13.5
+			boost_consumption_rate = 30.0
+			boost_recharge_rate = 10.0
+		"muscle_gt", "titan_enforcer", "muscle", "turbo_truck":
+			max_speed = 26.5
+			boost_speed = 40.0
+			acceleration = 32.0
+			brake_deceleration = 38.0
+			steer_speed = 2.7
+			jump_impulse = 10.5
+			boost_consumption_rate = 35.0
+			boost_recharge_rate = 8.0
+		"cyber_ev", "volt_pulse", "phantom", "cyber":
+			max_speed = 29.5
+			boost_speed = 44.0
+			acceleration = 30.0
+			brake_deceleration = 35.0
+			steer_speed = 3.2
+			jump_impulse = 11.5
+			boost_consumption_rate = 28.0
+			boost_recharge_rate = 15.0
+		_: # "sports_coupe" / "apex_spectre" / "speed_demon"
+			max_speed = 28.0
+			boost_speed = 42.0
+			acceleration = 28.0
+			brake_deceleration = 35.0
+			steer_speed = 3.0
+			jump_impulse = 11.0
+			boost_consumption_rate = 32.0
+			boost_recharge_rate = 9.0
+
 func setup_car_visual() -> void:
-	# Production-quality 3D rocket car model
-	var v_id = "rocket_car_spectre" if team_id == 0 else "rocket_car_enforcer"
-	car_visual = ModelCacheScript.get_vehicle(v_id)
-	if not car_visual:
-		car_visual = MeshBuilder.build_rocket_car(team_id)
+	if car_visual and is_instance_valid(car_visual):
+		car_visual.queue_free()
+
+	# Production-quality 3D rocket car model matching archetype and canonical orientation
+	car_visual = MeshBuilder.build_rocket_car(team_id, vehicle_archetype)
 	add_child(car_visual)
+	apply_archetype_stats()
 
-	# Main physics collider
-	var col = CollisionShape3D.new()
-	var b_shape = BoxShape3D.new()
-	b_shape.size = Vector3(2.2, 1.3, 3.8)
-	col.shape = b_shape
-	col.position = Vector3(0, 0.7, 0)
-	add_child(col)
+	# Main physics collider if not already added
+	var col = get_node_or_null("CarCollision") as CollisionShape3D
+	if not col:
+		col = CollisionShape3D.new()
+		col.name = "CarCollision"
+		var b_shape = BoxShape3D.new()
+		b_shape.size = Vector3(2.2, 1.3, 3.8)
+		col.shape = b_shape
+		col.position = Vector3(0, 0.7, 0)
+		add_child(col)
 
-	# Front impact bumper for responsive ball contact
-	var bumper = Area3D.new()
-	bumper.name = "FrontBumper"
-	bumper.collision_layer = 0
-	bumper.collision_mask = GameConstants.LAYER_BALL
-	var b_col = CollisionShape3D.new()
-	var b_box = BoxShape3D.new()
-	b_box.size = Vector3(2.4, 1.2, 1.2)
-	b_col.shape = b_box
-	b_col.position = Vector3(0, 0.7, -1.9)
-	bumper.add_child(b_col)
-	add_child(bumper)
+	# Front impact bumper for responsive ball contact (canonical forward is -Z)
+	var bumper = get_node_or_null("FrontBumper") as Area3D
+	if not bumper:
+		bumper = Area3D.new()
+		bumper.name = "FrontBumper"
+		bumper.position = Vector3(0, 0.7, -1.9)
+		bumper.collision_layer = 0
+		bumper.collision_mask = GameConstants.LAYER_BALL
+		var b_col = CollisionShape3D.new()
+		var b_box = BoxShape3D.new()
+		b_box.size = Vector3(2.4, 1.2, 1.2)
+		b_col.shape = b_box
+		b_col.position = Vector3.ZERO
+		bumper.add_child(b_col)
+		add_child(bumper)
 
-	bumper.body_entered.connect(func(b: Node3D):
-		if b.is_in_group("balls"):
-			_apply_ball_hit(b, -global_transform.basis.z)
-	)
+		bumper.body_entered.connect(func(b: Node3D):
+			if b.is_in_group("balls"):
+				_apply_ball_hit(b, -global_transform.basis.z)
+		)
 
 func _physics_process(delta: float) -> void:
 	if hit_cooldown > 0.0:
@@ -108,10 +159,11 @@ func _apply_ball_hit(ball_node: Node3D, contact_normal: Vector3) -> void:
 
 	var hit_speed = maxf(velocity.length(), 10.0)
 	if is_boosting:
-		hit_speed *= 1.45
+		hit_speed *= 1.40
 	var fwd = -global_transform.basis.z
-	var launch_dir = (fwd * 0.75 + contact_normal * 0.25 + Vector3.UP * 0.32).normalized()
-	var impulse = launch_dir * (hit_speed * 1.9)
+	var launch_dir = (fwd * 0.72 + contact_normal * 0.28 + Vector3.UP * 0.30).normalized()
+	# Authoritative momentum transfer to ball RigidBody3D
+	var impulse = launch_dir * (hit_speed * 18.0)
 
 	if ball_node.has_method("apply_ball_impulse"):
 		ball_node.apply_ball_impulse(impulse, global_position + fwd * 1.5)
@@ -197,6 +249,21 @@ func handle_player_input(delta: float) -> void:
 func apply_driving_controls(throttle: float, steer: float, delta: float) -> void:
 	var on_ground = (is_on_floor() and velocity.y <= 0.1 and global_position.y < 1.0) if is_inside_tree() else true
 
+	# Update visual wheel steering yaw (front wheels steer with turn)
+	if car_visual and is_instance_valid(car_visual):
+		var steer_target = steer * 0.42
+		for w_name in ["Wheel_0", "Wheel_1", "wheel-front-left", "wheel-front-right"]:
+			var w = car_visual.find_child(w_name, true, false)
+			if w is Node3D:
+				w.rotation.y = lerpf(w.rotation.y, steer_target, delta * 14.0)
+
+		# Animate boost flames
+		var flame_scale = Vector3(1.4, 1.4, 1.6) if is_boosting else Vector3(0.5, 0.5, 0.5)
+		for child in car_visual.get_children():
+			if "ThrusterFlame" in child.name or "ThrusterGlow" in child.name:
+				if child is Node3D:
+					child.scale = child.scale.lerp(flame_scale, delta * 12.0)
+
 	if on_ground:
 		# Ground Driving & Drift
 		if abs(forward_speed) > 0.5:
@@ -213,7 +280,7 @@ func apply_driving_controls(throttle: float, steer: float, delta: float) -> void
 		else:
 			forward_speed = move_toward(forward_speed, 0.0, 12.0 * delta)
 
-		# Apply forward direction velocity
+		# Apply forward direction velocity (canonical forward is -Z)
 		var fwd = -transform.basis.z
 		velocity.x = fwd.x * forward_speed
 		velocity.z = fwd.z * forward_speed

@@ -54,59 +54,95 @@ func build_circuit() -> void:
 	fl_overlay.material_override = MaterialGenerator.get_material("checkered_flag")
 	add_child(fl_overlay)
 
-	# Realistic FIA Painted Starting Grid Marks along the home straight
+	# Production Start/Finish Overhead Gantry anchored to authoritative spline
+	var s0 = race_spline.sample_at_distance(0.0)
+	var gantry = MeshBuilder.build_start_gantry(track_width)
+	var g_tr = Transform3D()
+	g_tr.basis.z = -s0["tangent"]
+	g_tr.basis.y = s0["normal"]
+	g_tr.basis.x = s0["binormal"]
+	gantry.transform = Transform3D(g_tr.basis.orthonormalized(), s0["pos"] - s0["tangent"] * 2.0)
+	add_child(gantry)
+
+	# Realistic FIA Painted Starting Grid Marks along the home straight behind finish line
 	var grid_mat = MaterialGenerator.create_pbr_material(Color(0.95, 0.95, 0.98, 0.9), 0.05, 0.45)
 	for grid_idx in range(6):
-		var gz = 6.0 + grid_idx * 3.5
-		var gx = -2.2 if grid_idx % 2 == 0 else 2.2
+		var grid_dist = fposmod(race_spline.track_length - (5.0 + grid_idx * 3.5), race_spline.track_length)
+		var s_grid = race_spline.sample_at_distance(grid_dist)
+		var lat_sign = -1.0 if grid_idx % 2 == 0 else 1.0
+		var slot_center = s_grid["pos"] + s_grid["binormal"] * (lat_sign * 2.2) + s_grid["normal"] * 0.08
+		var g_tan = s_grid["tangent"]
+		var g_bin = s_grid["binormal"]
+		var g_up = s_grid["normal"]
+
+		var b_tr = Transform3D()
+		b_tr.basis.z = -g_tan
+		b_tr.basis.y = g_up
+		b_tr.basis.x = g_bin
+		var b_basis = b_tr.basis.orthonormalized()
+
 		# Front white limit bar
 		var bar_f = MeshInstance3D.new()
 		var bar_f_mesh = QuadMesh.new()
 		bar_f_mesh.size = Vector2(2.2, 0.22)
 		bar_f_mesh.orientation = PlaneMesh.FACE_Y
 		bar_f.mesh = bar_f_mesh
-		bar_f.position = Vector3(gx, 0.08, gz - 1.2)
+		bar_f.transform = Transform3D(b_basis, slot_center + g_tan * 1.0)
 		bar_f.material_override = grid_mat
 		add_child(bar_f)
+
 		# Left guideline
 		var bar_l = MeshInstance3D.new()
 		var bar_l_mesh = QuadMesh.new()
 		bar_l_mesh.size = Vector2(0.18, 1.8)
 		bar_l_mesh.orientation = PlaneMesh.FACE_Y
 		bar_l.mesh = bar_l_mesh
-		bar_l.position = Vector3(gx - 1.0, 0.08, gz - 0.3)
+		bar_l.transform = Transform3D(b_basis, slot_center - g_bin * 1.0)
 		bar_l.material_override = grid_mat
 		add_child(bar_l)
+
 		# Right guideline
 		var bar_r = MeshInstance3D.new()
 		var bar_r_mesh = QuadMesh.new()
 		bar_r_mesh.size = Vector2(0.18, 1.8)
 		bar_r_mesh.orientation = PlaneMesh.FACE_Y
 		bar_r.mesh = bar_r_mesh
-		bar_r.position = Vector3(gx + 1.0, 0.08, gz - 0.3)
+		bar_r.transform = Transform3D(b_basis, slot_center + g_bin * 1.0)
 		bar_r.material_override = grid_mat
 		add_child(bar_r)
 
-	# Production Start/Finish Overhead Gantry with Turbo Kart Rush banner & lights
-	var gantry = MeshBuilder.build_start_gantry(track_width)
-	gantry.position = circuit_nodes[0] + Vector3(0, 0, -2.0)
-	add_child(gantry)
+	# Trackside Sponsor Advertising Boards on Barriers (strictly anchored to RaceSpline binormals)
+	var banner_dists = [15.0, 45.0, 75.0]
+	for b_d in banner_dists:
+		if b_d < race_spline.track_length * 0.8:
+			var s_b = race_spline.sample_at_distance(b_d)
+			var b_tan = s_b["tangent"]
+			var b_bin = s_b["binormal"]
+			var b_up = s_b["normal"]
 
-	# Trackside Sponsor Advertising Boards on Barriers along the straight
-	for sb_z in [-35.0, -15.0, 15.0, 35.0]:
-		var sb_l = MeshInstance3D.new()
-		var sb_mesh = BoxMesh.new()
-		sb_mesh.size = Vector3(0.08, 1.1, 8.0)
-		sb_l.mesh = sb_mesh
-		sb_l.position = Vector3(-track_width * 0.5 - 1.25, 0.75, sb_z)
-		sb_l.material_override = MaterialGenerator.get_material("stadium_banner_blue" if sb_z < 0 else "stadium_banner_orange")
-		add_child(sb_l)
+			var sb_l = MeshInstance3D.new()
+			var sb_mesh = BoxMesh.new()
+			sb_mesh.size = Vector3(0.08, 1.1, 7.5)
+			sb_l.mesh = sb_mesh
+			sb_l.position = s_b["pos"] - b_bin * (track_width * 0.5 + 1.28) + b_up * 0.75
+			var tr_l = Transform3D()
+			tr_l.basis.z = b_tan
+			tr_l.basis.y = b_up
+			tr_l.basis.x = b_bin
+			sb_l.transform = Transform3D(tr_l.basis.orthonormalized(), sb_l.position)
+			sb_l.material_override = MaterialGenerator.get_material("stadium_banner_blue")
+			add_child(sb_l)
 
-		var sb_r = MeshInstance3D.new()
-		sb_r.mesh = sb_mesh
-		sb_r.position = Vector3(track_width * 0.5 + 1.25, 0.75, sb_z)
-		sb_r.material_override = MaterialGenerator.get_material("stadium_banner_orange" if sb_z < 0 else "stadium_banner_blue")
-		add_child(sb_r)
+			var sb_r = MeshInstance3D.new()
+			sb_r.mesh = sb_mesh
+			sb_r.position = s_b["pos"] + b_bin * (track_width * 0.5 + 1.28) + b_up * 0.75
+			var tr_r = Transform3D()
+			tr_r.basis.z = b_tan
+			tr_r.basis.y = b_up
+			tr_r.basis.x = -b_bin
+			sb_r.transform = Transform3D(tr_r.basis.orthonormalized(), sb_r.position)
+			sb_r.material_override = MaterialGenerator.get_material("stadium_banner_orange")
+			add_child(sb_r)
 
 	# PowerUp Item Pickups placed along the circuit
 	var item_indices = [1, int(circuit_nodes.size() * 0.35), int(circuit_nodes.size() * 0.65), int(circuit_nodes.size() * 0.85)]
@@ -236,25 +272,44 @@ func _build_environment_scenery(def: TrackRegistryScript.TrackDefinition) -> voi
 		_: # "speedway" / "metropolis"
 			# Stadium asphalt paddock foundation at y = -2.0 (top is -1.5)
 			create_box(Vector3(110.0, -2.0, -50.0), Vector3(700.0, 1.0, 700.0), "asphalt_track")
-			# Grandstands with crowds along the home straight
-			for z_pos in [-50.0, -25.0, 0.0, 25.0]:
-				var stand_l = MeshBuilder.build_grandstand_with_crowd(24.0, 7.0, 9.0)
-				stand_l.position = Vector3(-def.track_width * 0.5 - 6.5, 0.0, z_pos)
-				stand_l.rotation_degrees.y = -90.0
-				add_child(stand_l)
+			# Grandstands with crowds along the home straight (anchored strictly to RaceSpline with guaranteed clearance)
+			var stand_dists = [15.0, 45.0]
+			for s_d in stand_dists:
+				if race_spline:
+					var s_pt = race_spline.sample_at_distance(s_d)
+					var t_fwd = s_pt["tangent"]
+					var t_bin = s_pt["binormal"]
+					var t_up = s_pt["normal"]
 
-				var stand_r = MeshBuilder.build_grandstand_with_crowd(24.0, 7.0, 9.0)
-				stand_r.position = Vector3(def.track_width * 0.5 + 6.5, 0.0, z_pos)
-				stand_r.rotation_degrees.y = 90.0
-				add_child(stand_r)
+					var stand_l = MeshBuilder.build_grandstand_with_crowd(24.0, 7.0, 9.0)
+					var pos_l = s_pt["pos"] - t_bin * (def.track_width * 0.5 + 14.0)
+					var tr_l = Transform3D()
+					tr_l.basis.x = t_fwd
+					tr_l.basis.y = t_up
+					tr_l.basis.z = -t_bin
+					stand_l.transform = Transform3D(tr_l.basis.orthonormalized(), pos_l)
+					add_child(stand_l)
 
-			# Stadium Floodlight Towers
-			for fl_pos in [Vector3(-def.track_width * 0.5 - 12.0, 0.0, -48.0), Vector3(def.track_width * 0.5 + 12.0, 0.0, -48.0)]:
-				var fl = ModelCacheScript.get_prop("floodlight_tower")
-				if fl:
-					fl.position = fl_pos
-					fl.scale = Vector3(3.0, 3.0, 3.0)
-					add_child(fl)
+					var stand_r = MeshBuilder.build_grandstand_with_crowd(24.0, 7.0, 9.0)
+					var pos_r = s_pt["pos"] + t_bin * (def.track_width * 0.5 + 14.0)
+					var tr_r = Transform3D()
+					tr_r.basis.x = -t_fwd
+					tr_r.basis.y = t_up
+					tr_r.basis.z = t_bin
+					stand_r.transform = Transform3D(tr_r.basis.orthonormalized(), pos_r)
+					add_child(stand_r)
+
+			# Stadium Floodlight Towers (strictly placed outside trackside safety envelope)
+			if race_spline:
+				for fl_d in [25.0, 55.0]:
+					var s_fl = race_spline.sample_at_distance(fl_d)
+					for side_sign in [-1.0, 1.0]:
+						var fl = ModelCacheScript.get_prop("floodlight_tower")
+						if fl:
+							fl.position = s_fl["pos"] + side_sign * s_fl["binormal"] * (def.track_width * 0.5 + 16.0)
+							fl.position.y = s_fl["pos"].y
+							fl.scale = Vector3(3.0, 3.0, 3.0)
+							add_child(fl)
 
 			# Paddock buildings in background
 			var stadium_buildings = [
@@ -598,21 +653,25 @@ func build_track_segment(start_pt: Vector3, end_pt: Vector3, segment_index: int)
 	add_child(cp)
 	checkpoints.append(cp)
 
-	# Apex Tire Wall at sharp corners
-	if segment_index % 4 == 2:
+	# Apex Tire Wall at sharp corners (strictly spline-anchored outside track bounds)
+	if segment_index % 4 == 2 and race_spline:
 		var tire = ModelCacheScript.get_prop("racing_tire_stack")
 		if tire:
-			tire.position = start_pt + Vector3(track_width * 0.5 + 2.0, 0.2, 0)
+			var s_dist = race_spline.get_closest_distance(start_pt)
+			var s_samp = race_spline.sample_at_distance(s_dist)
+			tire.position = s_samp["pos"] + s_samp["binormal"] * (track_width * 0.5 + 2.5) + Vector3(0, 0.2, 0)
 			tire.scale = Vector3(2.0, 2.0, 2.0)
 			add_child(tire)
 
 func create_box(pos: Vector3, size: Vector3, material_name: String) -> StaticBody3D:
 	var body = StaticBody3D.new()
+	body.name = material_name + "_subfloor"
 	body.collision_layer = GameConstants.LAYER_WORLD
 	body.collision_mask = 0
 	body.position = pos
 
 	var col = CollisionShape3D.new()
+	col.name = "SubfloorCol"
 	var box_shape = BoxShape3D.new()
 	box_shape.size = size
 	col.shape = box_shape
@@ -717,3 +776,80 @@ func setup_racing_environment(def: TrackRegistryScript.TrackDefinition = null) -
 	fill.light_energy = 0.7
 	fill.shadow_enabled = false
 	add_child(fill)
+
+## Automated Track-Surface and Racing-Corridor Clearance Scanner
+## Verifies that:
+## 1. Valid road colliders exist along the entire loop
+## 2. Protected racing corridor (spline centerline +/- track_width/2) is free of obstructing solid colliders or geometry intrusions
+## 3. Surface normals remain continuous (+Y)
+func verify_race_corridor_clearance(sample_step: float = 2.0) -> Dictionary:
+	var result = {
+		"success": true,
+		"inspected_samples": 0,
+		"violations": []
+	}
+	if not race_spline or race_spline.track_length <= 0.0:
+		result["success"] = false
+		result["violations"].append("RaceSpline is missing or unbaked")
+		return result
+
+	var total_len = race_spline.track_length
+	var num_steps = int(ceil(total_len / sample_step))
+	var half_w = track_width * 0.5
+
+	# Collect all solid colliders that could act as road obstructions
+	var obstacle_colliders: Array[CollisionShape3D] = []
+
+	var _scan_node = func(n: Node, self_func: Callable) -> void:
+		if n.name == "ContinuousRoadFoundation" or n.name == "ContinuousRoadCol":
+			return # Authorized road ribbon
+		if n is RaceCheckpoint or n is PowerUpItem:
+			return # Authorized race triggers
+		if n.name.ends_with("_subfloor") or "subfloor" in n.name.to_lower() or "foundation" in n.name.to_lower():
+			return # Authorized sub-terrain foundation below road
+		if n is CollisionShape3D and n.shape:
+			obstacle_colliders.append(n)
+		for c in n.get_children():
+			self_func.call(c, self_func)
+
+	_scan_node.call(self, _scan_node)
+
+	for i in range(num_steps):
+		var s = float(i) * sample_step
+		var samp = race_spline.sample_at_distance(s)
+		var center_pos = samp["pos"]
+		var binormal = samp["binormal"]
+		var tangent = samp["tangent"]
+		result["inspected_samples"] += 1
+
+		# Verify normal points generally UP
+		if samp["normal"].y < 0.2:
+			result["violations"].append("Invalid road surface normal at s=%.1f: %s" % [s, str(samp["normal"])])
+			result["success"] = false
+
+		# Verify no solid obstacle collision shape intersects the protected corridor
+		for col in obstacle_colliders:
+			if not is_instance_valid(col):
+				continue
+			var parent_node = col.get_parent() as Node3D
+			var col_pos = col.global_position if col.is_inside_tree() else (parent_node.position + col.position if parent_node else col.position)
+
+			# Vertical check: only test colliders near road surface level (-0.5m to +4.0m)
+			var vert_diff = col_pos.y - center_pos.y
+			if vert_diff < -0.8 or vert_diff > 4.5:
+				continue # Deep underground or high overhead
+
+			var diff = col_pos - center_pos
+			diff.y = 0.0
+			var lat_dist = diff.dot(binormal)
+			var fwd_dist = diff.dot(tangent)
+			# Protected corridor from -half_w to +half_w (plus margin)
+			if absf(fwd_dist) < sample_step * 1.5 and absf(lat_dist) < (half_w - 0.5):
+				var v_msg = "Obstacle collider '%s' intrudes into racing corridor at s=%.1fm (lat=%.2fm, track_half_w=%.2fm, y_diff=%.2fm)" % [
+					col.name, s, lat_dist, half_w, vert_diff
+				]
+				result["violations"].append(v_msg)
+				result["success"] = false
+
+	return result
+

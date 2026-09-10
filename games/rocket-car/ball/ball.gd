@@ -63,11 +63,12 @@ func _physics_process(_delta: float) -> void:
 			reset_to_center()
 
 func apply_ball_impulse(impulse: Vector3, contact_pos: Vector3 = Vector3.ZERO) -> void:
-	linear_velocity += impulse
 	if is_inside_tree() and contact_pos != Vector3.ZERO:
 		apply_impulse(impulse, contact_pos - global_position)
 	elif is_inside_tree():
 		apply_central_impulse(impulse)
+	else:
+		linear_velocity += impulse / mass
 
 	var speed = impulse.length()
 	last_hit_speed = speed
@@ -84,3 +85,6 @@ func reset_to_center() -> void:
 		global_position = Vector3(0, radius + 0.6, 0)
 	else:
 		position = Vector3(0, radius + 0.6, 0)
+
+func reset_ball() -> void:
+	reset_to_center()

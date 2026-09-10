@@ -25,7 +25,9 @@ func get_coverage_entries() -> Array:
 				"build_grenade_launcher", "build_plasma_cutter", "build_cyber_soldier",
 				"build_crawler_mesh", "build_stalker_mesh", "build_brute_mesh",
 				"build_spitter_mesh", "build_colossus_boss_mesh",
-				"build_rocket_car", "build_drift_kart", "build_speed_demon_kart",
+				"build_rocket_car", "build_rocket_sports_coupe", "build_rocket_rally_buggy",
+				"build_rocket_muscle_gt", "build_rocket_cyber_ev",
+				"build_drift_kart", "build_speed_demon_kart",
 				"build_drift_king_kart", "build_turbo_tank_kart",
 				"build_energy_ball", "build_item_box", "build_pickup_mesh",
 				"build_cyber_crate", "build_subway_car_mesh", "build_stadium_goal_mesh",
@@ -99,6 +101,22 @@ func test_vehicles() -> void:
 	var car = MeshBuilderScript.build_rocket_car(0)
 	assert_true(car != null and car.get_child_count() > 0, "Rocket car must have wheels and chassis")
 	car.queue_free()
+
+	var c1 = MeshBuilderScript.build_rocket_sports_coupe(0)
+	assert_true(c1 != null and c1.get_child_count() > 0, "Sports coupe must build")
+	c1.queue_free()
+
+	var c2 = MeshBuilderScript.build_rocket_rally_buggy(1)
+	assert_true(c2 != null and c2.get_child_count() > 0, "Rally buggy must build")
+	c2.queue_free()
+
+	var c3 = MeshBuilderScript.build_rocket_muscle_gt(0)
+	assert_true(c3 != null and c3.get_child_count() > 0, "Muscle GT must build")
+	c3.queue_free()
+
+	var c4 = MeshBuilderScript.build_rocket_cyber_ev(1)
+	assert_true(c4 != null and c4.get_child_count() > 0, "Cyber EV must build")
+	c4.queue_free()
 
 	var kart = MeshBuilderScript.build_drift_kart(Color.GREEN)
 	assert_true(kart != null and kart.get_child_count() > 0, "Drift kart must have wheels and chassis")

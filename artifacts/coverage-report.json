@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 97.394540942928,
+  "overall_coverage_pct": 95.0363196125908,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -92,10 +92,13 @@
       "untested": []
     },
     "res://games/kart-racing/kart_racing_main.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 75,
       "tested": 6,
-      "total": 6,
-      "untested": []
+      "total": 8,
+      "untested": [
+        "start_race",
+        "reposition_karts_on_grid"
+      ]
     },
     "res://games/kart-racing/powerups/powerup_item.gd": {
       "coverage_pct": 100,
@@ -116,10 +119,12 @@
       "untested": []
     },
     "res://games/kart-racing/tracks/track_generator.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 83.3333333333333,
       "tested": 5,
-      "total": 5,
-      "untested": []
+      "total": 6,
+      "untested": [
+        "verify_race_corridor_clearance"
+      ]
     },
     "res://games/kart-racing/tracks/track_registry.gd": {
       "coverage_pct": 100,
@@ -129,8 +134,8 @@
     },
     "res://games/kart-racing/ui/drift_storm_hud.gd": {
       "coverage_pct": 100,
-      "tested": 18,
-      "total": 18,
+      "tested": 17,
+      "total": 17,
       "untested": []
     },
     "res://games/roboforge-arena/challenges/challenge_manager.gd": {
@@ -170,28 +175,47 @@
       "untested": []
     },
     "res://games/rocket-car/ai/car_ai.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 50,
       "tested": 2,
-      "total": 2,
-      "untested": []
+      "total": 4,
+      "untested": [
+        "set_role",
+        "predict_ball_intercept"
+      ]
     },
     "res://games/rocket-car/arena/rocket_arena.gd": {
-      "coverage_pct": 100,
-      "tested": 11,
-      "total": 11,
-      "untested": []
+      "coverage_pct": 44.4444444444444,
+      "tested": 8,
+      "total": 18,
+      "untested": [
+        "_process",
+        "build_octagonal_perimeter",
+        "build_regulation_goal",
+        "trigger_goal_explosion",
+        "build_stadium_grandstands_and_crowd",
+        "set_crowd_state",
+        "set_crowd_reaction_state",
+        "build_boost_system",
+        "create_flush_boost_pad",
+        "setup_stadium_environment"
+      ]
     },
     "res://games/rocket-car/ball/ball.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 83.3333333333333,
       "tested": 5,
-      "total": 5,
-      "untested": []
+      "total": 6,
+      "untested": [
+        "reset_ball"
+      ]
     },
     "res://games/rocket-car/rocket_car_main.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 83.3333333333333,
       "tested": 10,
-      "total": 10,
-      "untested": []
+      "total": 12,
+      "untested": [
+        "select_stadium_theme",
+        "get_available_stadiums"
+      ]
     },
     "res://games/rocket-car/ui/nitro_kick_hud.gd": {
       "coverage_pct": 100,
@@ -200,10 +224,13 @@
       "untested": []
     },
     "res://games/rocket-car/vehicle/car_controller.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 80,
       "tested": 8,
-      "total": 8,
-      "untested": []
+      "total": 10,
+      "untested": [
+        "set_vehicle_archetype",
+        "apply_archetype_stats"
+      ]
     },
     "res://games/skybound-odyssey/character/sky_character.gd": {
       "coverage_pct": 100,
@@ -698,8 +725,8 @@
     },
     "res://shared/graphics/mesh_builder.gd": {
       "coverage_pct": 100,
-      "tested": 46,
-      "total": 46,
+      "tested": 50,
+      "total": 50,
       "untested": []
     },
     "res://shared/graphics/model_cache.gd": {
@@ -806,6 +833,6 @@
     }
   },
   "tested_functions": 785,
-  "timestamp": "2026-09-09T10:24:28",
-  "total_functions": 806
+  "timestamp": "2026-09-10T06:24:40",
+  "total_functions": 826
 }

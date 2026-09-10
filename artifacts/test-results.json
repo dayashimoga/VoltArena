@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 97.394540942928,
+  "coverage_percent": 95.0363196125908,
   "coverage_tested_functions": 785,
-  "coverage_total_functions": 806,
-  "execution_seconds": 60.28,
+  "coverage_total_functions": 826,
+  "execution_seconds": 184.435,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -28,6 +28,11 @@
     "Car Physics Unit": {
       "failed": 0,
       "passed": 6,
+      "status": "PASS"
+    },
+    "Drift Storm Corridor & Pre-Race Gates": {
+      "failed": 0,
+      "passed": 15,
       "status": "PASS"
     },
     "Drift Storm E2E": {
@@ -117,7 +122,7 @@
     },
     "MeshBuilder 3D Assets Unit": {
       "failed": 0,
-      "passed": 39,
+      "passed": 43,
       "status": "PASS"
     },
     "Metro Siege E2E": {
@@ -133,6 +138,11 @@
     "Nitro Kick E2E": {
       "failed": 0,
       "passed": 46,
+      "status": "PASS"
+    },
+    "Nitro Kick P0 Forensic Gates": {
+      "failed": 0,
+      "passed": 21,
       "status": "PASS"
     },
     "NodePool Centralized Service Unit": {
@@ -301,8 +311,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-09T10:24:28",
+  "timestamp": "2026-09-10T06:24:40",
   "total_failed": 0,
-  "total_passed": 1846,
-  "total_suites": 59
+  "total_passed": 1886,
+  "total_suites": 61
 }

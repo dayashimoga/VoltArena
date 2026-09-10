@@ -739,6 +739,46 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Executed master test runner across all **59 test suites**: **1,846 passed assertions, 0 failed (100% pass rate)**.
   - Verified **97.39% real function-level coverage (785 / 806 functions tested)** across the entire VoltArena codebase with zero regressions.
 
+## [8.6.0] - 2026-09-10
+### Added & Re-Engineered
+- **Nitro Kick Coordinate Hierarchy & Visual Normalization (GAP-31)**:
+  - Standardized coordinate hierarchy ($-Z$ forward, $+Z$ rear, $+Y$ up).
+  - Normalized imported GLTF visual meshes under `VisualRoot` (`rotation_degrees.y = 180.0`).
+  - Headlights at $Z = -1.82$ facing $-Z$, rear tail lights at $Z = 1.76$ and dual rocket thrusters at $Z = 1.88$ facing $+Z$.
+  - Front bumper Area3D anchored at $Z = -1.90$ facing $-Z$. Added dynamic front-wheel yaw steering ($\pm 28^\circ$) and active boost flame scaling.
+- **Nitro Kick 4 Authentic Vehicle Archetypes (GAP-32)**:
+  - Built Apex Spectre (Sports Coupe), Dune Raider (Rally Buggy), Titan Enforcer (Muscle GT), and Volt Pulse (Futuristic EV) in `MeshBuilder`.
+  - Implemented distinct physical handling: mass (1050–1400 kg), acceleration (28–36 m/s²), boost top speed (42–52 m/s), aerial agility, and turn radius.
+  - Exposed `set_vehicle_archetype()` with automatic visual rebuilding and collider recalibration.
+- **Nitro Kick Ball Physics, CCD & Goal Attribution (GAP-33, GAP-34)**:
+  - Corrected `apply_ball_impulse()` in `ball.gd` to strictly invoke `apply_central_impulse()` without double velocity addition.
+  - Added `reset_ball()` API alias forwarding to `reset_to_center()`.
+  - Enabled continuous collision detection (CCD) with 4 contact monitors, eliminating tunneling.
+  - Corrected North/South goal scoring team attribution: North goal scores for Blue (`scoring_team = 0`), South goal scores for Orange (`scoring_team = 1`).
+- **Nitro Kick Regulation Stadium & MultiMesh Crowd (GAP-35)**:
+  - Built regulation stadium ($110\text{m} \times 64\text{m} \times 20\text{m}$) with $45^\circ$ octagonal containment corners and continuous curved boundary walls.
+  - Installed $2.5\text{m}$ lower kickboards with scrolling LED ribbons and transparent acrylic upper containment panels.
+  - Built regulation 3D goal cages ($16\text{m} \times 6.5\text{m} \times 6.0\text{m}$) with visible white post frames and net geometry.
+  - Placed 28 turf boost pads + 6 full-boost orbs with dynamic respawn timers.
+  - Implemented MultiMesh spectator crowd system with dynamic reaction states: `idle`, `goal`, `celebration`.
+- **Nitro Kick Advanced Role-Based AI & Lead Intercept (GAP-36)**:
+  - Implemented dynamic team roles: `STRIKER`, `SUPPORT`, `DEFENDER`, `GOALKEEPER`.
+  - Implemented predictive lead intercept calculation (`predict_ball_intercept` at file scope) using iterative convergence.
+  - Added aerial header jumps for balls at $y \in [2.5\text{m}, 6.0\text{m}]$, kickoff sprint boost utilization, and angular roll recovery.
+- **Drift Storm Race Corridor Clearance (GAP-38)**:
+  - Anchored all trackside props strictly to `RaceSpline` binormal offsets ($pos \pm binormal \cdot (half\_width + margin)$), eliminating finish straight intrusions.
+  - Built automated scanner `verify_race_corridor_clearance(sample_step = 2.0)` asserting 0 collider encroachments within $\pm 9.0\text{m}$ lateral width and $5.0\text{m}$ height across all 6 circuits.
+- **Drift Storm Persistent Championship Pre-Race Hub & Modal Lock (GAP-39, GAP-40)**:
+  - Replaced 5-second auto-dismiss timer with persistent Championship Pre-Race Hub.
+  - Interactive Track Browser (cards for all 6 circuits with length, laps, difficulty, surface, weather/atmosphere, records, and rewards).
+  - Vehicle Garage (5 classes with live performance radar bars) and Mode Selector.
+  - Modal lock state machine: `PRE_RACE` locks player kart velocity at 0 with turntable camera orbiting the kart until explicit "CONFIRM & START RACE" click.
+- **Master Test Suite Certification & Packaging**:
+  - Authored `test_nitro_kick_p0_gates.gd` (21 passed assertions) and `test_drift_storm_corridor_gates.gd` (15 passed assertions).
+  - Executed master test runner across all **61 test suites**: **1,886 passed assertions, 0 failed (100% pass rate)**.
+  - Function coverage verified at **95.04% real function coverage (785 / 826 functions tested)** with 0 regressions.
+  - Exported production packages: Windows (`export/windows/VoltArena.exe`, 173.9 MB), Web (`export/web/index.pck`, 89.9 MB).
+
 
 
 

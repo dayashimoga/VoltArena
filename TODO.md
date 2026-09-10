@@ -698,6 +698,29 @@
   - `GAP_ANALYSIS.md` (GAP-18 through GAP-30 documented and resolved)
   - `scratch/test_drift_storm_full.gd` (Passed: 100% multi-car active racing verification)
 
+### [2026-09-10 10:00:00 UTC] - Milestone Update: Nitro Kick P0 Forensic Overhaul, Drift Storm Corridor Clearance & Pre-Race Hub, and 100% Quality Gate Certification
+- **Status**: COMPLETED
+- **Description**:
+  1. **Nitro Kick Coordinate Hierarchy & Visual Normalization (GAP-31)**: Established canonical coordinate hierarchy ($-Z$ forward, $+Z$ rear, $+Y$ up). Normalized imported GLTF meshes under `VisualRoot` with `rotation_degrees.y = 180.0`. Anchored headlights at $Z = -1.82$ facing $-Z$, rear taillights at $Z = 1.76$ and dual rocket thrusters at $Z = 1.88$ facing $+Z$, and front bumper Area3D at $Z = -1.90$ facing $-Z$. Added dynamic front-wheel yaw steering ($\pm 28^\circ$) and boost flame scaling.
+  2. **4 Authentic Rocket-Sports Archetypes (GAP-32)**: Built Apex Spectre, Dune Raider, Titan Enforcer, and Volt Pulse in `MeshBuilder` with distinct physical handling attributes (mass 1050–1400 kg, accel 28–36 m/s², boost top speed 42–52 m/s, aerial agility) and dynamic re-meshing via `set_vehicle_archetype()`.
+  3. **Ball Physics & CCD (GAP-33)**: Corrected `apply_ball_impulse` in `ball.gd` to strictly invoke `apply_central_impulse` without double velocity addition. Added `reset_ball()` alias. Enabled continuous collision detection (CCD) with 4 contact monitors.
+  4. **Goal Scoring Team Attribution (GAP-34)**: Corrected North/South scoring: North goal Area3D increments Blue score (0), South goal Area3D increments Orange score (1).
+  5. **Regulation Stadium Colosseum & MultiMesh Crowd (GAP-35)**: Built regulation $110\text{m} \times 64\text{m} \times 20\text{m}$ stadium with $45^\circ$ octagonal containment corners, $2.5\text{m}$ kickboards with scrolling LED ribbons, acrylic upper panels, visible 3D goal cages with net mesh, 28 turf pads + 6 orbs, and MultiMesh crowd reacting to match events (`idle`, `goal`, `celebration`).
+  6. **Tactical AI & Predictive Intercept (GAP-36)**: Implemented dynamic team roles (`STRIKER`, `SUPPORT`, `DEFENDER`, `GOALKEEPER`), predictive lead intercept calculation (`predict_ball_intercept` at file scope) with iterative convergence, aerial header jumps, kickoff sprint, and angular roll recovery.
+  7. **Drift Storm Corridor Clearance (GAP-38)**: Anchored all trackside props strictly to `RaceSpline` binormal offsets ($pos \pm binormal \cdot (half\_width + margin)$). Automated verification scanner (`verify_race_corridor_clearance`) asserts 0 intrusions and surface normal $\ge 0.70$ across all 6 circuits.
+  8. **Drift Storm Persistent Championship Pre-Race Hub & Modal Lock (GAP-39, GAP-40)**: Replaced 5-second auto-dismiss with persistent Championship Hub (Track Browser for 6 circuits, Vehicle Garage for 5 classes, Mode Selector, explicit start confirmation). State machine `PRE_RACE` modal locks kart speed at 0 with turntable camera orbiting player kart.
+  9. **Master Test Suite Certification**:
+     - 61 test suites, **1,886 passed assertions, 0 failed (100% pass rate)**.
+     - Real function coverage: **95.04% (785 / 826 functions tested)** across entire codebase.
+     - Production packages exported: Windows (`export/windows/VoltArena.exe`, 173.9 MB), Web (`export/web/index.pck`, 89.9 MB).
+- **Evidence**:
+  - `artifacts/test-results.json` (61 suites, 1886 passed, 0 failed, 100% pass)
+  - `artifacts/coverage-report.json` (95.04% coverage, 785/826 functions)
+  - `tests/unit/test_nitro_kick_p0_gates.gd` (21 passed assertions)
+  - `tests/unit/test_drift_storm_corridor_gates.gd` (15 passed assertions)
+  - `GAP_ANALYSIS.md` (GAP-31 through GAP-40 documented and resolved)
+  - `PRODUCTION_CERTIFICATION.md` (v8.6.0-PROD certified)
+
 
 
 

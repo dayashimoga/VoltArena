@@ -44,32 +44,40 @@ VoltArena delivers four commercially polished, visually dense 3D game experience
 
 ### 2.3 Nitro Kick — Enclosed Rocket Stadium (Reference 3)
 * **Visual Identity**: Electrifying enclosed sports colosseum built specifically for high-speed rocket car football.
-* **Pitch & Markings**:
+* **Regulation Stadium Architecture**:
+  * Regulation colosseum dimensions: $110\text{m} \times 64\text{m} \times 20\text{m}$ with $45^\circ$ octagonal containment corners and continuous curved boundary walls.
+  * $2.5\text{m}$ lower kickboards with scrolling dynamic LED ribbons and transparent acrylic upper containment panels.
+  * Regulation 3D goal cages ($16\text{m} \times 6.5\text{m} \times 6.0\text{m}$) with visible white tubular post frames and net geometry.
+  * Symmetrical North/South pitch markings with penalty arcs, center circle, and turf boost pads.
+  * MultiMesh spectator crowd system with dynamic reaction states (`idle`, `goal`, `celebration`).
+* **Pitch & Boost Infrastructure**:
   * Alternating two-tone green turf bands (`Color(0.18, 0.52, 0.22)` and `Color(0.14, 0.44, 0.18)`).
-  * Painted white touchlines, penalty boxes, corner arcs, and center circle.
-  * Luminous circular boost pads recessed into the turf with rotating amber glow rings.
-* **Stadium Infrastructure**:
-  * Tiered spectator grandstands with dense crowd texturing surrounding the perimeter.
-  * Overhead steel space-frame roof trusses and high-intensity stadium floodlight towers.
-  * Cyan and orange illuminated goal frames with high-speed ball-entry sensor netting.
-  * Giant elevated Jumbotron scoreboards displaying real-time match time and scores.
-* **Vehicle & Ball Presentation**:
-  * Production rocket cars with distinct chassis, spoilers, wheels, and dual booster exhausts.
-  * Truncated icosahedron soccer sphere with pentagonal seam textures and dynamic shadow projection.
+  * 28 turf boost pads (+12 boost) with amber ring emission and 6 full-boost perimeter orbs (+100 boost) with rotating energy rings.
+  * Giant elevated Jumbotron scoreboards displaying match time, team scores, and goal celebration graphics.
+* **Vehicle Presentation & Canonical Hierarchy**:
+  * 4 authentic rocket-sports vehicles: *Apex Spectre* (Sports Coupe), *Dune Raider* (Rally Buggy), *Titan Enforcer* (Muscle GT), and *Volt Pulse* (Futuristic EV).
+  * Normalized coordinate hierarchy: $-Z$ forward, $+Z$ rear, $+Y$ up.
+  * Front headlights at $Z = -1.82$, rear taillights at $Z = 1.76$, dual rocket thruster exhausts at $Z = 1.88$ with dynamic boost flame scaling, and front wheel steering yaw ($\pm 28^\circ$).
+  * Physical soccer ball with continuous collision detection and dynamic shadow casting.
 
-### 2.4 Drift Storm — Grand Prix Circuit (Reference 4)
-* **Visual Identity**: Vibrant, sunlit arcade circuit racing with professional motorsport track dressing and dynamic competition.
-* **Track Construction**:
-  * Multi-lane asphalt racing surface with tire wear marks and apex racing lines.
-  * Alternating red/white and blue/white ripple kerbs along corner apexes and exit runoffs.
-  * Continuous Armco corrugated steel and stacked rubber tire safety barriers.
-* **Course Dressing**:
+### 2.4 Drift Storm — Global Circuits & Vehicle Classes (Reference 4)
+* **Visual Identity**: Vibrant, sunlit and neon-lit arcade circuit racing across 6 global environments with professional motorsport dressing and dynamic competition.
+* **6 Global Environments & PBR Materials**:
+  * **Volt Speedway**: Professional Grand Prix stadium raceway ($755\text{m}$), high-speed pit straight, start/finish gantry, spectator grandstands, Armco barriers, asphalt ribbon with blue/white kerb strips, chicane and banked hairpin.
+  * **Sunset Coast**: Scenic coastal highway circuit ($830\text{m}$), procedural palm trees, ocean water vistas, beach sand runoffs, and sweeping high-speed bends.
+  * **Canyon Run**: Rugged mountain desert circuit ($848\text{m}$), red-rock sandstone formations, mountain tunnels, elevation changes, wooden crash rails, and gravel runoff.
+  * **Skyline Drift**: High-tech metropolis night circuit ($812\text{m}$), elevated highway overpasses, neon-lit skyscrapers, tight $90^\circ$ and $180^\circ$ drift bends, concrete barriers, and street lighting.
+  * **Alpine Rush**: High-altitude alpine mountain pass ($865\text{m}$), steep switchbacks, pine tree forests, sheer cliff faces, and snow-dusted runoffs.
+  * **Storm Harbor**: Industrial seaport shipping facility ($820\text{m}$), shipping container canyons, giant gantry harbor cranes, wet asphalt reflections, and narrow chicanes.
+* **Track Construction & Corridor Clearance**:
+  * Single authoritative `RaceSpline` with counter-clockwise road quad winding and explicit upward normals $(0, 1, 0)$.
+  * Double-sided collision geometry with zero snagging seams.
+  * Automated corridor clearance verification asserting zero trackside prop intrusions along the entire $\pm 9.0\text{m}$ drivable corridor across all 6 circuits.
   * Overhead start/finish truss gantry with checkered racing banner and 5-lamp start lights sequence.
-  * Pit lane structures, flag marshal stations, and trackside sponsor hoardings.
-  * Tiered spectator grandstands filled with cheering crowds.
-* **Vehicle Presentation**:
-  * Low-center-of-gravity racing karts with front splitters, side pods, and exposed engines.
-  * Rigged racer drivers with white safety helmets and tinted reflective black visors.
+* **5 Authentic Vehicle Classes & Presentation**:
+  * *Speeder* (CIK-FIA Kart), *Phantom* (GT Coupe), *Enforcer* (Offroad Buggy), *Turbo Demon* (Cyber EV), *Formula* (Open-Wheel F1).
+  * 4-wheel raycast suspension system with spring-damper compression, rolling wheel rotation ($\omega = v/r$), front wheel steering yaw ($\pm 28^\circ$), and zero hover ($y = 0.08\text{m}$ chassis rest).
+  * Persistent Championship Pre-Race Hub with Track Browser cards and 3D turntable vehicle inspection garage.
 
 ### 2.5 Strike Vector — Urban Blackout & Campaign Biomes
 * **Visual Identity**: Nocturnal military blackout cityscape under hostile electronic warfare. The aesthetic balances deep shadows with selective emergency illumination: blinking hazard beacons, amber streetlights, disabled transport vehicles, and emergency barricades against weathered concrete and dark asphalt.

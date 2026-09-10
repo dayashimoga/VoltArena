@@ -671,7 +671,21 @@ static func build_scrap_gear_mesh() -> Node3D:
 # 5. NITRO KICK ROCKET CAR & PROFESSIONAL STADIUM ASSETS
 # ==============================================================================
 
-static func build_rocket_car(team_id: int = 0) -> Node3D:
+static func build_rocket_car(team_id: int = 0, archetype: String = "sports_coupe") -> Node3D:
+	match archetype.to_lower():
+		"rally_buggy", "dune_raider", "buggy":
+			return build_rocket_rally_buggy(team_id)
+		"muscle_gt", "titan_enforcer", "muscle", "turbo_truck":
+			return build_rocket_muscle_gt(team_id)
+		"cyber_ev", "volt_pulse", "phantom", "cyber":
+			return build_rocket_cyber_ev(team_id)
+		_:
+			return build_rocket_sports_coupe(team_id)
+
+# ------------------------------------------------------------------------------
+# Archetype 1: Apex Spectre (Aerodynamic Sports Coupe)
+# ------------------------------------------------------------------------------
+static func build_rocket_sports_coupe(team_id: int = 0) -> Node3D:
 	var car = Node3D.new()
 	car.name = "RocketCarVisual"
 
@@ -681,22 +695,35 @@ static func build_rocket_car(team_id: int = 0) -> Node3D:
 	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
 	var mat_tire = MaterialGenerator.get_material("asphalt_track")
 	var mat_glow = MaterialGenerator.create_pbr_material(team_color, 0.3, 0.2, team_color, 2.5)
+	var mat_headlight = MaterialGenerator.create_pbr_material(Color(0.95, 0.98, 1.0), 0.9, 0.1, Color(0.9, 0.95, 1.0), 3.5)
+	var mat_taillight = MaterialGenerator.create_pbr_material(Color(1.0, 0.1, 0.15), 0.8, 0.2, Color(1.0, 0.05, 0.1), 3.0)
 
-	# Aerodynamic Sculpted Low-Slung Chassis Body
+	# Aerodynamic Low-Slung Chassis Body (Canonical Forward: -Z, Rear: +Z)
 	var body = _add_box(car, Vector3(1.80, 0.45, 3.50), Vector3(0, 0.42, 0), mat_team)
 	body.name = "CarBodyMesh"
-	# Sloped Aerodynamic Hood with Air Scoop
+	# Sloped Aerodynamic Hood with Air Scoop at -Z
 	var hood = _add_box(car, Vector3(1.65, 0.22, 1.20), Vector3(0, 0.45, -1.20), mat_hull)
 	hood.rotation_degrees.x = 12.0
 	_add_box(car, Vector3(0.55, 0.10, 0.40), Vector3(0, 0.58, -1.15), mat_metal)
-	# Front Ground-Effect Splitter & Bumper
+	# Front Ground-Effect Splitter & Bumper at -Z
 	_add_box(car, Vector3(1.95, 0.10, 0.50), Vector3(0, 0.22, -1.82), mat_hull)
-	# Cockpit Canopy with Tinted Windshield
+
+	# Dual Front High-Intensity Headlights at -Z (Forward)
+	for hx in [-0.55, 0.55]:
+		var hl = _add_cyl(car, 0.08, 0.12, 0.12, Vector3(hx, 0.42, -1.82), mat_headlight)
+		hl.rotation_degrees.x = 90.0
+		hl.name = "FrontHeadlight_" + ("L" if hx < 0 else "R")
+
+	# Cockpit Canopy with Tinted Windshield & Driver Silhouette
 	_add_box(car, Vector3(1.30, 0.45, 1.60), Vector3(0, 0.82, -0.15), mat_hull)
 	_add_box(car, Vector3(1.20, 0.38, 0.85), Vector3(0, 0.85, -0.55), mat_glow)
+	# Driver helmet inside canopy
+	var helmet = _add_cyl(car, 0.20, 0.22, 0.30, Vector3(0, 0.82, -0.10), mat_metal)
+	helmet.rotation_degrees.x = 15.0
 	# Roll Cage Struts
 	_add_box(car, Vector3(1.25, 0.06, 1.55), Vector3(0, 1.05, -0.15), mat_metal)
-	# High-Downforce Carbon-Fiber Rear Spoiler Wing
+
+	# High-Downforce Carbon-Fiber Rear Spoiler Wing at +Z (Rear)
 	_add_box(car, Vector3(2.15, 0.07, 0.42), Vector3(0, 1.22, 1.60), mat_team)
 	# Spoiler Wing Endplates
 	_add_box(car, Vector3(0.06, 0.25, 0.46), Vector3(-1.08, 1.22, 1.60), mat_hull)
@@ -704,18 +731,25 @@ static func build_rocket_car(team_id: int = 0) -> Node3D:
 	# Spoiler Wing Pylons
 	for sx in [-0.75, 0.75]:
 		_add_box(car, Vector3(0.07, 0.45, 0.12), Vector3(sx, 0.95, 1.58), mat_metal)
-	# Aggressive Rear Diffuser
+	# Aggressive Rear Diffuser at +Z
 	_add_box(car, Vector3(1.85, 0.24, 0.45), Vector3(0, 0.32, 1.76), mat_hull)
-	# Dual Cylindrical Rocket Booster Thrusters
+
+	# Dual Rear Brake/Taillights at +Z (Rear)
+	for rx in [-0.60, 0.60]:
+		var tl = _add_box(car, Vector3(0.24, 0.08, 0.08), Vector3(rx, 0.48, 1.76), mat_taillight)
+		tl.name = "RearTailLight_" + ("L" if rx < 0 else "R")
+
+	# Dual Cylindrical Rocket Booster Thrusters at +Z (Rear)
 	for tx in [-0.38, 0.38]:
 		var thruster = _add_cyl(car, 0.14, 0.18, 0.38, Vector3(tx, 0.50, 1.88), mat_metal)
 		thruster.rotation_degrees.x = 90.0
-		# Active Rocket Exhaust Flame Cone
+		thruster.name = "ThrusterNozzle_" + ("L" if tx < 0 else "R")
+		# Active Rocket Exhaust Flame Cone at +Z (Rear)
 		var flame = _add_cyl(car, 0.02, 0.13, 0.55, Vector3(tx, 0.50, 2.30), mat_glow)
 		flame.rotation_degrees.x = 90.0
 		flame.name = "ThrusterFlame_" + ("L" if tx < 0 else "R")
 
-	# --- 4 DETAILED ALLOY WHEELS WITH RADIAL TIRES & SUSPENSION ---
+	# 4 Detailed Alloy Wheels with Radial Tires & Wishbones
 	var wheel_offsets = [
 		Vector3(-1.08, 0.38, -1.25),
 		Vector3(1.08, 0.38, -1.25),
@@ -728,17 +762,246 @@ static func build_rocket_car(team_id: int = 0) -> Node3D:
 		w_node.name = "Wheel_" + str(i)
 		w_node.position = wp
 		car.add_child(w_node)
-
-		# Tire Tread Cylinder
 		var tire = _add_cyl(w_node, 0.38, 0.38, 0.34, Vector3.ZERO, mat_tire)
 		tire.rotation_degrees.z = 90.0
-		# Alloy Rim Face
 		var rim = _add_cyl(w_node, 0.28, 0.28, 0.36, Vector3(sign(wp.x) * 0.02, 0, 0), mat_metal)
 		rim.rotation_degrees.z = 90.0
-		# Brake Caliper
 		_add_box(w_node, Vector3(0.12, 0.18, 0.12), Vector3(-sign(wp.x) * 0.14, 0.14, 0), mat_glow)
-		# Suspension Wishbone Arm
 		_add_box(car, Vector3(0.24, 0.08, 0.14), wp + Vector3(sign(wp.x) * -0.14, 0.06, 0), mat_metal)
+
+	return car
+
+# ------------------------------------------------------------------------------
+# Archetype 2: Dune Raider (Off-Road Rally Buggy)
+# ------------------------------------------------------------------------------
+static func build_rocket_rally_buggy(team_id: int = 0) -> Node3D:
+	var car = Node3D.new()
+	car.name = "RocketCarVisual"
+
+	var team_color = Color(0.1, 0.85, 1.0) if team_id == 0 else Color(1.0, 0.55, 0.05)
+	var mat_team = MaterialGenerator.create_pbr_material(team_color, 0.85, 0.22, team_color, 0.4)
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_tire = MaterialGenerator.get_material("asphalt_track")
+	var mat_glow = MaterialGenerator.create_pbr_material(team_color, 0.3, 0.2, team_color, 2.5)
+	var mat_headlight = MaterialGenerator.create_pbr_material(Color(0.95, 0.98, 1.0), 0.9, 0.1, Color(0.9, 0.95, 1.0), 3.5)
+	var mat_taillight = MaterialGenerator.create_pbr_material(Color(1.0, 0.1, 0.15), 0.8, 0.2, Color(1.0, 0.05, 0.1), 3.0)
+
+	# Tubular Roll Cage Chassis Base
+	var body = _add_box(car, Vector3(1.60, 0.35, 3.20), Vector3(0, 0.52, 0), mat_team)
+	body.name = "CarBodyMesh"
+	# Steel Front Skid Plate at -Z (Forward)
+	var skid = _add_box(car, Vector3(1.40, 0.08, 0.80), Vector3(0, 0.35, -1.55), mat_metal)
+	skid.rotation_degrees.x = 22.0
+
+	# Roll Cage Tubular Bars
+	for sx in [-0.65, 0.65]:
+		# A-pillar & B-pillar tubular frame
+		_add_box(car, Vector3(0.06, 0.75, 0.06), Vector3(sx, 0.95, -0.65), mat_metal)
+		_add_box(car, Vector3(0.06, 0.85, 0.06), Vector3(sx, 1.00, 0.45), mat_metal)
+		_add_box(car, Vector3(0.06, 0.06, 1.15), Vector3(sx, 1.35, -0.10), mat_metal)
+	_add_box(car, Vector3(1.36, 0.06, 0.06), Vector3(0, 1.35, -0.65), mat_metal)
+	_add_box(car, Vector3(1.36, 0.06, 0.06), Vector3(0, 1.35, 0.45), mat_metal)
+
+	# Roof-Mounted Quad LED Rally Light Bar at -Z
+	for lx in [-0.45, -0.15, 0.15, 0.45]:
+		var pod = _add_cyl(car, 0.06, 0.08, 0.10, Vector3(lx, 1.45, -0.62), mat_headlight)
+		pod.rotation_degrees.x = 90.0
+		pod.name = "RallyLight_" + str(lx)
+
+	# Front Bumper Headlights at -Z
+	for bx in [-0.55, 0.55]:
+		var hl = _add_cyl(car, 0.07, 0.09, 0.10, Vector3(bx, 0.48, -1.68), mat_headlight)
+		hl.rotation_degrees.x = 90.0
+		hl.name = "FrontHeadlight_" + ("L" if bx < 0 else "R")
+
+	# Cockpit Driver with Helmet
+	var helmet = _add_cyl(car, 0.22, 0.24, 0.32, Vector3(0, 0.95, 0.0), mat_team)
+	helmet.rotation_degrees.x = 10.0
+
+	# High-Mount Rear Radiator Scoops
+	_add_box(car, Vector3(0.85, 0.35, 0.60), Vector3(0, 0.85, 1.10), mat_hull)
+
+	# Rear LED Taillight Strip at +Z
+	var tl = _add_box(car, Vector3(1.20, 0.08, 0.08), Vector3(0, 0.65, 1.62), mat_taillight)
+	tl.name = "RearTailLight_C"
+
+	# Center Mega Rocket Thruster Cannon at +Z (Rear)
+	var thruster = _add_cyl(car, 0.22, 0.26, 0.45, Vector3(0, 0.58, 1.78), mat_metal)
+	thruster.rotation_degrees.x = 90.0
+	thruster.name = "ThrusterNozzle_C"
+	var flame = _add_cyl(car, 0.04, 0.20, 0.70, Vector3(0, 0.58, 2.30), mat_glow)
+	flame.rotation_degrees.x = 90.0
+	flame.name = "ThrusterFlame_C"
+
+	# 4 Oversized Knobby Off-Road Wheels with Long-Travel Wishbones
+	var wheel_offsets = [
+		Vector3(-1.18, 0.48, -1.20),
+		Vector3(1.18, 0.48, -1.20),
+		Vector3(-1.18, 0.52, 1.20),
+		Vector3(1.18, 0.52, 1.20)
+	]
+	for i in range(wheel_offsets.size()):
+		var wp = wheel_offsets[i]
+		var w_node = Node3D.new()
+		w_node.name = "Wheel_" + str(i)
+		w_node.position = wp
+		car.add_child(w_node)
+		var tire = _add_cyl(w_node, 0.46, 0.46, 0.42, Vector3.ZERO, mat_tire)
+		tire.rotation_degrees.z = 90.0
+		var rim = _add_cyl(w_node, 0.30, 0.30, 0.44, Vector3(sign(wp.x) * 0.02, 0, 0), mat_metal)
+		rim.rotation_degrees.z = 90.0
+		# Exposed Long-Travel Wishbone & Coilover Spring
+		_add_box(car, Vector3(0.35, 0.08, 0.12), wp + Vector3(sign(wp.x) * -0.20, -0.05, 0), mat_metal)
+		var shock = _add_cyl(car, 0.05, 0.05, 0.35, wp + Vector3(sign(wp.x) * -0.15, 0.15, 0), mat_glow)
+		shock.rotation_degrees.z = sign(wp.x) * 25.0
+
+	return car
+
+# ------------------------------------------------------------------------------
+# Archetype 3: Titan Enforcer (Heavy American Muscle GT)
+# ------------------------------------------------------------------------------
+static func build_rocket_muscle_gt(team_id: int = 0) -> Node3D:
+	var car = Node3D.new()
+	car.name = "RocketCarVisual"
+
+	var team_color = Color(0.1, 0.85, 1.0) if team_id == 0 else Color(1.0, 0.55, 0.05)
+	var mat_team = MaterialGenerator.create_pbr_material(team_color, 0.85, 0.22, team_color, 0.4)
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_tire = MaterialGenerator.get_material("asphalt_track")
+	var mat_glow = MaterialGenerator.create_pbr_material(team_color, 0.3, 0.2, team_color, 2.5)
+	var mat_headlight = MaterialGenerator.create_pbr_material(Color(1.0, 0.95, 0.85), 0.9, 0.1, Color(1.0, 0.9, 0.7), 3.5)
+	var mat_taillight = MaterialGenerator.create_pbr_material(Color(1.0, 0.1, 0.15), 0.8, 0.2, Color(1.0, 0.05, 0.1), 3.0)
+
+	# Broad Widebody Muscle Chassis Body (2.0m wide)
+	var body = _add_box(car, Vector3(2.00, 0.52, 3.60), Vector3(0, 0.46, 0), mat_team)
+	body.name = "CarBodyMesh"
+	# Aggressive Front Chin Air Dam at -Z
+	_add_box(car, Vector3(2.05, 0.15, 0.45), Vector3(0, 0.24, -1.85), mat_hull)
+
+	# Massive Shaker Hood Scoop / Supercharger Blower at -Z
+	_add_box(car, Vector3(1.75, 0.24, 1.30), Vector3(0, 0.50, -1.15), mat_hull)
+	var scoop = _add_box(car, Vector3(0.65, 0.22, 0.55), Vector3(0, 0.74, -1.05), mat_metal)
+	scoop.rotation_degrees.x = -8.0
+
+	# Retro Quad Circular Headlights at -Z
+	for hx in [-0.70, -0.45, 0.45, 0.70]:
+		var hl = _add_cyl(car, 0.09, 0.09, 0.10, Vector3(hx, 0.48, -1.82), mat_headlight)
+		hl.rotation_degrees.x = 90.0
+		hl.name = "FrontHeadlight_" + str(hx)
+
+	# Fastback Roofline & Tinted Windows
+	_add_box(car, Vector3(1.45, 0.48, 1.80), Vector3(0, 0.88, 0.05), mat_hull)
+	var windshield = _add_box(car, Vector3(1.35, 0.40, 0.75), Vector3(0, 0.90, -0.45), mat_glow)
+	windshield.rotation_degrees.x = 35.0
+
+	# Integrated Ducktail Rear Spoiler at +Z
+	var ducktail = _add_box(car, Vector3(2.05, 0.18, 0.32), Vector3(0, 0.82, 1.72), mat_team)
+	ducktail.rotation_degrees.x = -25.0
+
+	# Full-Width Horizontal Rear Taillight Bar at +Z
+	var tl = _add_box(car, Vector3(1.75, 0.12, 0.08), Vector3(0, 0.55, 1.82), mat_taillight)
+	tl.name = "RearTailLight_Bar"
+
+	# Quad Rectangular Chrome Rocket Thruster Nozzles at +Z
+	for tx in [-0.55, -0.22, 0.22, 0.55]:
+		var thruster = _add_box(car, Vector3(0.18, 0.14, 0.35), Vector3(tx, 0.38, 1.88), mat_metal)
+		thruster.name = "ThrusterNozzle_" + str(tx)
+		var flame = _add_cyl(car, 0.02, 0.10, 0.50, Vector3(tx, 0.38, 2.25), mat_glow)
+		flame.rotation_degrees.x = 90.0
+		flame.name = "ThrusterFlame_" + str(tx)
+
+	# 4 Wide Radial Wheels with Fat Rear Tires
+	var wheel_offsets = [
+		Vector3(-1.12, 0.40, -1.25),
+		Vector3(1.12, 0.40, -1.25),
+		Vector3(-1.18, 0.42, 1.25),
+		Vector3(1.18, 0.42, 1.25)
+	]
+	for i in range(wheel_offsets.size()):
+		var wp = wheel_offsets[i]
+		var is_rear = wp.z > 0
+		var w_node = Node3D.new()
+		w_node.name = "Wheel_" + str(i)
+		w_node.position = wp
+		car.add_child(w_node)
+		var w_width = 0.42 if is_rear else 0.35
+		var w_radius = 0.42 if is_rear else 0.38
+		var tire = _add_cyl(w_node, w_radius, w_radius, w_width, Vector3.ZERO, mat_tire)
+		tire.rotation_degrees.z = 90.0
+		var rim = _add_cyl(w_node, w_radius * 0.7, w_radius * 0.7, w_width + 0.02, Vector3(sign(wp.x) * 0.02, 0, 0), mat_metal)
+		rim.rotation_degrees.z = 90.0
+
+	return car
+
+# ------------------------------------------------------------------------------
+# Archetype 4: Volt Pulse (Futuristic Cyberpunk EV Wedge)
+# ------------------------------------------------------------------------------
+static func build_rocket_cyber_ev(team_id: int = 0) -> Node3D:
+	var car = Node3D.new()
+	car.name = "RocketCarVisual"
+
+	var team_color = Color(0.1, 0.85, 1.0) if team_id == 0 else Color(1.0, 0.55, 0.05)
+	var mat_team = MaterialGenerator.create_pbr_material(team_color, 0.90, 0.18, team_color, 0.6)
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_tire = MaterialGenerator.get_material("asphalt_track")
+	var mat_glow = MaterialGenerator.create_pbr_material(team_color, 0.2, 0.1, team_color, 3.0)
+	var mat_photon = MaterialGenerator.create_pbr_material(Color(0.85, 0.98, 1.0), 0.9, 0.05, Color(0.7, 0.95, 1.0), 4.0)
+	var mat_taillight = MaterialGenerator.create_pbr_material(Color(1.0, 0.05, 0.2), 0.8, 0.1, Color(1.0, 0.05, 0.2), 3.5)
+
+	# Low Aerodynamic Stealth Wedge Body (Canonical Forward: -Z, Rear: +Z)
+	var body = _add_box(car, Vector3(1.85, 0.38, 3.55), Vector3(0, 0.40, 0), mat_team)
+	body.name = "CarBodyMesh"
+
+	# Full-Width Cyber Photon Visor Headlight Blade across front nose at -Z
+	var visor = _add_box(car, Vector3(1.82, 0.09, 0.15), Vector3(0, 0.42, -1.82), mat_photon)
+	visor.name = "FrontHeadlight_Blade"
+	# Lower Active Front Canard Flaps at -Z
+	_add_box(car, Vector3(1.95, 0.05, 0.35), Vector3(0, 0.20, -1.75), mat_hull)
+
+	# Sloped Geometric Cockpit Canopy with Panoramic Glass
+	var canopy = _add_box(car, Vector3(1.25, 0.42, 1.70), Vector3(0, 0.76, -0.10), mat_glow)
+	canopy.rotation_degrees.x = 10.0
+
+	# Twin Vertical Aerodynamic Stabilizer Fins at +Z
+	for fx in [-0.85, 0.85]:
+		var fin = _add_box(car, Vector3(0.06, 0.45, 0.85), Vector3(fx, 0.92, 1.35), mat_team)
+		fin.rotation_degrees.y = sign(fx) * -8.0
+
+	# Rear Dynamic Laser Taillight Bar at +Z
+	var tl = _add_box(car, Vector3(1.80, 0.08, 0.08), Vector3(0, 0.50, 1.78), mat_taillight)
+	tl.name = "RearTailLight_Laser"
+
+	# Central Magnetic Hyper-Thruster Containment Ring at +Z (Rear)
+	var ring = _add_cyl(car, 0.26, 0.26, 0.25, Vector3(0, 0.48, 1.82), mat_metal)
+	ring.rotation_degrees.x = 90.0
+	ring.name = "ThrusterNozzle_C"
+	var core_flame = _add_cyl(car, 0.06, 0.22, 0.65, Vector3(0, 0.48, 2.30), mat_glow)
+	core_flame.rotation_degrees.x = 90.0
+	core_flame.name = "ThrusterFlame_C"
+
+	# 4 Enclosed Aerodisc Wheels with Glowing Neon Outer Rings
+	var wheel_offsets = [
+		Vector3(-1.05, 0.38, -1.25),
+		Vector3(1.05, 0.38, -1.25),
+		Vector3(-1.05, 0.38, 1.25),
+		Vector3(1.05, 0.38, 1.25)
+	]
+	for i in range(wheel_offsets.size()):
+		var wp = wheel_offsets[i]
+		var w_node = Node3D.new()
+		w_node.name = "Wheel_" + str(i)
+		w_node.position = wp
+		car.add_child(w_node)
+		var tire = _add_cyl(w_node, 0.38, 0.38, 0.32, Vector3.ZERO, mat_tire)
+		tire.rotation_degrees.z = 90.0
+		# Flat Aerodisc Rim Face with glowing neon ring
+		var disc = _add_cyl(w_node, 0.32, 0.32, 0.34, Vector3(sign(wp.x) * 0.02, 0, 0), mat_hull)
+		disc.rotation_degrees.z = 90.0
+		var n_ring = _add_cyl(w_node, 0.28, 0.28, 0.35, Vector3(sign(wp.x) * 0.025, 0, 0), mat_glow)
+		n_ring.rotation_degrees.z = 90.0
 
 	return car
 

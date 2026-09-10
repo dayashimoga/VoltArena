@@ -12,6 +12,8 @@ func run_tests() -> Dictionary:
 	test_vehicles()
 	test_props()
 	test_subway_and_stadium()
+	test_vehicle_classes()
+	test_scenery_props()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -23,7 +25,9 @@ func get_coverage_entries() -> Array:
 				"build_grenade_launcher", "build_plasma_cutter", "build_cyber_soldier",
 				"build_crawler_mesh", "build_stalker_mesh", "build_brute_mesh",
 				"build_spitter_mesh", "build_colossus_boss_mesh",
-				"build_rocket_car", "build_drift_kart", "build_speed_demon_kart",
+				"build_rocket_car", "build_rocket_sports_coupe", "build_rocket_rally_buggy",
+				"build_rocket_muscle_gt", "build_rocket_cyber_ev",
+				"build_drift_kart", "build_speed_demon_kart",
 				"build_drift_king_kart", "build_turbo_tank_kart",
 				"build_energy_ball", "build_item_box", "build_pickup_mesh",
 				"build_cyber_crate", "build_subway_car_mesh", "build_stadium_goal_mesh",
@@ -31,7 +35,11 @@ func get_coverage_entries() -> Array:
 				"build_boost_orb_mesh", "build_scrap_gear_mesh", "build_start_gantry",
 				"build_ticket_turnstile", "build_subway_bench", "build_vending_machine",
 				"build_stadium_grandstand", "build_stadium_floodlight_tower",
-				"build_track_barrier", "build_grandstand_with_crowd"
+				"build_track_barrier", "build_grandstand_with_crowd",
+				"build_racing_kart", "build_street_tuner", "build_offroad_buggy",
+				"build_futuristic_ev", "build_formula_racer",
+				"build_palm_tree", "build_pine_tree", "build_shipping_container",
+				"build_harbor_crane", "build_neon_skyscraper", "build_rock_arch"
 			]
 		]
 	]
@@ -93,6 +101,22 @@ func test_vehicles() -> void:
 	var car = MeshBuilderScript.build_rocket_car(0)
 	assert_true(car != null and car.get_child_count() > 0, "Rocket car must have wheels and chassis")
 	car.queue_free()
+
+	var c1 = MeshBuilderScript.build_rocket_sports_coupe(0)
+	assert_true(c1 != null and c1.get_child_count() > 0, "Sports coupe must build")
+	c1.queue_free()
+
+	var c2 = MeshBuilderScript.build_rocket_rally_buggy(1)
+	assert_true(c2 != null and c2.get_child_count() > 0, "Rally buggy must build")
+	c2.queue_free()
+
+	var c3 = MeshBuilderScript.build_rocket_muscle_gt(0)
+	assert_true(c3 != null and c3.get_child_count() > 0, "Muscle GT must build")
+	c3.queue_free()
+
+	var c4 = MeshBuilderScript.build_rocket_cyber_ev(1)
+	assert_true(c4 != null and c4.get_child_count() > 0, "Cyber EV must build")
+	c4.queue_free()
 
 	var kart = MeshBuilderScript.build_drift_kart(Color.GREEN)
 	assert_true(kart != null and kart.get_child_count() > 0, "Drift kart must have wheels and chassis")
@@ -159,3 +183,49 @@ func test_subway_and_stadium() -> void:
 	var start_g = MeshBuilderScript.build_start_gantry(14.0)
 	assert_true(start_g != null and start_g.get_child_count() > 0, "Start gantry must have bridge and banner")
 	start_g.queue_free()
+
+func test_vehicle_classes() -> void:
+	var vk1 = MeshBuilderScript.build_racing_kart(Color(1, 0.2, 0.2))
+	assert_true(vk1 != null and vk1.get_child_count() > 0, "Racing kart mesh must build")
+	vk1.queue_free()
+
+	var vk2 = MeshBuilderScript.build_street_tuner(Color(0.2, 0.5, 1.0))
+	assert_true(vk2 != null and vk2.get_child_count() > 0, "Street tuner mesh must build")
+	vk2.queue_free()
+
+	var vk3 = MeshBuilderScript.build_offroad_buggy(Color(0.9, 0.6, 0.1))
+	assert_true(vk3 != null and vk3.get_child_count() > 0, "Offroad buggy mesh must build")
+	vk3.queue_free()
+
+	var vk4 = MeshBuilderScript.build_futuristic_ev(Color(0.1, 0.9, 0.8))
+	assert_true(vk4 != null and vk4.get_child_count() > 0, "Futuristic EV mesh must build")
+	vk4.queue_free()
+
+	var vk5 = MeshBuilderScript.build_formula_racer(Color(0.8, 0.1, 0.9))
+	assert_true(vk5 != null and vk5.get_child_count() > 0, "Formula racer mesh must build")
+	vk5.queue_free()
+
+func test_scenery_props() -> void:
+	var p1 = MeshBuilderScript.build_palm_tree()
+	assert_true(p1 != null and p1.get_child_count() > 0, "Palm tree prop must build")
+	p1.queue_free()
+
+	var p2 = MeshBuilderScript.build_pine_tree()
+	assert_true(p2 != null and p2.get_child_count() > 0, "Pine tree prop must build")
+	p2.queue_free()
+
+	var p3 = MeshBuilderScript.build_shipping_container()
+	assert_true(p3 != null and p3.get_child_count() > 0, "Shipping container prop must build")
+	p3.queue_free()
+
+	var p4 = MeshBuilderScript.build_harbor_crane()
+	assert_true(p4 != null and p4.get_child_count() > 0, "Harbor crane prop must build")
+	p4.queue_free()
+
+	var p5 = MeshBuilderScript.build_neon_skyscraper(55.0, 18.0, 18.0, "neon_cyan")
+	assert_true(p5 != null and p5.get_child_count() > 0, "Neon skyscraper prop must build")
+	p5.queue_free()
+
+	var p6 = MeshBuilderScript.build_rock_arch()
+	assert_true(p6 != null and p6.get_child_count() > 0, "Rock arch prop must build")
+	p6.queue_free()

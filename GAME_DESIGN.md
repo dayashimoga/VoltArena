@@ -147,30 +147,95 @@ graph TD
 ### 9.2 Authoritative RaceSpline & Track Hierarchy
 All race mechanics derive strictly from a single authoritative `RaceSpline` model:
 - Dense arc-length sample cache ($0.5\text{m}$ resolution) providing centerline position $\vec{P}(s)$, forward tangent $\vec{T}(s)$, surface normal $\vec{N}(s)$, lateral binormal $\vec{B}(s)$, and drivable width bounds.
-- Eliminates fragmented logic across collision, AI navigation lines, wrong-way detection, minimap generation, and position tracking.
 - Watertight collision generated via continuous road foundations with zero internal seams or collision steps.
 
-### 9.3 Three Production Circuits
+### 9.3 Six Global Production Circuits
 1. **Volt Speedway**: Professional Grand Prix stadium raceway ($755\text{m}$, 504 samples), high-speed pit straight, start/finish gantry, spectator grandstands, Armco barriers, asphalt ribbon with blue/white kerb strips, chicane and banked hairpin.
-2. **Canyon Run**: Rugged mountain desert circuit ($848\text{m}$, 566 samples), red-rock sandstone formations, mountain tunnels, elevation changes, wooden crash rails, and gravel runoff.
-3. **Skyline Drift**: High-tech metropolis night circuit ($812\text{m}$, 542 samples), elevated highway overpasses, neon-lit skyscrapers, tight $90^\circ$ and $180^\circ$ drift bends, concrete barriers, and street lighting.
+2. **Sunset Coast**: Scenic coastal highway circuit ($830\text{m}$), palm trees, ocean view vistas, beach sand runoffs, and sweeping high-speed bends.
+3. **Canyon Run**: Rugged mountain desert circuit ($848\text{m}$, 566 samples), red-rock sandstone formations, mountain tunnels, elevation changes, wooden crash rails, and gravel runoff.
+4. **Skyline Drift**: High-tech metropolis night circuit ($812\text{m}$, 542 samples), elevated highway overpasses, neon-lit skyscrapers, tight $90^\circ$ and $180^\circ$ drift bends, concrete barriers, and street lighting.
+5. **Alpine Rush**: High-altitude alpine mountain pass ($865\text{m}$), steep switchbacks, pine tree forests, sheer cliff faces, and snow-dusted runoffs.
+6. **Storm Harbor**: Industrial seaport shipping facility ($820\text{m}$), shipping container canyons, giant gantry harbor cranes, wet asphalt reflections, and narrow chicanes.
 
-### 9.4 Vehicle Archetypes & 4-Wheel Physics
-- **4 Archetypes**:
-  - *Phantom*: Top speed $30\text{ m/s}$, mass $750\text{ kg}$, straight-line specialist.
-  - *Enforcer*: High acceleration $28\text{ m/s}^2$, mass $920\text{ kg}$, corner exit torque.
-  - *Drifter*: Drift boost multiplier $1.35$, steering $3.0\text{ rad/s}$, mini-turbo master.
-  - *All-Rounder*: Balanced attributes ($26\text{ m/s}$ top speed, $25\text{ m/s}^2$ accel) for all circuits.
+### 9.4 Five Vehicle Archetypes & 4-Wheel Physics
+- **5 Archetypes**:
+  - *Speeder* (CIK-FIA Kart): Mass $680\text{ kg}$, top speed $32\text{ m/s}$, accel $28\text{ m/s}^2$, ultra-agile handling.
+  - *Phantom* (GT Coupe): Mass $750\text{ kg}$, top speed $35\text{ m/s}$, accel $24\text{ m/s}^2$, straight-line draft specialist.
+  - *Enforcer* (Offroad Buggy): Mass $920\text{ kg}$, top speed $29\text{ m/s}$, accel $32\text{ m/s}^2$, rough terrain stability.
+  - *Turbo Demon* (Cyber EV): Mass $710\text{ kg}$, top speed $34\text{ m/s}$, accel $30\text{ m/s}^2$, rapid drift charge rate.
+  - *Formula* (Open-Wheel F1): Mass $620\text{ kg}$, top speed $38\text{ m/s}$, accel $32\text{ m/s}^2$, high aerodynamic downforce.
 - **Physics Suspension**: 4 physical raycasts at wheel contact patches with spring-damper compression ($0.28\text{m}$ rest, $0.12\text{m}$ travel), rolling wheel animation ($\omega = v/r$), front wheel steering yaw ($\pm 28^\circ$), and zero hover ($y = 0.08\text{m}$ chassis rest).
-- **Telemetry System**: Real-time tracking of `wheel_contact_count`, `ground_distance`, `suspension_compression`, `surface_normal`, `vehicle_speed`, and `nearest_spline_distance`.
+- **Corridor Clearance**: Automated verification (`verify_race_corridor_clearance`) ensuring 0 trackside prop intrusions across all 6 circuits.
 
-### 9.5 Authoritative Wrong-Way System
+### 9.5 Championship Pre-Race Hub & Modal Lock
+- **Pre-Race Hub**: Persistent UI with interactive Track Browser (cards for all 6 circuits with length, laps, difficulty, surface, weather/atmosphere, records, and rewards), Vehicle Garage (5 classes with live radar bars), and Mode Selector.
+- **Modal Lock**: State machine (`PRE_RACE`, `COUNTDOWN`, `RACING`, `FINISHED`) locks kart speed at 0 in pre-race, orbiting a turntable camera around the selected kart until explicit user click on "CONFIRM & START RACE".
+
+### 9.6 Authoritative Wrong-Way System
 - Continuous planar projection of forward vector $\vec{F}$ against spline tangent $\vec{T}$.
 - Triggers **ONLY** when: $\vec{F} \cdot \vec{T} < -0.30$, forward speed $>3.0\text{ m/s}$, vehicle is within track corridor, and condition persists $>0.6\text{s}$.
 - Rapid decay hysteresis and immediate auto-clearance upon facing forward. Zero false warnings on valid clockwise laps.
 
-### 9.6 AI Competitors & HUD
+### 9.7 AI Competitors & HUD
 - **AI Navigation**: Curvature-aware lookahead steering ($10\text{--}26\text{m}$), trail-braking, lateral lane separation, slipstream draft overtaking, and stuck watchdog unjamming.
 - **Dynamic Minimap Canvas**: 64-sample vector track ribbon with player chevron, finish line, and real-time color-coded opponent markers derived directly from `RaceSpline`.
 - **Race Position**: Continuous distance-based progress sorting: $\text{prog} = (\text{lap}-1) \cdot L + s$.
+
+---
+
+## 10. Nitro Kick — Rocket-Car Arena Football (Title 3)
+
+### 10.1 Title Overview & Core Gameplay Loop
+* **Title**: NITRO KICK
+* **Genre**: High-Speed Rocket-Car Sports Arena
+* **Platform**: Godot 4.3 Stable (GL Compatibility, Desktop & Web)
+* **Core Loop**:
+  ```mermaid
+  graph TD
+      Kickoff[Kickoff Spawn & Countdown] --> Sprint[Sprint to Center Ball]
+      Sprint --> Contest[First Touch & High-Velocity Aerial Strike]
+      Contest --> Possession[Team Possession & Tactical Wall Drives]
+      Possession --> Shot[Lead Shot Toward Goal Cage]
+      Shot --> Save{Goalkeeper Save?}
+      Save -- Yes --> Rebound[Rebound Clear & Counter Attack]
+      Rebound --> Possession
+      Save -- No --> Goal[GOAL! Explosion, Siren & Crowd Roar]
+      Goal --> Reset[Scoreboard Increment & Kickoff Reset]
+      Reset --> Overtime{Match Clock 0:00 & Tied?}
+      Overtime -- Yes --> SuddenDeath[Sudden Death Golden Goal]
+      Overtime -- No --> Final[Final Whistle & Match Celebration]
+  ```
+
+### 10.2 Vehicle Dynamics & Canonical Coordinates
+- **Coordinate Hierarchy**: Canonical $-Z$ forward, $+Z$ rear, $+Y$ up across all vehicle nodes. Imported GLTF visual meshes normalized under `VisualRoot` (`rotation_degrees.y = 180.0`).
+- **Aerodynamics & Thrusters**: Headlights at $Z = -1.82$ facing $-Z$, rear taillights at $Z = 1.76$, dual rocket thrusters at $Z = 1.88$ facing $+Z$, and front bumper Area3D at $Z = -1.90$ facing $-Z$. Dynamic front-wheel steering yaw ($\pm 28^\circ$) and active boost flame scaling.
+- **4 Authentic Vehicle Archetypes**:
+  - *Apex Spectre* (Sports Coupe): Mass $1050\text{ kg}$, accel $36\text{ m/s}^2$, boost top speed $52\text{ m/s}$, agile turning.
+  - *Dune Raider* (Rally Buggy): Mass $1150\text{ kg}$, accel $32\text{ m/s}^2$, high suspension travel, drift stability.
+  - *Titan Enforcer* (Muscle GT): Mass $1400\text{ kg}$, accel $28\text{ m/s}^2$, heavy ball hit impulse.
+  - *Volt Pulse* (Futuristic EV): Mass $1100\text{ kg}$, accel $34\text{ m/s}^2$, instant torque, hyper-responsive aerial pitch/yaw.
+- **Aerial Maneuvers**: Double jump with vertical thruster burst (`can_double_jump`), in-air pitch, yaw, and roll orientation controls, and self-righting roll recovery upon ground contact.
+
+### 10.3 Soccer Ball Physics & Anti-Tunneling
+- **Physical Bouncy Ball (`Ball`)**: Continuous collision detection (`continuous_cd = true`) and contact monitor with 4 reported contacts.
+- **Single-Impulse Integration**: Re-engineered `apply_ball_impulse()` strictly calling `apply_central_impulse()`, eliminating double-velocity integration.
+- **Reset API**: Exposes `reset_ball()` forwarding to `reset_to_center()` at $(0, 1.2, 0)$ for deterministic kickoff resets.
+
+### 10.4 Regulation Stadium Colosseum
+- **Stadium Dimensions**: Regulation $110\text{m} \times 64\text{m} \times 20\text{m}$ with $45^\circ$ octagonal containment corners and continuous curved boundary walls.
+- **Kickboards & Upper Glass**: $2.5\text{m}$ lower kickboards with scrolling LED ribbons, transparent acrylic upper containment panels, and overhead floodlight gantries.
+- **Regulation Goal Cages**: $16\text{m} \times 6.5\text{m} \times 6.0\text{m}$ visible 3D goal cages with white tubular posts and net mesh.
+- **Goal Attribution**: Entering North goal scores for Blue (`scoring_team = 0`), entering South goal scores for Orange (`scoring_team = 1`).
+- **Boost Infrastructure**: 28 turf boost pads (+12 boost) and 6 full-boost perimeter orbs (+100 boost) with dynamic respawn timers.
+- **Dynamic MultiMesh Crowd**: Animated crowd instances reacting dynamically to match events (`idle`, `goal`, `celebration`).
+
+### 10.5 Tactical AI & Team Formations
+- **Team Formations**: 1v1, 2v2, and 3v3 match modes with dynamic role allocation:
+  - `STRIKER`: Aggressive ball-hunting, aerial header jumps, shooting lines on opposing goal.
+  - `SUPPORT`: Midfield coverage, collecting boost pads, anticipating rebounds.
+  - `DEFENDER`: Sweeping the defensive half, clearing contested balls to the corners.
+  - `GOALKEEPER`: Positioning between ball and goal net, diving saves on high-speed shots.
+- **Predictive Lead Intercept**: Iterative time-of-flight convergence calculating exact intercept point ahead of the moving ball trajectory.
+- **Aerial Header Headers**: Automated vertical jump and pitch strikes when ball altitude is within $[2.5\text{m}, 6.0\text{m}]$.
+
 

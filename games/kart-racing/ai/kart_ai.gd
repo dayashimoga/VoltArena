@@ -15,12 +15,14 @@ var dynamic_overtake_offset: float = 0.0
 var stuck_timer: float = 0.0
 var reverse_timer: float = 0.0
 var race_active_time: float = 0.0
+var prev_pos: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	if not kart:
 		kart = get_parent() as KartController
 	if kart:
 		kart.is_player = false
+		prev_pos = kart.global_position if kart.is_inside_tree() else kart.position
 
 func _physics_process(delta: float) -> void:
 	if not kart or not is_instance_valid(kart) or kart.race_finished:
@@ -33,6 +35,7 @@ func _physics_process(delta: float) -> void:
 		stuck_timer = 0.0
 		reverse_timer = 0.0
 		race_active_time = 0.0
+		prev_pos = kart.global_position if kart.is_inside_tree() else kart.position
 		return
 
 	race_active_time += delta
@@ -49,13 +52,27 @@ func _process_spline_driving(spline: RefCounted, delta: float) -> void:
 	var fwd = -k_basis.z; fwd.y = 0.0; fwd = fwd.normalized()
 	var right = k_basis.x; right.y = 0.0; right = right.normalized()
 
-	# Current spline progress
-	var current_s = spline.get_closest_distance(kart_pos)
+	# 1. Authoritative spline tangent & Wrong-Way Self-Righting
+	var track_tangent = spline.get_tangent_at_pos(kart_pos)
+	track_tangent.y = 0.0
+	track_tangent = track_tangent.normalized()
+	var dot_tangent = fwd.dot(track_tangent)
 
-	# Dynamic lookahead based on speed (10m to 26m ahead)
+	# If spun or facing against track flow, prioritize turning 180 degrees back to track forward
+	if dot_tangent < -0.20:
+		var angle_to_tan = fwd.signed_angle_to(track_tangent, Vector3.UP)
+		var spin_steer = signf(angle_to_tan) if absf(angle_to_tan) > 0.05 else 1.0
+		var spin_throttle = -1.0 if kart.forward_speed > 2.0 else 0.55
+		kart.apply_kart_controls(spin_throttle, spin_steer, false, delta)
+		stuck_timer = 0.0
+		reverse_timer = 0.0
+		prev_pos = kart_pos
+		return
+
+	# 2. Current spline progress & Lookahead
+	var current_s = spline.get_closest_distance(kart_pos)
 	var lookahead = clampf(kart.forward_speed * 0.75 + 11.0, 10.0, 26.0)
-	var target_s = current_s + lookahead
-	var target_data = spline.sample_at_distance(target_s)
+	var target_data = spline.sample_lookahead_forward(current_s, lookahead)
 
 	# Lateral lane offset + dynamic overtaking
 	var total_offset = clampf(lane_offset + dynamic_overtake_offset, -3.2, 3.2)
@@ -63,52 +80,80 @@ func _process_spline_driving(spline: RefCounted, delta: float) -> void:
 
 	var to_target = target_pos - kart_pos
 	to_target.y = 0.0
-	var dir_to_target = to_target.normalized()
-	var dot_right = right.dot(dir_to_target)
-	var dot_fwd = fwd.dot(dir_to_target)
+	var dir_to_target = to_target.normalized() if to_target.length_squared() > 0.01 else fwd
 
-	# Multi-tier stuck watchdog unjamming logic:
-	if kart.forward_speed < 1.5 and race_active_time >= 1.5:
+	# 3. Signed Angle Steering: positive angle turns left, negative angle turns right
+	var angle_to_target = fwd.signed_angle_to(dir_to_target, Vector3.UP)
+	var steer_input = clampf(angle_to_target * 2.2, -1.0, 1.0)
+
+	# Track boundary / barrier avoidance: steer inward when approaching barrier
+	var lat_offset = spline.get_lateral_offset(kart_pos)
+	var max_safe_lat = (spline.track_width * 0.5) - 2.0
+	var boundary_steer = 0.0
+	if lat_offset > max_safe_lat:
+		boundary_steer += clampf((lat_offset - max_safe_lat) * 0.65, 0.0, 0.60) # Steer left
+	elif lat_offset < -max_safe_lat:
+		boundary_steer -= clampf((-lat_offset - max_safe_lat) * 0.65, 0.0, 0.60) # Steer right
+
+	# 4. Stuck Watchdog: true physical displacement tracking
+	var actual_speed = (kart_pos - prev_pos).length() / maxf(delta, 0.001) if prev_pos != Vector3.ZERO else 10.0
+	prev_pos = kart_pos
+
+	if actual_speed < 1.8 and race_active_time >= 1.5:
 		stuck_timer += delta
-		if stuck_timer > 3.0:
+		if stuck_timer > 2.5:
 			kart.recover_to_checkpoint()
 			stuck_timer = 0.0
 			reverse_timer = 0.0
-		elif stuck_timer > 0.8 and reverse_timer <= 0.0:
-			reverse_timer = 0.6
+			prev_pos = kart.global_position if kart.is_inside_tree() else kart.position
+			return
+		elif stuck_timer > 0.7 and reverse_timer <= 0.0:
+			reverse_timer = 0.55
 	else:
 		stuck_timer = maxf(0.0, stuck_timer - delta * 2.0)
 
 	if reverse_timer > 0.0:
 		reverse_timer -= delta
-		kart.apply_kart_controls(-0.85, signf(dot_right) if abs(dot_right) > 0.1 else -1.0, false, delta)
+		var rev_steer = signf(lat_offset) * 0.8 if absf(lat_offset) > 1.0 else 0.0
+		kart.apply_kart_controls(-0.80, rev_steer, false, delta)
 		return
 
-	# Curvature Look-Ahead for speed management
-	var near_data = spline.sample_at_distance(current_s + 8.0)
-	var far_data = spline.sample_at_distance(current_s + 24.0)
-	var corner_angle = absf(near_data["tangent"].angle_to(far_data["tangent"]))
+	# 5. Multi-Horizon Curvature Lookahead & Physics-Based Braking Points
+	var brake_horizon = clampf(kart.forward_speed * 1.4 + 12.0, 18.0, 42.0)
+	var s_mid = spline.sample_at_distance(current_s + brake_horizon * 0.45)
+	var s_far = spline.sample_at_distance(current_s + brake_horizon)
+	var angle_mid = absf(track_tangent.angle_to(s_mid["tangent"]))
+	var angle_far = absf(s_mid["tangent"].angle_to(s_far["tangent"]))
+	var max_curvature = maxf(angle_mid, angle_far)
 
-	# Steering: negative steer turns right, positive steer turns left
-	var steer_input = -clampf(dot_right * 2.4, -1.0, 1.0)
+	var target_speed = kart.base_speed
+	if max_curvature > 0.60:
+		target_speed = kart.base_speed * 0.48 # Very sharp corner / 90-degree turn
+	elif max_curvature > 0.40:
+		target_speed = kart.base_speed * 0.62 # Sharp corner
+	elif max_curvature > 0.22:
+		target_speed = kart.base_speed * 0.78 # Medium corner
+	elif max_curvature > 0.12:
+		target_speed = kart.base_speed * 0.90 # Gentle bend
+
 	var throttle_input = 1.0
+	if kart.forward_speed > target_speed + 1.5:
+		throttle_input = -0.90 # Strong progressive braking into corner
+	elif kart.forward_speed > target_speed:
+		throttle_input = 0.20
+	elif absf(angle_to_target) > 0.40:
+		throttle_input = 0.75
 
-	# Cornering target speed
-	var corner_target_speed = kart.base_speed
-	if corner_angle > 0.30:
-		corner_target_speed = kart.base_speed * clampf(1.0 - corner_angle * 0.55, 0.45, 0.90)
+	# Slow down and steer inward if sliding toward outer barrier
+	if absf(lat_offset) > max_safe_lat:
+		throttle_input = minf(throttle_input, 0.35)
 
-	if kart.forward_speed > corner_target_speed + 2.0:
-		throttle_input = -0.35 # Trail-braking into sharp corners
-	elif absf(dot_right) > 0.45:
-		throttle_input = 0.72
-	elif absf(dot_right) > 0.25:
-		throttle_input = 0.88
-
-	# Overtaking and opponent avoidance
-	dynamic_overtake_offset = move_toward(dynamic_overtake_offset, 0.0, delta * 0.8)
+	# 6. Overtaking, Collision Avoidance & Slipstream Drafting
+	dynamic_overtake_offset = move_toward(dynamic_overtake_offset, 0.0, delta * 0.6)
 	var avoidance_steer = 0.0
-	if race_active_time > 2.0 and is_inside_tree():
+	var in_slipstream = false
+
+	if is_inside_tree() and race_active_time > 1.0:
 		var all_karts = get_tree().get_nodes_in_group("karts")
 		for other in all_karts:
 			if other == kart or not is_instance_valid(other):
@@ -116,19 +161,27 @@ func _process_spline_driving(spline: RefCounted, delta: float) -> void:
 			var o_pos = other.global_position if other.is_inside_tree() else other.position
 			var to_other = o_pos - kart_pos
 			to_other.y = 0.0
-			var other_dist = to_other.length()
-			if other_dist < 6.5 and other_dist > 0.4:
-				var other_fwd = fwd.dot(to_other.normalized())
-				if other_fwd > 0.35: # Vehicle directly in front
-					var other_right = right.dot(to_other.normalized())
-					if absf(other_right) < 0.45:
-						dynamic_overtake_offset = 2.2 if other_right <= 0.0 else -2.2
-						avoidance_steer += signf(other_right if abs(other_right) > 0.05 else 1.0) * 0.16
+			var dist_other = to_other.length()
+			if dist_other > 0.4 and dist_other < 15.0:
+				var dir_other = to_other.normalized()
+				var dot_other_fwd = fwd.dot(dir_other)
+				if dot_other_fwd > 0.70: # Directly ahead
+					if dist_other < 7.5:
+						# Initiate lane shift to overtake
+						var dot_other_right = right.dot(dir_other)
+						dynamic_overtake_offset = 2.4 if dot_other_right <= 0.0 else -2.4
+						avoidance_steer += (0.20 if dot_other_right <= 0.0 else -0.20)
+					else:
+						# Slipstream draft zone (7.5m - 15m)
+						in_slipstream = true
 
-	steer_input = clampf(steer_input + avoidance_steer, -1.0, 1.0)
+	if in_slipstream and throttle_input > 0.0:
+		kart.forward_speed = minf(kart.forward_speed + delta * 2.5, kart.base_speed * 1.08)
 
-	# Trigger drift on sharp turns for cornering grip
-	var want_drift = (corner_angle > 0.48 or absf(dot_right) > 0.40) and kart.forward_speed > 14.0
+	steer_input = clampf(steer_input + avoidance_steer + boundary_steer, -1.0, 1.0)
+
+	# 7. Drift Initiation on Sharp Turns (only when safe speed and steering angle)
+	var want_drift = max_curvature > 0.45 and absf(angle_to_target) > 0.35 and kart.forward_speed > 12.0 and kart.forward_speed < 21.0
 
 	kart.apply_kart_controls(throttle_input, steer_input, want_drift, delta)
 

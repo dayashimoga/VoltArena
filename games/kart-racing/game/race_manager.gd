@@ -72,23 +72,26 @@ func _on_checkpoint_hit(kart: Node, cp_index: int) -> void:
 	if current_state != RaceState.RACING or (kart and kart.race_finished):
 		return
 
-	# Sequential checkpoint validation
 	var cp_count = checkpoints.size() if not checkpoints.is_empty() else 1
-	var expected_cp = kart.next_checkpoint_index
-	if cp_index == expected_cp:
-		kart.next_checkpoint_index = (expected_cp + 1) % cp_count
-		kart.total_checkpoints_hit += 1
-		if cp_index < checkpoints.size():
-			kart.last_valid_checkpoint_pos = checkpoints[cp_index].global_position
-			kart.last_valid_checkpoint_rot = checkpoints[cp_index].rotation.y
+	var is_finish = (cp_index == 0)
 
-		# Lap complete when wrapping to 0
-		if kart.next_checkpoint_index == 0:
+	if cp_index < checkpoints.size():
+		kart.last_valid_checkpoint_pos = checkpoints[cp_index].global_position
+		kart.last_valid_checkpoint_rot = checkpoints[cp_index].rotation.y
+
+	if is_finish:
+		# Crossing finish line gate
+		# Require passing majority of intermediate checkpoints before completing a lap
+		var req_cps = max(1, int(float(cp_count) * 0.65))
+		if kart.get("checkpoints_passed_this_lap") != null and kart.checkpoints_passed_this_lap >= req_cps:
 			var lap_time = race_time - kart.lap_start_time
 			kart.lap_start_time = race_time
 			if lap_time < kart.best_lap_time:
 				kart.best_lap_time = lap_time
 			kart.current_lap += 1
+			kart.checkpoints_passed_this_lap = 0
+			kart.next_checkpoint_index = 1
+			kart.total_checkpoints_hit += 1
 
 			var bus = GameConstants.get_autoload(self, "EventBus")
 			if bus and kart.is_player:
@@ -98,9 +101,34 @@ func _on_checkpoint_hit(kart: Node, cp_index: int) -> void:
 				kart.race_finished = true
 				if kart.is_player:
 					finish_race(kart)
+		else:
+			# Initial start line crossing right after countdown release
+			kart.next_checkpoint_index = 1
+			kart.total_checkpoints_hit += 1
+			if kart.get("checkpoints_passed_this_lap") != null:
+				kart.checkpoints_passed_this_lap = 0
+	else:
+		# Intermediate checkpoint (1 through N - 1)
+		var expected_cp = kart.next_checkpoint_index
+		var can_skip_one = (cp_count > 4 and expected_cp != 0)
+		if cp_index == expected_cp or (can_skip_one and cp_index == (expected_cp + 1) % cp_count):
+			kart.next_checkpoint_index = (cp_index + 1) % cp_count
+			if kart.get("checkpoints_passed_this_lap") != null:
+				kart.checkpoints_passed_this_lap += 1
+			kart.total_checkpoints_hit += 1
 
 func on_kart_hit_checkpoint(kart: Node, checkpoint_idx: int) -> void:
 	_on_checkpoint_hit(kart, checkpoint_idx)
+
+func get_kart_continuous_progress(kart: Node, spline: RefCounted) -> float:
+	if not kart:
+		return 0.0
+	var pos = kart.global_position if kart.is_inside_tree() else kart.position
+	var completed = float(kart.current_lap - 1)
+	if kart.race_finished:
+		return float(total_laps) * spline.track_length + 100.0 - float(get_racer_position(kart))
+	var s = spline.get_closest_distance(pos) if spline else 0.0
+	return completed * spline.track_length + s
 
 func update_race_positions() -> void:
 	var spline: RefCounted = null
@@ -117,12 +145,9 @@ func update_race_positions() -> void:
 			spline = tg.race_spline
 
 	if spline and spline.track_length > 0.0:
-		var track_len = spline.track_length
 		racers.sort_custom(func(a, b):
-			var a_pos = a.global_position if a.is_inside_tree() else a.position
-			var b_pos = b.global_position if b.is_inside_tree() else b.position
-			var prog_a = float(a.current_lap - 1) * track_len + spline.get_closest_distance(a_pos)
-			var prog_b = float(b.current_lap - 1) * track_len + spline.get_closest_distance(b_pos)
+			var prog_a = get_kart_continuous_progress(a, spline)
+			var prog_b = get_kart_continuous_progress(b, spline)
 			return prog_a > prog_b
 		)
 	else:
@@ -143,3 +168,4 @@ func get_racer_position(kart: Node) -> int:
 func finish_race(winner: Node) -> void:
 	current_state = RaceState.FINISHED
 	race_finished.emit(winner)
+

@@ -187,6 +187,57 @@ The physics world is partitioned into 12 strict collision layers configured in `
 * **Tactical Navigation HUD (`StrikeHUD`)**: Features top-center `StrikeCompassTape` with dynamic objective diamond bearing and meter distance, top-right `StrikeMinimap` radar with player forward chevron and threat-aware fading hostile blips ($3.0\text{s}$ fade), full-screen `StrikeTacticalMap` ($M$ key toggle modal), dynamic crosshair with hit indicators, directional threat arcs, and vitals/weapon readouts with fire mode display.
 * **Checkpoint & Save Persistence (`CheckpointManager`)**: Real-time checkpoint registration, safe-ground respawn restoration, and career mission grading persistence.
 
+### 6.5 Nitro Kick (Rocket-Car Arena Football)
+* **Canonical Coordinate Hierarchy (`CarController`)**:
+  - Enforces standard Godot coordinates: $-Z$ forward, $+Z$ rear, $+Y$ up.
+  - Normalizes imported GLTF chassis under `VisualRoot` (`rotation_degrees.y = 180.0`), properly orienting custom and loaded models.
+  - Headlights anchored at $Z = -1.82$ facing $-Z$, rear taillights at $Z = 1.76$ and dual rocket thrusters at $Z = 1.88$ facing $+Z$.
+  - Front bumper `Area3D` at $Z = -1.90$ with dynamic front-wheel steering yaw ($\pm 28^\circ$) and boost flame scaling.
+* **4 Authentic Vehicle Archetypes (`MeshBuilder` & `ModelCache`)**:
+  - *Apex Spectre* (Sports Coupe): Mass $1050\text{kg}$, accel $36\text{ m/s}^2$, boost top speed $52\text{ m/s}$, agile turning.
+  - *Dune Raider* (Rally Buggy): Mass $1150\text{kg}$, accel $32\text{ m/s}^2$, high suspension travel, drift stability.
+  - *Titan Enforcer* (Muscle GT): Mass $1400\text{kg}$, accel $28\text{ m/s}^2$, high demolition impact momentum, heavy ball hit impulse.
+  - *Volt Pulse* (Futuristic EV): Mass $1100\text{kg}$, accel $34\text{ m/s}^2$, instant torque, hyper-responsive aerial pitch/yaw.
+  - Reconfigurable at runtime via `set_vehicle_archetype()` with automatic visual swapping and collider updates.
+* **Soccer Ball Physics & CCD (`Ball`)**:
+  - Physics `RigidBody3D` with continuous collision detection (`continuous_cd = true`) and contact monitoring (4 contacts).
+  - Single-impulse integration: `apply_ball_impulse()` exclusively calls `apply_central_impulse()` to eliminate double-velocity integration.
+  - Exposes `reset_ball()` alias pointing to `reset_to_center()` for deterministic kickoff state resets.
+* **Regulation Sports Colosseum (`RocketArena`)**:
+  - Regulation stadium footprint ($110\text{m} \times 64\text{m} \times 20\text{m}$) with $45^\circ$ octagonal containment corners and continuous curved boundary walls.
+  - $2.5\text{m}$ lower kickboards with scrolling LED ribbons and transparent acrylic upper containment panels.
+  - Regulation 3D goal cages ($16\text{m} \times 6.5\text{m} \times 6.0\text{m}$) with visible white post frames and net geometry.
+  - Correct goal scoring team attribution: North goal Area3D scores for Blue (`scoring_team = 0`), South goal Area3D scores for Orange (`scoring_team = 1`).
+  - 28 turf boost pads + 6 full-boost perimeter orbs with dynamic respawn timers.
+  - MultiMesh crowd system with dynamic stadium reaction states (`idle`, `goal`, `celebration`).
+* **Tactical AI & Predictive Ball Interception (`CarAI`)**:
+  - Dynamic team role assignment: `STRIKER` (ball attack), `SUPPORT` (midfield positioning), `DEFENDER` (penalty box sweep), `GOALKEEPER` (goal mouth protection).
+  - Predictive lead intercept calculation (`predict_ball_intercept` at file scope) using iterative time-of-flight convergence against ball trajectory.
+  - Aerial header jumps when ball altitude $\in [2.5\text{m}, 6.0\text{m}]$.
+  - Kickoff sprint boost utilization and angular roll recovery.
+
+### 6.6 Drift Storm (Arcade Kart Racing)
+* **Single Track Authority Pipeline (`RaceSpline`)**:
+  - Authoritative arc-length spline model ($0.5\text{m}$ interval) providing centerline $\vec{P}(s)$, forward tangent $\vec{T}(s)$, surface normal $\vec{N}(s)$, and lateral binormal $\vec{B}(s)$.
+  - Unifies procedural road quad generation, collision ribbons, AI navigation, wrong-way detection, and lap progress calculation.
+  - Counter-clockwise quad triangle winding ensuring upward normals $(0, 1, 0)$ and two-sided collision response (`backface_collision = true`).
+* **4-Wheel Raycast Suspension & Grounding (`KartController`)**:
+  - 4 physical raycasts (`SuspensionRay_0..3`) at $(\pm 0.42, 0.12, \pm 0.58)$ with spring compression damping, rolling wheel rotation ($\omega = v/r$), front wheel steering yaw ($\pm 28^\circ$), and suspension deflection.
+  - Chassis resting naturally on road surface ($y \in [0.0, 0.25\text{m}]$) with verified $0.0\text{m}$ hovering.
+* **Corridor Clearance Verification System (`TrackGenerator`)**:
+  - Anchors all trackside props strictly to spline binormal offsets ($pos \pm binormal \cdot (half\_width + margin)$).
+  - Built automated scanner `verify_race_corridor_clearance(sample_step = 2.0)` asserting 0 collider encroachments within $\pm 9.0\text{m}$ lateral width and $5.0\text{m}$ height across all 6 circuits.
+* **6 Global Production Circuits (`TrackRegistry`)**:
+  - Volt Speedway ($755\text{m}$), Sunset Coast ($830\text{m}$), Canyon Run ($848\text{m}$), Skyline Drift ($812\text{m}$), Alpine Rush ($865\text{m}$), Storm Harbor ($820\text{m}$).
+  - Procedural 3D scenery props: palm trees, pine trees, shipping containers, harbor cranes, skyscrapers, and rock arches.
+* **5 Authentic Vehicle Classes (`MeshBuilder`)**:
+  - *Speeder* (CIK-FIA Kart), *Phantom* (GT Coupe), *Enforcer* (Offroad Buggy), *Turbo Demon* (Cyber EV), *Formula* (Open-Wheel F1).
+  - Distinct authoritative physics: top speed (27–38 m/s), acceleration (20–32 m/s²), grip factor (0.80–0.96), drift charge rate, and boost duration (1.2–2.4s).
+* **Championship Pre-Race Hub & Modal Lock (`KartRacingMain` & `DriftStormHUD`)**:
+  - State machine: `PRE_RACE`, `COUNTDOWN`, `RACING`, `FINISHED`.
+  - Persistent Championship Hub: interactive Track Browser (6 circuits), Vehicle Garage (5 classes with live radar bars), and Mode Selector.
+  - Modal lock: in `PRE_RACE`, player kart velocity and throttle are hard-locked to 0 with turntable camera orbiting the kart until explicit "CONFIRM & START RACE" click.
+
 ---
 
 ## 7. Universal Launcher Architecture

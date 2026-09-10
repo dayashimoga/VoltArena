@@ -153,6 +153,19 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.emission_texture = TexSynth.get_texture("stadium_score_banner_blue")
 			mat.emission_energy_multiplier = 0.8
 			mat.roughness = 0.3
+		"arena_glass":
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat.albedo_color = Color(0.15, 0.45, 0.75, 0.22)
+			mat.metallic = 0.85
+			mat.roughness = 0.08
+			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		"arena_energy_grid":
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat.albedo_color = Color(0.10, 0.70, 1.0, 0.30)
+			mat.emission_enabled = true
+			mat.emission = Color(0.08, 0.60, 0.95)
+			mat.emission_energy_multiplier = 1.6
+			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 		"gold_pickup":
 			mat.albedo_color = Color(1.0, 0.88, 0.15)
 			mat.metallic = 0.95
@@ -399,10 +412,49 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 		"wetland_mud":
 			mat.albedo_color = Color(0.32, 0.26, 0.20)
 			mat.roughness = 0.55
-		"water_stream":
-			mat.albedo_color = Color(0.2, 0.65, 0.9, 0.85)
-			mat.metallic = 0.25
+		"water_stream", "ocean_water":
+			mat.albedo_color = Color(0.12, 0.45, 0.78, 0.88)
+			mat.metallic = 0.35
 			mat.roughness = 0.08
+			mat.uv1_triplanar = true
+		"sand_beach", "coastal_sand":
+			mat.albedo_color = Color(0.92, 0.82, 0.60)
+			mat.roughness = 0.92
+			mat.metallic = 0.02
+			mat.uv1_triplanar = true
+		"pine_wood", "timber":
+			mat.albedo_color = Color(0.42, 0.28, 0.18)
+			mat.roughness = 0.78
+			mat.metallic = 0.05
+		"pine_needles":
+			mat.albedo_color = Color(0.15, 0.35, 0.18)
+			mat.roughness = 0.85
+			mat.metallic = 0.02
+		"container_red":
+			mat.albedo_color = Color(0.85, 0.18, 0.15)
+			mat.roughness = 0.45
+			mat.metallic = 0.65
+		"container_blue":
+			mat.albedo_color = Color(0.12, 0.38, 0.82)
+			mat.roughness = 0.45
+			mat.metallic = 0.65
+		"container_yellow":
+			mat.albedo_color = Color(0.92, 0.75, 0.12)
+			mat.roughness = 0.45
+			mat.metallic = 0.65
+		"wet_asphalt":
+			mat.albedo_color = Color(0.20, 0.22, 0.26)
+			mat.roughness = 0.22
+			mat.metallic = 0.25
+		"harbor_crane_metal":
+			mat.albedo_color = Color(0.95, 0.60, 0.10)
+			mat.roughness = 0.40
+			mat.metallic = 0.70
+		"alpine_rock":
+			mat.albedo_color = Color(0.48, 0.52, 0.58)
+			mat.roughness = 0.82
+			mat.metallic = 0.10
+			mat.uv1_triplanar = true
 		_:
 			mat.albedo_color = Color(0.7, 0.7, 0.7)
 			mat.metallic = 0.5

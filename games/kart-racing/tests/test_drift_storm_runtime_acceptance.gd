@@ -14,6 +14,7 @@ const KartControllerScript = preload("res://games/kart-racing/kart/kart_controll
 const KartAIScript = preload("res://games/kart-racing/ai/kart_ai.gd")
 const KartRacingMainScript = preload("res://games/kart-racing/kart_racing_main.gd")
 const RaceManagerScript = preload("res://games/kart-racing/game/race_manager.gd")
+const TrackRegistryScript = preload("res://games/kart-racing/tracks/track_registry.gd")
 
 func run_tests() -> Dictionary:
 	test_authoritative_race_spline_integrity()
@@ -22,17 +23,21 @@ func run_tests() -> Dictionary:
 	test_zero_false_wrong_way_on_valid_lap()
 	test_reversing_triggers_wrong_way_and_recovery_clears()
 	test_six_car_multi_lap_simulation()
-	test_three_circuits_continuous_colliders_and_environments()
+	test_six_circuits_continuous_colliders_and_environments()
+	test_five_vehicle_classes_and_stats()
+	test_seam_wrapping_and_continuous_progress()
+	test_track_registry_and_extended_spline_methods()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
 	return [
-		["res://games/kart-racing/tracks/race_spline.gd", ["_init", "build_from_nodes", "get_closest_distance", "sample_at_distance", "get_tangent_at_pos", "get_lateral_offset", "is_point_on_track", "get_progress", "get_safe_respawn_transform"]],
+		["res://games/kart-racing/tracks/race_spline.gd", ["_init", "build_from_nodes", "get_closest_distance", "sample_at_distance", "get_tangent_at_pos", "get_lateral_offset", "is_point_on_track", "get_progress", "get_safe_respawn_transform", "sample_lookahead_forward", "get_forward_delta", "get_minimap_points"]],
 		["res://games/kart-racing/tracks/track_generator.gd", ["_ready", "build_circuit", "_build_continuous_road_foundation", "build_track_segment", "create_box", "setup_racing_environment"]],
 		["res://games/kart-racing/kart/kart_controller.gd", ["_ready", "setup_kart_archetype", "setup_kart_visual", "setup_suspension_raycasts", "_physics_process", "_update_suspension_and_grounding", "recover_to_checkpoint", "handle_player_input", "apply_kart_controls", "trigger_drift_boost", "_check_wrong_way", "_check_wrong_way_fallback", "_get_race_spline", "_get_race_manager"]],
 		["res://games/kart-racing/ai/kart_ai.gd", ["_ready", "_physics_process", "_process_spline_driving", "_process_waypoint_driving", "_get_race_spline", "_get_race_manager"]],
-		["res://games/kart-racing/game/race_manager.gd", ["initialize_race", "_process", "start_race", "_on_checkpoint_hit", "update_race_positions", "get_racer_position", "finish_race"]],
-		["res://games/kart-racing/kart_racing_main.gd", ["_ready", "setup_scene", "update_camera", "_on_race_finished", "select_track", "select_kart"]]
+		["res://games/kart-racing/game/race_manager.gd", ["initialize_race", "_process", "start_race", "_on_checkpoint_hit", "update_race_positions", "get_racer_position", "finish_race", "get_kart_continuous_progress"]],
+		["res://games/kart-racing/kart_racing_main.gd", ["_ready", "setup_scene", "update_camera", "_on_race_finished", "select_track", "select_kart"]],
+		["res://games/kart-racing/tracks/track_registry.gd", ["_init", "get_all_tracks", "get_track"]]
 	]
 
 func assert_true(cond: bool, msg: String) -> void:
@@ -258,22 +263,118 @@ func test_six_car_multi_lap_simulation() -> void:
 
 	main.queue_free()
 
-## T7: 3 Circuits Geometry, Continuous Colliders & Environments
-func test_three_circuits_continuous_colliders_and_environments() -> void:
-	var circuits = ["metropolis", "canyon", "skyline"]
+## T7: 6 Distinct Circuits Geometry, Continuous Colliders & Environments
+func test_six_circuits_continuous_colliders_and_environments() -> void:
+	var circuits = ["speedway", "sunset_coast", "canyon", "skyline", "alpine_rush", "storm_harbor"]
 	for c_name in circuits:
 		var tg = TrackGeneratorScript.new()
 		tg.track_theme = c_name
 		tg.build_circuit()
 
 		assert_true(tg.race_spline != null, "Circuit '%s' must build valid RaceSpline" % c_name)
-		assert_true(tg.race_spline.track_length > 350.0, "Circuit '%s' length must exceed 350m" % c_name)
-		assert_true(tg.checkpoints.size() >= 8, "Circuit '%s' must contain at least 8 checkpoints" % c_name)
+		assert_true(tg.race_spline.track_length > 500.0, "Circuit '%s' length must exceed 500m (got %.1f)" % [c_name, tg.race_spline.track_length])
+		assert_true(tg.checkpoints.size() >= 12, "Circuit '%s' must contain at least 12 checkpoints" % c_name)
 
 		var crf = tg.get_node_or_null("ContinuousRoadFoundation")
 		assert_true(crf != null, "Circuit '%s' must include ContinuousRoadFoundation StaticBody3D" % c_name)
 
 		var col = crf.get_node_or_null("ContinuousRoadCol") as CollisionShape3D
 		assert_true(col != null and col.shape != null, "Circuit '%s' must have valid road collision shape" % c_name)
+		if col and col.shape is ConcavePolygonShape3D:
+			assert_true(col.shape.backface_collision, "Circuit '%s' road collider must have backface_collision = true for raycast suspension" % c_name)
 
 		tg.queue_free()
+
+## T8: 5 Distinct Vehicle Classes & Authoritative Physics Stats
+func test_five_vehicle_classes_and_stats() -> void:
+	var v_classes = ["speeder", "phantom", "enforcer", "turbo_demon", "formula"]
+	for v_name in v_classes:
+		var kart = KartControllerScript.new()
+		kart.kart_type = v_name
+		kart._ready()
+
+		assert_true(kart.kart_visual != null, "Vehicle class '%s' must construct 3D visual" % v_name)
+		assert_eq(kart.all_wheels.size(), 4, "Vehicle class '%s' must have exactly 4 wheels" % v_name)
+		assert_eq(kart.front_wheels.size(), 2, "Vehicle class '%s' must have exactly 2 front wheels" % v_name)
+		assert_eq(kart.rear_wheels.size(), 2, "Vehicle class '%s' must have exactly 2 rear wheels" % v_name)
+
+		# Verify stats are distinct and authoritative
+		assert_true(kart.base_speed > 20.0 and kart.base_speed <= 40.0, "Vehicle class '%s' speed must be in 20-40 m/s range" % v_name)
+		assert_true(kart.acceleration > 15.0 and kart.acceleration <= 35.0, "Vehicle class '%s' acceleration must be in 15-35 m/s^2 range" % v_name)
+		assert_true(kart.boost_multiplier >= 1.25 and kart.boost_multiplier <= 1.70, "Vehicle class '%s' boost multiplier must be valid" % v_name)
+
+		kart.queue_free()
+
+## T9: Start/Finish Seam Wrapping & Authoritative Continuous Progress
+func test_seam_wrapping_and_continuous_progress() -> void:
+	var nodes: Array[Vector3] = [
+		Vector3(0, 0, 0), Vector3(0, 0, -50), Vector3(30, 2, -100),
+		Vector3(100, 4, -120), Vector3(180, 4, -80), Vector3(160, 2, 20),
+		Vector3(80, 0, 60), Vector3(0, 0, 30)
+	]
+	var spline = RaceSplineScript.new(nodes, 14.0)
+	var L = spline.track_length
+
+	# Query near end of spline (s = L - 2.0m) and just past seam (s = 2.0m)
+	var pt_before_seam = spline.sample_at_distance(L - 2.0)["pos"]
+	var pt_after_seam = spline.sample_at_distance(2.0)["pos"]
+
+	var s_before = spline.get_closest_distance(pt_before_seam)
+	var s_after = spline.get_closest_distance(pt_after_seam)
+
+	assert_almost_eq(s_before, L - 2.0, 2.5, "Distance before seam must be close to L - 2m")
+	assert_almost_eq(s_after, 2.0, 2.5, "Distance after seam must be close to 2m")
+
+	# Delta distance across seam must wrap positively forward, never plunging backward by -L
+	var raw_delta = s_after - s_before
+	var wrapped_delta = fposmod(raw_delta + L * 0.5, L) - L * 0.5
+	assert_true(wrapped_delta > 0.0, "Wrapped distance delta across seam must be positive (+4m), not -L")
+	assert_almost_eq(wrapped_delta, 4.0, 3.0, "Wrapped distance delta across seam must approximate 4m")
+
+	# Authoritative continuous progress formula
+	var prog_lap0 = 0 * L + s_before
+	var prog_lap1 = 1 * L + s_after
+	assert_true(prog_lap1 > prog_lap0, "Progress on Lap 1 past finish must be greater than Lap 0 before finish")
+
+## T10: TrackRegistry & Extended RaceSpline and RaceManager Methods
+func test_track_registry_and_extended_spline_methods() -> void:
+	# Track registry
+	var tr = TrackRegistryScript.new()
+	assert_true(tr != null, "TrackRegistry instance must instantiate")
+	var all_tracks = TrackRegistryScript.get_all_tracks()
+	assert_eq(all_tracks.size(), 6, "TrackRegistry must return exactly 6 distinct tracks")
+	var harbor = TrackRegistryScript.get_track("storm_harbor")
+	assert_true(harbor != null, "TrackRegistry must find storm_harbor track")
+	assert_eq(harbor.name, "Storm Harbor", "storm_harbor track name must match")
+	assert_true(harbor.length_m > 500.0, "storm_harbor track length must exceed 500m")
+
+	# RaceSpline extended methods
+	var nodes: Array[Vector3] = [
+		Vector3(0, 0, 0), Vector3(0, 0, -50), Vector3(30, 2, -100),
+		Vector3(100, 4, -120), Vector3(180, 4, -80), Vector3(160, 2, 20),
+		Vector3(80, 0, 60), Vector3(0, 0, 30)
+	]
+	var spline = RaceSplineScript.new(nodes, 14.0)
+	var ahead_sample = spline.sample_lookahead_forward(10.0, 15.0)
+	assert_true(ahead_sample.has("pos") and ahead_sample.has("tangent"), "sample_lookahead_forward must return valid sample")
+	assert_almost_eq(ahead_sample["dist"], 25.0, 0.5, "sample_lookahead_forward distance must be 25m")
+
+	var forward_d = spline.get_forward_delta(10.0, 30.0)
+	assert_almost_eq(forward_d, 20.0, 0.1, "get_forward_delta must compute 20m forward")
+	var reverse_d = spline.get_forward_delta(30.0, 10.0)
+	assert_almost_eq(reverse_d, -20.0, 0.1, "get_forward_delta must compute -20m backward")
+
+	var minimap_pts = spline.get_minimap_points(32)
+	assert_eq(minimap_pts.size(), 32, "get_minimap_points must return 32 2D vector points")
+
+	# RaceManager continuous progress
+	var rm = RaceManagerScript.new()
+	var kart = KartControllerScript.new()
+	kart.current_lap = 2
+	kart.position = nodes[1]
+	var prog = rm.get_kart_continuous_progress(kart, spline)
+	assert_true(prog > spline.track_length, "Kart on Lap 2 must have continuous progress > 1 track length")
+	kart.queue_free()
+	rm.queue_free()
+
+

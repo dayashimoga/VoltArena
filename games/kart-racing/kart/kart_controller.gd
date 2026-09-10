@@ -44,6 +44,7 @@ var current_steer_input: float = 0.0
 # Race Progression
 var current_lap: int = 1
 var next_checkpoint_index: int = 0
+var checkpoints_passed_this_lap: int = 0
 var total_checkpoints_hit: int = 0
 var lap_start_time: float = 0.0
 var best_lap_time: float = 999.0
@@ -67,6 +68,7 @@ var surface_normal: Vector3 = Vector3.UP
 var vehicle_speed: float:
 	get: return absf(forward_speed) * 3.6 # km/h
 var nearest_spline_distance: float = 0.0
+var current_throttle_input: float = 0.0
 
 # Wrong-Way Detection & Hysteresis
 var is_wrong_way: bool = false
@@ -128,6 +130,14 @@ func setup_kart_archetype() -> void:
 			brake_deceleration = 32.0
 			steer_speed = 3.4
 			drift_steer_speed = 4.4
+		"formula":
+			# Lightweight high-downforce open-wheeler
+			base_speed = 30.5
+			boost_top_speed = 43.0
+			acceleration = 27.0
+			brake_deceleration = 38.0
+			steer_speed = 3.8
+			drift_steer_speed = 4.0
 		_: # "speeder"
 			# Balanced all-rounder
 			base_speed = 26.0
@@ -221,8 +231,6 @@ func _physics_process(delta: float) -> void:
 
 	if not is_on_floor() and wheel_contact_count == 0:
 		velocity.y -= gravity * delta
-	else:
-		velocity.y = 0.0 # Clean asphalt glide, zero internal edge bump
 
 	# Check wrong-way progression against authoritative RaceSpline
 	_check_wrong_way(delta)
@@ -234,11 +242,27 @@ func _physics_process(delta: float) -> void:
 	if is_player and not race_finished and not is_countdown:
 		handle_player_input(delta)
 
-	# Process boost timer
-	if boost_timer > 0.0:
-		boost_timer -= delta
+	# Dynamic Engine SFX for player
+	if is_player:
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am:
+			if not is_countdown and not race_finished:
+				am.start_engine_sound()
+				am.update_engine_rpm(absf(forward_speed) / base_speed, current_throttle_input > 0.1)
+			else:
+				am.stop_engine_sound()
 
 	move_and_slide()
+
+	# Wall impact audio feedback
+	if is_player and get_slide_collision_count() > 0 and absf(forward_speed) > 12.0:
+		for c_idx in range(get_slide_collision_count()):
+			var col = get_slide_collision(c_idx)
+			if col and col.get_normal().dot(Vector3.UP) < 0.6:
+				var am = GameConstants.get_autoload(self, "AudioManager")
+				if am:
+					am.play_sound("hit", randf_range(0.85, 1.15), -4.0)
+				break
 
 func _update_suspension_and_grounding(delta: float) -> void:
 	var hits = 0
@@ -368,6 +392,7 @@ func apply_kart_controls(throttle: float, steer: float, want_drift: bool, delta:
 		forward_speed = 0.0
 
 	current_steer_input = steer
+	current_throttle_input = throttle
 
 	# Drift mechanics handling
 	if want_drift and abs(steer) > 0.2 and (is_on_floor() or wheel_contact_count >= 2) and forward_speed > 10.0:
@@ -409,8 +434,15 @@ func apply_kart_controls(throttle: float, steer: float, want_drift: bool, delta:
 		forward_speed = move_toward(forward_speed, 0.0, 10.0 * delta)
 
 	var fwd = -transform.basis.z
-	velocity.x = fwd.x * forward_speed
-	velocity.z = fwd.z * forward_speed
+	if wheel_contact_count > 0 and surface_normal.dot(Vector3.UP) > 0.3:
+		var slope_fwd = (fwd - surface_normal * fwd.dot(surface_normal)).normalized()
+		var rest_len = 0.28
+		var susp_error = clampf(rest_len - ground_distance, -0.15, 0.15)
+		var susp_vy = susp_error * 18.0
+		velocity = slope_fwd * forward_speed + Vector3.UP * susp_vy
+	else:
+		velocity.x = fwd.x * forward_speed
+		velocity.z = fwd.z * forward_speed
 
 func trigger_drift_boost() -> void:
 	var boost_level = 0

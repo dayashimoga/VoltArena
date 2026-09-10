@@ -13,6 +13,9 @@ const ResultsScreenScript = preload("res://shared/ui/results_screen.gd")
 @export var match_duration: float = 300.0 # 5 minutes
 @export var enable_overtime: bool = false
 @export var game_mode: String = "2v2" # "1v1", "2v2", "3v3", "target_challenge"
+var match_mode: String:
+	get: return game_mode
+	set(v): game_mode = v
 @export var selected_vehicle: String = "speed_demon" # "speed_demon", "turbo_truck", "phantom"
 
 var blue_score: int = 0
@@ -83,22 +86,21 @@ func setup_scene() -> void:
 	camera = Camera3D.new()
 	camera.name = "ChaseCamera"
 	camera.current = true
-	camera.global_position = Vector3(0, 4.0, 37.5)
-	camera.look_at(Vector3(0, 1.2, 25.0), Vector3.UP)
 	add_child(camera)
+	camera.look_at_from_position(Vector3(0, 4.0, 37.5), Vector3(0, 1.2, 25.0), Vector3.UP)
 	if hud and hud.has_method("set_tracking_targets"):
 		hud.set_tracking_targets(camera, ball)
 
 	# Blue Team AI Teammates
-	var b_ai1 = _create_ai_car("AI_Blue_1", 0, false)
-	var b_ai2 = _create_ai_car("AI_Blue_2", 0, false)
+	var b_ai1 = _create_ai_car("AI_Blue_1", 0, false, CarAIScript.AIRole.SUPPORT, "cyber_ev")
+	var b_ai2 = _create_ai_car("AI_Blue_2", 0, false, CarAIScript.AIRole.GOALKEEPER, "muscle_gt")
 	blue_ai_cars.append(b_ai1)
 	blue_ai_cars.append(b_ai2)
 
 	# Orange Team AI Opponents
-	var o_ai1 = _create_ai_car("AI_Orange_1", 1, true)
-	var o_ai2 = _create_ai_car("AI_Orange_2", 1, true)
-	var o_ai3 = _create_ai_car("AI_Orange_3", 1, true)
+	var o_ai1 = _create_ai_car("AI_Orange_1", 1, true, CarAIScript.AIRole.STRIKER, "sports_coupe")
+	var o_ai2 = _create_ai_car("AI_Orange_2", 1, true, CarAIScript.AIRole.SUPPORT, "rally_buggy")
+	var o_ai3 = _create_ai_car("AI_Orange_3", 1, true, CarAIScript.AIRole.GOALKEEPER, "muscle_gt")
 	orange_ai_cars.append(o_ai1)
 	orange_ai_cars.append(o_ai2)
 	orange_ai_cars.append(o_ai3)
@@ -114,22 +116,42 @@ func setup_scene() -> void:
 	select_game_mode(game_mode)
 	reset_kickoff()
 
-func _create_ai_car(car_name: String, team: int, is_orange: bool) -> Node3D:
+func _create_ai_car(car_name: String, team: int, is_orange: bool, initial_role: int = 0, archetype: String = "sports_coupe") -> Node3D:
 	var car_node = CarControllerScript.new()
 	car_node.name = car_name
 	car_node.team_id = team
 	car_node.is_player_controlled = false
+	car_node.vehicle_archetype = archetype
 	add_child(car_node)
 
 	var ai_brain = CarAIScript.new()
 	ai_brain.car = car_node
 	ai_brain.ball = ball
 	ai_brain.is_orange_team = is_orange
+	ai_brain.set_role(initial_role)
 	car_node.add_child(ai_brain)
 	return car_node
 
 var blue_ai_cars: Array[Node3D] = []
 var orange_ai_cars: Array[Node3D] = []
+
+var blue_cars: Array[Node3D]:
+	get:
+		var list: Array[Node3D] = []
+		if is_instance_valid(player_car):
+			list.append(player_car)
+		for b in blue_ai_cars:
+			if is_instance_valid(b) and b.visible:
+				list.append(b)
+		return list
+
+var orange_cars: Array[Node3D]:
+	get:
+		var list: Array[Node3D] = []
+		for o in orange_ai_cars:
+			if is_instance_valid(o) and o.visible:
+				list.append(o)
+		return list
 
 func _process(delta: float) -> void:
 	if not match_active:
@@ -353,19 +375,24 @@ func select_game_mode(mode: String) -> void:
 func select_car_vehicle(vehicle_id: String) -> void:
 	selected_vehicle = vehicle_id
 	if is_instance_valid(player_car) and player_car is CarController:
-		match vehicle_id:
-			"speed_demon":
-				player_car.max_speed = 28.0
-				player_car.boost_speed = 42.0
-			"turbo_truck":
-				player_car.max_boost = 150.0
-				player_car.boost_recharge_rate = 14.0
-			"phantom":
-				player_car.jump_impulse = 13.5
-				player_car.steer_speed = 3.2
+		player_car.set_vehicle_archetype(vehicle_id)
+
+func select_stadium_theme(theme_name: String) -> void:
+	selected_theme = theme_name
+	var arena = find_child("RocketArena", true, false)
+	if arena:
+		arena.queue_free()
+	var new_arena = RocketArenaScript.new()
+	new_arena.name = "RocketArena"
+	new_arena.stadium_theme = selected_theme
+	new_arena.goal_triggered.connect(_on_goal_scored)
+	add_child(new_arena)
 
 func get_available_modes() -> Array[String]:
 	return ["1v1", "2v2", "3v3", "target_challenge"]
 
 func get_available_cars() -> Array[String]:
-	return ["speed_demon", "turbo_truck", "phantom"]
+	return ["sports_coupe", "rally_buggy", "muscle_gt", "cyber_ev", "speed_demon", "turbo_truck", "phantom"]
+
+func get_available_stadiums() -> Array[String]:
+	return ["day", "coastal", "cyber"]

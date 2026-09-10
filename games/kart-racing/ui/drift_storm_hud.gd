@@ -230,12 +230,12 @@ func setup_hud_layout() -> void:
 	r_vbox.add_child(sep)
 
 	powerup_panel = PanelContainer.new()
+	powerup_panel.visible = false # Hidden in non-item modes
 	r_vbox.add_child(powerup_panel)
 
 	powerup_label = Label.new()
-	powerup_label.text = "[ NO ITEM ]"
+	powerup_label.text = ""
 	powerup_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	powerup_label.modulate = Color(0.6, 0.65, 0.75)
 	powerup_panel.add_child(powerup_label)
 
 	# Bottom Right: Speedometer & Drift Charge
@@ -422,12 +422,14 @@ func update_drift_charge(charge: float, tier: int) -> void:
 				drift_label.modulate = Color(0.6, 0.6, 0.6)
 
 func update_powerup(p_name: String) -> void:
-	if not powerup_label:
+	if not powerup_label or not powerup_panel:
 		return
 	if p_name.is_empty():
+		powerup_panel.visible = false
 		powerup_label.text = "[ NO ITEM ]"
 		powerup_label.modulate = Color(0.6, 0.65, 0.75)
 	else:
+		powerup_panel.visible = true
 		powerup_label.text = "[ %s ]" % p_name.to_upper()
 		powerup_label.modulate = Color(1.0, 0.9, 0.2)
 
@@ -502,6 +504,101 @@ func show_toast(msg: String, col: Color = Color.WHITE) -> void:
 	tween.tween_property(lbl, "modulate:a", 0.0, 2.5).set_delay(1.5)
 	tween.tween_callback(lbl.queue_free)
 
+var stat_bars: Dictionary = {}
+var track_btn_map: Dictionary = {}
+var veh_btn_map: Dictionary = {}
+
+var track_info_name: Label
+var track_info_theme: Label
+var track_info_desc: Label
+var track_info_stats: Label
+var track_info_surface: Label
+var track_info_weather: Label
+var track_info_record: Label
+
+const TRACK_METADATA = {
+	"speedway": {
+		"name": "Volt International Speedway",
+		"theme": "Championship Stadium Super-Oval",
+		"desc": "Premier floodlit stadium venue featuring wide banking, Armco barriers, and high-energy grandstands.",
+		"length": "755 m",
+		"laps": "3 Laps",
+		"diff": "Easy",
+		"surface": "FIA Grade 1 Asphalt Lanes",
+		"weather": "Floodlit Night (Clear / 22°C)",
+		"record": "00:42.5",
+		"reward": "500 XP • Speedway Champion Trophy"
+	},
+	"sunset_coast": {
+		"name": "Sunset Coast Boulevard",
+		"theme": "Ocean Seaside Highway",
+		"desc": "Sun-drenched coastal highway along cliffs, golden sands, and scenic resort oceanfronts.",
+		"length": "820 m",
+		"laps": "3 Laps",
+		"diff": "Medium",
+		"surface": "Seaside Asphalt & Sand Runoff",
+		"weather": "Golden Hour Sunset (Ocean Mist)",
+		"record": "00:46.8",
+		"reward": "600 XP • Sunset Mirage Livery"
+	},
+	"canyon": {
+		"name": "Redrock Canyon Pass",
+		"theme": "Desert Sandstone Switchbacks",
+		"desc": "High-speed desert canyon pass cut through towering sandstone arches and dusty elevation climbs.",
+		"length": "785 m",
+		"laps": "3 Laps",
+		"diff": "Hard",
+		"surface": "Desert Asphalt & Canyon Rock",
+		"weather": "High Noon Desert Heat (Dust Haze)",
+		"record": "00:48.2",
+		"reward": "750 XP • Dune Raider Chassis"
+	},
+	"skyline": {
+		"name": "Metro Night Run",
+		"theme": "Neon Cyber Expressway",
+		"desc": "Midnight urban expressway threading through neon-lit skyscrapers, tunnels, and elevated plazas.",
+		"length": "855 m",
+		"laps": "3 Laps",
+		"diff": "Medium",
+		"surface": "Polished City Tarmac",
+		"weather": "Midnight Neon (Cyber Fog)",
+		"record": "00:49.1",
+		"reward": "800 XP • Neon Photon Wheel Kit"
+	},
+	"alpine_rush": {
+		"name": "Alpine Rush Mountain Pass",
+		"theme": "Alpine Peak Hairpins",
+		"desc": "Scenic mountain circuit featuring steep climbs, snow peaks, dense pine forests, and tight hairpins.",
+		"length": "830 m",
+		"laps": "3 Laps",
+		"diff": "Hard",
+		"surface": "Alpine Asphalt & Curb Ribbons",
+		"weather": "Alpine Frost (Crisp Daylight)",
+		"record": "00:51.3",
+		"reward": "900 XP • Icebreaker Titanium Rims"
+	},
+	"storm_harbor": {
+		"name": "Storm Harbor Shipyard",
+		"theme": "Industrial Container Docks",
+		"desc": "Industrial shipyard raceway between towering cargo cranes, shipping containers, and storm tides.",
+		"length": "790 m",
+		"laps": "3 Laps",
+		"diff": "Expert",
+		"surface": "Wet Reflective Heavy Dock Tarmac",
+		"weather": "Overcast Gale (Squall Rain)",
+		"record": "00:47.4",
+		"reward": "1000 XP • Harbor Master Title"
+	}
+}
+
+const VEHICLE_STATS = {
+	"speeder": {"speed": 82, "accel": 80, "handling": 90, "drift": 80, "boost": 80, "name": "Speeder (Pro Kart)"},
+	"phantom": {"speed": 90, "accel": 75, "handling": 82, "drift": 96, "boost": 88, "name": "Phantom (Street Tuner)"},
+	"enforcer": {"speed": 78, "accel": 88, "handling": 76, "drift": 70, "boost": 75, "name": "Enforcer (Off-Road Buggy)"},
+	"turbo_demon": {"speed": 100, "accel": 92, "handling": 85, "drift": 75, "boost": 100, "name": "Turbo Demon (Futuristic EV)"},
+	"formula": {"speed": 96, "accel": 100, "handling": 100, "drift": 85, "boost": 86, "name": "Formula Apex (Formula GP)"}
+}
+
 func setup_onboarding_overlay() -> void:
 	onboarding_overlay = PanelContainer.new()
 	onboarding_overlay.name = "OnboardingOverlay"
@@ -509,10 +606,21 @@ func setup_onboarding_overlay() -> void:
 	onboarding_overlay.anchor_top = 0.5
 	onboarding_overlay.anchor_right = 0.5
 	onboarding_overlay.anchor_bottom = 0.5
-	onboarding_overlay.offset_left = -330
-	onboarding_overlay.offset_top = -180
-	onboarding_overlay.offset_right = 330
-	onboarding_overlay.offset_bottom = 180
+	onboarding_overlay.offset_left = -440
+	onboarding_overlay.offset_top = -280
+	onboarding_overlay.offset_right = 440
+	onboarding_overlay.offset_bottom = 280
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.07, 0.12, 0.96)
+	style.border_color = Color(0.0, 0.85, 1.0, 0.75)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(10)
+	style.content_margin_left = 20
+	style.content_margin_right = 20
+	style.content_margin_top = 16
+	style.content_margin_bottom = 16
+	onboarding_overlay.add_theme_stylebox_override("panel", style)
 	add_child(onboarding_overlay)
 
 	var vbox = VBoxContainer.new()
@@ -520,127 +628,265 @@ func setup_onboarding_overlay() -> void:
 	vbox.add_theme_constant_override("separation", 8)
 	onboarding_overlay.add_child(vbox)
 
+	# 1. Header
 	var title = Label.new()
-	title.text = "DRIFT STORM — ARCADE KART RACING"
+	title.text = "⚡ DRIFT STORM — CHAMPIONSHIP PRE-RACE HUB ⚡"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 22)
-	title.modulate = Color(0.2, 0.9, 1.0)
+	title.add_theme_font_size_override("font_size", 18)
+	title.modulate = Color(0.2, 0.95, 1.0)
 	vbox.add_child(title)
 
-	var sub = Label.new()
-	sub.text = "HIGH-OCTANE DRIFT CIRCUIT"
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.add_theme_font_size_override("font_size", 15)
-	sub.modulate = Color(0.8, 0.85, 0.95)
-	vbox.add_child(sub)
+	var subtitle = Label.new()
+	subtitle.text = "SELECT CIRCUIT • VEHICLE ARCHETYPE • RACE CONFIGURATION"
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_font_size_override("font_size", 11)
+	subtitle.modulate = Color(0.7, 0.8, 0.9, 0.85)
+	vbox.add_child(subtitle)
 
-	var obj_lbl = Label.new()
-	obj_lbl.text = "OBJECTIVE: COMPLETE 3 LAPS — CROSS THE FINISH LINE 1ST!"
-	obj_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	obj_lbl.add_theme_font_size_override("font_size", 14)
-	obj_lbl.modulate = Color(1.0, 0.85, 0.2)
-	vbox.add_child(obj_lbl)
+	# 2. Track Browser Section (6 Materially Different Environments)
+	var trk_hdr = Label.new()
+	trk_hdr.text = "1. CHAMPIONSHIP TRACK BROWSER"
+	trk_hdr.add_theme_font_size_override("font_size", 12)
+	trk_hdr.modulate = Color(0.3, 0.9, 1.0)
+	vbox.add_child(trk_hdr)
 
-	# Track Selection Row
 	var trk_box = HBoxContainer.new()
 	trk_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	trk_box.add_theme_constant_override("separation", 10)
+	trk_box.add_theme_constant_override("separation", 6)
 	vbox.add_child(trk_box)
 
-	var trk_lbl = Label.new()
-	trk_lbl.text = "TRACK:"
-	trk_lbl.modulate = Color(0.2, 0.9, 1.0)
-	trk_lbl.add_theme_font_size_override("font_size", 13)
-	trk_box.add_child(trk_lbl)
-
-	var tracks = [["NEON CIRCUIT", "neon"], ["CANYON RUN", "canyon"], ["SKYLINE DRIFT", "skyline"]]
+	var tracks = [
+		["VOLT SPEEDWAY", "speedway"],
+		["SUNSET COAST", "sunset_coast"],
+		["REDROCK CANYON", "canyon"],
+		["METRO NIGHT", "skyline"],
+		["ALPINE RUSH", "alpine_rush"],
+		["STORM HARBOR", "storm_harbor"]
+	]
 	for t in tracks:
 		var btn = Button.new()
 		btn.text = t[0]
-		btn.add_theme_font_size_override("font_size", 12)
+		btn.add_theme_font_size_override("font_size", 10)
+		btn.custom_minimum_size = Vector2(120, 26)
+		track_btn_map[t[1]] = btn
 		btn.pressed.connect(func():
+			_select_track_ui(t[1])
 			var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
 			if tree:
 				var km = tree.root.find_child("KartRacingMain", true, false)
 				if km and km.has_method("select_track"):
 					km.select_track(t[1])
-					show_toast("TRACK SELECTED: " + t[0], Color(0.2, 0.9, 1.0))
+					show_toast("TRACK LOADED: " + t[0], Color(0.2, 0.9, 1.0))
 		)
 		trk_box.add_child(btn)
 
-	# Vehicle Selection Row
+	# Track Detail Card
+	var trk_card = PanelContainer.new()
+	var card_style = StyleBoxFlat.new()
+	card_style.bg_color = Color(0.06, 0.10, 0.16, 0.90)
+	card_style.border_color = Color(0.15, 0.45, 0.70, 0.6)
+	card_style.set_border_width_all(1)
+	card_style.set_corner_radius_all(6)
+	card_style.content_margin_left = 12
+	card_style.content_margin_right = 12
+	card_style.content_margin_top = 8
+	card_style.content_margin_bottom = 8
+	trk_card.add_theme_stylebox_override("panel", card_style)
+	vbox.add_child(trk_card)
+
+	var card_vbox = VBoxContainer.new()
+	card_vbox.add_theme_constant_override("separation", 3)
+	trk_card.add_child(card_vbox)
+
+	var card_top = HBoxContainer.new()
+	card_vbox.add_child(card_top)
+
+	track_info_name = Label.new()
+	track_info_name.text = "Volt International Speedway"
+	track_info_name.add_theme_font_size_override("font_size", 13)
+	track_info_name.modulate = Color(1.0, 0.85, 0.2)
+	card_top.add_child(track_info_name)
+
+	var spacer = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card_top.add_child(spacer)
+
+	track_info_theme = Label.new()
+	track_info_theme.text = "[Stadium Super-Oval]"
+	track_info_theme.add_theme_font_size_override("font_size", 11)
+	track_info_theme.modulate = Color(0.0, 0.9, 0.8)
+	card_top.add_child(track_info_theme)
+
+	track_info_desc = Label.new()
+	track_info_desc.text = "Premier floodlit stadium raceway with high-speed banking, safety walls, and packed grandstands."
+	track_info_desc.add_theme_font_size_override("font_size", 10)
+	track_info_desc.modulate = Color(0.85, 0.90, 0.95)
+	card_vbox.add_child(track_info_desc)
+
+	var card_details = HBoxContainer.new()
+	card_details.add_theme_constant_override("separation", 16)
+	card_vbox.add_child(card_details)
+
+	track_info_stats = Label.new()
+	track_info_stats.text = "Length: 755m  |  3 Laps  |  Diff: Easy"
+	track_info_stats.add_theme_font_size_override("font_size", 10)
+	track_info_stats.modulate = Color(0.7, 0.85, 1.0)
+	card_details.add_child(track_info_stats)
+
+	track_info_weather = Label.new()
+	track_info_weather.text = "Weather: Clear Floodlit Night"
+	track_info_weather.add_theme_font_size_override("font_size", 10)
+	track_info_weather.modulate = Color(0.9, 0.7, 1.0)
+	card_details.add_child(track_info_weather)
+
+	track_info_record = Label.new()
+	track_info_record.text = "Record: 00:42.5"
+	track_info_record.add_theme_font_size_override("font_size", 10)
+	track_info_record.modulate = Color(0.4, 1.0, 0.5)
+	card_details.add_child(track_info_record)
+
+	# 3. Vehicle Garage Section (5 Archetypes with Live Stats)
+	var veh_hdr = Label.new()
+	veh_hdr.text = "2. VEHICLE GARAGE & PERFORMANCE SPECIFICATIONS"
+	veh_hdr.add_theme_font_size_override("font_size", 12)
+	veh_hdr.modulate = Color(1.0, 0.8, 0.2)
+	vbox.add_child(veh_hdr)
+
 	var veh_box = HBoxContainer.new()
 	veh_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	veh_box.add_theme_constant_override("separation", 10)
+	veh_box.add_theme_constant_override("separation", 6)
 	vbox.add_child(veh_box)
 
-	var veh_lbl = Label.new()
-	veh_lbl.text = "VEHICLE:"
-	veh_lbl.modulate = Color(1.0, 0.8, 0.2)
-	veh_lbl.add_theme_font_size_override("font_size", 13)
-	veh_box.add_child(veh_lbl)
+	var vehs = [
+		["SPEEDER (Pro Kart)", "speeder"],
+		["PHANTOM (Tuner)", "phantom"],
+		["ENFORCER (Buggy)", "enforcer"],
+		["TURBO DEMON (EV)", "turbo_demon"],
+		["FORMULA APEX", "formula"]
+	]
 
-	var vehs = [["SPEED DEMON (Speeder)", "speeder"], ["TURBO TRUCK (Enforcer)", "enforcer"], ["PHANTOM DRIFT", "phantom"], ["TURBO DEMON (Rocket)", "turbo_demon"]]
 	for v in vehs:
 		var btn = Button.new()
 		btn.text = v[0]
-		btn.add_theme_font_size_override("font_size", 12)
+		btn.add_theme_font_size_override("font_size", 10)
+		btn.custom_minimum_size = Vector2(130, 26)
+		veh_btn_map[v[1]] = btn
 		btn.pressed.connect(func():
+			_select_vehicle_ui(v[1])
 			var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
 			if tree:
 				var km = tree.root.find_child("KartRacingMain", true, false)
 				if km and km.has_method("select_kart"):
 					km.select_kart(v[1])
-					show_toast("VEHICLE SELECTED: " + v[0], Color(1.0, 0.85, 0.2))
+					show_toast("VEHICLE: " + v[0], Color(1.0, 0.85, 0.2))
 		)
 		veh_box.add_child(btn)
+
+	# Performance Radar Bars
+	var stats_box = HBoxContainer.new()
+	stats_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	stats_box.add_theme_constant_override("separation", 14)
+	vbox.add_child(stats_box)
+
+	var stat_names = ["SPEED", "ACCEL", "HANDLING", "DRIFT", "BOOST"]
+	for sn in stat_names:
+		var s_item = VBoxContainer.new()
+		s_item.alignment = BoxContainer.ALIGNMENT_CENTER
+		var slbl = Label.new()
+		slbl.text = sn
+		slbl.add_theme_font_size_override("font_size", 9)
+		slbl.modulate = Color(0.75, 0.85, 0.95)
+		s_item.add_child(slbl)
+
+		var bar = ProgressBar.new()
+		bar.custom_minimum_size = Vector2(80, 7)
+		bar.max_value = 100.0
+		bar.value = 80.0
+		bar.show_percentage = false
+		s_item.add_child(bar)
+		stats_box.add_child(s_item)
+		stat_bars[sn.to_lower()] = bar
+
+	_select_track_ui("speedway")
+	_select_vehicle_ui("speeder")
 
 	var sep = HSeparator.new()
 	vbox.add_child(sep)
 
-	var ctrl_grid = GridContainer.new()
-	ctrl_grid.columns = 2
-	ctrl_grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	vbox.add_child(ctrl_grid)
+	# 4. Action Buttons (Explicit flow: Never timeouts, explicit click to start or return)
+	var act_box = HBoxContainer.new()
+	act_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	act_box.add_theme_constant_override("separation", 24)
+	vbox.add_child(act_box)
 
-	var controls_data = [
-		["W / S", "Accelerate / Reverse & Brake"],
-		["A / D", "Steering Left / Right"],
-		["SHIFT", "Drift (Hold through turns for Mini-Turbo Sparks)"],
-		["SPACE", "Activate Collected PowerUp (Boost/Shield/EMP)"]
-	]
-	for c in controls_data:
-		var k = Label.new()
-		k.text = c[0] + "  "
-		k.modulate = Color(0.0, 1.0, 0.8)
-		k.add_theme_font_size_override("font_size", 13)
-		ctrl_grid.add_child(k)
-
-		var a = Label.new()
-		a.text = c[1]
-		a.modulate = Color.WHITE
-		a.add_theme_font_size_override("font_size", 13)
-		ctrl_grid.add_child(a)
+	var back_btn = Button.new()
+	back_btn.text = "⮌ RETURN TO LAUNCHER"
+	back_btn.add_theme_font_size_override("font_size", 12)
+	back_btn.custom_minimum_size = Vector2(180, 36)
+	back_btn.pressed.connect(func():
+		var bus = GameConstants.get_autoload(self, "EventBus")
+		if bus and bus.has_signal("return_to_launcher_requested"):
+			bus.return_to_launcher_requested.emit()
+	)
+	act_box.add_child(back_btn)
 
 	var start_btn = Button.new()
-	start_btn.text = "START RACE (CLICK OR PRESS SPACE)"
+	start_btn.text = "▶ CONFIRM & START RACE"
 	start_btn.add_theme_font_size_override("font_size", 14)
 	start_btn.modulate = Color(0.2, 1.0, 0.5)
-	start_btn.pressed.connect(dismiss_onboarding)
-	vbox.add_child(start_btn)
+	start_btn.custom_minimum_size = Vector2(260, 36)
+	start_btn.pressed.connect(func():
+		var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+		if tree:
+			var km = tree.root.find_child("KartRacingMain", true, false)
+			if km and km.has_method("start_race"):
+				km.start_race()
+			else:
+				dismiss_onboarding()
+	)
+	act_box.add_child(start_btn)
+
+func _select_track_ui(track_id: String) -> void:
+	for tid in track_btn_map.keys():
+		var btn = track_btn_map[tid] as Button
+		if tid == track_id:
+			btn.modulate = Color(0.2, 1.0, 0.9)
+		else:
+			btn.modulate = Color(0.85, 0.85, 0.85)
+
+	if TRACK_METADATA.has(track_id):
+		var meta = TRACK_METADATA[track_id]
+		if track_info_name: track_info_name.text = meta["name"]
+		if track_info_theme: track_info_theme.text = "[" + meta["theme"] + "]"
+		if track_info_desc: track_info_desc.text = meta["desc"]
+		if track_info_stats: track_info_stats.text = "Length: %s  |  %s  |  Diff: %s" % [meta["length"], meta["laps"], meta["diff"]]
+		if track_info_weather: track_info_weather.text = "Atmosphere: " + meta["weather"]
+		if track_info_record: track_info_record.text = "Record: " + meta["record"]
+
+func _select_vehicle_ui(veh_id: String) -> void:
+	for vid in veh_btn_map.keys():
+		var btn = veh_btn_map[vid] as Button
+		if vid == veh_id:
+			btn.modulate = Color(1.0, 0.85, 0.2)
+		else:
+			btn.modulate = Color(0.85, 0.85, 0.85)
+
+	if VEHICLE_STATS.has(veh_id):
+		_update_stat_bars(VEHICLE_STATS[veh_id])
+
+func _update_stat_bars(stats: Dictionary) -> void:
+	for k in stats.keys():
+		if stat_bars.has(k):
+			stat_bars[k].value = stats[k]
 
 func dismiss_onboarding() -> void:
 	if is_instance_valid(onboarding_overlay):
 		onboarding_overlay.visible = false
 		onboarding_overlay.modulate.a = 0.0
 
-func _unhandled_input(event: InputEvent) -> void:
-	if is_instance_valid(onboarding_overlay) and onboarding_overlay.visible:
-		if (event is InputEventKey and event.pressed) or (event is InputEventMouseButton and event.pressed):
-			dismiss_onboarding()
-
 func _format_time(sec: float) -> String:
 	var mins = int(sec) / 60
 	var s = int(sec) % 60
 	var ms = int((sec - int(sec)) * 10.0)
 	return "%02d:%02d.%01d" % [mins, s, ms]
+

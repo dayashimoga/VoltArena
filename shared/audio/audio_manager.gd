@@ -107,6 +107,26 @@ func generate_all_procedural_sounds() -> void:
 	sound_cache["music_metro_siege"] = create_music_track("metro_siege")
 	sound_cache["music_nitro_kick"] = create_music_track("nitro_kick")
 	sound_cache["music_drift_storm"] = create_music_track("drift_storm")
+	sound_cache["engine_loop"] = create_engine_loop_sound()
+
+func start_engine_sound() -> void:
+	if engine_sfx_player and sound_cache.has("engine_loop"):
+		if not engine_sfx_player.playing:
+			engine_sfx_player.stream = sound_cache["engine_loop"]
+			engine_sfx_player.volume_db = -14.0
+			if engine_sfx_player.is_inside_tree():
+				engine_sfx_player.play()
+
+func update_engine_rpm(speed_ratio: float, is_accelerating: bool) -> void:
+	if engine_sfx_player and engine_sfx_player.playing:
+		var target_pitch = lerpf(0.75, 2.3, clampf(speed_ratio, 0.0, 1.0))
+		engine_sfx_player.pitch_scale = lerpf(engine_sfx_player.pitch_scale, target_pitch, 0.2)
+		var target_vol = -10.0 if is_accelerating else -16.0
+		engine_sfx_player.volume_db = lerpf(engine_sfx_player.volume_db, target_vol, 0.15)
+
+func stop_engine_sound() -> void:
+	if engine_sfx_player and engine_sfx_player.playing:
+		engine_sfx_player.stop()
 
 func play_sfx(sound_name: String, pitch_scale: float = 1.0, volume_db: float = 0.0) -> void:
 	play_sound(sound_name, pitch_scale, volume_db)
@@ -364,3 +384,30 @@ func create_music_track(track_name: String) -> AudioStreamWAV:
 	wav.loop_end = num_samples
 	wav.data = data
 	return wav
+
+func create_engine_loop_sound() -> AudioStreamWAV:
+	var sample_rate: int = 22050
+	var duration: float = 0.6
+	var num_samples: int = int(sample_rate * duration)
+	var data = PackedByteArray()
+	data.resize(num_samples)
+	var base_freq = 65.0
+	for i in range(num_samples):
+		var t: float = float(i) / float(sample_rate)
+		var s1 = sin(t * base_freq * TAU) * 0.40
+		var s2 = sin(t * base_freq * 2.0 * TAU) * 0.28
+		var s3 = sin(t * base_freq * 3.0 * TAU) * 0.15
+		var noise = (randf() * 2.0 - 1.0) * 0.06
+		var val = s1 + s2 + s3 + noise
+		data[i] = clampi(int(val * 127.0) + 128, 0, 255)
+
+	var wav = AudioStreamWAV.new()
+	wav.format = AudioStreamWAV.FORMAT_8_BITS
+	wav.mix_rate = sample_rate
+	wav.stereo = false
+	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	wav.loop_begin = 0
+	wav.loop_end = num_samples
+	wav.data = data
+	return wav
+

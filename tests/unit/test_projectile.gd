@@ -45,7 +45,7 @@ func get_coverage_entries() -> Array:
 		],
 		[
 			"res://games/arena-fps/weapons/weapon_base.gd",
-			["_ready", "_process", "perform_hitscan", "spawn_projectile", "spawn_impact_fx"]
+			["_ready", "_process", "perform_hitscan", "spawn_projectile", "setup_muzzle_flash"]
 		]
 	]
 
@@ -112,6 +112,6 @@ func test_weapon_base_extended() -> void:
 	wb._process(0.016)
 	wb.perform_hitscan(Vector3.ZERO, Vector3.FORWARD)
 	wb.spawn_projectile(Vector3.ZERO, Vector3.FORWARD)
-	wb.spawn_impact_fx(Vector3.ZERO, Vector3.UP)
+	wb.setup_muzzle_flash()
 	assert_true(wb.max_clip_ammo > 0, "WeaponBase must have valid clip")
 	wb.queue_free()

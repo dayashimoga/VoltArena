@@ -198,15 +198,27 @@ static func get_vehicle(vehicle_id: String = "kart_speedster") -> Node3D:
 	if not model:
 		return MeshBuilder.build_rocket_car(0)
 
-	model.scale = target_scale
-	model.rotation_degrees.y = rot_y
+	var visual_root = Node3D.new()
+	visual_root.name = "RocketCarVisual" if is_rocket_car else "VehicleVisualRoot"
 
-	if is_kart:
+	if is_rocket_car:
+		# Kenney vehicle models face +Z; rotate 180 around Y so forward aligns with canonical -Z
+		model.rotation_degrees.y = 180.0
+		model.scale = target_scale
+		visual_root.add_child(model)
+		_enhance_rocket_car(visual_root, team_tint)
+		return visual_root
+	elif is_kart:
+		model.scale = target_scale
+		model.rotation_degrees.y = rot_y
+		visual_root.add_child(model)
 		_replace_kart_driver(model, vehicle_id)
-	elif is_rocket_car:
-		_enhance_rocket_car(model, team_tint)
-
-	return model
+		return visual_root
+	else:
+		model.scale = target_scale
+		model.rotation_degrees.y = rot_y
+		visual_root.add_child(model)
+		return visual_root
 
 static func _recursive_remove_chibi(node: Node) -> void:
 	if not node:
@@ -274,27 +286,83 @@ static func _replace_kart_driver(model: Node3D, _vid: String) -> void:
 
 	model.add_child(driver_root)
 
-static func _enhance_rocket_car(model: Node3D, team_col: Color) -> void:
-	if not model:
+static func _enhance_rocket_car(root: Node3D, team_col: Color) -> void:
+	if not root:
 		return
-	# Add rear boost thruster glow points
-	for side in [-0.42, 0.42]:
+
+	# 1. Front Headlights at canonical forward (-Z)
+	var mat_headlight = StandardMaterial3D.new()
+	mat_headlight.albedo_color = Color(0.95, 0.98, 1.0)
+	mat_headlight.emission_enabled = true
+	mat_headlight.emission = Color(0.85, 0.95, 1.0)
+	mat_headlight.emission_energy_multiplier = 3.5
+
+	for side in [-0.48, 0.48]:
+		var hl = MeshInstance3D.new()
+		hl.name = "FrontHeadlight_" + ("L" if side < 0 else "R")
+		var cyl = CylinderMesh.new()
+		cyl.top_radius = 0.08
+		cyl.bottom_radius = 0.12
+		cyl.height = 0.10
+		hl.mesh = cyl
+		hl.rotation_degrees.x = 90.0
+		hl.position = Vector3(side, 0.45, -1.60)
+		hl.material_override = mat_headlight
+		root.add_child(hl)
+
+	# 2. Rear Tail / Brake Lights at canonical rear (+Z)
+	var mat_taillight = StandardMaterial3D.new()
+	mat_taillight.albedo_color = Color(1.0, 0.1, 0.15)
+	mat_taillight.emission_enabled = true
+	mat_taillight.emission = Color(1.0, 0.05, 0.1)
+	mat_taillight.emission_energy_multiplier = 3.0
+
+	for side in [-0.52, 0.52]:
+		var tl = MeshInstance3D.new()
+		tl.name = "RearTailLight_" + ("L" if side < 0 else "R")
+		var box = BoxMesh.new()
+		box.size = Vector3(0.20, 0.08, 0.08)
+		tl.mesh = box
+		tl.position = Vector3(side, 0.50, 1.42)
+		tl.material_override = mat_taillight
+		root.add_child(tl)
+
+	# 3. Rear Boost Thruster Nozzles and Glow Cones at canonical rear (+Z)
+	var mat_thruster_glow = StandardMaterial3D.new()
+	mat_thruster_glow.albedo_color = team_col
+	mat_thruster_glow.emission_enabled = true
+	mat_thruster_glow.emission = team_col
+	mat_thruster_glow.emission_energy_multiplier = 4.0
+
+	var mat_metal = StandardMaterial3D.new()
+	mat_metal.albedo_color = Color(0.2, 0.22, 0.25)
+	mat_metal.metallic = 0.9
+	mat_metal.roughness = 0.2
+
+	for side in [-0.35, 0.35]:
+		var nozzle = MeshInstance3D.new()
+		nozzle.name = "ThrusterNozzle_" + ("L" if side < 0 else "R")
+		var n_cyl = CylinderMesh.new()
+		n_cyl.top_radius = 0.12
+		n_cyl.bottom_radius = 0.16
+		n_cyl.height = 0.25
+		nozzle.mesh = n_cyl
+		nozzle.rotation_degrees.x = 90.0
+		nozzle.position = Vector3(side, 0.42, 1.48)
+		nozzle.material_override = mat_metal
+		root.add_child(nozzle)
+
 		var thruster = MeshInstance3D.new()
 		thruster.name = "ThrusterGlow_" + ("L" if side < 0 else "R")
 		var cyl = CylinderMesh.new()
-		cyl.top_radius = 0.04
-		cyl.bottom_radius = 0.14
-		cyl.height = 0.35
+		cyl.top_radius = 0.02
+		cyl.bottom_radius = 0.10
+		cyl.height = 0.40
 		thruster.mesh = cyl
-		thruster.rotation_degrees.x = -90.0
-		thruster.position = Vector3(side, 0.42, 1.45)
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = team_col
-		mat.emission_enabled = true
-		mat.emission = team_col
-		mat.emission_energy_multiplier = 3.0
-		thruster.material_override = mat
-		model.add_child(thruster)
+		thruster.rotation_degrees.x = 90.0
+		thruster.position = Vector3(side, 0.42, 1.72)
+		thruster.material_override = mat_thruster_glow
+		root.add_child(thruster)
 
 # ==============================================================================
 # 4. WEAPON & PROP INSTANTIATION

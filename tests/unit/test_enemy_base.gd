@@ -7,6 +7,7 @@ const StalkerScript = preload("res://games/subway-survival/enemies/stalker.gd")
 const BruteScript = preload("res://games/subway-survival/enemies/brute.gd")
 const SpitterScript = preload("res://games/subway-survival/enemies/spitter.gd")
 const BioColossusScript = preload("res://games/subway-survival/enemies/bio_colossus.gd")
+const InfectedHumanScript = preload("res://games/subway-survival/enemies/infected_human.gd")
 
 var assertions_passed: int = 0
 var assertions_failed: int = 0
@@ -18,6 +19,7 @@ func run_tests() -> Dictionary:
 	test_brute()
 	test_spitter()
 	test_bio_colossus()
+	test_infected_human()
 	test_enemy_ai_methods()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
@@ -46,6 +48,10 @@ func get_coverage_entries() -> Array:
 		[
 			"res://games/subway-survival/enemies/bio_colossus.gd",
 			["_init", "setup_visuals", "perform_attack"]
+		],
+		[
+			"res://games/subway-survival/enemies/infected_human.gd",
+			["_init", "setup_visuals"]
 		]
 	]
 
@@ -100,6 +106,13 @@ func test_bio_colossus() -> void:
 	assert_true(boss.health_component.max_health >= 1000.0, "Boss must have high health")
 	boss.perform_attack()
 	boss.queue_free()
+
+func test_infected_human() -> void:
+	var inf = InfectedHumanScript.new()
+	inf._ready()
+	assert_true(inf.enemy_type == "Infected", "Type must be Infected")
+	assert_true(inf.health_component.max_health > 0.0, "Infected must have health")
+	inf.queue_free()
 
 func test_enemy_ai_methods() -> void:
 	var e = EnemyBaseScript.new()

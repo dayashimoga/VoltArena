@@ -20,7 +20,7 @@ func get_coverage_entries() -> Array:
 	return [[
 		"res://shared/gameplay/quest_system.gd",
 		[
-			"register_quest", "create_and_register_quest", "start_quest",
+			"_init", "register_quest", "create_and_register_quest", "start_quest",
 			"advance_objective", "complete_quest", "fail_quest",
 			"get_quest", "get_active_quests", "get_completed_quests",
 			"is_quest_completed", "serialize_save_data", "deserialize_save_data",

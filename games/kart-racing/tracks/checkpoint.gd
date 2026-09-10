@@ -7,6 +7,12 @@ signal checkpoint_hit(kart: KartController, checkpoint_index: int)
 @export var is_finish_line: bool = false
 @export var checkpoint_width: float = 18.0
 
+var gate_forward: Vector3:
+	get:
+		var f = -global_transform.basis.z
+		f.y = 0.0
+		return f.normalized() if f.length_squared() > 0.001 else Vector3(0, 0, -1)
+
 func _ready() -> void:
 	collision_layer = GameConstants.LAYER_CHECKPOINTS
 	collision_mask = GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES
@@ -16,9 +22,9 @@ func _ready() -> void:
 func setup_trigger_volume() -> void:
 	var col = CollisionShape3D.new()
 	var box = BoxShape3D.new()
-	box.size = Vector3(checkpoint_width, 6.0, 6.0)
+	box.size = Vector3(checkpoint_width, 6.0, 4.0)
 	col.shape = box
-	col.position = Vector3(0, 0, -3.0) # Extends 6m down the track from the checkpoint position
+	col.position = Vector3(0, 0, -2.0) # Extends 4m centered down track
 	add_child(col)
 
 	# Finish line visual arch if finish line
@@ -33,6 +39,14 @@ func setup_trigger_volume() -> void:
 
 func _on_body_entered(body: Node3D) -> void:
 	if body is KartController:
+		var kart_fwd = -body.global_transform.basis.z
+		kart_fwd.y = 0.0
+		kart_fwd = kart_fwd.normalized()
+		var dot = kart_fwd.dot(gate_forward)
+		if dot < 0.10:
+			# Reversing or driving backwards through gate -> reject!
+			return
 		body.last_valid_checkpoint_pos = global_position
 		body.last_valid_checkpoint_rot = rotation.y
 		checkpoint_hit.emit(body, checkpoint_index)
+

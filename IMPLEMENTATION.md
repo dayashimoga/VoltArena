@@ -258,6 +258,49 @@ VoltArena was developed in a multi-phase engineering process adhering strictly t
   - Function coverage increased to **96.4%** (756 / 784 functions).
   - Packaged fresh desktop binaries (`export/linux/VoltArena.x86_64`, `export/windows/VoltArena.exe`) and Cloudflare-compliant Web chunks in `export/web/`.
 
+### Phase 19: Nitro Kick Forensic Gap Remediation & Visual Overhaul (v8.5.0)
+* **P0 Canonical Coordinate Hierarchy & Visual Normalization**:
+  - **Root Cause of Inversion**: Imported GLTF vehicle models had $+Z$ as authored model front. In Godot's convention ($-Z$ forward, $+Z$ rear, $+Y$ up), cars appeared reversed, headlights shone backwards, rocket thrusters pointed forward, and front bumper was attached at $+Z$.
+  - **Architectural Fix**: Normalized imported GLTF meshes under `VisualRoot` with `rotation_degrees.y = 180.0`. Relocated headlights to $Z = -1.82$ facing $-Z$, rear tail lights to $Z = 1.76$ and dual rocket thrusters to $Z = 1.88$ facing $+Z$. Re-anchored front bumper Area3D at $Z = -1.90$ facing $-Z$. Added dynamic front-wheel yaw steering ($\pm 28^\circ$) and boost flame scaling.
+* **P0 Four Authentic Vehicle Archetypes**:
+  - Engineered 4 authentic rocket-sports vehicles in `MeshBuilder`: *Apex Spectre* (Sports Coupe), *Dune Raider* (Rally Buggy), *Titan Enforcer* (Muscle GT), and *Volt Pulse* (Futuristic EV).
+  - Built distinct physical handling: mass (1050–1400 kg), acceleration (28–36 m/s²), boost top speed (42–52 m/s), aerial agility, and turn radius. Exposed `set_vehicle_archetype()` with automatic visual rebuilding and collider recalibration.
+* **P0 Soccer Ball Physics, CCD & Goal Attribution**:
+  - **Root Cause of Double Impulse**: In `ball.gd`, `apply_ball_impulse()` both directly modified `linear_velocity` and invoked `apply_central_impulse()`, double-integrating velocity in Godot's `RigidBody3D`.
+  - **Architectural Fix**: Re-engineered `apply_ball_impulse(impulse: Vector3)` to strictly invoke `apply_central_impulse(impulse)` without manual velocity addition. Added `reset_ball()` alias forwarding to `reset_to_center()`. Enabled `continuous_cd = true` with 4 contact monitors.
+  - Corrected goal scoring attribution in `rocket_arena.gd`: North goal Area3D scores for Blue (`scoring_team = 0`), South goal Area3D scores for Orange (`scoring_team = 1`).
+* **P0 Regulation Stadium Colosseum & MultiMesh Crowd**:
+  - Built regulation stadium ($110\text{m} \times 64\text{m} \times 20\text{m}$) with $45^\circ$ octagonal containment corners and continuous curved boundary walls.
+  - Installed $2.5\text{m}$ lower kickboards with scrolling LED ribbons and transparent acrylic upper containment panels.
+  - Built regulation 3D goal cages ($16\text{m} \times 6.5\text{m} \times 6.0\text{m}$) with visible white post frames and net geometry.
+  - Placed 28 turf boost pads + 6 full-boost orbs with dynamic respawn timers.
+  - Implemented MultiMesh spectator crowd system with dynamic reaction states: `idle`, `goal`, `celebration`.
+* **P0 Advanced Role-Based AI & Lead Intercept Physics**:
+  - Implemented dynamic team role allocation: `STRIKER` (attack), `SUPPORT` (midfield), `DEFENDER` (sweeper), `GOALKEEPER` (goal protection).
+  - Implemented predictive lead intercept calculation (`predict_ball_intercept` at file scope) using iterative time-of-flight convergence.
+  - Added aerial header jumps for balls at $y \in [2.5\text{m}, 6.0\text{m}]$, kickoff sprint boost utilization, and angular roll recovery.
+* **Acceptance Suite**:
+  - Authored `test_nitro_kick_p0_gates.gd` (21 passed assertions) verifying coordinate hierarchy, archetypes, ball impulse, goal attribution, arena containment, and AI lead intercept.
+
+### Phase 20: Drift Storm Race Corridor Clearance & Championship Pre-Race Hub (v8.6.0)
+* **P0 Race Corridor Clearance & Prop Anchoring**:
+  - **Root Cause of Intrusions**: Trackside grandstands (`stand_r`) and scoreboards (`sb_r`) used hardcoded global coordinate offsets (`Vector3(30, 0, 10)`) that did not follow procedural spline curves, encroaching into the finish straight.
+  - **Architectural Fix**: Anchored all trackside props strictly to `RaceSpline` binormal offsets ($pos \pm binormal \cdot (half\_width + margin)$).
+  - Built automated scanner `verify_race_corridor_clearance(sample_step = 2.0)` asserting 0 collider encroachments within $\pm 9.0\text{m}$ lateral width and $5.0\text{m}$ height across all 6 circuits.
+* **P0 Persistent Championship Pre-Race Hub**:
+  - Replaced 5-second auto-dismiss timer with persistent modal hub.
+  - Built interactive Track Browser (cards for all 6 circuits with length, laps, difficulty, surface, weather/atmosphere, records, and rewards), Vehicle Garage (5 classes with live radar bars), and Mode Selector.
+  - Race begins strictly upon explicit user click on "CONFIRM & START RACE".
+* **P0 Modal Lock State Machine & Turntable Camera**:
+  - Implemented state machine: `PRE_RACE`, `COUNTDOWN`, `RACING`, `FINISHED`.
+  - In `PRE_RACE`, player kart velocity and throttle are hard-locked to 0. Turntable camera orbits around the selected kart in the inspection bay.
+  - Racer registration (`race_manager.racers = all_karts`) occurs on track build while `race_manager.process_mode = PROCESS_MODE_DISABLED` until countdown release.
+* **Master Test Verification & Release Packaging**:
+  - Authored `test_drift_storm_corridor_gates.gd` (15 passed assertions).
+  - Executed master test runner across all **61 test suites**: **1,886 passed assertions, 0 failed (100% pass rate)**.
+  - Function coverage verified at **95.04% real function coverage (785 / 826 functions tested)**.
+  - Re-exported release packages: Windows (`export/windows/VoltArena.exe`, 173.9 MB), Web (`export/web/index.pck`, 89.9 MB).
+
 
 
 

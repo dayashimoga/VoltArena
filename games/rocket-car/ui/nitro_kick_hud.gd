@@ -358,6 +358,100 @@ func setup_onboarding_overlay() -> void:
 	obj_lbl.modulate = Color(1.0, 0.85, 0.2)
 	vbox.add_child(obj_lbl)
 
+	# 1. Vehicle Selection Row (4 Distinct Rocket Sports Archetypes)
+	var veh_box = HBoxContainer.new()
+	veh_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	veh_box.add_theme_constant_override("separation", 6)
+	vbox.add_child(veh_box)
+
+	var veh_lbl = Label.new()
+	veh_lbl.text = "VEHICLE:"
+	veh_lbl.modulate = Color(1.0, 0.85, 0.2)
+	veh_lbl.add_theme_font_size_override("font_size", 12)
+	veh_box.add_child(veh_lbl)
+
+	var vehs = [
+		["APEX SPECTRE (Coupe)", "sports_coupe"],
+		["DUNE RAIDER (Rally)", "rally_buggy"],
+		["TITAN ENFORCER (Muscle)", "muscle_gt"],
+		["VOLT PULSE (Cyber EV)", "cyber_ev"]
+	]
+	for v in vehs:
+		var btn = Button.new()
+		btn.text = v[0]
+		btn.add_theme_font_size_override("font_size", 10)
+		btn.pressed.connect(func():
+			var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+			if tree:
+				var rcm = tree.root.find_child("RocketCarMain", true, false)
+				if rcm and rcm.has_method("select_car_vehicle"):
+					rcm.select_car_vehicle(v[1])
+					show_toast("CAR: " + v[0], Color(1.0, 0.85, 0.2))
+		)
+		veh_box.add_child(btn)
+
+	# 2. Stadium Selection Row (3 Distinct Sports Venues)
+	var stad_box = HBoxContainer.new()
+	stad_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	stad_box.add_theme_constant_override("separation", 6)
+	vbox.add_child(stad_box)
+
+	var stad_lbl = Label.new()
+	stad_lbl.text = "STADIUM:"
+	stad_lbl.modulate = Color(0.2, 0.9, 1.0)
+	stad_lbl.add_theme_font_size_override("font_size", 12)
+	stad_box.add_child(stad_lbl)
+
+	var stadiums = [
+		["VOLT GRAND ARENA", "day"],
+		["COASTAL PARK", "coastal"],
+		["NEON NIGHT DOME", "cyber"]
+	]
+	for s in stadiums:
+		var btn = Button.new()
+		btn.text = s[0]
+		btn.add_theme_font_size_override("font_size", 10)
+		btn.pressed.connect(func():
+			var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+			if tree:
+				var rcm = tree.root.find_child("RocketCarMain", true, false)
+				if rcm and rcm.has_method("select_stadium_theme"):
+					rcm.select_stadium_theme(s[1])
+					show_toast("VENUE: " + s[0], Color(0.2, 0.9, 1.0))
+		)
+		stad_box.add_child(btn)
+
+	# 3. Match Mode Selection Row
+	var mode_box = HBoxContainer.new()
+	mode_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	mode_box.add_theme_constant_override("separation", 6)
+	vbox.add_child(mode_box)
+
+	var mode_lbl = Label.new()
+	mode_lbl.text = "MODE:"
+	mode_lbl.modulate = Color(0.9, 0.5, 1.0)
+	mode_lbl.add_theme_font_size_override("font_size", 12)
+	mode_box.add_child(mode_lbl)
+
+	var modes = [
+		["1v1 DUEL", "1v1"],
+		["2v2 COMP", "2v2"],
+		["3v3 CHAOS", "3v3"]
+	]
+	for m in modes:
+		var btn = Button.new()
+		btn.text = m[0]
+		btn.add_theme_font_size_override("font_size", 10)
+		btn.pressed.connect(func():
+			var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+			if tree:
+				var rcm = tree.root.find_child("RocketCarMain", true, false)
+				if rcm and rcm.has_method("select_game_mode"):
+					rcm.select_game_mode(m[1])
+					show_toast("MODE: " + m[0], Color(0.9, 0.5, 1.0))
+		)
+		mode_box.add_child(btn)
+
 	var sep = HSeparator.new()
 	vbox.add_child(sep)
 
@@ -385,12 +479,12 @@ func setup_onboarding_overlay() -> void:
 		a.add_theme_font_size_override("font_size", 14)
 		ctrl_grid.add_child(a)
 
-	var prompt_lbl = Label.new()
-	prompt_lbl.text = "MATCH STARTING (PRESS ANY KEY OR SPACE TO START)"
-	prompt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt_lbl.add_theme_font_size_override("font_size", 12)
-	prompt_lbl.modulate = Color(0.7, 0.85, 0.95)
-	vbox.add_child(prompt_lbl)
+	var start_btn = Button.new()
+	start_btn.text = "KICKOFF / START MATCH (CLICK OR PRESS SPACE)"
+	start_btn.add_theme_font_size_override("font_size", 14)
+	start_btn.modulate = Color(0.2, 1.0, 0.5)
+	start_btn.pressed.connect(dismiss_onboarding)
+	vbox.add_child(start_btn)
 
 func dismiss_onboarding() -> void:
 	if is_instance_valid(onboarding_overlay):
@@ -402,7 +496,7 @@ func dismiss_onboarding() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if is_instance_valid(onboarding_overlay) and onboarding_overlay.visible:
-		if (event is InputEventKey and event.pressed) or (event is InputEventMouseButton and event.pressed):
+		if event is InputEventKey and event.pressed and event.keycode == KEY_SPACE:
 			dismiss_onboarding()
 
 func _process(_delta: float) -> void:

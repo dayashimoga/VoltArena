@@ -40,7 +40,8 @@ func get_coverage_entries() -> Array:
 				"_ready", "setup_hud_layout", "connect_bus_signals",
 				"check_mobile_controls", "set_crosshair_spread",
 				"update_health", "update_armor", "update_ammo",
-				"update_weapon", "update_score", "update_timer", "show_toast"
+				"update_weapon", "update_score", "update_timer", "show_toast",
+				"update_layout_positions"
 			]
 		],
 		[
@@ -144,6 +145,7 @@ func test_hud_base() -> void:
 
 	hud.show_toast("TEST TOAST", Color.CYAN)
 	assert_true(hud.toast_container.get_child_count() > 0, "Toast container must have active child")
+	hud.update_layout_positions()
 	hud.queue_free()
 
 func test_pause_menu() -> void:

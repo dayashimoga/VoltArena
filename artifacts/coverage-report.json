@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 96.4285714285714,
+  "overall_coverage_pct": 95.0363196125908,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -68,12 +68,10 @@
       "untested": []
     },
     "res://games/arena-fps/weapons/weapon_base.gd": {
-      "coverage_pct": 90.9090909090909,
-      "tested": 10,
+      "coverage_pct": 100,
+      "tested": 11,
       "total": 11,
-      "untested": [
-        "setup_muzzle_flash"
-      ]
+      "untested": []
     },
     "res://games/kart-racing/ai/kart_ai.gd": {
       "coverage_pct": 100,
@@ -83,8 +81,8 @@
     },
     "res://games/kart-racing/game/race_manager.gd": {
       "coverage_pct": 100,
-      "tested": 8,
-      "total": 8,
+      "tested": 9,
+      "total": 9,
       "untested": []
     },
     "res://games/kart-racing/kart/kart_controller.gd": {
@@ -94,10 +92,13 @@
       "untested": []
     },
     "res://games/kart-racing/kart_racing_main.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 75,
       "tested": 6,
-      "total": 6,
-      "untested": []
+      "total": 8,
+      "untested": [
+        "start_race",
+        "reposition_karts_on_grid"
+      ]
     },
     "res://games/kart-racing/powerups/powerup_item.gd": {
       "coverage_pct": 100,
@@ -113,20 +114,28 @@
     },
     "res://games/kart-racing/tracks/race_spline.gd": {
       "coverage_pct": 100,
-      "tested": 9,
-      "total": 9,
+      "tested": 12,
+      "total": 12,
       "untested": []
     },
     "res://games/kart-racing/tracks/track_generator.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 83.3333333333333,
       "tested": 5,
-      "total": 5,
+      "total": 6,
+      "untested": [
+        "verify_race_corridor_clearance"
+      ]
+    },
+    "res://games/kart-racing/tracks/track_registry.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
       "untested": []
     },
     "res://games/kart-racing/ui/drift_storm_hud.gd": {
       "coverage_pct": 100,
-      "tested": 18,
-      "total": 18,
+      "tested": 17,
+      "total": 17,
       "untested": []
     },
     "res://games/roboforge-arena/challenges/challenge_manager.gd": {
@@ -166,28 +175,47 @@
       "untested": []
     },
     "res://games/rocket-car/ai/car_ai.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 50,
       "tested": 2,
-      "total": 2,
-      "untested": []
+      "total": 4,
+      "untested": [
+        "set_role",
+        "predict_ball_intercept"
+      ]
     },
     "res://games/rocket-car/arena/rocket_arena.gd": {
-      "coverage_pct": 100,
-      "tested": 11,
-      "total": 11,
-      "untested": []
+      "coverage_pct": 44.4444444444444,
+      "tested": 8,
+      "total": 18,
+      "untested": [
+        "_process",
+        "build_octagonal_perimeter",
+        "build_regulation_goal",
+        "trigger_goal_explosion",
+        "build_stadium_grandstands_and_crowd",
+        "set_crowd_state",
+        "set_crowd_reaction_state",
+        "build_boost_system",
+        "create_flush_boost_pad",
+        "setup_stadium_environment"
+      ]
     },
     "res://games/rocket-car/ball/ball.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 83.3333333333333,
       "tested": 5,
-      "total": 5,
-      "untested": []
+      "total": 6,
+      "untested": [
+        "reset_ball"
+      ]
     },
     "res://games/rocket-car/rocket_car_main.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 83.3333333333333,
       "tested": 10,
-      "total": 10,
-      "untested": []
+      "total": 12,
+      "untested": [
+        "select_stadium_theme",
+        "get_available_stadiums"
+      ]
     },
     "res://games/rocket-car/ui/nitro_kick_hud.gd": {
       "coverage_pct": 100,
@@ -196,10 +224,13 @@
       "untested": []
     },
     "res://games/rocket-car/vehicle/car_controller.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 80,
       "tested": 8,
-      "total": 8,
-      "untested": []
+      "total": 10,
+      "untested": [
+        "set_vehicle_archetype",
+        "apply_archetype_stats"
+      ]
     },
     "res://games/skybound-odyssey/character/sky_character.gd": {
       "coverage_pct": 100,
@@ -495,13 +526,10 @@
       "untested": []
     },
     "res://games/subway-survival/enemies/infected_human.gd": {
-      "coverage_pct": 0,
-      "tested": 0,
+      "coverage_pct": 100,
+      "tested": 2,
       "total": 2,
-      "untested": [
-        "_init",
-        "setup_visuals"
-      ]
+      "untested": []
     },
     "res://games/subway-survival/enemies/spitter.gd": {
       "coverage_pct": 100,
@@ -516,13 +544,10 @@
       "untested": []
     },
     "res://games/subway-survival/game/scrap_pickup.gd": {
-      "coverage_pct": 0,
-      "tested": 0,
+      "coverage_pct": 100,
+      "tested": 2,
       "total": 2,
-      "untested": [
-        "_ready",
-        "_process"
-      ]
+      "untested": []
     },
     "res://games/subway-survival/game/wave_director.gd": {
       "coverage_pct": 100,
@@ -616,8 +641,8 @@
     },
     "res://shared/audio/audio_manager.gd": {
       "coverage_pct": 100,
-      "tested": 15,
-      "total": 15,
+      "tested": 19,
+      "total": 19,
       "untested": []
     },
     "res://shared/cameras/orbit_camera.gd": {
@@ -675,12 +700,10 @@
       "untested": []
     },
     "res://shared/gameplay/quest_system.gd": {
-      "coverage_pct": 94.7368421052632,
-      "tested": 18,
+      "coverage_pct": 100,
+      "tested": 19,
       "total": 19,
-      "untested": [
-        "_init"
-      ]
+      "untested": []
     },
     "res://shared/graphics/camera_shake.gd": {
       "coverage_pct": 100,
@@ -702,8 +725,8 @@
     },
     "res://shared/graphics/mesh_builder.gd": {
       "coverage_pct": 100,
-      "tested": 35,
-      "total": 35,
+      "tested": 50,
+      "total": 50,
       "untested": []
     },
     "res://shared/graphics/model_cache.gd": {
@@ -785,12 +808,10 @@
       "untested": []
     },
     "res://shared/ui/hud_base.gd": {
-      "coverage_pct": 92.3076923076923,
-      "tested": 12,
+      "coverage_pct": 100,
+      "tested": 13,
       "total": 13,
-      "untested": [
-        "update_layout_positions"
-      ]
+      "untested": []
     },
     "res://shared/ui/pause_menu.gd": {
       "coverage_pct": 100,
@@ -811,7 +832,7 @@
       "untested": []
     }
   },
-  "tested_functions": 756,
-  "timestamp": "2026-09-09T07:57:17",
-  "total_functions": 784
+  "tested_functions": 785,
+  "timestamp": "2026-09-10T06:24:40",
+  "total_functions": 826
 }

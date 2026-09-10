@@ -167,9 +167,23 @@ All race mechanics derive strictly from a single authoritative `RaceSpline` mode
 - **Physics Suspension**: 4 physical raycasts at wheel contact patches with spring-damper compression ($0.28\text{m}$ rest, $0.12\text{m}$ travel), rolling wheel animation ($\omega = v/r$), front wheel steering yaw ($\pm 28^\circ$), and zero hover ($y = 0.08\text{m}$ chassis rest).
 - **Corridor Clearance**: Automated verification (`verify_race_corridor_clearance`) ensuring 0 trackside prop intrusions across all 6 circuits.
 
-### 9.5 Championship Pre-Race Hub & Modal Lock
-- **Pre-Race Hub**: Persistent UI with interactive Track Browser (cards for all 6 circuits with length, laps, difficulty, surface, weather/atmosphere, records, and rewards), Vehicle Garage (5 classes with live radar bars), and Mode Selector.
-- **Modal Lock**: State machine (`PRE_RACE`, `COUNTDOWN`, `RACING`, `FINISHED`) locks kart speed at 0 in pre-race, orbiting a turntable camera around the selected kart until explicit user click on "CONFIRM & START RACE".
+### 9.5 Championship Pre-Race Hub & 11-Stage Scene State Machine
+- **11-Stage Scene State Machine**:
+  - Pre-Race Menu States: `DriftHome` $\rightarrow$ `ModeSelect` $\rightarrow$ `TrackSelect` $\rightarrow$ `VehicleSelect` $\rightarrow$ `RaceSetup` $\rightarrow$ `Confirm`.
+  - Active Race States: `Loading` $\rightarrow$ `Grid` $\rightarrow$ `Countdown` $\rightarrow$ `Racing` $\rightarrow$ `Finished`.
+- **Strict Visual & Processing Isolation**:
+  - In all pre-race menu states, `_set_race_world_active(false)` disables and hides the procedural track generator, player kart, and AI opponent karts (`process_mode = PROCESS_MODE_DISABLED`, `visible = false`).
+  - In-race HUD is completely hidden during pre-race configuration.
+  - The 3D race world, starting grid positions, camera directors, and race HUD activate **ONLY** upon explicit countdown launch via `start_race()`.
+- **Championship Pre-Race Hub UI**:
+  - Interactive Track Browser featuring cards for all 6 circuits with length, laps, difficulty, surface, weather/atmosphere, records, and rewards.
+  - Vector Track Spline Preview Canvas: Dynamically samples circuit splines and renders high-definition 2D preview paths in the UI.
+  - Vehicle Garage: 5 vehicle archetypes with real-time performance radar bars (Top Speed, Acceleration, Handling Grip, Drift Charge, Turbo Boost).
+  - Mode Selector: Championship Grand Prix, Single Race, Time Attack.
+- **Responsive Viewport Adaptation**:
+  - Responsive full-screen UI layout guaranteeing zero clipping on displays $\le 800\text{px}$ height.
+  - Always-visible bottom navigation bar with $\ge 48\text{dp}$ touch targets: `[⮌ RETURN TO LAUNCHER]`, `[◀ PREVIOUS]`, `[CONTINUE ▶]`, and `[▶▶ CONFIRM & START RACE ◀◀]`.
+  - Seamlessly scales across all 9 canonical viewports from mobile portrait ($360\times 800$) to desktop QHD ($2560\times 1440$).
 
 ### 9.6 Authoritative Wrong-Way System
 - Continuous planar projection of forward vector $\vec{F}$ against spline tangent $\vec{T}$.
@@ -237,5 +251,31 @@ All race mechanics derive strictly from a single authoritative `RaceSpline` mode
   - `GOALKEEPER`: Positioning between ball and goal net, diving saves on high-speed shots.
 - **Predictive Lead Intercept**: Iterative time-of-flight convergence calculating exact intercept point ahead of the moving ball trajectory.
 - **Aerial Header Headers**: Automated vertical jump and pitch strikes when ball altitude is within $[2.5\text{m}, 6.0\text{m}]$.
+
+---
+
+## 11. Cross-Platform Architectural Framework
+
+### 11.1 Universal Platform Capabilities (`PlatformCapabilities`)
+- **OS & Environment Discovery**: Automatically categorizes platform into Web (WASM/WebGL2), Windows x86_64, Android ARM64, Linux, macOS, and iOS.
+- **Safe-Area Insets**: Queries `DisplayServer.get_display_safe_area()` and computes left, top, right, and bottom insets to ensure critical controls are never obstructed by camera cutouts, notches, or system gesture pills.
+- **Aspect Ratio Categorization**: Formats viewports into canonical ratios: 16:9 (Standard), 16:10 (Laptops/Tablets), 18:9, 19.5:9 (Modern iPhone), 20:9 (Modern Android), 4:3 (iPad), and 21:9 (Ultrawide).
+- **Device Performance Tiers**: Dynamically assigns hardware performance tiers (`TIER_LOW`, `TIER_MEDIUM`, `TIER_HIGH`, `TIER_ULTRA`) based on detected core counts, video memory limits, and platform constraints.
+- **Touch Target Standard**: Enforces a strict minimum touch target dimension of $48\text{dp}$ ($\approx 48\text{px}$ base scale) across all interactive touch elements.
+
+### 11.2 Semantic Input Profiles (`InputProfile`)
+- **Profile Categories**: `DESKTOP_KEYBOARD_MOUSE`, `DESKTOP_CONTROLLER`, `TOUCH_PHONE`, `TOUCH_TABLET`.
+- **Genre Support**: `GENRE_FPS`, `GENRE_RACING`, `GENRE_ROCKET_CAR`, `GENRE_PLATFORMER`, `GENRE_GENERIC`.
+- **Dynamic Action Prompts**: Resolves semantic action names into contextual user-facing button glyphs or text (e.g. "Space / RT / [BOOST]", "W / Left Stick / [THROTTLE]", "Shift / X / [DRIFT]").
+
+### 11.3 Scalable Graphics Profiles (`GraphicsProfile`)
+- **Presets**: `PRESET_LOW`, `PRESET_MEDIUM`, `PRESET_HIGH`, `PRESET_ULTRA`, `PRESET_AUTO`.
+- **Dynamic Scalers**: Adjusts viewport render scale (0.75x to 1.0x), directional shadow atlas size (512 to 4096), 3D MSAA (Disabled, 2X, 4X, 8X), and FXAA.
+- **Physics Invariant**: Strictly locks `Engine.physics_ticks_per_second == 60` across all graphics presets to ensure 100% deterministic simulation parity across platforms.
+
+### 11.4 Adaptive Touch HUD (`TouchControls`)
+- **Genre Adaptive**: Renders analog virtual joysticks for movement/aim in FPS, throttle/steering/drift buttons in racing, and pitch/jump/boost controls in rocket-car modes.
+- **Platform Responsive**: Automatically hides virtual controls when running on desktop/KBM platforms while providing instant touch activation on Web/Mobile targets.
+
 
 

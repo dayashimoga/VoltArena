@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 95.0363196125908,
+  "overall_coverage_pct": 96.9555035128806,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -92,13 +92,10 @@
       "untested": []
     },
     "res://games/kart-racing/kart_racing_main.gd": {
-      "coverage_pct": 75,
-      "tested": 6,
+      "coverage_pct": 100,
+      "tested": 8,
       "total": 8,
-      "untested": [
-        "start_race",
-        "reposition_karts_on_grid"
-      ]
+      "untested": []
     },
     "res://games/kart-racing/powerups/powerup_item.gd": {
       "coverage_pct": 100,
@@ -133,10 +130,12 @@
       "untested": []
     },
     "res://games/kart-racing/ui/drift_storm_hud.gd": {
-      "coverage_pct": 100,
-      "tested": 17,
-      "total": 17,
-      "untested": []
+      "coverage_pct": 95.2380952380952,
+      "tested": 20,
+      "total": 21,
+      "untested": [
+        "show_finish"
+      ]
     },
     "res://games/roboforge-arena/challenges/challenge_manager.gd": {
       "coverage_pct": 100,
@@ -175,30 +174,16 @@
       "untested": []
     },
     "res://games/rocket-car/ai/car_ai.gd": {
-      "coverage_pct": 50,
-      "tested": 2,
+      "coverage_pct": 100,
+      "tested": 4,
       "total": 4,
-      "untested": [
-        "set_role",
-        "predict_ball_intercept"
-      ]
+      "untested": []
     },
     "res://games/rocket-car/arena/rocket_arena.gd": {
-      "coverage_pct": 44.4444444444444,
-      "tested": 8,
+      "coverage_pct": 100,
+      "tested": 18,
       "total": 18,
-      "untested": [
-        "_process",
-        "build_octagonal_perimeter",
-        "build_regulation_goal",
-        "trigger_goal_explosion",
-        "build_stadium_grandstands_and_crowd",
-        "set_crowd_state",
-        "set_crowd_reaction_state",
-        "build_boost_system",
-        "create_flush_boost_pad",
-        "setup_stadium_environment"
-      ]
+      "untested": []
     },
     "res://games/rocket-car/ball/ball.gd": {
       "coverage_pct": 83.3333333333333,
@@ -209,13 +194,10 @@
       ]
     },
     "res://games/rocket-car/rocket_car_main.gd": {
-      "coverage_pct": 83.3333333333333,
-      "tested": 10,
+      "coverage_pct": 100,
+      "tested": 12,
       "total": 12,
-      "untested": [
-        "select_stadium_theme",
-        "get_available_stadiums"
-      ]
+      "untested": []
     },
     "res://games/rocket-car/ui/nitro_kick_hud.gd": {
       "coverage_pct": 100,
@@ -224,13 +206,10 @@
       "untested": []
     },
     "res://games/rocket-car/vehicle/car_controller.gd": {
-      "coverage_pct": 80,
-      "tested": 8,
+      "coverage_pct": 100,
+      "tested": 10,
       "total": 10,
-      "untested": [
-        "set_vehicle_archetype",
-        "apply_archetype_stats"
-      ]
+      "untested": []
     },
     "res://games/skybound-odyssey/character/sky_character.gd": {
       "coverage_pct": 100,
@@ -760,10 +739,13 @@
       "untested": []
     },
     "res://shared/input/touch_controls.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 60,
       "tested": 3,
-      "total": 3,
-      "untested": []
+      "total": 5,
+      "untested": [
+        "apply_platform_visibility",
+        "set_genre"
+      ]
     },
     "res://shared/input/virtual_joystick.gd": {
       "coverage_pct": 100,
@@ -783,10 +765,28 @@
       "total": 3,
       "untested": []
     },
+    "res://shared/platform/graphics_profile.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://shared/platform/input_profile.gd": {
+      "coverage_pct": 100,
+      "tested": 6,
+      "total": 6,
+      "untested": []
+    },
     "res://shared/platform/platform_adapter.gd": {
       "coverage_pct": 100,
       "tested": 7,
       "total": 7,
+      "untested": []
+    },
+    "res://shared/platform/platform_capabilities.gd": {
+      "coverage_pct": 100,
+      "tested": 13,
+      "total": 13,
       "untested": []
     },
     "res://shared/save/save_manager.gd": {
@@ -832,7 +832,7 @@
       "untested": []
     }
   },
-  "tested_functions": 785,
-  "timestamp": "2026-09-10T06:24:40",
-  "total_functions": 826
+  "tested_functions": 828,
+  "timestamp": "2026-09-10T07:46:19",
+  "total_functions": 854
 }

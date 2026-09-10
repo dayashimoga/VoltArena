@@ -25,9 +25,9 @@ Upon launching VoltArena, you are greeted by the 3D Holographic Menu:
 ## 3. In-Game Interface (HUD) & Onboarding
 
 Each game features an immediate pre-match onboarding sequence and high-contrast HUD:
-* **Pre-Match Onboarding Overlay**:
-  * On first launching any game, a dedicated modal presents the game premise, victory objective, and a 2-column controls guide.
-  * Dismisses automatically after a brief preview or immediately upon pressing any key, `Space`, or mouse button.
+* **Pre-Match Onboarding & Championship Hubs**:
+  * **Quick-Play Titles**: On first launching games like Iron Crucible or Metro Siege, a high-contrast onboarding modal displays rules, objectives, and control mappings.
+  * **Drift Storm Championship Hub**: Unlike quick-play modals, Drift Storm features a persistent, full-screen **Pre-Race Configuration Hub** that never auto-dismisses. Players can browse 6 distinct global circuits with live vector track previews, compare 5 vehicle archetypes with real-time performance radar bars, and select race modes. The 3D race world remains completely dormant until the player navigates through setup and clicks **CONFIRM & START RACE**.
 * **Active Objective Badges (Top-Center)**:
   * **Iron Crucible**: `RACE TO 20 FRAGS | YOU: X vs ENEMIES: Y`
   * **Metro Siege**: `OBJECTIVE: SURVIVE 10 WAVES & EXTRACT` (with real-time threat count)
@@ -81,6 +81,7 @@ When a match concludes (time runs out, all waves survived, race finished, or goa
 * **Aerial Interceptions**: Use the double-jump mechanic with pitch-up rotation to block high shots and spike the ball into the opponent net.
 
 ### 6.4 Drift Storm
+* **Pre-Race Customization**: Match vehicle class to track topology — use *Turbo Demon* for technical circuits with frequent hairpin drifts, and *Formula* or *Phantom* for high-speed straights.
 * **Mini-Turbo Timing**: Initiate drifts early before hairpin bends; hold drift angle until purple sparks erupt for a tier-3 speed surge down the following straight.
 * **Powerup Management**: Hold the Plasma Shield powerup when leading the pack to counter incoming Seeker Missiles.
 
@@ -89,4 +90,17 @@ When a match concludes (time runs out, all waves survived, race finished, or goa
 * **Slide-Fire & Dodge-Roll**: Combine sprint with crouch (`Shift` + `C`) to slide-fire underneath incoming projectile barrages. Tap `Ctrl` or double-tap direction to dodge-roll away from grenade blast radii.
 * **Weakpoint Prioritization**: Aim for glowing head units and heat sinks on Elites and Mechs for $2.0\times$ to $2.5\times$ damage multipliers.
 * **Power Module Combos**: Stacking Piercing Module with Overdrive turns high-density enemy choke-points into instant multi-kill score bonuses.
+
+---
+
+## 7. Cross-Platform Controls & Touch UI Guide
+
+VoltArena provides 100% feature parity across Desktop, Web, and Android devices through adaptive platform abstractions:
+* **Desktop Keyboard & Mouse**: Full KBM support with WASD locomotion, mouse aiming, and numeric weapon selection. Virtual touch controls are automatically hidden.
+* **Gamepad Support**: Plug-and-play controller mappings (Xbox, PlayStation, standard HID) with analog stick steering and trigger acceleration/firing.
+* **Mobile & Tablet Touch HUD**:
+  * **Adaptive Layouts**: Floating virtual thumbsticks for directional movement and aiming; oversized action buttons ($\ge 48\text{dp}$) for jump, boost, drift, fire, and reload.
+  * **Safe-Area Inset Handling**: Automatically offsets on-screen HUD elements away from display notches, camera cutouts, and OS gesture bars.
+  * **Zero Screen Clipping**: Responsive UI scaling guarantees all dialogs, pause menus, and pre-race hubs render cleanly on screens as narrow as 360px up to 2560px QHD.
+
 

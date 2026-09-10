@@ -60,6 +60,7 @@ This document specifies the technical, functional, architectural, performance, a
 * **FR-KART-03 (Automated Corridor Clearance Verification)**: Automated verification system (`verify_race_corridor_clearance`) asserting zero trackside prop or barrier intrusions along the entire drivable corridor ($\pm 9.0\text{m}$ width, $5.0\text{m}$ height), drivable surface normals $\ge 0.70$, and continuous corridor bounding across all 6 circuits.
 * **FR-KART-04 (Persistent Championship Pre-Race Hub)**: Persistent pre-race hub overlay with Track Browser (all 6 circuits with length, laps, difficulty, surface, weather/atmosphere, records, and rewards), Vehicle Garage (5 classes: Speeder, Phantom, Enforcer, Turbo Demon, Formula with live performance radar bars), Mode Selector, and explicit "CONFIRM & START RACE" button with zero auto-timeout.
 * **FR-KART-05 (Modal Lock & Authoritative Wrong-Way Detection)**: Formal state machine (`PRE_RACE`, `COUNTDOWN`, `RACING`, `FINISHED`). Locks kart speed strictly at 0 in pre-race, orbits turntable camera around player kart, and registers racers while keeping race manager disabled until countdown release. Authoritative wrong-way detection using continuous spline tangent dot product ($\vec{F} \cdot \vec{T} < -0.30$) with speed threshold ($>3.0\text{ m/s}$) and $0.6\text{s}$ debounce hysteresis. Continuous progress sorting: $\text{prog} = (\text{lap}-1) \cdot L + s$.
+* **FR-KART-06 (Dedicated Scene State Machine & Visual Isolation)**: 11-stage scene state machine (`DriftHome -> ModeSelect -> TrackSelect -> VehicleSelect -> RaceSetup -> Confirm -> Loading -> Grid -> Countdown -> Racing -> Finished`). In pre-race menu states, all 3D track, player kart, and AI karts are completely hidden and disabled (`process_mode = PROCESS_MODE_DISABLED`, `visible = false`). In-race HUD is hidden. Responsive full-screen pre-race hub with tabbed navigation, dynamic vector track spline preview, and an always-visible bottom navigation bar with $\ge 48\text{dp}$ touch targets guaranteed unclipped across all 9 canonical viewports.
 
 ### 3.5 Game 5: Skybound Odyssey (Open-Air 3D Platformer)
 * **FR-SKY-01 (Locomotion & Traversal)**: Responsive platforming with walk/sprint, variable jump, double jump, ledge detection and mantling, glider deployment with realistic glide ratio and terminal descent, and grapple hook anchoring.
@@ -102,7 +103,13 @@ This document specifies the technical, functional, architectural, performance, a
 * **FR-STRIKE-13 (Threat Readability & Directional Damage Feedback)**: Directional damage indicator on HUD showing glowing threat arcs pointing toward attacker bearing, plus red peripheral vignette pulse.
 * **FR-STRIKE-14 (Urban Blackout Visual Aesthetic)**: Dark weathered concrete, carbon steel, midnight sky lighting, emergency orange/red hazard beacons, and distance atmospheric fog.
 
-### 3.9 Shared Platform Subsystems
+### 3.9 Cross-Platform Architecture & Foundation
+* **FR-PLAT-01 (Universal Platform Capabilities)**: Single authoritative `PlatformCapabilities` system detecting Web (WASM/WebGL2), Windows x86_64, Android ARM64, Linux, macOS, and iOS; querying safe-area insets via `DisplayServer.get_display_safe_area()`; categorizing aspect ratios; evaluating device performance tiers (`LOW`, `MEDIUM`, `HIGH`, `ULTRA`); and strictly enforcing minimum $48\text{dp}$ touch target dimensions.
+* **FR-PLAT-02 (Semantic Input Profiles)**: Adaptive `InputProfile` system providing genre-aware mappings (`GENRE_FPS`, `GENRE_RACING`, `GENRE_ROCKET_CAR`, `GENRE_PLATFORMER`) and dynamic semantic action prompt strings that update seamlessly when switching between keyboard/mouse, controller, and touch screens.
+* **FR-PLAT-03 (Scalable Graphics Profiles)**: Unified `GraphicsProfile` managing rendering quality presets (`LOW`, `MEDIUM`, `HIGH`, `ULTRA`, `AUTO`) with viewport render scaling, directional shadow atlas resolution, MSAA, and FXAA, with strict invariant enforcement that `Engine.physics_ticks_per_second == 60` across all profiles.
+* **FR-PLAT-04 (Genre-Adaptive Touch Controls)**: Responsive `TouchControls` system rendering dynamic virtual thumbsticks, action buttons, and brake/drift paddles tailored to the active game genre, featuring safe-area insetting, $\ge 48\text{dp}$ targets, and automatic hiding on desktop/KBM environments.
+
+### 3.10 Shared Platform Subsystems
 * **FR-SYS-01 (Quest System)**: Universal `QuestManager` supporting linear and branching quests, multi-stage objectives, signal callbacks, and state serialization.
 * **FR-SYS-02 (Inventory System)**: Universal `InventorySystem` with grid/stack management, equipment slots, item weight, and traversal gear unlocks.
 * **FR-SYS-03 (Orbit Camera)**: `OrbitCamera3D` with spring-arm raycast obstacle avoidance, mouse/gamepad rotation, pitch clamping, and distance zoom.
@@ -110,7 +117,7 @@ This document specifies the technical, functional, architectural, performance, a
 * **FR-SYS-05 (Puzzle Elements)**: Reusable physics-driven `PressurePlate`, `PuzzleSwitch`, `PuzzleDoor`, `WindCurrent`, and `GrappleAnchor`.
 * **FR-SYS-06 (Material Generator)**: Procedural PBR material generator producing 18 rich surface textures (metals, concrete, dirt, grass, glass, energy grids).
 
-### 3.10 Universal Launcher
+### 3.11 Universal Launcher
 * **FR-LAUNCH-01 (8-Game Carousel)**: Responsive 8-game 3D carousel with keyboard, gamepad, and mouse navigation, live preview metadata, career statistics, and instant hot-swapping between all titles.
 
 ---
@@ -131,8 +138,9 @@ This document specifies the technical, functional, architectural, performance, a
 
 ### 4.3 Testing & Quality Assurance
 * **NFR-QA-01 (Test Pass Rate)**: Automated test runner must achieve 100% assertions passing with 0 failures across all test suites.
-* **NFR-QA-02 (Code Coverage)**: Function-level code coverage must exceed 90.0% across all production scripts.
+* **NFR-QA-02 (Code Coverage)**: Function-level code coverage must exceed 95.0% across all production scripts.
 * **NFR-QA-03 (Headless Stability)**: All game scenes must boot headlessly for 30+ frames without crashing (exit code 0).
+* **NFR-QA-04 (9-Viewport Cross-Platform Gate)**: UI systems must render without clipping or overlap across all 9 canonical viewports (`360x800` to `2560x1440`).
 
 ---
 
@@ -142,7 +150,7 @@ This document specifies the technical, functional, architectural, performance, a
 | :--- | :--- | :--- | :---: | :--- |
 | **FR-01** | Zero Host Install | Containerized execution via Podman | **RUNTIME_VERIFIED** | All builds and test runs executed via `barichello/godot-ci:4.3` container |
 | **FR-02** | Production 3D Assets | 49 GLB models + 18 PBR materials | **RUNTIME_VERIFIED** | 49 verified `.glb` models in `res://assets/models/`, SHA-256 manifest verified |
-| **FR-03** | Original IP | Completely original assets, gameplay, and branding | **IMPLEMENTED** | VoltArena branding and unique original mechanics across 7 games |
+| **FR-03** | Original IP | Completely original assets, gameplay, and branding | **IMPLEMENTED** | VoltArena branding and unique original mechanics across 8 games |
 | **FR-04** | Cross-Platform | Web (WASM/WebGL2), Linux, Windows, Android | **RUNTIME_VERIFIED** | Packaged binaries built in `export/` across all target platforms |
 | **FR-05** | Unified Project | Shared architecture, singletons, input, and themes | **RUNTIME_VERIFIED** | 10 shared autoload singletons in single `project.godot` |
 | **FR-FPS-01** | FPS Locomotion | Walk, sprint, crouch, jump, air drift, kill-plane | **RUNTIME_VERIFIED** | `FPSPlayer` with spring camera recovery, tested in `TestArenaE2E` |
@@ -160,10 +168,11 @@ This document specifies the technical, functional, architectural, performance, a
 | **FR-CAR-04** | Team Match Formations | 1v1, 2v2, 3v3 team formations, blue/orange AI | **RUNTIME_VERIFIED** | Team configurations and sudden death tested in `TestNitroE2E` |
 | **FR-CAR-05** | Kickoff & Overtime | 3-2-1 kickoff, sudden death overtime, goal scoring | **RUNTIME_VERIFIED** | Match state machines tested in `TestNitroE2E` |
 | **FR-KART-01** | Kart Dynamics & Drift | Arcade steering, 3-tier mini-turbo sparks, boost bursts | **RUNTIME_VERIFIED** | Drift charge and mini-turbos tested in `TestKartController` |
-| **FR-KART-02** | 3 Racing Circuits | Alpine Ridge, Desert Mirage, Neon Speedway | **RUNTIME_VERIFIED** | 3 distinct circuits generated and tested in `TestKartE2E` |
+| **FR-KART-02** | 6 Racing Circuits | 6 distinct circuits with continuous colliders & scenery | **RUNTIME_VERIFIED** | Speedway, Sunset Coast, Canyon, Skyline, Alpine, Harbor |
 | **FR-KART-03** | Checkpoint Gate System | Sequential checkpoints, anti-cheat, 3 laps | **RUNTIME_VERIFIED** | Checkpoint sequential gate logic tested in `TestRaceManager` |
 | **FR-KART-04** | Powerups System | Mystery crates, 4 items (Boost/Shield/EMP/Mine) | **RUNTIME_VERIFIED** | Item pickup and powerup triggers tested in `TestKartE2E` |
 | **FR-KART-05** | 6-Slot Grid & AI | Staggered grid, 5 AI racers, 5-lamp gantry sequence | **RUNTIME_VERIFIED** | Grid layout and AI racelines tested in `TestKartE2E` |
+| **FR-KART-06** | State Machine & Hub Isolation | 11-stage scene state machine, pre-race isolation, responsive hub | **RUNTIME_VERIFIED** | Verified in `TestDriftStormStateMachine` & `TestResponsiveUI` |
 | **FR-SKY-01** | Skybound Traversal | Sprint, variable jump, double jump, mantle, glider, grapple | **RUNTIME_VERIFIED** | `SkyCharacter` tested in `TestSkybound` and `TestSkyboundE2E` |
 | **FR-SKY-02** | Skybound 5-Region World | Emerald Isles, Crystal Caverns, Temple, Peaks, Citadel | **RUNTIME_VERIFIED** | 5 regions verified in `TestSkyboundE2E` |
 | **FR-SKY-03** | Skybound Puzzles | Pressure plates, puzzle switches, locked doors, wind | **RUNTIME_VERIFIED** | Interactive puzzle chains tested in `TestPuzzleElements` |
@@ -179,6 +188,10 @@ This document specifies the technical, functional, architectural, performance, a
 | **FR-WILD-03** | Viewfinder Photography | 24-300mm optical zoom, depth of field, framing grid | **RUNTIME_VERIFIED** | Viewfinder camera tested in `TestWildCircuit` |
 | **FR-WILD-04** | Photo Scoring Engine | Centering, framing, distance, rarity, action state | **RUNTIME_VERIFIED** | Scoring engine tested in `TestWildCircuit` |
 | **FR-WILD-05** | Field Journal & ATV | Species catalog, high scores, terrain explorer ATV | **RUNTIME_VERIFIED** | Journal and ATV tested in `TestWildCircuitE2E` |
+| **FR-PLAT-01** | Universal Platform Caps | Safe area insets, aspect ratio, performance tier, 48dp | **RUNTIME_VERIFIED** | `PlatformCapabilities` verified in unit & responsive suites |
+| **FR-PLAT-02** | Semantic Input Profiles | Genre mappings, dynamic action prompts for all schemes | **RUNTIME_VERIFIED** | `InputProfile` verified in `TestInputManager` & `TestUISystems` |
+| **FR-PLAT-03** | Graphics Scalability | Render scale, shadows, MSAA, FXAA, invariant 60Hz physics | **RUNTIME_VERIFIED** | `GraphicsProfile` verified in `TestQualityManager` |
+| **FR-PLAT-04** | Genre Touch Controls | Dynamic thumbsticks, buttons, safe-margins, auto-hide | **RUNTIME_VERIFIED** | `TouchControls` verified across responsive viewports |
 | **FR-SYS-01**  | Shared Quest System | Objectives, prerequisites, serialization, signals | **RUNTIME_VERIFIED** | `QuestManager` tested in `TestQuestSystem` |
 | **FR-SYS-02**  | Shared Inventory System | Stacks, weights, equipment slots, traversal unlocks | **RUNTIME_VERIFIED** | `InventorySystem` tested in `TestInventorySystem` |
 | **FR-SYS-03**  | Shared Orbit Camera | Raycast collision avoidance, mouse/gamepad orbit | **RUNTIME_VERIFIED** | `OrbitCamera3D` tested in `TestEngineSubsystems` |
@@ -196,7 +209,8 @@ This document specifies the technical, functional, architectural, performance, a
 | **NFR-PERF-02**| ProcGen Execution | Map and circuit generation under 2,500ms | **RUNTIME_VERIFIED** | All biomes generated under 2,500ms |
 | **NFR-PERF-03**| Memory Budget | Heap under 500MB | **RUNTIME_VERIFIED** | 22.3 MB static heap footprint |
 | **NFR-WEB-01** | Cloudflare 25MB Limit | All individual deployed files $\le 25.0$ MB | **RUNTIME_VERIFIED** | `index.pck` and `index.wasm` split into <= 18MB chunks, all files PASS |
-| **NFR-QA-01**  | Test Pass Rate | 100% assertions passing | **RUNTIME_VERIFIED** | 61/61 suites, 1886/1886 assertions PASS (100% pass rate, 0 failures) |
-| **NFR-QA-02**  | Code Coverage | $> 90.0\%$ function coverage | **RUNTIME_VERIFIED** | **95.04% real function coverage (785 / 826 functions)** |
+| **NFR-QA-01**  | Test Pass Rate | 100% assertions passing | **RUNTIME_VERIFIED** | **63/63 suites, 2102/2102 assertions PASS (100% pass rate, 0 failures)** |
+| **NFR-QA-02**  | Code Coverage | $\ge 95.0\%$ function coverage | **RUNTIME_VERIFIED** | **96.96% real function coverage (828 / 854 functions)** |
 | **NFR-GATE-01**| Production Gates | G0-G10 verified, zero automatable failures | **RUNTIME_VERIFIED** | Automated certification passed with exit code 0 |
+
 

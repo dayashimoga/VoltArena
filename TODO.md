@@ -721,6 +721,38 @@
   - `GAP_ANALYSIS.md` (GAP-31 through GAP-40 documented and resolved)
   - `PRODUCTION_CERTIFICATION.md` (v8.6.0-PROD certified)
 
+### [2026-09-10 12:30:00 UTC] - Milestone Update: Drift Storm Dedicated Scene State Machine, Global Cross-Platform Architecture, and 9-Viewport Production Certification
+- **Status**: COMPLETED
+- **Description**:
+  1. **Drift Storm Dedicated Scene State Machine (GAP-41, GAP-42)**:
+     - Eliminated the floating pre-race configuration overlay that previously rendered over an active 3D race and clipped off-screen on displays $\le 800\text{px}$ height.
+     - Implemented an 11-stage scene state machine: `DriftHome -> ModeSelect -> TrackSelect -> VehicleSelect -> RaceSetup -> Confirm -> Loading -> Grid -> Countdown -> Racing -> Finished`.
+     - **Complete Isolation**: In pre-race menu states, `_set_race_world_active(false)` disables and hides the track generator, player kart, and AI karts (`process_mode = PROCESS_MODE_DISABLED`, `visible = false`).
+     - **Isolated In-Race HUD**: In-race HUD panels (`pos_panel`, `obj_panel`, `right_panel`, `minimap_panel`, `speed_box`, `touch_controls`) remain strictly hidden until race release.
+     - **Persistent Full-Screen Track & Vehicle Selection**: Track selection persists indefinitely until explicit user action, featuring dynamic vector track map preview, full metadata across all 6 circuits (`Volt Speedway`, `Sunset Coast`, `Redrock Canyon`, `Metro Night`, `Alpine Rush`, `Storm Harbor`), 5 vehicle archetypes (`Speeder`, `Phantom`, `Enforcer`, `Turbo Demon`, `Formula Apex`) with performance radar bars, and an **always-visible CONTINUE button** guaranteed within screen bounds.
+  2. **Global Cross-Platform Architecture (GAP-43, GAP-44, GAP-45)**:
+     - Created `PlatformCapabilities` (`shared/platform/platform_capabilities.gd`): Platform detection (Web/WebGL2, Windows x86_64, Android ARM64, Linux, macOS, iOS), scaled safe-area insets (`DisplayServer.get_display_safe_area()`), aspect ratio classification (16:9, 16:10, 18:9, 19.5:9, 20:9, tablet 4:3, ultrawide 21:9), device tiers (`TIER_LOW` to `TIER_ULTRA`), and minimum $48\text{dp}$ touch target enforcement.
+     - Created `InputProfile` (`shared/platform/input_profile.gd`): Dynamic switching between desktop keyboard/mouse, desktop controller, mobile touch, and tablet touch. Provides genre-aware semantic action prompts (`move_forward`, `fire`, `boost`, `drift`, `jump`, `reload`, `pause`).
+     - Created `GraphicsProfile` (`shared/platform/graphics_profile.gd`): Low/Medium/High/Ultra/Auto presets controlling render scale, shadow atlas resolution, MSAA, screen-space AA, and LOD. Guaranteed physics tick invariant (`Engine.physics_ticks_per_second == 60`) across all presets.
+     - Upgraded `TouchControls` (`shared/input/touch_controls.gd`): Adaptive genre layouts (`GENRE_FPS`, `GENRE_RACING`, `GENRE_ROCKET_CAR`), minimum $48\text{dp}$ touch target sizing, and automatic desktop hiding.
+  3. **9-Viewport Automated Verification Gate (GAP-46)**:
+     - Expanded `tests/responsive/test_responsive_ui.gd` to test all 9 canonical viewports: `360x800`, `393x852`, `412x915`, `600x960`, `800x1280`, `1280x720`, `1366x768`, `1920x1080`, `2560x1440`.
+     - Validated 297/297 responsive layout assertions with zero clipping or overflow.
+  4. **Dedicated Drift Storm State Machine Test Suite**:
+     - Authored `tests/unit/test_drift_storm_state_machine.gd` (35 assertions): Dormant pre-race state, menu navigation forward/backward, complete metadata across 6 tracks and 5 vehicles, and explicit countdown activation.
+- **Evidence**:
+  - `tests/unit/test_drift_storm_state_machine.gd` (35 passed assertions)
+  - `tests/responsive/test_responsive_ui.gd` (297 passed assertions)
+  - `tests/unit/test_cross_platform_architecture.gd` (19 passed assertions)
+  - `artifacts/test-results.json` (63 suites, 2102 passed, 0 failed, 100% pass)
+  - `artifacts/coverage-report.json` (96.96% function coverage, 828/854 functions)
+  - Multi-platform packaged builds: `export/web/` (Cloudflare-compliant $\le 18\text{MB}$ chunks), `export/windows/VoltArena.exe`, `export/linux/VoltArena.x86_64`, `export/android/VoltArena.apk`
+  - Distribution archives: `export/dist/VoltArena-Web.zip` (143.2 MB), `export/dist/VoltArena-Linux-x86_64.tar.gz` (86.8 MB), `export/dist/VoltArena-Windows-x86_64.zip` (92.7 MB), `export/dist/VoltArena-Android.apk` (108.7 MB)
+  - `GAP_ANALYSIS.md` (GAP-41 through GAP-46 documented and remediated)
+  - `PRODUCTION_CERTIFICATION.md` (Release 8.7.0 verified)
+
+
+
 
 
 

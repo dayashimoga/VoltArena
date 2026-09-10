@@ -1,7 +1,7 @@
 {
   "overall_status": "PASS",
-  "resolutions_tested": 5,
-  "timestamp": "2026-09-10T06:21:55",
+  "resolutions_tested": 9,
+  "timestamp": "2026-09-10T07:45:18",
   "total_failed": 0,
-  "total_passed": 135
+  "total_passed": 297
 }

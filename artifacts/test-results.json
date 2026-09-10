@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 95.0363196125908,
-  "coverage_tested_functions": 785,
-  "coverage_total_functions": 826,
-  "execution_seconds": 184.435,
+  "coverage_percent": 96.9555035128806,
+  "coverage_tested_functions": 828,
+  "coverage_total_functions": 854,
+  "execution_seconds": 68.962,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -45,6 +45,11 @@
       "passed": 100,
       "status": "PASS"
     },
+    "Drift Storm State Machine & Pre-Race Hub": {
+      "failed": 0,
+      "passed": 35,
+      "status": "PASS"
+    },
     "Enemy Archetypes Unit": {
       "failed": 0,
       "passed": 18,
@@ -73,6 +78,11 @@
     "Gameplay Screens Certification E2E": {
       "failed": 0,
       "passed": 32,
+      "status": "PASS"
+    },
+    "Global Cross-Platform Architecture Unit": {
+      "failed": 0,
+      "passed": 19,
       "status": "PASS"
     },
     "HealthComponent Unit": {
@@ -202,7 +212,7 @@
     },
     "Responsive UI Multi-Resolution": {
       "failed": 0,
-      "passed": 135,
+      "passed": 297,
       "status": "PASS"
     },
     "RoboForge Arena E2E": {
@@ -311,8 +321,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-10T06:24:40",
+  "timestamp": "2026-09-10T07:46:19",
   "total_failed": 0,
-  "total_passed": 1886,
-  "total_suites": 61
+  "total_passed": 2102,
+  "total_suites": 63
 }

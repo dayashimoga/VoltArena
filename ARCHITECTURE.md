@@ -233,10 +233,28 @@ The physics world is partitioned into 12 strict collision layers configured in `
 * **5 Authentic Vehicle Classes (`MeshBuilder`)**:
   - *Speeder* (CIK-FIA Kart), *Phantom* (GT Coupe), *Enforcer* (Offroad Buggy), *Turbo Demon* (Cyber EV), *Formula* (Open-Wheel F1).
   - Distinct authoritative physics: top speed (27–38 m/s), acceleration (20–32 m/s²), grip factor (0.80–0.96), drift charge rate, and boost duration (1.2–2.4s).
-* **Championship Pre-Race Hub & Modal Lock (`KartRacingMain` & `DriftStormHUD`)**:
-  - State machine: `PRE_RACE`, `COUNTDOWN`, `RACING`, `FINISHED`.
-  - Persistent Championship Hub: interactive Track Browser (6 circuits), Vehicle Garage (5 classes with live radar bars), and Mode Selector.
-  - Modal lock: in `PRE_RACE`, player kart velocity and throttle are hard-locked to 0 with turntable camera orbiting the kart until explicit "CONFIRM & START RACE" click.
+### 6.6 Drift Storm (Arcade Kart Racing)
+* **Single Track Authority Pipeline (`RaceSpline`)**:
+  - Authoritative arc-length spline model ($0.5\text{m}$ interval) providing centerline $\vec{P}(s)$, forward tangent $\vec{T}(s)$, surface normal $\vec{N}(s)$, and lateral binormal $\vec{B}(s)$.
+  - Unifies procedural road quad generation, collision ribbons, AI navigation, wrong-way detection, and lap progress calculation.
+  - Counter-clockwise quad triangle winding ensuring upward normals $(0, 1, 0)$ and two-sided collision response (`backface_collision = true`).
+* **4-Wheel Raycast Suspension & Grounding (`KartController`)**:
+  - 4 physical raycasts (`SuspensionRay_0..3`) at $(\pm 0.42, 0.12, \pm 0.58)$ with spring compression damping, rolling wheel rotation ($\omega = v/r$), front wheel steering yaw ($\pm 28^\circ$), and suspension deflection.
+  - Chassis resting naturally on road surface ($y \in [0.0, 0.25\text{m}]$) with verified $0.0\text{m}$ hovering.
+* **Corridor Clearance Verification System (`TrackGenerator`)**:
+  - Anchors all trackside props strictly to spline binormal offsets ($pos \pm binormal \cdot (half\_width + margin)$).
+  - Built automated scanner `verify_race_corridor_clearance(sample_step = 2.0)` asserting 0 collider encroachments within $\pm 9.0\text{m}$ lateral width and $5.0\text{m}$ height across all 6 circuits.
+* **6 Global Production Circuits (`TrackRegistry`)**:
+  - Volt Speedway ($755\text{m}$), Sunset Coast ($830\text{m}$), Canyon Run ($848\text{m}$), Skyline Drift ($812\text{m}$), Alpine Rush ($865\text{m}$), Storm Harbor ($820\text{m}$).
+  - Procedural 3D scenery props: palm trees, pine trees, shipping containers, harbor cranes, skyscrapers, and rock arches.
+* **5 Authentic Vehicle Classes (`MeshBuilder`)**:
+  - *Speeder* (CIK-FIA Kart), *Phantom* (GT Coupe), *Enforcer* (Offroad Buggy), *Turbo Demon* (Cyber EV), *Formula* (Open-Wheel F1).
+  - Distinct authoritative physics: top speed (27–38 m/s), acceleration (20–32 m/s²), grip factor (0.80–0.96), drift charge rate, and boost duration (1.2–2.4s).
+* **11-Stage Scene State Machine & Strict Visual Isolation (`KartRacingMain` & `DriftStormHUD`)**:
+  - 11-stage scene state machine: `DriftHome` $\rightarrow$ `ModeSelect` $\rightarrow$ `TrackSelect` $\rightarrow$ `VehicleSelect` $\rightarrow$ `RaceSetup` $\rightarrow$ `Confirm` $\rightarrow$ `Loading` $\rightarrow$ `Grid` $\rightarrow$ `Countdown` $\rightarrow$ `Racing` $\rightarrow$ `Finished`.
+  - In all pre-race menu states, `_set_race_world_active(false)` disables and hides the procedural track generator, player kart, and AI opponent karts (`process_mode = PROCESS_MODE_DISABLED`, `visible = false`). In-race HUD is hidden.
+  - 3D race world and in-race HUD activate strictly upon race launch in `start_race()`.
+  - Responsive full-screen pre-race hub with dynamic vector spline preview canvas, 5-vehicle radar stats, and an always-visible bottom navigation bar with $\ge 48\text{dp}$ touch targets guaranteed unclipped across all 9 canonical viewports.
 
 ---
 
@@ -247,3 +265,32 @@ The top-level `Launcher` (`launcher/launcher.tscn`) acts as the master coordinat
 * **State & Metadata Preview**: Displays title, genre tags, active controls, description, career records, and visual dossier for the highlighted game.
 * **Hot-Swap Engine**: Uses `GameManager.load_game_scene()` for asynchronous resource streaming and clean garbage collection during transitions.
 * **Universal In-Game Pause & Overlay**: Every game includes a unified `PauseMenu` that provides "Resume", "Restart", and "Quit to Launcher" with zero memory leaks.
+
+---
+
+## 8. Universal Cross-Platform Architecture
+
+### 8.1 Platform Capabilities Layer (`PlatformCapabilities`)
+Located in `shared/platform/platform_capabilities.gd`, this subsystem provides hardware and runtime abstraction:
+* **Platform Categorization**: Identifies Web (WASM/WebGL2), Windows x86_64, Android ARM64, Linux, macOS, and iOS environments.
+* **Safe-Area Insets**: Queries `DisplayServer.get_display_safe_area()` and computes screen-edge margins to prevent UI clipping by notches, cutouts, and OS navigation gestures.
+* **Aspect Ratio Detection**: Classifies viewports into standard aspect ratios (16:9, 16:10, 18:9, 19.5:9, 20:9, 4:3, 21:9).
+* **Performance Tiering**: Evaluates device hardware capabilities (`TIER_LOW`, `TIER_MEDIUM`, `TIER_HIGH`, `TIER_ULTRA`) for dynamic LOD and shadow scalability.
+* **Touch Target Enforcement**: Enforces a strict minimum touch target dimension of $48\text{dp}$ ($\ge 48\text{px}$) across all interactive touch surfaces.
+
+### 8.2 Semantic Input Management (`InputProfile`)
+Located in `shared/platform/input_profile.gd`, this subsystem translates generic platform inputs into contextual gameplay actions:
+* **Input Schemes**: Supports `DESKTOP_KEYBOARD_MOUSE`, `DESKTOP_CONTROLLER`, `TOUCH_PHONE`, and `TOUCH_TABLET`.
+* **Genre Adaptation**: Formats controls specifically for `GENRE_FPS`, `GENRE_RACING`, `GENRE_ROCKET_CAR`, `GENRE_PLATFORMER`, and `GENRE_GENERIC`.
+* **Action Glyph Resolution**: Dynamically formats semantic button prompts for active HUDs based on current input device.
+
+### 8.3 Graphics Presets & Invariants (`GraphicsProfile`)
+Located in `shared/platform/graphics_profile.gd`, this subsystem handles visual scalability:
+* **Scalable Presets**: Low, Medium, High, Ultra, and Auto presets configuring viewport scale (0.75x–1.0x), shadow resolution (512–4096), MSAA (Disabled, 2X, 4X, 8X), and FXAA.
+* **Physics Parity Invariant**: Strictly enforces `Engine.physics_ticks_per_second == 60` across all presets and platforms to ensure 100% identical vehicle and sports physics.
+
+### 8.4 Genre-Adaptive Touch HUD (`TouchControls`)
+Located in `shared/input/touch_controls.gd`, this component provides mobile and web touch interaction:
+* **Dynamic Layouts**: Renders dual analog thumbsticks for FPS combat, throttle/brake pedals and steering buttons for racing, and boost/jump triggers for rocket football.
+* **Desktop Auto-Hide**: Automatically disables and hides virtual controls when running on desktop/KBM environments, activating instantly when touchscreen input is detected.
+

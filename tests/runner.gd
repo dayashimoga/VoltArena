@@ -39,6 +39,8 @@ const TestProceduralAnimatorScript = preload("res://tests/unit/test_procedural_a
 const TestModelCacheScript = preload("res://tests/unit/test_model_cache.gd")
 const TestNitroKickP0GatesScript = preload("res://tests/unit/test_nitro_kick_p0_gates.gd")
 const TestDriftStormCorridorGatesScript = preload("res://tests/unit/test_drift_storm_corridor_gates.gd")
+const TestDriftStormStateMachineScript = preload("res://tests/unit/test_drift_storm_state_machine.gd")
+const TestCrossPlatformArchitectureScript = preload("res://tests/unit/test_cross_platform_architecture.gd")
 
 # --- New Subsystems & 3 New Games (Unit) ---
 const TestQuestSystemScript = preload("res://tests/unit/test_quest_system.gd")
@@ -150,6 +152,8 @@ func _init() -> void:
 		{"name": "Nitro Kick P0 Forensic Gates", "instance": TestNitroKickP0GatesScript.new()},
 		{"name": "Drift Storm E2E", "instance": TestKartE2EScript.new()},
 		{"name": "Drift Storm Corridor & Pre-Race Gates", "instance": TestDriftStormCorridorGatesScript.new()},
+		{"name": "Drift Storm State Machine & Pre-Race Hub", "instance": TestDriftStormStateMachineScript.new()},
+		{"name": "Global Cross-Platform Architecture Unit", "instance": TestCrossPlatformArchitectureScript.new()},
 		{"name": "Drift Storm Runtime Acceptance (P0 Gates)", "instance": TestDriftStormRuntimeAcceptanceScript.new()},
 		{"name": "Skybound Odyssey E2E", "instance": TestSkyboundE2EScript.new()},
 		{"name": "RoboForge Arena E2E", "instance": TestRoboForgeE2EScript.new()},

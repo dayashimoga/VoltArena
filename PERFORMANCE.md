@@ -55,6 +55,15 @@ At 60 FPS, the maximum frame budget is **16.67 milliseconds**:
 * **AI Concurrency & Watchdog Budgeting**: Enemy perception (FOV raycasting and hearing) is evaluated on staggered tick cycles. The 28s watchdog runs at 1 Hz, consuming $< 0.05\text{ ms}$ of frame budget.
 * **Projectile Swept-Raycast Pooling**: Sweep raycasts eliminate tunneling without expensive full physics continuous collision checks for bullet hitscan.
 
+### 3.6 Drift Storm Dormant State Optimization
+* **Pre-Race World Disabling**: In all pre-race menu states (`DriftHome` to `Confirm`), `_set_race_world_active(false)` disables and hides the procedural track generator, player kart, and AI opponent karts (`process_mode = PROCESS_MODE_DISABLED`, `visible = false`).
+* **Zero Pre-Race GPU/CPU Load**: Eliminates all physics ticks, collision queries, and 3D draw calls while players browse tracks and customize vehicle attributes.
+* **Isolated In-Race HUD**: In-race HUD gauges remain dormant and hidden until countdown begins.
+
+### 3.7 Cross-Platform Graphics Scalability & 60Hz Physics Invariant
+* **Hardware Tier Profiles**: `GraphicsProfile` automatically scales viewport render scale ($0.75\times\text{--}1.0\times$), directional shadow map resolution ($512\text{--}4096$), and MSAA ($0\times\text{--}8\times$) according to target device tier (`TIER_LOW` to `TIER_ULTRA`).
+* **Deterministic Simulation Invariant**: Enforces `Engine.physics_ticks_per_second == 60` across all visual presets, guaranteeing identical vehicle handling, ball bounces, and kinematics across budget mobile devices, browsers, and high-end desktop rigs.
+
 ---
 
 ## 4. Running Performance Benchmarks

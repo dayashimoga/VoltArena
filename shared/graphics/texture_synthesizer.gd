@@ -85,6 +85,12 @@ static func get_texture(texture_id: String) -> ImageTexture:
 			tex = _build_digital_signage_albedo(Color(1.0, 0.5, 0.0), "NITRO KICK")
 		"stadium_spectators":
 			tex = _build_stadium_spectators_albedo()
+		"asphalt_roughness":
+			tex = _build_asphalt_roughness()
+		"wet_puddle_mask":
+			tex = _build_wet_puddle_mask()
+		"contact_shadow_blob":
+			tex = _build_contact_shadow_blob()
 		_:
 			tex = _build_fallback_texture()
 
@@ -263,9 +269,16 @@ static func _build_asphalt_normal() -> ImageTexture:
 	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
 	for y in range(h):
 		for x in range(w):
-			var nx = 0.5 + (float((x * 13 + y * 7) % 17) / 17.0 - 0.5) * 0.15
-			var ny = 0.5 + (float((x * 11 + y * 19) % 17) / 17.0 - 0.5) * 0.15
-			img.set_pixel(x, y, Color(nx, ny, 1.0))
+			# High-frequency procedural stone aggregate noise
+			var n1 = float((x * 17 + y * 31 + 13) % 23) / 23.0 - 0.5
+			var n2 = float((x * 29 + y * 19 + 7) % 19) / 19.0 - 0.5
+			var n3 = float((x * 41 + y * 37 + 5) % 17) / 17.0 - 0.5
+			var dx = (n1 * 0.6 + n2 * 0.4) * 0.45
+			var dy = (n2 * 0.6 + n3 * 0.4) * 0.45
+			var normal = Vector3(dx, dy, 1.0).normalized()
+			# Map [-1, 1] to [0, 1] for normal map encoding
+			var col = Color(normal.x * 0.5 + 0.5, normal.y * 0.5 + 0.5, normal.z * 0.5 + 0.5, 1.0)
+			img.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(img)
 
 static func _build_stadium_pitch_albedo() -> ImageTexture:
@@ -628,30 +641,31 @@ static func _build_tactile_bump_albedo() -> ImageTexture:
 	return ImageTexture.create_from_image(img)
 
 static func _build_asphalt_lanes_albedo() -> ImageTexture:
-	var w = 128
-	var h = 128
+	var w = 256
+	var h = 256
 	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
-	var base_asphalt = Color(0.20, 0.22, 0.24)
-	var rubber_groove = Color(0.11, 0.12, 0.13) # Heavy tire wear groove on racing line
-	var white_line = Color(0.96, 0.96, 0.98)
+	var base_asphalt = Color(0.18, 0.19, 0.21)
+	var rubber_groove = Color(0.09, 0.10, 0.11) # Heavy tire wear groove on racing line
+	var white_line = Color(0.92, 0.93, 0.95)
 
 	for y in range(h):
-		var dashed = (y % 32) < 20
+		var dashed = (y % 64) < 40
 		for x in range(w):
-			var grain = (float((x * 19 + y * 23) % 29) / 29.0 - 0.5) * 0.035
-			var col = base_asphalt + Color(grain, grain, grain)
+			var grain = (float((x * 37 + y * 43 + 17) % 31) / 31.0 - 0.5) * 0.05
+			var stone_fleck = 0.04 if ((x * 19 + y * 29) % 37 < 2) else 0.0
+			var col = base_asphalt + Color(grain + stone_fleck, grain + stone_fleck, grain + stone_fleck)
 
-			# Rubbered-in racing groove along left lane (x: 24-44) and right lane (x: 84-104)
-			var in_left_groove = (x >= 24 and x <= 44)
-			var in_right_groove = (x >= 84 and x <= 104)
+			# Rubbered-in racing groove along left lane (x: 48-88) and right lane (x: 168-208)
+			var in_left_groove = (x >= 48 and x <= 88)
+			var in_right_groove = (x >= 168 and x <= 208)
 			if in_left_groove or in_right_groove:
-				col = col.lerp(rubber_groove, 0.75)
+				col = col.lerp(rubber_groove, 0.82)
 
 			# Crisp White Outer boundary edge lines
-			if x < 4 or x >= w - 4:
+			if x < 8 or x >= w - 8:
 				col = white_line
 			# Center dashed racing dividing line
-			elif x >= 62 and x <= 66 and dashed:
+			elif x >= 125 and x <= 131 and dashed:
 				col = white_line
 
 			img.set_pixel(x, y, col)
@@ -903,4 +917,69 @@ static func _build_fallback_texture() -> ImageTexture:
 	var img = Image.create(16, 16, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0.5, 0.5, 0.5))
 	return ImageTexture.create_from_image(img)
+
+static func _build_asphalt_roughness() -> ImageTexture:
+	var w = 256
+	var h = 256
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	for y in range(h):
+		for x in range(w):
+			# Base matte aggregate roughness: 0.86 - 0.94
+			var grain = (float((x * 29 + y * 41 + 11) % 37) / 37.0 - 0.5) * 0.08
+			var r = 0.90 + grain
+			# Rubber groove on racing line is smoother (0.76)
+			var in_groove = (x >= 48 and x <= 88) or (x >= 168 and x <= 208)
+			if in_groove:
+				r = lerpf(r, 0.76, 0.8)
+			# Painted lines slightly smoother (0.68)
+			if x < 8 or x >= w - 8 or (x >= 125 and x <= 131 and ((y % 64) < 40)):
+				r = 0.68
+			r = clampf(r, 0.0, 1.0)
+			img.set_pixel(x, y, Color(r, r, r, 1.0))
+	return ImageTexture.create_from_image(img)
+
+static func _build_wet_puddle_mask() -> ImageTexture:
+	var w = 256
+	var h = 256
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	for y in range(h):
+		var fy = float(y) / 256.0
+		for x in range(w):
+			var fx = float(x) / 256.0
+			# Low frequency organic puddle shapes using layered harmonic frequencies
+			var p1 = sin(fx * 12.5) * cos(fy * 12.5)
+			var p2 = sin(fx * 25.0 + fy * 18.0) * 0.5
+			var val = p1 + p2
+			# Puddle threshold: below 0.15 is liquid pool (roughness 0.18), above is matte damp asphalt (0.86)
+			var r = 0.86
+			if val < -0.35:
+				r = 0.18 # Mirror water puddle
+			elif val < -0.15:
+				var t = (val - (-0.35)) / 0.20
+				r = lerpf(0.18, 0.86, t) # Damp puddle fringe
+			img.set_pixel(x, y, Color(r, r, r, 1.0))
+	return ImageTexture.create_from_image(img)
+
+static func _build_contact_shadow_blob() -> ImageTexture:
+	var w = 128
+	var h = 128
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var cx = float(w) * 0.5
+	var cy = float(h) * 0.5
+	var rx = float(w) * 0.44
+	var ry = float(h) * 0.40
+
+	for y in range(h):
+		var dy = (float(y) - cy) / ry
+		for x in range(w):
+			var dx = (float(x) - cx) / rx
+			var dist = sqrt(dx * dx + dy * dy)
+			var alpha = 0.0
+			if dist < 1.0:
+				# Smooth cubic falloff from center (0.82) to edge (0.0)
+				var t = 1.0 - dist
+				alpha = (t * t * (3.0 - 2.0 * t)) * 0.85
+			img.set_pixel(x, y, Color(0.02, 0.02, 0.03, alpha))
+	return ImageTexture.create_from_image(img)
+
 

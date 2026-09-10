@@ -449,6 +449,43 @@ func _handle_kart_cmd(scene: Node, cmd: String) -> void:
 			cam.look_at(player.global_position + Vector3(0, 0.6, 0), Vector3.UP)
 		if results and results.has_method("display_results"):
 			results.display_results(true, {"Position": "1st Place (GOLD)", "Best Lap": "00:48.2", "Total Time": "02:31.5"})
+	elif cmd == "tab_track_select":
+		if hud and hud.has_method("_show_track_select"):
+			hud._show_track_select()
+	elif cmd.begins_with("select_track_"):
+		var t_id = cmd.substr(13)
+		if hud and hud.has_method("_on_track_card_selected"):
+			hud._on_track_card_selected(t_id)
+	elif cmd == "tab_vehicle_select":
+		if hud and hud.has_method("_show_vehicle_select"):
+			hud._show_vehicle_select()
+	elif cmd.begins_with("select_vehicle_"):
+		var v_id = cmd.substr(15)
+		if hud and hud.has_method("_on_vehicle_card_selected"):
+			hud._on_vehicle_card_selected(v_id)
+	elif cmd.begins_with("select_paint_"):
+		var p_idx = cmd.substr(13).to_int()
+		if hud and "PAINT_SWATCHES" in hud and p_idx >= 0 and p_idx < hud.PAINT_SWATCHES.size():
+			hud._on_paint_swatch_selected(hud.PAINT_SWATCHES[p_idx]["color"])
+	elif cmd == "tab_setup":
+		if hud and hud.has_method("_show_setup_view"):
+			hud._show_setup_view()
+	elif cmd == "start_race":
+		if scene.has_method("start_race"):
+			scene.start_race()
+	elif cmd.begins_with("race_track_"):
+		var t_id = cmd.substr(11)
+		if hud and "selected_track_id" in hud:
+			hud.selected_track_id = t_id
+		if scene.has_method("select_track"):
+			scene.select_track(t_id)
+		if scene.has_method("start_race"):
+			scene.start_race()
+	elif cmd == "cam_grounding_telemetry":
+		if cam and player:
+			cam.top_level = true
+			cam.global_position = player.global_position + Vector3(1.6, 0.4, -0.6)
+			cam.look_at(player.global_position + Vector3(0, 0.15, 0), Vector3.UP)
 
 func _check_cmdline_args() -> void:
 	var args = OS.get_cmdline_user_args()

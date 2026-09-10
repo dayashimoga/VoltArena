@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 96.9555035128806,
+  "overall_coverage_pct": 96.0556844547564,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -74,10 +74,12 @@
       "untested": []
     },
     "res://games/kart-racing/ai/kart_ai.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 66.6666666666667,
       "tested": 2,
-      "total": 2,
-      "untested": []
+      "total": 3,
+      "untested": [
+        "set_difficulty"
+      ]
     },
     "res://games/kart-racing/game/race_manager.gd": {
       "coverage_pct": 100,
@@ -86,10 +88,12 @@
       "untested": []
     },
     "res://games/kart-racing/kart/kart_controller.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 91.6666666666667,
       "tested": 11,
-      "total": 11,
-      "untested": []
+      "total": 12,
+      "untested": [
+        "set_kart_color"
+      ]
     },
     "res://games/kart-racing/kart_racing_main.gd": {
       "coverage_pct": 100,
@@ -703,10 +707,17 @@
       "untested": []
     },
     "res://shared/graphics/mesh_builder.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 89.2857142857143,
       "tested": 50,
-      "total": 50,
-      "untested": []
+      "total": 56,
+      "untested": [
+        "build_pit_building",
+        "build_cargo_ship",
+        "build_suspension_bridge_tower",
+        "build_marshal_post",
+        "build_mountain_peak",
+        "build_alpine_chalet"
+      ]
     },
     "res://shared/graphics/model_cache.gd": {
       "coverage_pct": 100,
@@ -833,6 +844,6 @@
     }
   },
   "tested_functions": 828,
-  "timestamp": "2026-09-10T07:46:19",
-  "total_functions": 854
+  "timestamp": "2026-09-10T10:41:56",
+  "total_functions": 862
 }

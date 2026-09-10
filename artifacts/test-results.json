@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 96.9555035128806,
+  "coverage_percent": 96.0556844547564,
   "coverage_tested_functions": 828,
-  "coverage_total_functions": 854,
-  "execution_seconds": 68.962,
+  "coverage_total_functions": 862,
+  "execution_seconds": 81.235,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -42,7 +42,7 @@
     },
     "Drift Storm Runtime Acceptance (P0 Gates)": {
       "failed": 0,
-      "passed": 100,
+      "passed": 353,
       "status": "PASS"
     },
     "Drift Storm State Machine & Pre-Race Hub": {
@@ -321,8 +321,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-10T07:46:19",
+  "timestamp": "2026-09-10T10:41:56",
   "total_failed": 0,
-  "total_passed": 2102,
+  "total_passed": 2355,
   "total_suites": 63
 }

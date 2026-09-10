@@ -15,6 +15,7 @@ const KartAIScript = preload("res://games/kart-racing/ai/kart_ai.gd")
 const KartRacingMainScript = preload("res://games/kart-racing/kart_racing_main.gd")
 const RaceManagerScript = preload("res://games/kart-racing/game/race_manager.gd")
 const TrackRegistryScript = preload("res://games/kart-racing/tracks/track_registry.gd")
+const DriftStormHUDScript = preload("res://games/kart-racing/ui/drift_storm_hud.gd")
 
 func run_tests() -> Dictionary:
 	test_authoritative_race_spline_integrity()
@@ -27,6 +28,9 @@ func run_tests() -> Dictionary:
 	test_five_vehicle_classes_and_stats()
 	test_seam_wrapping_and_continuous_progress()
 	test_track_registry_and_extended_spline_methods()
+	test_track_selection_dossier_and_previews()
+	test_vehicle_selection_turntable_and_customization()
+	test_ai_difficulty_tiers_and_racing_dynamics()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -376,5 +380,137 @@ func test_track_registry_and_extended_spline_methods() -> void:
 	assert_true(prog > spline.track_length, "Kart on Lap 2 must have continuous progress > 1 track length")
 	kart.queue_free()
 	rm.queue_free()
+
+## T11: Track Selection Browser 14-Parameter Dossier & 3D Preview Diorama
+func test_track_selection_dossier_and_previews() -> void:
+	var expected_circuits = ["speedway", "sunset_coast", "canyon", "skyline", "alpine_rush", "storm_harbor"]
+	var required_keys = [
+		"name", "location", "length", "laps", "corners", "elevation",
+		"surface", "diff", "weather", "time", "record", "reward",
+		"rec_vehicle", "grip"
+	]
+
+	# Verify 14-parameter complete dossier for all 6 circuits
+	assert_true(DriftStormHUDScript.TRACK_METADATA.size() >= 6, "TRACK_METADATA must contain at least 6 circuits")
+	for c_id in expected_circuits:
+		assert_true(DriftStormHUDScript.TRACK_METADATA.has(c_id), "TRACK_METADATA must contain circuit '%s'" % c_id)
+		var meta: Dictionary = DriftStormHUDScript.TRACK_METADATA.get(c_id, {})
+		for req_k in required_keys:
+			assert_true(meta.has(req_k), "Circuit '%s' dossier missing parameter '%s'" % [c_id, req_k])
+			var val_str = str(meta.get(req_k, "")).strip_edges()
+			assert_true(val_str.length() > 0, "Circuit '%s' parameter '%s' must not be empty" % [c_id, req_k])
+
+	# Instantiate HUD and verify 3D preview diorama generation
+	var hud = DriftStormHUDScript.new()
+	hud._setup_ui()
+	assert_true(hud.track_3d_viewport != null, "HUD must instantiate track_3d_viewport SubViewport")
+	assert_true(hud.track_3d_camera != null, "HUD must instantiate track_3d_camera Camera3D")
+	assert_true(hud.track_3d_root != null, "HUD must instantiate track_3d_root Node3D")
+
+	# Select each circuit card and ensure preview track & scenery rebuild without errors
+	for c_id in expected_circuits:
+		hud._on_track_card_selected(c_id)
+		assert_eq(hud.selected_track_id, c_id, "HUD selected_track_id must update to '%s'" % c_id)
+		assert_true(hud.track_3d_root.get_child_count() > 0, "3D preview diorama for '%s' must populate child meshes" % c_id)
+
+	hud.queue_free()
+
+## T12: Vehicle Selection Showroom Turntable, 8 Performance Specs & 8 Paint Swatches
+func test_vehicle_selection_turntable_and_customization() -> void:
+	var expected_vehicles = ["speeder", "phantom", "enforcer", "turbo_demon", "formula"]
+	var required_metrics = ["speed", "accel", "braking", "handling", "drift", "boost", "weight", "drivetrain"]
+
+	# Verify complete 8 performance metrics and driver dossier for all 5 vehicles
+	assert_eq(DriftStormHUDScript.VEHICLE_STATS.size(), 5, "VEHICLE_STATS must contain exactly 5 vehicle classes")
+	for v_id in expected_vehicles:
+		assert_true(DriftStormHUDScript.VEHICLE_STATS.has(v_id), "VEHICLE_STATS must contain vehicle '%s'" % v_id)
+		var stats: Dictionary = DriftStormHUDScript.VEHICLE_STATS.get(v_id, {})
+		for m in required_metrics:
+			assert_true(stats.has(m), "Vehicle '%s' stats missing metric '%s'" % [v_id, m])
+		assert_true(stats.has("driver"), "Vehicle '%s' must specify driver spec" % v_id)
+
+	# Verify 8 competition paint swatches
+	assert_eq(DriftStormHUDScript.PAINT_SWATCHES.size(), 8, "PAINT_SWATCHES must contain exactly 8 competition paint options")
+	for swatch in DriftStormHUDScript.PAINT_SWATCHES:
+		assert_true(swatch.has("name") and swatch.has("color"), "Each paint swatch must have 'name' and 'color'")
+		assert_true(swatch["color"] is Color, "Swatch color must be a valid Color object")
+
+	# Verify 3D turntable interactive setup and vehicle swapping
+	var hud = DriftStormHUDScript.new()
+	hud._setup_ui()
+	assert_true(hud.vehicle_3d_viewport != null, "HUD must instantiate vehicle_3d_viewport SubViewport")
+	assert_true(hud.vehicle_3d_turntable != null, "HUD must instantiate vehicle_3d_turntable Node3D")
+
+	for v_id in expected_vehicles:
+		hud._on_vehicle_card_selected(v_id)
+		assert_eq(hud.selected_vehicle_id, v_id, "Selected vehicle id must update to '%s'" % v_id)
+		assert_true(hud.vehicle_3d_model != null, "3D showroom model for '%s' must be instantiated" % v_id)
+
+	# Test paint swatch application
+	var swatch_col = DriftStormHUDScript.PAINT_SWATCHES[1]["color"]
+	hud._on_paint_swatch_selected(swatch_col)
+	assert_eq(hud.selected_paint_color, swatch_col, "HUD selected_paint_color must match selected swatch")
+
+	hud.queue_free()
+
+	# Test KartController runtime paint and wheel mechanics
+	var kart = KartControllerScript.new()
+	kart.kart_type = "formula"
+	kart._ready()
+	kart.set_kart_color(swatch_col)
+	assert_eq(kart.custom_color, swatch_col, "KartController custom_color must update on set_kart_color()")
+
+	# Verify RollHub rolling and front steering
+	assert_eq(kart.all_wheels.size(), 4, "Kart must have 4 wheels")
+	for w in kart.all_wheels:
+		var hub = w.find_child("RollHub", true, false)
+		assert_true(hub != null, "Each wheel must have a 3D RollHub for rolling rotation")
+
+	# Simulate rolling motion
+	kart.forward_speed = 25.0
+	kart.steer_input = 0.5
+	kart._physics_process(0.016)
+
+	var front_w = kart.front_wheels[0]
+	assert_true(absf(front_w.rotation.y) > 0.0, "Front wheel must steer with non-zero yaw")
+	var front_hub = front_w.find_child("RollHub", true, false)
+	assert_true(absf(front_hub.rotation.x) > 0.0, "Front wheel RollHub must rotate forward (omega = v/r)")
+
+	kart.queue_free()
+
+## T13: AI Difficulty Tiers, Curvature Dynamics & Cool-Down Traversal
+func test_ai_difficulty_tiers_and_racing_dynamics() -> void:
+	# Verify enum and difficulty setting
+	var ai = KartAIScript.new()
+	assert_true(KartAIScript.Difficulty.EASY == 0, "Difficulty.EASY must exist")
+	assert_true(KartAIScript.Difficulty.NORMAL == 1, "Difficulty.NORMAL must exist")
+	assert_true(KartAIScript.Difficulty.HARD == 2, "Difficulty.HARD must exist")
+	assert_true(KartAIScript.Difficulty.EXPERT == 3, "Difficulty.EXPERT must exist")
+
+	ai.set_difficulty("easy")
+	assert_eq(ai.difficulty, KartAIScript.Difficulty.EASY, "set_difficulty('easy') must set EASY")
+	ai.set_difficulty("hard")
+	assert_eq(ai.difficulty, KartAIScript.Difficulty.HARD, "set_difficulty('hard') must set HARD")
+	ai.set_difficulty("expert")
+	assert_eq(ai.difficulty, KartAIScript.Difficulty.EXPERT, "set_difficulty('expert') must set EXPERT")
+	ai.set_difficulty("normal")
+	assert_eq(ai.difficulty, KartAIScript.Difficulty.NORMAL, "set_difficulty('normal') must set NORMAL")
+
+	# Test Cool-Down Finish Line Traversal
+	var kart = KartControllerScript.new()
+	kart.kart_type = "speeder"
+	kart._ready()
+	ai.kart = kart
+	kart.race_finished = true
+	kart.forward_speed = 10.0
+
+	# Process physics: AI must apply braking without reversing or false spin-outs
+	ai._physics_process(0.016)
+	assert_true(kart.forward_speed >= 0.0, "Kart in cool-down must not accelerate in reverse")
+	assert_true(not kart.is_wrong_way, "AI cool-down traversal must never trigger wrong-way state")
+
+	kart.queue_free()
+	ai.queue_free()
+
 
 

@@ -215,6 +215,19 @@ func start_race() -> void:
 	select_track(selected_track)
 	select_kart(selected_kart)
 
+	# Apply selected vehicle color to player kart
+	if hud and "selected_paint_color" in hud and player_kart and player_kart.has_method("set_kart_color"):
+		player_kart.set_kart_color(hud.selected_paint_color)
+
+	# Apply difficulty to AI competitors
+	var diff_str = "Normal"
+	if hud and "selected_difficulty" in hud:
+		diff_str = hud.selected_difficulty
+	for ai in ai_karts:
+		var brain = ai.get_node_or_null("KartAI")
+		if brain and brain.has_method("set_difficulty"):
+			brain.set_difficulty(diff_str)
+
 	# 2. Transition through Countdown
 	current_state = State.COUNTDOWN
 	is_race_started = true

@@ -157,27 +157,43 @@ func build_circuit() -> void:
 func _build_environment_scenery(def: TrackRegistryScript.TrackDefinition) -> void:
 	match def.theme:
 		"coast":
-			# Ocean plane at y = -2.8
-			create_box(Vector3(120.0, -2.8, -100.0), Vector3(800.0, 1.0, 600.0), "ocean_water")
-			# Sand beach foundation at y = -2.0 (top is -1.5)
-			create_box(Vector3(110.0, -2.0, -30.0), Vector3(650.0, 1.0, 650.0), "sand_beach")
-			# Palm trees along the coastal stretch
+			# Expansive ocean waters extending to the horizon
+			create_box(Vector3(60.0, -3.2, -120.0), Vector3(2500.0, 1.0, 2500.0), "ocean_water")
+			# Coastal sand beach foundation
+			create_box(Vector3(70.0, -2.0, -100.0), Vector3(850.0, 1.0, 850.0), "sand_beach")
+
+			# Dense clusters of coastal palm trees along the seaside sweepers
 			var palm_positions = [
-				Vector3(-15, 0, -20), Vector3(-15, 0, -60), Vector3(15, 0.5, -95),
-				Vector3(50, 2.0, -150), Vector3(120, 4.0, -195), Vector3(190, 4.0, -185),
-				Vector3(260, 1.5, -90), Vector3(255, 0.5, -10), Vector3(220, 0, 75),
-				Vector3(130, 0, 105), Vector3(30, 0, 65)
+				Vector3(-20, 0, -30), Vector3(-25, 0, -70), Vector3(-50, 1.5, -120),
+				Vector3(-85, 3.5, -170), Vector3(-90, 5.0, -230), Vector3(-75, 6.5, -290),
+				Vector3(20, 7.5, -345), Vector3(85, 7.0, -320), Vector3(140, 5.5, -270),
+				Vector3(190, 3.5, -200), Vector3(225, 2.0, -130), Vector3(255, 1.0, -50),
+				Vector3(245, 0.5, 30), Vector3(200, 0.0, 95), Vector3(135, 0.0, 135),
+				Vector3(65, 0.0, 115), Vector3(20, 0.0, 65)
 			]
 			for p in palm_positions:
-				var tree = MeshBuilder.build_palm_tree(8.0)
+				var tree = MeshBuilder.build_palm_tree(randf_range(8.0, 12.0))
 				tree.position = p
 				add_child(tree)
-			# Coastal resort buildings in the background
+
+			# Coastal Suspension Bridge Tower over sea inlet
+			var bridge_tower = MeshBuilder.build_suspension_bridge_tower(36.0)
+			bridge_tower.position = Vector3(40, 0.0, -320)
+			add_child(bridge_tower)
+
+			# Marshal Posts at strategic corners
+			for mp_pos in [Vector3(-45, 1.8, -130), Vector3(125, 6.0, -280), Vector3(225, 0.0, 10)]:
+				var mp = MeshBuilder.build_marshal_post()
+				mp.position = mp_pos
+				add_child(mp)
+
+			# Coastal resort hotel skyline in the golden sunset horizon
 			var resort_coords = [
-				[Vector3(-45, 0, -85), "c", Vector3(5, 6, 5)],
-				[Vector3(75, 0, -215), "a", Vector3(6, 8, 6)],
-				[Vector3(170, 0, -215), "b", Vector3(6, 9, 6)],
-				[Vector3(265, 0, -60), "d", Vector3(6, 10, 6)]
+				[Vector3(-120, 0, -160), "c", Vector3(7, 10, 7)],
+				[Vector3(95, 0, -380), "a", Vector3(8, 14, 8)],
+				[Vector3(190, 0, -340), "b", Vector3(8, 12, 8)],
+				[Vector3(290, 0, -110), "d", Vector3(8, 15, 8)],
+				[Vector3(270, 0, 80), "a", Vector3(7, 11, 7)]
 			]
 			for np in resort_coords:
 				var b = ModelCacheScript.get_building(np[1])
@@ -187,93 +203,180 @@ func _build_environment_scenery(def: TrackRegistryScript.TrackDefinition) -> voi
 					add_child(b)
 
 		"canyon":
-			# Red rock canyon terrain at y = -2.0 (top is -1.5)
-			create_box(Vector3(110.0, -2.0, -25.0), Vector3(650.0, 1.0, 650.0), "canyon_rock")
-			# Mesas
+			# Vast redrock canyon terrain foundation
+			create_box(Vector3(60.0, -2.5, -120.0), Vector3(2500.0, 1.0, 2500.0), "canyon_rock")
+
+			# Towering Sandstone Mesas and Canyon Walls framing the track
 			var mesa_coords = [
-				Vector3(-55, 18, -80), Vector3(85, 26, -200), Vector3(275, 24, -40),
-				Vector3(85, 22, 145), Vector3(-45, 16, 60), Vector3(185, 16, 25),
-				Vector3(140, 30, -85), Vector3(25, 15, -165)
+				Vector3(-85, 22, -90), Vector3(65, 28, -125), Vector3(-95, 34, -220),
+				Vector3(45, 38, -320), Vector3(135, 32, -240), Vector3(155, 24, -120),
+				Vector3(205, 18, -20), Vector3(160, 14, 110), Vector3(-45, 16, 60)
 			]
 			for p in mesa_coords:
-				create_box(p, Vector3(56.0, 42.0, 56.0), "canyon_rock")
-			# Overhead Canyon Rock Arch spanning the canyon track
-			var arch1 = MeshBuilder.build_rock_arch(22.0, 15.0)
-			arch1.position = Vector3(125, 7.0, -170)
-			arch1.rotation_degrees.y = 90.0
+				create_box(p, Vector3(68.0, 48.0, 68.0), "canyon_rock")
+
+			# 2 Overhead Canyon Natural Rock Arches spanning the track
+			var arch1 = MeshBuilder.build_rock_arch(24.0, 16.0)
+			arch1.position = Vector3(15, 26.0, -295)
+			arch1.rotation_degrees.y = 75.0
 			add_child(arch1)
 
+			var arch2 = MeshBuilder.build_rock_arch(22.0, 14.0)
+			arch2.position = Vector3(145, 3.5, 60)
+			arch2.rotation_degrees.y = 45.0
+			add_child(arch2)
+
+			# Distant Mountain Peaks on the desert horizon
+			for pk_pos in [Vector3(-260, 0, -320), Vector3(280, 0, -350), Vector3(0, 0, -420), Vector3(320, 0, 120)]:
+				var peak = MeshBuilder.build_mountain_peak(140.0, 85.0)
+				peak.position = pk_pos
+				add_child(peak)
+
+			# Marshal Posts at technical switchbacks
+			for mp_pos in [Vector3(50, 4.0, -90), Vector3(-40, 24.0, -280), Vector3(115, 14.0, -140)]:
+				var mp = MeshBuilder.build_marshal_post()
+				mp.position = mp_pos
+				add_child(mp)
+
 		"skyline":
-			# Dark metropolis high-deck foundation at y = -2.0
-			create_box(Vector3(115.0, -2.0, -55.0), Vector3(650.0, 1.0, 650.0), "dark_hull")
-			# Neon skyscrapers towering over the cityscape
+			# Dark metropolis urban foundation
+			create_box(Vector3(60.0, -2.5, -120.0), Vector3(2500.0, 1.0, 2500.0), "dark_hull")
+
+			# Ring of 14 Illuminated Neon Skyscrapers towering over the urban raceway
 			var sky_towers = [
-				[Vector3(-55, 0, -80), 65.0, "neon_cyan"],
-				[Vector3(80, 0, -235), 75.0, "neon_magenta"],
-				[Vector3(185, 0, -235), 70.0, "neon_blue"],
-				[Vector3(285, 0, -60), 80.0, "neon_orange"],
-				[Vector3(160, 0, 115), 60.0, "neon_cyan"],
-				[Vector3(-45, 0, 75), 50.0, "neon_green"],
-				[Vector3(90, 0, -40), 90.0, "neon_cyan"]
+				[Vector3(-45, 0, -70), 75.0, "neon_cyan"],
+				[Vector3(-85, 0, -170), 95.0, "neon_magenta"],
+				[Vector3(30, 0, -190), 85.0, "neon_blue"],
+				[Vector3(95, 0, -200), 105.0, "neon_orange"],
+				[Vector3(190, 0, -220), 80.0, "neon_cyan"],
+				[Vector3(195, 0, -330), 110.0, "neon_magenta"],
+				[Vector3(125, 0, -370), 90.0, "neon_blue"],
+				[Vector3(25, 0, -370), 115.0, "neon_cyan"],
+				[Vector3(-70, 0, -340), 85.0, "neon_orange"],
+				[Vector3(-105, 0, -240), 100.0, "neon_green"],
+				[Vector3(-105, 0, -80), 90.0, "neon_cyan"],
+				[Vector3(-85, 0, 50), 75.0, "neon_magenta"],
+				[Vector3(65, 0, 65), 85.0, "neon_cyan"],
+				[Vector3(150, 0, -60), 95.0, "neon_blue"]
 			]
 			for st in sky_towers:
-				var tower = MeshBuilder.build_neon_skyscraper(st[1], 20.0, 20.0, st[2])
+				var tower = MeshBuilder.build_neon_skyscraper(st[1], 24.0, 24.0, st[2])
 				tower.position = st[0]
 				add_child(tower)
 
+			# Elevated Freeway Flyover Concrete Pillars underneath track section
+			for pillar_z in [-200.0, -240.0, -280.0]:
+				create_box(Vector3(150.0, 3.5, pillar_z), Vector3(4.0, 7.0, 4.0), "grimy_concrete")
+
+			# Marshal Posts at 90-degree street corners
+			for mp_pos in [Vector3(25, 0, -135), Vector3(135, 0, -165), Vector3(-45, 0, -245)]:
+				var mp = MeshBuilder.build_marshal_post()
+				mp.position = mp_pos
+				add_child(mp)
+
 		"alpine":
-			# Alpine rocky terrain at y = -2.0
-			create_box(Vector3(110.0, -2.0, -30.0), Vector3(650.0, 1.0, 650.0), "alpine_rock")
-			# Dense pine trees across slopes
-			var pine_positions = [
-				Vector3(-25, 0, -20), Vector3(-28, 1.0, -60), Vector3(-25, 2.0, -110),
-				Vector3(0, 5.0, -150), Vector3(50, 8.0, -195), Vector3(120, 10.0, -190),
-				Vector3(175, 8.5, -155), Vector3(230, 6.0, -100), Vector3(225, 3.5, -30),
-				Vector3(180, 1.5, 45), Vector3(135, 0.5, 95), Vector3(65, 0.0, 105),
-				Vector3(5, 0.0, 65)
-			]
-			for pp in pine_positions:
-				var tree = MeshBuilder.build_pine_tree(randf_range(8.0, 12.0))
-				tree.position = pp
-				add_child(tree)
-			# Mountain rocky peaks
+			# Alpine rocky mountain foundation
+			create_box(Vector3(60.0, -2.5, -120.0), Vector3(2500.0, 1.0, 2500.0), "alpine_rock")
+
+			# Ring of 8 Majestic Snow-Capped Mountain Peaks
 			var peak_coords = [
-				Vector3(-65, 25, -95), Vector3(70, 35, -220), Vector3(240, 30, -160),
-				Vector3(195, 20, 105), Vector3(-50, 18, 55)
+				Vector3(-180, 0, -120), Vector3(-160, 0, -280), Vector3(-60, 0, -380),
+				Vector3(80, 0, -390), Vector3(220, 0, -340), Vector3(250, 0, -180),
+				Vector3(240, 0, 40), Vector3(-120, 0, 80)
 			]
 			for pk in peak_coords:
-				create_box(pk, Vector3(50.0, 45.0, 50.0), "snow_ice")
+				var mtn = MeshBuilder.build_mountain_peak(150.0, 95.0)
+				mtn.position = pk
+				add_child(mtn)
+
+			# Dense clusters of evergreen pine trees lining the hairpins
+			var pine_positions = [
+				Vector3(-25, 0, -35), Vector3(-55, 3.0, -85), Vector3(-85, 8.0, -135),
+				Vector3(-60, 13.0, -180), Vector3(-95, 19.0, -225), Vector3(-70, 25.0, -270),
+				Vector3(-15, 30.0, -295), Vector3(50, 32.0, -285), Vector3(110, 28.0, -245),
+				Vector3(150, 20.0, -185), Vector3(165, 13.0, -115), Vector3(145, 6.0, -45),
+				Vector3(160, 3.0, 10), Vector3(130, 1.0, 60), Vector3(70, 0.0, 80),
+				Vector3(20, 0.0, 50)
+			]
+			for pp in pine_positions:
+				var tree = MeshBuilder.build_pine_tree(randf_range(9.0, 15.0))
+				tree.position = pp
+				add_child(tree)
+
+			# Swiss-style Alpine Wooden Chalets in the valley
+			for ch_pos in [Vector3(-25, 0, 45), Vector3(95, 0, 45), Vector3(185, 0, -10)]:
+				var chalet = MeshBuilder.build_alpine_chalet()
+				chalet.position = ch_pos
+				add_child(chalet)
+
+			# Marshal Posts
+			for mp_pos in [Vector3(-30, 3.5, -90), Vector3(5, 31.0, -295), Vector3(150, 12.0, -115)]:
+				var mp = MeshBuilder.build_marshal_post()
+				mp.position = mp_pos
+				add_child(mp)
 
 		"harbor":
-			# Harbor dock pavement at y = -2.0
-			create_box(Vector3(110.0, -2.0, -40.0), Vector3(650.0, 1.0, 650.0), "wet_asphalt")
-			# Ocean dock waters surrounding the harbor
-			create_box(Vector3(110.0, -2.8, -220.0), Vector3(800.0, 1.0, 250.0), "ocean_water")
-			# Harbor Gantry Cranes
-			for cx in [25.0, 125.0, 215.0]:
-				var crane = MeshBuilder.build_harbor_crane(32.0)
-				crane.position = Vector3(cx, 0.0, -195.0)
-				crane.rotation_degrees.y = 180.0
+			# Harbor industrial dock pavement
+			create_box(Vector3(60.0, -2.5, -120.0), Vector3(2500.0, 1.0, 2500.0), "wet_asphalt")
+			# Deep ocean shipping channel alongside wharf
+			create_box(Vector3(-120.0, -3.2, -120.0), Vector3(350.0, 1.0, 1200.0), "ocean_water")
+
+			# 4 Massive Container Gantry Cranes along wharf edge
+			for cz in [-20.0, -80.0, -140.0, -200.0]:
+				var crane = MeshBuilder.build_harbor_crane(34.0)
+				crane.position = Vector3(-18.0, 0.0, cz)
+				crane.rotation_degrees.y = 90.0
 				add_child(crane)
-			# Stacks of colorful shipping containers in freight yards
-			var cont_coords = [
-				[Vector3(-25, 0, -35), "container_red"], [Vector3(-25, 2.6, -35), "container_blue"],
-				[Vector3(-25, 0, -45), "container_yellow"], [Vector3(-25, 2.6, -45), "container_red"],
-				[Vector3(245, 0, -75), "container_blue"], [Vector3(245, 2.6, -75), "container_yellow"],
-				[Vector3(245, 0, -85), "container_red"], [Vector3(245, 0, -95), "container_blue"],
-				[Vector3(145, 0, 75), "container_yellow"], [Vector3(145, 2.6, 75), "container_red"],
-				[Vector3(75, 0, 85), "container_blue"], [Vector3(75, 2.6, 85), "container_yellow"]
+
+			# Large Container Cargo Ship docked at the wharf
+			var ship = MeshBuilder.build_cargo_ship(85.0)
+			ship.position = Vector3(-42.0, -1.8, -100.0)
+			ship.rotation_degrees.y = 0.0
+			add_child(ship)
+
+			# Stacks of colorful shipping containers creating industrial freight corridors
+			var cont_stacks = [
+				[Vector3(20, 0, -170), "container_red"], [Vector3(20, 2.6, -170), "container_blue"],
+				[Vector3(50, 0, -170), "container_yellow"], [Vector3(50, 2.6, -170), "container_red"],
+				[Vector3(80, 0, -170), "container_blue"], [Vector3(80, 2.6, -170), "container_yellow"],
+				[Vector3(120, 0, -205), "container_red"], [Vector3(120, 2.6, -205), "container_blue"],
+				[Vector3(175, 0, -205), "container_yellow"], [Vector3(175, 2.6, -205), "container_red"],
+				[Vector3(215, 0, -165), "container_blue"], [Vector3(215, 2.6, -165), "container_yellow"],
+				[Vector3(215, 0, -135), "container_red"], [Vector3(215, 2.6, -135), "container_blue"],
+				[Vector3(175, 0, -50), "container_yellow"], [Vector3(175, 2.6, -50), "container_red"],
+				[Vector3(175, 0, 20), "container_blue"], [Vector3(175, 2.6, 20), "container_yellow"],
+				[Vector3(125, 0, 105), "container_red"], [Vector3(125, 2.6, 105), "container_blue"],
+				[Vector3(65, 0, 80), "container_yellow"], [Vector3(65, 2.6, 80), "container_red"]
 			]
-			for cc in cont_coords:
-				var cont = MeshBuilder.build_shipping_container(cc[1])
-				cont.position = cc[0]
+			for cs in cont_stacks:
+				var cont = MeshBuilder.build_shipping_container(cs[1], Vector3(2.8, 2.6, 6.5))
+				cont.position = cs[0]
 				add_child(cont)
 
+			# Dock Warehouses
+			var warehouses = [
+				Vector3(260, 0, -60), Vector3(260, 0, 40), Vector3(80, 0, 160)
+			]
+			for wh in warehouses:
+				create_box(wh, Vector3(32.0, 12.0, 55.0), "grimy_concrete")
+
+			# Marshal Posts
+			for mp_pos in [Vector3(22, 0, -175), Vector3(210, 0, -170), Vector3(185, 0, 75)]:
+				var mp = MeshBuilder.build_marshal_post()
+				mp.position = mp_pos
+				add_child(mp)
+
 		_: # "speedway" / "metropolis"
-			# Stadium asphalt paddock foundation at y = -2.0 (top is -1.5)
-			create_box(Vector3(110.0, -2.0, -50.0), Vector3(700.0, 1.0, 700.0), "asphalt_track")
-			# Grandstands with crowds along the home straight (anchored strictly to RaceSpline with guaranteed clearance)
-			var stand_dists = [15.0, 45.0]
+			# Expansive stadium grounds foundation
+			create_box(Vector3(60.0, -2.5, -120.0), Vector3(2500.0, 1.0, 2500.0), "asphalt_track")
+
+			# Modern 2-Story Pit Complex with Garages and Control Tower along Home Straight
+			var pit_building = MeshBuilder.build_pit_building(8)
+			pit_building.position = Vector3(-18.0, 0.0, -60.0)
+			add_child(pit_building)
+
+			# Multi-Tier Grandstands with Roof Canopies and Spectators
+			var stand_dists = [15.0, 55.0, 140.0, 220.0]
 			for s_d in stand_dists:
 				if race_spline:
 					var s_pt = race_spline.sample_at_distance(s_d)
@@ -281,8 +384,8 @@ func _build_environment_scenery(def: TrackRegistryScript.TrackDefinition) -> voi
 					var t_bin = s_pt["binormal"]
 					var t_up = s_pt["normal"]
 
-					var stand_l = MeshBuilder.build_grandstand_with_crowd(24.0, 7.0, 9.0)
-					var pos_l = s_pt["pos"] - t_bin * (def.track_width * 0.5 + 14.0)
+					var stand_l = MeshBuilder.build_grandstand_with_crowd(28.0, 8.5, 10.0)
+					var pos_l = s_pt["pos"] - t_bin * (def.track_width * 0.5 + 16.0)
 					var tr_l = Transform3D()
 					tr_l.basis.x = t_fwd
 					tr_l.basis.y = t_up
@@ -290,8 +393,8 @@ func _build_environment_scenery(def: TrackRegistryScript.TrackDefinition) -> voi
 					stand_l.transform = Transform3D(tr_l.basis.orthonormalized(), pos_l)
 					add_child(stand_l)
 
-					var stand_r = MeshBuilder.build_grandstand_with_crowd(24.0, 7.0, 9.0)
-					var pos_r = s_pt["pos"] + t_bin * (def.track_width * 0.5 + 14.0)
+					var stand_r = MeshBuilder.build_grandstand_with_crowd(28.0, 8.5, 10.0)
+					var pos_r = s_pt["pos"] + t_bin * (def.track_width * 0.5 + 16.0)
 					var tr_r = Transform3D()
 					tr_r.basis.x = -t_fwd
 					tr_r.basis.y = t_up
@@ -299,25 +402,33 @@ func _build_environment_scenery(def: TrackRegistryScript.TrackDefinition) -> voi
 					stand_r.transform = Transform3D(tr_r.basis.orthonormalized(), pos_r)
 					add_child(stand_r)
 
-			# Stadium Floodlight Towers (strictly placed outside trackside safety envelope)
+			# Stadium Floodlight Towers
 			if race_spline:
-				for fl_d in [25.0, 55.0]:
+				for fl_d in [30.0, 80.0, 160.0, 240.0]:
 					var s_fl = race_spline.sample_at_distance(fl_d)
 					for side_sign in [-1.0, 1.0]:
 						var fl = ModelCacheScript.get_prop("floodlight_tower")
 						if fl:
-							fl.position = s_fl["pos"] + side_sign * s_fl["binormal"] * (def.track_width * 0.5 + 16.0)
+							fl.position = s_fl["pos"] + side_sign * s_fl["binormal"] * (def.track_width * 0.5 + 18.0)
 							fl.position.y = s_fl["pos"].y
 							fl.scale = Vector3(3.0, 3.0, 3.0)
 							add_child(fl)
 
+			# Marshal Posts at technical infield corners
+			for mp_d in [40.0, 110.0, 180.0]:
+				if race_spline:
+					var s_mp = race_spline.sample_at_distance(mp_d)
+					var mp = MeshBuilder.build_marshal_post()
+					mp.position = s_mp["pos"] + s_mp["binormal"] * (def.track_width * 0.5 + 4.5)
+					add_child(mp)
+
 			# Paddock buildings in background
 			var stadium_buildings = [
-				[Vector3(-45, 0, -85), "c", Vector3(5, 6, 5)],
-				[Vector3(75, 0, -205), "a", Vector3(6, 10, 6)],
-				[Vector3(170, 0, -205), "b", Vector3(6, 11, 6)],
-				[Vector3(250, 0, -60), "c", Vector3(6, 12, 6)],
-				[Vector3(155, 0, 95), "d", Vector3(6, 10, 6)]
+				[Vector3(-75, 0, -120), "c", Vector3(6, 8, 6)],
+				[Vector3(95, 0, -250), "a", Vector3(8, 12, 8)],
+				[Vector3(180, 0, -240), "b", Vector3(8, 14, 8)],
+				[Vector3(260, 0, -70), "c", Vector3(8, 14, 8)],
+				[Vector3(160, 0, 120), "d", Vector3(8, 12, 8)]
 			]
 			for np in stadium_buildings:
 				var b = ModelCacheScript.get_building(np[1])
@@ -746,34 +857,39 @@ func setup_racing_environment(def: TrackRegistryScript.TrackDefinition = null) -
 		"coast":
 			sun.rotation_degrees = Vector3(-35, 70, 0)
 			sun.light_color = Color(1.0, 0.88, 0.72)
-			sun.light_energy = 2.5
+			sun.light_energy = 1.6
 		"canyon":
 			sun.rotation_degrees = Vector3(-45, 55, 0)
 			sun.light_color = Color(1.0, 0.92, 0.80)
-			sun.light_energy = 2.4
+			sun.light_energy = 1.65
 		"skyline":
 			sun.rotation_degrees = Vector3(-50, 40, 0)
 			sun.light_color = Color(1.0, 0.85, 0.82)
-			sun.light_energy = 2.0
+			sun.light_energy = 1.3
 		"alpine":
 			sun.rotation_degrees = Vector3(-55, 30, 0)
 			sun.light_color = Color(0.96, 0.98, 1.0)
-			sun.light_energy = 2.5
+			sun.light_energy = 1.6
 		"harbor":
 			sun.rotation_degrees = Vector3(-40, 60, 0)
 			sun.light_color = Color(0.85, 0.90, 0.98)
-			sun.light_energy = 1.8
+			sun.light_energy = 1.25
 		_: # "metropolis" / "speedway"
 			sun.rotation_degrees = Vector3(-60, 30, 0)
 			sun.light_color = Color(0.90, 0.95, 1.0)
-			sun.light_energy = 2.2
+			sun.light_energy = 1.5
 	sun.shadow_enabled = true
+	sun.shadow_bias = 0.04
+	sun.directional_shadow_max_distance = 250.0
+	sun.directional_shadow_split_1 = 0.1
+	sun.directional_shadow_split_2 = 0.3
+	sun.directional_shadow_blend_splits = true
 	add_child(sun)
 
 	var fill = DirectionalLight3D.new()
 	fill.rotation_degrees = Vector3(40, -140, 0)
 	fill.light_color = Color(0.35, 0.50, 0.80)
-	fill.light_energy = 0.7
+	fill.light_energy = 0.45
 	fill.shadow_enabled = false
 	add_child(fill)
 

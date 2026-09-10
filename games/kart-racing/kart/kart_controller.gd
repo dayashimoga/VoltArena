@@ -147,9 +147,15 @@ func setup_kart_archetype() -> void:
 			steer_speed = 3.2
 			drift_steer_speed = 4.2
 
+var custom_color: Color = Color(0.0, 0.88, 1.0)
+
 func set_kart_type(new_type: String) -> void:
 	kart_type = new_type
 	setup_kart_archetype()
+	setup_kart_visual()
+
+func set_kart_color(col: Color) -> void:
+	custom_color = col
 	setup_kart_visual()
 
 func setup_kart_visual() -> void:
@@ -159,7 +165,7 @@ func setup_kart_visual() -> void:
 		rear_wheels.clear()
 		all_wheels.clear()
 
-	var kart_col = Color(0.0, 0.88, 1.0) # Player 1: Volt Cyan
+	var kart_col = custom_color if is_player else Color(0.0, 0.88, 1.0)
 	if not is_player:
 		match racer_id % 5:
 			1: kart_col = Color(1.0, 0.45, 0.05) # Blaze Orange (Apex Nova)
@@ -317,10 +323,19 @@ func _update_suspension_and_grounding(delta: float) -> void:
 	var avg_r = 0.155
 	wheel_roll_angle -= (forward_speed * delta / avg_r)
 
-	# Visual steering angle for front wheels
+	# Apply forward rolling rotation to RollHub on each wheel
+	for w in all_wheels:
+		if is_instance_valid(w):
+			var roll_hub = w.get_node_or_null("RollHub")
+			if roll_hub:
+				roll_hub.rotation.x = wheel_roll_angle
+			else:
+				w.rotation.x = wheel_roll_angle
+
+	# Visual steering angle for front wheels (yaw only, preserving roll)
 	for fw in front_wheels:
 		if is_instance_valid(fw):
-			fw.rotation_degrees.y = -current_steer_input * 28.0
+			fw.rotation.y = -current_steer_input * deg_to_rad(26.0)
 
 	# Track telemetry: nearest spline distance
 	var spline = _get_race_spline()

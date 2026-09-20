@@ -37,6 +37,10 @@ func on_mission_completed(m_idx: int, results: Dictionary) -> void:
 	if m_idx >= highest_unlocked_mission and m_idx < TOTAL_MISSIONS:
 		highest_unlocked_mission = m_idx + 1
 
+	var sm = GameConstants.get_autoload(self, "SaveManager")
+	if sm and sm.has_method("record_strike_vector_mission"):
+		sm.record_strike_vector_mission(m_idx, score, grade, true)
+
 	if m_idx == TOTAL_MISSIONS:
 		campaign_completed.emit(campaign_score, mission_grades)
 	else:

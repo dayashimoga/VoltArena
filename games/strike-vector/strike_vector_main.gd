@@ -260,6 +260,26 @@ func _connect_segment_events() -> void:
 					mission_mgr.complete_mission()
 			)
 
+		if seg.is_boss_segment:
+			# Physical extraction trigger area on the helipad
+			var ext_area = Area3D.new()
+			ext_area.name = "ExtractionZone"
+			ext_area.collision_layer = 0
+			ext_area.collision_mask = GameConstants.LAYER_PLAYER
+			ext_area.position = Vector3(0, 1.0, -32.0)
+			var ext_col = CollisionShape3D.new()
+			var ext_box = BoxShape3D.new()
+			ext_box.size = Vector3(10.0, 4.0, 10.0)
+			ext_col.shape = ext_box
+			ext_area.add_child(ext_col)
+			seg.add_child(ext_area)
+
+			ext_area.body_entered.connect(func(body):
+				if body == player_node or (body and body.is_in_group("players")):
+					if is_instance_valid(seg.encounter_director) and seg.encounter_director.is_completed:
+						mission_mgr.complete_mission()
+			)
+
 func advance_segment() -> void:
 	if not is_instance_valid(mission_streamer):
 		return

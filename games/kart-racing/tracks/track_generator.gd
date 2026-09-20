@@ -24,6 +24,8 @@ func _ready() -> void:
 	build_circuit()
 
 func build_circuit() -> void:
+	waypoints.clear()
+	checkpoints.clear()
 	var def = TrackRegistryScript.get_track(track_theme)
 	var circuit_nodes = def.nodes
 	track_width = def.track_width
@@ -46,6 +48,7 @@ func build_circuit() -> void:
 
 	# Checkered Start/Finish Line spanning the asphalt road
 	var fl_overlay = MeshInstance3D.new()
+	fl_overlay.name = "CheckeredFinishLineOverlay"
 	var fl_plane = QuadMesh.new()
 	fl_plane.size = Vector2(track_width, 2.8)
 	fl_plane.orientation = PlaneMesh.FACE_Y
@@ -83,6 +86,7 @@ func build_circuit() -> void:
 
 		# Front white limit bar
 		var bar_f = MeshInstance3D.new()
+		bar_f.name = "GridMarkingFront_%d" % grid_idx
 		var bar_f_mesh = QuadMesh.new()
 		bar_f_mesh.size = Vector2(2.2, 0.22)
 		bar_f_mesh.orientation = PlaneMesh.FACE_Y
@@ -93,6 +97,7 @@ func build_circuit() -> void:
 
 		# Left guideline
 		var bar_l = MeshInstance3D.new()
+		bar_l.name = "GridMarkingLeft_%d" % grid_idx
 		var bar_l_mesh = QuadMesh.new()
 		bar_l_mesh.size = Vector2(0.18, 1.8)
 		bar_l_mesh.orientation = PlaneMesh.FACE_Y
@@ -103,6 +108,7 @@ func build_circuit() -> void:
 
 		# Right guideline
 		var bar_r = MeshInstance3D.new()
+		bar_r.name = "GridMarkingRight_%d" % grid_idx
 		var bar_r_mesh = QuadMesh.new()
 		bar_r_mesh.size = Vector2(0.18, 1.8)
 		bar_r_mesh.orientation = PlaneMesh.FACE_Y
@@ -162,30 +168,29 @@ func _build_environment_scenery(def: TrackRegistryScript.TrackDefinition) -> voi
 			# Coastal sand beach foundation
 			create_box(Vector3(70.0, -2.0, -100.0), Vector3(850.0, 1.0, 850.0), "sand_beach")
 
-			# Dense clusters of coastal palm trees along the seaside sweepers
-			var palm_positions = [
-				Vector3(-20, 0, -30), Vector3(-25, 0, -70), Vector3(-50, 1.5, -120),
-				Vector3(-85, 3.5, -170), Vector3(-90, 5.0, -230), Vector3(-75, 6.5, -290),
-				Vector3(20, 7.5, -345), Vector3(85, 7.0, -320), Vector3(140, 5.5, -270),
-				Vector3(190, 3.5, -200), Vector3(225, 2.0, -130), Vector3(255, 1.0, -50),
-				Vector3(245, 0.5, 30), Vector3(200, 0.0, 95), Vector3(135, 0.0, 135),
-				Vector3(65, 0.0, 115), Vector3(20, 0.0, 65)
-			]
-			for p in palm_positions:
-				var tree = MeshBuilder.build_palm_tree(randf_range(8.0, 12.0))
-				tree.position = p
-				add_child(tree)
+			# Dense clusters of coastal palm trees along the seaside sweepers (anchored to spline)
+			if race_spline:
+				var palm_count = 18
+				var palm_step = race_spline.track_length / float(palm_count)
+				for i in range(palm_count):
+					var s_p = race_spline.sample_at_distance(float(i) * palm_step + 12.0)
+					var side = 1.0 if i % 2 == 0 else -1.0
+					var p_tree = MeshBuilder.build_palm_tree(randf_range(8.0, 12.0))
+					p_tree.position = s_p["pos"] + side * s_p["binormal"] * (def.track_width * 0.5 + 7.5 + (i % 3) * 2.5)
+					add_child(p_tree)
 
-			# Coastal Suspension Bridge Tower over sea inlet
-			var bridge_tower = MeshBuilder.build_suspension_bridge_tower(36.0)
-			bridge_tower.position = Vector3(40, 0.0, -320)
-			add_child(bridge_tower)
+				# Coastal Suspension Bridge Tower over sea inlet
+				var s_br = race_spline.sample_at_distance(race_spline.track_length * 0.4)
+				var bridge_tower = MeshBuilder.build_suspension_bridge_tower(36.0)
+				bridge_tower.position = s_br["pos"] + s_br["binormal"] * (def.track_width * 0.5 + 16.0)
+				add_child(bridge_tower)
 
-			# Marshal Posts at strategic corners
-			for mp_pos in [Vector3(-45, 1.8, -130), Vector3(125, 6.0, -280), Vector3(225, 0.0, 10)]:
-				var mp = MeshBuilder.build_marshal_post()
-				mp.position = mp_pos
-				add_child(mp)
+				# Marshal Posts at strategic corners
+				for mp_d in [60.0, 180.0, 320.0]:
+					var s_mp = race_spline.sample_at_distance(mp_d)
+					var mp = MeshBuilder.build_marshal_post()
+					mp.position = s_mp["pos"] + s_mp["binormal"] * (def.track_width * 0.5 + 5.5)
+					add_child(mp)
 
 			# Coastal resort hotel skyline in the golden sunset horizon
 			var resort_coords = [
@@ -206,25 +211,33 @@ func _build_environment_scenery(def: TrackRegistryScript.TrackDefinition) -> voi
 			# Vast redrock canyon terrain foundation
 			create_box(Vector3(60.0, -2.5, -120.0), Vector3(2500.0, 1.0, 2500.0), "canyon_rock")
 
-			# Towering Sandstone Mesas and Canyon Walls framing the track
-			var mesa_coords = [
-				Vector3(-85, 22, -90), Vector3(65, 28, -125), Vector3(-95, 34, -220),
-				Vector3(45, 38, -320), Vector3(135, 32, -240), Vector3(155, 24, -120),
-				Vector3(205, 18, -20), Vector3(160, 14, 110), Vector3(-45, 16, 60)
-			]
-			for p in mesa_coords:
-				create_box(p, Vector3(68.0, 48.0, 68.0), "canyon_rock")
+			# Towering Sandstone Mesas and Canyon Walls framing the track (anchored safely outside track)
+			if race_spline:
+				var mesa_dists = [40.0, 120.0, 200.0, 280.0, 360.0, 440.0, 520.0, 600.0]
+				for idx in range(mesa_dists.size()):
+					var md = mesa_dists[idx]
+					var s_m = race_spline.sample_at_distance(md)
+					var side = 1.0 if idx % 2 == 0 else -1.0
+					var m_pos = s_m["pos"] + side * s_m["binormal"] * (def.track_width * 0.5 + 38.0)
+					create_box(m_pos, Vector3(55.0, 42.0, 55.0), "canyon_rock")
 
-			# 2 Overhead Canyon Natural Rock Arches spanning the track
-			var arch1 = MeshBuilder.build_rock_arch(24.0, 16.0)
-			arch1.position = Vector3(15, 26.0, -295)
-			arch1.rotation_degrees.y = 75.0
-			add_child(arch1)
+				# 2 Overhead Canyon Natural Rock Arches spanning the track safely overhead (>10m high)
+				var s_a1 = race_spline.sample_at_distance(180.0)
+				var arch1 = MeshBuilder.build_rock_arch(def.track_width + 12.0, 16.0)
+				arch1.position = s_a1["pos"] + Vector3(0, 10.0, 0)
+				add_child(arch1)
 
-			var arch2 = MeshBuilder.build_rock_arch(22.0, 14.0)
-			arch2.position = Vector3(145, 3.5, 60)
-			arch2.rotation_degrees.y = 45.0
-			add_child(arch2)
+				var s_a2 = race_spline.sample_at_distance(420.0)
+				var arch2 = MeshBuilder.build_rock_arch(def.track_width + 12.0, 16.0)
+				arch2.position = s_a2["pos"] + Vector3(0, 10.0, 0)
+				add_child(arch2)
+
+				# Marshal Posts at technical switchbacks
+				for mp_d in [60.0, 240.0, 400.0]:
+					var s_mp = race_spline.sample_at_distance(mp_d)
+					var mp = MeshBuilder.build_marshal_post()
+					mp.position = s_mp["pos"] + s_mp["binormal"] * (def.track_width * 0.5 + 5.5)
+					add_child(mp)
 
 			# Distant Mountain Peaks on the desert horizon
 			for pk_pos in [Vector3(-260, 0, -320), Vector3(280, 0, -350), Vector3(0, 0, -420), Vector3(320, 0, 120)]:
@@ -232,53 +245,41 @@ func _build_environment_scenery(def: TrackRegistryScript.TrackDefinition) -> voi
 				peak.position = pk_pos
 				add_child(peak)
 
-			# Marshal Posts at technical switchbacks
-			for mp_pos in [Vector3(50, 4.0, -90), Vector3(-40, 24.0, -280), Vector3(115, 14.0, -140)]:
-				var mp = MeshBuilder.build_marshal_post()
-				mp.position = mp_pos
-				add_child(mp)
-
 		"skyline":
 			# Dark metropolis urban foundation
 			create_box(Vector3(60.0, -2.5, -120.0), Vector3(2500.0, 1.0, 2500.0), "dark_hull")
 
-			# Ring of 14 Illuminated Neon Skyscrapers towering over the urban raceway
-			var sky_towers = [
-				[Vector3(-45, 0, -70), 75.0, "neon_cyan"],
-				[Vector3(-85, 0, -170), 95.0, "neon_magenta"],
-				[Vector3(30, 0, -190), 85.0, "neon_blue"],
-				[Vector3(95, 0, -200), 105.0, "neon_orange"],
-				[Vector3(190, 0, -220), 80.0, "neon_cyan"],
-				[Vector3(195, 0, -330), 110.0, "neon_magenta"],
-				[Vector3(125, 0, -370), 90.0, "neon_blue"],
-				[Vector3(25, 0, -370), 115.0, "neon_cyan"],
-				[Vector3(-70, 0, -340), 85.0, "neon_orange"],
-				[Vector3(-105, 0, -240), 100.0, "neon_green"],
-				[Vector3(-105, 0, -80), 90.0, "neon_cyan"],
-				[Vector3(-85, 0, 50), 75.0, "neon_magenta"],
-				[Vector3(65, 0, 65), 85.0, "neon_cyan"],
-				[Vector3(150, 0, -60), 95.0, "neon_blue"]
-			]
-			for st in sky_towers:
-				var tower = MeshBuilder.build_neon_skyscraper(st[1], 24.0, 24.0, st[2])
-				tower.position = st[0]
-				add_child(tower)
+			if race_spline:
+				# Ring of 14 Illuminated Neon Skyscrapers towering safely outside raceway
+				var neon_colors = ["neon_cyan", "neon_magenta", "neon_blue", "neon_orange", "neon_green"]
+				var tower_count = 14
+				var t_step = race_spline.track_length / float(tower_count)
+				for i in range(tower_count):
+					var s_t = race_spline.sample_at_distance(float(i) * t_step + 15.0)
+					var side = 1.0 if i % 2 == 0 else -1.0
+					var t_h = randf_range(75.0, 115.0)
+					var t_col = neon_colors[i % neon_colors.size()]
+					var tower = MeshBuilder.build_neon_skyscraper(t_h, 24.0, 24.0, t_col)
+					tower.position = s_t["pos"] + side * s_t["binormal"] * (def.track_width * 0.5 + 24.0)
+					add_child(tower)
 
-			# Elevated Freeway Flyover Concrete Pillars underneath track section
-			for pillar_z in [-200.0, -240.0, -280.0]:
-				create_box(Vector3(150.0, 3.5, pillar_z), Vector3(4.0, 7.0, 4.0), "grimy_concrete")
+				# Elevated Freeway Flyover Concrete Pillars underneath track section
+				for p_d in [180.0, 240.0, 300.0]:
+					var s_p = race_spline.sample_at_distance(p_d)
+					create_box(s_p["pos"] + Vector3(0, -5.0, 0), Vector3(4.0, 8.0, 4.0), "grimy_concrete")
 
-			# Marshal Posts at 90-degree street corners
-			for mp_pos in [Vector3(25, 0, -135), Vector3(135, 0, -165), Vector3(-45, 0, -245)]:
-				var mp = MeshBuilder.build_marshal_post()
-				mp.position = mp_pos
-				add_child(mp)
+				# Marshal Posts at 90-degree street corners
+				for mp_d in [50.0, 140.0, 280.0]:
+					var s_mp = race_spline.sample_at_distance(mp_d)
+					var mp = MeshBuilder.build_marshal_post()
+					mp.position = s_mp["pos"] + s_mp["binormal"] * (def.track_width * 0.5 + 5.5)
+					add_child(mp)
 
 		"alpine":
 			# Alpine rocky mountain foundation
 			create_box(Vector3(60.0, -2.5, -120.0), Vector3(2500.0, 1.0, 2500.0), "alpine_rock")
 
-			# Ring of 8 Majestic Snow-Capped Mountain Peaks
+			# Distant Mountain Peaks
 			var peak_coords = [
 				Vector3(-180, 0, -120), Vector3(-160, 0, -280), Vector3(-60, 0, -380),
 				Vector3(80, 0, -390), Vector3(220, 0, -340), Vector3(250, 0, -180),
@@ -289,31 +290,30 @@ func _build_environment_scenery(def: TrackRegistryScript.TrackDefinition) -> voi
 				mtn.position = pk
 				add_child(mtn)
 
-			# Dense clusters of evergreen pine trees lining the hairpins
-			var pine_positions = [
-				Vector3(-25, 0, -35), Vector3(-55, 3.0, -85), Vector3(-85, 8.0, -135),
-				Vector3(-60, 13.0, -180), Vector3(-95, 19.0, -225), Vector3(-70, 25.0, -270),
-				Vector3(-15, 30.0, -295), Vector3(50, 32.0, -285), Vector3(110, 28.0, -245),
-				Vector3(150, 20.0, -185), Vector3(165, 13.0, -115), Vector3(145, 6.0, -45),
-				Vector3(160, 3.0, 10), Vector3(130, 1.0, 60), Vector3(70, 0.0, 80),
-				Vector3(20, 0.0, 50)
-			]
-			for pp in pine_positions:
-				var tree = MeshBuilder.build_pine_tree(randf_range(9.0, 15.0))
-				tree.position = pp
-				add_child(tree)
+			if race_spline:
+				# Dense clusters of evergreen pine trees lining the hairpins (safely outside track)
+				var pine_count = 20
+				var p_step = race_spline.track_length / float(pine_count)
+				for i in range(pine_count):
+					var s_p = race_spline.sample_at_distance(float(i) * p_step + 10.0)
+					var side = 1.0 if i % 2 == 0 else -1.0
+					var tree = MeshBuilder.build_pine_tree(randf_range(9.0, 15.0))
+					tree.position = s_p["pos"] + side * s_p["binormal"] * (def.track_width * 0.5 + 7.5 + (i % 3) * 2.0)
+					add_child(tree)
 
-			# Swiss-style Alpine Wooden Chalets in the valley
-			for ch_pos in [Vector3(-25, 0, 45), Vector3(95, 0, 45), Vector3(185, 0, -10)]:
-				var chalet = MeshBuilder.build_alpine_chalet()
-				chalet.position = ch_pos
-				add_child(chalet)
+				# Swiss-style Alpine Wooden Chalets in the valley
+				for ch_d in [80.0, 220.0, 360.0]:
+					var s_ch = race_spline.sample_at_distance(ch_d)
+					var chalet = MeshBuilder.build_alpine_chalet()
+					chalet.position = s_ch["pos"] - s_ch["binormal"] * (def.track_width * 0.5 + 18.0)
+					add_child(chalet)
 
-			# Marshal Posts
-			for mp_pos in [Vector3(-30, 3.5, -90), Vector3(5, 31.0, -295), Vector3(150, 12.0, -115)]:
-				var mp = MeshBuilder.build_marshal_post()
-				mp.position = mp_pos
-				add_child(mp)
+				# Marshal Posts
+				for mp_d in [50.0, 160.0, 290.0]:
+					var s_mp = race_spline.sample_at_distance(mp_d)
+					var mp = MeshBuilder.build_marshal_post()
+					mp.position = s_mp["pos"] + s_mp["binormal"] * (def.track_width * 0.5 + 5.5)
+					add_child(mp)
 
 		"harbor":
 			# Harbor industrial dock pavement
@@ -321,59 +321,57 @@ func _build_environment_scenery(def: TrackRegistryScript.TrackDefinition) -> voi
 			# Deep ocean shipping channel alongside wharf
 			create_box(Vector3(-120.0, -3.2, -120.0), Vector3(350.0, 1.0, 1200.0), "ocean_water")
 
-			# 4 Massive Container Gantry Cranes along wharf edge
-			for cz in [-20.0, -80.0, -140.0, -200.0]:
-				var crane = MeshBuilder.build_harbor_crane(34.0)
-				crane.position = Vector3(-18.0, 0.0, cz)
-				crane.rotation_degrees.y = 90.0
-				add_child(crane)
+			if race_spline:
+				# 4 Massive Container Gantry Cranes along wharf edge
+				for cz_d in [60.0, 140.0, 220.0, 300.0]:
+					var s_cz = race_spline.sample_at_distance(cz_d)
+					var crane = MeshBuilder.build_harbor_crane(34.0)
+					crane.position = s_cz["pos"] - s_cz["binormal"] * (def.track_width * 0.5 + 18.0)
+					crane.rotation_degrees.y = 90.0
+					add_child(crane)
 
-			# Large Container Cargo Ship docked at the wharf
-			var ship = MeshBuilder.build_cargo_ship(85.0)
-			ship.position = Vector3(-42.0, -1.8, -100.0)
-			ship.rotation_degrees.y = 0.0
-			add_child(ship)
+				# Large Container Cargo Ship docked at the wharf
+				var s_ship = race_spline.sample_at_distance(180.0)
+				var ship = MeshBuilder.build_cargo_ship(85.0)
+				ship.position = s_ship["pos"] - s_ship["binormal"] * (def.track_width * 0.5 + 35.0)
+				add_child(ship)
 
-			# Stacks of colorful shipping containers creating industrial freight corridors
-			var cont_stacks = [
-				[Vector3(20, 0, -170), "container_red"], [Vector3(20, 2.6, -170), "container_blue"],
-				[Vector3(50, 0, -170), "container_yellow"], [Vector3(50, 2.6, -170), "container_red"],
-				[Vector3(80, 0, -170), "container_blue"], [Vector3(80, 2.6, -170), "container_yellow"],
-				[Vector3(120, 0, -205), "container_red"], [Vector3(120, 2.6, -205), "container_blue"],
-				[Vector3(175, 0, -205), "container_yellow"], [Vector3(175, 2.6, -205), "container_red"],
-				[Vector3(215, 0, -165), "container_blue"], [Vector3(215, 2.6, -165), "container_yellow"],
-				[Vector3(215, 0, -135), "container_red"], [Vector3(215, 2.6, -135), "container_blue"],
-				[Vector3(175, 0, -50), "container_yellow"], [Vector3(175, 2.6, -50), "container_red"],
-				[Vector3(175, 0, 20), "container_blue"], [Vector3(175, 2.6, 20), "container_yellow"],
-				[Vector3(125, 0, 105), "container_red"], [Vector3(125, 2.6, 105), "container_blue"],
-				[Vector3(65, 0, 80), "container_yellow"], [Vector3(65, 2.6, 80), "container_red"]
-			]
-			for cs in cont_stacks:
-				var cont = MeshBuilder.build_shipping_container(cs[1], Vector3(2.8, 2.6, 6.5))
-				cont.position = cs[0]
-				add_child(cont)
+				# Stacks of colorful shipping containers along the circuit boundary
+				var cont_colors = ["container_red", "container_blue", "container_yellow"]
+				for i in range(16):
+					var s_c = race_spline.sample_at_distance(float(i) * 35.0 + 20.0)
+					var side = 1.0 if i % 2 == 0 else -1.0
+					var cont = MeshBuilder.build_shipping_container(cont_colors[i % 3], Vector3(2.8, 2.6, 6.5))
+					cont.position = s_c["pos"] + side * s_c["binormal"] * (def.track_width * 0.5 + 7.5)
+					add_child(cont)
 
-			# Dock Warehouses
-			var warehouses = [
-				Vector3(260, 0, -60), Vector3(260, 0, 40), Vector3(80, 0, 160)
-			]
-			for wh in warehouses:
-				create_box(wh, Vector3(32.0, 12.0, 55.0), "grimy_concrete")
+				# Dock Warehouses safely placed
+				for wh_d in [100.0, 250.0, 380.0]:
+					var s_wh = race_spline.sample_at_distance(wh_d)
+					create_box(s_wh["pos"] + s_wh["binormal"] * (def.track_width * 0.5 + 26.0), Vector3(28.0, 10.0, 45.0), "grimy_concrete")
 
-			# Marshal Posts
-			for mp_pos in [Vector3(22, 0, -175), Vector3(210, 0, -170), Vector3(185, 0, 75)]:
-				var mp = MeshBuilder.build_marshal_post()
-				mp.position = mp_pos
-				add_child(mp)
+				# Marshal Posts
+				for mp_d in [45.0, 175.0, 310.0]:
+					var s_mp = race_spline.sample_at_distance(mp_d)
+					var mp = MeshBuilder.build_marshal_post()
+					mp.position = s_mp["pos"] + s_mp["binormal"] * (def.track_width * 0.5 + 5.5)
+					add_child(mp)
 
 		_: # "speedway" / "metropolis"
 			# Expansive stadium grounds foundation
 			create_box(Vector3(60.0, -2.5, -120.0), Vector3(2500.0, 1.0, 2500.0), "asphalt_track")
 
-			# Modern 2-Story Pit Complex with Garages and Control Tower along Home Straight
-			var pit_building = MeshBuilder.build_pit_building(8)
-			pit_building.position = Vector3(-18.0, 0.0, -60.0)
-			add_child(pit_building)
+			# Modern 2-Story Pit Complex with Garages and Control Tower along Home Straight (strictly outside track boundary)
+			if race_spline:
+				var s_pit = race_spline.sample_at_distance(60.0)
+				var pit_building = MeshBuilder.build_pit_building(8)
+				var p_tr = Transform3D()
+				p_tr.basis.x = s_pit["tangent"]
+				p_tr.basis.y = s_pit["normal"]
+				p_tr.basis.z = -s_pit["binormal"]
+				var pit_pos = s_pit["pos"] - s_pit["binormal"] * (def.track_width * 0.5 + 16.0)
+				pit_building.transform = Transform3D(p_tr.basis.orthonormalized(), pit_pos)
+				add_child(pit_building)
 
 			# Multi-Tier Grandstands with Roof Canopies and Spectators
 			var stand_dists = [15.0, 55.0, 140.0, 220.0]
@@ -419,7 +417,7 @@ func _build_environment_scenery(def: TrackRegistryScript.TrackDefinition) -> voi
 				if race_spline:
 					var s_mp = race_spline.sample_at_distance(mp_d)
 					var mp = MeshBuilder.build_marshal_post()
-					mp.position = s_mp["pos"] + s_mp["binormal"] * (def.track_width * 0.5 + 4.5)
+					mp.position = s_mp["pos"] + s_mp["binormal"] * (def.track_width * 0.5 + 5.5)
 					add_child(mp)
 
 			# Paddock buildings in background
@@ -459,8 +457,14 @@ func _build_continuous_road_foundation(def: TrackRegistryScript.TrackDefinition 
 	var curb_right_outer: Array[Vector3] = []
 	var wall_left_bot: Array[Vector3] = []
 	var wall_left_top: Array[Vector3] = []
+	var wall_left_top_out: Array[Vector3] = []
+	var wall_left_bot_out: Array[Vector3] = []
 	var wall_right_bot: Array[Vector3] = []
 	var wall_right_top: Array[Vector3] = []
+	var wall_right_top_out: Array[Vector3] = []
+	var wall_right_bot_out: Array[Vector3] = []
+
+	var wall_thick = 0.35
 
 	for i in range(n):
 		var s = samples[i]
@@ -483,16 +487,24 @@ func _build_continuous_road_foundation(def: TrackRegistryScript.TrackDefinition 
 		curb_right_inner.append(cri)
 		curb_right_outer.append(cro)
 
-		# Metallic Safety Barriers placed outside the curbs
+		# 3D Solid Safety Barriers placed outside the curbs (with physical 0.35m thickness)
 		var wlb = clo - binormal * 0.08
 		var wlt = wlb + Vector3.UP * wall_h
+		var wlt_out = wlt - binormal * wall_thick
+		var wlb_out = wlb - binormal * wall_thick
 		wall_left_bot.append(wlb)
 		wall_left_top.append(wlt)
+		wall_left_top_out.append(wlt_out)
+		wall_left_bot_out.append(wlb_out)
 
 		var wrb = cro + binormal * 0.08
 		var wrt = wrb + Vector3.UP * wall_h
+		var wrt_out = wrt + binormal * wall_thick
+		var wrb_out = wrb + binormal * wall_thick
 		wall_right_bot.append(wrb)
 		wall_right_top.append(wrt)
+		wall_right_top_out.append(wrt_out)
+		wall_right_bot_out.append(wrb_out)
 
 	var road_body = StaticBody3D.new()
 	road_body.name = "ContinuousRoadFoundation"
@@ -656,64 +668,98 @@ func _build_continuous_road_foundation(def: TrackRegistryScript.TrackDefinition 
 		collision_faces.append(v_cro2)
 		collision_faces.append(v_cri2)
 
-		# --- 4. Left Safety Barrier Ribbon ---
+		# --- 4. Left Safety Barrier (3D Solid Box with Inner, Top, Outer Faces) ---
 		var v_wlb1 = wall_left_bot[i]
 		var v_wlt1 = wall_left_top[i]
+		var v_wlto1 = wall_left_top_out[i]
+		var v_wlbo1 = wall_left_bot_out[i]
+
 		var v_wlb2 = wall_left_bot[next_idx]
 		var v_wlt2 = wall_left_top[next_idx]
+		var v_wlto2 = wall_left_top_out[next_idx]
+		var v_wlbo2 = wall_left_bot_out[next_idx]
 
 		var uv_wb1 = Vector2(d1 / 4.0, 1.0)
 		var uv_wt1 = Vector2(d1 / 4.0, 0.0)
 		var uv_wb2 = Vector2(d2 / 4.0, 1.0)
 		var uv_wt2 = Vector2(d2 / 4.0, 0.0)
 
-		st_barrier.set_uv(uv_wb1)
-		st_barrier.add_vertex(v_wlb1)
-		st_barrier.set_uv(uv_wt1)
-		st_barrier.add_vertex(v_wlt1)
-		st_barrier.set_uv(uv_wb2)
-		st_barrier.add_vertex(v_wlb2)
+		# Left Inner Face (Facing Track)
+		st_barrier.set_uv(uv_wb1); st_barrier.add_vertex(v_wlb1)
+		st_barrier.set_uv(uv_wt1); st_barrier.add_vertex(v_wlt1)
+		st_barrier.set_uv(uv_wb2); st_barrier.add_vertex(v_wlb2)
+		st_barrier.set_uv(uv_wt1); st_barrier.add_vertex(v_wlt1)
+		st_barrier.set_uv(uv_wt2); st_barrier.add_vertex(v_wlt2)
+		st_barrier.set_uv(uv_wb2); st_barrier.add_vertex(v_wlb2)
 
-		st_barrier.set_uv(uv_wt1)
-		st_barrier.add_vertex(v_wlt1)
-		st_barrier.set_uv(uv_wt2)
-		st_barrier.add_vertex(v_wlt2)
-		st_barrier.set_uv(uv_wb2)
-		st_barrier.add_vertex(v_wlb2)
+		collision_faces.append(v_wlb1); collision_faces.append(v_wlt1); collision_faces.append(v_wlb2)
+		collision_faces.append(v_wlt1); collision_faces.append(v_wlt2); collision_faces.append(v_wlb2)
 
-		collision_faces.append(v_wlb1)
-		collision_faces.append(v_wlt1)
-		collision_faces.append(v_wlb2)
-		collision_faces.append(v_wlt1)
-		collision_faces.append(v_wlt2)
-		collision_faces.append(v_wlb2)
+		# Left Top Cap Face
+		st_barrier.set_uv(uv_wb1); st_barrier.add_vertex(v_wlt1)
+		st_barrier.set_uv(uv_wt1); st_barrier.add_vertex(v_wlto1)
+		st_barrier.set_uv(uv_wb2); st_barrier.add_vertex(v_wlt2)
+		st_barrier.set_uv(uv_wt1); st_barrier.add_vertex(v_wlto1)
+		st_barrier.set_uv(uv_wt2); st_barrier.add_vertex(v_wlto2)
+		st_barrier.set_uv(uv_wb2); st_barrier.add_vertex(v_wlt2)
 
-		# --- 5. Right Safety Barrier Ribbon ---
+		collision_faces.append(v_wlt1); collision_faces.append(v_wlto1); collision_faces.append(v_wlt2)
+		collision_faces.append(v_wlto1); collision_faces.append(v_wlto2); collision_faces.append(v_wlt2)
+
+		# Left Outer Face (Backing)
+		st_barrier.set_uv(uv_wb1); st_barrier.add_vertex(v_wlto1)
+		st_barrier.set_uv(uv_wt1); st_barrier.add_vertex(v_wlbo1)
+		st_barrier.set_uv(uv_wb2); st_barrier.add_vertex(v_wlto2)
+		st_barrier.set_uv(uv_wt1); st_barrier.add_vertex(v_wlbo1)
+		st_barrier.set_uv(uv_wt2); st_barrier.add_vertex(v_wlbo2)
+		st_barrier.set_uv(uv_wb2); st_barrier.add_vertex(v_wlto2)
+
+		collision_faces.append(v_wlto1); collision_faces.append(v_wlbo1); collision_faces.append(v_wlto2)
+		collision_faces.append(v_wlbo1); collision_faces.append(v_wlbo2); collision_faces.append(v_wlto2)
+
+		# --- 5. Right Safety Barrier (3D Solid Box with Inner, Top, Outer Faces) ---
 		var v_wrb1 = wall_right_bot[i]
 		var v_wrt1 = wall_right_top[i]
+		var v_wrto1 = wall_right_top_out[i]
+		var v_wrbo1 = wall_right_bot_out[i]
+
 		var v_wrb2 = wall_right_bot[next_idx]
 		var v_wrt2 = wall_right_top[next_idx]
+		var v_wrto2 = wall_right_top_out[next_idx]
+		var v_wrbo2 = wall_right_bot_out[next_idx]
 
-		st_barrier.set_uv(uv_wb1)
-		st_barrier.add_vertex(v_wrb1)
-		st_barrier.set_uv(uv_wb2)
-		st_barrier.add_vertex(v_wrb2)
-		st_barrier.set_uv(uv_wt1)
-		st_barrier.add_vertex(v_wrt1)
+		# Right Inner Face (Facing Track)
+		st_barrier.set_uv(uv_wb1); st_barrier.add_vertex(v_wrb1)
+		st_barrier.set_uv(uv_wb2); st_barrier.add_vertex(v_wrb2)
+		st_barrier.set_uv(uv_wt1); st_barrier.add_vertex(v_wrt1)
+		st_barrier.set_uv(uv_wt1); st_barrier.add_vertex(v_wrt1)
+		st_barrier.set_uv(uv_wb2); st_barrier.add_vertex(v_wrb2)
+		st_barrier.set_uv(uv_wt2); st_barrier.add_vertex(v_wrt2)
 
-		st_barrier.set_uv(uv_wt1)
-		st_barrier.add_vertex(v_wrt1)
-		st_barrier.set_uv(uv_wb2)
-		st_barrier.add_vertex(v_wrb2)
-		st_barrier.set_uv(uv_wt2)
-		st_barrier.add_vertex(v_wrt2)
+		collision_faces.append(v_wrb1); collision_faces.append(v_wrb2); collision_faces.append(v_wrt1)
+		collision_faces.append(v_wrt1); collision_faces.append(v_wrb2); collision_faces.append(v_wrt2)
 
-		collision_faces.append(v_wrb1)
-		collision_faces.append(v_wrb2)
-		collision_faces.append(v_wrt1)
-		collision_faces.append(v_wrt1)
-		collision_faces.append(v_wrb2)
-		collision_faces.append(v_wrt2)
+		# Right Top Cap Face
+		st_barrier.set_uv(uv_wb1); st_barrier.add_vertex(v_wrt1)
+		st_barrier.set_uv(uv_wb2); st_barrier.add_vertex(v_wrt2)
+		st_barrier.set_uv(uv_wt1); st_barrier.add_vertex(v_wrto1)
+		st_barrier.set_uv(uv_wt1); st_barrier.add_vertex(v_wrto1)
+		st_barrier.set_uv(uv_wb2); st_barrier.add_vertex(v_wrt2)
+		st_barrier.set_uv(uv_wt2); st_barrier.add_vertex(v_wrto2)
+
+		collision_faces.append(v_wrt1); collision_faces.append(v_wrt2); collision_faces.append(v_wrto1)
+		collision_faces.append(v_wrto1); collision_faces.append(v_wrt2); collision_faces.append(v_wrto2)
+
+		# Right Outer Face (Backing)
+		st_barrier.set_uv(uv_wb1); st_barrier.add_vertex(v_wrto1)
+		st_barrier.set_uv(uv_wb2); st_barrier.add_vertex(v_wrto2)
+		st_barrier.set_uv(uv_wt1); st_barrier.add_vertex(v_wrbo1)
+		st_barrier.set_uv(uv_wt1); st_barrier.add_vertex(v_wrbo1)
+		st_barrier.set_uv(uv_wb2); st_barrier.add_vertex(v_wrto2)
+		st_barrier.set_uv(uv_wt2); st_barrier.add_vertex(v_wrbo2)
+
+		collision_faces.append(v_wrto1); collision_faces.append(v_wrto2); collision_faces.append(v_wrbo1)
+		collision_faces.append(v_wrbo1); collision_faces.append(v_wrto2); collision_faces.append(v_wrbo2)
 
 	# Generate tangents for proper rendering across all view angles
 	st_road.generate_tangents()
@@ -913,18 +959,35 @@ func verify_race_corridor_clearance(sample_step: float = 2.0) -> Dictionary:
 	var num_steps = int(ceil(total_len / sample_step))
 	var half_w = track_width * 0.5
 
-	# Collect all solid colliders that could act as road obstructions
+	# Collect all solid colliders and non-road visual meshes that could act as road obstructions
 	var obstacle_colliders: Array[CollisionShape3D] = []
+	var obstacle_meshes: Array[MeshInstance3D] = []
+
+	var _calc_node_world_pos = func(n: Node3D) -> Vector3:
+		if n.is_inside_tree():
+			return n.global_position
+		var cur: Node = n
+		var t: Transform3D = Transform3D.IDENTITY
+		while cur and cur is Node3D:
+			t = (cur as Node3D).transform * t
+			if cur == self:
+				break
+			cur = cur.get_parent()
+		return t.origin
 
 	var _scan_node = func(n: Node, self_func: Callable) -> void:
-		if n.name == "ContinuousRoadFoundation" or n.name == "ContinuousRoadCol":
+		if n.name == "ContinuousRoadFoundation" or n.name == "ContinuousRoadCol" or n.name == "ContinuousRoadMesh" or n.name == "ContinuousCurbMesh" or n.name == "ContinuousBarrierMesh":
 			return # Authorized road ribbon
-		if n is RaceCheckpoint or n is PowerUpItem:
-			return # Authorized race triggers
+		if n is RaceCheckpoint or n is PowerUpItem or n.name == "GroundCheckeredLine" or "grid" in n.name.to_lower() or "marking" in n.name.to_lower() or "line" in n.name.to_lower():
+			return # Authorized race triggers and markings
+		if "gantry" in n.name.to_lower() or "start_gantry" in n.name.to_lower():
+			return # Authorized start/finish gantry overhead
 		if n.name.ends_with("_subfloor") or "subfloor" in n.name.to_lower() or "foundation" in n.name.to_lower():
 			return # Authorized sub-terrain foundation below road
 		if n is CollisionShape3D and n.shape:
 			obstacle_colliders.append(n)
+		elif n is MeshInstance3D and n.mesh:
+			obstacle_meshes.append(n)
 		for c in n.get_children():
 			self_func.call(c, self_func)
 
@@ -947,13 +1010,12 @@ func verify_race_corridor_clearance(sample_step: float = 2.0) -> Dictionary:
 		for col in obstacle_colliders:
 			if not is_instance_valid(col):
 				continue
-			var parent_node = col.get_parent() as Node3D
-			var col_pos = col.global_position if col.is_inside_tree() else (parent_node.position + col.position if parent_node else col.position)
+			var col_pos = _calc_node_world_pos.call(col)
 
-			# Vertical check: only test colliders near road surface level (-0.5m to +4.0m)
+			# Vertical check: only test colliders near road surface level (-0.2m to +3.2m kart height)
 			var vert_diff = col_pos.y - center_pos.y
-			if vert_diff < -0.8 or vert_diff > 4.5:
-				continue # Deep underground or high overhead
+			if vert_diff < -0.2 or vert_diff > 3.2:
+				continue # Deep underground, subfloor, or high overhead
 
 			var diff = col_pos - center_pos
 			diff.y = 0.0
@@ -963,6 +1025,26 @@ func verify_race_corridor_clearance(sample_step: float = 2.0) -> Dictionary:
 			if absf(fwd_dist) < sample_step * 1.5 and absf(lat_dist) < (half_w - 0.5):
 				var v_msg = "Obstacle collider '%s' intrudes into racing corridor at s=%.1fm (lat=%.2fm, track_half_w=%.2fm, y_diff=%.2fm)" % [
 					col.name, s, lat_dist, half_w, vert_diff
+				]
+				result["violations"].append(v_msg)
+				result["success"] = false
+
+		# Verify no visual mesh intrudes into the protected corridor
+		for mi in obstacle_meshes:
+			if not is_instance_valid(mi):
+				continue
+			var mi_pos = _calc_node_world_pos.call(mi)
+			var vert_diff = mi_pos.y - center_pos.y
+			if vert_diff < 0.25 or vert_diff > 3.2:
+				continue
+
+			var diff = mi_pos - center_pos
+			diff.y = 0.0
+			var lat_dist = diff.dot(binormal)
+			var fwd_dist = diff.dot(tangent)
+			if absf(fwd_dist) < sample_step * 1.5 and absf(lat_dist) < (half_w - 0.8):
+				var v_msg = "Visual mesh '%s' intrudes into racing corridor at s=%.1fm (lat=%.2fm, track_half_w=%.2fm, y_diff=%.2fm)" % [
+					mi.name, s, lat_dist, half_w, vert_diff
 				]
 				result["violations"].append(v_msg)
 				result["success"] = false

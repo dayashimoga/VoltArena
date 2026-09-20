@@ -779,6 +779,40 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Function coverage verified at **95.04% real function coverage (785 / 826 functions tested)** with 0 regressions.
   - Exported production packages: Windows (`export/windows/VoltArena.exe`, 173.9 MB), Web (`export/web/index.pck`, 89.9 MB).
 
+## [8.7.0-cross-platform-architecture] - 2026-09-10
+### Added
+- **Drift Storm Dedicated Scene State Machine (GAP-41, GAP-42)**:
+  - Replaced floating pre-race overlay with formal 11-stage scene state machine: `DriftHome -> ModeSelect -> TrackSelect -> VehicleSelect -> RaceSetup -> Confirm -> Loading -> Grid -> Countdown -> Racing -> Finished`.
+  - Enforced strict isolation: All 3D track, player, and AI racer entities are hidden and processing-disabled (`visible = false`, `process_mode = PROCESS_MODE_DISABLED`) during pre-race menus.
+  - Complete isolation of in-race HUD: Telemetry displays (`pos_panel`, `obj_panel`, `right_panel`, `minimap_panel`, `speed_box`, `touch_controls`) are strictly hidden during pre-race menus.
+  - Full-screen responsive track selection persisting indefinitely until explicit user action, featuring dynamic vector track map preview, full metadata across all 6 circuits (`Volt Speedway`, `Sunset Coast`, `Redrock Canyon`, `Metro Night`, `Alpine Rush`, `Storm Harbor`), 5 vehicle archetypes (`Speeder`, `Phantom`, `Enforcer`, `Turbo Demon`, `Formula Apex`) with live performance radar bars, and an **always-visible CONTINUE button** guaranteed within screen bounds.
+  - Dedicated unit test suite `test_drift_storm_state_machine.gd` (35 assertions) asserting dormant pre-race state, forward/backward menu navigation, circuit definitions, vehicle radar metrics, and explicit countdown activation.
+- **Global Cross-Platform Architecture (GAP-43, GAP-44, GAP-45)**:
+  - Created `PlatformCapabilities` (`shared/platform/platform_capabilities.gd`): Platform detection (Web/WebGL2, Windows x86_64, Android ARM64, Linux, macOS, iOS), safe-area insets (`DisplayServer.get_display_safe_area()`), aspect ratio classification (16:9, 16:10, 18:9, 19.5:9, 20:9, tablet 4:3, ultrawide 21:9), device tiers (`TIER_LOW` to `TIER_ULTRA`), and minimum $48\text{dp}$ touch target enforcement.
+  - Created `InputProfile` (`shared/platform/input_profile.gd`): Semantic action prompts and input abstraction profiles (`DESKTOP_KEYBOARD_MOUSE`, `DESKTOP_CONTROLLER`, `TOUCH_PHONE`, `TOUCH_TABLET`) with genre support (`GENRE_FPS`, `GENRE_RACING`, `GENRE_ROCKET_CAR`).
+  - Created `GraphicsProfile` (`shared/platform/graphics_profile.gd`): Scalable presets (Low, Medium, High, Ultra, Auto) controlling render scale, shadow atlas resolution, MSAA, and LOD with invariant physics tick rate (`Engine.physics_ticks_per_second == 60`).
+  - Upgraded `TouchControls` (`shared/input/touch_controls.gd`): Genre-adaptive layouts, minimum $48\text{dp}$ touch target sizing, and desktop auto-hide.
+- **9-Viewport Automated Platform Verification Gate (GAP-46)**:
+  - Expanded `tests/responsive/test_responsive_ui.gd` to test all 9 canonical viewports: `360x800`, `393x852`, `412x915`, `600x960`, `800x1280`, `1280x720`, `1366x768`, `1920x1080`, `2560x1440`.
+  - Added `test_drift_storm_hud_responsive_resolutions` testing the pre-race hub across all 9 viewports: 297/297 assertions passed.
+- **Master Test Suite Certification (63 Suites, 2,102 Assertions, 96.96% Coverage)**:
+  - Executed master test runner across all **63 test suites**: **2,102 passed assertions, 0 failed (100% pass rate)**.
+  - Function coverage verified at **96.96% real function coverage (828 / 854 functions tested)** with 0 regressions.
+  - Added dedicated test suites: `test_drift_storm_state_machine.gd` (35 assertions) and `test_cross_platform_architecture.gd` (19 assertions).
+- **Multi-Platform Release Packaging & Distribution**:
+  - Re-exported release builds across all platforms:
+    - Web (`export/web/`): Cloudflare Pages compliant with $\le 18\text{MB}$ WASM and PCK chunks.
+    - Linux (`export/linux/VoltArena.x86_64`).
+    - Windows (`export/windows/VoltArena.exe`).
+    - Android (`export/android/VoltArena.apk`).
+  - Generated distribution archives in `export/dist/`:
+    - `VoltArena-Web.zip` (143.19 MB)
+    - `VoltArena-Linux-x86_64.tar.gz` (86.84 MB)
+    - `VoltArena-Windows-x86_64.zip` (92.69 MB)
+    - `VoltArena-Android.apk` (108.70 MB)
+
+
+
 
 
 

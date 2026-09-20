@@ -61,12 +61,12 @@ Expected output:
 ```
 ==================================================
 TEST RESULTS SUMMARY:
-  Total Suites:            41
-  Total Assertions Passed: 857
+  Total Suites:            63
+  Total Assertions Passed: 2102
   Total Assertions Failed: 0
-  Function Coverage:       93.91% (Required: >90%)
+  Function Coverage:       96.96% (Required: >=95.0%)
 ==================================================
-ALL TEST GATES PASSED [100% SUCCESS]
+ALL TEST GATES PASSED [2102/2102 ASSERTIONS, 100% SUCCESS]
 ```
 
 ---

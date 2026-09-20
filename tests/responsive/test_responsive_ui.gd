@@ -1,27 +1,36 @@
 class_name TestResponsiveUI
 extends RefCounted
 
-## Validates responsive UI layouts across multiple display resolutions and aspect ratios:
-## - 1920x1080 (Desktop 16:9)
-## - 1280x720 (HD 16:9)
-## - 1024x768 (Tablet 4:3)
-## - 720x1280 (Mobile Portrait 9:16)
-## - 800x480 (Handheld 5:3)
+## Validates responsive UI layouts across the 9 mandatory platform viewport gates:
+## - 360x800 (Modern Android Phone Portrait, 20:9)
+## - 393x852 (iPhone 14/15/16 Portrait, 19.5:9)
+## - 412x915 (Google Pixel / Galaxy Portrait, 20:9)
+## - 600x960 (7-inch Tablet / Foldable, 16:10)
+## - 800x1280 (10-inch Android Tablet, 16:10)
+## - 1280x720 (Standard HD, 16:9)
+## - 1366x768 (Budget Laptop / Scaled Window, 16:9)
+## - 1920x1080 (Desktop Full HD, 16:9)
+## - 2560x1440 (Desktop QHD, 16:9)
 
 const LauncherScript = preload("res://launcher/launcher.gd")
 const HUDBaseScript = preload("res://shared/ui/hud_base.gd")
 const PauseMenuScript = preload("res://shared/ui/pause_menu.gd")
 const ResultsScreenScript = preload("res://shared/ui/results_screen.gd")
+const DriftStormHUDScript = preload("res://games/kart-racing/ui/drift_storm_hud.gd")
 
 var assertions_passed: int = 0
 var assertions_failed: int = 0
 
 const TEST_RESOLUTIONS: Array[Dictionary] = [
-	{"name": "Desktop 1080p", "size": Vector2(1920, 1080), "is_portrait": false},
-	{"name": "Standard HD 720p", "size": Vector2(1280, 720), "is_portrait": false},
-	{"name": "Tablet 4:3", "size": Vector2(1024, 768), "is_portrait": false},
-	{"name": "Mobile Portrait 9:16", "size": Vector2(720, 1280), "is_portrait": true},
-	{"name": "Handheld 5:3", "size": Vector2(800, 480), "is_portrait": false},
+	{"name": "Android Phone 360x800", "size": Vector2(360, 800), "is_portrait": true},
+	{"name": "iPhone 393x852", "size": Vector2(393, 852), "is_portrait": true},
+	{"name": "Pixel/Galaxy 412x915", "size": Vector2(412, 915), "is_portrait": true},
+	{"name": "7-inch Tablet 600x960", "size": Vector2(600, 960), "is_portrait": true},
+	{"name": "10-inch Tablet 800x1280", "size": Vector2(800, 1280), "is_portrait": true},
+	{"name": "Standard HD 1280x720", "size": Vector2(1280, 720), "is_portrait": false},
+	{"name": "Laptop 1366x768", "size": Vector2(1366, 768), "is_portrait": false},
+	{"name": "Desktop 1080p 1920x1080", "size": Vector2(1920, 1080), "is_portrait": false},
+	{"name": "Desktop QHD 2560x1440", "size": Vector2(2560, 1440), "is_portrait": false},
 ]
 
 func run_tests() -> Dictionary:
@@ -29,6 +38,8 @@ func run_tests() -> Dictionary:
 	test_hud_responsive_resolutions()
 	test_pause_menu_responsive_resolutions()
 	test_results_screen_responsive_resolutions()
+	test_drift_storm_hud_responsive_resolutions()
+
 	var results_dict = {
 		"overall_status": "PASS" if assertions_failed == 0 else "FAIL",
 		"total_passed": assertions_passed,
@@ -67,7 +78,6 @@ func test_launcher_responsive_resolutions() -> void:
 		assert_true(launcher.game_cards_container != null, "%s: Game cards container must exist" % res["name"])
 		assert_true(launcher.game_cards_container.get_child_count() == launcher.games_meta.size(), "%s: Must have %d game cards" % [res["name"], launcher.games_meta.size()])
 
-		# Verify all game cards have positive non-zero minimum size
 		for card in launcher.game_cards_container.get_children():
 			if card is Control:
 				assert_true(card.custom_minimum_size.x > 0, "%s: Card min width must be positive" % res["name"])
@@ -106,3 +116,20 @@ func test_results_screen_responsive_resolutions() -> void:
 		assert_true(rs.visible, "%s: Results screen must be visible" % res["name"])
 		assert_true(rs.stats_vbox != null, "%s: Stats vbox must exist" % res["name"])
 		rs.queue_free()
+
+func test_drift_storm_hud_responsive_resolutions() -> void:
+	for res in TEST_RESOLUTIONS:
+		var hud = DriftStormHUDScript.new()
+		hud.size = res["size"]
+		hud._ready()
+
+		assert_true(hud.onboarding_overlay != null, "%s: Drift Storm onboarding overlay must exist" % res["name"])
+		assert_true(hud.onboarding_overlay.visible, "%s: Drift Storm onboarding overlay must be visible" % res["name"])
+		assert_true(hud.track_btn_map.size() == 6, "%s: All 6 track selector buttons must be registered" % res["name"])
+		assert_true(hud.veh_btn_map.size() == 5, "%s: All 5 vehicle selector buttons must be registered" % res["name"])
+
+		var cont_btn = hud.onboarding_overlay.find_child("ContinueButton", true, false) as Button
+		assert_true(cont_btn != null, "%s: Always-visible Continue button must exist in hierarchy" % res["name"])
+		assert_true(cont_btn.visible, "%s: Continue button must be visible" % res["name"])
+
+		hud.queue_free()

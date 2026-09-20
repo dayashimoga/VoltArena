@@ -87,11 +87,51 @@
 
 ## 3. Touch Screen Controls (Mobile & Tablets)
 
-When running on mobile browsers or touchscreen devices:
-* **Virtual Joystick (Bottom-Left)**: Drag to navigate or steer.
-* **On-Screen Action Buttons (Bottom-Right)**:
-  * **FIRE / DRIFT**: Red glowing circular action button.
-  * **JUMP**: Green circular jump button.
-  * **BOOST / SPRINT**: Cyan boost button with live fuel ring.
-  * **RELOAD / POWERUP**: Yellow utility button.
-  * **PAUSE**: Menu button in upper-right corner.
+When running on mobile browsers, Android phones, or touchscreen tablets, VoltArena deploys **Genre-Adaptive Touch Layouts** through `TouchControls` (`shared/input/touch_controls.gd`). All interactive touch buttons strictly respect the **$\ge 48\times 48\text{dp}$ minimum touch target** rule (52px to 80px on standard viewports) to eliminate touch misses.
+
+### 3.1 Racing Genre Layout (Drift Storm)
+- **Steering Control (Bottom-Left)**: Virtual thumb joystick or left/right steering pads.
+- **Action Cluster (Bottom-Right)**:
+  - **GAS (Accelerate)**: Prominent green acceleration pedal ($80\times 72\text{px}$).
+  - **BRAKE (Reverse / Decel)**: Coral brake button ($72\times 64\text{px}$).
+  - **DRIFT**: High-leverage amber drift button for corner power-slides.
+  - **BOOST**: Cyan nitrous burst trigger.
+
+### 3.2 Rocket-Sports Genre Layout (Nitro Kick)
+- **Drive Controls (Bottom-Right)**: GAS and BRAKE buttons.
+- **Aerial & Jump Controls**:
+  - **JUMP**: Azure jump button; double-tap in mid-air to trigger directional double jump.
+  - **BOOST**: Rocket thruster propulsion button.
+  - **DRIFT**: Sharp handbrake powerslide button.
+  - **BALL CAM**: Toggle tracking camera locked to the ball.
+
+### 3.3 FPS & Action Genre Layout (Iron Crucible, Metro Siege, Strike Vector)
+- **Movement (Bottom-Left)**: Omnidirectional `VirtualJoystick` ($48\text{px}$ deadzone with dynamic centering).
+- **Camera Look (Right Half Screen)**: Free-drag swipe zone for responsive target acquisition and fine aiming.
+- **Combat Cluster (Bottom-Right)**:
+  - **FIRE**: Large primary trigger button with instant response.
+  - **ADS**: Aim down sights toggle / shoulder zoom.
+  - **RELOAD**: Magazine refresh button.
+  - **JUMP / CROUCH**: Vertical mobility and sliding toggles.
+  - **WEAPON**: Fast circular weapon switch toggle.
+
+### 3.4 Automatic Desktop Hiding
+Touch controls automatically hide on desktop environments when no touchscreen is present (`PlatformCapabilities.has_touchscreen() == false`), and automatically display on mobile/tablet platforms or when simulated in testing.
+
+---
+
+## 4. InputProfile Semantic Action Resolution
+
+VoltArena decouples game input from hardware-specific keys via `InputProfile` (`shared/platform/input_profile.gd`). In-game prompts dynamically reflect the player's active input method:
+
+| Action | Desktop Keyboard & Mouse | Desktop Gamepad | Mobile & Tablet Touch |
+| :--- | :--- | :--- | :--- |
+| **Movement** | `W / A / S / D` | `Left Stick` | `Virtual Joystick` |
+| **Primary Fire / Gas** | `LMB` | `Right Trigger (RT)` | `[FIRE]` / `[GAS]` |
+| **Aim / Secondary / Brake** | `RMB` | `Left Trigger (LT)` | `[ADS]` / `[BRAKE]` |
+| **Jump** | `Space` | `(A) Button` | `[JUMP]` |
+| **Boost / Nitro** | `Shift` / `Space` | `(B) Button` | `[BOOST]` |
+| **Drift / Slide** | `Shift` / `C` | `(X) Button` | `[DRIFT]` |
+| **Reload / Interact** | `R` / `E` | `(X) Button` | `[RELOAD]` |
+| **Pause** | `Escape` | `Start / Menu` | `[PAUSE]` |
+

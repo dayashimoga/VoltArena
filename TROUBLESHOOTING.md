@@ -89,5 +89,22 @@
 
 ### Gotcha: Cloudflare 25MB Limit with Full 3D Asset Package
 * **Cause**: Exporting 49 production 3D models increases `index.pck` to 64.9MB, exceeding Cloudflare Pages' 25MB limit.
-* **Resolution**: Split `index.pck` into 18MB chunks (`index.pck.part00` to `index.pck.part03`) and reassemble via client-side fetch streaming before WASM boot.
+* **Resolution**: Split `index.pck` into 18MB chunks (`index.pck.part00` to `index.pck.part04`) and reassemble via client-side fetch streaming before WASM boot.
+
+---
+
+## 5. Drift Storm & Cross-Platform UI Gotchas
+
+### Gotcha: Pre-Race Overlay Floating Over Active 3D Race World
+* **Cause**: In `kart_racing_main.gd`, initializing the 3D track, player kart, AI racers, and in-race HUD immediately inside `_ready()` causes the pre-race configuration hub to render on top of an already running 3D world, leading to visual confusion and background processing.
+* **Resolution**: Re-architect into an 11-stage scene state machine (`DriftHome` to `Finished`). In pre-race menu states, `_set_race_world_active(false)` disables and hides the track generator, player kart, and AI karts (`process_mode = PROCESS_MODE_DISABLED`, `visible = false`). The in-race HUD is hidden until countdown release.
+
+### Gotcha: Action Buttons Clipped on Screen Heights $\le 800\text{px}$
+* **Cause**: Using fixed-pixel offsets (`offset_bottom = 280`) on pre-race dialogs causes buttons to extend past the bottom edge of screens on standard laptops or mobile viewports $\le 800\text{px}$ in height.
+* **Resolution**: Convert dialogs to responsive full-screen containers (`anchor_right = 1.0, anchor_bottom = 1.0`) with vertical scrolling for content cards and a fixed bottom navigation bar containing $\ge 48\text{dp}$ touch targets guaranteed within safe-area boundaries.
+
+### Gotcha: Headless GDScript `class_name` Cache Staleness
+* **Cause**: In Godot 4.3 headless mode, newly created `class_name` scripts are not immediately registered in `.godot/global_script_class_cache.cfg` unless an editor scan occurs.
+* **Resolution**: Include explicit `const ... = preload(...)` references in consumer scripts and test harnesses to guarantee hermetic headless compilation without depending on cache scans.
+
 

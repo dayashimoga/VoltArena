@@ -48,12 +48,13 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.emission = Color(0.2, 1.0, 0.4)
 			mat.emission_energy_multiplier = 2.2
 		"asphalt_track":
-			mat.albedo_color = Color(0.85, 0.88, 0.92)
+			mat.albedo_color = Color(0.95, 0.95, 0.98)
 			mat.albedo_texture = TexSynth.get_texture("asphalt_albedo")
 			mat.normal_enabled = true
 			mat.normal_texture = TexSynth.get_texture("asphalt_normal")
-			mat.metallic = 0.1
-			mat.roughness = 0.75
+			mat.metallic = 0.0
+			mat.roughness = 0.88
+			mat.roughness_texture = TexSynth.get_texture("asphalt_roughness")
 			mat.uv1_scale = Vector3(2.0, 8.0, 2.0)
 		"hex_grid_cyan":
 			mat.albedo_color = Color(1.0, 1.0, 1.0)
@@ -91,21 +92,45 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.roughness = 0.50
 			mat.uv1_triplanar = true
 			mat.uv1_scale = Vector3(1.0, 1.0, 1.0)
-		"curb_blue_white", "curb_red_white", "curb_stripes":
+		"curb_blue_white":
+			mat.albedo_color = Color(1.0, 1.0, 1.0)
+			mat.albedo_texture = TexSynth.get_texture("curb_stripes_blue_white")
+			mat.roughness = 0.70
+			mat.metallic = 0.0
+			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			mat.uv1_scale = Vector3(6.0, 1.0, 1.0)
+		"curb_red_white", "curb_stripes":
 			mat.albedo_color = Color(1.0, 1.0, 1.0)
 			mat.albedo_texture = TexSynth.get_texture("curb_stripes_red_white")
-			mat.roughness = 0.60
-			mat.metallic = 0.05
+			mat.roughness = 0.70
+			mat.metallic = 0.0
 			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-			mat.uv1_scale = Vector3(8.0, 1.0, 1.0)
+			mat.uv1_scale = Vector3(6.0, 1.0, 1.0)
 		"asphalt_lanes":
-			mat.albedo_color = Color(0.95, 0.95, 0.98)
+			mat.albedo_color = Color(1.0, 1.0, 1.0)
 			mat.albedo_texture = TexSynth.get_texture("asphalt_lanes_albedo")
 			mat.normal_enabled = true
 			mat.normal_texture = TexSynth.get_texture("asphalt_normal")
-			mat.metallic = 0.12
-			mat.roughness = 0.72
+			mat.metallic = 0.0
+			mat.roughness = 0.88
+			mat.roughness_texture = TexSynth.get_texture("asphalt_roughness")
 			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		"wet_asphalt":
+			mat.albedo_color = Color(0.70, 0.72, 0.75)
+			mat.albedo_texture = TexSynth.get_texture("asphalt_lanes_albedo")
+			mat.normal_enabled = true
+			mat.normal_texture = TexSynth.get_texture("asphalt_normal")
+			mat.metallic = 0.0
+			mat.roughness = 0.82
+			mat.roughness_texture = TexSynth.get_texture("wet_puddle_mask")
+			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		"contact_shadow":
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat.albedo_color = Color(0.0, 0.0, 0.0, 0.85)
+			mat.albedo_texture = TexSynth.get_texture("contact_shadow_blob")
+			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
 		"racing_barrier", "armco_barrier":
 			mat.albedo_color = Color(0.90, 0.92, 0.95)
 			mat.albedo_texture = TexSynth.get_texture("armco_barrier_albedo")

@@ -136,6 +136,9 @@ func enter_workshop_mode() -> void:
 	player_robot.velocity = Vector3.ZERO
 	player_robot.forward_speed = 0.0
 
+func start_challenge(challenge_id: String) -> void:
+	launch_challenge(challenge_id)
+
 func launch_challenge(challenge_id: String) -> void:
 	is_in_workshop = false
 	workshop.visible = false

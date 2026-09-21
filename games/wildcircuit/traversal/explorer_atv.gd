@@ -21,9 +21,17 @@ func _ready() -> void:
 	collision_mask = GameConstants.LAYER_WORLD
 	setup_visuals()
 
+var wheels: Array[Node3D] = []
+var visual_body: Node3D = null
+var current_steer: float = 0.0
+
 func setup_visuals() -> void:
-	var visual = MeshBuilder.build_safari_atv_vehicle()
-	add_child(visual)
+	visual_body = MeshBuilder.build_safari_atv_vehicle()
+	add_child(visual_body)
+
+	for child in visual_body.get_children():
+		if "wheel" in child.name.to_lower():
+			wheels.append(child)
 
 	# Headlight for night expeditions
 	headlight = SpotLight3D.new()
@@ -81,6 +89,18 @@ func handle_driving(delta: float) -> void:
 	var fwd = -transform.basis.z
 	velocity.x = fwd.x * forward_speed
 	velocity.z = fwd.z * forward_speed
+
+	# Dynamic wheel spin, steering, and suspension roll/pitch
+	current_steer = lerpf(current_steer, steer * 0.45, delta * 10.0)
+	for i in range(wheels.size()):
+		var w = wheels[i]
+		w.rotate_x(forward_speed * delta * 2.5)
+		if i < 2:
+			w.rotation.y = current_steer
+
+	if visual_body:
+		visual_body.rotation.z = lerpf(visual_body.rotation.z, -steer * 0.08, delta * 8.0)
+		visual_body.rotation.x = lerpf(visual_body.rotation.x, (throttle * 0.05), delta * 8.0)
 
 	if driver:
 		driver.global_position = global_position + Vector3(0, 0.7, 0)

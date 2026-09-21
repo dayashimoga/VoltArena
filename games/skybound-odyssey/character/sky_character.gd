@@ -51,6 +51,9 @@ var walk_anim_time: float = 0.0
 var ledge_ray_forward: RayCast3D
 var ledge_ray_down: RayCast3D
 
+const HumanoidAnimatorScript = preload("res://shared/animation/humanoid_animator.gd")
+var animator = null
+
 func _ready() -> void:
 	add_to_group("players")
 	collision_layer = GameConstants.LAYER_PLAYER
@@ -73,6 +76,9 @@ func setup_visuals() -> void:
 	shoulder_l = visual_node.find_child("Shoulder_L", true, false)
 	shoulder_r = visual_node.find_child("Shoulder_R", true, false)
 	cape_mesh = visual_node.find_child("Cape", true, false)
+
+	animator = HumanoidAnimatorScript.new()
+	animator.setup_procedural_biped(visual_node)
 
 	# Collision shape
 	var col = CollisionShape3D.new()
@@ -99,8 +105,22 @@ func setup_ledge_detectors() -> void:
 	add_child(ledge_ray_down)
 
 func _update_procedural_animations(delta: float, on_floor: bool) -> void:
-	var h_spd = Vector2(velocity.x, velocity.z).length()
-	if on_floor:
+	if animator:
+		var is_sprint = Input.is_action_pressed("sprint")
+		animator.update(
+			delta,
+			velocity,
+			on_floor,
+			is_sprint,
+			false,
+			false,
+			false,
+			false,
+			is_gliding,
+			false
+		)
+	elif on_floor:
+		var h_spd = Vector2(velocity.x, velocity.z).length()
 		if h_spd > 0.2:
 			walk_anim_time += delta * (h_spd * 2.2)
 			var leg_swing = sin(walk_anim_time) * 0.45

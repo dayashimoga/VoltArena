@@ -25,6 +25,15 @@ var pause_menu: CanvasLayer
 var results_screen: CanvasLayer
 
 var game_active: bool = true
+var collected_shards_count: int = 0
+
+func _on_shard_collected(_shard_id: String = "") -> void:
+	collected_shards_count += 1
+	if player:
+		player.shards_collected = collected_shards_count
+
+func _on_all_quests_finished() -> void:
+	complete_odyssey()
 
 func _ready() -> void:
 	setup_game()
@@ -48,6 +57,7 @@ func setup_game() -> void:
 	world = SkyboundWorldScript.new()
 	world.name = "SkyboundWorld"
 	add_child(world)
+	world.build_world()
 
 	# 4. Player Character
 	player = SkyCharacterScript.new()
@@ -84,6 +94,7 @@ func setup_game() -> void:
 
 func connect_signals() -> void:
 	player.shard_collected.connect(func(total: int, amount: int):
+		collected_shards_count = total
 		hud.update_shards(total)
 		inventory.add_item("energy_shard", amount)
 		quest_manager.advance_objective("quest_emerald", "shards", amount)

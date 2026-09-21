@@ -87,6 +87,9 @@ func setup_game() -> void:
 
 var current_biome_idx: int = 0
 
+const HumanoidAnimatorScript = preload("res://shared/animation/humanoid_animator.gd")
+var ranger_animator: HumanoidAnimator = null
+
 func _create_player_explorer() -> CharacterBody3D:
 	var body = CharacterBody3D.new()
 	body.name = "Player"
@@ -97,6 +100,9 @@ func _create_player_explorer() -> CharacterBody3D:
 	var visual = MeshBuilder.build_wildcircuit_ranger_character()
 	visual.name = "RangerVisual"
 	body.add_child(visual)
+
+	ranger_animator = HumanoidAnimatorScript.new()
+	ranger_animator.setup_procedural_biped(visual)
 
 	var col = CollisionShape3D.new()
 	var cs = CapsuleShape3D.new()
@@ -184,6 +190,25 @@ func handle_player_movement(delta: float) -> void:
 	player.velocity.x = move_dir.x * spd
 	player.velocity.z = move_dir.z * spd
 	player.move_and_slide()
+
+	# Rotate character towards movement direction
+	if move_dir.length_squared() > 0.01:
+		var target_angle = atan2(-move_dir.x, -move_dir.z)
+		player.rotation.y = lerp_angle(player.rotation.y, target_angle, delta * 10.0)
+
+	if ranger_animator:
+		ranger_animator.update(
+			delta,
+			player.velocity,
+			player.is_on_floor(),
+			is_sprint,
+			is_camera_mode,
+			false,
+			is_camera_mode,
+			false,
+			false,
+			false
+		)
 
 	# Mount / Dismount ATV
 	if Input.is_action_just_pressed("interact"):

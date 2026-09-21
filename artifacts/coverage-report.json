@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 94.9828962371722,
+  "overall_coverage_pct": 95.0113378684807,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -149,8 +149,8 @@
     },
     "res://games/roboforge-arena/roboforge_main.gd": {
       "coverage_pct": 100,
-      "tested": 6,
-      "total": 6,
+      "tested": 7,
+      "total": 7,
       "untested": []
     },
     "res://games/roboforge-arena/robot/modular_robot.gd": {
@@ -235,8 +235,8 @@
     },
     "res://games/skybound-odyssey/world/skybound_world.gd": {
       "coverage_pct": 100,
-      "tested": 8,
-      "total": 8,
+      "tested": 9,
+      "total": 9,
       "untested": []
     },
     "res://games/strike-vector/ai/ai_archetypes.gd": {
@@ -622,6 +622,12 @@
       "total": 5,
       "untested": []
     },
+    "res://shared/animation/humanoid_animator.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
     "res://shared/audio/audio_manager.gd": {
       "coverage_pct": 100,
       "tested": 19,
@@ -853,7 +859,7 @@
       "untested": []
     }
   },
-  "tested_functions": 833,
-  "timestamp": "2026-09-21T14:13:49",
-  "total_functions": 877
+  "tested_functions": 838,
+  "timestamp": "2026-09-21T16:59:56",
+  "total_functions": 882
 }

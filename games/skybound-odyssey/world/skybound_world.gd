@@ -1,9 +1,10 @@
 class_name SkyboundWorld
 extends Node3D
 
-## SkyboundWorld: 5 Interconnected Production-Quality 3D Regions for Skybound Odyssey
+## SkyboundWorld: 5 Distinct Production-Quality 3D Exploration Regions for Skybound Odyssey.
 ## Features Emerald Isles, Crystal Caverns, Sunken Sky Temple, Frost Peaks, and Storm Citadel.
-## Houses complete puzzle chains, traversal obstacles, NPCs, collectible shards, and checkpoints.
+## Features multi-tiered floating islands, stalactite underbellies, waterfalls with mist,
+## ancient ruins, grapple chasms, wind updrafts, and complete progression.
 
 signal region_entered(region_name: String)
 signal shard_picked_up(shard_node: Node3D)
@@ -32,23 +33,25 @@ func _ready() -> void:
 	build_world()
 
 func build_world() -> void:
+	if get_child_count() > 0:
+		return
 	# 1. Emerald Isles (Region 0: 0, 0, 0)
 	build_emerald_isles(Vector3(0, 0, 0))
 
-	# 2. Crystal Caverns (Region 1: 0, -25.0, 70.0)
+	# 2. Crystal Caverns (Region 1: 0, -20.0, 80.0)
 	build_crystal_caverns(Vector3(0, -20.0, 80.0))
 
-	# 3. Sunken Sky Temple (Region 2: 90.0, 10.0, 0)
+	# 3. Sunken Sky Temple (Region 2: 95.0, 12.0, 0)
 	build_sky_temple(Vector3(95.0, 12.0, 0))
 
-	# 4. Frost Peaks (Region 3: -90.0, 25.0, 0)
+	# 4. Frost Peaks (Region 3: -95.0, 24.0, 0)
 	build_frost_peaks(Vector3(-95.0, 24.0, 0))
 
-	# 5. Storm Citadel (Region 4: 0, 45.0, -110.0)
+	# 5. Storm Citadel (Region 4: 0, 42.0, -115.0)
 	build_storm_citadel(Vector3(0, 42.0, -115.0))
 
 # ==============================================================================
-# REGION 1: EMERALD ISLES (Floating Lush Islands & Ancient Ruins)
+# REGION 1: EMERALD ISLES (Lush Floating Islands, Waterfalls & Ancient Ruins)
 # ==============================================================================
 func build_emerald_isles(origin: Vector3) -> void:
 	var root = Node3D.new()
@@ -56,41 +59,55 @@ func build_emerald_isles(origin: Vector3) -> void:
 	root.position = origin
 	add_child(root)
 
-	# Main Central Island
-	_create_floating_island(root, Vector3(0, 0, 0), Vector3(32.0, 6.0, 32.0), "lush_grass", "ancient_stone")
+	# Main Central Island with tiered plateau
+	_create_floating_island(root, Vector3(0, 0, 0), Vector3(36.0, 8.0, 36.0), "lush_grass", "ancient_stone")
+
+	# Upper Temple Terrace
+	_create_floating_platform(root, Vector3(0, 3.5, -10.0), Vector3(18.0, 1.4, 14.0), "ancient_stone")
 
 	# Ancient Ruin Archways & Columns
-	_create_ruin_arch(root, Vector3(0, 3.0, -8.0))
-	_create_pillar(root, Vector3(-8.0, 3.0, 8.0), 5.0)
-	_create_pillar(root, Vector3(8.0, 3.0, 8.0), 5.0)
+	_create_ruin_arch(root, Vector3(0, 4.2, -14.0))
+	_create_pillar(root, Vector3(-7.0, 4.2, -6.0), 5.5, "ancient_stone")
+	_create_pillar(root, Vector3(7.0, 4.2, -6.0), 5.5, "ancient_stone")
+	_create_pillar(root, Vector3(-12.0, 0.8, 8.0), 4.5, "ancient_stone")
+	_create_pillar(root, Vector3(12.0, 0.8, 8.0), 4.5, "ancient_stone")
 
-	# Stepping Stone Floating Platforms
-	_create_floating_platform(root, Vector3(0, 1.5, 22.0), Vector3(5.0, 1.2, 5.0))
-	_create_floating_platform(root, Vector3(0, 3.0, 32.0), Vector3(6.0, 1.2, 6.0))
+	# Stepping Stone Floating Platforms leading to outer shard
+	_create_floating_platform(root, Vector3(0, 1.5, 22.0), Vector3(6.5, 1.8, 6.5), "ancient_stone")
+	_create_floating_platform(root, Vector3(0, 3.5, 34.0), Vector3(7.5, 2.0, 7.5), "ancient_stone")
+
+	# Waterfall cascading from island edge into void
+	_create_waterfall(root, Vector3(14.0, 0.5, 0), Vector3(4.0, 14.0, 0.8))
+
+	# Foliage & trees
+	for p in [Vector3(-10.0, 0.8, -4.0), Vector3(10.0, 0.8, 6.0), Vector3(-8.0, 0.8, 12.0)]:
+		var tree = MeshBuilder.build_pine_tree(7.5)
+		tree.position = p
+		root.add_child(tree)
 
 	# Tutorial Puzzle: Pressure plate opens ruin gate
 	var plate = PuzzleElementsScript.PressurePlate.new()
-	plate.position = Vector3(0, 3.0, 6.0)
+	plate.position = Vector3(0, 4.2, 2.0)
 	root.add_child(plate)
 
 	var door = PuzzleElementsScript.PuzzleDoor.new()
-	door.position = Vector3(0, 3.0, -14.0)
+	door.position = Vector3(0, 4.2, -14.0)
 	door.register_trigger(plate.state_changed)
 	root.add_child(door)
 	puzzle_doors.append(door)
 
 	# NPC: Elder Zephyr
-	var elder = _create_npc("Elder Zephyr", Vector3(5.0, 3.0, 2.0), "Welcome, Skyfarer! Collect the energy shards to awaken the ancient temples.")
+	var elder = _create_npc("Elder Zephyr", Vector3(6.0, 4.2, -2.0), "Welcome, Skyfarer! Collect the energy shards to awaken the ancient temples.")
 	root.add_child(elder)
 	npcs.append(elder)
 
 	# Shards
-	_spawn_shard(root, Vector3(0, 4.2, 22.0))
-	_spawn_shard(root, Vector3(0, 5.8, 32.0))
-	_spawn_shard(root, Vector3(0, 4.2, -18.0))
+	_spawn_shard(root, Vector3(0, 4.8, 22.0))
+	_spawn_shard(root, Vector3(0, 6.5, 34.0))
+	_spawn_shard(root, Vector3(0, 5.8, -18.0))
 
 	# Region trigger volume
-	_create_region_detector(root, Vector3.ZERO, Vector3(45.0, 15.0, 45.0), 0)
+	_create_region_detector(root, Vector3.ZERO, Vector3(55.0, 20.0, 55.0), 0)
 
 # ==============================================================================
 # REGION 2: CRYSTAL CAVERNS (Luminous Crystals & Chasm Traversal)
@@ -101,29 +118,38 @@ func build_crystal_caverns(origin: Vector3) -> void:
 	root.position = origin
 	add_child(root)
 
-	# Subterranean cavern floor
-	_create_box_collider(root, Vector3(0, 0, 0), Vector3(36.0, 4.0, 42.0), "dark_hull")
+	# Subterranean cavern floor with basalt texture
+	_create_box_collider(root, Vector3(0, 0, 0), Vector3(40.0, 5.0, 48.0), "dark_hull")
 
-	# Luminous Glowing Crystal Formations
-	for pos in [Vector3(-10.0, 2.0, -10.0), Vector3(10.0, 2.0, -10.0), Vector3(-12.0, 2.0, 10.0), Vector3(12.0, 2.0, 10.0)]:
-		_create_crystal_cluster(root, pos, "crystal_cyan")
-	for pos in [Vector3(0, 2.0, -14.0), Vector3(0, 2.0, 14.0)]:
-		_create_crystal_cluster(root, pos, "crystal_magenta")
+	# Luminous Glowing Crystal Formations (cyan, magenta, amber)
+	for pos in [Vector3(-12.0, 2.5, -12.0), Vector3(12.0, 2.5, -12.0), Vector3(-14.0, 2.5, 12.0), Vector3(14.0, 2.5, 12.0)]:
+		_create_crystal_cluster(root, pos, "neon_cyan")
+	for pos in [Vector3(0, 2.5, -16.0), Vector3(0, 2.5, 16.0)]:
+		_create_crystal_cluster(root, pos, "neon_magenta")
+
+	# Basalt Arch Bridges over chasm
+	var arch = MeshInstance3D.new()
+	var b_box = BoxMesh.new()
+	b_box.size = Vector3(8.0, 1.4, 28.0)
+	arch.mesh = b_box
+	arch.material_override = MaterialGenerator.get_material("dark_hull")
+	arch.position = Vector3(0, 1.0, 0)
+	root.add_child(arch)
 
 	# Chasm gap with Grapple Anchors
 	var anchor1 = PuzzleElementsScript.GrappleAnchor.new()
-	anchor1.position = Vector3(-6.0, 8.0, 0)
+	anchor1.position = Vector3(-8.0, 9.0, 0)
 	root.add_child(anchor1)
 
 	var anchor2 = PuzzleElementsScript.GrappleAnchor.new()
-	anchor2.position = Vector3(6.0, 8.0, 0)
+	anchor2.position = Vector3(8.0, 9.0, 0)
 	root.add_child(anchor2)
 
 	# Shards
-	_spawn_shard(root, Vector3(-10.0, 4.0, -10.0))
-	_spawn_shard(root, Vector3(10.0, 4.0, 10.0))
+	_spawn_shard(root, Vector3(-12.0, 5.0, -12.0))
+	_spawn_shard(root, Vector3(12.0, 5.0, 12.0))
 
-	_create_region_detector(root, Vector3.ZERO, Vector3(45.0, 18.0, 50.0), 1)
+	_create_region_detector(root, Vector3.ZERO, Vector3(50.0, 22.0, 55.0), 1)
 
 # ==============================================================================
 # REGION 3: SUNKEN SKY TEMPLE (Floating Columns & Wind Updrafts)
@@ -135,37 +161,25 @@ func build_sky_temple(origin: Vector3) -> void:
 	add_child(root)
 
 	# Main Temple Plaza
-	_create_floating_island(root, Vector3(0, 0, 0), Vector3(34.0, 5.0, 34.0), "ancient_stone", "temple_gold")
+	_create_floating_island(root, Vector3(0, 0, 0), Vector3(38.0, 6.0, 38.0), "ancient_stone", "temple_gold")
 
 	# Gilded Columns
-	for cp in [Vector3(-10.0, 2.5, -10.0), Vector3(10.0, 2.5, -10.0), Vector3(-10.0, 2.5, 10.0), Vector3(10.0, 2.5, 10.0)]:
-		_create_pillar(root, cp, 6.5, "temple_gold")
+	for cp in [Vector3(-12.0, 3.0, -12.0), Vector3(12.0, 3.0, -12.0), Vector3(-12.0, 3.0, 12.0), Vector3(12.0, 3.0, 12.0)]:
+		_create_pillar(root, cp, 7.5, "temple_gold")
 
 	# Wind Updraft for Glider Flight
 	var wind = PuzzleElementsScript.WindCurrent.new()
-	wind.position = Vector3(0, 2.5, 14.0)
+	wind.position = Vector3(0, 3.0, 14.0)
 	root.add_child(wind)
 
 	# Elevated Altar reached via Wind Gliding
-	_create_floating_platform(root, Vector3(0, 16.0, 22.0), Vector3(8.0, 1.5, 8.0), "temple_gold")
+	_create_floating_platform(root, Vector3(0, 18.0, 24.0), Vector3(9.0, 2.0, 9.0), "temple_gold")
+	_spawn_shard(root, Vector3(0, 20.2, 24.0), 2)
 
-	# Puzzle Switch on elevated altar
-	var p_switch = PuzzleElementsScript.PuzzleSwitch.new()
-	p_switch.position = Vector3(0, 16.8, 22.0)
-	root.add_child(p_switch)
-
-	# NPC: Scholar Lyra
-	var scholar = _create_npc("Scholar Lyra", Vector3(-4.0, 2.5, -4.0), "Use the wind thermal to glide up to the Sunken Altar and activate the temple core!")
-	root.add_child(scholar)
-	npcs.append(scholar)
-
-	# Temple Shard on elevated altar
-	_spawn_shard(root, Vector3(0, 18.5, 22.0))
-
-	_create_region_detector(root, Vector3.ZERO, Vector3(45.0, 30.0, 45.0), 2)
+	_create_region_detector(root, Vector3.ZERO, Vector3(50.0, 30.0, 50.0), 2)
 
 # ==============================================================================
-# REGION 4: FROST PEAKS (Snow-Covered Crags & Ice Platforms)
+# REGION 4: FROST PEAKS (Jagged Ice Pinnacles & Narrow Glaciers)
 # ==============================================================================
 func build_frost_peaks(origin: Vector3) -> void:
 	var root = Node3D.new()
@@ -173,26 +187,22 @@ func build_frost_peaks(origin: Vector3) -> void:
 	root.position = origin
 	add_child(root)
 
-	# Icy Mountain Base
-	_create_floating_island(root, Vector3(0, 0, 0), Vector3(32.0, 7.0, 32.0), "frost_ice", "alpine_rock")
+	# Snowy Mountain Plateau
+	_create_floating_island(root, Vector3(0, 0, 0), Vector3(36.0, 10.0, 36.0), "arctic_ice", "alpine_rock")
 
-	# Ascending Crag Ledges for mantling & double-jumping
-	_create_floating_platform(root, Vector3(-10.0, 4.0, 0), Vector3(6.0, 1.5, 6.0), "frost_ice")
-	_create_floating_platform(root, Vector3(-10.0, 8.0, 10.0), Vector3(6.0, 1.5, 6.0), "frost_ice")
-	_create_floating_platform(root, Vector3(0.0, 12.0, 12.0), Vector3(7.0, 1.5, 7.0), "frost_ice")
+	# Jagged Ice Formations
+	for ip in [Vector3(-10.0, 5.0, -10.0), Vector3(10.0, 5.0, -10.0), Vector3(-10.0, 5.0, 10.0), Vector3(10.0, 5.0, 10.0)]:
+		_create_ice_formation(root, ip)
 
-	# NPC: Scout Kael
-	var scout = _create_npc("Scout Kael", Vector3(3.0, 3.5, 0), "The storm clouds ahead guard the Citadel. Use double jumps to climb the icy peaks!")
-	root.add_child(scout)
-	npcs.append(scout)
+	# Frozen narrow bridge to isolated peak
+	_create_floating_platform(root, Vector3(0, 5.0, -22.0), Vector3(3.2, 1.2, 16.0), "arctic_ice")
+	_create_floating_platform(root, Vector3(0, 7.0, -36.0), Vector3(8.0, 2.0, 8.0), "arctic_ice")
+	_spawn_shard(root, Vector3(0, 9.2, -36.0), 2)
 
-	# Shards
-	_spawn_shard(root, Vector3(0.0, 14.0, 12.0))
-
-	_create_region_detector(root, Vector3.ZERO, Vector3(45.0, 25.0, 45.0), 3)
+	_create_region_detector(root, Vector3.ZERO, Vector3(50.0, 25.0, 55.0), 3)
 
 # ==============================================================================
-# REGION 5: STORM CITADEL (Apex Challenge Fortress)
+# REGION 5: STORM CITADEL (Obsidian Sky Fortress & Apex Relic Altar)
 # ==============================================================================
 func build_storm_citadel(origin: Vector3) -> void:
 	var root = Node3D.new()
@@ -201,27 +211,27 @@ func build_storm_citadel(origin: Vector3) -> void:
 	add_child(root)
 
 	# Main Citadel Fortress Platform
-	_create_floating_island(root, Vector3(0, 0, 0), Vector3(42.0, 8.0, 42.0), "storm_citadel", "dark_hull")
+	_create_floating_island(root, Vector3(0, 0, 0), Vector3(46.0, 10.0, 46.0), "storm_citadel", "dark_hull")
 
-	# Lightning Pylons
-	for lp in [Vector3(-14.0, 4.0, -14.0), Vector3(14.0, 4.0, -14.0), Vector3(-14.0, 4.0, 14.0), Vector3(14.0, 4.0, 14.0)]:
+	# Lightning Pylons with crackling energy
+	for lp in [Vector3(-16.0, 5.0, -16.0), Vector3(16.0, 5.0, -16.0), Vector3(-16.0, 5.0, 16.0), Vector3(16.0, 5.0, 16.0)]:
 		_create_lightning_pylon(root, lp)
 
 	# Apex Artifact Pedestal
 	var pedestal = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
-	cyl.top_radius = 2.2
-	cyl.bottom_radius = 2.5
-	cyl.height = 1.2
+	cyl.top_radius = 2.4
+	cyl.bottom_radius = 2.8
+	cyl.height = 1.4
 	pedestal.mesh = cyl
 	pedestal.material_override = MaterialGenerator.get_material("temple_gold")
-	pedestal.position = Vector3(0, 4.6, 0)
+	pedestal.position = Vector3(0, 5.7, 0)
 	root.add_child(pedestal)
 
 	# Apex Skybound Artifact Shard
-	_spawn_shard(root, Vector3(0, 6.5, 0), 5) # 5 shards value
+	_spawn_shard(root, Vector3(0, 7.8, 0), 5) # 5 shards value
 
-	_create_region_detector(root, Vector3.ZERO, Vector3(50.0, 30.0, 50.0), 4)
+	_create_region_detector(root, Vector3.ZERO, Vector3(55.0, 35.0, 55.0), 4)
 
 # ==============================================================================
 # PROCEDURAL ENVIRONMENT BUILDERS
@@ -231,23 +241,36 @@ func _create_floating_island(parent: Node3D, pos: Vector3, size: Vector3, top_ma
 	island.collision_layer = GameConstants.LAYER_WORLD
 	island.position = pos
 
-	# Top turf slab
+	# 1. Top turf slab with stepped elevation
 	var top_mesh = MeshInstance3D.new()
 	var b_top = BoxMesh.new()
-	b_top.size = Vector3(size.x, 1.2, size.z)
+	b_top.size = Vector3(size.x, 1.4, size.z)
 	top_mesh.mesh = b_top
 	top_mesh.material_override = MaterialGenerator.get_material(top_mat)
-	top_mesh.position = Vector3(0, size.y * 0.5 - 0.6, 0)
+	top_mesh.position = Vector3(0, size.y * 0.5 - 0.7, 0)
 	island.add_child(top_mesh)
 
-	# Under-rock base
-	var base_mesh = MeshInstance3D.new()
-	var b_base = BoxMesh.new()
-	b_base.size = Vector3(size.x * 0.85, size.y - 1.2, size.z * 0.85)
-	base_mesh.mesh = b_base
-	base_mesh.material_override = MaterialGenerator.get_material(base_mat)
-	base_mesh.position = Vector3(0, -0.6, 0)
-	island.add_child(base_mesh)
+	# 2. Stepped middle rock ledge
+	var mid_mesh = MeshInstance3D.new()
+	var b_mid = BoxMesh.new()
+	b_mid.size = Vector3(size.x * 0.92, size.y * 0.4, size.z * 0.92)
+	mid_mesh.mesh = b_mid
+	mid_mesh.material_override = MaterialGenerator.get_material(base_mat)
+	mid_mesh.position = Vector3(0, size.y * 0.5 - 1.4 - (size.y * 0.2), 0)
+	island.add_child(mid_mesh)
+
+	# 3. Inverted rock stalactite underbelly (3 tapered cones pointing downward)
+	for i in range(3):
+		var cone_mesh = MeshInstance3D.new()
+		var cone = CylinderMesh.new()
+		cone.top_radius = (size.x * 0.35) - float(i) * 1.5
+		cone.bottom_radius = 0.4
+		cone.height = size.y * 0.75 + float(i) * 2.0
+		cone_mesh.mesh = cone
+		cone_mesh.material_override = MaterialGenerator.get_material(base_mat)
+		var offset_x = (float(i) - 1.0) * (size.x * 0.22)
+		cone_mesh.position = Vector3(offset_x, -size.y * 0.5, 0)
+		island.add_child(cone_mesh)
 
 	# Collision
 	var col = CollisionShape3D.new()
@@ -257,6 +280,25 @@ func _create_floating_island(parent: Node3D, pos: Vector3, size: Vector3, top_ma
 	island.add_child(col)
 
 	parent.add_child(island)
+
+func _create_waterfall(parent: Node3D, pos: Vector3, size: Vector3) -> void:
+	var stream = MeshInstance3D.new()
+	var box = BoxMesh.new()
+	box.size = size
+	stream.mesh = box
+	stream.material_override = MaterialGenerator.get_material("water_stream")
+	stream.position = pos - Vector3(0, size.y * 0.5, 0)
+	parent.add_child(stream)
+
+	# Mist emitter at waterfall impact
+	var mist = MeshInstance3D.new()
+	var sphere = SphereMesh.new()
+	sphere.radius = 2.5
+	sphere.height = 1.2
+	mist.mesh = sphere
+	mist.material_override = MaterialGenerator.get_material("neon_cyan")
+	mist.position = pos - Vector3(0, size.y, 0)
+	parent.add_child(mist)
 
 func _create_floating_platform(parent: Node3D, pos: Vector3, size: Vector3, mat_name: String = "ancient_stone") -> void:
 	var plat = StaticBody3D.new()
@@ -269,6 +311,17 @@ func _create_floating_platform(parent: Node3D, pos: Vector3, size: Vector3, mat_
 	mesh_inst.mesh = b_mesh
 	mesh_inst.material_override = MaterialGenerator.get_material(mat_name)
 	plat.add_child(mesh_inst)
+
+	# Inverted stone taper under platform
+	var under = MeshInstance3D.new()
+	var cone = CylinderMesh.new()
+	cone.top_radius = size.x * 0.45
+	cone.bottom_radius = 0.2
+	cone.height = size.y * 1.5
+	under.mesh = cone
+	under.material_override = MaterialGenerator.get_material(mat_name)
+	under.position = Vector3(0, -size.y * 0.8, 0)
+	plat.add_child(under)
 
 	var col = CollisionShape3D.new()
 	var col_box = BoxShape3D.new()
@@ -313,10 +366,19 @@ func _create_pillar(parent: Node3D, pos: Vector3, h: float, mat_name: String = "
 	mi.position = Vector3(0, h * 0.5, 0)
 	pillar.add_child(mi)
 
+	# Capital & Base plinths
+	var cap = MeshInstance3D.new()
+	var box = BoxMesh.new()
+	box.size = Vector3(1.8, 0.4, 1.8)
+	cap.mesh = box
+	cap.material_override = MaterialGenerator.get_material(mat_name)
+	cap.position = Vector3(0, h + 0.2, 0)
+	pillar.add_child(cap)
+
 	var col = CollisionShape3D.new()
 	var col_cyl = CylinderShape3D.new()
-	col_cyl.radius = 0.75
-	col_cyl.height = h
+	col_cyl.radius = 0.85
+	col_cyl.height = h + 0.4
 	col.shape = col_cyl
 	col.position = Vector3(0, h * 0.5, 0)
 	pillar.add_child(col)
@@ -326,21 +388,21 @@ func _create_pillar(parent: Node3D, pos: Vector3, h: float, mat_name: String = "
 func _create_ruin_arch(parent: Node3D, pos: Vector3) -> void:
 	var arch = Node3D.new()
 	arch.position = pos
-	_create_pillar(arch, Vector3(-3.0, 0, 0), 6.0)
-	_create_pillar(arch, Vector3(3.0, 0, 0), 6.0)
+	_create_pillar(arch, Vector3(-3.5, 0, 0), 6.5, "ancient_stone")
+	_create_pillar(arch, Vector3(3.5, 0, 0), 6.5, "ancient_stone")
 
 	var lintel = StaticBody3D.new()
 	lintel.collision_layer = GameConstants.LAYER_WORLD
-	lintel.position = Vector3(0, 6.0, 0)
+	lintel.position = Vector3(0, 6.7, 0)
 	var mi = MeshInstance3D.new()
 	var b_box = BoxMesh.new()
-	b_box.size = Vector3(7.5, 1.2, 1.4)
+	b_box.size = Vector3(9.0, 1.4, 1.6)
 	mi.mesh = b_box
 	mi.material_override = MaterialGenerator.get_material("ancient_stone")
 	lintel.add_child(mi)
 	var col = CollisionShape3D.new()
 	var col_box = BoxShape3D.new()
-	col_box.size = Vector3(7.5, 1.2, 1.4)
+	col_box.size = Vector3(9.0, 1.4, 1.6)
 	col.shape = col_box
 	lintel.add_child(col)
 	arch.add_child(lintel)
@@ -352,17 +414,33 @@ func _create_crystal_cluster(parent: Node3D, pos: Vector3, mat_name: String) -> 
 	cluster.position = pos
 
 	var mat = MaterialGenerator.get_material(mat_name)
-	for i in range(3):
+	for i in range(4):
 		var mi = MeshInstance3D.new()
 		var prism = PrismMesh.new()
-		prism.size = Vector3(0.8, 2.5 + i * 0.8, 0.8)
+		prism.size = Vector3(0.9, 3.0 + i * 0.8, 0.9)
 		mi.mesh = prism
 		mi.material_override = mat
-		mi.position = Vector3((i - 1) * 0.6, 1.2, (i - 1) * 0.3)
-		mi.rotation_degrees.z = (i - 1) * 15.0
+		var ang = float(i) * (PI * 0.5)
+		mi.position = Vector3(cos(ang) * 0.7, 1.5, sin(ang) * 0.7)
+		mi.rotation_degrees.z = (float(i) - 1.5) * 12.0
 		cluster.add_child(mi)
 
 	parent.add_child(cluster)
+
+func _create_ice_formation(parent: Node3D, pos: Vector3) -> void:
+	var form = Node3D.new()
+	form.position = pos
+	var mat = MaterialGenerator.get_material("arctic_ice")
+	for i in range(3):
+		var mi = MeshInstance3D.new()
+		var prism = PrismMesh.new()
+		prism.size = Vector3(1.2, 4.5 + i * 1.0, 1.2)
+		mi.mesh = prism
+		mi.material_override = mat
+		mi.position = Vector3(float(i - 1) * 0.8, 2.2, 0)
+		mi.rotation_degrees.x = float(i - 1) * 10.0
+		form.add_child(mi)
+	parent.add_child(form)
 
 func _create_lightning_pylon(parent: Node3D, pos: Vector3) -> void:
 	var pylon = StaticBody3D.new()
@@ -371,29 +449,29 @@ func _create_lightning_pylon(parent: Node3D, pos: Vector3) -> void:
 
 	var mi = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
-	cyl.top_radius = 0.2
-	cyl.bottom_radius = 0.9
-	cyl.height = 12.0
+	cyl.top_radius = 0.25
+	cyl.bottom_radius = 1.1
+	cyl.height = 14.0
 	mi.mesh = cyl
-	mi.material_override = MaterialGenerator.get_material("sci_fi_metal")
-	mi.position = Vector3(0, 6.0, 0)
+	mi.material_override = MaterialGenerator.get_material("storm_citadel")
+	mi.position = Vector3(0, 7.0, 0)
 	pylon.add_child(mi)
 
 	var orb = MeshInstance3D.new()
 	var s_mesh = SphereMesh.new()
-	s_mesh.radius = 0.8
-	s_mesh.height = 1.6
+	s_mesh.radius = 1.0
+	s_mesh.height = 2.0
 	orb.mesh = s_mesh
 	orb.material_override = MaterialGenerator.get_material("neon_cyan")
-	orb.position = Vector3(0, 12.4, 0)
+	orb.position = Vector3(0, 14.5, 0)
 	pylon.add_child(orb)
 
 	var col = CollisionShape3D.new()
 	var c_cyl = CylinderShape3D.new()
-	c_cyl.radius = 0.9
-	c_cyl.height = 12.0
+	c_cyl.radius = 1.1
+	c_cyl.height = 14.0
 	col.shape = c_cyl
-	col.position = Vector3(0, 6.0, 0)
+	col.position = Vector3(0, 7.0, 0)
 	pylon.add_child(col)
 
 	parent.add_child(pylon)
@@ -487,3 +565,11 @@ func unlock_region(idx: int) -> void:
 	if not unlocked_regions.has(idx):
 		unlocked_regions.append(idx)
 		region_unlocked.emit(idx)
+
+func get_region_node(region_name: String) -> Node3D:
+	if get_child_count() == 0:
+		build_world()
+	for c in get_children():
+		if c.name == region_name or c.name == region_name.replace(" ", "") or c.name.to_lower() == region_name.replace(" ", "").to_lower():
+			return c
+	return null

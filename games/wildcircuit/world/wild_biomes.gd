@@ -1,9 +1,9 @@
 class_name WildBiomes
 extends Node3D
 
-## WildBiomes: Generates and manages the 5 distinct nature biomes for WildCircuit.
+## WildBiomes: Generates 5 distinct, dense nature exploration biomes for WildCircuit.
 ## Savannah, Rainforest, Alpine Forest, Tropical Coast, and Wetlands.
-## Houses procedural flora, water bodies, landmarks, and autonomous wildlife spawns.
+## Features procedural terrain elevation, dense flora, water bodies, landmarks, and autonomous wildlife.
 
 signal biome_changed(biome_name: String)
 
@@ -22,17 +22,17 @@ func build_all_biomes() -> void:
 	# 2. Rainforest (North: 0, 0, -85.0)
 	build_rainforest(Vector3(0, 0, -85.0))
 
-	# 3. Alpine Forest (West: -90.0, 15.0, 0)
+	# 3. Alpine Forest (West: -90.0, 12.0, 0)
 	build_alpine_forest(Vector3(-90.0, 12.0, 0))
 
-	# 4. Tropical Coast (South: 0, -5.0, 90.0)
+	# 4. Tropical Coast (South: 0, -4.0, 90.0)
 	build_tropical_coast(Vector3(0, -4.0, 90.0))
 
 	# 5. Wetlands (East: 90.0, -2.0, 0)
 	build_wetlands(Vector3(90.0, -2.0, 0))
 
 # ==============================================================================
-# 1. SAVANNAH BIOME
+# 1. SAVANNAH BIOME (Watering Hole, Acacia Trees, Termite Mounds, Tall Grass)
 # ==============================================================================
 func build_savannah(origin: Vector3) -> void:
 	var root = Node3D.new()
@@ -40,35 +40,51 @@ func build_savannah(origin: Vector3) -> void:
 	root.position = origin
 	add_child(root)
 
-	# Terrain floor
-	_add_terrain_slab(root, Vector3(0, -0.5, 0), Vector3(55.0, 1.0, 55.0), "savannah_dirt")
+	# Multi-tiered rolling terrain
+	_add_terrain_slab(root, Vector3(0, -0.5, 0), Vector3(65.0, 1.0, 65.0), "savannah_dirt")
+	_add_terrain_slab(root, Vector3(12.0, 0.4, -10.0), Vector3(24.0, 0.8, 20.0), "savannah_dirt")
+	_add_terrain_slab(root, Vector3(-14.0, 0.6, 12.0), Vector3(20.0, 1.2, 22.0), "savannah_dirt")
 
-	# Central Watering Hole (Reflective water disc)
+	# Central Watering Hole (Reflective water disc with muddy shoreline)
+	var shore = MeshInstance3D.new()
+	var s_cyl = CylinderMesh.new()
+	s_cyl.top_radius = 12.0
+	s_cyl.bottom_radius = 13.0
+	s_cyl.height = 0.05
+	shore.mesh = s_cyl
+	shore.material_override = MaterialGenerator.get_material("wetland_mud")
+	shore.position = Vector3(0, 0.02, 0)
+	root.add_child(shore)
+
 	var water = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
-	cyl.top_radius = 9.0
-	cyl.bottom_radius = 9.0
-	cyl.height = 0.1
+	cyl.top_radius = 10.0
+	cyl.bottom_radius = 10.0
+	cyl.height = 0.08
 	water.mesh = cyl
 	water.material_override = MaterialGenerator.get_material("water_stream")
-	water.position = Vector3(0, 0.05, 0)
+	water.position = Vector3(0, 0.06, 0)
 	root.add_child(water)
 
 	# Acacia Trees
-	for p in [Vector3(-14.0, 0, -12.0), Vector3(14.0, 0, -10.0), Vector3(-12.0, 0, 14.0)]:
+	for p in [Vector3(-18.0, 0, -14.0), Vector3(18.0, 0, -12.0), Vector3(-14.0, 0, 18.0), Vector3(16.0, 0, 16.0), Vector3(0, 0, -22.0)]:
 		_create_acacia_tree(root, p)
 
-	# Termite Mounds
-	for p in [Vector3(-8.0, 0, 12.0), Vector3(10.0, 0, 8.0)]:
+	# Tall Grass Clumps & Termite Mounds
+	for p in [Vector3(-10.0, 0, 14.0), Vector3(12.0, 0, 10.0), Vector3(-20.0, 0, 2.0)]:
 		_create_termite_mound(root, p)
 
-	# Wildlife: Gazelles and Lion
-	_spawn_animal(root, "gazelle", Vector3(-6.0, 0.5, -4.0))
-	_spawn_animal(root, "gazelle", Vector3(-4.0, 0.5, -6.0))
-	_spawn_animal(root, "lion", Vector3(12.0, 0.5, -14.0))
+	for p in [Vector3(-6.0, 0, 8.0), Vector3(8.0, 0, -6.0), Vector3(-12.0, 0, -8.0), Vector3(14.0, 0, 4.0)]:
+		_create_grass_cluster(root, p, "savannah_dirt")
+
+	# Wildlife: Gazelles, Lion, Zebra
+	_spawn_animal(root, "gazelle", Vector3(-8.0, 0.5, -5.0))
+	_spawn_animal(root, "gazelle", Vector3(-5.0, 0.5, -8.0))
+	_spawn_animal(root, "lion", Vector3(15.0, 0.5, -16.0))
+	_spawn_animal(root, "zebra", Vector3(-12.0, 0.5, 8.0))
 
 # ==============================================================================
-# 2. RAINFOREST BIOME
+# 2. RAINFOREST BIOME (Dense Canopy, Vines, Fallen Trunks)
 # ==============================================================================
 func build_rainforest(origin: Vector3) -> void:
 	var root = Node3D.new()
@@ -76,18 +92,22 @@ func build_rainforest(origin: Vector3) -> void:
 	root.position = origin
 	add_child(root)
 
-	_add_terrain_slab(root, Vector3(0, -0.5, 0), Vector3(50.0, 1.0, 50.0), "rainforest_canopy")
+	_add_terrain_slab(root, Vector3(0, -0.5, 0), Vector3(60.0, 1.0, 60.0), "rainforest_canopy")
 
-	# Canopy Giant Trees & Vines
-	for p in [Vector3(-12.0, 0, -12.0), Vector3(12.0, 0, -12.0), Vector3(0, 0, 12.0)]:
+	# Giant Canopy Trees
+	for p in [Vector3(-16.0, 0, -16.0), Vector3(16.0, 0, -16.0), Vector3(-14.0, 0, 14.0), Vector3(14.0, 0, 14.0), Vector3(0, 0, 0)]:
 		_create_canopy_tree(root, p)
 
+	# Understory Ferns & Fallen Logs
+	for p in [Vector3(-6.0, 0.3, -8.0), Vector3(8.0, 0.3, 6.0)]:
+		_create_fallen_log(root, p)
+
 	# Wildlife: Jaguar and Macaw
-	_spawn_animal(root, "jaguar", Vector3(-5.0, 0.5, -5.0))
-	_spawn_animal(root, "macaw", Vector3(0, 4.5, 12.0))
+	_spawn_animal(root, "jaguar", Vector3(-6.0, 0.5, -6.0))
+	_spawn_animal(root, "macaw", Vector3(0, 5.0, 14.0))
 
 # ==============================================================================
-# 3. ALPINE FOREST BIOME
+# 3. ALPINE FOREST BIOME (Mountain Crags, Pines, Elevation)
 # ==============================================================================
 func build_alpine_forest(origin: Vector3) -> void:
 	var root = Node3D.new()
@@ -95,18 +115,21 @@ func build_alpine_forest(origin: Vector3) -> void:
 	root.position = origin
 	add_child(root)
 
-	_add_terrain_slab(root, Vector3(0, -0.5, 0), Vector3(50.0, 1.0, 50.0), "alpine_rock")
+	# Multi-tiered mountain rock slopes
+	_add_terrain_slab(root, Vector3(0, -0.5, 0), Vector3(60.0, 1.0, 60.0), "alpine_rock")
+	_add_terrain_slab(root, Vector3(0, 3.0, -10.0), Vector3(35.0, 4.0, 30.0), "alpine_rock")
+	_add_terrain_slab(root, Vector3(0, 7.0, -18.0), Vector3(20.0, 5.0, 18.0), "arctic_ice")
 
-	# Mountain Crags & Pines
-	for p in [Vector3(-10.0, 0, -10.0), Vector3(10.0, 0, -10.0), Vector3(0, 0, 10.0)]:
+	# Mountain Pines
+	for p in [Vector3(-14.0, 0, -12.0), Vector3(14.0, 0, -12.0), Vector3(-10.0, 3.5, -10.0), Vector3(10.0, 3.5, -10.0), Vector3(0, 7.5, -18.0)]:
 		_create_pine_tree(root, p)
 
 	# Wildlife: Snow Leopard and Mountain Goat
-	_spawn_animal(root, "snow_leopard", Vector3(8.0, 0.5, -8.0))
-	_spawn_animal(root, "mountain_goat", Vector3(-8.0, 0.5, 6.0))
+	_spawn_animal(root, "snow_leopard", Vector3(10.0, 4.0, -12.0))
+	_spawn_animal(root, "mountain_goat", Vector3(-8.0, 7.5, -16.0))
 
 # ==============================================================================
-# 4. TROPICAL COAST BIOME
+# 4. TROPICAL COAST BIOME (Sand Dunes, Palms, Turquoise Ocean)
 # ==============================================================================
 func build_tropical_coast(origin: Vector3) -> void:
 	var root = Node3D.new()
@@ -115,26 +138,26 @@ func build_tropical_coast(origin: Vector3) -> void:
 	add_child(root)
 
 	# Sand dunes
-	_add_terrain_slab(root, Vector3(0, -0.5, 0), Vector3(50.0, 1.0, 50.0), "tropical_sand")
+	_add_terrain_slab(root, Vector3(0, -0.5, 0), Vector3(60.0, 1.0, 60.0), "tropical_sand")
 
-	# Ocean shallows
+	# Turquoise ocean shallows
 	var ocean = MeshInstance3D.new()
 	var b_box = BoxMesh.new()
-	b_box.size = Vector3(48.0, 0.2, 16.0)
+	b_box.size = Vector3(58.0, 0.3, 24.0)
 	ocean.mesh = b_box
 	ocean.material_override = MaterialGenerator.get_material("water_stream")
-	ocean.position = Vector3(0, 0.1, 16.0)
+	ocean.position = Vector3(0, 0.12, 18.0)
 	root.add_child(ocean)
 
-	# Palm trees
-	for p in [Vector3(-12.0, 0, -6.0), Vector3(12.0, 0, -6.0)]:
+	# Palm trees leaning over water
+	for p in [Vector3(-16.0, 0, -8.0), Vector3(16.0, 0, -8.0), Vector3(-8.0, 0, 4.0), Vector3(8.0, 0, 4.0)]:
 		_create_palm_tree(root, p)
 
 	# Wildlife: Sea Turtle
-	_spawn_animal(root, "sea_turtle", Vector3(0, 0.3, 10.0))
+	_spawn_animal(root, "sea_turtle", Vector3(0, 0.35, 14.0))
 
 # ==============================================================================
-# 5. WETLANDS BIOME
+# 5. WETLANDS BIOME (Marsh Basins, Water Lilies, Dense Reeds)
 # ==============================================================================
 func build_wetlands(origin: Vector3) -> void:
 	var root = Node3D.new()
@@ -142,28 +165,32 @@ func build_wetlands(origin: Vector3) -> void:
 	root.position = origin
 	add_child(root)
 
-	_add_terrain_slab(root, Vector3(0, -0.5, 0), Vector3(50.0, 1.0, 50.0), "wetland_mud")
+	_add_terrain_slab(root, Vector3(0, -0.5, 0), Vector3(60.0, 1.0, 60.0), "wetland_mud")
 
-	# Marsh basins & reeds
-	for p in [Vector3(-8.0, 0.05, -6.0), Vector3(8.0, 0.05, 6.0)]:
+	# Marsh basins
+	for p in [Vector3(-12.0, 0.05, -8.0), Vector3(12.0, 0.05, 8.0), Vector3(0, 0.05, 0)]:
 		var pool = MeshInstance3D.new()
 		var cyl = CylinderMesh.new()
-		cyl.top_radius = 6.0
-		cyl.bottom_radius = 6.0
+		cyl.top_radius = 8.5
+		cyl.bottom_radius = 8.5
 		cyl.height = 0.08
 		pool.mesh = cyl
 		pool.material_override = MaterialGenerator.get_material("water_stream")
 		pool.position = p
 		root.add_child(pool)
 
+	# Reeds and marsh grass
+	for p in [Vector3(-8.0, 0, -4.0), Vector3(8.0, 0, 4.0), Vector3(-4.0, 0, 6.0), Vector3(4.0, 0, -6.0)]:
+		_create_grass_cluster(root, p, "lush_grass")
+
 	# Wildlife: Crocodile and Flamingo
-	_spawn_animal(root, "crocodile", Vector3(-4.0, 0.3, -4.0))
-	_spawn_animal(root, "flamingo", Vector3(6.0, 0.8, 4.0))
+	_spawn_animal(root, "crocodile", Vector3(-5.0, 0.35, -5.0))
+	_spawn_animal(root, "flamingo", Vector3(4.0, 0.5, 5.0))
 
 # ==============================================================================
-# ENVIRONMENT & FLORA HELPERS
+# PROCEDURAL PROPS & VEGETATION
 # ==============================================================================
-func _add_terrain_slab(parent: Node3D, pos: Vector3, size: Vector3, mat_name: String) -> void:
+func _add_terrain_slab(parent: Node3D, pos: Vector3, size: Vector3, mat_name: String) -> StaticBody3D:
 	var sb = StaticBody3D.new()
 	sb.collision_layer = GameConstants.LAYER_WORLD
 	sb.position = pos
@@ -182,101 +209,126 @@ func _add_terrain_slab(parent: Node3D, pos: Vector3, size: Vector3, mat_name: St
 	sb.add_child(col)
 
 	parent.add_child(sb)
+	return sb
 
 func _create_acacia_tree(parent: Node3D, pos: Vector3) -> void:
 	var trunk = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
-	cyl.top_radius = 0.3
-	cyl.bottom_radius = 0.5
-	cyl.height = 4.5
+	cyl.top_radius = 0.35
+	cyl.bottom_radius = 0.6
+	cyl.height = 5.2
 	trunk.mesh = cyl
 	trunk.material_override = MaterialGenerator.get_material("wood_bark")
-	trunk.position = pos + Vector3(0, 2.25, 0)
+	trunk.position = pos + Vector3(0, 2.6, 0)
 	parent.add_child(trunk)
 
+	# Wide flat umbrella canopy
 	var canopy = MeshInstance3D.new()
 	var disc = CylinderMesh.new()
-	disc.top_radius = 3.5
-	disc.bottom_radius = 3.2
-	disc.height = 0.8
+	disc.top_radius = 4.2
+	disc.bottom_radius = 3.8
+	disc.height = 0.9
 	canopy.mesh = disc
 	canopy.material_override = MaterialGenerator.get_material("lush_grass")
-	canopy.position = pos + Vector3(0, 4.8, 0)
+	canopy.position = pos + Vector3(0, 5.5, 0)
 	parent.add_child(canopy)
 
 func _create_canopy_tree(parent: Node3D, pos: Vector3) -> void:
 	var trunk = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
-	cyl.top_radius = 0.6
-	cyl.bottom_radius = 0.8
-	cyl.height = 8.0
+	cyl.top_radius = 0.7
+	cyl.bottom_radius = 1.0
+	cyl.height = 9.5
 	trunk.mesh = cyl
 	trunk.material_override = MaterialGenerator.get_material("wood_bark")
-	trunk.position = pos + Vector3(0, 4.0, 0)
+	trunk.position = pos + Vector3(0, 4.75, 0)
 	parent.add_child(trunk)
 
 	var leaves = MeshInstance3D.new()
 	var sphere = SphereMesh.new()
-	sphere.radius = 4.0
-	sphere.height = 5.0
+	sphere.radius = 4.8
+	sphere.height = 6.0
 	leaves.mesh = sphere
 	leaves.material_override = MaterialGenerator.get_material("rainforest_canopy")
-	leaves.position = pos + Vector3(0, 8.5, 0)
+	leaves.position = pos + Vector3(0, 10.0, 0)
 	parent.add_child(leaves)
 
 func _create_pine_tree(parent: Node3D, pos: Vector3) -> void:
 	var trunk = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
-	cyl.top_radius = 0.25
-	cyl.bottom_radius = 0.35
-	cyl.height = 3.5
+	cyl.top_radius = 0.3
+	cyl.bottom_radius = 0.45
+	cyl.height = 4.2
 	trunk.mesh = cyl
 	trunk.material_override = MaterialGenerator.get_material("wood_bark")
-	trunk.position = pos + Vector3(0, 1.75, 0)
+	trunk.position = pos + Vector3(0, 2.1, 0)
 	parent.add_child(trunk)
 
 	var foliage = MeshInstance3D.new()
 	var cone = CylinderMesh.new()
 	cone.top_radius = 0.05
-	cone.bottom_radius = 2.2
-	cone.height = 5.0
+	cone.bottom_radius = 2.8
+	cone.height = 6.2
 	foliage.mesh = cone
 	foliage.material_override = MaterialGenerator.get_material("rainforest_canopy")
-	foliage.position = pos + Vector3(0, 5.0, 0)
+	foliage.position = pos + Vector3(0, 6.0, 0)
 	parent.add_child(foliage)
 
 func _create_palm_tree(parent: Node3D, pos: Vector3) -> void:
 	var trunk = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
-	cyl.top_radius = 0.2
-	cyl.bottom_radius = 0.35
-	cyl.height = 5.5
+	cyl.top_radius = 0.25
+	cyl.bottom_radius = 0.4
+	cyl.height = 6.5
 	trunk.mesh = cyl
 	trunk.material_override = MaterialGenerator.get_material("wood_bark")
-	trunk.position = pos + Vector3(0, 2.75, 0)
-	trunk.rotation_degrees.z = 8.0
+	trunk.position = pos + Vector3(0, 3.25, 0)
+	trunk.rotation_degrees.z = 10.0
 	parent.add_child(trunk)
 
 	var fronds = MeshInstance3D.new()
 	var disc = CylinderMesh.new()
-	disc.top_radius = 2.8
-	disc.bottom_radius = 2.4
-	disc.height = 0.4
+	disc.top_radius = 3.4
+	disc.bottom_radius = 2.8
+	disc.height = 0.45
 	fronds.mesh = disc
 	fronds.material_override = MaterialGenerator.get_material("lush_grass")
-	fronds.position = pos + Vector3(0.5, 5.5, 0)
+	fronds.position = pos + Vector3(0.6, 6.5, 0)
 	parent.add_child(fronds)
 
 func _create_termite_mound(parent: Node3D, pos: Vector3) -> void:
 	var mound = MeshInstance3D.new()
 	var cone = CylinderMesh.new()
-	cone.top_radius = 0.15
-	cone.bottom_radius = 0.7
-	cone.height = 2.2
+	cone.top_radius = 0.18
+	cone.bottom_radius = 0.85
+	cone.height = 2.6
 	mound.mesh = cone
 	mound.material_override = MaterialGenerator.get_material("savannah_dirt")
-	mound.position = pos + Vector3(0, 1.1, 0)
+	mound.position = pos + Vector3(0, 1.3, 0)
 	parent.add_child(mound)
+
+func _create_grass_cluster(parent: Node3D, pos: Vector3, mat_name: String) -> void:
+	for i in range(3):
+		var blade = MeshInstance3D.new()
+		var prism = PrismMesh.new()
+		prism.size = Vector3(0.4, 1.4, 0.4)
+		blade.mesh = prism
+		blade.material_override = MaterialGenerator.get_material(mat_name)
+		blade.position = pos + Vector3((i - 1) * 0.3, 0.7, 0)
+		blade.rotation_degrees.z = (i - 1) * 12.0
+		parent.add_child(blade)
+
+func _create_fallen_log(parent: Node3D, pos: Vector3) -> void:
+	var log_mesh = MeshInstance3D.new()
+	var cyl = CylinderMesh.new()
+	cyl.top_radius = 0.45
+	cyl.bottom_radius = 0.5
+	cyl.height = 5.0
+	log_mesh.mesh = cyl
+	log_mesh.material_override = MaterialGenerator.get_material("wood_bark")
+	log_mesh.position = pos
+	log_mesh.rotation_degrees.z = 90.0
+	parent.add_child(log_mesh)
 
 func _spawn_animal(parent: Node3D, sp_id: String, pos: Vector3) -> Node3D:
 	var animal = WildAnimalScript.new()

@@ -811,6 +811,30 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
     - `VoltArena-Windows-x86_64.zip` (92.69 MB)
     - `VoltArena-Android.apk` (108.70 MB)
 
+## [8.8.0-visual-production-pass] - 2026-09-21
+### Added
+- **Humanoid Animation & Speed-Synchronized Locomotion (P0)**:
+  - Created `HumanoidAnimator` (`shared/animation/humanoid_animator.gd`) with full state machine (`Idle ↔ Walk ↔ Run ↔ Jump ↔ Land ↔ Crouch ↔ Aim/Strafe ↔ Attack ↔ Hit ↔ Death ↔ Glide`).
+  - Implemented stride-synchronized locomotion where playback speed scales dynamically with linear velocity, eliminating foot sliding.
+  - Added support for both rigged skeletal AnimationPlayers and articulated procedural biped nodes.
+  - Authored dedicated unit test suite `tests/unit/test_humanoid_animator.gd` (11 assertions passed).
+- **Skybound Odyssey Visual & World Overhaul**:
+  - Rebuilt island generation across 5 regions (`Emerald Isles`, `Crystal Caverns`, `Sunken Sky Temple`, `Frost Peaks`, `Storm Citadel`) with multi-tiered organic floating islands, stalactite underbellies, cascading waterfalls with mist particles, ruin pillars, arches, and ancient altars.
+  - Integrated `HumanoidAnimator` into explorer character (`sky_character.gd`).
+- **RoboForge Arena High-Tech Engineering Hangar**:
+  - Transformed workshop into a high-tech engineering hangar with diagnostic computer server racks, gantry crane, robotic arm, and glowing turntable.
+  - Rebuilt 7 mechanically distinct engineering challenges (`Payload Hauler`, `Steep Incline`, `Speed Trial`, `Rough Terrain`, `Precision Crane`, `Battle Arena`, `High-Altitude Hop`) with physical tradeoffs.
+- **WildCircuit Wildlife Exploration Overhaul**:
+  - Rebuilt multi-tiered rolling terrain, dense flora across 5 biomes (`Savannah`, `Forest`, `Wetlands`, `Desert`, `Mountains`), water bodies, and wildlife distribution.
+  - Upgraded Explorer ATV with dynamic wheel spin, front wheel steering, and suspension roll/pitch.
+  - Integrated `HumanoidAnimator` for Ranger character locomotion and camera mode aiming.
+- **Drift Storm UX Optimization**:
+  - Streamlined pre-race menu flow (`Track → Vehicle → Setup → Confirm`) and added 1-click `⚡ QUICK RACE` button for instant launches.
+- **Suite-Wide Systems Integration & Certification**:
+  - Integrated speed-synchronized animation playback across Strike Vector, Subway Survival, Arena FPS, and Nitro Kick.
+  - Master test runner: **64 test suites, 2,418 passed assertions, 0 failed (100% pass rate)**.
+  - Regenerated production certification and acceptance artifacts via `scripts/certifier.py`.
+
 
 
 

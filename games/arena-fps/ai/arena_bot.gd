@@ -229,6 +229,16 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	if character_model:
+		var horiz_spd = Vector2(velocity.x, velocity.z).length()
+		var ap = character_model.find_child("*AnimationPlayer*", true, false) as AnimationPlayer
+		if ap and ap.is_playing():
+			if horiz_spd < 0.2 and current_state != AIState.ATTACK:
+				ModelCacheScript.play_animation(character_model, "Idle", 0.2)
+			else:
+				var target_spd = 3.2 if current_state == AIState.PATROL else 6.0
+				ap.speed_scale = clampf(horiz_spd / target_spd, 0.6, 1.6)
+
 func pick_random_patrol() -> void:
 	patrol_target = Vector3(
 		randf_range(-25.0, 25.0),

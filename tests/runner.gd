@@ -41,6 +41,7 @@ const TestNitroKickP0GatesScript = preload("res://tests/unit/test_nitro_kick_p0_
 const TestDriftStormCorridorGatesScript = preload("res://tests/unit/test_drift_storm_corridor_gates.gd")
 const TestDriftStormStateMachineScript = preload("res://tests/unit/test_drift_storm_state_machine.gd")
 const TestCrossPlatformArchitectureScript = preload("res://tests/unit/test_cross_platform_architecture.gd")
+const TestHumanoidAnimatorScript = preload("res://tests/unit/test_humanoid_animator.gd")
 
 # --- New Subsystems & 3 New Games (Unit) ---
 const TestQuestSystemScript = preload("res://tests/unit/test_quest_system.gd")
@@ -141,6 +142,7 @@ func _init() -> void:
 		{"name": "Skybound Odyssey Unit", "instance": TestSkyboundScript.new()},
 		{"name": "RoboForge Arena Unit", "instance": TestRoboForgeScript.new()},
 		{"name": "WildCircuit Unit", "instance": TestWildCircuitScript.new()},
+		{"name": "HumanoidAnimator Locomotion Unit", "instance": TestHumanoidAnimatorScript.new()},
 		{"name": "Engine Subsystems Unit", "instance": TestEngineSubsystemsScript.new()},
 		# Responsive & Soak
 		{"name": "Responsive UI Multi-Resolution", "instance": TestResponsiveUIScript.new()},

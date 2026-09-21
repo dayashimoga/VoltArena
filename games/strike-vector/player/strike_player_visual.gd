@@ -10,6 +10,7 @@ const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
 var weapon_socket: Marker3D = null
 var weapon_grip: Marker3D = null
 var right_hand_att: BoneAttachment3D = null
+var bone_attachment: BoneAttachment3D = null
 var character_model: Node3D = null
 var skeleton: Skeleton3D = null
 var current_anim_state: String = "idle"
@@ -41,13 +42,14 @@ func build_visual() -> void:
 				right_hand_att.bone_name = "mixamorig_RightHand"
 				right_hand_att.bone_idx = bone_idx
 				skeleton.add_child(right_hand_att)
+				bone_attachment = right_hand_att
 
 				weapon_grip = Marker3D.new()
 				weapon_grip.name = "WeaponGrip"
 				# Character rig has scale (0.01, 0.01, 0.01), so compensate scale to 1.0 world units
 				weapon_grip.scale = Vector3(100.0, 100.0, 100.0)
 				# Align weapon barrel with character forward axis (-Z) and top along (+Y)
-				weapon_grip.rotation_degrees = Vector3(90.0, 90.0, 0.0)
+				weapon_grip.rotation_degrees = Vector3(0.0, -90.0, 0.0)
 				right_hand_att.add_child(weapon_grip)
 
 				weapon_socket = weapon_grip
@@ -149,3 +151,13 @@ func update_animation(horizontal_speed: float, is_on_floor: bool, sliding: bool,
 	if desired_anim != current_anim_state and is_instance_valid(character_model):
 		current_anim_state = desired_anim
 		ModelCacheScript.play_animation(character_model, current_anim_state, 0.15)
+
+	if is_instance_valid(character_model):
+		var ap = character_model.find_child("*AnimationPlayer*", true, false) as AnimationPlayer
+		if ap and ap.is_playing():
+			if "walk" in current_anim_state.to_lower():
+				ap.speed_scale = clampf(horizontal_speed / 3.2, 0.6, 1.6)
+			elif "run" in current_anim_state.to_lower():
+				ap.speed_scale = clampf(horizontal_speed / 7.5, 0.7, 1.8)
+			else:
+				ap.speed_scale = 1.0

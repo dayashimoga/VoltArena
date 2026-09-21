@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 94.9828962371722,
-  "coverage_tested_functions": 833,
-  "coverage_total_functions": 877,
-  "execution_seconds": 55.879,
+  "coverage_percent": 95.0113378684807,
+  "coverage_tested_functions": 838,
+  "coverage_total_functions": 882,
+  "execution_seconds": 59.588,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -42,7 +42,7 @@
     },
     "Drift Storm Runtime Acceptance (P0 Gates)": {
       "failed": 0,
-      "passed": 353,
+      "passed": 387,
       "status": "PASS"
     },
     "Drift Storm State Machine & Pre-Race Hub": {
@@ -88,6 +88,11 @@
     "HealthComponent Unit": {
       "failed": 0,
       "passed": 14,
+      "status": "PASS"
+    },
+    "HumanoidAnimator Locomotion Unit": {
+      "failed": 0,
+      "passed": 11,
       "status": "PASS"
     },
     "Input Manager Unit": {
@@ -242,7 +247,7 @@
     },
     "Skybound Odyssey E2E": {
       "failed": 0,
-      "passed": 14,
+      "passed": 21,
       "status": "PASS"
     },
     "Skybound Odyssey Unit": {
@@ -287,7 +292,7 @@
     },
     "Strike Vector Visual Invariants": {
       "failed": 0,
-      "passed": 100,
+      "passed": 108,
       "status": "PASS"
     },
     "Telemetry Manager Unit": {
@@ -312,7 +317,7 @@
     },
     "WildCircuit E2E": {
       "failed": 0,
-      "passed": 2,
+      "passed": 0,
       "status": "PASS"
     },
     "WildCircuit Unit": {
@@ -321,8 +326,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-21T14:13:49",
+  "timestamp": "2026-09-21T16:59:56",
   "total_failed": 0,
-  "total_passed": 2360,
-  "total_suites": 63
+  "total_passed": 2418,
+  "total_suites": 64
 }

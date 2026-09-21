@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 96.0602549246813,
+  "overall_coverage_pct": 94.9599083619702,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -707,16 +707,26 @@
       "untested": []
     },
     "res://shared/graphics/mesh_builder.gd": {
-      "coverage_pct": 89.2857142857143,
+      "coverage_pct": 75.7575757575758,
       "tested": 50,
-      "total": 56,
+      "total": 66,
       "untested": [
         "build_pit_building",
         "build_cargo_ship",
         "build_suspension_bridge_tower",
         "build_marshal_post",
         "build_mountain_peak",
-        "build_alpine_chalet"
+        "build_alpine_chalet",
+        "build_modular_robot_model",
+        "build_skybound_explorer_character",
+        "build_ancient_energy_shard_artifact",
+        "build_wildcircuit_ranger_character",
+        "build_safari_atv_vehicle",
+        "build_wildlife_animal_model",
+        "build_contextual_reward",
+        "build_turbo_boost_canister",
+        "build_shield_orb_pickup",
+        "build_emp_mine_pickup"
       ]
     },
     "res://shared/graphics/model_cache.gd": {
@@ -844,6 +854,6 @@
     }
   },
   "tested_functions": 829,
-  "timestamp": "2026-09-20T08:17:50",
-  "total_functions": 863
+  "timestamp": "2026-09-21T13:47:46",
+  "total_functions": 873
 }

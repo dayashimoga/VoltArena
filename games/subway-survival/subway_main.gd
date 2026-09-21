@@ -53,6 +53,7 @@ func setup_scene() -> void:
 		results_screen = ResultsScreenScript.new()
 		results_screen.name = "ResultsScreen"
 		results_screen.restart_pressed.connect(_on_restart)
+		results_screen.next_stage_pressed.connect(_on_next_stage_requested)
 		results_screen.launcher_pressed.connect(_on_quit_to_launcher)
 		add_child(results_screen)
 
@@ -75,6 +76,12 @@ func connect_signals() -> void:
 		bus.wave_completed.connect(_on_wave_completed)
 	if wave_director and wave_director.has_signal("all_waves_defeated"):
 		wave_director.all_waves_defeated.connect(_on_all_waves_defeated)
+
+func _on_next_stage_requested() -> void:
+	results_screen.hide_results()
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.game_restart_requested.emit()
 
 func _on_enemy_killed(_type: String, score_val: int) -> void:
 	total_kills += 1
@@ -146,7 +153,7 @@ func _on_all_waves_defeated() -> void:
 		"Mutants Eliminated": total_kills,
 		"Scrap Salvaged": total_scrap,
 		"Outcome": "EXTRACTION SUCCESSFUL"
-	})
+	}, "tech_crate", "TECH CRATE // SECTOR 2 ACCESSIBLE")
 
 func _on_player_died(_killer: String) -> void:
 	is_game_active = false
@@ -159,7 +166,7 @@ func _on_player_died(_killer: String) -> void:
 		"Waves Survived": highest_wave,
 		"Mutants Eliminated": total_kills,
 		"Outcome": "Overrun by the Swarm"
-	})
+	}, "trophy_bronze", "SURVIVOR RECON MEDAL")
 
 func _on_resume() -> void:
 	var im = GameConstants.get_autoload(self, "InputManager")

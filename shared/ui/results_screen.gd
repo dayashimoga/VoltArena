@@ -3,9 +3,12 @@ extends CanvasLayer
 
 signal restart_pressed()
 signal launcher_pressed()
+signal next_stage_pressed()
 
 var title_label: Label
 var stats_vbox: VBoxContainer
+var btn_next: Button
+var reward_label: Label
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
@@ -17,7 +20,7 @@ func setup_ui() -> void:
 	var bg = ColorRect.new()
 	bg.anchor_right = 1.0
 	bg.anchor_bottom = 1.0
-	bg.color = Color(0.04, 0.07, 0.12, 0.35)
+	bg.color = Color(0.04, 0.07, 0.12, 0.85)
 	add_child(bg)
 
 	var panel = PanelContainer.new()
@@ -25,10 +28,10 @@ func setup_ui() -> void:
 	panel.anchor_top = 0.5
 	panel.anchor_right = 0.5
 	panel.anchor_bottom = 0.5
-	panel.offset_left = -240
-	panel.offset_top = -220
-	panel.offset_right = 240
-	panel.offset_bottom = 220
+	panel.offset_left = -280
+	panel.offset_top = -240
+	panel.offset_right = 280
+	panel.offset_bottom = 240
 	panel.theme = ThemeGenerator.get_theme()
 	add_child(panel)
 
@@ -41,6 +44,13 @@ func setup_ui() -> void:
 	title_label.modulate = Color(0.0, 1.0, 0.8)
 	vbox.add_child(title_label)
 
+	reward_label = Label.new()
+	reward_label.text = ""
+	reward_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	reward_label.modulate = Color(1.0, 0.85, 0.1)
+	reward_label.visible = false
+	vbox.add_child(reward_label)
+
 	var sep = HSeparator.new()
 	vbox.add_child(sep)
 
@@ -48,15 +58,26 @@ func setup_ui() -> void:
 	vbox.add_child(stats_vbox)
 
 	var spacer = Control.new()
-	spacer.custom_minimum_size = Vector2(0, 20)
+	spacer.custom_minimum_size = Vector2(0, 15)
 	vbox.add_child(spacer)
 
 	var btn_box = HBoxContainer.new()
 	btn_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(btn_box)
 
+	btn_next = Button.new()
+	btn_next.text = "NEXT STAGE"
+	btn_next.pressed.connect(func():
+		visible = false
+		var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+		if tree:
+			tree.paused = false
+		next_stage_pressed.emit()
+	)
+	btn_box.add_child(btn_next)
+
 	var btn_restart = Button.new()
-	btn_restart.text = "PLAY AGAIN"
+	btn_restart.text = "RETRY / PLAY AGAIN"
 	btn_restart.pressed.connect(func():
 		visible = false
 		var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
@@ -95,12 +116,34 @@ func display_results(won: bool, stats_dict: Dictionary) -> void:
 			title_label.text = "DEFEAT"
 			title_label.modulate = Color(1.0, 0.2, 0.3)
 
+	# Check for reward in stats
+	var reward_text = ""
+	if stats_dict.has("Reward"):
+		reward_text = "★ REWARD UNLOCKED: " + str(stats_dict["Reward"])
+	elif stats_dict.has("reward"):
+		reward_text = "★ REWARD UNLOCKED: " + str(stats_dict["reward"])
+	elif won and stats_dict.has("Status"):
+		reward_text = "★ UNLOCKED: " + str(stats_dict["Status"])
+
+	if reward_label:
+		if reward_text != "":
+			reward_label.text = reward_text
+			reward_label.visible = true
+		else:
+			reward_label.visible = false
+
+	# Show Next Stage button if won
+	if btn_next:
+		btn_next.visible = won
+
 	# Clear old stats
 	if stats_vbox:
 		for child in stats_vbox.get_children():
 			child.queue_free()
 
 		for k in stats_dict.keys():
+			if k == "Reward" or k == "reward":
+				continue
 			var row = HBoxContainer.new()
 			var lbl_name = Label.new()
 			lbl_name.text = str(k).capitalize() + ":"

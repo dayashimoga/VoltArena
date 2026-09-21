@@ -42,6 +42,12 @@ var current_stamina: float = 100.0
 # Visuals & Components
 var visual_node: Node3D
 var glider_mesh: Node3D
+var hip_l: Node3D
+var hip_r: Node3D
+var shoulder_l: Node3D
+var shoulder_r: Node3D
+var cape_mesh: Node3D
+var walk_anim_time: float = 0.0
 var ledge_ray_forward: RayCast3D
 var ledge_ray_down: RayCast3D
 
@@ -55,62 +61,18 @@ func _ready() -> void:
 	setup_ledge_detectors()
 
 func setup_visuals() -> void:
-	visual_node = Node3D.new()
-	visual_node.name = "CharacterVisual"
+	if visual_node:
+		visual_node.queue_free()
+
+	visual_node = MeshBuilder.build_skybound_explorer_character()
 	add_child(visual_node)
 
-	# Articulated Adventurer Model
-	var body_mat = MaterialGenerator.get_material("ancient_stone")
-	var cloak_mat = MaterialGenerator.get_material("neon_cyan")
-	var skin_mat = MaterialGenerator.get_material("temple_gold")
-
-	# Torso
-	var torso = MeshInstance3D.new()
-	var t_box = BoxMesh.new()
-	t_box.size = Vector3(0.55, 0.75, 0.35)
-	torso.mesh = t_box
-	torso.material_override = body_mat
-	torso.position = Vector3(0, 1.05, 0)
-	visual_node.add_child(torso)
-
-	# Head
-	var head = MeshInstance3D.new()
-	var h_box = BoxMesh.new()
-	h_box.size = Vector3(0.35, 0.38, 0.35)
-	head.mesh = h_box
-	head.material_override = skin_mat
-	head.position = Vector3(0, 1.62, 0)
-	visual_node.add_child(head)
-
-	# Flowing Adventurer Cloak / Cape
-	var cape = MeshInstance3D.new()
-	var c_box = BoxMesh.new()
-	c_box.size = Vector3(0.5, 0.85, 0.06)
-	cape.mesh = c_box
-	cape.material_override = cloak_mat
-	cape.position = Vector3(0, 0.95, 0.20)
-	visual_node.add_child(cape)
-
-	# Foldable Glider Wings
-	glider_mesh = Node3D.new()
-	glider_mesh.name = "GliderWings"
-	glider_mesh.visible = false
-	var wing_l = MeshInstance3D.new()
-	var w_box = BoxMesh.new()
-	w_box.size = Vector3(1.4, 0.04, 0.7)
-	wing_l.mesh = w_box
-	wing_l.material_override = cloak_mat
-	wing_l.position = Vector3(-0.9, 1.35, 0.1)
-	wing_l.rotation_degrees.z = -12.0
-	glider_mesh.add_child(wing_l)
-
-	var wing_r = MeshInstance3D.new()
-	wing_r.mesh = w_box
-	wing_r.material_override = cloak_mat
-	wing_r.position = Vector3(0.9, 1.35, 0.1)
-	wing_r.rotation_degrees.z = 12.0
-	glider_mesh.add_child(wing_r)
-	visual_node.add_child(glider_mesh)
+	glider_mesh = visual_node.find_child("GliderWings", true, false)
+	hip_l = visual_node.find_child("Hip_L", true, false)
+	hip_r = visual_node.find_child("Hip_R", true, false)
+	shoulder_l = visual_node.find_child("Shoulder_L", true, false)
+	shoulder_r = visual_node.find_child("Shoulder_R", true, false)
+	cape_mesh = visual_node.find_child("Cape", true, false)
 
 	# Collision shape
 	var col = CollisionShape3D.new()
@@ -125,7 +87,7 @@ func setup_ledge_detectors() -> void:
 	# Forward raycast at chest height to detect wall
 	ledge_ray_forward = RayCast3D.new()
 	ledge_ray_forward.target_position = Vector3(0, 0, -0.9)
-	ledge_ray_forward.position = Vector3(0, 1.3, 0)
+	ledge_ray_forward.position = Vector3(0, 1.2, 0)
 	ledge_ray_forward.collision_mask = GameConstants.LAYER_WORLD
 	add_child(ledge_ray_forward)
 
@@ -135,6 +97,38 @@ func setup_ledge_detectors() -> void:
 	ledge_ray_down.position = Vector3(0, 2.0, -0.85)
 	ledge_ray_down.collision_mask = GameConstants.LAYER_WORLD
 	add_child(ledge_ray_down)
+
+func _update_procedural_animations(delta: float, on_floor: bool) -> void:
+	var h_spd = Vector2(velocity.x, velocity.z).length()
+	if on_floor:
+		if h_spd > 0.2:
+			walk_anim_time += delta * (h_spd * 2.2)
+			var leg_swing = sin(walk_anim_time) * 0.45
+			var arm_swing = sin(walk_anim_time) * 0.38
+			if hip_l: hip_l.rotation.x = leg_swing
+			if hip_r: hip_r.rotation.x = -leg_swing
+			if shoulder_l: shoulder_l.rotation.x = -arm_swing
+			if shoulder_r: shoulder_r.rotation.x = arm_swing
+		else:
+			if hip_l: hip_l.rotation.x = lerpf(hip_l.rotation.x, 0.0, delta * 8.0)
+			if hip_r: hip_r.rotation.x = lerpf(hip_r.rotation.x, 0.0, delta * 8.0)
+			if shoulder_l: shoulder_l.rotation.x = lerpf(shoulder_l.rotation.x, 0.0, delta * 8.0)
+			if shoulder_r: shoulder_r.rotation.x = lerpf(shoulder_r.rotation.x, 0.0, delta * 8.0)
+	else:
+		if is_gliding:
+			if shoulder_l:
+				shoulder_l.rotation.z = lerpf(shoulder_l.rotation.z, 1.15, delta * 10.0)
+				shoulder_l.rotation.x = 0.0
+			if shoulder_r:
+				shoulder_r.rotation.z = lerpf(shoulder_r.rotation.z, -1.15, delta * 10.0)
+				shoulder_r.rotation.x = 0.0
+			if hip_l: hip_l.rotation.x = lerpf(hip_l.rotation.x, -0.2, delta * 8.0)
+			if hip_r: hip_r.rotation.x = lerpf(hip_r.rotation.x, 0.2, delta * 8.0)
+		else:
+			if shoulder_l: shoulder_l.rotation.z = lerpf(shoulder_l.rotation.z, 0.2, delta * 8.0)
+			if shoulder_r: shoulder_r.rotation.z = lerpf(shoulder_r.rotation.z, -0.2, delta * 8.0)
+			if hip_l: hip_l.rotation.x = lerpf(hip_l.rotation.x, -0.35, delta * 8.0)
+			if hip_r: hip_r.rotation.x = lerpf(hip_r.rotation.x, 0.25, delta * 8.0)
 
 func _physics_process(delta: float) -> void:
 	# Kill-plane fail-safe recovery
@@ -146,6 +140,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var on_floor = is_on_floor()
+	_update_procedural_animations(delta, on_floor)
 
 	# Safe grounded transform tracking
 	if on_floor:

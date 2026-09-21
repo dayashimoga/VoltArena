@@ -47,4 +47,4 @@ func on_mission_completed(m_idx: int, results: Dictionary) -> void:
 		current_mission_index = m_idx + 1
 
 func get_next_mission_index() -> int:
-	return mini(TOTAL_MISSIONS, current_mission_index + 1)
+	return clampi(current_mission_index, 1, TOTAL_MISSIONS)

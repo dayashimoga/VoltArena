@@ -252,7 +252,7 @@ func _process_spline_driving(spline: RefCounted, delta: float) -> void:
 						in_slipstream = true
 
 	if in_slipstream and throttle_input > 0.0:
-		kart.forward_speed = minf(kart.forward_speed + delta * 2.5 * overtake_mult, kart.base_speed * draft_max)
+		throttle_input = 1.0 # Maximum throttle in slipstream without teleporting or jumping speed
 
 	steer_input = clampf(steer_input + avoidance_steer + boundary_steer, -1.0, 1.0)
 

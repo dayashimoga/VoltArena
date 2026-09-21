@@ -2096,4 +2096,693 @@ static func build_alpine_chalet() -> Node3D:
 
 	return chalet
 
+# ==============================================================================
+# 8. ROBOFORGE ARENA MODULAR ROBOT BUILDER
+# ==============================================================================
 
+static func build_modular_robot_model(blueprint: Dictionary) -> Node3D:
+	var root = Node3D.new()
+	root.name = "ModularRobotVisual"
+
+	var ch_id: String = blueprint.get("chassis", "scout")
+	var loc_id: String = blueprint.get("locomotion", "wheels")
+	var modules: Array = blueprint.get("modules", [])
+
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_carbon = MaterialGenerator.get_material("chassis_carbon")
+	var mat_hazard = MaterialGenerator.get_material("hazard_yellow")
+	var mat_chrome = MaterialGenerator.get_material("hydraulic_chrome")
+	var mat_cyan = MaterialGenerator.get_material("neon_cyan")
+	var mat_orange = MaterialGenerator.get_material("neon_orange")
+	var mat_tire = MaterialGenerator.get_material("tread_rubber")
+
+	# 1. Main Sculpted Chassis Body
+	var ch_size = Vector3(1.6, 0.6, 2.2)
+	var body_color_mat = mat_carbon
+	if ch_id == "titan":
+		ch_size = Vector3(2.4, 0.9, 3.0)
+		body_color_mat = mat_hull
+	elif ch_id == "scout":
+		ch_size = Vector3(1.3, 0.5, 1.8)
+		body_color_mat = mat_carbon
+
+	# Center monocoque frame
+	var ch_mesh = _add_box(root, ch_size, Vector3(0, 0.65, 0), body_color_mat)
+	ch_mesh.name = "ChassisMain"
+
+	# Upper armored cockpit / avionics wedge
+	var cowl = _add_box(root, Vector3(ch_size.x * 0.75, ch_size.y * 0.5, ch_size.z * 0.6), Vector3(0, 0.65 + ch_size.y * 0.55, -0.1), mat_metal)
+	cowl.rotation_degrees.x = 8.0
+
+	# Sensor visor / optics cluster at front of cowl
+	var visor = _add_box(cowl, Vector3(ch_size.x * 0.5, 0.12, 0.08), Vector3(0, 0.05, -ch_size.z * 0.32), mat_cyan)
+	visor.name = "OpticsVisor"
+
+	# Heavy bumper / crash frame at front (-Z)
+	var bumper = _add_box(root, Vector3(ch_size.x + 0.25, 0.18, 0.25), Vector3(0, 0.45, -ch_size.z * 0.52), mat_hazard)
+	bumper.name = "FrontBumper"
+
+	# Side armor skirts with hazard stripe
+	for side in [-1.0, 1.0]:
+		_add_box(root, Vector3(0.08, ch_size.y * 0.7, ch_size.z * 0.8), Vector3(side * (ch_size.x * 0.5 + 0.05), 0.62, 0), mat_metal)
+		_add_box(root, Vector3(0.10, 0.08, ch_size.z * 0.75), Vector3(side * (ch_size.x * 0.5 + 0.06), 0.62, 0), mat_hazard)
+
+	# 2. Locomotion Assemblies
+	if loc_id == "wheels":
+		# 4 Heavy Off-Road Radial Wheels with alloy hubs and wishbones
+		var w_rad = 0.38 if ch_id != "titan" else 0.48
+		var w_wid = 0.28 if ch_id != "titan" else 0.38
+		var w_pts = [
+			Vector3(-ch_size.x * 0.5 - w_wid * 0.6, 0.38, -ch_size.z * 0.35),
+			Vector3(ch_size.x * 0.5 + w_wid * 0.6, 0.38, -ch_size.z * 0.35),
+			Vector3(-ch_size.x * 0.5 - w_wid * 0.6, 0.38, ch_size.z * 0.35),
+			Vector3(ch_size.x * 0.5 + w_wid * 0.6, 0.38, ch_size.z * 0.35)
+		]
+		for wp in w_pts:
+			var w_node = Node3D.new()
+			w_node.position = wp
+			root.add_child(w_node)
+			var tire = _add_cyl(w_node, w_rad, w_rad, w_wid, Vector3.ZERO, mat_tire)
+			tire.rotation_degrees.z = 90.0
+			var rim = _add_cyl(w_node, w_rad * 0.65, w_rad * 0.65, w_wid + 0.02, Vector3(sign(wp.x) * 0.02, 0, 0), mat_metal)
+			rim.rotation_degrees.z = 90.0
+			var wishbone = _add_box(root, Vector3(0.3, 0.08, 0.12), wp + Vector3(sign(wp.x) * -0.15, 0.08, 0), mat_chrome)
+	elif loc_id == "tracks":
+		# Heavy Dual Caterpillar Track Pods with drive sprockets and road wheels
+		var tr_w = 0.42
+		var tr_h = 0.65
+		var tr_l = ch_size.z * 1.05
+		for side in [-1.0, 1.0]:
+			var tr_x = side * (ch_size.x * 0.5 + tr_w * 0.6)
+			var tr_node = Node3D.new()
+			tr_node.position = Vector3(tr_x, 0.36, 0)
+			root.add_child(tr_node)
+			# Outer track rubber band
+			var band = _add_box(tr_node, Vector3(tr_w, tr_h, tr_l), Vector3.ZERO, mat_tire)
+			# Drive sprocket front
+			var sp_f = _add_cyl(tr_node, tr_h * 0.45, tr_h * 0.45, tr_w + 0.02, Vector3(0, 0, -tr_l * 0.42), mat_metal)
+			sp_f.rotation_degrees.z = 90.0
+			# Drive sprocket rear
+			var sp_r = _add_cyl(tr_node, tr_h * 0.45, tr_h * 0.45, tr_w + 0.02, Vector3(0, 0, tr_l * 0.42), mat_metal)
+			sp_r.rotation_degrees.z = 90.0
+			# 3 Road wheels
+			for ri in range(3):
+				var rz = -tr_l * 0.25 + ri * (tr_l * 0.25)
+				var rw = _add_cyl(tr_node, tr_h * 0.38, tr_h * 0.38, tr_w - 0.04, Vector3(0, -0.05, rz), mat_chrome)
+				rw.rotation_degrees.z = 90.0
+	elif loc_id == "legs":
+		# 4 Articulated Quad Walker Legs with hydraulic cylinders
+		for side in [-1.0, 1.0]:
+			for fwd in [-1.0, 1.0]:
+				var leg_base = Node3D.new()
+				leg_base.position = Vector3(side * (ch_size.x * 0.5 + 0.1), 0.55, fwd * (ch_size.z * 0.35))
+				root.add_child(leg_base)
+				# Hip ball joint
+				_add_sphere(leg_base, 0.15, Vector3.ZERO, mat_metal)
+				# Upper Femur
+				var femur = _add_cyl(leg_base, 0.08, 0.07, 0.55, Vector3(side * 0.18, -0.12, 0), mat_chrome)
+				femur.rotation_degrees.z = -side * 35.0
+				# Knee joint
+				var knee = _add_sphere(leg_base, 0.12, Vector3(side * 0.34, -0.32, 0), mat_metal)
+				# Lower Tibia & Foot
+				var tibia = _add_cyl(leg_base, 0.06, 0.08, 0.60, Vector3(side * 0.42, -0.55, 0), mat_hull)
+				tibia.rotation_degrees.z = side * 15.0
+				var foot = _add_cyl(leg_base, 0.16, 0.18, 0.08, Vector3(side * 0.48, -0.85, 0), mat_tire)
+
+	# 3. Sockets & Installed Modules
+	var front_socket = Marker3D.new()
+	front_socket.name = "FrontSocket"
+	front_socket.position = Vector3(0, 0.58, -ch_size.z * 0.5 - 0.15)
+	root.add_child(front_socket)
+
+	var top_socket = Marker3D.new()
+	top_socket.name = "TopSocket"
+	top_socket.position = Vector3(0, 0.65 + ch_size.y * 0.5 + 0.1, 0)
+	root.add_child(top_socket)
+
+	var rear_socket = Marker3D.new()
+	rear_socket.name = "RearSocket"
+	rear_socket.position = Vector3(0, 0.65, ch_size.z * 0.5 + 0.15)
+	root.add_child(rear_socket)
+
+	for mod_id in modules:
+		match mod_id:
+			"hydraulic_grabber":
+				var claw_root = Node3D.new()
+				claw_root.name = "HydraulicGrabberVisual"
+				front_socket.add_child(claw_root)
+				# Hydraulic arm base
+				_add_box(claw_root, Vector3(0.55, 0.28, 0.4), Vector3(0, 0, 0), mat_metal)
+				_add_cyl(claw_root, 0.06, 0.06, 0.35, Vector3(0, 0, -0.2), mat_chrome).rotation_degrees.x = 90.0
+				# Dual articulated claw pinchers
+				var claw_l = _add_box(claw_root, Vector3(0.12, 0.22, 0.55), Vector3(-0.25, 0, -0.50), mat_hazard)
+				claw_l.rotation_degrees.y = 15.0
+				var claw_r = _add_box(claw_root, Vector3(0.12, 0.22, 0.55), Vector3(0.25, 0, -0.50), mat_hazard)
+				claw_r.rotation_degrees.y = -15.0
+			"magnetic_arm":
+				var mag_root = Node3D.new()
+				mag_root.name = "MagneticArmVisual"
+				top_socket.add_child(mag_root)
+				# Rotating turntable base
+				_add_cyl(mag_root, 0.25, 0.28, 0.15, Vector3(0, 0.08, 0), mat_metal)
+				# Articulated boom arm
+				var boom = _add_cyl(mag_root, 0.08, 0.08, 0.65, Vector3(0, 0.45, -0.15), mat_chrome)
+				boom.rotation_degrees.x = 25.0
+				# Copper solenoid coil head
+				var coil = _add_cyl(mag_root, 0.22, 0.22, 0.32, Vector3(0, 0.82, -0.32), MaterialGenerator.get_material("copper_core"))
+				coil.rotation_degrees.x = 90.0
+				# Glowing magnetic field emitter ring
+				var mag_ring = _add_cyl(mag_root, 0.26, 0.26, 0.06, Vector3(0, 0.82, -0.48), mat_cyan)
+				mag_ring.rotation_degrees.x = 90.0
+			"rocket_booster":
+				var boost_root = Node3D.new()
+				boost_root.name = "RocketBoosterVisual"
+				rear_socket.add_child(boost_root)
+				# Heat shield bracket
+				_add_box(boost_root, Vector3(ch_size.x * 0.7, 0.35, 0.18), Vector3(0, 0.05, 0), mat_metal)
+				# Twin rocket nozzle cones
+				for tx in [-0.32, 0.32]:
+					var nozzle = _add_cyl(boost_root, 0.14, 0.24, 0.42, Vector3(tx, 0.05, 0.24), mat_hull)
+					nozzle.rotation_degrees.x = 90.0
+					var flame = _add_cyl(boost_root, 0.03, 0.16, 0.55, Vector3(tx, 0.05, 0.65), mat_orange)
+					flame.rotation_degrees.x = 90.0
+					flame.name = "ThrusterFlame_" + str(tx)
+			"cargo_bed":
+				var bed_root = Node3D.new()
+				bed_root.name = "CargoBedVisual"
+				rear_socket.add_child(bed_root)
+				# Sturdy titanium cargo deck
+				_add_box(bed_root, Vector3(ch_size.x * 0.9, 0.12, 1.1), Vector3(0, 0.1, 0.55), mat_metal)
+				# Side retaining rails
+				for bx in [-ch_size.x * 0.42, ch_size.x * 0.42]:
+					_add_box(bed_root, Vector3(0.06, 0.28, 1.1), Vector3(bx, 0.24, 0.55), mat_hazard)
+				_add_box(bed_root, Vector3(ch_size.x * 0.84, 0.28, 0.06), Vector3(0, 0.24, 1.08), mat_hazard)
+			"kinetic_shield":
+				var shield_root = Node3D.new()
+				shield_root.name = "KineticShieldVisual"
+				top_socket.add_child(shield_root)
+				# Shield emitter hub
+				_add_cyl(shield_root, 0.18, 0.22, 0.25, Vector3(0, 0.15, 0), mat_metal)
+				# Glowing kinetic energy ring
+				var torus = MeshInstance3D.new()
+				var tm = TorusMesh.new()
+				tm.inner_radius = 1.1
+				tm.outer_radius = 1.3
+				torus.mesh = tm
+				torus.material_override = mat_cyan
+				torus.position = Vector3(0, 0.6, 0)
+				shield_root.add_child(torus)
+
+	return root
+
+# ==============================================================================
+# 9. SKYBOUND ODYSSEY EXPLORER & ARTIFACT SHARDS
+# ==============================================================================
+
+static func build_skybound_explorer_character() -> Node3D:
+	var root = Node3D.new()
+	root.name = "SkyboundExplorerVisual"
+
+	var mat_skin = MaterialGenerator.get_material("temple_gold")
+	var mat_leather = MaterialGenerator.get_material("wood_bark")
+	var mat_cloak = MaterialGenerator.get_material("adventurer_cloak_blue")
+	var mat_brass = MaterialGenerator.get_material("ancient_altar_gold")
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+
+	# SKELETAL ROOT: Pelvis & Hips (Y = 0.90)
+	var pelvis = Node3D.new()
+	pelvis.name = "Pelvis"
+	pelvis.position = Vector3(0, 0.90, 0)
+	root.add_child(pelvis)
+
+	_add_box(pelvis, Vector3(0.32, 0.18, 0.24), Vector3(0, 0, 0), mat_leather)
+	# Brass belt & buckle
+	_add_box(pelvis, Vector3(0.34, 0.06, 0.26), Vector3(0, 0.05, 0), mat_brass)
+	# Adventurer pouch
+	_add_box(pelvis, Vector3(0.09, 0.10, 0.08), Vector3(0.18, 0.02, 0.12), mat_leather)
+
+	# TORSO / CHEST
+	var chest = Node3D.new()
+	chest.name = "Chest"
+	chest.position = Vector3(0, 0.28, 0)
+	pelvis.add_child(chest)
+
+	_add_box(chest, Vector3(0.42, 0.44, 0.28), Vector3(0, 0.10, 0), mat_cloak)
+	_add_box(chest, Vector3(0.30, 0.38, 0.30), Vector3(0, 0.08, 0), mat_leather)
+	# Cross-body strap
+	_add_box(chest, Vector3(0.06, 0.46, 0.32), Vector3(0, 0.10, 0), mat_brass).rotation_degrees.z = 25.0
+
+	# HEAD & AVIATOR GOGGLES
+	var head = Node3D.new()
+	head.name = "Head"
+	head.position = Vector3(0, 0.38, 0)
+	chest.add_child(head)
+
+	_add_cyl(head, 0.06, 0.07, 0.08, Vector3(0, -0.04, 0), mat_skin)
+	_add_sphere(head, 0.16, Vector3(0, 0.12, 0), mat_skin)
+	# Adventurer hat / bandana
+	var hat = _add_box(head, Vector3(0.34, 0.06, 0.34), Vector3(0, 0.24, 0), mat_leather)
+	# Brass aviator goggles on brow
+	_add_cyl(head, 0.05, 0.05, 0.04, Vector3(-0.07, 0.16, 0.14), mat_brass).rotation_degrees.x = 90.0
+	_add_cyl(head, 0.05, 0.05, 0.04, Vector3(0.07, 0.16, 0.14), mat_brass).rotation_degrees.x = 90.0
+
+	# FLOWING ADVENTURER CLOAK
+	var cape = _add_box(chest, Vector3(0.44, 0.85, 0.05), Vector3(0, -0.15, 0.16), mat_cloak)
+	cape.rotation_degrees.x = -8.0
+
+	# FOLDING GLIDER WINGS (ATTACHED TO BACK)
+	var glider_root = Node3D.new()
+	glider_root.name = "GliderWings"
+	glider_root.position = Vector3(0, 0.18, 0.18)
+	glider_root.visible = false
+	chest.add_child(glider_root)
+
+	for side in [-1.0, 1.0]:
+		var wing = _add_box(glider_root, Vector3(1.3, 0.04, 0.65), Vector3(side * 0.9, 0.1, 0), mat_cloak)
+		wing.rotation_degrees.z = side * -12.0
+		# Wing frame strut
+		_add_box(wing, Vector3(1.3, 0.05, 0.06), Vector3(0, 0.02, 0.3), mat_brass)
+
+	# ARMS
+	for side in [-1.0, 1.0]:
+		var shoulder = Node3D.new()
+		shoulder.name = "Shoulder_" + ("L" if side < 0 else "R")
+		shoulder.position = Vector3(side * 0.26, 0.22, 0)
+		chest.add_child(shoulder)
+		_add_sphere(shoulder, 0.09, Vector3.ZERO, mat_cloak)
+		var arm = _add_cyl(shoulder, 0.065, 0.055, 0.32, Vector3(0, -0.16, 0), mat_cloak)
+		var forearm = Node3D.new()
+		forearm.name = "Forearm"
+		forearm.position = Vector3(0, -0.32, 0)
+		shoulder.add_child(forearm)
+		_add_cyl(forearm, 0.055, 0.05, 0.28, Vector3(0, -0.12, 0), mat_leather)
+		var hand = _add_sphere(forearm, 0.06, Vector3(0, -0.28, 0), mat_skin)
+
+	# LEGS
+	for side in [-1.0, 1.0]:
+		var hip = Node3D.new()
+		hip.name = "Hip_" + ("L" if side < 0 else "R")
+		hip.position = Vector3(side * 0.12, -0.10, 0)
+		pelvis.add_child(hip)
+		var thigh = _add_cyl(hip, 0.08, 0.07, 0.38, Vector3(0, -0.18, 0), mat_leather)
+		var shin = Node3D.new()
+		shin.name = "Shin"
+		shin.position = Vector3(0, -0.38, 0)
+		hip.add_child(shin)
+		_add_cyl(shin, 0.07, 0.065, 0.38, Vector3(0, -0.18, 0), mat_cloak)
+		# Explorer boot
+		var boot = _add_box(shin, Vector3(0.14, 0.16, 0.26), Vector3(0, -0.38, 0.04), mat_leather)
+
+	return root
+
+static func build_ancient_energy_shard_artifact() -> Node3D:
+	var root = Node3D.new()
+	root.name = "AncientShardArtifact"
+
+	var mat_shard = MaterialGenerator.get_material("ancient_shard_glow")
+	var mat_gold = MaterialGenerator.get_material("ancient_altar_gold")
+
+	# Central Octahedral Floating Crystal (Two opposed Pyramids)
+	var crystal_top = MeshInstance3D.new()
+	var prism1 = PrismMesh.new()
+	prism1.size = Vector3(0.55, 0.65, 0.55)
+	crystal_top.mesh = prism1
+	crystal_top.material_override = mat_shard
+	crystal_top.position = Vector3(0, 0.25, 0)
+	root.add_child(crystal_top)
+
+	var crystal_bot = MeshInstance3D.new()
+	var prism2 = PrismMesh.new()
+	prism2.size = Vector3(0.55, 0.65, 0.55)
+	crystal_bot.mesh = prism2
+	crystal_bot.material_override = mat_shard
+	crystal_bot.position = Vector3(0, -0.25, 0)
+	crystal_bot.rotation_degrees.x = 180.0
+	root.add_child(crystal_bot)
+
+	# Counter-Rotating Gyroscopic Rune Rings
+	var ring1 = MeshInstance3D.new()
+	var tm1 = TorusMesh.new()
+	tm1.inner_radius = 0.55
+	tm1.outer_radius = 0.65
+	ring1.mesh = tm1
+	ring1.material_override = mat_gold
+	ring1.rotation_degrees.x = 45.0
+	ring1.name = "RuneRing1"
+	root.add_child(ring1)
+
+	var ring2 = MeshInstance3D.new()
+	var tm2 = TorusMesh.new()
+	tm2.inner_radius = 0.68
+	tm2.outer_radius = 0.76
+	ring2.mesh = tm2
+	ring2.material_override = mat_gold
+	ring2.rotation_degrees.z = 45.0
+	ring2.name = "RuneRing2"
+	root.add_child(ring2)
+
+	# Inner glowing light source
+	var omni = OmniLight3D.new()
+	omni.light_color = Color(0.1, 0.9, 1.0)
+	omni.light_energy = 2.8
+	omni.omni_range = 8.0
+	root.add_child(omni)
+
+	return root
+
+# ==============================================================================
+# 10. WILDCIRCUIT RANGER, SAFARI ATV & WILDLIFE
+# ==============================================================================
+
+static func build_wildcircuit_ranger_character() -> Node3D:
+	var root = Node3D.new()
+	root.name = "WildCircuitRangerVisual"
+
+	var mat_khaki = MaterialGenerator.get_material("ranger_khaki")
+	var mat_vest = MaterialGenerator.get_material("ranger_vest")
+	var mat_leather = MaterialGenerator.get_material("wood_bark")
+	var mat_skin = MaterialGenerator.get_material("temple_gold")
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_cyan = MaterialGenerator.get_material("neon_cyan")
+
+	# SKELETAL ROOT: Pelvis & Hips
+	var pelvis = Node3D.new()
+	pelvis.name = "Pelvis"
+	pelvis.position = Vector3(0, 0.90, 0)
+	root.add_child(pelvis)
+
+	_add_box(pelvis, Vector3(0.34, 0.18, 0.24), Vector3(0, 0, 0), mat_khaki)
+	_add_box(pelvis, Vector3(0.36, 0.05, 0.26), Vector3(0, 0.06, 0), mat_leather)
+
+	# TORSO / VEST
+	var chest = Node3D.new()
+	chest.name = "Chest"
+	chest.position = Vector3(0, 0.28, 0)
+	pelvis.add_child(chest)
+
+	_add_box(chest, Vector3(0.44, 0.46, 0.28), Vector3(0, 0.10, 0), mat_khaki)
+	# Ranger Utility Vest with pockets
+	_add_box(chest, Vector3(0.48, 0.44, 0.32), Vector3(0, 0.10, 0), mat_vest)
+	for py in [-0.05, 0.12]:
+		_add_box(chest, Vector3(0.12, 0.10, 0.05), Vector3(-0.14, py, 0.17), mat_leather)
+		_add_box(chest, Vector3(0.12, 0.10, 0.05), Vector3(0.14, py, 0.17), mat_leather)
+
+	# HEAD & SAFARI HAT
+	var head = Node3D.new()
+	head.name = "Head"
+	head.position = Vector3(0, 0.38, 0)
+	chest.add_child(head)
+
+	_add_cyl(head, 0.06, 0.07, 0.08, Vector3(0, -0.04, 0), mat_skin)
+	_add_sphere(head, 0.16, Vector3(0, 0.12, 0), mat_skin)
+	# Wide-brim safari field hat
+	var hat_brim = _add_cyl(head, 0.32, 0.32, 0.03, Vector3(0, 0.22, 0), mat_khaki)
+	_add_cyl(head, 0.18, 0.18, 0.14, Vector3(0, 0.29, 0), mat_khaki)
+	_add_box(head, Vector3(0.38, 0.02, 0.38), Vector3(0, 0.24, 0), mat_leather) # Hat band
+
+	# Binoculars hanging around neck
+	var bino = Node3D.new()
+	bino.name = "NeckBinoculars"
+	bino.position = Vector3(0, 0.10, 0.18)
+	chest.add_child(bino)
+	_add_cyl(bino, 0.04, 0.05, 0.14, Vector3(-0.06, 0, 0), mat_metal).rotation_degrees.x = 90.0
+	_add_cyl(bino, 0.04, 0.05, 0.14, Vector3(0.06, 0, 0), mat_metal).rotation_degrees.x = 90.0
+	_add_box(bino, Vector3(0.14, 0.04, 0.06), Vector3(0, 0.02, 0), mat_metal)
+
+	# ARMS & LEGS
+	for side in [-1.0, 1.0]:
+		var shoulder = Node3D.new()
+		shoulder.name = "Shoulder_" + ("L" if side < 0 else "R")
+		shoulder.position = Vector3(side * 0.28, 0.24, 0)
+		chest.add_child(shoulder)
+		_add_cyl(shoulder, 0.065, 0.055, 0.32, Vector3(0, -0.16, 0), mat_khaki)
+		var forearm = Node3D.new()
+		forearm.name = "Forearm"
+		forearm.position = Vector3(0, -0.32, 0)
+		shoulder.add_child(forearm)
+		_add_cyl(forearm, 0.055, 0.05, 0.28, Vector3(0, -0.12, 0), mat_skin)
+		_add_sphere(forearm, 0.06, Vector3(0, -0.28, 0), mat_skin)
+
+		var hip = Node3D.new()
+		hip.name = "Hip_" + ("L" if side < 0 else "R")
+		hip.position = Vector3(side * 0.12, -0.10, 0)
+		pelvis.add_child(hip)
+		_add_cyl(hip, 0.08, 0.07, 0.38, Vector3(0, -0.18, 0), mat_khaki)
+		var shin = Node3D.new()
+		shin.name = "Shin"
+		shin.position = Vector3(0, -0.38, 0)
+		hip.add_child(shin)
+		_add_cyl(shin, 0.07, 0.065, 0.38, Vector3(0, -0.18, 0), mat_khaki)
+		_add_box(shin, Vector3(0.14, 0.18, 0.26), Vector3(0, -0.38, 0.04), mat_leather)
+
+	return root
+
+static func build_safari_atv_vehicle() -> Node3D:
+	var atv = Node3D.new()
+	atv.name = "SafariATVVisual"
+
+	var mat_body = MaterialGenerator.get_material("atv_body_green")
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+	var mat_hull = MaterialGenerator.get_material("dark_hull")
+	var mat_tire = MaterialGenerator.get_material("tread_rubber")
+	var mat_headlight = MaterialGenerator.get_material("neon_yellow")
+	var mat_taillight = MaterialGenerator.get_material("neon_red")
+
+	# Tubular Steel Spaceframe Chassis
+	_add_box(atv, Vector3(1.6, 0.35, 2.8), Vector3(0, 0.50, 0), mat_hull)
+	# Body Panels (Olive Green)
+	var hood = _add_box(atv, Vector3(1.4, 0.25, 1.0), Vector3(0, 0.65, -0.85), mat_body)
+	hood.rotation_degrees.x = 10.0
+	_add_box(atv, Vector3(1.4, 0.30, 0.9), Vector3(0, 0.65, 0.85), mat_body)
+
+	# Full Tubular Roll Cage & Roof Rack
+	for sx in [-0.7, 0.7]:
+		_add_cyl(atv, 0.035, 0.035, 1.1, Vector3(sx, 1.15, -0.3), mat_metal).rotation_degrees.x = -15.0
+		_add_cyl(atv, 0.035, 0.035, 1.1, Vector3(sx, 1.15, 0.5), mat_metal).rotation_degrees.x = 10.0
+		_add_box(atv, Vector3(0.06, 0.06, 0.95), Vector3(sx, 1.68, 0.1), mat_metal)
+	_add_box(atv, Vector3(1.46, 0.06, 0.06), Vector3(0, 1.68, -0.35), mat_metal)
+	_add_box(atv, Vector3(1.46, 0.06, 0.06), Vector3(0, 1.68, 0.55), mat_metal)
+
+	# Front Bull Bar, Winch & Spotlights
+	_add_box(atv, Vector3(1.5, 0.35, 0.15), Vector3(0, 0.45, -1.45), mat_metal)
+	_add_cyl(atv, 0.10, 0.10, 0.25, Vector3(0, 0.45, -1.55), mat_hull).rotation_degrees.z = 90.0 # Winch
+	for hx in [-0.45, 0.45]:
+		var hl = _add_cyl(atv, 0.09, 0.09, 0.08, Vector3(hx, 0.62, -1.40), mat_headlight)
+		hl.rotation_degrees.x = 90.0
+
+	# 4 Oversized Knobby Mud Tires with Long-Travel Wishbones
+	var w_offsets = [
+		Vector3(-0.95, 0.42, -0.95),
+		Vector3(0.95, 0.42, -0.95),
+		Vector3(-0.95, 0.45, 0.95),
+		Vector3(0.95, 0.45, 0.95)
+	]
+	for wp in w_offsets:
+		var wn = Node3D.new()
+		wn.position = wp
+		atv.add_child(wn)
+		var tire = _add_cyl(wn, 0.42, 0.42, 0.35, Vector3.ZERO, mat_tire)
+		tire.rotation_degrees.z = 90.0
+		var rim = _add_cyl(wn, 0.26, 0.26, 0.38, Vector3(sign(wp.x) * 0.02, 0, 0), mat_metal)
+		rim.rotation_degrees.z = 90.0
+		# Wishbone arm
+		_add_box(atv, Vector3(0.35, 0.08, 0.14), wp + Vector3(sign(wp.x) * -0.20, 0.05, 0), mat_metal)
+
+	# Spare Tire mounted on rear
+	var spare = _add_cyl(atv, 0.38, 0.38, 0.28, Vector3(0, 0.85, 1.45), mat_tire)
+	spare.rotation_degrees.x = 90.0
+
+	return atv
+
+static func build_wildlife_animal_model(species_id: String) -> Node3D:
+	var root = Node3D.new()
+	root.name = "Wildlife_" + species_id
+
+	match species_id.to_lower():
+		"lion":
+			var mat_coat = MaterialGenerator.get_material("wildlife_lion")
+			var mat_mane = MaterialGenerator.get_material("wood_bark")
+			var mat_eye = MaterialGenerator.get_material("neon_yellow")
+			# Body
+			var body = _add_box(root, Vector3(0.75, 0.70, 1.45), Vector3(0, 0.75, 0), mat_coat)
+			# Neck & Mane
+			var neck = _add_box(root, Vector3(0.65, 0.65, 0.50), Vector3(0, 0.95, -0.75), mat_mane)
+			# Head
+			var head_node = Node3D.new()
+			head_node.name = "HeadNode"
+			head_node.position = Vector3(0, 1.05, -1.05)
+			root.add_child(head_node)
+			_add_box(head_node, Vector3(0.50, 0.45, 0.55), Vector3(0, 0, 0), mat_coat)
+			_add_box(head_node, Vector3(0.32, 0.25, 0.35), Vector3(0, -0.10, -0.35), mat_coat) # Snout
+			for side in [-1.0, 1.0]:
+				_add_sphere(head_node, 0.04, Vector3(side * 0.18, 0.08, -0.22), mat_eye)
+				_add_sphere(head_node, 0.08, Vector3(side * 0.22, 0.24, 0.05), mat_mane) # Rounded ear
+			# 4 Legs
+			for side in [-1.0, 1.0]:
+				for fwd in [-1.0, 1.0]:
+					var leg = _add_cyl(root, 0.12, 0.10, 0.65, Vector3(side * 0.32, 0.35, fwd * 0.52), mat_coat)
+			# Tail
+			var tail = _add_cyl(root, 0.03, 0.03, 0.65, Vector3(0, 0.85, 0.95), mat_coat)
+			tail.rotation_degrees.x = -45.0
+			_add_sphere(tail, 0.08, Vector3(0, -0.35, 0), mat_mane)
+		"elephant":
+			var mat_skin = MaterialGenerator.get_material("wildlife_elephant")
+			var mat_tusk = MaterialGenerator.get_material("ancient_stone")
+			# Massive Body
+			_add_box(root, Vector3(1.8, 1.6, 2.6), Vector3(0, 1.6, 0), mat_skin)
+			# Head
+			var head_node = Node3D.new()
+			head_node.name = "HeadNode"
+			head_node.position = Vector3(0, 1.8, -1.6)
+			root.add_child(head_node)
+			_add_box(head_node, Vector3(1.1, 1.1, 1.1), Vector3(0, 0, 0), mat_skin)
+			# Large Ears
+			for side in [-1.0, 1.0]:
+				var ear = _add_box(head_node, Vector3(0.06, 0.85, 0.75), Vector3(side * 0.70, 0.10, 0.1), mat_skin)
+				ear.rotation_degrees.y = side * 25.0
+				# Curved Ivory Tusks
+				var tusk = _add_cyl(head_node, 0.04, 0.08, 0.75, Vector3(side * 0.35, -0.35, -0.55), mat_tusk)
+				tusk.rotation_degrees.x = 45.0
+			# Articulated Trunk
+			var trunk = _add_cyl(head_node, 0.12, 0.16, 1.2, Vector3(0, -0.65, -0.65), mat_skin)
+			trunk.rotation_degrees.x = -15.0
+			# 4 Massive Pillar Legs
+			for side in [-1.0, 1.0]:
+				for fwd in [-1.0, 1.0]:
+					_add_cyl(root, 0.28, 0.32, 1.0, Vector3(side * 0.70, 0.50, fwd * 0.95), mat_skin)
+		"zebra":
+			var mat_coat = MaterialGenerator.get_material("wildlife_zebra")
+			var mat_dark = MaterialGenerator.get_material("dark_hull")
+			# Body
+			_add_box(root, Vector3(0.65, 0.75, 1.45), Vector3(0, 0.95, 0), mat_coat)
+			# Slender Neck & Mane
+			var neck = _add_cyl(root, 0.18, 0.24, 0.75, Vector3(0, 1.35, -0.75), mat_coat)
+			neck.rotation_degrees.x = -35.0
+			_add_box(neck, Vector3(0.06, 0.75, 0.12), Vector3(0, 0, 0.22), mat_dark) # Mane ridge
+			# Head
+			var head_node = Node3D.new()
+			head_node.name = "HeadNode"
+			head_node.position = Vector3(0, 1.65, -1.15)
+			root.add_child(head_node)
+			_add_box(head_node, Vector3(0.35, 0.38, 0.65), Vector3(0, 0, 0), mat_coat)
+			_add_box(head_node, Vector3(0.25, 0.22, 0.25), Vector3(0, -0.10, -0.42), mat_dark) # Dark muzzle
+			# 4 Legs
+			for side in [-1.0, 1.0]:
+				for fwd in [-1.0, 1.0]:
+					_add_cyl(root, 0.09, 0.08, 0.85, Vector3(side * 0.28, 0.42, fwd * 0.55), mat_coat)
+		_: # "gazelle" (Default)
+			var mat_coat = MaterialGenerator.get_material("wildlife_gazelle")
+			var mat_horn = MaterialGenerator.get_material("wildlife_horn")
+			var mat_belly = MaterialGenerator.get_material("temple_gold")
+			# Slender Body
+			_add_box(root, Vector3(0.55, 0.55, 1.15), Vector3(0, 0.85, 0), mat_coat)
+			_add_box(root, Vector3(0.48, 0.15, 1.05), Vector3(0, 0.60, 0), mat_belly)
+			# Neck
+			var neck = _add_cyl(root, 0.12, 0.16, 0.65, Vector3(0, 1.25, -0.55), mat_coat)
+			neck.rotation_degrees.x = -32.0
+			# Head
+			var head_node = Node3D.new()
+			head_node.name = "HeadNode"
+			head_node.position = Vector3(0, 1.55, -0.85)
+			root.add_child(head_node)
+			_add_box(head_node, Vector3(0.28, 0.28, 0.45), Vector3(0, 0, 0), mat_coat)
+			# Dual Curved Ridged Horns
+			for side in [-1.0, 1.0]:
+				var horn = _add_cyl(head_node, 0.02, 0.05, 0.45, Vector3(side * 0.10, 0.28, 0.05), mat_horn)
+				horn.rotation_degrees.x = 24.0
+				horn.rotation_degrees.z = side * 10.0
+			# 4 Slender Legs with hooves
+			for side in [-1.0, 1.0]:
+				for fwd in [-1.0, 1.0]:
+					_add_cyl(root, 0.065, 0.055, 0.80, Vector3(side * 0.22, 0.40, fwd * 0.42), mat_coat)
+
+	return root
+
+# ==============================================================================
+# 11. CONTEXTUAL 3D REWARDS & RACING PICKUPS
+# ==============================================================================
+
+static func build_contextual_reward(reward_type: String) -> Node3D:
+	var root = Node3D.new()
+	root.name = "Reward_" + reward_type
+
+	match reward_type.to_lower():
+		"trophy_silver":
+			var mat = MaterialGenerator.get_material("trophy_silver")
+			var base = _add_cyl(root, 0.35, 0.40, 0.25, Vector3(0, 0.12, 0), MaterialGenerator.get_material("dark_hull"))
+			var stem = _add_cyl(root, 0.12, 0.16, 0.40, Vector3(0, 0.45, 0), mat)
+			var cup = _add_cyl(root, 0.40, 0.18, 0.55, Vector3(0, 0.90, 0), mat)
+		"trophy_bronze":
+			var mat = MaterialGenerator.get_material("trophy_bronze")
+			var base = _add_cyl(root, 0.35, 0.40, 0.25, Vector3(0, 0.12, 0), MaterialGenerator.get_material("dark_hull"))
+			var stem = _add_cyl(root, 0.12, 0.16, 0.40, Vector3(0, 0.45, 0), mat)
+			var cup = _add_cyl(root, 0.40, 0.18, 0.55, Vector3(0, 0.90, 0), mat)
+		"component_crate":
+			var mat_crate = MaterialGenerator.get_material("sci_fi_metal")
+			var mat_glow = MaterialGenerator.get_material("neon_cyan")
+			_add_box(root, Vector3(0.8, 0.8, 0.8), Vector3(0, 0.4, 0), mat_crate)
+			_add_box(root, Vector3(0.85, 0.2, 0.85), Vector3(0, 0.4, 0), mat_glow)
+		"ancient_relic":
+			var mat_gold = MaterialGenerator.get_material("ancient_altar_gold")
+			var mat_glow = MaterialGenerator.get_material("ancient_shard_glow")
+			_add_cyl(root, 0.45, 0.45, 0.08, Vector3(0, 0.5, 0), mat_gold).rotation_degrees.x = 90.0
+			_add_sphere(root, 0.22, Vector3(0, 0.5, 0), mat_glow)
+		"conservation_star":
+			var mat_gold = MaterialGenerator.get_material("trophy_gold")
+			var mat_leaf = MaterialGenerator.get_material("neon_green")
+			_add_sphere(root, 0.35, Vector3(0, 0.5, 0), mat_gold)
+			_add_box(root, Vector3(0.12, 0.30, 0.12), Vector3(0, 0.5, 0), mat_leaf)
+		_: # "trophy_gold" (Default)
+			var mat = MaterialGenerator.get_material("trophy_gold")
+			var base = _add_cyl(root, 0.38, 0.44, 0.28, Vector3(0, 0.14, 0), MaterialGenerator.get_material("dark_hull"))
+			var stem = _add_cyl(root, 0.14, 0.18, 0.45, Vector3(0, 0.50, 0), mat)
+			var cup = _add_cyl(root, 0.45, 0.20, 0.65, Vector3(0, 1.05, 0), mat)
+			# Dual Handles
+			for side in [-1.0, 1.0]:
+				var handle = _add_box(root, Vector3(0.06, 0.35, 0.15), Vector3(side * 0.52, 1.05, 0), mat)
+
+	return root
+
+static func build_turbo_boost_canister() -> Node3D:
+	var root = Node3D.new()
+	root.name = "PickupTurboBoostCanister"
+	var mat_nitro = MaterialGenerator.get_material("pickup_boost_canister")
+	var mat_chrome = MaterialGenerator.get_material("hydraulic_chrome")
+
+	# Twin Cylindrical Nitro Bottles
+	for side in [-0.22, 0.22]:
+		var bottle = _add_cyl(root, 0.18, 0.18, 0.65, Vector3(side, 0.45, 0), mat_nitro)
+		_add_sphere(root, 0.18, Vector3(side, 0.78, 0), mat_nitro)
+		_add_cyl(root, 0.06, 0.06, 0.12, Vector3(side, 0.95, 0), mat_chrome)
+	_add_box(root, Vector3(0.70, 0.12, 0.15), Vector3(0, 0.45, 0), mat_chrome)
+	return root
+
+static func build_shield_orb_pickup() -> Node3D:
+	var root = Node3D.new()
+	root.name = "PickupShieldOrb"
+	var mat_shield = MaterialGenerator.get_material("pickup_shield_orb")
+	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
+
+	# Central Glowing Cyan Sphere
+	_add_sphere(root, 0.32, Vector3(0, 0.55, 0), mat_shield)
+	# Gyroscopic Outer Rings
+	var r1 = _add_cyl(root, 0.48, 0.48, 0.04, Vector3(0, 0.55, 0), mat_metal)
+	r1.rotation_degrees.x = 45.0
+	var r2 = _add_cyl(root, 0.54, 0.54, 0.04, Vector3(0, 0.55, 0), mat_metal)
+	r2.rotation_degrees.z = 45.0
+	return root
+
+static func build_emp_mine_pickup() -> Node3D:
+	var root = Node3D.new()
+	root.name = "PickupEMPMine"
+	var mat_emp = MaterialGenerator.get_material("pickup_emp_mine")
+	var mat_dark = MaterialGenerator.get_material("dark_hull")
+
+	# Spiked Proximity Mine Body
+	_add_sphere(root, 0.35, Vector3(0, 0.55, 0), mat_emp)
+	for i in range(6):
+		var ang = float(i) * PI / 3.0
+		var spike = _add_cyl(root, 0.02, 0.06, 0.28, Vector3(cos(ang) * 0.42, 0.55, sin(ang) * 0.42), mat_dark)
+		spike.rotation_degrees.y = rad_to_deg(ang)
+	return root

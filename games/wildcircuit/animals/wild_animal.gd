@@ -45,72 +45,25 @@ func _ready() -> void:
 	setup_nav_sensors()
 
 func setup_visuals() -> void:
-	visual_node = Node3D.new()
-	visual_node.name = "AnimalVisual"
+	if visual_node:
+		visual_node.queue_free()
+
+	visual_node = MeshBuilder.build_wildlife_animal_model(species_id)
 	add_child(visual_node)
 
-	var s_scale: Vector3 = species_info.get("scale", Vector3(1.0, 1.0, 1.0))
-	var s_color: Color = species_info.get("color", Color(0.7, 0.5, 0.3))
-
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = s_color
-	mat.roughness = 0.85
-
-	# 1. Torso Body
-	var body = MeshInstance3D.new()
-	var b_box = BoxMesh.new()
-	b_box.size = Vector3(0.7 * s_scale.x, 0.7 * s_scale.y, 1.4 * s_scale.z)
-	body.mesh = b_box
-	body.material_override = mat
-	body.position = Vector3(0, 0.8 * s_scale.y, 0)
-	visual_node.add_child(body)
-
-	# 2. Neck & Head
-	head_node = Node3D.new()
-	head_node.position = Vector3(0, 1.1 * s_scale.y, -0.6 * s_scale.z)
-	var head_mesh = MeshInstance3D.new()
-	var h_box = BoxMesh.new()
-	h_box.size = Vector3(0.4 * s_scale.x, 0.45 * s_scale.y, 0.55 * s_scale.z)
-	head_mesh.mesh = h_box
-	head_mesh.material_override = mat
-	head_mesh.position = Vector3(0, 0.25 * s_scale.y, -0.2 * s_scale.z)
-	head_node.add_child(head_mesh)
-
-	# Horns if applicable
-	if species_info.get("has_horns", false):
-		for side in [-1.0, 1.0]:
-			var horn = MeshInstance3D.new()
-			var cyl = CylinderMesh.new()
-			cyl.top_radius = 0.02
-			cyl.bottom_radius = 0.06
-			cyl.height = 0.5 * s_scale.y
-			horn.mesh = cyl
-			var mat_horn = StandardMaterial3D.new()
-			mat_horn.albedo_color = species_info.get("horn_color", Color(0.2, 0.2, 0.2))
-			horn.material_override = mat_horn
-			horn.position = Vector3(side * 0.15 * s_scale.x, 0.6 * s_scale.y, -0.1 * s_scale.z)
-			horn.rotation_degrees.x = 20.0
-			head_node.add_child(horn)
-
-	visual_node.add_child(head_node)
-
-	# 3. Four Legs
-	for side in [-1.0, 1.0]:
-		for fwd in [-1.0, 1.0]:
-			var leg = MeshInstance3D.new()
-			var l_box = BoxMesh.new()
-			l_box.size = Vector3(0.18 * s_scale.x, 0.8 * s_scale.y, 0.18 * s_scale.z)
-			leg.mesh = l_box
-			leg.material_override = mat
-			leg.position = Vector3(side * 0.3 * s_scale.x, 0.4 * s_scale.y, fwd * 0.45 * s_scale.z)
-			visual_node.add_child(leg)
+	head_node = visual_node.find_child("HeadNode", true, false)
 
 	# Collision
+	for c in get_children():
+		if c is CollisionShape3D:
+			c.queue_free()
+
 	var col = CollisionShape3D.new()
 	var box_shape = BoxShape3D.new()
-	box_shape.size = Vector3(1.0 * s_scale.x, 1.2 * s_scale.y, 1.6 * s_scale.z)
+	var s_scale: Vector3 = species_info.get("scale", Vector3(1.0, 1.0, 1.0))
+	box_shape.size = Vector3(1.0 * s_scale.x, 1.2 * s_scale.y, 1.8 * s_scale.z)
 	col.shape = box_shape
-	col.position = Vector3(0, 0.7 * s_scale.y, 0)
+	col.position = Vector3(0, 0.6 * s_scale.y, 0)
 	add_child(col)
 
 func setup_nav_sensors() -> void:

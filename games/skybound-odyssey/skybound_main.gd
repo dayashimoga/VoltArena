@@ -75,6 +75,7 @@ func setup_game() -> void:
 	results_screen = ResultsScreenScript.new()
 	results_screen.name = "ResultsScreen"
 	results_screen.restart_pressed.connect(_on_restart)
+	results_screen.next_stage_pressed.connect(_on_next_region_requested)
 	results_screen.launcher_pressed.connect(_on_quit_to_launcher)
 	add_child(results_screen)
 
@@ -112,9 +113,58 @@ func connect_signals() -> void:
 	quest_manager.quest_completed.connect(func(q_id: String, _rewards: Dictionary):
 		if q_id == "quest_emerald":
 			world.unlock_region(1)
+			results_screen.display_results(true, {
+				"Region": "Emerald Isles Cleared",
+				"Shards Found": "%d / 3" % player.shards_collected,
+				"Next Region": "Crystal Caverns Unlocked",
+				"Status": "ALTAR AWAKENED"
+			}, "ancient_relic", "ANCIENT RELIC // PORTAL UNLOCKED")
+		elif q_id == "quest_caverns":
+			world.unlock_region(2)
+			results_screen.display_results(true, {
+				"Region": "Crystal Caverns Cleared",
+				"Chasm": "Crossed",
+				"Next Region": "Sunken Sky Temple Unlocked",
+				"Status": "TEMPLE LOCATED"
+			}, "ancient_relic", "ANCIENT RELIC // TEMPLE OPENED")
+		elif q_id == "quest_temple":
+			world.unlock_region(3)
+			results_screen.display_results(true, {
+				"Region": "Sunken Sky Temple Cleared",
+				"Thermal Current": "Mastered",
+				"Next Region": "Frost Peaks Unlocked",
+				"Status": "ASCENSION READY"
+			}, "ancient_relic", "ANCIENT RELIC // PEAKS UNLOCKED")
+		elif q_id == "quest_peaks":
+			world.unlock_region(4)
+			results_screen.display_results(true, {
+				"Region": "Frost Peaks Cleared",
+				"Crags": "Mantled",
+				"Next Region": "Storm Citadel Unlocked",
+				"Status": "SUMMIT REACHED"
+			}, "ancient_relic", "ANCIENT RELIC // CITADEL UNLOCKED")
 		elif q_id == "quest_citadel":
 			complete_odyssey()
 	)
+
+func _on_next_region_requested() -> void:
+	results_screen.hide_results()
+	var next_reg_idx = world.current_region_idx + 1
+	var spawn_points = [
+		Vector3(0, 3.5, 0),             # 0: Emerald Isles
+		Vector3(0, -18.0, 80.0),         # 1: Crystal Caverns
+		Vector3(95.0, 14.0, 0),          # 2: Sunken Sky Temple
+		Vector3(-95.0, 26.0, 0),         # 3: Frost Peaks
+		Vector3(0, 44.0, -115.0)         # 4: Storm Citadel
+	]
+	if next_reg_idx < spawn_points.size():
+		player.global_position = spawn_points[next_reg_idx]
+		player.velocity = Vector3.ZERO
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am and am.has_method("play_sound"):
+			am.play_sound("respawn", 1.0, 1.2)
+	else:
+		complete_odyssey()
 
 func initialize_quest_lines() -> void:
 	var q1_objs = [
@@ -155,7 +205,7 @@ func complete_odyssey() -> void:
 		"Regions Explored": "5 / 5",
 		"Energy Shards": player.shards_collected,
 		"Title": "Master Skyfarer"
-	})
+	}, "ancient_relic", "APEX ARTIFACT // MASTER SKYFARER")
 
 func _on_restart() -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")

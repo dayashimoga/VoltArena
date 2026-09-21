@@ -438,12 +438,8 @@ func _spawn_shard(parent: Node3D, pos: Vector3, val: int = 1) -> void:
 	shard_body.collision_mask = GameConstants.LAYER_PLAYER
 	shard_body.position = pos
 
-	var mi = MeshInstance3D.new()
-	var prism = PrismMesh.new()
-	prism.size = Vector3(0.6, 0.9, 0.6)
-	mi.mesh = prism
-	mi.material_override = MaterialGenerator.get_material("crystal_cyan")
-	shard_body.add_child(mi)
+	var artifact = MeshBuilder.build_ancient_energy_shard_artifact()
+	shard_body.add_child(artifact)
 
 	var col = CollisionShape3D.new()
 	var sphere = SphereShape3D.new()
@@ -455,6 +451,9 @@ func _spawn_shard(parent: Node3D, pos: Vector3, val: int = 1) -> void:
 		if body.has_method("collect_shard"):
 			body.collect_shard(val)
 			shard_picked_up.emit(shard_body)
+			var am = GameConstants.get_autoload(shard_body, "AudioManager")
+			if am and am.has_method("play_sound"):
+				am.play_sound("pickup_ammo", 1.2, 1.2)
 			shard_body.queue_free()
 	)
 	parent.add_child(shard_body)

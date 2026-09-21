@@ -76,6 +76,7 @@ func setup_scene() -> void:
 		results_screen.name = "ResultsScreen"
 		results_screen.restart_pressed.connect(_on_restart)
 		results_screen.launcher_pressed.connect(_on_quit_to_launcher)
+		results_screen.next_stage_pressed.connect(_on_next_race_requested)
 		add_child(results_screen)
 
 	# Race Manager
@@ -353,10 +354,18 @@ func _on_race_finished(winner: Node) -> void:
 		sm.record_kart_race(selected_track, best_lap, won)
 
 	results_screen.display_results(won, {
-		"Position": "1st Place (WINNER!)" if won else "Finished",
+		"Position": "1st Place (CHAMPION!)" if won else "Finished",
 		"Total Time": "%.2fs" % race_manager.race_time,
-		"Best Lap": "%.2fs" % best_lap if best_lap < 900.0 else "N/A"
+		"Best Lap": "%.2fs" % best_lap if best_lap < 900.0 else "N/A",
+		"Reward": "Grand Prix Championship Gold Trophy" if won else "Circuit Participation Medal"
 	})
+
+func _on_next_race_requested() -> void:
+	var track_sequence = ["speedway", "canyon", "skyline", "sunset_coast", "alpine_rush", "storm_harbor"]
+	var cur_idx = track_sequence.find(selected_track)
+	var next_idx = (cur_idx + 1) % track_sequence.size()
+	select_track(track_sequence[next_idx])
+	start_race()
 
 func _on_restart() -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")

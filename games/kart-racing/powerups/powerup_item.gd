@@ -7,6 +7,8 @@ enum ItemType {
 	SHOCK_MINE
 }
 
+@export var item_type: int = ItemType.TURBO_BOOST
+
 var is_active: bool = true
 var respawn_timer: float = 0.0
 var box_mesh: Node3D
@@ -18,15 +20,24 @@ func _ready() -> void:
 	setup_visual()
 
 func setup_visual() -> void:
-	box_mesh = MeshBuilder.build_item_box()
-	box_mesh.position = Vector3(0, 0.9, 0)
+	match item_type:
+		ItemType.TURBO_BOOST:
+			box_mesh = MeshBuilder.build_turbo_boost_canister()
+		ItemType.EMP_SHIELD:
+			box_mesh = MeshBuilder.build_shield_orb_pickup()
+		ItemType.SHOCK_MINE:
+			box_mesh = MeshBuilder.build_emp_mine_pickup()
+		_:
+			box_mesh = MeshBuilder.build_turbo_boost_canister()
+
+	box_mesh.position = Vector3(0, 0.5, 0)
 	add_child(box_mesh)
 
 	var col = CollisionShape3D.new()
 	var sphere = SphereShape3D.new()
 	sphere.radius = 1.2
 	col.shape = sphere
-	col.position = Vector3(0, 0.9, 0)
+	col.position = Vector3(0, 0.5, 0)
 	add_child(col)
 
 func _process(delta: float) -> void:

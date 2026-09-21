@@ -79,10 +79,13 @@ func setup_game() -> void:
 	results_screen = ResultsScreenScript.new()
 	results_screen.name = "ResultsScreen"
 	results_screen.restart_pressed.connect(_on_restart)
+	results_screen.next_stage_pressed.connect(_on_next_biome_requested)
 	results_screen.launcher_pressed.connect(_on_quit_to_launcher)
 	add_child(results_screen)
 
 	connect_signals()
+
+var current_biome_idx: int = 0
 
 func _create_player_explorer() -> CharacterBody3D:
 	var body = CharacterBody3D.new()
@@ -91,14 +94,9 @@ func _create_player_explorer() -> CharacterBody3D:
 	body.collision_layer = GameConstants.LAYER_PLAYER
 	body.collision_mask = GameConstants.LAYER_WORLD
 
-	var mi = MeshInstance3D.new()
-	var cap = CapsuleMesh.new()
-	cap.radius = 0.38
-	cap.height = 1.75
-	mi.mesh = cap
-	mi.material_override = MaterialGenerator.get_material("savannah_dirt")
-	mi.position = Vector3(0, 0.88, 0)
-	body.add_child(mi)
+	var visual = MeshBuilder.build_wildcircuit_ranger_character()
+	visual.name = "RangerVisual"
+	body.add_child(visual)
 
 	var col = CollisionShape3D.new()
 	var cs = CapsuleShape3D.new()
@@ -120,6 +118,25 @@ func connect_signals() -> void:
 		if total_found >= 4:
 			complete_expedition()
 	)
+
+func _on_next_biome_requested() -> void:
+	results_screen.hide_results()
+	var biome_spawn_points = [
+		Vector3(0, 0.5, 5.0),      # 0: Savannah
+		Vector3(0, 0.5, 85.0),     # 1: Forest
+		Vector3(95.0, 0.5, 0.0),   # 2: Wetlands
+		Vector3(-95.0, 0.5, 0.0),  # 3: Desert
+		Vector3(0, 15.0, -110.0)   # 4: Mountains
+	]
+	current_biome_idx = (current_biome_idx + 1) % biome_spawn_points.size()
+	player.global_position = biome_spawn_points[current_biome_idx]
+	player.velocity = Vector3.ZERO
+	if is_instance_valid(atv):
+		atv.global_position = player.global_position + Vector3(4.0, 0.0, 0.0)
+		atv.velocity = Vector3.ZERO
+	var bus = GameConstants.get_autoload(self, "EventBus")
+	if bus:
+		bus.show_toast_requested.emit("EXPEDITION: ADVANCING TO NEXT BIOME", Color(0.2, 1.0, 0.4))
 
 func _process(delta: float) -> void:
 	handle_player_movement(delta)
@@ -257,7 +274,7 @@ func complete_expedition() -> void:
 		"Species Documented": "%d / %d" % [journal.get_total_discovered(), AnimalDataScript.SPECIES.size()],
 		"Rank": "Master Field Ranger",
 		"Conservation Rating": "100% Certified"
-	})
+	}, "conservation_star", "CONSERVATION STAR // NEXT BIOME EXPEDITION")
 
 func _on_restart() -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")

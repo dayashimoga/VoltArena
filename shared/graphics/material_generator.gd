@@ -480,6 +480,92 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.roughness = 0.82
 			mat.metallic = 0.10
 			mat.uv1_triplanar = true
+		"wildlife_gazelle":
+			mat.albedo_color = Color(0.86, 0.62, 0.38)
+			mat.roughness = 0.88
+			mat.metallic = 0.02
+		"wildlife_lion":
+			mat.albedo_color = Color(0.82, 0.65, 0.32)
+			mat.roughness = 0.82
+			mat.metallic = 0.02
+		"wildlife_elephant":
+			mat.albedo_color = Color(0.48, 0.50, 0.54)
+			mat.roughness = 0.90
+			mat.metallic = 0.04
+		"wildlife_zebra":
+			mat.albedo_color = Color(0.92, 0.92, 0.95)
+			mat.roughness = 0.80
+			mat.metallic = 0.02
+		"wildlife_horn":
+			mat.albedo_color = Color(0.22, 0.20, 0.18)
+			mat.roughness = 0.65
+			mat.metallic = 0.10
+		"ranger_vest":
+			mat.albedo_color = Color(0.45, 0.55, 0.35)
+			mat.roughness = 0.75
+			mat.metallic = 0.05
+		"ranger_khaki":
+			mat.albedo_color = Color(0.72, 0.65, 0.50)
+			mat.roughness = 0.85
+			mat.metallic = 0.02
+		"atv_body_green":
+			mat.albedo_color = Color(0.25, 0.48, 0.30)
+			mat.roughness = 0.35
+			mat.metallic = 0.70
+		"adventurer_cloak_blue":
+			mat.albedo_color = Color(0.15, 0.55, 0.90)
+			mat.roughness = 0.70
+			mat.metallic = 0.10
+		"ancient_shard_glow":
+			mat.albedo_color = Color(0.10, 0.90, 1.0)
+			mat.emission_enabled = true
+			mat.emission = Color(0.0, 0.95, 1.0)
+			mat.emission_energy_multiplier = 3.2
+			mat.roughness = 0.10
+			mat.metallic = 0.20
+		"ancient_altar_gold":
+			mat.albedo_color = Color(0.95, 0.80, 0.20)
+			mat.emission_enabled = true
+			mat.emission = Color(0.95, 0.75, 0.15)
+			mat.emission_energy_multiplier = 1.4
+			mat.roughness = 0.25
+			mat.metallic = 0.90
+		"trophy_gold":
+			mat.albedo_color = Color(1.0, 0.84, 0.0)
+			mat.metallic = 0.95
+			mat.roughness = 0.15
+			mat.emission_enabled = true
+			mat.emission = Color(0.9, 0.75, 0.1)
+			mat.emission_energy_multiplier = 0.8
+		"trophy_silver":
+			mat.albedo_color = Color(0.88, 0.90, 0.94)
+			mat.metallic = 0.95
+			mat.roughness = 0.18
+		"trophy_bronze":
+			mat.albedo_color = Color(0.80, 0.50, 0.20)
+			mat.metallic = 0.90
+			mat.roughness = 0.25
+		"pickup_boost_canister":
+			mat.albedo_color = Color(1.0, 0.55, 0.05)
+			mat.emission_enabled = true
+			mat.emission = Color(1.0, 0.50, 0.0)
+			mat.emission_energy_multiplier = 2.5
+			mat.metallic = 0.7
+			mat.roughness = 0.2
+		"pickup_shield_orb":
+			mat.albedo_color = Color(0.1, 0.85, 1.0)
+			mat.emission_enabled = true
+			mat.emission = Color(0.0, 0.85, 1.0)
+			mat.emission_energy_multiplier = 2.5
+			mat.metallic = 0.7
+			mat.roughness = 0.2
+		"pickup_emp_mine":
+			mat.albedo_color = Color(0.9, 0.1, 0.9)
+			mat.emission_enabled = true
+			mat.emission = Color(0.85, 0.1, 0.85)
+			mat.emission_energy_multiplier = 2.5
+			mat.metallic = 0.8
+			mat.roughness = 0.2
 		_:
 			mat.albedo_color = Color(0.7, 0.7, 0.7)
 			mat.metallic = 0.5

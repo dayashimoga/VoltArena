@@ -22,47 +22,20 @@ func _ready() -> void:
 	setup_visuals()
 
 func setup_visuals() -> void:
-	var body_mesh = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(1.6, 0.7, 2.4)
-	body_mesh.mesh = box
-	body_mesh.material_override = MaterialGenerator.get_material("chassis_carbon")
-	body_mesh.position = Vector3(0, 0.6, 0)
-	add_child(body_mesh)
-
-	var rollbar = MeshInstance3D.new()
-	var r_box = BoxMesh.new()
-	r_box.size = Vector3(1.4, 0.9, 1.2)
-	rollbar.mesh = r_box
-	rollbar.material_override = MaterialGenerator.get_material("hazard_yellow")
-	rollbar.position = Vector3(0, 1.2, 0.2)
-	add_child(rollbar)
-
-	# 4 Heavy ATV balloon tires
-	for side in [-1.0, 1.0]:
-		for fwd in [-1.0, 1.0]:
-			var tire = MeshInstance3D.new()
-			var cyl = CylinderMesh.new()
-			cyl.top_radius = 0.4
-			cyl.bottom_radius = 0.4
-			cyl.height = 0.35
-			tire.mesh = cyl
-			tire.material_override = MaterialGenerator.get_material("tread_rubber")
-			tire.rotation_degrees.z = 90.0
-			tire.position = Vector3(side * 0.95, 0.4, fwd * 0.75)
-			add_child(tire)
+	var visual = MeshBuilder.build_safari_atv_vehicle()
+	add_child(visual)
 
 	# Headlight for night expeditions
 	headlight = SpotLight3D.new()
-	headlight.position = Vector3(0, 0.8, -1.3)
-	headlight.spot_range = 25.0
-	headlight.spot_angle = 35.0
-	headlight.light_energy = 2.5
+	headlight.position = Vector3(0, 0.8, -1.4)
+	headlight.spot_range = 30.0
+	headlight.spot_angle = 38.0
+	headlight.light_energy = 3.0
 	add_child(headlight)
 
 	var col = CollisionShape3D.new()
 	var bs = BoxShape3D.new()
-	bs.size = Vector3(2.0, 1.4, 2.6)
+	bs.size = Vector3(2.0, 1.4, 2.8)
 	col.shape = bs
 	col.position = Vector3(0, 0.7, 0)
 	add_child(col)

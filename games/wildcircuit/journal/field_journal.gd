@@ -55,6 +55,9 @@ func get_all_entries() -> Dictionary:
 func get_total_discovered() -> int:
 	return _entries.size()
 
+func get_total_photos_count() -> int:
+	return _entries.size()
+
 func calculate_biome_completion(biome_name: String) -> float:
 	var total_in_biome = 0
 	var found_in_biome = 0

@@ -28,6 +28,8 @@ var hud: Control = null
 var pause_menu: CanvasLayer = null
 var results_screen: CanvasLayer = null
 
+var is_extracting: bool = false
+
 func _ready() -> void:
 	setup_subsystems()
 	load_mission(start_mission_index)
@@ -47,9 +49,6 @@ func setup_subsystems() -> void:
 	audio_director = StrikeAudioDirectorScript.new()
 	audio_director.name = "AudioDirector"
 	add_child(audio_director)
-
-	# Setup Global Environment Lighting & Atmosphere
-	_setup_environment_lighting()
 
 	# Setup UI
 	hud = StrikeHUDScript.new()
@@ -75,65 +74,171 @@ func setup_subsystems() -> void:
 	if im and im.has_method("capture_mouse"):
 		im.capture_mouse(true)
 
-func _setup_environment_lighting() -> void:
+func _setup_environment_lighting(biome: String = "urban") -> void:
+	var we: WorldEnvironment = null
 	if has_node("WorldEnvironment"):
-		return
+		we = get_node("WorldEnvironment") as WorldEnvironment
+	else:
+		we = WorldEnvironment.new()
+		we.name = "WorldEnvironment"
+		add_child(we)
 
-	var we = WorldEnvironment.new()
-	we.name = "WorldEnvironment"
 	var env = Environment.new()
-
-	# Procedural midnight sky with dark atmospheric horizon
 	var sky_mat = ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.01, 0.03, 0.08)
-	sky_mat.sky_horizon_color = Color(0.06, 0.10, 0.18)
+
+	match biome:
+		"rail":
+			# High speed rail: golden hour sunset
+			sky_mat.sky_top_color = Color(0.12, 0.08, 0.22)
+			sky_mat.sky_horizon_color = Color(0.95, 0.45, 0.15)
+			sky_mat.ground_bottom_color = Color(0.08, 0.05, 0.04)
+			sky_mat.ground_horizon_color = Color(0.42, 0.20, 0.10)
+			sky_mat.energy_multiplier = 1.05
+			env.ambient_light_color = Color(0.28, 0.18, 0.16)
+			env.ambient_light_energy = 0.55
+			env.fog_light_color = Color(0.35, 0.18, 0.12)
+			env.fog_density = 0.0025
+		"harbor":
+			# Harbor assault: deep ocean storm, teal fog
+			sky_mat.sky_top_color = Color(0.02, 0.06, 0.12)
+			sky_mat.sky_horizon_color = Color(0.12, 0.28, 0.35)
+			sky_mat.ground_bottom_color = Color(0.02, 0.04, 0.06)
+			sky_mat.ground_horizon_color = Color(0.08, 0.16, 0.20)
+			sky_mat.energy_multiplier = 0.75
+			env.ambient_light_color = Color(0.12, 0.22, 0.28)
+			env.ambient_light_energy = 0.45
+			env.fog_light_color = Color(0.08, 0.16, 0.22)
+			env.fog_density = 0.0040
+		"desert":
+			# Desert convoy: searing sun, arid dust
+			sky_mat.sky_top_color = Color(0.25, 0.45, 0.85)
+			sky_mat.sky_horizon_color = Color(0.92, 0.78, 0.55)
+			sky_mat.ground_bottom_color = Color(0.45, 0.32, 0.18)
+			sky_mat.ground_horizon_color = Color(0.85, 0.65, 0.42)
+			sky_mat.energy_multiplier = 1.25
+			env.ambient_light_color = Color(0.38, 0.32, 0.24)
+			env.ambient_light_energy = 0.65
+			env.fog_light_color = Color(0.72, 0.58, 0.40)
+			env.fog_density = 0.0030
+		"arctic":
+			# Arctic installation: blizzard, cold cyan atmosphere
+			sky_mat.sky_top_color = Color(0.08, 0.18, 0.35)
+			sky_mat.sky_horizon_color = Color(0.70, 0.85, 0.98)
+			sky_mat.ground_bottom_color = Color(0.30, 0.42, 0.55)
+			sky_mat.ground_horizon_color = Color(0.65, 0.78, 0.90)
+			sky_mat.energy_multiplier = 1.10
+			env.ambient_light_color = Color(0.32, 0.40, 0.52)
+			env.ambient_light_energy = 0.60
+			env.fog_light_color = Color(0.62, 0.75, 0.88)
+			env.fog_density = 0.0055
+		"factory":
+			# Megafactory: heavy industrial smog, orange furnaces
+			sky_mat.sky_top_color = Color(0.05, 0.03, 0.02)
+			sky_mat.sky_horizon_color = Color(0.45, 0.22, 0.08)
+			sky_mat.ground_bottom_color = Color(0.04, 0.02, 0.02)
+			sky_mat.ground_horizon_color = Color(0.25, 0.12, 0.05)
+			sky_mat.energy_multiplier = 0.70
+			env.ambient_light_color = Color(0.26, 0.14, 0.08)
+			env.ambient_light_energy = 0.50
+			env.fog_light_color = Color(0.28, 0.12, 0.06)
+			env.fog_density = 0.0045
+		"sky_fortress":
+			# Sky fortress: high-altitude bright stratosphere
+			sky_mat.sky_top_color = Color(0.05, 0.22, 0.65)
+			sky_mat.sky_horizon_color = Color(0.55, 0.75, 0.95)
+			sky_mat.ground_bottom_color = Color(0.12, 0.25, 0.45)
+			sky_mat.ground_horizon_color = Color(0.45, 0.65, 0.85)
+			sky_mat.energy_multiplier = 1.30
+			env.ambient_light_color = Color(0.35, 0.45, 0.60)
+			env.ambient_light_energy = 0.65
+			env.fog_light_color = Color(0.55, 0.70, 0.90)
+			env.fog_density = 0.0018
+		"citadel":
+			# Final citadel: ominous deep crimson/violet vortex
+			sky_mat.sky_top_color = Color(0.15, 0.02, 0.08)
+			sky_mat.sky_horizon_color = Color(0.65, 0.12, 0.25)
+			sky_mat.ground_bottom_color = Color(0.08, 0.02, 0.04)
+			sky_mat.ground_horizon_color = Color(0.35, 0.08, 0.14)
+			sky_mat.energy_multiplier = 0.85
+			env.ambient_light_color = Color(0.28, 0.10, 0.15)
+			env.ambient_light_energy = 0.50
+			env.fog_light_color = Color(0.35, 0.08, 0.15)
+			env.fog_density = 0.0035
+		_:
+			# Urban blackout default: midnight blue
+			sky_mat.sky_top_color = Color(0.01, 0.03, 0.08)
+			sky_mat.sky_horizon_color = Color(0.06, 0.10, 0.18)
+			sky_mat.ground_bottom_color = Color(0.02, 0.03, 0.05)
+			sky_mat.ground_horizon_color = Color(0.04, 0.07, 0.12)
+			sky_mat.energy_multiplier = 0.60
+			env.ambient_light_color = Color(0.12, 0.16, 0.24)
+			env.ambient_light_energy = 0.35
+			env.fog_light_color = Color(0.04, 0.06, 0.12)
+			env.fog_density = 0.0035
+
 	sky_mat.sky_curve = 0.12
-	sky_mat.ground_bottom_color = Color(0.02, 0.03, 0.05)
-	sky_mat.ground_horizon_color = Color(0.04, 0.07, 0.12)
 	sky_mat.ground_curve = 0.08
-	sky_mat.energy_multiplier = 0.60
 
 	var sky = Sky.new()
 	sky.sky_material = sky_mat
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 
-	# Moody, tactical ambient illumination for Urban Blackout
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.12, 0.16, 0.24)
-	env.ambient_light_energy = 0.35
-
-	# Filmic tonemapper with high dynamic range
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_exposure = 1.15
 	env.tonemap_white = 4.0
 
-	# Glow bloom on neon signs and muzzle flashes
 	env.glow_enabled = true
 	env.glow_intensity = 0.65
 	env.glow_bloom = 0.25
-
-	# Subtle atmospheric blackout depth fog
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.04, 0.06, 0.12)
-	env.fog_density = 0.0035
 
 	we.environment = env
-	add_child(we)
 
-	# Directional Moonlight
-	var dir_light = DirectionalLight3D.new()
-	dir_light.name = "KeyMoonlight"
-	dir_light.light_color = Color(0.70, 0.82, 0.96)
-	dir_light.light_energy = 0.85
+	var dir_light: DirectionalLight3D = null
+	if has_node("KeyMoonlight"):
+		dir_light = get_node("KeyMoonlight") as DirectionalLight3D
+	else:
+		dir_light = DirectionalLight3D.new()
+		dir_light.name = "KeyMoonlight"
+		add_child(dir_light)
+
 	dir_light.rotation_degrees = Vector3(-55.0, 35.0, 0.0)
 	dir_light.shadow_enabled = true
-	add_child(dir_light)
+
+	match biome:
+		"rail":
+			dir_light.light_color = Color(1.0, 0.75, 0.50)
+			dir_light.light_energy = 1.25
+		"harbor":
+			dir_light.light_color = Color(0.65, 0.80, 0.95)
+			dir_light.light_energy = 0.70
+		"desert":
+			dir_light.light_color = Color(1.0, 0.92, 0.75)
+			dir_light.light_energy = 1.40
+		"arctic":
+			dir_light.light_color = Color(0.85, 0.92, 1.0)
+			dir_light.light_energy = 1.10
+		"factory":
+			dir_light.light_color = Color(1.0, 0.55, 0.30)
+			dir_light.light_energy = 0.80
+		"sky_fortress":
+			dir_light.light_color = Color(1.0, 0.98, 0.92)
+			dir_light.light_energy = 1.35
+		"citadel":
+			dir_light.light_color = Color(1.0, 0.40, 0.40)
+			dir_light.light_energy = 0.95
+		_:
+			dir_light.light_color = Color(0.70, 0.82, 0.96)
+			dir_light.light_energy = 0.85
 
 func load_mission(m_idx: int) -> void:
 	# Ensure subsystems are initialized even if called before _ready()
 	if campaign_mgr == null:
 		setup_subsystems()
+
+	is_extracting = false
 
 	# Clear existing streamer, player, camera
 	if is_instance_valid(mission_streamer):
@@ -142,6 +247,9 @@ func load_mission(m_idx: int) -> void:
 		player_node.queue_free()
 	if is_instance_valid(camera_director):
 		camera_director.queue_free()
+
+	var meta = MissionDefinitionsScript.get_mission_meta(m_idx)
+	_setup_environment_lighting(meta.get("biome", "urban"))
 
 	# Create Mission Streamer & Segments
 	mission_streamer = MissionStreamerScript.new()
@@ -205,7 +313,6 @@ func load_mission(m_idx: int) -> void:
 	# Connect Segments
 	_connect_segment_events()
 
-	var meta = MissionDefinitionsScript.get_mission_meta(m_idx)
 	mission_mgr.start_mission(m_idx, meta["name"], mission_streamer)
 	hud.update_objective(meta["objective"])
 	hud.show_context_alert("DEPLOYED: " + meta["name"].to_upper(), Color(0.2, 1.0, 0.4))
@@ -229,8 +336,8 @@ func _process(_delta: float) -> void:
 		var act_seg = mission_streamer.get_active_segment()
 		if act_seg:
 			if act_seg.is_boss_segment:
-				target_pos = act_seg.global_position + Vector3(0, 0, -20.0)
-				target_name = "EXTRACTION ZONE"
+				target_pos = act_seg.global_position + Vector3(0, 0, -32.0)
+				target_name = "EXTRACTION HELIPAD"
 			else:
 				target_pos = act_seg.global_position + Vector3(0, 0, -20.0)
 				target_name = act_seg.segment_name
@@ -252,12 +359,13 @@ func _connect_segment_events() -> void:
 	for seg in mission_streamer.segments:
 		if is_instance_valid(seg.encounter_director):
 			seg.encounter_director.route_cleared.connect(func():
-				hud.show_context_alert("ROUTE CLEAR // ADVANCE", Color(0.0, 1.0, 1.0))
 				if seg.segment_index < mission_streamer.segments.size() - 1:
+					hud.show_context_alert("ROUTE CLEAR // ADVANCE", Color(0.0, 1.0, 1.0))
 					advance_segment()
 				else:
-					# All segments cleared -> Mission complete!
-					mission_mgr.complete_mission()
+					# Last segment: prompt player to reach extraction helipad
+					hud.show_context_alert("TARGET ELIMINATED // PROCEED TO EXTRACTION", Color(0.1, 1.0, 0.5))
+					hud.update_objective("REACH EXTRACTION HELIPAD // EVAC INBOUND")
 			)
 
 		if seg.is_boss_segment:
@@ -276,7 +384,30 @@ func _connect_segment_events() -> void:
 
 			ext_area.body_entered.connect(func(body):
 				if body == player_node or (body and body.is_in_group("players")):
-					if is_instance_valid(seg.encounter_director) and seg.encounter_director.is_completed:
+					if is_extracting:
+						return
+					var is_boss_done = (not is_instance_valid(seg.encounter_director)) or seg.encounter_director.is_completed
+					if not is_boss_done:
+						hud.show_context_alert("EXTRACTION LOCKED // NEUTRALIZE HOSTILES FIRST", Color(1.0, 0.25, 0.2))
+						return
+
+					# Lock completion exactly once
+					is_extracting = true
+					if is_instance_valid(player_node):
+						player_node.velocity = Vector3.ZERO
+						player_node.set_physics_process(false)
+
+					hud.show_context_alert("OPERATIVE SECURED // EXTRACTION SUCCESSFUL", Color(0.1, 1.0, 0.5))
+					var am = GameConstants.get_autoload(self, "AudioManager")
+					if am and am.has_method("play_sound"):
+						am.play_sound("goal", 1.2)
+
+					var tree = get_tree()
+					if tree:
+						tree.create_timer(1.2).timeout.connect(func():
+							mission_mgr.complete_mission()
+						)
+					else:
 						mission_mgr.complete_mission()
 			)
 
@@ -316,7 +447,10 @@ func _on_mission_completed(m_idx: int, results: Dictionary) -> void:
 
 func _on_next_mission_requested() -> void:
 	results_screen.hide_results()
-	var next_m = campaign_mgr.get_next_mission_index()
+	var cur_m = mission_mgr.mission_index if is_instance_valid(mission_mgr) else 1
+	var next_m = clampi(cur_m + 1, 1, CampaignManagerScript.TOTAL_MISSIONS)
+	if is_instance_valid(campaign_mgr):
+		campaign_mgr.start_mission(next_m)
 	load_mission(next_m)
 
 func restart_mission() -> void:

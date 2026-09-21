@@ -64,6 +64,7 @@ func setup_game() -> void:
 	results_screen = ResultsScreenScript.new()
 	results_screen.name = "ResultsScreen"
 	results_screen.restart_pressed.connect(_on_restart)
+	results_screen.next_stage_pressed.connect(_on_next_stage_requested)
 	results_screen.launcher_pressed.connect(_on_quit_to_launcher)
 	add_child(results_screen)
 
@@ -98,7 +99,7 @@ func connect_signals() -> void:
 
 	challenge_manager.challenge_completed.connect(func(ch_id: String, time_taken: float, score: int):
 		var sm = GameConstants.get_autoload(self, "SaveManager")
-		if sm:
+		if sm and sm.has_method("record_roboforge_challenge"):
 			sm.record_roboforge_challenge(ch_id, time_taken, true)
 
 		results_screen.display_results(true, {
@@ -106,8 +107,20 @@ func connect_signals() -> void:
 			"Completion Time": "%.2f s" % time_taken,
 			"Engineering Score": score,
 			"Status": "QUALIFIED"
-		})
+		}, "trophy_gold", "ENGINEERING TROPHY // UPGRADE UNLOCKED")
 	)
+
+func _on_next_stage_requested() -> void:
+	results_screen.hide_results()
+	var challenge_list = [
+		"obstacle_course", "cargo_delivery", "energy_competition",
+		"maze_escape", "physics_puzzle", "precision_platform", "machine_repair"
+	]
+	var cur_idx = challenge_list.find(challenge_manager.active_challenge_id)
+	if cur_idx != -1 and cur_idx < challenge_list.size() - 1:
+		launch_challenge(challenge_list[cur_idx + 1])
+	else:
+		enter_workshop_mode()
 
 func _apply_blueprint() -> void:
 	player_robot.load_blueprint(active_blueprint)

@@ -17,6 +17,7 @@ const ResultsScreenScript = preload("res://shared/ui/results_screen.gd")
 @export var selected_kart: String = "speeder" # "speeder", "phantom", "enforcer", "turbo_demon", "formula"
 @export var game_mode: String = "quick_race" # "quick_race", "championship", "time_trial", "drift_challenge", "elimination"
 @export var ai_racer_count: int = 5
+@export var player_grid_slot: int = 5 # 0-indexed: slot 5 = 6th position on starting grid (behind 5 AI racers)
 
 enum State {
 	PRE_RACE = 0,
@@ -256,13 +257,35 @@ func reposition_karts_on_grid() -> void:
 	if not spline or spline.track_length <= 0.0:
 		return
 	var t_len = spline.track_length
-	for i in range(all_karts.size()):
-		var kart = all_karts[i]
+	
+	# Determine ordered grid slots
+	var total_racers = all_karts.size()
+	var assigned_slots: Array[Node3D] = []
+	assigned_slots.resize(total_racers)
+	
+	var p_slot = clampi(player_grid_slot, 0, total_racers - 1)
+	if is_instance_valid(player_kart):
+		assigned_slots[p_slot] = player_kart
+	
+	var ai_idx = 0
+	for slot in range(total_racers):
+		if slot == p_slot:
+			continue
+		if ai_idx < ai_karts.size():
+			assigned_slots[slot] = ai_karts[ai_idx]
+			ai_idx += 1
+		elif ai_idx < all_karts.size():
+			if all_karts[ai_idx] != player_kart:
+				assigned_slots[slot] = all_karts[ai_idx]
+			ai_idx += 1
+
+	for slot in range(total_racers):
+		var kart = assigned_slots[slot]
 		if not is_instance_valid(kart):
 			continue
-		var grid_dist = fposmod(t_len - (5.0 + i * 3.5), t_len)
+		var grid_dist = fposmod(t_len - (6.0 + slot * 4.5), t_len)
 		var samp = spline.sample_at_distance(grid_dist)
-		var lat_sign = -1.0 if i % 2 == 0 else 1.0
+		var lat_sign = -1.0 if slot % 2 == 0 else 1.0
 		var pos = samp["pos"] + samp["binormal"] * (lat_sign * 2.2) + Vector3(0, 0.08, 0)
 		kart.global_position = pos
 		if samp["tangent"].length_squared() > 0.01:

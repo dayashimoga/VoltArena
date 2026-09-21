@@ -125,7 +125,8 @@ static func build_mission_segments(mission_idx: int) -> Array:
 		seg.position = Vector3(0, 0, -float(i) * seg_length)
 
 		# Build modular environment geometry
-		var env = StrikeEnvironmentBuilder.build_segment_environment(biome, i, seg_length, 14.0)
+		var is_last_seg = (i == seg_names.size() - 1)
+		var env = StrikeEnvironmentBuilder.build_segment_environment(biome, i, seg_length, 14.0, is_last_seg)
 		seg.add_child(env)
 
 		# Add Encounter Director
@@ -141,6 +142,15 @@ static func build_mission_segments(mission_idx: int) -> Array:
 			var boss = BossArchetypes.create_boss_by_mission(mission_idx)
 			boss.position = Vector3(0, 0, -seg_length * 0.5)
 			seg.add_child(boss)
+			if boss.has_signal("boss_defeated"):
+				boss.boss_defeated.connect(func(_name, _score):
+					if is_instance_valid(enc) and not enc.is_completed:
+						enc.complete_encounter()
+				)
+			boss.tree_exited.connect(func():
+				if is_instance_valid(enc) and not enc.is_completed:
+					enc.complete_encounter()
+			)
 		else:
 			# Standard Forward Encounter
 			enc.enemy_spawns = _get_default_spawns(mission_idx, i, seg_length)

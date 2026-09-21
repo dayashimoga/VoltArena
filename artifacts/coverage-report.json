@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 96.0556844547564,
+  "overall_coverage_pct": 96.0602549246813,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -134,9 +134,9 @@
       "untested": []
     },
     "res://games/kart-racing/ui/drift_storm_hud.gd": {
-      "coverage_pct": 95.2380952380952,
-      "tested": 20,
-      "total": 21,
+      "coverage_pct": 95.4545454545455,
+      "tested": 21,
+      "total": 22,
       "untested": [
         "show_finish"
       ]
@@ -843,7 +843,7 @@
       "untested": []
     }
   },
-  "tested_functions": 828,
-  "timestamp": "2026-09-10T10:41:56",
-  "total_functions": 862
+  "tested_functions": 829,
+  "timestamp": "2026-09-20T08:17:50",
+  "total_functions": 863
 }

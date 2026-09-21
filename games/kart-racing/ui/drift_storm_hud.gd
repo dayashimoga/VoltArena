@@ -319,9 +319,13 @@ class CircuitMinimapCanvas extends Control:
 	var player_ref: Node3D = null
 	var circuit_waypoints: Array = []
 
+	func _process(_delta: float) -> void:
+		if is_visible_in_tree():
+			queue_redraw()
+
 	func _draw() -> void:
-		draw_rect(Rect2(Vector2.ZERO, size), Color(0.04, 0.08, 0.12, 0.88), true)
-		draw_rect(Rect2(Vector2.ZERO, size), Color(0.0, 0.85, 1.0, 0.5), false, 1.5)
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.04, 0.08, 0.12, 0.90), true)
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.0, 0.85, 1.0, 0.6), false, 1.5)
 
 		var tree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
 		if not tree:
@@ -352,7 +356,7 @@ class CircuitMinimapCanvas extends Control:
 			min_z = minf(min_z, wp.z)
 			max_z = maxf(max_z, wp.z)
 
-		var margin = 16.0
+		var margin = 18.0
 		var avail_w = size.x - margin * 2.0
 		var avail_h = size.y - margin * 2.0
 		var span_x = maxf(max_x - min_x, 10.0)
@@ -369,15 +373,33 @@ class CircuitMinimapCanvas extends Control:
 			return canvas_center + Vector2(ox, oz)
 
 		var num_pts = circuit_waypoints.size()
+		# Draw outer track casing
 		for i in range(num_pts):
 			var p1 = to_canvas.call(circuit_waypoints[i])
 			var p2 = to_canvas.call(circuit_waypoints[(i + 1) % num_pts])
-			draw_line(p1, p2, Color(0.20, 0.48, 0.85, 0.95), 4.0)
+			draw_line(p1, p2, Color(0.08, 0.20, 0.38, 0.95), 6.0)
+
+		# Draw track center ribbon
+		for i in range(num_pts):
+			var p1 = to_canvas.call(circuit_waypoints[i])
+			var p2 = to_canvas.call(circuit_waypoints[(i + 1) % num_pts])
+			draw_line(p1, p2, Color(0.18, 0.65, 0.95, 0.95), 3.0)
+
+		# Checkpoints
+		if tg and "checkpoints" in tg:
+			for cp in tg.checkpoints:
+				if is_instance_valid(cp):
+					var cp_pos = to_canvas.call(cp.global_position)
+					draw_circle(cp_pos, 2.0, Color(1.0, 0.85, 0.2, 0.6))
 
 		# Start/Finish line marker on map
 		if num_pts > 0:
 			var s_pos = to_canvas.call(circuit_waypoints[0])
-			draw_circle(s_pos, 4.5, Color(1.0, 1.0, 1.0))
+			var s_next = to_canvas.call(circuit_waypoints[1])
+			var s_dir = (s_next - s_pos).normalized()
+			var s_norm = Vector2(-s_dir.y, s_dir.x) * 6.0
+			draw_line(s_pos - s_norm, s_pos + s_norm, Color(1.0, 1.0, 1.0, 1.0), 3.5)
+			draw_circle(s_pos, 3.5, Color(1.0, 0.9, 0.0))
 
 		# AI opponents
 		var ai_colors = [
@@ -390,7 +412,12 @@ class CircuitMinimapCanvas extends Control:
 			if is_instance_valid(ai):
 				var ai_pos = to_canvas.call(ai.global_position)
 				var c = ai_colors[idx % ai_colors.size()]
-				draw_circle(ai_pos, 3.5, c)
+				draw_circle(ai_pos, 4.5, c)
+				var ai_fwd = -ai.global_transform.basis.z
+				ai_fwd.y = 0.0
+				if ai_fwd.length_squared() > 0.01:
+					ai_fwd = ai_fwd.normalized()
+					draw_line(ai_pos, ai_pos + Vector2(ai_fwd.x, ai_fwd.z) * 6.5, Color(1.0, 1.0, 1.0, 0.9), 2.0)
 
 		if not is_instance_valid(player_ref):
 			var p_list = tree.get_nodes_in_group("players")
@@ -402,9 +429,13 @@ class CircuitMinimapCanvas extends Control:
 			var p_fwd = -player_ref.global_transform.basis.z
 			p_fwd.y = 0.0
 			p_fwd = p_fwd.normalized()
-			var p_arrow = Vector2(p_fwd.x, p_fwd.z) * 9.0
-			draw_circle(p_pos, 5.0, Color(0.0, 0.95, 1.0))
-			draw_line(p_pos, p_pos + p_arrow, Color(1.0, 1.0, 1.0), 2.5)
+			var p_arrow = Vector2(p_fwd.x, p_fwd.z) * 11.0
+			# White ring
+			draw_circle(p_pos, 6.5, Color(1.0, 1.0, 1.0, 1.0))
+			# Cyan core
+			draw_circle(p_pos, 4.5, Color(0.0, 0.95, 1.0, 1.0))
+			# Direction pointer
+			draw_line(p_pos, p_pos + p_arrow, Color(1.0, 1.0, 1.0, 1.0), 3.0)
 
 # ------------------------------------------------------------------------------
 # Pre-Race Track Preview Vector Canvas

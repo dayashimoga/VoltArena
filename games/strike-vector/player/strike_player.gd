@@ -331,7 +331,7 @@ func _get_input_vector() -> Vector2:
 	return dir.normalized()
 
 func _handle_weapon_input(delta: float) -> void:
-	if not is_instance_valid(active_weapon):
+	if not is_alive or not is_instance_valid(active_weapon):
 		return
 
 	# Quick weapon switch via keys 1-9
@@ -440,6 +440,7 @@ func take_damage(amount: float, _dealer_name: String = "", _weapon: String = "")
 
 func _die() -> void:
 	is_alive = false
+	velocity = Vector3.ZERO
 	player_died.emit()
 
 	var bus = GameConstants.get_autoload(self, "EventBus")
@@ -559,11 +560,15 @@ func _on_weapon_reloaded(w_name: String, ammo: int, reserve: int) -> void:
 
 # API helper functions for tests and external controllers
 func trigger_jump() -> void:
+	if not is_alive:
+		return
 	if locomotion:
 		locomotion.buffer_jump()
 		velocity.y = locomotion.consume_jump()
 
 func fire_weapon() -> void:
+	if not is_alive:
+		return
 	if is_instance_valid(active_weapon):
 		var aim_origin = global_position + Vector3(0, 1.4, 0)
 		var aim_dir = -global_transform.basis.z

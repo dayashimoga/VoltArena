@@ -197,6 +197,17 @@ func setup_kart_visual() -> void:
 		col.position = Vector3(0, 0.36, 0)
 		add_child(col)
 
+	# Physical Bumper Box - Covers full 1.36m width and 1.95m length above ground level (Y=0.42)
+	# Guarantees no visual penetration into walls, barriers, or scenery props
+	if not has_node("KartBumperCollision"):
+		var b_col = CollisionShape3D.new()
+		b_col.name = "KartBumperCollision"
+		var box = BoxShape3D.new()
+		box.size = Vector3(1.36, 0.40, 1.95)
+		b_col.shape = box
+		b_col.position = Vector3(0, 0.42, 0)
+		add_child(b_col)
+
 func setup_suspension_raycasts() -> void:
 	for r in wheel_raycasts:
 		if is_instance_valid(r):

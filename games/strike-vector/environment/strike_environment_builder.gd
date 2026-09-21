@@ -9,27 +9,27 @@ extends RefCounted
 
 const ModelCacheScript = preload("res://shared/graphics/model_cache.gd")
 
-static func build_segment_environment(biome: String, seg_idx: int, length: float = 40.0, width: float = 16.0) -> Node3D:
+static func build_segment_environment(biome: String, seg_idx: int, length: float = 40.0, width: float = 16.0, is_last: bool = false) -> Node3D:
 	var root = Node3D.new()
 	root.name = "Environment_" + biome + "_" + str(seg_idx)
 
 	match biome:
-		"urban": _build_urban_segment(root, seg_idx, length, width)
-		"rail": _build_rail_segment(root, seg_idx, length, width)
-		"harbor": _build_harbor_segment(root, seg_idx, length, width)
-		"desert": _build_desert_segment(root, seg_idx, length, width)
-		"arctic": _build_arctic_segment(root, seg_idx, length, width)
-		"factory": _build_factory_segment(root, seg_idx, length, width)
-		"sky_fortress": _build_sky_fortress_segment(root, seg_idx, length, width)
-		"citadel": _build_citadel_segment(root, seg_idx, length, width)
-		_: _build_urban_segment(root, seg_idx, length, width)
+		"urban": _build_urban_segment(root, seg_idx, length, width, is_last)
+		"rail": _build_rail_segment(root, seg_idx, length, width, is_last)
+		"harbor": _build_harbor_segment(root, seg_idx, length, width, is_last)
+		"desert": _build_desert_segment(root, seg_idx, length, width, is_last)
+		"arctic": _build_arctic_segment(root, seg_idx, length, width, is_last)
+		"factory": _build_factory_segment(root, seg_idx, length, width, is_last)
+		"sky_fortress": _build_sky_fortress_segment(root, seg_idx, length, width, is_last)
+		"citadel": _build_citadel_segment(root, seg_idx, length, width, is_last)
+		_: _build_urban_segment(root, seg_idx, length, width, is_last)
 
 	return root
 
 # ==============================================================================
 # 1. URBAN BLACKOUT (Asphalt, curbs, buildings, streetlights, vehicles, barriers)
 # ==============================================================================
-static func _build_urban_segment(root: Node3D, seg_idx: int, length: float, width: float) -> void:
+static func _build_urban_segment(root: Node3D, seg_idx: int, length: float, width: float, is_last: bool = false) -> void:
 	var mat_road = MaterialGenerator.get_material("asphalt_track")
 	var mat_sidewalk = MaterialGenerator.get_material("grimy_concrete")
 	var mat_dark = MaterialGenerator.get_material("dark_hull")
@@ -49,7 +49,7 @@ static func _build_urban_segment(root: Node3D, seg_idx: int, length: float, widt
 	_create_solid_floor(root, Vector3(sidewalk_w, 1.4, road_len), Vector3(road_w * 0.5 + sidewalk_w * 0.5, -0.5, z_offset), mat_sidewalk)
 
 	# 3. Lateral & Rear Anti-Fall Containment Barriers
-	_create_boundary_walls(root, total_street_w + 2.0, road_len, z_offset, seg_idx == 0)
+	_create_boundary_walls(root, total_street_w + 2.0, road_len, z_offset, seg_idx == 0, is_last)
 
 	# 4. Navigation Region for AI Pathfinding across road & sidewalks
 	_create_navigation_region(root, total_street_w, road_len, z_offset)
@@ -149,7 +149,7 @@ static func _build_urban_segment(root: Node3D, seg_idx: int, length: float, widt
 # ==============================================================================
 # 2. HIGH-SPEED RAIL (Train tracks, passenger cars, roof traversal, gantries)
 # ==============================================================================
-static func _build_rail_segment(root: Node3D, seg_idx: int, length: float, width: float) -> void:
+static func _build_rail_segment(root: Node3D, seg_idx: int, length: float, width: float, is_last: bool = false) -> void:
 	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
 	var mat_hull = MaterialGenerator.get_material("dark_hull")
 	var mat_orange = MaterialGenerator.get_material("neon_orange")
@@ -159,7 +159,7 @@ static func _build_rail_segment(root: Node3D, seg_idx: int, length: float, width
 
 	# Heavy Steel Train Deck Floor
 	_create_solid_floor(root, Vector3(width * 0.70, 1.2, road_len), Vector3(0, -0.6, z_offset), mat_metal)
-	_create_boundary_walls(root, width * 0.70 + 2.0, road_len, z_offset, seg_idx == 0)
+	_create_boundary_walls(root, width * 0.70 + 2.0, road_len, z_offset, seg_idx == 0, is_last)
 	_create_navigation_region(root, width * 0.70, road_len, z_offset)
 
 	# Moving Rail Cars & Train Tracks
@@ -182,7 +182,7 @@ static func _build_rail_segment(root: Node3D, seg_idx: int, length: float, width
 # ==============================================================================
 # 3. HARBOR ASSAULT (Wet docks, multi-colored containers, warehouses, gantries)
 # ==============================================================================
-static func _build_harbor_segment(root: Node3D, seg_idx: int, length: float, width: float) -> void:
+static func _build_harbor_segment(root: Node3D, seg_idx: int, length: float, width: float, is_last: bool = false) -> void:
 	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
 	var mat_hull = MaterialGenerator.get_material("dark_hull")
 	var mat_blue = MaterialGenerator.get_material("neon_blue")
@@ -192,7 +192,7 @@ static func _build_harbor_segment(root: Node3D, seg_idx: int, length: float, wid
 
 	# Wet Concrete Dock Slab
 	_create_solid_floor(root, Vector3(width, 1.2, road_len), Vector3(0, -0.6, z_offset), mat_hull)
-	_create_boundary_walls(root, width + 4.0, road_len, z_offset, seg_idx == 0)
+	_create_boundary_walls(root, width + 4.0, road_len, z_offset, seg_idx == 0, is_last)
 	_create_navigation_region(root, width, road_len, z_offset)
 
 	# Shipping Container Labyrinths
@@ -209,7 +209,7 @@ static func _build_harbor_segment(root: Node3D, seg_idx: int, length: float, wid
 # ==============================================================================
 # 4. DESERT CONVOY (Canyon sandstone, highway, convoy trucks, pipelines)
 # ==============================================================================
-static func _build_desert_segment(root: Node3D, seg_idx: int, length: float, width: float) -> void:
+static func _build_desert_segment(root: Node3D, seg_idx: int, length: float, width: float, is_last: bool = false) -> void:
 	var mat_road = MaterialGenerator.get_material("asphalt_track")
 	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
 
@@ -217,7 +217,7 @@ static func _build_desert_segment(root: Node3D, seg_idx: int, length: float, wid
 	var z_offset = -length * 0.5 - 1.0
 
 	_create_solid_floor(root, Vector3(width, 1.2, road_len), Vector3(0, -0.6, z_offset), mat_road)
-	_create_boundary_walls(root, width + 4.0, road_len, z_offset, seg_idx == 0)
+	_create_boundary_walls(root, width + 4.0, road_len, z_offset, seg_idx == 0, is_last)
 	_create_navigation_region(root, width, road_len, z_offset)
 
 	# Canyon Pipeline Infrastructure
@@ -231,7 +231,7 @@ static func _build_desert_segment(root: Node3D, seg_idx: int, length: float, wid
 # ==============================================================================
 # 5. ARCTIC INSTALLATION (Sub-zero research modules, radar facilities, caverns)
 # ==============================================================================
-static func _build_arctic_segment(root: Node3D, seg_idx: int, length: float, width: float) -> void:
+static func _build_arctic_segment(root: Node3D, seg_idx: int, length: float, width: float, is_last: bool = false) -> void:
 	var mat_hull = MaterialGenerator.get_material("dark_hull")
 	var mat_cyan = MaterialGenerator.get_material("neon_cyan")
 
@@ -239,7 +239,7 @@ static func _build_arctic_segment(root: Node3D, seg_idx: int, length: float, wid
 	var z_offset = -length * 0.5 - 1.0
 
 	_create_solid_floor(root, Vector3(width, 1.2, road_len), Vector3(0, -0.6, z_offset), mat_hull)
-	_create_boundary_walls(root, width + 4.0, road_len, z_offset, seg_idx == 0)
+	_create_boundary_walls(root, width + 4.0, road_len, z_offset, seg_idx == 0, is_last)
 	_create_navigation_region(root, width, road_len, z_offset)
 
 	# Arctic Research Buildings & Radars
@@ -250,7 +250,7 @@ static func _build_arctic_segment(root: Node3D, seg_idx: int, length: float, wid
 # ==============================================================================
 # 6. MEGAFACTORY (Robotic assembly, conveyor floors, smelting furnaces)
 # ==============================================================================
-static func _build_factory_segment(root: Node3D, seg_idx: int, length: float, width: float) -> void:
+static func _build_factory_segment(root: Node3D, seg_idx: int, length: float, width: float, is_last: bool = false) -> void:
 	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
 	var mat_hull = MaterialGenerator.get_material("dark_hull")
 
@@ -258,7 +258,7 @@ static func _build_factory_segment(root: Node3D, seg_idx: int, length: float, wi
 	var z_offset = -length * 0.5 - 1.0
 
 	_create_solid_floor(root, Vector3(width, 1.2, road_len), Vector3(0, -0.6, z_offset), mat_metal)
-	_create_boundary_walls(root, width + 4.0, road_len, z_offset, seg_idx == 0)
+	_create_boundary_walls(root, width + 4.0, road_len, z_offset, seg_idx == 0, is_last)
 	_create_navigation_region(root, width, road_len, z_offset)
 
 	# Industrial Pillars & Catwalk Stairs
@@ -270,7 +270,7 @@ static func _build_factory_segment(root: Node3D, seg_idx: int, length: float, wi
 # ==============================================================================
 # 7. SKY FORTRESS (High-altitude platforms, hangars, fighter craft, conduits)
 # ==============================================================================
-static func _build_sky_fortress_segment(root: Node3D, seg_idx: int, length: float, width: float) -> void:
+static func _build_sky_fortress_segment(root: Node3D, seg_idx: int, length: float, width: float, is_last: bool = false) -> void:
 	var mat_metal = MaterialGenerator.get_material("sci_fi_metal")
 	var mat_cyan = MaterialGenerator.get_material("neon_cyan")
 
@@ -278,7 +278,7 @@ static func _build_sky_fortress_segment(root: Node3D, seg_idx: int, length: floa
 	var z_offset = -length * 0.5 - 1.0
 
 	_create_solid_floor(root, Vector3(width * 0.85, 1.2, road_len), Vector3(0, -0.6, z_offset), mat_metal)
-	_create_boundary_walls(root, width * 0.85 + 2.0, road_len, z_offset, seg_idx == 0)
+	_create_boundary_walls(root, width * 0.85 + 2.0, road_len, z_offset, seg_idx == 0, is_last)
 	_create_navigation_region(root, width * 0.85, road_len, z_offset)
 
 	# Fighter Hangar Aircraft
@@ -289,7 +289,7 @@ static func _build_sky_fortress_segment(root: Node3D, seg_idx: int, length: floa
 # ==============================================================================
 # 8. FINAL CITADEL (Fortress bastions, monolith pillars, grand spires)
 # ==============================================================================
-static func _build_citadel_segment(root: Node3D, seg_idx: int, length: float, width: float) -> void:
+static func _build_citadel_segment(root: Node3D, seg_idx: int, length: float, width: float, is_last: bool = false) -> void:
 	var mat_hull = MaterialGenerator.get_material("dark_hull")
 	var mat_orange = MaterialGenerator.get_material("neon_orange")
 
@@ -297,7 +297,7 @@ static func _build_citadel_segment(root: Node3D, seg_idx: int, length: float, wi
 	var z_offset = -length * 0.5 - 1.0
 
 	_create_solid_floor(root, Vector3(width, 1.2, road_len), Vector3(0, -0.6, z_offset), mat_hull)
-	_create_boundary_walls(root, width + 4.0, road_len, z_offset, seg_idx == 0)
+	_create_boundary_walls(root, width + 4.0, road_len, z_offset, seg_idx == 0, is_last)
 	_create_navigation_region(root, width, road_len, z_offset)
 
 	# Grand Obsidian Monolith Columns
@@ -332,20 +332,27 @@ static func _create_solid_floor(parent: Node3D, size: Vector3, pos: Vector3, mat
 	parent.add_child(sb)
 	return sb
 
-static func _create_boundary_walls(parent: Node3D, width: float, length: float, z_pos: float, is_first: bool) -> void:
+static func _create_boundary_walls(parent: Node3D, width: float, length: float, z_pos: float, is_first: bool, is_last: bool = false) -> void:
 	var wall_h = 8.0
 	var half_w = width * 0.5
+	var mat_wall = MaterialGenerator.get_material("dark_hull")
+	var mat_gate = MaterialGenerator.get_material("grimy_concrete")
 
-	# Left Wall
-	_create_invisible_wall(parent, Vector3(1.0, wall_h, length), Vector3(-half_w, wall_h * 0.5, z_pos))
-	# Right Wall
-	_create_invisible_wall(parent, Vector3(1.0, wall_h, length), Vector3(half_w, wall_h * 0.5, z_pos))
+	# Left Wall (Physical + Visual)
+	_create_solid_wall(parent, Vector3(1.2, wall_h, length), Vector3(-half_w, wall_h * 0.5, z_pos), mat_wall)
+	# Right Wall (Physical + Visual)
+	_create_solid_wall(parent, Vector3(1.2, wall_h, length), Vector3(half_w, wall_h * 0.5, z_pos), mat_wall)
 
 	# Rear Wall on first segment so player cannot walk backwards off spawn
 	if is_first:
-		_create_invisible_wall(parent, Vector3(width + 2.0, wall_h, 1.0), Vector3(0, wall_h * 0.5, z_pos + length * 0.5))
+		_create_solid_wall(parent, Vector3(width + 2.0, wall_h, 1.2), Vector3(0, wall_h * 0.5, z_pos + length * 0.5), mat_gate)
 
-static func _create_invisible_wall(parent: Node3D, size: Vector3, pos: Vector3) -> StaticBody3D:
+	# End Perimeter Wall on final segment so player never sees open void or falls off world edge
+	if is_last:
+		_create_solid_wall(parent, Vector3(width + 2.0, wall_h, 1.2), Vector3(0, wall_h * 0.5, z_pos - length * 0.5), mat_gate)
+		_build_extraction_helipad(parent, Vector3(0, 0.05, z_pos - length * 0.5 + 8.0))
+
+static func _create_solid_wall(parent: Node3D, size: Vector3, pos: Vector3, mat: Material = null) -> StaticBody3D:
 	var sb = StaticBody3D.new()
 	sb.collision_layer = GameConstants.LAYER_WORLD
 	sb.collision_mask = 0
@@ -357,8 +364,55 @@ static func _create_invisible_wall(parent: Node3D, size: Vector3, pos: Vector3) 
 	col.shape = shape
 	sb.add_child(col)
 
+	var mi = MeshInstance3D.new()
+	var box = BoxMesh.new()
+	box.size = size
+	mi.mesh = box
+	mi.material_override = mat if mat else MaterialGenerator.get_material("dark_hull")
+	sb.add_child(mi)
+
 	parent.add_child(sb)
 	return sb
+
+static func _create_invisible_wall(parent: Node3D, size: Vector3, pos: Vector3) -> StaticBody3D:
+	return _create_solid_wall(parent, size, pos)
+
+static func _build_extraction_helipad(parent: Node3D, pos: Vector3) -> void:
+	var pad = Node3D.new()
+	pad.name = "ExtractionPadVisual"
+	pad.position = pos
+
+	# Circular landing ring / octagonal pad
+	var mi = MeshInstance3D.new()
+	var cyl = CylinderMesh.new()
+	cyl.top_radius = 5.0
+	cyl.bottom_radius = 5.2
+	cyl.height = 0.15
+	mi.mesh = cyl
+	mi.material_override = MaterialGenerator.get_material("sci_fi_metal")
+	pad.add_child(mi)
+
+	# Glowing extraction ring / beacon
+	var ring = MeshInstance3D.new()
+	var torus = TorusMesh.new()
+	torus.inner_radius = 4.2
+	torus.outer_radius = 4.6
+	ring.mesh = torus
+	var mat_glow = StandardMaterial3D.new()
+	mat_glow.albedo_color = Color(0.1, 0.9, 1.0)
+	mat_glow.emission_enabled = true
+	mat_glow.emission = Color(0.1, 0.9, 1.0)
+	mat_glow.emission_energy_multiplier = 4.0
+	ring.material_override = mat_glow
+	ring.position = Vector3(0, 0.1, 0)
+	pad.add_child(ring)
+
+	# 4 Corner Extraction Floodlights
+	var corner_offsets = [Vector3(-5.5, 0, -5.5), Vector3(5.5, 0, -5.5), Vector3(-5.5, 0, 5.5), Vector3(5.5, 0, 5.5)]
+	for c_off in corner_offsets:
+		_add_beacon(pad, c_off + Vector3(0, 0.5, 0), Color(0.1, 0.85, 1.0))
+
+	parent.add_child(pad)
 
 static func _create_navigation_region(parent: Node3D, width: float, length: float, z_pos: float) -> NavigationRegion3D:
 	var nav_reg = NavigationRegion3D.new()

@@ -1528,6 +1528,20 @@ static func build_track_barrier(barrier_length: float = 10.0, height: float = 1.
 # 7. HELPER PRIMITIVE BUILDERS (CREATES VISIBLE MESH INSTANCES WITH PROPER UVs)
 # ==============================================================================
 
+static func _add_box_collider(parent: Node3D, size: Vector3, pos: Vector3, layer: int = 1) -> StaticBody3D:
+	var sb = StaticBody3D.new()
+	sb.name = "Collider_" + str(parent.get_child_count())
+	sb.collision_layer = layer
+	sb.collision_mask = 0
+	sb.position = pos
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = size
+	col.shape = box
+	sb.add_child(col)
+	parent.add_child(sb)
+	return sb
+
 static func _add_box(parent: Node3D, size: Vector3, pos: Vector3, mat: Material) -> MeshInstance3D:
 	var mi = MeshInstance3D.new()
 	var box = BoxMesh.new()
@@ -1575,10 +1589,11 @@ static func build_start_gantry(track_w: float = 14.0) -> Node3D:
 	var half_w = track_w * 0.5 + 1.2
 	var g_height = 8.5
 
-	# Left and Right Steel Truss Support Columns
+	# Left and Right Steel Truss Support Columns with solid physical colliders
 	for sx in [-half_w, half_w]:
 		_add_box(gantry, Vector3(0.8, g_height, 0.8), Vector3(sx, g_height * 0.5, 0), mat_hull)
 		_add_box(gantry, Vector3(1.4, 0.6, 1.4), Vector3(sx, 0.3, 0), mat_metal)
+		_add_box_collider(gantry, Vector3(1.6, g_height, 1.6), Vector3(sx, g_height * 0.5, 0))
 		# Diagonal truss bracing
 		for ty in [2.5, 5.0, 7.0]:
 			_add_box(gantry, Vector3(0.9, 0.15, 0.9), Vector3(sx, ty, 0), mat_metal)
@@ -1730,6 +1745,7 @@ static func build_grandstand_with_crowd(stand_len: float = 24.0, stand_h: float 
 
 	var canopy = _add_box(stand, Vector3(stand_len + 1.0, 0.25, stand_d + 2.0), Vector3(0, stand_h + 1.5, stand_d * 0.4), mat_metal)
 	canopy.rotation_degrees.x = -8.0
+	_add_box_collider(stand, Vector3(stand_len, stand_h, stand_d), Vector3(0, stand_h * 0.5, stand_d * 0.5))
 	return stand
 
 static func build_race_gantry_mesh() -> Node3D:
@@ -1808,6 +1824,7 @@ static func build_shipping_container(container_color: String = "container_blue",
 	# Door locking bars
 	for bar_x in [-0.4, 0.4]:
 		_add_cyl(cont, 0.025, 0.025, size.y * 0.85, Vector3(bar_x, size.y * 0.5, size.z * 0.5 + 0.02), mat_frame)
+	_add_box_collider(cont, size, Vector3(0, size.y * 0.5, 0))
 	return cont
 
 static func build_harbor_crane(crane_height: float = 28.0) -> Node3D:
@@ -1823,6 +1840,7 @@ static func build_harbor_crane(crane_height: float = 28.0) -> Node3D:
 		for lz in [-leg_span_z * 0.5, leg_span_z * 0.5]:
 			var leg = _add_box(crane, Vector3(0.8, crane_height * 0.7, 0.8), Vector3(lx, crane_height * 0.35, lz), mat_steel)
 			leg.rotation_degrees.z = -6.0 if lx < 0 else 6.0
+			_add_box_collider(crane, Vector3(1.6, crane_height * 0.7, 1.6), Vector3(lx, crane_height * 0.35, lz))
 
 	# Upper horizontal gantry bridge
 	_add_box(crane, Vector3(leg_span_x + 8.0, 1.8, 3.2), Vector3(0, crane_height * 0.72, 0), mat_steel)
@@ -1852,6 +1870,7 @@ static func build_neon_skyscraper(height: float = 55.0, width: float = 18.0, dep
 		_add_box(bld, Vector3(width + 0.1, 0.35, depth + 0.1), Vector3(0, fy, 0), mat_neon)
 	# Rooftop Spire / Antenna
 	var spire = _add_cyl(bld, 0.05, 0.35, 12.0, Vector3(0, height + 6.0, 0), mat_neon)
+	_add_box_collider(bld, Vector3(width, height, depth), Vector3(0, height * 0.5, 0))
 	return bld
 
 static func build_rock_arch(width: float = 24.0, height: float = 16.0) -> Node3D:
@@ -1862,9 +1881,11 @@ static func build_rock_arch(width: float = 24.0, height: float = 16.0) -> Node3D
 	# Left pillar
 	var p_left = _add_box(arch, Vector3(5.0, height, 5.0), Vector3(-width * 0.5, height * 0.5, 0), mat_rock)
 	p_left.rotation_degrees.z = -8.0
+	_add_box_collider(arch, Vector3(5.5, height, 5.5), Vector3(-width * 0.5, height * 0.5, 0))
 	# Right pillar
 	var p_right = _add_box(arch, Vector3(5.0, height, 5.0), Vector3(width * 0.5, height * 0.5, 0), mat_rock)
 	p_right.rotation_degrees.z = 8.0
+	_add_box_collider(arch, Vector3(5.5, height, 5.5), Vector3(width * 0.5, height * 0.5, 0))
 	# Overhead arch span
 	var top = _add_box(arch, Vector3(width + 6.0, 4.5, 5.5), Vector3(0, height + 1.2, 0), mat_rock)
 	return arch
@@ -1885,6 +1906,7 @@ static func build_pit_building(num_garages: int = 6) -> Node3D:
 
 	# Main 2-Story Pit Complex Structure
 	_add_box(root, Vector3(total_len, build_h, build_d), Vector3(0, build_h * 0.5, 0), mat_conc)
+	_add_box_collider(root, Vector3(total_len, build_h, build_d), Vector3(0, build_h * 0.5, 0))
 	# Upper VIP Hospitality Suite Glass Facade
 	_add_box(root, Vector3(total_len - 1.0, 2.8, 0.2), Vector3(0, build_h * 0.72, -build_d * 0.5 - 0.05), mat_glass)
 	# Rooftop Paddock Terrace & Railings
@@ -1905,6 +1927,7 @@ static func build_pit_building(num_garages: int = 6) -> Node3D:
 	var tower_x = total_len * 0.5 + 4.5
 	var tower_h = 16.0
 	_add_box(root, Vector3(7.0, tower_h, 9.0), Vector3(tower_x, tower_h * 0.5, 0), mat_conc)
+	_add_box_collider(root, Vector3(7.0, tower_h, 9.0), Vector3(tower_x, tower_h * 0.5, 0))
 	# 360-degree glass observation deck
 	_add_box(root, Vector3(8.2, 3.4, 10.2), Vector3(tower_x, tower_h - 2.5, 0), mat_glass)
 	# Digital Timing Board Display Screen
@@ -1925,6 +1948,7 @@ static func build_cargo_ship(ship_length: float = 75.0) -> Node3D:
 
 	# Cargo Vessel Lower Hull
 	_add_box(ship, Vector3(ship_length, ship_h, ship_w), Vector3(0, ship_h * 0.5, 0), mat_hull)
+	_add_box_collider(ship, Vector3(ship_length, ship_h, ship_w), Vector3(0, ship_h * 0.5, 0))
 	# Main Deck Plane
 	_add_box(ship, Vector3(ship_length - 2.0, 0.3, ship_w - 0.8), Vector3(0, ship_h + 0.15, 0), mat_deck)
 
@@ -1941,6 +1965,7 @@ static func build_cargo_ship(ship_length: float = 75.0) -> Node3D:
 	# Stern Navigation Bridge Tower
 	var bridge_x = ship_length * 0.38
 	_add_box(ship, Vector3(9.0, 11.0, 14.0), Vector3(bridge_x, ship_h + 5.5, 0), mat_bridge)
+	_add_box_collider(ship, Vector3(9.0, 11.0, 14.0), Vector3(bridge_x, ship_h + 5.5, 0))
 	_add_box(ship, Vector3(9.2, 2.2, 14.2), Vector3(bridge_x, ship_h + 9.5, 0), mat_glass)
 	# Radar Mast / Chimney Exhaust
 	_add_cyl(ship, 0.8, 1.2, 5.0, Vector3(bridge_x - 2.5, ship_h + 13.5, 0), mat_hull)
@@ -1957,6 +1982,7 @@ static func build_suspension_bridge_tower(tower_height: float = 32.0) -> Node3D:
 	for pz in [-8.5, 8.5]:
 		_add_box(bridge, Vector3(2.2, tower_height, 2.2), Vector3(0, tower_height * 0.5, pz), mat_tower)
 		_add_box(bridge, Vector3(2.6, 0.8, 2.6), Vector3(0, tower_height * 0.75, pz), mat_tower)
+		_add_box_collider(bridge, Vector3(2.6, tower_height, 2.6), Vector3(0, tower_height * 0.5, pz))
 
 	# Crossbeam Braces
 	_add_box(bridge, Vector3(2.0, 1.4, 17.0), Vector3(0, tower_height * 0.50, 0), mat_tower)
@@ -1984,6 +2010,7 @@ static func build_marshal_post() -> Node3D:
 
 	# Raised Marshalling Platform
 	_add_box(post, Vector3(2.4, 1.6, 2.4), Vector3(0, 0.8, 0), mat_post)
+	_add_box_collider(post, Vector3(2.4, 1.6, 2.4), Vector3(0, 0.8, 0))
 	_add_box(post, Vector3(2.6, 0.1, 2.6), Vector3(0, 3.2, 0), mat_roof)
 	# Platform canopy roof posts
 	for ox in [-1.1, 1.1]:
@@ -2025,6 +2052,7 @@ static func build_mountain_peak(width: float = 65.0, height: float = 55.0) -> No
 	mi_snow.material_override = mat_snow
 	mtn.add_child(mi_snow)
 
+	_add_box_collider(mtn, Vector3(width * 0.7, height * 0.75, width * 0.7), Vector3(0, height * 0.375, 0))
 	return mtn
 
 static func build_alpine_chalet() -> Node3D:
@@ -2037,6 +2065,7 @@ static func build_alpine_chalet() -> Node3D:
 
 	# Main Timber Lodge Body
 	_add_box(chalet, Vector3(8.5, 5.0, 7.0), Vector3(0, 2.5, 0), mat_wood)
+	_add_box_collider(chalet, Vector3(8.5, 5.0, 7.0), Vector3(0, 2.5, 0))
 	# Balcony
 	_add_box(chalet, Vector3(9.2, 0.2, 2.0), Vector3(0, 3.2, 3.5), mat_wood)
 	_add_box(chalet, Vector3(9.2, 0.8, 0.08), Vector3(0, 3.7, 4.4), mat_wood)

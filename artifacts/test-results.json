@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 94.9599083619702,
-  "coverage_tested_functions": 829,
-  "coverage_total_functions": 873,
-  "execution_seconds": 57.047,
+  "coverage_percent": 94.9828962371722,
+  "coverage_tested_functions": 833,
+  "coverage_total_functions": 877,
+  "execution_seconds": 55.879,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -77,7 +77,7 @@
     },
     "Gameplay Screens Certification E2E": {
       "failed": 0,
-      "passed": 25,
+      "passed": 32,
       "status": "PASS"
     },
     "Global Cross-Platform Architecture Unit": {
@@ -102,7 +102,7 @@
     },
     "Iron Crucible E2E": {
       "failed": 0,
-      "passed": 0,
+      "passed": 76,
       "status": "PASS"
     },
     "KartController Unit": {
@@ -172,7 +172,7 @@
     },
     "Platform Acceptance (Legacy)": {
       "failed": 0,
-      "passed": 12,
+      "passed": 19,
       "status": "PASS"
     },
     "Platform Adapter Unit": {
@@ -252,7 +252,7 @@
     },
     "Soak & Stability Lifecycle": {
       "failed": 0,
-      "passed": 4,
+      "passed": 5,
       "status": "PASS"
     },
     "Strike Vector AI & Bosses Unit": {
@@ -317,12 +317,12 @@
     },
     "WildCircuit Unit": {
       "failed": 0,
-      "passed": 2,
+      "passed": 7,
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-21T13:47:46",
+  "timestamp": "2026-09-21T14:13:49",
   "total_failed": 0,
-  "total_passed": 2264,
+  "total_passed": 2360,
   "total_suites": 63
 }

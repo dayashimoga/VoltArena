@@ -98,7 +98,7 @@ func setup_ui() -> void:
 	)
 	btn_box.add_child(btn_launcher)
 
-func display_results(won: bool, stats_dict: Dictionary) -> void:
+func display_results(won: bool, stats_dict: Dictionary, reward_type: String = "", reward_custom_text: String = "") -> void:
 	if not title_label or not stats_vbox:
 		setup_ui()
 
@@ -116,9 +116,11 @@ func display_results(won: bool, stats_dict: Dictionary) -> void:
 			title_label.text = "DEFEAT"
 			title_label.modulate = Color(1.0, 0.2, 0.3)
 
-	# Check for reward in stats
+	# Check for reward in stats or parameters
 	var reward_text = ""
-	if stats_dict.has("Reward"):
+	if reward_custom_text != "":
+		reward_text = "★ " + reward_custom_text
+	elif stats_dict.has("Reward"):
 		reward_text = "★ REWARD UNLOCKED: " + str(stats_dict["Reward"])
 	elif stats_dict.has("reward"):
 		reward_text = "★ REWARD UNLOCKED: " + str(stats_dict["reward"])

@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 94.9599083619702,
+  "overall_coverage_pct": 94.9828962371722,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -564,14 +564,14 @@
     },
     "res://games/wildcircuit/animals/wild_animal.gd": {
       "coverage_pct": 100,
-      "tested": 8,
-      "total": 8,
+      "tested": 10,
+      "total": 10,
       "untested": []
     },
     "res://games/wildcircuit/journal/field_journal.gd": {
       "coverage_pct": 100,
-      "tested": 5,
-      "total": 5,
+      "tested": 7,
+      "total": 7,
       "untested": []
     },
     "res://games/wildcircuit/photography/camera_mode.gd": {
@@ -853,7 +853,7 @@
       "untested": []
     }
   },
-  "tested_functions": 829,
-  "timestamp": "2026-09-21T13:47:46",
-  "total_functions": 873
+  "tested_functions": 833,
+  "timestamp": "2026-09-21T14:13:49",
+  "total_functions": 877
 }

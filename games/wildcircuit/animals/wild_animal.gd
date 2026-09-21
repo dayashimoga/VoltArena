@@ -24,7 +24,7 @@ const AnimalDataScript = preload("res://games/wildcircuit/animals/animal_data.gd
 @export var move_speed: float = 3.2
 @export var flee_speed: float = 8.5
 
-var current_state: int = State.IDLE
+var current_state: String = "idle"
 var state_timer: float = 3.0
 var target_wander_pos: Vector3 = Vector3.ZERO
 var home_pos: Vector3 = Vector3.ZERO
@@ -80,7 +80,7 @@ func _physics_process(delta: float) -> void:
 	state_timer -= delta
 	check_player_proximity()
 
-	if state_timer <= 0.0 and current_state != State.FLEE:
+	if state_timer <= 0.0 and current_state != "flee":
 		_transition_to_next_state()
 
 	execute_state(delta)
@@ -97,62 +97,101 @@ func check_player_proximity() -> void:
 	var p_speed = player.velocity.length() if "velocity" in player else 0.0
 
 	if dist < flee_thresh and p_speed > 3.0: # Player sprinting or driving close!
-		if current_state != State.FLEE:
-			change_state(State.FLEE)
-			state_timer = 4.0
-			# Set wander direction away from player
-			var away_dir = (global_position - player.global_position).normalized()
-			target_wander_pos = global_position + away_dir * 18.0
-	elif dist < flee_thresh * 1.5 and p_speed < 1.0 and current_state == State.IDLE:
+		if current_state != "flee":
+			take_fright(player.global_position)
+	elif dist < flee_thresh * 1.5 and p_speed < 1.0 and current_state == "idle":
 		if randf() < 0.2:
-			change_state(State.INVESTIGATE)
+			change_state("investigate")
 			state_timer = 3.5
 
 func _transition_to_next_state() -> void:
 	var r = randf()
 	if r < 0.35:
-		change_state(State.ROAM)
+		change_state("roam")
 		state_timer = randf_range(4.0, 8.0)
 		_pick_new_wander_target()
 	elif r < 0.65:
-		change_state(State.GRAZE_FEED)
+		change_state("graze")
 		state_timer = randf_range(5.0, 10.0)
 	elif r < 0.85:
-		change_state(State.IDLE)
+		change_state("idle")
 		state_timer = randf_range(3.0, 6.0)
 	else:
-		change_state(State.DRINK)
+		change_state("drink")
 		state_timer = randf_range(4.0, 7.0)
 
-func change_state(new_state: int) -> void:
-	if new_state == current_state:
+func transition_to_state(new_state_name: String) -> void:
+	change_state(new_state_name)
+
+func take_fright(threat_pos: Vector3 = Vector3.ZERO) -> void:
+	change_state("flee")
+	state_timer = 4.0
+	if threat_pos != Vector3.ZERO:
+		var away_dir = (global_position - threat_pos).normalized()
+		target_wander_pos = global_position + away_dir * 18.0
+	else:
+		var angle = randf() * TAU
+		target_wander_pos = global_position + Vector3(cos(angle), 0, sin(angle)) * 18.0
+
+func _state_to_str(s) -> String:
+	if s is String:
+		var s_lower = s.to_lower()
+		if s_lower == "graze_feed":
+			return "graze"
+		return s_lower
+	match s:
+		State.IDLE: return "idle"
+		State.ROAM: return "roam"
+		State.GRAZE_FEED: return "graze"
+		State.DRINK: return "drink"
+		State.SLEEP: return "sleep"
+		State.SOCIALIZE: return "socialize"
+		State.INVESTIGATE: return "investigate"
+		State.FLEE: return "flee"
+		_: return "idle"
+
+func _str_to_state(s: String) -> int:
+	match s.to_lower():
+		"idle": return State.IDLE
+		"roam": return State.ROAM
+		"graze", "graze_feed": return State.GRAZE_FEED
+		"drink": return State.DRINK
+		"sleep": return State.SLEEP
+		"socialize": return State.SOCIALIZE
+		"investigate": return State.INVESTIGATE
+		"flee": return State.FLEE
+		_: return State.IDLE
+
+func change_state(new_state) -> void:
+	var next_str = _state_to_str(new_state)
+	if next_str == current_state:
 		return
-	var old = current_state
-	current_state = new_state
-	state_changed.emit(old, new_state)
+	var old_str = current_state
+	current_state = next_str
+	state_changed.emit(_str_to_state(old_str), _str_to_state(next_str))
 
 	# Animation / Pose adjustments
 	if head_node:
 		match current_state:
-			State.GRAZE_FEED, State.DRINK:
+			"graze", "drink":
 				head_node.rotation_degrees.x = 35.0 # head lowered to ground
-			State.INVESTIGATE:
+			"investigate":
 				head_node.rotation_degrees.x = -15.0 # alert raised head
-			State.SLEEP:
+			"sleep":
 				head_node.rotation_degrees.x = 45.0
 			_:
 				head_node.rotation_degrees.x = 0.0
 
 func execute_state(delta: float) -> void:
 	match current_state:
-		State.IDLE, State.GRAZE_FEED, State.DRINK, State.SLEEP:
+		"idle", "graze", "drink", "sleep":
 			velocity.x = move_toward(velocity.x, 0.0, 15.0 * delta)
 			velocity.z = move_toward(velocity.z, 0.0, 15.0 * delta)
-		State.ROAM:
+		"roam":
 			_navigate_towards(target_wander_pos, move_speed, delta)
-		State.FLEE:
+		"flee":
 			_navigate_towards(target_wander_pos, flee_speed, delta)
-		State.INVESTIGATE:
+		"investigate":
 			var players = get_tree().get_nodes_in_group("players")
 			if not players.is_empty():
 				_turn_towards(players[0].global_position, delta * 3.0)
@@ -167,8 +206,8 @@ func _navigate_towards(target_pt: Vector3, spd: float, delta: float) -> void:
 	if dist < 1.0:
 		velocity.x = 0.0
 		velocity.z = 0.0
-		if current_state == State.FLEE:
-			change_state(State.IDLE)
+		if current_state == "flee":
+			change_state("idle")
 		return
 
 	var move_dir = to_target.normalized()
@@ -194,12 +233,12 @@ func _pick_new_wander_target() -> void:
 
 func get_current_behavior_name() -> String:
 	match current_state:
-		State.IDLE: return "Resting / Idle"
-		State.ROAM: return "Roaming Habitat"
-		State.GRAZE_FEED: return "Grazing / Feeding"
-		State.DRINK: return "Drinking Water"
-		State.SLEEP: return "Sleeping"
-		State.SOCIALIZE: return "Socializing"
-		State.INVESTIGATE: return "Investigating Observer"
-		State.FLEE: return "Alert / Fleeing"
+		"idle": return "Resting / Idle"
+		"roam": return "Roaming Habitat"
+		"graze": return "Grazing / Feeding"
+		"drink": return "Drinking Water"
+		"sleep": return "Sleeping"
+		"socialize": return "Socializing"
+		"investigate": return "Investigating Observer"
+		"flee": return "Alert / Fleeing"
 		_: return "Active"

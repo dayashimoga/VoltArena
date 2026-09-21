@@ -14,7 +14,7 @@ var _entries: Dictionary = {} # species_id -> Dictionary (best photo record)
 var _observed_behaviors: Dictionary = {} # species_id -> Array[String]
 
 func log_photo(photo_record: Dictionary) -> bool:
-	if not photo_record.get("valid", false):
+	if photo_record.has("valid") and not photo_record.get("valid", true):
 		return false
 
 	var sp_id = photo_record.get("species_id", "")
@@ -57,6 +57,9 @@ func get_total_discovered() -> int:
 
 func get_total_photos_count() -> int:
 	return _entries.size()
+
+func get_biome_completion(biome_name: String) -> float:
+	return calculate_biome_completion(biome_name)
 
 func calculate_biome_completion(biome_name: String) -> float:
 	var total_in_biome = 0

@@ -2,7 +2,7 @@
   "coverage_percent": 94.7963800904977,
   "coverage_tested_functions": 838,
   "coverage_total_functions": 884,
-  "execution_seconds": 70.161,
+  "execution_seconds": 63.329,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -322,7 +322,7 @@
     },
     "WildCircuit E2E": {
       "failed": 0,
-      "passed": 0,
+      "passed": 2,
       "status": "PASS"
     },
     "WildCircuit Unit": {
@@ -331,8 +331,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-22T08:47:19",
+  "timestamp": "2026-09-22T13:08:13",
   "total_failed": 0,
-  "total_passed": 2447,
+  "total_passed": 2449,
   "total_suites": 65
 }

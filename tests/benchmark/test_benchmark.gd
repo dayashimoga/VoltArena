@@ -101,16 +101,13 @@ func _init() -> void:
 		var script = load(scenes[scene_name])
 		var t_start = Time.get_ticks_usec()
 		var instance = script.new()
-		if instance.has_method("setup_scene"):
-			instance.setup_scene()
-		elif instance.has_method("setup_game"):
-			instance.setup_game()
-		else:
-			instance._ready()
+		root.add_child(instance)
+		# Node entering tree automatically executes _ready() and scene setup
 		var t_ttp = (Time.get_ticks_usec() - t_start) / 1000.0
 		ttp_results[scene_name] = t_ttp
 		var b = ttp_budgets.get(scene_name, 2000.0)
 		print("[BENCH] %-16s TTP: %6.2f ms (Budget: <%.0fms)" % [scene_name, t_ttp, b])
+		root.remove_child(instance)
 		instance.queue_free()
 	results["time_to_playable_ms"] = ttp_results
 
@@ -118,6 +115,7 @@ func _init() -> void:
 	print("\n[SECTION] Frame Time Stability (300 frames)")
 	var frame_times: Array[float] = []
 	var arena_main = load("res://games/arena-fps/arena_fps_main.gd").new()
+	root.add_child(arena_main)
 	arena_main.setup_scene()
 	for i in range(300):
 		var ft0 = Time.get_ticks_usec()
@@ -129,6 +127,7 @@ func _init() -> void:
 			arena_main.player_node._physics_process(0.016)
 		var ft = (Time.get_ticks_usec() - ft0) / 1000.0
 		frame_times.append(maxf(0.05, ft))
+	root.remove_child(arena_main)
 	arena_main.queue_free()
 
 	frame_times.sort()
@@ -205,15 +204,11 @@ func _init() -> void:
 		quit(1)
 
 func bench_gen(label: String, script) -> float:
-	# Warmup cache (cold I/O load)
-	var warmup = script.new()
-	warmup._ready()
-	warmup.free()
-
 	var t0 = Time.get_ticks_usec()
 	var inst = script.new()
-	inst._ready()
+	root.add_child(inst)
 	var t_ms = (Time.get_ticks_usec() - t0) / 1000.0
 	print("[BENCH] %-20s %6.2f ms" % [label + ":", t_ms])
-	inst.free()
+	root.remove_child(inst)
+	inst.queue_free()
 	return t_ms

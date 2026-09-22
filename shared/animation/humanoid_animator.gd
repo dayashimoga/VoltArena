@@ -45,9 +45,9 @@ var weapon_socket: Node3D = null
 var anim_player: AnimationPlayer = null
 var skeleton: Skeleton3D = null
 
-func setup_procedural_biped(root: Node3D) -> void:
+func setup_procedural_biped(root: Node3D) -> bool:
 	if not root or not is_instance_valid(root):
-		return
+		return false
 	head_node = root.find_child("HeadNode", true, false)
 	if not head_node: head_node = root.find_child("Head", true, false)
 	torso_node = root.find_child("TorsoNode", true, false)
@@ -62,12 +62,14 @@ func setup_procedural_biped(root: Node3D) -> void:
 	if not right_leg: right_leg = root.find_child("Leg_R", true, false)
 	glider_wings = root.find_child("GliderWings", true, false)
 	weapon_socket = root.find_child("WeaponGrip", true, false)
+	return torso_node != null or head_node != null
 
-func setup_skeletal_biped(root: Node3D) -> void:
+func setup_skeletal_biped(root: Node3D) -> bool:
 	if not root or not is_instance_valid(root):
-		return
+		return false
 	anim_player = root.find_child("*AnimationPlayer*", true, false) as AnimationPlayer
 	skeleton = root.find_child("*Skeleton*", true, false) as Skeleton3D
+	return anim_player != null
 
 func update(
 	delta: float,

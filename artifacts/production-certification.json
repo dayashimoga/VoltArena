@@ -1,7 +1,7 @@
 {
   "project": "VoltArena",
   "version": "5.0.0",
-  "timestamp_utc": "2026-09-22 08:47:53 UTC",
+  "timestamp_utc": "2026-09-22 13:08:42 UTC",
   "overall_status": "RUNTIME_VERIFIED",
   "runtime_verified_count": 8,
   "implemented_count": 3,
@@ -12,7 +12,7 @@
     {
       "gate": "Unit & E2E Tests",
       "requirement": "100% assertion pass rate, 0 failures",
-      "measured": "2447 passed, 0 failed",
+      "measured": "2449 passed, 0 failed",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/test-results.json"
     },
@@ -26,7 +26,7 @@
     {
       "gate": "Performance Benchmarks",
       "requirement": "Target >=60 FPS (desktop), P95<16.6ms, P99<33.3ms, RAM<500MB, 0 stutters",
-      "measured": "FPS=818.3 (P50=1.22ms, P95=1.98ms, P99=2.42ms), RAM=24.3MB, Stutters=0",
+      "measured": "FPS=728.9 (P50=1.37ms, P95=2.36ms, P99=3.10ms), RAM=21.3MB, Stutters=1",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/benchmark-results.json"
     },

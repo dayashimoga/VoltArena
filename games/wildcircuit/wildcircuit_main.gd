@@ -88,7 +88,7 @@ func setup_game() -> void:
 var current_biome_idx: int = 0
 
 const HumanoidAnimatorScript = preload("res://shared/animation/humanoid_animator.gd")
-var ranger_animator: HumanoidAnimator = null
+var ranger_animator = null
 
 func _create_player_explorer() -> CharacterBody3D:
 	var body = CharacterBody3D.new()

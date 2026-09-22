@@ -212,26 +212,64 @@ func _add_terrain_slab(parent: Node3D, pos: Vector3, size: Vector3, mat_name: St
 	return sb
 
 func _create_acacia_tree(parent: Node3D, pos: Vector3) -> void:
+	var tree_root = Node3D.new()
+	tree_root.position = pos
+	var mat_bark = MaterialGenerator.get_material("wood_bark")
+	var mat_leaves = MaterialGenerator.get_material("lush_grass")
+
+	# Base trunk with organic taper and slight lean
 	var trunk = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
 	cyl.top_radius = 0.35
-	cyl.bottom_radius = 0.6
-	cyl.height = 5.2
+	cyl.bottom_radius = 0.65
+	cyl.height = 4.2
 	trunk.mesh = cyl
-	trunk.material_override = MaterialGenerator.get_material("wood_bark")
-	trunk.position = pos + Vector3(0, 2.6, 0)
-	parent.add_child(trunk)
+	trunk.material_override = mat_bark
+	trunk.position = Vector3(0, 2.1, 0)
+	trunk.rotation_degrees.z = 6.0
+	tree_root.add_child(trunk)
 
-	# Wide flat umbrella canopy
-	var canopy = MeshInstance3D.new()
-	var disc = CylinderMesh.new()
-	disc.top_radius = 4.2
-	disc.bottom_radius = 3.8
-	disc.height = 0.9
-	canopy.mesh = disc
-	canopy.material_override = MaterialGenerator.get_material("lush_grass")
-	canopy.position = pos + Vector3(0, 5.5, 0)
-	parent.add_child(canopy)
+	# 3 Outward spreading angled branches
+	var branch_data = [
+		{"pos": Vector3(-0.4, 3.6, 0.2), "rot": Vector3(15.0, 0, -32.0), "pad_pos": Vector3(-2.2, 5.1, 0.5), "r": 2.8, "h": 0.55},
+		{"pos": Vector3(0.5, 3.8, -0.3), "rot": Vector3(-20.0, 0, 35.0), "pad_pos": Vector3(2.4, 5.3, -0.6), "r": 3.0, "h": 0.55},
+		{"pos": Vector3(0.1, 4.0, 0.4), "rot": Vector3(28.0, 0, 10.0), "pad_pos": Vector3(0.3, 5.5, 2.2), "r": 2.6, "h": 0.50}
+	]
+	for b in branch_data:
+		var limb = MeshInstance3D.new()
+		var l_cyl = CylinderMesh.new()
+		l_cyl.top_radius = 0.18
+		l_cyl.bottom_radius = 0.28
+		l_cyl.height = 2.4
+		limb.mesh = l_cyl
+		limb.material_override = mat_bark
+		limb.position = b["pos"]
+		limb.rotation_degrees = b["rot"]
+		tree_root.add_child(limb)
+
+		# Tiered umbrella foliage pad at limb end
+		var pad = MeshInstance3D.new()
+		var p_cyl = CylinderMesh.new()
+		p_cyl.top_radius = b["r"]
+		p_cyl.bottom_radius = b["r"] * 0.85
+		p_cyl.height = b["h"]
+		pad.mesh = p_cyl
+		pad.material_override = mat_leaves
+		pad.position = b["pad_pos"]
+		tree_root.add_child(pad)
+
+	# Crown top umbrella canopy
+	var crown = MeshInstance3D.new()
+	var c_cyl = CylinderMesh.new()
+	c_cyl.top_radius = 3.6
+	c_cyl.bottom_radius = 3.2
+	c_cyl.height = 0.65
+	crown.mesh = c_cyl
+	crown.material_override = mat_leaves
+	crown.position = Vector3(0.1, 6.0, 0)
+	tree_root.add_child(crown)
+
+	parent.add_child(tree_root)
 
 func _create_canopy_tree(parent: Node3D, pos: Vector3) -> void:
 	var trunk = MeshInstance3D.new()

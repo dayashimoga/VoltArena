@@ -21,10 +21,10 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.uv1_triplanar = true
 			mat.uv1_scale = Vector3(0.5, 0.5, 0.5)
 		"dark_hull":
-			mat.albedo_color = Color(0.14, 0.16, 0.20)
+			mat.albedo_color = Color(0.26, 0.30, 0.35)
 			mat.albedo_texture = TexSynth.get_texture("dark_hull_albedo")
-			mat.metallic = 0.85
-			mat.roughness = 0.35
+			mat.metallic = 0.65
+			mat.roughness = 0.40
 			mat.uv1_triplanar = true
 			mat.uv1_scale = Vector3(0.5, 0.5, 0.5)
 		"neon_cyan":
@@ -403,21 +403,21 @@ static func get_material(mat_type: String) -> StandardMaterial3D:
 			mat.albedo_color = Color(0.42, 0.30, 0.20)
 			mat.roughness = 0.92
 		"chassis_carbon":
-			mat.albedo_color = Color(0.14, 0.15, 0.18)
-			mat.metallic = 0.70
-			mat.roughness = 0.32
+			mat.albedo_color = Color(0.30, 0.33, 0.38)
+			mat.metallic = 0.50
+			mat.roughness = 0.38
 		"hazard_yellow":
-			mat.albedo_color = Color(0.95, 0.82, 0.05)
-			mat.metallic = 0.3
-			mat.roughness = 0.4
+			mat.albedo_color = Color(0.98, 0.85, 0.08)
+			mat.metallic = 0.2
+			mat.roughness = 0.35
 		"hydraulic_chrome":
-			mat.albedo_color = Color(0.88, 0.90, 0.95)
-			mat.metallic = 0.96
-			mat.roughness = 0.10
+			mat.albedo_color = Color(0.92, 0.94, 0.98)
+			mat.metallic = 0.95
+			mat.roughness = 0.12
 		"tread_rubber":
-			mat.albedo_color = Color(0.15, 0.15, 0.16)
+			mat.albedo_color = Color(0.24, 0.25, 0.28)
 			mat.metallic = 0.05
-			mat.roughness = 0.82
+			mat.roughness = 0.75
 		"copper_core":
 			mat.albedo_color = Color(0.85, 0.52, 0.32)
 			mat.metallic = 0.90

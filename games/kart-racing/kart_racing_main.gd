@@ -347,18 +347,51 @@ func update_camera(delta: float) -> void:
 
 func _on_race_finished(winner: Node) -> void:
 	current_state = State.FINISHED
-	var won = (winner == player_kart)
+	var player_rank = 1
+	if race_manager and "finished_racers" in race_manager and not race_manager.finished_racers.is_empty():
+		var p_idx = race_manager.finished_racers.find(player_kart)
+		if p_idx != -1:
+			player_rank = p_idx + 1
+		else:
+			player_rank = race_manager.get_racer_position(player_kart)
+	elif race_manager and race_manager.has_method("get_racer_position"):
+		player_rank = race_manager.get_racer_position(player_kart)
+
+	var won = (player_rank == 1)
 	var best_lap = player_kart.best_lap_time
 	var sm = GameConstants.get_autoload(self, "SaveManager")
 	if sm:
 		sm.record_kart_race(selected_track, best_lap, won)
 
+	var suffix = "th"
+	if player_rank == 1: suffix = "st"
+	elif player_rank == 2: suffix = "nd"
+	elif player_rank == 3: suffix = "rd"
+
+	var pos_str = "%d%s Place" % [player_rank, suffix]
+	if player_rank == 1:
+		pos_str += " (CHAMPION!)"
+	elif player_rank <= 3:
+		pos_str += " (PODIUM)"
+
+	var reward_str = "Circuit Participation Medal"
+	var reward_type = "trophy_bronze"
+	if player_rank == 1:
+		reward_str = "Grand Prix Championship Gold Trophy"
+		reward_type = "trophy_gold"
+	elif player_rank == 2:
+		reward_str = "Grand Prix Silver Trophy"
+		reward_type = "trophy_silver"
+	elif player_rank == 3:
+		reward_str = "Grand Prix Bronze Trophy"
+		reward_type = "trophy_bronze"
+
 	results_screen.display_results(won, {
-		"Position": "1st Place (CHAMPION!)" if won else "Finished",
+		"Position": pos_str,
 		"Total Time": "%.2fs" % race_manager.race_time,
 		"Best Lap": "%.2fs" % best_lap if best_lap < 900.0 else "N/A",
-		"Reward": "Grand Prix Championship Gold Trophy" if won else "Circuit Participation Medal"
-	})
+		"Reward": reward_str
+	}, reward_type, reward_str)
 
 func _on_next_race_requested() -> void:
 	var track_sequence = ["speedway", "canyon", "skyline", "sunset_coast", "alpine_rush", "storm_harbor"]

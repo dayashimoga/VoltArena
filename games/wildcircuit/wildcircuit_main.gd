@@ -97,12 +97,15 @@ func _create_player_explorer() -> CharacterBody3D:
 	body.collision_layer = GameConstants.LAYER_PLAYER
 	body.collision_mask = GameConstants.LAYER_WORLD
 
-	var visual = MeshBuilder.build_wildcircuit_ranger_character()
+	var visual = ModelCache.get_ranger_character()
+	if not visual:
+		visual = MeshBuilder.build_wildcircuit_ranger_character()
 	visual.name = "RangerVisual"
 	body.add_child(visual)
 
 	ranger_animator = HumanoidAnimatorScript.new()
-	ranger_animator.setup_procedural_biped(visual)
+	if not ranger_animator.setup_skeletal_biped(visual):
+		ranger_animator.setup_procedural_biped(visual)
 
 	var col = CollisionShape3D.new()
 	var cs = CapsuleShape3D.new()

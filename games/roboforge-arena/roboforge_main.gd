@@ -132,9 +132,13 @@ func enter_workshop_mode() -> void:
 	workshop.visible = true
 	challenge_manager.visible = false
 	hud.set_workshop_visible(true)
+	player_robot.visible = false
+	player_robot.process_mode = Node.PROCESS_MODE_DISABLED
 	player_robot.global_position = Vector3(0, 0.5, 0)
 	player_robot.velocity = Vector3.ZERO
 	player_robot.forward_speed = 0.0
+	if workshop and workshop.get("turntable"):
+		camera.set_target(workshop.turntable)
 
 func start_challenge(challenge_id: String) -> void:
 	launch_challenge(challenge_id)
@@ -145,9 +149,12 @@ func launch_challenge(challenge_id: String) -> void:
 	challenge_manager.visible = true
 	hud.set_workshop_visible(false)
 
+	player_robot.visible = true
+	player_robot.process_mode = Node.PROCESS_MODE_INHERIT
 	player_robot.global_position = Vector3(0, 0.8, 0)
 	player_robot.velocity = Vector3.ZERO
 	player_robot.forward_speed = 0.0
+	camera.set_target(player_robot)
 
 	challenge_manager.load_challenge(challenge_id, challenge_manager)
 	hud.update_objective("Challenge: " + challenge_id.replace("_", " ").capitalize())

@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 95.0113378684807,
+  "overall_coverage_pct": 94.7963800904977,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -736,10 +736,13 @@
       ]
     },
     "res://shared/graphics/model_cache.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 81.8181818181818,
       "tested": 9,
-      "total": 9,
-      "untested": []
+      "total": 11,
+      "untested": [
+        "get_explorer_character",
+        "get_ranger_character"
+      ]
     },
     "res://shared/graphics/procedural_animator.gd": {
       "coverage_pct": 100,
@@ -860,6 +863,6 @@
     }
   },
   "tested_functions": 838,
-  "timestamp": "2026-09-21T16:59:56",
-  "total_functions": 882
+  "timestamp": "2026-09-22T08:47:19",
+  "total_functions": 884
 }

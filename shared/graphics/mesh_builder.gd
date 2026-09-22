@@ -2603,99 +2603,162 @@ static func build_wildlife_animal_model(species_id: String) -> Node3D:
 		"lion":
 			var mat_coat = MaterialGenerator.get_material("wildlife_lion")
 			var mat_mane = MaterialGenerator.get_material("wood_bark")
+			var mat_dark = MaterialGenerator.get_material("dark_hull")
 			var mat_eye = MaterialGenerator.get_material("neon_yellow")
-			# Body
-			var body = _add_box(root, Vector3(0.75, 0.70, 1.45), Vector3(0, 0.75, 0), mat_coat)
-			# Neck & Mane
-			var neck = _add_box(root, Vector3(0.65, 0.65, 0.50), Vector3(0, 0.95, -0.75), mat_mane)
-			# Head
+			# Muscular Torso: Broad Chest & Tapered Flank
+			var chest = _add_box(root, Vector3(0.85, 0.80, 0.90), Vector3(0, 0.85, -0.35), mat_coat)
+			var flank = _add_box(root, Vector3(0.72, 0.70, 0.85), Vector3(0, 0.82, 0.45), mat_coat)
+			# Layered Volumetric Mane Collar
+			var mane_collar = _add_box(root, Vector3(1.10, 1.05, 0.70), Vector3(0, 0.95, -0.60), mat_mane)
+			var mane_top = _add_sphere(root, 0.55, Vector3(0, 1.30, -0.65), mat_mane)
+			# Articulated Head & Snout
 			var head_node = Node3D.new()
 			head_node.name = "HeadNode"
-			head_node.position = Vector3(0, 1.05, -1.05)
+			head_node.position = Vector3(0, 1.10, -1.05)
 			root.add_child(head_node)
-			_add_box(head_node, Vector3(0.50, 0.45, 0.55), Vector3(0, 0, 0), mat_coat)
-			_add_box(head_node, Vector3(0.32, 0.25, 0.35), Vector3(0, -0.10, -0.35), mat_coat) # Snout
+			var skull = _add_box(head_node, Vector3(0.55, 0.48, 0.50), Vector3(0, 0, 0), mat_coat)
+			var snout = _add_box(head_node, Vector3(0.36, 0.28, 0.40), Vector3(0, -0.08, -0.38), mat_coat)
+			var nose = _add_box(head_node, Vector3(0.18, 0.10, 0.12), Vector3(0, 0.02, -0.56), mat_dark)
 			for side in [-1.0, 1.0]:
-				_add_sphere(head_node, 0.04, Vector3(side * 0.18, 0.08, -0.22), mat_eye)
-				_add_sphere(head_node, 0.08, Vector3(side * 0.22, 0.24, 0.05), mat_mane) # Rounded ear
-			# 4 Legs
+				_add_sphere(head_node, 0.045, Vector3(side * 0.20, 0.10, -0.25), mat_eye)
+				var ear = _add_sphere(head_node, 0.10, Vector3(side * 0.26, 0.26, 0.05), mat_mane)
+				ear.scale = Vector3(1.0, 1.2, 0.5)
+			# 4 Articulated Muscular Legs (Upper thigh + Lower leg + Paws)
 			for side in [-1.0, 1.0]:
-				for fwd in [-1.0, 1.0]:
-					var leg = _add_cyl(root, 0.12, 0.10, 0.65, Vector3(side * 0.32, 0.35, fwd * 0.52), mat_coat)
-			# Tail
-			var tail = _add_cyl(root, 0.03, 0.03, 0.65, Vector3(0, 0.85, 0.95), mat_coat)
-			tail.rotation_degrees.x = -45.0
-			_add_sphere(tail, 0.08, Vector3(0, -0.35, 0), mat_mane)
+				# Front legs
+				var f_thigh = _add_cyl(root, 0.16, 0.13, 0.45, Vector3(side * 0.38, 0.65, -0.40), mat_coat)
+				var f_shin = _add_cyl(root, 0.12, 0.10, 0.45, Vector3(side * 0.38, 0.25, -0.40), mat_coat)
+				var f_paw = _add_box(root, Vector3(0.22, 0.12, 0.26), Vector3(side * 0.38, 0.06, -0.44), mat_coat)
+				# Hind legs
+				var r_thigh = _add_cyl(root, 0.18, 0.14, 0.50, Vector3(side * 0.36, 0.68, 0.50), mat_coat)
+				r_thigh.rotation_degrees.x = -15.0
+				var r_shin = _add_cyl(root, 0.13, 0.10, 0.45, Vector3(side * 0.36, 0.25, 0.45), mat_coat)
+				var r_paw = _add_box(root, Vector3(0.20, 0.12, 0.26), Vector3(side * 0.36, 0.06, 0.42), mat_coat)
+			# Long Tail with dark tuft
+			var tail = _add_cyl(root, 0.04, 0.035, 0.75, Vector3(0, 0.90, 0.95), mat_coat)
+			tail.rotation_degrees.x = -40.0
+			_add_sphere(tail, 0.10, Vector3(0, -0.40, 0), mat_dark)
 		"elephant":
 			var mat_skin = MaterialGenerator.get_material("wildlife_elephant")
 			var mat_tusk = MaterialGenerator.get_material("ancient_stone")
-			# Massive Body
-			_add_box(root, Vector3(1.8, 1.6, 2.6), Vector3(0, 1.6, 0), mat_skin)
-			# Head
+			var mat_dark = MaterialGenerator.get_material("dark_hull")
+			# Massive Sculpted Body: Shoulder Arch, Ribcage, and Flank
+			var body_front = _add_sphere(root, 1.25, Vector3(0, 1.70, -0.55), mat_skin)
+			body_front.scale = Vector3(1.15, 1.05, 1.25)
+			var body_rear = _add_sphere(root, 1.15, Vector3(0, 1.65, 0.75), mat_skin)
+			body_rear.scale = Vector3(1.10, 1.00, 1.20)
+			# Head & Expressive Brow Dome
 			var head_node = Node3D.new()
 			head_node.name = "HeadNode"
-			head_node.position = Vector3(0, 1.8, -1.6)
+			head_node.position = Vector3(0, 1.95, -1.75)
 			root.add_child(head_node)
-			_add_box(head_node, Vector3(1.1, 1.1, 1.1), Vector3(0, 0, 0), mat_skin)
-			# Large Ears
+			var skull = _add_sphere(head_node, 0.85, Vector3(0, 0, 0), mat_skin)
+			skull.scale = Vector3(1.0, 1.1, 0.9)
+			# Flared Fan Ears
 			for side in [-1.0, 1.0]:
-				var ear = _add_box(head_node, Vector3(0.06, 0.85, 0.75), Vector3(side * 0.70, 0.10, 0.1), mat_skin)
-				ear.rotation_degrees.y = side * 25.0
+				var ear = _add_box(head_node, Vector3(0.08, 1.10, 0.95), Vector3(side * 0.85, 0.10, 0.10), mat_skin)
+				ear.rotation_degrees.y = side * 28.0
+				ear.rotation_degrees.z = -side * 10.0
 				# Curved Ivory Tusks
-				var tusk = _add_cyl(head_node, 0.04, 0.08, 0.75, Vector3(side * 0.35, -0.35, -0.55), mat_tusk)
-				tusk.rotation_degrees.x = 45.0
-			# Articulated Trunk
-			var trunk = _add_cyl(head_node, 0.12, 0.16, 1.2, Vector3(0, -0.65, -0.65), mat_skin)
-			trunk.rotation_degrees.x = -15.0
-			# 4 Massive Pillar Legs
+				var tusk1 = _add_cyl(head_node, 0.06, 0.09, 0.55, Vector3(side * 0.40, -0.35, -0.50), mat_tusk)
+				tusk1.rotation_degrees.x = 40.0
+				var tusk2 = _add_cyl(head_node, 0.04, 0.06, 0.45, Vector3(side * 0.40, -0.55, -0.80), mat_tusk)
+				tusk2.rotation_degrees.x = 75.0
+			# Segmented Curved Trunk (3 natural articulated sections)
+			var trunk1 = _add_cyl(head_node, 0.16, 0.20, 0.65, Vector3(0, -0.45, -0.60), mat_skin)
+			trunk1.rotation_degrees.x = -15.0
+			var trunk2 = _add_cyl(head_node, 0.12, 0.16, 0.60, Vector3(0, -0.95, -0.72), mat_skin)
+			trunk2.rotation_degrees.x = 10.0
+			var trunk3 = _add_cyl(head_node, 0.08, 0.12, 0.55, Vector3(0, -1.40, -0.65), mat_skin)
+			trunk3.rotation_degrees.x = 35.0
+			# 4 Massive Pillar Legs with round foot pads
 			for side in [-1.0, 1.0]:
 				for fwd in [-1.0, 1.0]:
-					_add_cyl(root, 0.28, 0.32, 1.0, Vector3(side * 0.70, 0.50, fwd * 0.95), mat_skin)
+					var z_pos = -0.65 if fwd < 0 else 0.85
+					var p_leg = _add_cyl(root, 0.32, 0.38, 1.25, Vector3(side * 0.78, 0.62, z_pos), mat_skin)
+					var p_foot = _add_cyl(root, 0.40, 0.42, 0.18, Vector3(side * 0.78, 0.09, z_pos), mat_dark)
+			# Rope Tail
+			var tail = _add_cyl(root, 0.04, 0.04, 0.90, Vector3(0, 1.50, 1.65), mat_skin)
+			tail.rotation_degrees.x = -12.0
 		"zebra":
 			var mat_coat = MaterialGenerator.get_material("wildlife_zebra")
 			var mat_dark = MaterialGenerator.get_material("dark_hull")
-			# Body
-			_add_box(root, Vector3(0.65, 0.75, 1.45), Vector3(0, 0.95, 0), mat_coat)
-			# Slender Neck & Mane
-			var neck = _add_cyl(root, 0.18, 0.24, 0.75, Vector3(0, 1.35, -0.75), mat_coat)
-			neck.rotation_degrees.x = -35.0
-			_add_box(neck, Vector3(0.06, 0.75, 0.12), Vector3(0, 0, 0.22), mat_dark) # Mane ridge
-			# Head
+			var mat_white = MaterialGenerator.get_material("pitch_line_white")
+			# Sculpted Equine Body: Barrel Chest & Hindquarters
+			var chest = _add_sphere(root, 0.65, Vector3(0, 1.05, -0.35), mat_coat)
+			chest.scale = Vector3(0.9, 1.1, 1.2)
+			var flank = _add_sphere(root, 0.62, Vector3(0, 1.08, 0.45), mat_coat)
+			flank.scale = Vector3(0.85, 1.05, 1.15)
+			# Arched Crested Neck
+			var neck = _add_cyl(root, 0.18, 0.26, 0.85, Vector3(0, 1.45, -0.75), mat_coat)
+			neck.rotation_degrees.x = -38.0
+			# Stiff Upright Brush Mane along neck
+			var mane = _add_box(neck, Vector3(0.06, 0.85, 0.16), Vector3(0, 0.0, 0.22), mat_dark)
+			# Head & Dark Muzzle
 			var head_node = Node3D.new()
 			head_node.name = "HeadNode"
-			head_node.position = Vector3(0, 1.65, -1.15)
+			head_node.position = Vector3(0, 1.78, -1.22)
 			root.add_child(head_node)
-			_add_box(head_node, Vector3(0.35, 0.38, 0.65), Vector3(0, 0, 0), mat_coat)
-			_add_box(head_node, Vector3(0.25, 0.22, 0.25), Vector3(0, -0.10, -0.42), mat_dark) # Dark muzzle
-			# 4 Legs
+			var skull = _add_box(head_node, Vector3(0.32, 0.36, 0.50), Vector3(0, 0, 0), mat_coat)
+			var muzzle = _add_box(head_node, Vector3(0.24, 0.22, 0.30), Vector3(0, -0.10, -0.36), mat_dark)
+			for side in [-1.0, 1.0]:
+				var ear = _add_cyl(head_node, 0.02, 0.06, 0.25, Vector3(side * 0.12, 0.24, 0.10), mat_coat)
+				ear.rotation_degrees.z = side * 15.0
+			# 4 Slender Athletic Legs with Hooves
 			for side in [-1.0, 1.0]:
 				for fwd in [-1.0, 1.0]:
-					_add_cyl(root, 0.09, 0.08, 0.85, Vector3(side * 0.28, 0.42, fwd * 0.55), mat_coat)
+					var z_pos = -0.38 if fwd < 0 else 0.52
+					var leg = _add_cyl(root, 0.09, 0.075, 0.95, Vector3(side * 0.30, 0.48, z_pos), mat_coat)
+					var hoof = _add_cyl(root, 0.08, 0.09, 0.12, Vector3(side * 0.30, 0.06, z_pos), mat_dark)
+			# Switch Tail
+			var tail = _add_cyl(root, 0.035, 0.05, 0.75, Vector3(0, 1.10, 0.95), mat_dark)
+			tail.rotation_degrees.x = -20.0
 		_: # "gazelle" (Default)
 			var mat_coat = MaterialGenerator.get_material("wildlife_gazelle")
 			var mat_horn = MaterialGenerator.get_material("wildlife_horn")
 			var mat_belly = MaterialGenerator.get_material("temple_gold")
-			# Slender Body
-			_add_box(root, Vector3(0.55, 0.55, 1.15), Vector3(0, 0.85, 0), mat_coat)
-			_add_box(root, Vector3(0.48, 0.15, 1.05), Vector3(0, 0.60, 0), mat_belly)
-			# Neck
-			var neck = _add_cyl(root, 0.12, 0.16, 0.65, Vector3(0, 1.25, -0.55), mat_coat)
-			neck.rotation_degrees.x = -32.0
-			# Head
+			var mat_dark = MaterialGenerator.get_material("dark_hull")
+			# Graceful Tapered Body with White Underside
+			var chest = _add_sphere(root, 0.48, Vector3(0, 0.90, -0.28), mat_coat)
+			chest.scale = Vector3(0.85, 1.05, 1.25)
+			var flank = _add_sphere(root, 0.44, Vector3(0, 0.92, 0.35), mat_coat)
+			flank.scale = Vector3(0.80, 1.00, 1.15)
+			var belly = _add_box(root, Vector3(0.38, 0.12, 0.95), Vector3(0, 0.65, 0.05), mat_belly)
+			# Dark Flank Stripe
+			for side in [-1.0, 1.0]:
+				_add_box(root, Vector3(0.04, 0.08, 0.85), Vector3(side * 0.36, 0.85, 0.05), mat_dark)
+			# Slender Elegant Neck
+			var neck = _add_cyl(root, 0.11, 0.16, 0.75, Vector3(0, 1.35, -0.58), mat_coat)
+			neck.rotation_degrees.x = -34.0
+			# Sculpted Head with Dark Muzzle & Alert Pointed Ears
 			var head_node = Node3D.new()
 			head_node.name = "HeadNode"
-			head_node.position = Vector3(0, 1.55, -0.85)
+			head_node.position = Vector3(0, 1.68, -0.92)
 			root.add_child(head_node)
-			_add_box(head_node, Vector3(0.28, 0.28, 0.45), Vector3(0, 0, 0), mat_coat)
-			# Dual Curved Ridged Horns
+			var skull = _add_box(head_node, Vector3(0.26, 0.28, 0.36), Vector3(0, 0, 0), mat_coat)
+			var muzzle = _add_box(head_node, Vector3(0.18, 0.16, 0.24), Vector3(0, -0.06, -0.26), mat_dark)
 			for side in [-1.0, 1.0]:
-				var horn = _add_cyl(head_node, 0.02, 0.05, 0.45, Vector3(side * 0.10, 0.28, 0.05), mat_horn)
-				horn.rotation_degrees.x = 24.0
-				horn.rotation_degrees.z = side * 10.0
-			# 4 Slender Legs with hooves
+				var ear = _add_cyl(head_node, 0.02, 0.05, 0.26, Vector3(side * 0.14, 0.20, 0.08), mat_coat)
+				ear.rotation_degrees.z = side * 30.0
+				ear.rotation_degrees.x = -15.0
+				# Curved Ribbed Horns
+				var horn1 = _add_cyl(head_node, 0.025, 0.045, 0.32, Vector3(side * 0.08, 0.28, 0.02), mat_horn)
+				horn1.rotation_degrees.x = 26.0
+				horn1.rotation_degrees.z = side * 8.0
+				var horn2 = _add_cyl(head_node, 0.015, 0.025, 0.24, Vector3(side * 0.09, 0.50, 0.10), mat_horn)
+				horn2.rotation_degrees.x = 42.0
+				horn2.rotation_degrees.z = -side * 4.0
+			# 4 Slender Articulated Legs (Thigh + Shank + Hoof)
 			for side in [-1.0, 1.0]:
 				for fwd in [-1.0, 1.0]:
-					_add_cyl(root, 0.065, 0.055, 0.80, Vector3(side * 0.22, 0.40, fwd * 0.42), mat_coat)
+					var z_pos = -0.28 if fwd < 0 else 0.40
+					var thigh = _add_cyl(root, 0.09, 0.065, 0.45, Vector3(side * 0.22, 0.62, z_pos), mat_coat)
+					var shank = _add_cyl(root, 0.055, 0.045, 0.45, Vector3(side * 0.22, 0.24, z_pos), mat_coat)
+					var hoof = _add_cyl(root, 0.05, 0.055, 0.08, Vector3(side * 0.22, 0.04, z_pos), mat_dark)
+			# Flicking Tail with dark tip
+			var tail = _add_cyl(root, 0.025, 0.025, 0.35, Vector3(0, 0.95, 0.72), mat_coat)
+			tail.rotation_degrees.x = -35.0
+			_add_sphere(tail, 0.045, Vector3(0, -0.18, 0), mat_dark)
 
 	return root
 

@@ -67,27 +67,59 @@ func setup_visuals() -> void:
 	if visual_node:
 		visual_node.queue_free()
 
-	visual_node = MeshBuilder.build_skybound_explorer_character()
+	visual_node = ModelCache.get_explorer_character()
 	add_child(visual_node)
 
-	glider_mesh = visual_node.find_child("GliderWings", true, false)
-	hip_l = visual_node.find_child("Hip_L", true, false)
-	hip_r = visual_node.find_child("Hip_R", true, false)
-	shoulder_l = visual_node.find_child("Shoulder_L", true, false)
-	shoulder_r = visual_node.find_child("Shoulder_R", true, false)
-	cape_mesh = visual_node.find_child("Cape", true, false)
+	# Explorer folding glider wings
+	var glider_root = Node3D.new()
+	glider_root.name = "GliderWings"
+	glider_root.position = Vector3(0, 1.15, 0.18)
+	glider_root.visible = false
+	visual_node.add_child(glider_root)
+
+	var mat_cloak = MaterialGenerator.get_material("adventurer_cloak_blue")
+	var mat_brass = MaterialGenerator.get_material("ancient_altar_gold")
+
+	for side in [-1.0, 1.0]:
+		var wing = MeshInstance3D.new()
+		var b_wing = BoxMesh.new()
+		b_wing.size = Vector3(1.3, 0.04, 0.65)
+		wing.mesh = b_wing
+		wing.material_override = mat_cloak
+		wing.position = Vector3(side * 0.85, 0.1, 0)
+		wing.rotation_degrees.z = side * -12.0
+		glider_root.add_child(wing)
+
+		var strut = MeshInstance3D.new()
+		var b_strut = BoxMesh.new()
+		b_strut.size = Vector3(1.3, 0.05, 0.06)
+		strut.mesh = b_strut
+		strut.material_override = mat_brass
+		strut.position = Vector3(0, 0.02, 0.3)
+		wing.add_child(strut)
+
+	glider_mesh = glider_root
+	hip_l = visual_node.find_child("upperleg.l", true, false)
+	hip_r = visual_node.find_child("upperleg.r", true, false)
+	shoulder_l = visual_node.find_child("upperarm.l", true, false)
+	shoulder_r = visual_node.find_child("upperarm.r", true, false)
+	cape_mesh = visual_node.find_child("Rogue_Cape", true, false)
 
 	animator = HumanoidAnimatorScript.new()
+	animator.setup_skeletal_biped(visual_node)
 	animator.setup_procedural_biped(visual_node)
 
 	# Collision shape
-	var col = CollisionShape3D.new()
-	var cap = CapsuleShape3D.new()
-	cap.radius = 0.38
-	cap.height = 1.75
-	col.shape = cap
-	col.position = Vector3(0, 0.88, 0)
-	add_child(col)
+	var col = get_node_or_null("CollisionShape3D")
+	if not col:
+		col = CollisionShape3D.new()
+		col.name = "CollisionShape3D"
+		var cap = CapsuleShape3D.new()
+		cap.radius = 0.38
+		cap.height = 1.75
+		col.shape = cap
+		col.position = Vector3(0, 0.88, 0)
+		add_child(col)
 
 func setup_ledge_detectors() -> void:
 	# Forward raycast at chest height to detect wall

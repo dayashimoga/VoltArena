@@ -388,24 +388,89 @@ func _create_pillar(parent: Node3D, pos: Vector3, h: float, mat_name: String = "
 func _create_ruin_arch(parent: Node3D, pos: Vector3) -> void:
 	var arch = Node3D.new()
 	arch.position = pos
-	_create_pillar(arch, Vector3(-3.5, 0, 0), 6.5, "ancient_stone")
-	_create_pillar(arch, Vector3(3.5, 0, 0), 6.5, "ancient_stone")
 
+	# Stepped stone plinth base
+	var base_sb = StaticBody3D.new()
+	base_sb.collision_layer = GameConstants.LAYER_WORLD
+	var b_mi = MeshInstance3D.new()
+	var b_box = BoxMesh.new()
+	b_box.size = Vector3(11.0, 0.6, 3.5)
+	b_mi.mesh = b_box
+	b_mi.material_override = MaterialGenerator.get_material("ancient_stone")
+	b_mi.position = Vector3(0, 0.3, 0)
+	base_sb.add_child(b_mi)
+	var b_col = CollisionShape3D.new()
+	var b_cbox = BoxShape3D.new()
+	b_cbox.size = Vector3(11.0, 0.6, 3.5)
+	b_col.shape = b_cbox
+	b_col.position = Vector3(0, 0.3, 0)
+	base_sb.add_child(b_col)
+	arch.add_child(base_sb)
+
+	# Fluted Pillars with stepped capitals
+	_create_pillar(arch, Vector3(-3.8, 0.6, 0), 6.5, "ancient_stone")
+	_create_pillar(arch, Vector3(3.8, 0.6, 0), 6.5, "ancient_stone")
+
+	# Classical Architrave & Frieze Lintel
 	var lintel = StaticBody3D.new()
 	lintel.collision_layer = GameConstants.LAYER_WORLD
-	lintel.position = Vector3(0, 6.7, 0)
+	lintel.position = Vector3(0, 7.3, 0)
 	var mi = MeshInstance3D.new()
-	var b_box = BoxMesh.new()
-	b_box.size = Vector3(9.0, 1.4, 1.6)
-	mi.mesh = b_box
+	var l_box = BoxMesh.new()
+	l_box.size = Vector3(10.5, 1.2, 2.0)
+	mi.mesh = l_box
 	mi.material_override = MaterialGenerator.get_material("ancient_stone")
 	lintel.add_child(mi)
+
+	# Triangular pediment crest
+	var ped = MeshInstance3D.new()
+	var prism = PrismMesh.new()
+	prism.size = Vector3(9.5, 1.8, 1.6)
+	ped.mesh = prism
+	ped.material_override = MaterialGenerator.get_material("ancient_stone")
+	ped.position = Vector3(0, 1.5, 0)
+	lintel.add_child(ped)
+
 	var col = CollisionShape3D.new()
 	var col_box = BoxShape3D.new()
-	col_box.size = Vector3(9.0, 1.4, 1.6)
+	col_box.size = Vector3(10.5, 2.8, 2.0)
 	col.shape = col_box
+	col.position = Vector3(0, 0.8, 0)
 	lintel.add_child(col)
 	arch.add_child(lintel)
+
+	# Glowing Runic Portal Archway
+	var portal = MeshInstance3D.new()
+	var p_mesh = BoxMesh.new()
+	p_mesh.size = Vector3(5.6, 6.2, 0.2)
+	portal.mesh = p_mesh
+	portal.material_override = MaterialGenerator.get_material("hex_grid_cyan")
+	portal.position = Vector3(0, 3.8, 0)
+	arch.add_child(portal)
+
+	# Two flanking stone braziers with glowing embers
+	for bx in [-5.8, 5.8]:
+		var brazier = Node3D.new()
+		brazier.position = Vector3(bx, 0.6, 1.2)
+		var b_cyl = MeshInstance3D.new()
+		var c_mesh = CylinderMesh.new()
+		c_mesh.top_radius = 0.55
+		c_mesh.bottom_radius = 0.4
+		c_mesh.height = 1.4
+		b_cyl.mesh = c_mesh
+		b_cyl.material_override = MaterialGenerator.get_material("ancient_stone")
+		b_cyl.position = Vector3(0, 0.7, 0)
+		brazier.add_child(b_cyl)
+
+		var ember = MeshInstance3D.new()
+		var e_mesh = SphereMesh.new()
+		e_mesh.radius = 0.35
+		e_mesh.height = 0.4
+		ember.mesh = e_mesh
+		ember.material_override = MaterialGenerator.get_material("neon_orange")
+		ember.position = Vector3(0, 1.5, 0)
+		brazier.add_child(ember)
+		arch.add_child(brazier)
 
 	parent.add_child(arch)
 
@@ -482,18 +547,26 @@ func _create_npc(p_name: String, pos: Vector3, dialogue: String) -> Node3D:
 	npc.position = pos
 	npc.collision_layer = GameConstants.LAYER_WORLD
 
-	var mi = MeshInstance3D.new()
-	var cap = CapsuleMesh.new()
-	cap.radius = 0.4
-	cap.height = 1.8
-	mi.mesh = cap
-	mi.material_override = MaterialGenerator.get_material("temple_gold")
-	mi.position = Vector3(0, 0.9, 0)
-	npc.add_child(mi)
+	var char_model = ModelCache.get_model("res://assets/models/characters/trooper.glb")
+	if char_model:
+		char_model.name = "CharacterModel"
+		char_model.scale = Vector3(1.0, 1.0, 1.0)
+		char_model.rotation_degrees.y = 180.0
+		npc.add_child(char_model)
+		ModelCache.play_animation(char_model, "Idle", 0.2)
+	else:
+		var mi = MeshInstance3D.new()
+		var cap = CapsuleMesh.new()
+		cap.radius = 0.4
+		cap.height = 1.8
+		mi.mesh = cap
+		mi.material_override = MaterialGenerator.get_material("temple_gold")
+		mi.position = Vector3(0, 0.9, 0)
+		npc.add_child(mi)
 
 	var col = CollisionShape3D.new()
 	var c_shape = CapsuleShape3D.new()
-	c_shape.radius = 0.4
+	c_shape.radius = 0.45
 	c_shape.height = 1.8
 	col.shape = c_shape
 	col.position = Vector3(0, 0.9, 0)

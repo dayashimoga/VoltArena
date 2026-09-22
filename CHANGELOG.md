@@ -835,6 +835,35 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Master test runner: **64 test suites, 2,418 passed assertions, 0 failed (100% pass rate)**.
   - Regenerated production certification and acceptance artifacts via `scripts/certifier.py`.
 
+## [8.9.0-p0-production-hardening] - 2026-09-22
+### Fixed
+- **RoboForge Arena Floor Falling & Dark Silhouette (P0)**:
+  - Added physical `BoxShape3D` collision to `WorkshopFloor` and `CylinderShape3D` to `TurntableBody`, eliminating robot falling into the void.
+  - Set `PreviewRobot.process_mode = PROCESS_MODE_DISABLED` in workshop mode and hid/disabled `PlayerRobot` until challenge launch.
+  - Added `WorldEnvironment` with ambient light (`energy = 1.1`), filmic tonemapping, and 3-point studio lighting (key, fill, rim).
+  - Integrated authentic scifi 3D props (`computer_terminal.glb`, `pipe_network.glb`, `stairs_industrial.glb`, `barrier_high.glb`).
+  - Redesigned HUD with a sleek side-docked panel leaving the central turntable and robot unobstructed.
+- **Drift Storm Racing & Victory Logic (P0)**:
+  - Refactored `RaceManager` to track all finishing karts independently.
+  - Stopped finished AI racers smoothly after crossing the finish line.
+  - Fixed false victory: 6th place finish records 6th place and `won = false`; 1st place finish records 1st place and `won = true`.
+  - Implemented tiered podium rewards: Gold for 1st, Silver for 2nd, Bronze for 3rd, Participation for 4th+.
+- **Skybound Odyssey Visual Rebuild (P0)**:
+  - Replaced primitive mannequin with rigged stylized 3D explorer character (`scout.glb` with 76 animations, folding glider wings, cloak, aviator goggles).
+  - Upgraded NPC Elder Zephyr to `trooper.glb` with active idle animation.
+  - Rebuilt Emerald Isles and 5 regions with dynamic `WorldEnvironment` (procedural sky dome, atmospheric fog, ambient sky lighting), multi-tiered islands, waterfalls, and classical temple ruins.
+- **WildCircuit Visual & Wildlife Overhaul (P0)**:
+  - Replaced primitive ranger with rigged stylized character (`scout.glb` with safari vest, hat, and binoculars).
+  - Added `WorldEnvironment` with dynamic `ProceduralSkyMaterial` to `DayNightCycle3D` to eliminate gray void.
+  - Rebuilt multi-segment articulated wildlife models for Gazelle, Lion, Elephant, and Zebra with distinct heads, snouts, ears, horns, and articulated legs.
+  - Upgraded acacia trees with branching limbs and layered umbrella foliage pads, and added rolling terrain with boulders.
+### Added
+- **Automated Behavioral Testing & Certification**:
+  - Authored `tests/unit/test_p0_visual_and_physics_gates.gd` covering all P0 gates (29 assertions passed).
+  - Master test runner: **65 test suites, 2,447 passed assertions, 0 failed (100% pass rate, 94.8% function coverage)**.
+  - Overall certification status: `RUNTIME_VERIFIED`.
+
+
 
 
 

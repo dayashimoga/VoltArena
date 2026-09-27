@@ -44,6 +44,10 @@ var speedometer_label: Label
 var speed_bar: ProgressBar
 var boost_gauge: ProgressBar
 
+# Real-Time Development Diagnostics (F3 toggle)
+var diagnostics_panel: PanelContainer
+var diagnostics_label: Label
+
 # Touch Controls Overlay
 var touch_controls: Control
 var virtual_joystick: Control
@@ -247,6 +251,30 @@ func _setup_mobile_touch_controls(root: Control) -> void:
 	# Automatically detect if touch screen or mobile is active
 	var is_mobile = OS.has_feature("mobile") or OS.has_feature("android") or DisplayServer.is_touchscreen_available()
 	touch_controls.visible = is_mobile
+
+	# --- DEVELOPMENT DIAGNOSTICS OVERLAY (F3) ---
+	diagnostics_panel = PanelContainer.new()
+	diagnostics_panel.name = "DiagnosticsPanel"
+	diagnostics_panel.anchor_left = 1.0
+	diagnostics_panel.anchor_top = 0.0
+	diagnostics_panel.anchor_right = 1.0
+	diagnostics_panel.offset_left = -340
+	diagnostics_panel.offset_top = 80
+	diagnostics_panel.offset_right = -20
+	diagnostics_panel.offset_bottom = 370
+	diagnostics_panel.visible = false
+	var diag_style = StyleBoxFlat.new()
+	diag_style.bg_color = Color(0.04, 0.06, 0.10, 0.92)
+	diag_style.border_color = Color(0.2, 0.8, 1.0, 0.6)
+	diag_style.set_border_width_all(1)
+	diagnostics_panel.add_theme_stylebox_override("panel", diag_style)
+	root.add_child(diagnostics_panel)
+
+	diagnostics_label = Label.new()
+	diagnostics_label.name = "DiagnosticsLabel"
+	diagnostics_label.add_theme_font_size_override("font_size", 12)
+	diagnostics_label.add_theme_color_override("font_color", Color(0.7, 0.95, 1.0))
+	diagnostics_panel.add_child(diagnostics_label)
 
 func _create_badge(title: String, col_id: int) -> PanelContainer:
 	var pc = PanelContainer.new()
@@ -453,14 +481,49 @@ func show_swap_rejected(reason: String) -> void:
 	if swap_prompt_label:
 		var msg = "SWAP FAILED"
 		match reason:
-			"DISTANCE_TOO_FAR": msg = "TOO FAR: Close within 14m"
-			"SPEED_DIFFERENCE_TOO_HIGH": msg = "SPEED DIFF: Match speeds (< 30 km/h)"
-			"NOT_ALIGNED": msg = "NOT ALIGNED: Drive alongside target"
-			"COOLDOWN": msg = "COOLDOWN: System recharging"
-			"SAME_COLOR": msg = "SAME COLOR: Already matches target"
-			_: msg = reason.replace("_", " ")
+			ChromaConstants.REJECT_DISTANCE, "DISTANCE_TOO_FAR":
+				msg = "TOO FAR: Close within 8m"
+			ChromaConstants.REJECT_SPEED, "SPEED_DIFFERENCE_TOO_HIGH":
+				msg = "SPEED DIFF: Match target speed"
+			ChromaConstants.REJECT_ANGLE, "NOT_ALIGNED":
+				msg = "NOT ALIGNED: Pull alongside parallel"
+			ChromaConstants.REJECT_ALIGNMENT_TIME:
+				msg = "HOLD ALIGNMENT: 0.5s to lock"
+			ChromaConstants.REJECT_SAME_COLOR, "SAME_COLOR":
+				msg = "SAME COLOR: Target already matches"
+			ChromaConstants.REJECT_COOLDOWN, "COOLDOWN":
+				msg = "COOLDOWN: System recharging"
+			ChromaConstants.REJECT_ELEVATION:
+				msg = "ELEVATION: Different road level"
+			ChromaConstants.REJECT_OBSTRUCTED:
+				msg = "OBSTRUCTED: Line of sight blocked"
+			ChromaConstants.REJECT_BUSY:
+				msg = "BUSY: Exchange in progress"
+			_:
+				msg = reason.replace("_", " ")
 		swap_prompt_label.text = "✕ " + msg
 		swap_prompt_label.modulate = Color(1.0, 0.3, 0.3)
+
+func toggle_diagnostics() -> void:
+	if diagnostics_panel:
+		diagnostics_panel.visible = not diagnostics_panel.visible
+
+func update_diagnostics(info: Dictionary) -> void:
+	if not diagnostics_panel or not diagnostics_panel.visible or not diagnostics_label:
+		return
+	var lines = [
+		"=== CHROMA DIAGNOSTICS (F3) ===",
+		"FPS: %d (%.2f ms)" % [Engine.get_frames_per_second(), 1000.0 / maxf(1.0, Engine.get_frames_per_second())],
+		"Velocity: %.1f km/h | %s" % [info.get("speed_kph", 0.0), str(info.get("vel", Vector3.ZERO))],
+		"Grounded: %s | Normal: %s" % [str(info.get("grounded", false)), str(info.get("normal", Vector3.UP))],
+		"Contacts: %d" % info.get("contacts", 0),
+		"Waypoint: %d / %d" % [info.get("nearest_wp", 0), info.get("total_wps", 0)],
+		"Target: %s (%s)" % [info.get("target_id", "NONE"), info.get("target_color", "NONE")],
+		"Target Dist: %.1fm | Align: %d%%" % [info.get("target_dist", 0.0), int(info.get("align_pct", 0.0) * 100)],
+		"Player Color: %s" % info.get("player_color", "NONE"),
+		"Mission: %s [%s]" % [info.get("mission_id", ""), info.get("mission_phase", "")]
+	]
+	diagnostics_label.text = "\n".join(lines)
 
 func show_notification(msg: String) -> void:
 	pass

@@ -210,9 +210,31 @@ func evaluate_eligibility(initiator_id: String, target_id: String, require_full_
 		return {"eligible": false, "eligible_except_time": false, "reason": ChromaConstants.REJECT_INVALID}
 
 	# Proximity check
-	var dist = _get_node_pos(node_a).distance_to(_get_node_pos(node_b))
+	var pos_a = _get_node_pos(node_a)
+	var pos_b = _get_node_pos(node_b)
+	var dist = pos_a.distance_to(pos_b)
 	if dist > ChromaConstants.MAX_SWAP_DISTANCE:
 		return {"eligible": false, "eligible_except_time": false, "reason": ChromaConstants.REJECT_DISTANCE}
+
+	# Elevation difference check (prevents swapping across elevated flyovers and ground roads)
+	if absf(pos_a.y - pos_b.y) > 2.8:
+		return {"eligible": false, "eligible_except_time": false, "reason": ChromaConstants.REJECT_ELEVATION}
+
+	# Line of sight check (never swap through buildings or walls)
+	if node_a.is_inside_tree() and node_b.is_inside_tree():
+		var space_state = node_a.get_world_3d().direct_space_state
+		if space_state:
+			var p_from = node_a.global_position + Vector3(0, 0.6, 0)
+			var p_to = node_b.global_position + Vector3(0, 0.6, 0)
+			var exclude: Array[RID] = []
+			if node_a is CollisionObject3D:
+				exclude.append(node_a.get_rid())
+			if node_b is CollisionObject3D:
+				exclude.append(node_b.get_rid())
+			var query = PhysicsRayQueryParameters3D.create(p_from, p_to, GameConstants.LAYER_WORLD, exclude)
+			var hit = space_state.intersect_ray(query)
+			if hit and not hit.is_empty():
+				return {"eligible": false, "eligible_except_time": false, "reason": ChromaConstants.REJECT_OBSTRUCTED}
 
 	# Velocity checks (using CharacterBody3D or velocity property if available)
 	var vel_a = _get_velocity(node_a)

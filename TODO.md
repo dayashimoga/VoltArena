@@ -944,3 +944,27 @@
   - `artifacts/coverage-report.json` (92.9% function coverage)
   - `artifacts/screenshots/screenshot_chroma_rush.png` (certified 1280x720 gameplay screen artifact)
 
+### [2026-09-27 06:00:00 UTC] - Milestone Update: Physical Line-of-Sight & Elevation Swap Guard, F3 Diagnostics & Traceability Matrix
+- **Status**: COMPLETED
+- **Description**:
+  1. **Line-of-Sight & Elevation Swap Validation**:
+     - Upgraded `ColorSwapEngine.evaluate_eligibility()` in `games/chroma-rush/core/color_swap_engine.gd`: added vertical elevation separation check ($\Delta Y \le 2.8\text{m}$, returning `REJECT_ELEVATION`) and direct physics raycast query against `GameConstants.LAYER_WORLD` (returning `REJECT_OBSTRUCTED`), preventing color swapping through building walls or across multi-level highway flyovers.
+     - Registered `REJECT_ELEVATION` and `REJECT_OBSTRUCTED` in `ChromaConstants` (`games/chroma-rush/core/chroma_constants.gd`).
+  2. **Human-Readable Rejection Messages**:
+     - Enhanced `ChromaHUD` (`games/chroma-rush/ui/chroma_hud.gd`) with explicit rejection reason strings in the swap reticle: `TOO FAR: Close within 8m`, `SPEED DIFF: Match target speed`, `ALIGNMENT: Drive parallel to target`, `COOLDOWN: Swap recharging`, `ELEVATION: Different road level`, and `OBSTRUCTED: Wall blocking view`.
+  3. **Real-Time Development Diagnostics Overlay (F3)**:
+     - Added comprehensive dev diagnostics panel to `ChromaHUD` toggleable with `F3` key (`KEY_F3` input handling in `ChromaRushMain`), displaying live FPS, frame delta time, vehicle speed km/h, world position and velocity Vector3, wheel contact count, wall collision status, nearest spline waypoint, target lock vehicle name/color/distance/alignment, player color, mission state, and active delivery checkpoint.
+  4. **Dual Input Binding for Swap**:
+     - Added `KEY_SPACE` support alongside `KEY_E` in `ChromaRushMain._unhandled_input()` for easy arcade swapping on desktop keyboard.
+     - Synchronized tutorial step 5 in `ChromaTutorial` (`games/chroma-rush/ui/chroma_tutorial.gd`) to instruct players: `Press [E / SPACE / TAP SWAP] to execute color swap!`.
+  5. **Comprehensive Requirements Traceability & Gap Analysis**:
+     - Authored `REQUIREMENTS_TRACEABILITY.md` with complete requirement-to-code, test suite, and evidence mapping across all 14 core requirements (REQ-01 to REQ-14).
+     - Documented GAP-47 through GAP-55 in `GAP_ANALYSIS.md` detailing root causes, exact code remediations, and invariant assertions for all user-reported screenshot defects.
+- **Evidence**:
+  - `artifacts/test-results.json` (72 suites, 2,708 passed, 0 failed, 100% pass rate)
+  - `artifacts/coverage-report.json` (92.7% function coverage, 994/1,072 functions)
+  - `REQUIREMENTS_TRACEABILITY.md` (complete 14-requirement matrix)
+  - `GAP_ANALYSIS.md` (GAP-47 through GAP-55 added)
+  - `artifacts/screenshots/screenshot_chroma_rush.png`
+
+

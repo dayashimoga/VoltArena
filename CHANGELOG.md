@@ -944,3 +944,42 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **Master Test Runner**: **65 test suites, 0 failures (100% pass rate, 79.47s)**.
 - **Function Coverage**: **92.9%** (994 / 1,070 functions tested).
 - **Suite-Wide Integrity**: Zero regressions across all 8 existing games (`arena-fps`, `subway-survival`, `rocket-car`, `kart-racing`, `skybound-odyssey`, `roboforge-arena`, `wildcircuit`, `strike-vector`).
+
+## [9.3.0-chroma-rush-production-certification] - 2026-09-27
+### Fixed & Enhanced
+- **Calibrated Crimson Red Lacquer & Dynamic Repainting**:
+  - Re-calibrated `CRIMSON` color definition from neon pink (`Color(1.0, 0.16, 0.33)`) to deep metallic automotive lacquer `Color(0.85, 0.06, 0.14)` (#D90F24).
+  - Added authoritative `set(val)` property setter on `ChromaVehicle.current_color` to immediately re-paint all `is_body_paint` meshes on assignment.
+  - Ensured bidirectional color synchronization on swap commit between player and target vehicle.
+- **Objective-Guided Targeting & Delivery Guidance**:
+  - Upgraded swap targeting logic in `ChromaRushMain` and `ChromaHUD` to prioritize vehicles carrying the required objective color over physically closer non-matching traffic.
+  - Added live target color name, symbol, and alignment percentage to the swap reticle.
+  - Dynamically switched guidance to `✓ COLOR MATCHED: Drive through Checkpoint [ID]` with 3D navigational beacon upon acquiring the target color.
+- **18m Overhead Highway Electronic Gantries**:
+  - Replaced 12m obstructing pink hurdles with 18m structural steel highway electronic gantries with foundation piers positioned safely outside travel lanes and balanced LED signage (`emission_energy_multiplier = 1.2`).
+- **Urban Streetscapes & Roadside Infrastructure**:
+  - Populated commercial buildings, office towers, and garages along both sides across all 16 spline waypoints in `NeonCity`.
+  - Added landscaped trees with concrete planters and sodium streetlights every 24m along sidewalk verges.
+  - Calibrated road asphalt roughness and environmental lighting to eliminate washed-out glare.
+- **Traffic Multi-Lane Separation & Lateral Repulsion**:
+  - Assigned alternating lane offsets ($\pm 3.2\text{m}$) across traffic spawns, preventing single-file conga lines.
+  - Added lateral collision repulsion in `ChromaVehicle` to eliminate persistent bumper-to-bumper wedging at 0 km/h.
+  - Enhanced `ChromaAIDriver` with multi-tier raycasts and proactive distance-based braking.
+- **Physical Line-of-Sight & Elevation Swap Guard**:
+  - Added vertical separation threshold ($\Delta Y \le 2.8\text{m}$) and `LAYER_WORLD` raycast query in `ColorSwapEngine`, preventing swaps across flyover levels or through building facades.
+  - Added human-readable rejection messages (`TOO FAR`, `SPEED DIFF`, `ALIGNMENT`, `COOLDOWN`, `ELEVATION`, `OBSTRUCTED`).
+- **Real-Time Development Diagnostics (F3)**:
+  - Added `F3`-toggleable telemetry overlay in `ChromaHUD` displaying live FPS, delta ms, velocity Vector3, wheel contacts, wall collision state, nearest waypoint, target info, color, and mission phase.
+- **Dual Swap Arcade Controls**:
+  - Added `KEY_SPACE` support alongside `KEY_E` and updated tutorial instructions to `[E / SPACE / TAP SWAP]`.
+
+### Verification & Artifacts
+- **Master Test Runner**: **72 test suites, 2,708 passed assertions, 0 failures (100% pass rate)**.
+- **Function Coverage**: **92.7%** (994 / 1,072 functions tested).
+- **Certified Gameplay Screen**: `artifacts/screenshots/screenshot_chroma_rush.png` (1280x720).
+- **Packaged Distribution Archives**:
+  - `export/dist/VoltArena-Web.zip` (157.16 MB, Cloudflare chunk-compliant)
+  - `export/dist/VoltArena-Linux-x86_64.tar.gz` (93.82 MB)
+  - `export/dist/VoltArena-Windows-x86_64.zip` (99.66 MB)
+  - `export/dist/VoltArena-Android.apk` (108.73 MB)
+

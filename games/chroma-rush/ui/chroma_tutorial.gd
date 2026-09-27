@@ -47,7 +47,7 @@ const STEP_DATA = {
 	},
 	TutorialStep.ATOMIC_SWAP: {
 		"title": "STEP 5: EXECUTE ATOMIC SWAP",
-		"desc": "When the reticle locks green, press [SPACE / TAP SWAP] to atomically exchange colors!"
+		"desc": "When the reticle locks green, press [E / SPACE / TAP SWAP] to atomically exchange colors!"
 	},
 	TutorialStep.CHECKPOINT_DELIVERY: {
 		"title": "STEP 6: CHECKPOINT DELIVERY",

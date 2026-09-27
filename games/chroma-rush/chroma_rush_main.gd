@@ -372,8 +372,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			resume_game()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_M:
 		_toggle_full_map()
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_F3:
+		if is_instance_valid(hud):
+			hud.toggle_diagnostics()
 	elif current_state == State.PLAYING:
-		if event.is_action_pressed("swap") or (event is InputEventKey and event.pressed and event.keycode == KEY_E):
+		if event.is_action_pressed("swap") or (event is InputEventKey and event.pressed and (event.keycode == KEY_E or event.keycode == KEY_SPACE)):
 			_on_swap_requested()
 		elif event.is_action_pressed("target_cycle") or (event is InputEventKey and event.pressed and event.keycode == KEY_TAB):
 			_on_target_cycle_requested()
@@ -518,6 +521,40 @@ func _update_hud_telemetry(delta: float = 0.016) -> void:
 			target_beacon.rotate_y(2.5 * delta)
 		else:
 			target_beacon.visible = false
+
+	# Real-time diagnostics feed
+	if is_instance_valid(hud) and hud.has_method("update_diagnostics"):
+		var wp_idx = 0
+		var tot_wps = 0
+		if is_instance_valid(active_world):
+			wp_idx = active_world.get_nearest_waypoint_index(p_pos)
+			tot_wps = active_world.get_total_waypoints()
+		var tgt_color_name = "NONE"
+		var tgt_dist = 0.0
+		var align_prog = 0.0
+		if not selected_target_id.is_empty() and is_instance_valid(swap_engine) and swap_engine.has_vehicle(selected_target_id):
+			tgt_color_name = ChromaConstants.get_color_name(swap_engine.get_vehicle_color(selected_target_id))
+			var node_t = swap_engine.get_vehicle_node(selected_target_id)
+			if is_instance_valid(node_t):
+				tgt_dist = p_pos.distance_to(node_t.global_position)
+			align_prog = swap_engine.get_alignment_progress("player", selected_target_id)
+
+		hud.update_diagnostics({
+			"speed_kph": speed_kmh,
+			"vel": player_vehicle.velocity,
+			"grounded": player_vehicle.is_grounded,
+			"normal": player_vehicle.ground_normal,
+			"contacts": player_vehicle.get_slide_collision_count() if player_vehicle.is_inside_tree() else 0,
+			"nearest_wp": wp_idx,
+			"total_wps": tot_wps,
+			"target_id": selected_target_id if not selected_target_id.is_empty() else "AUTO",
+			"target_color": tgt_color_name,
+			"target_dist": tgt_dist,
+			"align_pct": align_prog,
+			"player_color": ChromaConstants.get_color_name(player_vehicle.current_color),
+			"mission_id": current_mission_id,
+			"mission_phase": State.keys()[current_state]
+		})
 
 # --- Gameplay Flow Methods ---
 

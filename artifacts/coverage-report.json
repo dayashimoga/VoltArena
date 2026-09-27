@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 92.8971962616822,
+  "overall_coverage_pct": 92.7238805970149,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -156,9 +156,9 @@
       ]
     },
     "res://games/chroma-rush/ui/chroma_hud.gd": {
-      "coverage_pct": 56.25,
+      "coverage_pct": 50,
       "tested": 9,
-      "total": 16,
+      "total": 18,
       "untested": [
         "setup_mission",
         "update_hud",
@@ -166,6 +166,8 @@
         "show_swap_prompt",
         "hide_swap_prompt",
         "show_swap_rejected",
+        "toggle_diagnostics",
+        "update_diagnostics",
         "show_notification"
       ]
     },
@@ -1050,6 +1052,6 @@
     }
   },
   "tested_functions": 994,
-  "timestamp": "2026-09-27T05:30:25",
-  "total_functions": 1070
+  "timestamp": "2026-09-27T06:04:38",
+  "total_functions": 1072
 }

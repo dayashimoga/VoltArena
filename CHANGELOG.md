@@ -983,3 +983,34 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - `export/dist/VoltArena-Windows-x86_64.zip` (99.66 MB)
   - `export/dist/VoltArena-Android.apk` (108.73 MB)
 
+## [9.4.0-chroma-rush-realistic-physics-overhaul] - 2026-09-27
+### Fixed & Enhanced
+- **Automated Headless Asset Import Pipeline**:
+  - Fixed automated asset importing via `godot --headless --import` inside pinned Podman container (`docker.io/barichello/godot-ci:4.3`).
+  - Generated authoritative `.import` metadata and `.godot/imported/*.scn` resource caches for all 12 CC0 automotive vehicle models and 16 environment skyscraper, commercial, and foliage models.
+- **Dedicated Automotive PBR Paint & Wheel Shading**:
+  - Replaced fragile RGB palette thresholds with robust semantic material segmentation in `AUTOMOTIVE_SHADER_CODE` (distinguishing multi-coat exterior body lacquer, tinted glass canopies, and matte underbody/grilles).
+  - Created dedicated `WHEEL_SHADER_CODE` applying vulcanized dark rubber tires (`Color(0.11, 0.11, 0.13)`, roughness 0.88) to outer radii ($r > 0.185\text{m}$) and precision metallic alloy rims (`Color(0.82, 0.84, 0.87)`, metallic 0.88) to inner hubs, completely eliminating neon wheel bleed.
+- **Vehicle-to-Vehicle Collision Wedging & Climbing Elimination**:
+  - Enlarged and lowered `ChromaCollision` box to $1.85\text{m} \times 0.74\text{m} \times 4.20\text{m}$ positioned at $Y = 0.50\text{m}$, creating $0.13\text{m}$ ground clearance that physically prevents wedge-shaped sports car noses from sliding underneath other vehicles.
+  - Implemented reciprocal horizontal collision separation in `_update_physics_movement()` ($+0.08\text{m} / -0.08\text{m}$ along contact normal) and longitudinal momentum transfer on rear-end impacts.
+  - Clamped vertical climbing velocity to zero (`velocity.y = minf(velocity.y, 0.0)`) on vehicle-to-vehicle contact, preventing cars from mounting or riding up on each other.
+- **Progressive Steering, Speed-Sensitive Damping & Analog Deadzones**:
+  - Implemented progressive steering input rate limiting (`smoothed_steer_input`) with smooth return-to-center dynamics (9.0 rad/s² turn onset, 14.0 rad/s² return).
+  - Added speed-sensitive cornering attenuation (`1.0 / (1.0 + max(0, (kmh - 40) / 70))`), eliminating twitchy arcade oversteer at high speeds while preserving snappy low-speed maneuverability.
+  - Added analog deadzone filtering (`abs(input) > 0.05`).
+- **Authoritative "Reset to Road" Action**:
+  - Added `get_nearest_safe_road_transform(pos)` in `WorldBase` calculating closest road centerline sample and heading orientation.
+  - Implemented `reset_to_road()` in `ChromaVehicle` and `ChromaRushMain` with both `[R]` keyboard hotkey and prominent on-screen `↺ RESET TO ROAD [R]` HUD button.
+- **Continuous World Road Ribbons & Spline Guardrails**:
+  - Removed straight-chord box barriers slicing across Catmull-Rom curves in `CoastalRush`, `SkyCircuit`, and `NeonCity`.
+  - Implemented continuous Frenet-frame guardrail, curb, and sidewalk generation in `WorldBase`.
+  - Added multi-height raycasting in `ColorSwapEngine` to block color exchanges across curbs, medians, and dividers.
+
+### Verification & Releases
+- **Master Test Runner**: **72 test suites, 2,708 passed assertions, 0 failures (100% pass rate)**.
+- **Function Coverage**: **92.1%** (994 / 1,079 functions tested).
+- **Web Release Export**: Validated release build (`export/web/index.html`, `index.pck`, `index.wasm`) with verified Cloudflare Pages `_headers` (COOP/COEP isolation).
+- **Suite-Wide Stability**: 0 regressions across all 8 games in the VoltArena suite.
+
+

@@ -34,40 +34,77 @@ uniform float clearcoat_val : hint_range(0.0, 1.0) = 0.80;
 
 void fragment() {
 	vec4 tex = texture(albedo_texture, UV);
-	// Kenney car body paint palette in colormap.png: R > 0.80, G in [0.45, 0.88], B < 0.42
-	bool is_body_paint = (tex.r > 0.80 && tex.g > 0.45 && tex.g < 0.88 && tex.b < 0.42);
-	if (is_body_paint) {
+	bool is_trim = (tex.r < 0.28 && tex.g < 0.28 && tex.b < 0.28);
+	bool is_glass = (tex.b > 0.70 && tex.r > 0.45 && tex.g > 0.55);
+
+	if (is_trim) {
+		ALBEDO = tex.rgb;
+		if (VERTEX.y > 0.45 && abs(VERTEX.x) < 0.85) {
+			// Tinted glass canopy / cockpit
+			ROUGHNESS = 0.08;
+			METALLIC = 0.35;
+			SPECULAR = 0.7;
+		} else {
+			// Dark lower chassis, diffusers, grilles, and aerodynamic trim
+			ROUGHNESS = 0.85;
+			METALLIC = 0.10;
+			SPECULAR = 0.2;
+		}
+	} else if (is_glass) {
+		// High-reflectance clear canopy glass
+		ALBEDO = vec3(0.08, 0.10, 0.14);
+		ROUGHNESS = 0.06;
+		METALLIC = 0.40;
+		SPECULAR = 0.8;
+	} else {
+		// Authoritative multi-coat automotive paint
 		float lum = (tex.r * 0.299 + tex.g * 0.587 + tex.b * 0.114);
-		float factor = clamp(lum / 0.68, 0.65, 1.35);
+		float factor = clamp(lum / 0.65, 0.70, 1.25);
 		ALBEDO = paint_color.rgb * factor;
 		METALLIC = metallic_val;
 		ROUGHNESS = roughness_val;
 		SPECULAR = 0.5;
+	}
+}
+"""
+
+const WHEEL_SHADER_CODE = """
+shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
+
+void fragment() {
+	float r = length(VERTEX.yz);
+	if (r > 0.185) {
+		// Vulcanized rubber tire tread and sidewall
+		ALBEDO = vec3(0.11, 0.11, 0.13);
+		ROUGHNESS = 0.88;
+		METALLIC = 0.04;
+		SPECULAR = 0.2;
 	} else {
-		ALBEDO = tex.rgb;
-		// Windows / Glass
-		bool is_glass = (abs(tex.r - tex.b) < 0.16 && tex.r > 0.32 && tex.b > 0.32);
-		if (is_glass) {
-			ROUGHNESS = 0.06;
-			METALLIC = 0.25;
-			SPECULAR = 0.8;
-		} else {
-			// Rubber tires, dark chassis, grille, lights
-			ROUGHNESS = 0.88;
-			METALLIC = 0.08;
-			SPECULAR = 0.2;
-		}
+		// High-grade precision alloy rim
+		ALBEDO = vec3(0.82, 0.84, 0.87);
+		ROUGHNESS = 0.22;
+		METALLIC = 0.88;
+		SPECULAR = 0.6;
 	}
 }
 """
 
 static var _cached_shader: Shader = null
+static var _cached_wheel_shader: Shader = null
 
 static func get_paint_shader() -> Shader:
 	if not _cached_shader:
 		_cached_shader = Shader.new()
 		_cached_shader.code = AUTOMOTIVE_SHADER_CODE
 	return _cached_shader
+
+static func get_wheel_shader() -> Shader:
+	if not _cached_wheel_shader:
+		_cached_wheel_shader = Shader.new()
+		_cached_wheel_shader.code = WHEEL_SHADER_CODE
+	return _cached_wheel_shader
+
 
 static func build_vehicle_visual(vehicle_id: String, base_color: int = ChromaConstants.ChromaColor.CRIMSON, paint_finish: String = "metallic") -> Node3D:
 	var root = Node3D.new()
@@ -198,24 +235,35 @@ static func apply_gameplay_color(vehicle_visual: Node3D, color_id: int, finish: 
 	var model_root = vehicle_visual.get_node_or_null("ModelRoot")
 	if model_root:
 		var colormap_tex = load("res://assets/models/vehicles/Textures/colormap.png")
+		var wheel_shader = get_wheel_shader()
 		for child in model_root.get_children():
 			if child is MeshInstance3D:
 				var mi = child as MeshInstance3D
-				var mat = mi.material_override
-				if not (mat is ShaderMaterial):
-					mat = ShaderMaterial.new()
-					mat.shader = shader
-					if colormap_tex:
-						mat.set_shader_parameter("albedo_texture", colormap_tex)
-					mi.material_override = mat
+				var is_wheel = "wheel" in child.name.to_lower()
+				if is_wheel:
+					# Apply dedicated realistic rubber tire & alloy rim shader
+					var w_mat = mi.material_override
+					if not (w_mat is ShaderMaterial):
+						w_mat = ShaderMaterial.new()
+						w_mat.shader = wheel_shader
+						mi.material_override = w_mat
+				else:
+					# Exterior automotive body panels (body, spoiler, etc.)
+					var mat = mi.material_override
+					if not (mat is ShaderMaterial):
+						mat = ShaderMaterial.new()
+						mat.shader = shader
+						if colormap_tex:
+							mat.set_shader_parameter("albedo_texture", colormap_tex)
+						mi.material_override = mat
 
-				mat.set_shader_parameter("paint_color", col)
-				mat.set_shader_parameter("metallic_val", metallic_v)
-				mat.set_shader_parameter("roughness_val", roughness_v)
-				mat.set_shader_parameter("clearcoat_val", clearcoat_v)
-				if child.name == "body" or child.name == "spoiler":
+					mat.set_shader_parameter("paint_color", col)
+					mat.set_shader_parameter("metallic_val", metallic_v)
+					mat.set_shader_parameter("roughness_val", roughness_v)
+					mat.set_shader_parameter("clearcoat_val", clearcoat_v)
 					child.set_meta("is_body_paint", true)
 					child.add_to_group("body_paint_meshes")
+
 
 	# Update fallback procedural meshes if present
 	var chassis = vehicle_visual.get_node_or_null("ChassisBody")

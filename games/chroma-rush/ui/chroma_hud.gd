@@ -16,6 +16,8 @@ signal pause_requested()
 signal swap_requested()
 signal target_cycle_requested()
 signal map_expand_requested()
+signal reset_to_road_requested()
+
 
 # MiniMap radar
 var mini_map: ChromaMiniMap
@@ -248,9 +250,28 @@ func _setup_mobile_touch_controls(root: Control) -> void:
 	swap_btn.pressed.connect(func(): swap_button_pressed.emit())
 	touch_controls.add_child(swap_btn)
 
+	# Visible "Reset to Road" action button (accessible via UI and [R] key)
+
+	var reset_btn = Button.new()
+	reset_btn.name = "ResetRoadBtn"
+	reset_btn.text = "↺ RESET TO ROAD [R]"
+	reset_btn.custom_minimum_size = Vector2(160, 36)
+	reset_btn.anchor_left = 1.0
+	reset_btn.anchor_top = 1.0
+	reset_btn.anchor_right = 1.0
+	reset_btn.anchor_bottom = 1.0
+	reset_btn.offset_left = -310
+	reset_btn.offset_top = -78
+	reset_btn.offset_right = -150
+	reset_btn.offset_bottom = -42
+	reset_btn.add_theme_font_size_override("font_size", 11)
+	reset_btn.pressed.connect(func(): reset_to_road_requested.emit())
+	root.add_child(reset_btn)
+
 	# Automatically detect if touch screen or mobile is active
 	var is_mobile = OS.has_feature("mobile") or OS.has_feature("android") or DisplayServer.is_touchscreen_available()
 	touch_controls.visible = is_mobile
+
 
 	# --- DEVELOPMENT DIAGNOSTICS OVERLAY (F3) ---
 	diagnostics_panel = PanelContainer.new()

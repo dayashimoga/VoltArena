@@ -608,3 +608,36 @@ func add_road_segment(start_pos: Vector3, end_pos: Vector3, road_width: float = 
 	segment.position = center
 	segment.look_at_from_position(center, center + dir, Vector3.UP)
 	road_container.add_child(segment)
+
+func get_nearest_safe_road_transform(pos: Vector3) -> Transform3D:
+	if waypoints.size() < 2:
+		return Transform3D(Basis.IDENTITY, pos + Vector3(0, 0.45, 0))
+
+	var best_dist_sq = 1e12
+	var best_point = waypoints[0]
+	var best_fwd = Vector3.FORWARD
+
+	var samples = spline_samples if spline_samples.size() > 4 else waypoints
+	var n_s = samples.size()
+	for i in range(n_s):
+		var p1 = samples[i]
+		var p2 = samples[(i + 1) % n_s]
+		var seg = p2 - p1
+		var seg_len_sq = seg.length_squared()
+		var proj_t = 0.0
+		if seg_len_sq > 0.001:
+			proj_t = clampf((pos - p1).dot(seg) / seg_len_sq, 0.0, 1.0)
+		var closest = p1 + seg * proj_t
+		var d_sq = (pos - closest).length_squared()
+		if d_sq < best_dist_sq:
+			best_dist_sq = d_sq
+			best_point = closest
+			best_fwd = seg.normalized() if seg_len_sq > 0.001 else Vector3.FORWARD
+
+	var right = Vector3.UP.cross(best_fwd).normalized()
+	if right.length_squared() < 0.001:
+		right = Vector3.RIGHT
+	var up = best_fwd.cross(right).normalized()
+	var basis = Basis(right, up, best_fwd)
+	return Transform3D(basis, best_point + Vector3(0, 0.45, 0))
+

@@ -39,8 +39,10 @@ var current_color: int = ChromaConstants.ChromaColor.CRIMSON:
 		color_changed.emit(current_color)
 var forward_speed: float = 0.0
 var steer_input: float = 0.0
+var smoothed_steer_input: float = 0.0
 var throttle_input: float = 0.0
 var brake_input: float = 0.0
+
 var is_drifting: bool = false
 var drift_direction: float = 0.0 # -1 left, +1 right
 var drift_charge: float = 0.0
@@ -143,10 +145,12 @@ func setup_collision_box() -> void:
 		var col = CollisionShape3D.new()
 		col.name = "ChromaCollision"
 		var box = BoxShape3D.new()
-		box.size = Vector3(1.75, 0.70, 3.70)
+		box.size = Vector3(1.85, 0.74, 4.20)
 		col.shape = box
-		col.position = Vector3(0, 0.60, 0)
+		col.position = Vector3(0, 0.50, 0)
 		add_child(col)
+
+
 
 func setup_suspension_rays() -> void:
 	wheel_raycasts.clear()
@@ -293,10 +297,16 @@ func _update_physics_movement(delta: float) -> void:
 		# Rolling friction drag
 		forward_speed = move_toward(forward_speed, 0.0, 6.0 * delta)
 
-	# Lateral Steering & Drift Yaw
+	# Progressive Steering & Speed-Sensitive Cornering Limits
+	var deadzone = 0.05
+	var target_steer = steer_input if absf(steer_input) > deadzone else 0.0
+	var steer_rate = 9.0 if absf(target_steer) > absf(smoothed_steer_input) else 14.0
+	smoothed_steer_input = move_toward(smoothed_steer_input, target_steer, steer_rate * delta)
+
 	if is_grounded:
 		var speed_ratio = clampf(absf(forward_speed) / maxf(top_speed, 1.0), 0.0, 1.0)
-		var effective_steer_speed = steer_speed * (1.15 if speed_ratio < 0.3 else 1.0)
+		var speed_damp = 1.0 / (1.0 + maxf(0.0, (get_speed_kmh() - 40.0) / 70.0))
+		var effective_steer_speed = steer_speed * speed_damp
 
 		if is_drifting:
 			# Enhanced yaw rotation during drift with boost charge accumulation
@@ -304,8 +314,8 @@ func _update_physics_movement(delta: float) -> void:
 			rotate_y(drift_yaw)
 			drift_charge = minf(drift_charge + delta * 0.9, 3.0)
 		else:
-			# Standard responsive arcade cornering
-			var yaw = -steer_input * effective_steer_speed * delta * (1.0 if forward_speed >= 0.0 else -1.0) * minf(absf(forward_speed) / 4.0, 1.0)
+			# Standard responsive arcade cornering with progressive smoothed steering
+			var yaw = -smoothed_steer_input * effective_steer_speed * delta * (1.0 if forward_speed >= 0.0 else -1.0) * minf(absf(forward_speed) / 3.5, 1.0)
 			rotate_y(yaw)
 
 	# Compose 3D velocity
@@ -344,11 +354,21 @@ func _update_physics_movement(delta: float) -> void:
 				var collider = slide_col.get_collider()
 				if collider is CharacterBody3D:
 					var push_normal = slide_col.get_normal()
-					push_normal.y = 0.0
-					if push_normal.length_squared() > 0.01:
-						global_position += push_normal.normalized() * 0.05
+					var push_dir = Vector3(push_normal.x, 0.0, push_normal.z)
+					if push_dir.length_squared() > 0.001:
+						push_dir = push_dir.normalized()
+						global_position += push_dir * 0.08
+						if collider is ChromaVehicle:
+							collider.global_position -= push_dir * 0.08
+							var rel_fwd = forward_speed - collider.forward_speed
+							if rel_fwd > 0.0:
+								forward_speed = maxf(0.0, collider.forward_speed + rel_fwd * 0.3)
+								collider.forward_speed += rel_fwd * 0.5
+					# Clamp upward velocity to prevent climbing or wedging
+					velocity.y = minf(velocity.y, 0.0)
 	else:
 		position += velocity * delta
+
 
 	# Track valid road coordinates if grounded and level
 	if is_grounded and t.basis.y.dot(Vector3.UP) > 0.7:
@@ -419,21 +439,34 @@ func _check_rollover_and_recovery(delta: float) -> void:
 	else:
 		rollover_timer = 0.0
 
-func recover_vehicle() -> void:
+func reset_to_road(target_pos: Variant = null, target_rot_y: Variant = null) -> void:
 	rollover_timer = 0.0
+	stuck_timer = 0.0
 	forward_speed = 0.0
 	velocity = Vector3.ZERO
 	is_drifting = false
 	drift_charge = 0.0
+	smoothed_steer_input = 0.0
 
-	# Restore safely to last valid track location with upright orientation
+	var dest_pos = last_valid_track_pos + Vector3(0, 0.45, 0)
+	var dest_rot = last_valid_track_rot
+
+	if target_pos is Vector3 and target_pos != Vector3.ZERO:
+		dest_pos = target_pos + Vector3(0, 0.45, 0)
+	if target_rot_y is float:
+		dest_rot = target_rot_y
+
 	if is_inside_tree():
-		global_position = last_valid_track_pos + Vector3(0, 0.8, 0)
+		global_position = dest_pos
 	else:
-		position = last_valid_track_pos + Vector3(0, 0.8, 0)
-	rotation = Vector3(0, last_valid_track_rot, 0)
+		position = dest_pos
+	rotation = Vector3(0, dest_rot, 0)
 
 	vehicle_recovered.emit(global_position if is_inside_tree() else position)
+
+func recover_vehicle() -> void:
+	reset_to_road()
+
 
 func _release_drift_boost() -> void:
 	var boost_level = 0

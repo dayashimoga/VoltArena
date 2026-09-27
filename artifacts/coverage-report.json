@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 92.3791821561338,
+  "overall_coverage_pct": 92.1223354958295,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -192,10 +192,12 @@
       "untested": []
     },
     "res://games/chroma-rush/vehicles/chroma_vehicle.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 92.3076923076923,
       "tested": 12,
-      "total": 12,
-      "untested": []
+      "total": 13,
+      "untested": [
+        "reset_to_road"
+      ]
     },
     "res://games/chroma-rush/vehicles/vehicle_catalog.gd": {
       "coverage_pct": 100,
@@ -204,11 +206,12 @@
       "untested": []
     },
     "res://games/chroma-rush/vehicles/vehicle_visuals.gd": {
-      "coverage_pct": 66.6666666666667,
+      "coverage_pct": 50,
       "tested": 2,
-      "total": 3,
+      "total": 4,
       "untested": [
-        "get_paint_shader"
+        "get_paint_shader",
+        "get_wheel_shader"
       ]
     },
     "res://games/chroma-rush/worlds/checkpoint_gate.gd": {
@@ -253,9 +256,9 @@
       ]
     },
     "res://games/chroma-rush/worlds/world_base.gd": {
-      "coverage_pct": 55.5555555555556,
+      "coverage_pct": 52.6315789473684,
       "tested": 10,
-      "total": 18,
+      "total": 19,
       "untested": [
         "setup_ground_plane",
         "generate_waypoints",
@@ -264,7 +267,8 @@
         "build_props",
         "get_nearest_spline_index",
         "get_spline_point",
-        "get_total_spline_points"
+        "get_total_spline_points",
+        "get_nearest_safe_road_transform"
       ]
     },
     "res://games/kart-racing/ai/kart_ai.gd": {
@@ -1057,6 +1061,6 @@
     }
   },
   "tested_functions": 994,
-  "timestamp": "2026-09-27T07:40:42",
-  "total_functions": 1076
+  "timestamp": "2026-09-27T09:26:30",
+  "total_functions": 1079
 }

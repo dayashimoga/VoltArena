@@ -189,6 +189,7 @@ func _init_ui() -> void:
 	hud.swap_requested.connect(_on_swap_requested)
 	hud.target_cycle_requested.connect(_on_target_cycle_requested)
 	hud.map_expand_requested.connect(_on_map_expand_requested)
+	hud.reset_to_road_requested.connect(_on_reset_to_road_requested)
 	add_child(hud)
 	hud.visible = false
 
@@ -380,6 +381,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_on_swap_requested()
 		elif event.is_action_pressed("target_cycle") or (event is InputEventKey and event.pressed and event.keycode == KEY_TAB):
 			_on_target_cycle_requested()
+		elif event is InputEventKey and event.pressed and event.keycode == KEY_R:
+			_on_reset_to_road_requested()
 
 func _physics_process(delta: float) -> void:
 	if current_state == State.COUNTDOWN:
@@ -810,6 +813,19 @@ func _on_swap_requested() -> void:
 		target_id = nearest_info.get("target_id", "")
 	if not target_id.is_empty():
 		swap_engine.request_swap("player", target_id)
+
+func _on_reset_to_road_requested() -> void:
+	if not is_instance_valid(player_vehicle) or current_state != State.PLAYING:
+		return
+	if is_instance_valid(active_world) and active_world.waypoints.size() > 1:
+		var safe_tf = active_world.get_nearest_safe_road_transform(player_vehicle.global_position)
+		player_vehicle.reset_to_road(safe_tf.origin, safe_tf.basis.get_euler().y)
+	else:
+		player_vehicle.reset_to_road()
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am and am.has_method("play_sfx"):
+		am.play_sfx("ui_click")
+
 
 func _on_target_cycle_requested() -> void:
 	var am = GameConstants.get_autoload(self, "AudioManager")

@@ -1,0 +1,171 @@
+class_name SkyCircuit
+extends "res://games/chroma-rush/worlds/world_base.gd"
+
+## World 4: Sky Circuit
+## Elevated multilevel skyway suspended high above the clouds,
+## high-speed banked curves, corkscrew ramps, and multi-tier energy tracks.
+
+func _init() -> void:
+	world_id = ChromaConstants.WORLD_SKY_CIRCUIT
+	world_name = "Sky Circuit"
+
+func setup_lighting() -> void:
+	world_environment = WorldEnvironment.new()
+	world_environment.name = "WorldEnv"
+	var env = Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.12, 0.16, 0.32) # Twilight upper stratosphere
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.50, 0.60, 0.85)
+	env.ambient_light_energy = 1.25
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.glow_enabled = true
+	env.glow_intensity = 0.9
+	env.glow_bloom = 0.3
+	world_environment.environment = env
+	add_child(world_environment)
+
+	sun_light = DirectionalLight3D.new()
+	sun_light.name = "SunLight"
+	sun_light.rotation_degrees = Vector3(-60, 20, 0)
+	sun_light.light_color = Color(0.9, 0.95, 1.0)
+	sun_light.light_energy = 1.3
+	sun_light.shadow_enabled = true
+	add_child(sun_light)
+
+func generate_waypoints() -> void:
+	waypoints.clear()
+	# 16-point floating sky highway with multi-tier overpass
+	var raw_points = [
+		Vector3(0, 50, 0),         # 0 Cloud Platform Grid
+		Vector3(0, 50, -90),       # 1 Zenith Straight
+		Vector3(30, 54, -180),     # 2 Incline to High Ribbon
+		Vector3(90, 62, -230),     # 3 High Banked Curve
+		Vector3(170, 68, -210),    # 4 Apex Overlook (Tier 3)
+		Vector3(230, 65, -150),    # 5 Spiral Ramp Descent
+		Vector3(250, 58, -70),     # 6 Mid Stratum Curve
+		Vector3(230, 50, 20),      # 7 Cloud Chasm Bridge
+		Vector3(180, 44, 100),     # 8 Corkscrew Down to Tier 1
+		Vector3(110, 40, 140),     # 9 Lower Ribbon Speed Zone
+		Vector3(30, 40, 130),      # 10 Energy Conduit Tunnel
+		Vector3(-50, 42, 100),     # 11 Under-tier Crossing
+		Vector3(-110, 46, 50),     # 12 West Bank Ascent
+		Vector3(-130, 50, -20),    # 13 Stratosphere Ridge
+		Vector3(-100, 50, -80),    # 14 High Velocity S-Curve
+		Vector3(-40, 50, -30)      # 15 Final Approach to Grid
+	]
+	for p in raw_points:
+		waypoints.append(p)
+
+	player_spawn_transform = Transform3D(Basis(), Vector3(0, 50.4, 0))
+
+	traffic_spawn_data = [
+		{"waypoint_idx": 1, "color": ChromaConstants.ChromaColor.CYAN, "speed": 26.0},
+		{"waypoint_idx": 4, "color": ChromaConstants.ChromaColor.MAGENTA, "speed": 24.0},
+		{"waypoint_idx": 7, "color": ChromaConstants.ChromaColor.CRIMSON, "speed": 27.0},
+		{"waypoint_idx": 9, "color": ChromaConstants.ChromaColor.EMERALD, "speed": 25.0},
+		{"waypoint_idx": 12, "color": ChromaConstants.ChromaColor.SOLAR, "speed": 28.0}
+	]
+
+func build_road_mesh() -> void:
+	for i in range(waypoints.size()):
+		var p1 = waypoints[i]
+		var p2 = waypoints[(i + 1) % waypoints.size()]
+		add_road_segment(p1, p2, 14.0)
+
+		# Add luminous energy guardrails
+		var dir = (p2 - p1).normalized()
+		var right = Vector3(-dir.z, 0, dir.x)
+		var center = (p1 + p2) * 0.5
+		var barrier_len = p1.distance_to(p2)
+
+		var bl = _create_energy_barrier(center - right * 7.2, dir, barrier_len)
+		road_container.add_child(bl)
+		var br = _create_energy_barrier(center + right * 7.2, dir, barrier_len)
+		road_container.add_child(br)
+
+func build_checkpoints() -> void:
+	checkpoints.clear()
+	var gate_defs = [
+		{"id": "gate_1", "wp_idx": 1, "color": ChromaConstants.ChromaColor.CYAN},
+		{"id": "gate_2", "wp_idx": 4, "color": ChromaConstants.ChromaColor.MAGENTA},
+		{"id": "gate_3", "wp_idx": 6, "color": ChromaConstants.ChromaColor.SOLAR},
+		{"id": "gate_4", "wp_idx": 8, "color": ChromaConstants.ChromaColor.COBALT},
+		{"id": "gate_5", "wp_idx": 10, "color": ChromaConstants.ChromaColor.EMERALD},
+		{"id": "gate_6", "wp_idx": 13, "color": ChromaConstants.ChromaColor.CRIMSON}
+	]
+
+	for g in gate_defs:
+		var gate = CheckpointGate.new()
+		gate.gate_id = g["id"]
+		gate.target_color = g["color"]
+
+		var wp = waypoints[g["wp_idx"]]
+		var next_wp = waypoints[(g["wp_idx"] + 1) % waypoints.size()]
+		var dir = (next_wp - wp).normalized()
+
+		gate.position = wp
+		if dir.length_squared() > 0.001:
+			gate.look_at_from_position(wp, wp + dir, Vector3.UP)
+
+		gates_container.add_child(gate)
+		checkpoints.append(gate)
+
+func build_props() -> void:
+	# Holographic race gantries across the skyway
+	var gantry1 = MeshBuilder.build_start_gantry(15.0)
+	gantry1.position = Vector3(0, 50.0, 0)
+	props_container.add_child(gantry1)
+
+	var gantry2 = MeshBuilder.build_race_gantry_mesh()
+	gantry2.position = Vector3(170, 68.0, -210)
+	props_container.add_child(gantry2)
+
+	# Massive support pylons anchoring the floating circuit into the clouds below
+	var pylon_positions = [
+		Vector3(0, 25, -90), Vector3(90, 30, -230), Vector3(230, 25, -70),
+		Vector3(110, 20, 140), Vector3(-110, 22, 50)
+	]
+	var pylon_mat = StandardMaterial3D.new()
+	pylon_mat.albedo_color = Color(0.18, 0.20, 0.28)
+	pylon_mat.metallic = 0.9
+
+	for pos in pylon_positions:
+		var mi = MeshInstance3D.new()
+		var p_mesh = CylinderMesh.new()
+		p_mesh.top_radius = 4.0
+		p_mesh.bottom_radius = 8.0
+		p_mesh.height = 70.0
+		mi.mesh = p_mesh
+		mi.material_override = pylon_mat
+		mi.position = pos
+		props_container.add_child(mi)
+
+func _create_energy_barrier(pos: Vector3, dir: Vector3, length: float) -> StaticBody3D:
+	var sb = StaticBody3D.new()
+	sb.collision_layer = GameConstants.LAYER_WORLD
+
+	var mi = MeshInstance3D.new()
+	var b_mesh = BoxMesh.new()
+	b_mesh.size = Vector3(0.3, 1.4, length)
+	mi.mesh = b_mesh
+
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.0, 0.8, 1.0)
+	mat.emission_enabled = true
+	mat.emission = Color(0.0, 0.8, 1.0)
+	mat.emission_energy_multiplier = 2.0
+	mi.material_override = mat
+	sb.add_child(mi)
+
+	var col = CollisionShape3D.new()
+	var col_shape = BoxShape3D.new()
+	col_shape.size = Vector3(0.3, 1.4, length)
+	col.shape = col_shape
+	sb.add_child(col)
+
+	sb.position = pos + Vector3(0, 0.7, 0)
+	if dir.length_squared() > 0.001:
+		sb.look_at_from_position(sb.position, sb.position + dir, Vector3.UP)
+
+	return sb

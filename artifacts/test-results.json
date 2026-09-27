@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 94.7963800904977,
-  "coverage_tested_functions": 838,
-  "coverage_total_functions": 884,
-  "execution_seconds": 63.329,
+  "coverage_percent": 93.1493815413891,
+  "coverage_tested_functions": 979,
+  "coverage_total_functions": 1051,
+  "execution_seconds": 65.659,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -28,6 +28,36 @@
     "Car Physics Unit": {
       "failed": 0,
       "passed": 6,
+      "status": "PASS"
+    },
+    "Chroma AI & Traffic Unit": {
+      "failed": 0,
+      "passed": 16,
+      "status": "PASS"
+    },
+    "Chroma Modes & Progression Unit": {
+      "failed": 0,
+      "passed": 30,
+      "status": "PASS"
+    },
+    "Chroma Rush E2E Scenarios": {
+      "failed": 0,
+      "passed": 44,
+      "status": "PASS"
+    },
+    "Chroma Vehicle Physics Unit": {
+      "failed": 0,
+      "passed": 30,
+      "status": "PASS"
+    },
+    "Chroma Worlds & Integration Unit": {
+      "failed": 0,
+      "passed": 24,
+      "status": "PASS"
+    },
+    "ColorSwapEngine Unit": {
+      "failed": 0,
+      "passed": 36,
       "status": "PASS"
     },
     "Drift Storm Corridor & Pre-Race Gates": {
@@ -117,7 +147,7 @@
     },
     "Launcher E2E": {
       "failed": 0,
-      "passed": 84,
+      "passed": 91,
       "status": "PASS"
     },
     "LauncherArt Vector Graphics Unit": {
@@ -143,6 +173,11 @@
     "Metro Siege E2E": {
       "failed": 0,
       "passed": 36,
+      "status": "PASS"
+    },
+    "Mission Solvability Unit": {
+      "failed": 0,
+      "passed": 28,
       "status": "PASS"
     },
     "ModelCache 3D glTF Assets Unit": {
@@ -222,7 +257,7 @@
     },
     "Responsive UI Multi-Resolution": {
       "failed": 0,
-      "passed": 297,
+      "passed": 315,
       "status": "PASS"
     },
     "RoboForge Arena E2E": {
@@ -331,8 +366,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-22T13:08:13",
+  "timestamp": "2026-09-27T02:07:54",
   "total_failed": 0,
-  "total_passed": 2449,
-  "total_suites": 65
+  "total_passed": 2682,
+  "total_suites": 72
 }

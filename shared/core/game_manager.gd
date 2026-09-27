@@ -531,6 +531,9 @@ func start_game(game_id: String) -> void:
 		"strike_vector":
 			scene_path = "res://games/strike-vector/strike_vector_main.tscn"
 			music_track = "iron_crucible"
+		"chroma_rush":
+			scene_path = "res://games/chroma-rush/chroma_rush_main.tscn"
+			music_track = "chroma_rush"
 		_:
 			push_error("Unknown game ID: " + game_id)
 			return

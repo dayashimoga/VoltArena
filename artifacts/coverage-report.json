@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 94.7963800904977,
+  "overall_coverage_pct": 93.1493815413891,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -72,6 +72,172 @@
       "tested": 11,
       "total": 11,
       "untested": []
+    },
+    "res://games/chroma-rush/ai/chroma_ai_driver.gd": {
+      "coverage_pct": 75,
+      "tested": 3,
+      "total": 4,
+      "untested": [
+        "_init"
+      ]
+    },
+    "res://games/chroma-rush/ai/rival_ai.gd": {
+      "coverage_pct": 80,
+      "tested": 4,
+      "total": 5,
+      "untested": [
+        "_init"
+      ]
+    },
+    "res://games/chroma-rush/ai/traffic_agent.gd": {
+      "coverage_pct": 83.3333333333333,
+      "tested": 5,
+      "total": 6,
+      "untested": [
+        "_init"
+      ]
+    },
+    "res://games/chroma-rush/chroma_rush_main.gd": {
+      "coverage_pct": 100,
+      "tested": 17,
+      "total": 17,
+      "untested": []
+    },
+    "res://games/chroma-rush/content/mission_database.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/chroma-rush/core/chroma_constants.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/chroma-rush/core/color_swap_engine.gd": {
+      "coverage_pct": 100,
+      "tested": 16,
+      "total": 16,
+      "untested": []
+    },
+    "res://games/chroma-rush/core/mission_director.gd": {
+      "coverage_pct": 85.7142857142857,
+      "tested": 6,
+      "total": 7,
+      "untested": [
+        "_init"
+      ]
+    },
+    "res://games/chroma-rush/persistence/chroma_save_adapter.gd": {
+      "coverage_pct": 84.2105263157895,
+      "tested": 16,
+      "total": 19,
+      "untested": [
+        "get_profile_data",
+        "save_resumable_session",
+        "reset_all_data"
+      ]
+    },
+    "res://games/chroma-rush/ui/chroma_garage.gd": {
+      "coverage_pct": 60,
+      "tested": 3,
+      "total": 5,
+      "untested": [
+        "setup_ui_layout",
+        "setup_3d_turntable"
+      ]
+    },
+    "res://games/chroma-rush/ui/chroma_hud.gd": {
+      "coverage_pct": 56.25,
+      "tested": 9,
+      "total": 16,
+      "untested": [
+        "setup_mission",
+        "update_hud",
+        "set_alignment_progress",
+        "show_swap_prompt",
+        "hide_swap_prompt",
+        "show_swap_rejected",
+        "show_notification"
+      ]
+    },
+    "res://games/chroma-rush/ui/chroma_tutorial.gd": {
+      "coverage_pct": 83.3333333333333,
+      "tested": 5,
+      "total": 6,
+      "untested": [
+        "_init"
+      ]
+    },
+    "res://games/chroma-rush/vehicles/chroma_vehicle.gd": {
+      "coverage_pct": 91.6666666666667,
+      "tested": 11,
+      "total": 12,
+      "untested": [
+        "get_speed_kmh"
+      ]
+    },
+    "res://games/chroma-rush/vehicles/vehicle_catalog.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/chroma-rush/vehicles/vehicle_visuals.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/chroma-rush/worlds/checkpoint_gate.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/chroma-rush/worlds/coastal_rush.gd": {
+      "coverage_pct": 83.3333333333333,
+      "tested": 5,
+      "total": 6,
+      "untested": [
+        "_init"
+      ]
+    },
+    "res://games/chroma-rush/worlds/neon_city.gd": {
+      "coverage_pct": 80,
+      "tested": 4,
+      "total": 5,
+      "untested": [
+        "_init"
+      ]
+    },
+    "res://games/chroma-rush/worlds/prism_canyon.gd": {
+      "coverage_pct": 83.3333333333333,
+      "tested": 5,
+      "total": 6,
+      "untested": [
+        "_init"
+      ]
+    },
+    "res://games/chroma-rush/worlds/sky_circuit.gd": {
+      "coverage_pct": 83.3333333333333,
+      "tested": 5,
+      "total": 6,
+      "untested": [
+        "_init"
+      ]
+    },
+    "res://games/chroma-rush/worlds/world_base.gd": {
+      "coverage_pct": 69.2307692307692,
+      "tested": 9,
+      "total": 13,
+      "untested": [
+        "generate_waypoints",
+        "build_road_mesh",
+        "build_checkpoints",
+        "build_props"
+      ]
     },
     "res://games/kart-racing/ai/kart_ai.gd": {
       "coverage_pct": 66.6666666666667,
@@ -862,7 +1028,7 @@
       "untested": []
     }
   },
-  "tested_functions": 838,
-  "timestamp": "2026-09-22T13:08:13",
-  "total_functions": 884
+  "tested_functions": 979,
+  "timestamp": "2026-09-27T02:07:54",
+  "total_functions": 1051
 }

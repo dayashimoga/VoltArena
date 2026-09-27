@@ -863,10 +863,24 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Master test runner: **65 test suites, 2,447 passed assertions, 0 failed (100% pass rate, 94.8% function coverage)**.
   - Overall certification status: `RUNTIME_VERIFIED`.
 
-
-
-
-
-
-
-
+## [9.0.0-chroma-rush] - 2026-09-27
+### Added
+- **Chroma Rush: The Color Chase (9th VoltArena Game)**:
+  - Full cross-platform 3D arcade driving, exploration, and color-exchange strategy game.
+  - **Authoritative Color Swap Engine**: Independent RefCounted engine enforcing color conservation ($\sum N_{\text{before}} = \sum N_{\text{after}}$), proximity ($d \le 12.0\text{m}$), relative velocity ($\Delta v \le 12.5\text{m/s}$), parallel angle ($\theta \le 45^\circ$), and continuous duration ($t \ge 0.5\text{s}$) eligibility thresholds, atomic bidirectional commit, deterministic simultaneous arbitration, and dual color/symbol representation.
+  - **Arcade Vehicle Physics**: CharacterBody3D controller with arcade acceleration, proportional braking, speed-dependent steering curves, dynamic counter-steer drifting, 4-wheel suspension raycasts, inverted rollover auto-righting ($>75^\circ$ for $>1.5\text{s}$), and track boundary recovery.
+  - **6 Visually & Physically Distinct Vehicles**: Apex Striker, Vortex Drift, Titan Vanguard, Pulse Cyber, Dune Nomad, and Quantum Phantom with dynamic paint finishes and customizable colors.
+  - **AI Systems & Parity**: `ChromaAIDriver` driving interface, `TrafficAgent` for ambient road loop navigation and color circulation, and `RivalAI` goal-directed state machine executing legitimate swaps and checkpoint deliveries under identical physical rules.
+  - **4 Handcrafted 3D Worlds**: Neon City, Coastal Rush, Prism Canyon, and Sky Circuit featuring connected waypoint loops, road networks, collision barriers, and dynamic color/symbol `CheckpointGate` portals.
+  - **4 Game Modes & 24 Handcrafted Missions**: Color Hunt, Chroma Sprint, Puzzle Drive, and Chroma Championship with programmatic solvability proofs and scoring combo multipliers.
+  - **UI & Accessibility**: Dual color badge and symbol glyph HUD (`◆`, `⬡`, `★`, `▲`, `✚`, `●`), alignment radar lock-on reticle, speedometer, combo multiplier, 3D turntable garage, 6-step interactive onboarding tutorial, and mobile touch controls.
+  - **Persistence & Integration**: Namespaced `"chroma_rush"` adapter for `SaveManager`, 9th game card in `Launcher` carousel, `EventBus` signals, `InputManager` action mappings, and synthesized procedural audio in `AudioManager`.
+- **Master Test Runner & Coverage**:
+  - Expanded master runner to **72 test suites** (65 existing + 7 new Chroma Rush suites).
+  - Achieved **100% test pass rate (0 failures)** across all suites.
+  - Real measured project function coverage: **93.15% (979 / 1,051 functions tested)**.
+- **Cross-Platform Release Packages**:
+  - Web export: Cloudflare Pages compliant with $\le 18\text{MB}$ WASM and PCK chunks and COOP/COEP headers.
+  - Desktop: Linux x86_64 (`VoltArena.x86_64`) and Windows x86_64 (`VoltArena.exe`).
+  - Mobile: Android APK (`VoltArena.apk`).
+  - Distribution archives generated in `export/dist/`: `VoltArena-Web.zip` (156.94 MB), `VoltArena-Linux-x86_64.tar.gz` (93.71 MB), `VoltArena-Windows-x86_64.zip` (99.56 MB), and `VoltArena-Android.apk` (108.73 MB).

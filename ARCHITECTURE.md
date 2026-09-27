@@ -5,17 +5,17 @@
 VoltArena is built on a modular, decoupled, single-binary architecture powered by **Godot 4.3 Stable**. The suite utilizes an event-driven pub/sub architecture centered around global singletons, shared foundation libraries, and self-contained game modules.
 
 ```
-+-------------------------------------------------------------------------------------------------------+
-|                                          VOLTARENA LAUNCHER                                           |
-|                             (8-Game Responsive Carousel, Hot-Swap Loader)                             |
-+-------------------------------------------------------------------------------------------------------+
-    |           |            |            |             |              |             |              |
-    v           v            v            v             v              v             v              v
-+-------+   +-------+   +---------+   +-------+   +-----------+   +----------+   +---------+    +---------+
-| IRON  |   | METRO |   |  NITRO  |   | DRIFT |   | SKYBOUND  |   | ROBOFORGE|   |  WILD   |    | STRIKE  |
-|CRUCIBLE|  | SIEGE |   |  KICK   |   | STORM |   |  ODYSSEY  |   |  ARENA   |   | CIRCUIT |    | VECTOR  |
-| (FPS) |   |(Survival) | (Rocket)|   | (Kart)|   |(Platform) |   | (Sandbox)|   | (Safari)|    |(Campaign|
-+-------+   +-------+   +---------+   +-------+   +-----------+   +----------+   +---------+    +---------+
++-------------------------------------------------------------------------------------------------------------------+
+|                                                 VOLTARENA LAUNCHER                                                |
+|                                    (9-Game Responsive Carousel, Hot-Swap Loader)                                  |
++-------------------------------------------------------------------------------------------------------------------+
+    |         |          |          |          |           |            |           |             |
+    v         v          v          v          v           v            v           v             v
++-------+ +-------+ +---------+ +-------+ +---------+ +----------+ +---------+ +---------+ +-------------+
+| IRON  | | METRO | |  NITRO  | | DRIFT | |SKYBOUND | |ROBOFORGE | |  WILD   | | STRIKE  | | CHROMA RUSH |
+|CRUCIBL| | SIEGE | |  KICK   | | STORM | | ODYSSEY | |  ARENA   | | CIRCUIT | | VECTOR  | | (The Color  |
+| (FPS) | |(Surv) | | (Rocket)| | (Kart)| |(Platform| | (Sandbox)| | (Safari)| |(Campaign| |    Chase)   |
++-------+ +-------+ +---------+ +-------+ +---------+ +----------+ +---------+ +---------+ +-------------+
     \           \            \            |            /              /             /              /
      \           \            \           |           /              /             /              /
       +------------------------------------------------------------------------------------------+
@@ -261,7 +261,7 @@ The physics world is partitioned into 12 strict collision layers configured in `
 ## 7. Universal Launcher Architecture
 
 The top-level `Launcher` (`launcher/launcher.tscn`) acts as the master coordinator:
-* **8-Game Carousel**: Responsive horizontal/grid card layout supporting keyboard, gamepad, and mouse navigation across all 8 titles.
+* **9-Game Carousel**: Responsive horizontal/grid card layout supporting keyboard, gamepad, and mouse navigation across all 9 titles.
 * **State & Metadata Preview**: Displays title, genre tags, active controls, description, career records, and visual dossier for the highlighted game.
 * **Hot-Swap Engine**: Uses `GameManager.load_game_scene()` for asynchronous resource streaming and clean garbage collection during transitions.
 * **Universal In-Game Pause & Overlay**: Every game includes a unified `PauseMenu` that provides "Resume", "Restart", and "Quit to Launcher" with zero memory leaks.
@@ -291,6 +291,67 @@ Located in `shared/platform/graphics_profile.gd`, this subsystem handles visual 
 
 ### 8.4 Genre-Adaptive Touch HUD (`TouchControls`)
 Located in `shared/input/touch_controls.gd`, this component provides mobile and web touch interaction:
-* **Dynamic Layouts**: Renders dual analog thumbsticks for FPS combat, throttle/brake pedals and steering buttons for racing, and boost/jump triggers for rocket football.
+* **Dynamic Layouts**: Renders dual analog thumbsticks for FPS combat, throttle/brake pedals and steering buttons for racing, boost/jump triggers for rocket football, and dedicated swap/cycle action buttons for color exchange.
 * **Desktop Auto-Hide**: Automatically disables and hides virtual controls when running on desktop/KBM environments, activating instantly when touchscreen input is detected.
+
+---
+
+## 9. Chroma Rush: The Color Chase Architecture
+
+Chroma Rush: The Color Chase is a full-featured 3D arcade driving, exploration, and color-exchange strategy game integrated as the 9th title in the VoltArena suite.
+
+### 9.1 Authoritative Color Swap Engine (`ColorSwapEngine`)
+Located at `games/chroma-rush/core/color_swap_engine.gd`, this standalone, headless-capable engine is completely independent of rendering and UI:
+* **Color Conservation Invariant**: Ensures bidirectional color exchange strictly conserves identity:
+  $$\sum_{c \in \mathcal{C}} N_{\text{before}}(c) = \sum_{c \in \mathcal{C}} N_{\text{after}}(c)$$
+  Swapping between any two vehicles with distinct colors commits atomically, with zero duplication or dropped colors.
+* **Authoritative Eligibility Evaluation**: Revalidates immediately before commitment:
+  - Proximity threshold: $d \le 12.0\text{m}$.
+  - Relative velocity alignment: $\Delta v \le 12.5\text{m/s}$.
+  - Forward parallel alignment angle: $\theta \le 45^\circ$.
+  - Continuous alignment duration: $t \ge 0.5\text{s}$.
+  - Action cooldown: $1.2\text{s}$ per participating vehicle.
+* **Deterministic Arbitration**: Locks participating vehicles during swap processing to eliminate race conditions, duplicate triggers, or overlapping exchanges. Emits single authoritative `swap_committed` or `swap_rejected` signal.
+* **Accessibility Symbols & High-Contrast Palettes**: Every gameplay color is paired with a distinct geometric glyph (Crimson `◆`, Cobalt `⬡`, Solar `★`, Emerald `▲`, Magenta `✚`, Cyan `●`) projected on vehicles and checkpoint gates for full colorblind accessibility.
+
+### 9.2 Arcade Vehicle Physics & Archetypes (`ChromaVehicle` & `VehicleCatalog`)
+Located at `games/chroma-rush/vehicles/`:
+* **CharacterBody3D Controller**: Authoritative arcade acceleration, proportional braking, speed-dependent steering curves, and counter-steer drift physics.
+* **Dynamic Grounding & Suspension**: 4-wheel raycast simulation computing surface normals, suspension compression, and dynamic chassis roll/pitch.
+* **Safety Invariants & Auto-Recovery**: Overturned vehicles ($>75^\circ$ roll/pitch for $>1.5\text{s}$) or vehicles leaving playable boundaries automatically right themselves and teleport to the nearest track centerline waypoint.
+* **6 Visual & Physical Archetypes**:
+  - `apex_striker`: Balanced high-speed aerodynamic interceptor.
+  - `vortex_drift`: High-traction drift specialist with rapid boost charge.
+  - `titan_vanguard`: Heavy armored cruiser with massive road stability.
+  - `pulse_cyber`: Agile electric sprint vehicle with snappy turn response.
+  - `dune_nomad`: High-clearance all-terrain truck with compliant suspension.
+  - `quantum_phantom`: Low-slung futuristic exotic with high top speed.
+
+### 9.3 AI Systems & Parity (`ChromaAIDriver`, `TrafficAgent`, `RivalAI`)
+Located at `games/chroma-rush/ai/`:
+* **Shared Physical Control Interface**: AI drivers translate navigation waypoints into realistic throttle, brake, and steer inputs through the exact same controller API used by player input.
+* **Ambient Traffic (`TrafficAgent`)**: Autonomous vehicles circulating road loops, yielding at intersections, maintaining lane spacing, and carrying circulating colors.
+* **Competitive Rivals (`RivalAI`)**: Goal-driven state machine (`SEEKING_COLOR` $\to$ `PURSUING` $\to$ `ALIGNING` $\to$ `DELIVERING`) that dynamically hunts colors, aligns alongside targets, executes valid swaps through `ColorSwapEngine`, and scores at checkpoint gates under identical physical rules.
+
+### 9.4 4 Handcrafted Worlds & Checkpoints
+Located at `games/chroma-rush/worlds/`:
+* `NeonCity`: Multi-lane urban highway circuit with skyscrapers, overpasses, and tunnels.
+* `CoastalRush`: Scenic coastal highway with bridges, ocean views, and winding seaside roads.
+* `PrismCanyon`: Tiered sandstone switchbacks, narrow rock canyons, and elevation changes.
+* `SkyCircuit`: Suspended multilevel cloud raceway with corkscrew ramps and sky gantries.
+* `CheckpointGate`: 3D emissive portal with dynamic color pillars, matching symbol projection, and entry velocity detection.
+
+### 9.5 4 Game Modes & Solvable Content
+Located at `games/chroma-rush/content/` and `games/chroma-rush/core/`:
+* **Color Hunt**: Sequential color acquisition and checkpoint delivery.
+* **Chroma Sprint**: High-intensity time-attack chaining deliveries to earn clock extensions.
+* **Puzzle Drive**: Strategic color exchanges under strict swap move limits and route constraints.
+* **Chroma Championship**: Multi-stage tournament competition against rival AI grids with standing points.
+* **24 Distinct Handcrafted Missions**: Programmatically validated for solvability, non-empty objectives, and valid world/color bindings via `test_mission_solvability.gd`.
+
+### 9.6 Namespaced Persistence (`ChromaSaveAdapter`)
+Located at `games/chroma-rush/persistence/`:
+* Namespaced profile key `"chroma_rush"` inside VoltArena's central `SaveManager`.
+* Versioned schema (`version = 1`), atomic JSON writes, corruption recovery, and migration safety.
+* Tracks unlocked vehicles, paint finishes, custom vehicle colors, stars, medals, high scores, credits, and resumable in-progress sessions.
 

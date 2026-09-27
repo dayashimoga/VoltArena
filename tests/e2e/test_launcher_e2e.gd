@@ -63,11 +63,12 @@ func test_game_cards_creation() -> void:
 func test_game_metadata_completeness() -> void:
 	var launcher = LauncherScript.new()
 
-	assert_eq(launcher.games_meta.size(), 8, "Must have metadata for 8 games")
+	assert_eq(launcher.games_meta.size(), 9, "Must have metadata for 9 games")
 
 	var expected_ids = [
 		"arena_fps", "subway_survival", "rocket_car", "kart_racing",
-		"skybound_odyssey", "roboforge_arena", "wildcircuit", "strike_vector"
+		"skybound_odyssey", "roboforge_arena", "wildcircuit", "strike_vector",
+		"chroma_rush"
 	]
 	for meta in launcher.games_meta:
 		assert_true(meta["id"] in expected_ids, "Game ID must be valid: %s" % meta["id"])

@@ -116,10 +116,12 @@ func generate_waypoints() -> void:
 	]
 
 func build_road_mesh() -> void:
+	var road_w = 15.0
+	build_continuous_road_network(waypoints, road_w)
+
 	for i in range(waypoints.size()):
 		var p1 = waypoints[i]
 		var p2 = waypoints[(i + 1) % waypoints.size()]
-		add_road_segment(p1, p2, 14.0)
 
 		# Add luminous energy guardrails
 		var dir = (p2 - p1).normalized()
@@ -127,9 +129,9 @@ func build_road_mesh() -> void:
 		var center = (p1 + p2) * 0.5
 		var barrier_len = p1.distance_to(p2)
 
-		var bl = _create_energy_barrier(center - right * 7.2, dir, barrier_len)
+		var bl = _create_energy_barrier(center - right * (road_w * 0.5 + 1.2), dir, barrier_len)
 		road_container.add_child(bl)
-		var br = _create_energy_barrier(center + right * 7.2, dir, barrier_len)
+		var br = _create_energy_barrier(center + right * (road_w * 0.5 + 1.2), dir, barrier_len)
 		road_container.add_child(br)
 
 func build_checkpoints() -> void:

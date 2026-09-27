@@ -52,22 +52,22 @@ func generate_waypoints() -> void:
 
 func build_road_mesh() -> void:
 	var road_w = 15.0
+	build_continuous_road_network(waypoints, road_w)
+
+	# Add protective guardrails on elevated flyovers and bridge ramps
 	for i in range(waypoints.size()):
 		var p1 = waypoints[i]
 		var p2 = waypoints[(i + 1) % waypoints.size()]
-		add_road_segment(p1, p2, road_w)
-
-		# Add protective guardrails on elevated flyovers and bridge ramps
 		if p1.y > 0.5 or p2.y > 0.5 or i in [5, 6, 7, 8]:
 			var dir = (p2 - p1).normalized()
 			var right = Vector3(-dir.z, 0, dir.x).normalized()
 			var center = (p1 + p2) * 0.5
 			var seg_len = p1.distance_to(p2)
 
-			var barrier_l = _create_barrier(center - right * (road_w * 0.5 + 2.5), dir, seg_len)
+			var barrier_l = _create_barrier(center - right * (road_w * 0.5 + 2.8), dir, seg_len)
 			road_container.add_child(barrier_l)
 
-			var barrier_r = _create_barrier(center + right * (road_w * 0.5 + 2.5), dir, seg_len)
+			var barrier_r = _create_barrier(center + right * (road_w * 0.5 + 2.8), dir, seg_len)
 			road_container.add_child(barrier_r)
 
 func build_checkpoints() -> void:

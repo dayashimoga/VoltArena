@@ -45,12 +45,17 @@ var boost_speed_bonus: float = 12.0
 var controls_enabled: bool = true
 
 func get_speed_kmh() -> float:
+	if is_inside_tree():
+		var real_v = get_real_velocity()
+		var h_speed = Vector2(real_v.x, real_v.z).length()
+		return h_speed * 3.6
 	return absf(forward_speed) * 3.6
 
 # Grounding & Physics Recovery
 var is_grounded: bool = true
 var ground_normal: Vector3 = Vector3.UP
 var rollover_timer: float = 0.0
+var stuck_timer: float = 0.0
 var last_valid_track_pos: Vector3 = Vector3.ZERO
 var last_valid_track_rot: float = 0.0
 var wheel_raycasts: Array[RayCast3D] = []
@@ -65,9 +70,15 @@ var wheel_roll_angle: float = 0.0
 
 # Telemetry
 var speed_kph: float:
-	get: return absf(forward_speed) * 3.6
+	get: return get_speed_kmh()
+
+var _is_ready_initialized: bool = false
 
 func _ready() -> void:
+	if _is_ready_initialized:
+		return
+	_is_ready_initialized = true
+
 	collision_layer = GameConstants.LAYER_PLAYER if is_player else GameConstants.LAYER_ENEMIES
 	collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES
 
@@ -88,7 +99,7 @@ func _ready() -> void:
 	setup_collision_box()
 
 	current_color = initial_color
-	last_valid_track_pos = global_position
+	last_valid_track_pos = global_position if is_inside_tree() else position
 	last_valid_track_rot = rotation.y
 
 func apply_catalog_stats() -> void:
@@ -118,9 +129,9 @@ func setup_collision_box() -> void:
 		var col = CollisionShape3D.new()
 		col.name = "ChromaCollision"
 		var box = BoxShape3D.new()
-		box.size = Vector3(1.8, 0.85, 3.8)
+		box.size = Vector3(1.75, 0.70, 3.70)
 		col.shape = box
-		col.position = Vector3(0, 0.55, 0)
+		col.position = Vector3(0, 0.60, 0)
 		add_child(col)
 
 func setup_suspension_rays() -> void:
@@ -172,6 +183,11 @@ func _handle_player_input() -> void:
 		return
 	if not controls_enabled:
 		set_inputs(0.0, 0.0, 0.8, false, false)
+		return
+
+	# Manual instant vehicle recovery hotkey
+	if Input.is_key_pressed(KEY_R):
+		recover_vehicle()
 		return
 
 	var steer: float = 0.0
@@ -293,6 +309,19 @@ func _update_physics_movement(delta: float) -> void:
 	velocity = Vector3(horizontal_vel.x, vertical_vel, horizontal_vel.z)
 	if is_inside_tree():
 		move_and_slide()
+		var real_v = get_real_velocity()
+		var fwd = -t.basis.z.normalized()
+		var real_fwd_speed = real_v.dot(fwd)
+
+		# If colliding with an obstacle, clamp forward_speed so displayed speed matches physical displacement
+		if get_slide_collision_count() > 0:
+			for i in range(get_slide_collision_count()):
+				var slide_col = get_slide_collision(i)
+				var normal = slide_col.get_normal()
+				if normal.dot(fwd) < -0.35 and forward_speed > 0.0:
+					forward_speed = maxf(0.0, real_fwd_speed)
+				elif normal.dot(fwd) > 0.35 and forward_speed < 0.0:
+					forward_speed = minf(0.0, real_fwd_speed)
 	else:
 		position += velocity * delta
 
@@ -335,6 +364,16 @@ func _check_rollover_and_recovery(delta: float) -> void:
 	var is_upside_down = up_dot < 0.25
 	var is_falling_out_of_world = pos.y < -15.0
 
+	# Stuck against an obstacle with full throttle
+	if is_player and throttle_input > 0.5 and get_speed_kmh() < 1.0 and is_on_wall():
+		stuck_timer += delta
+		if stuck_timer >= 2.5:
+			stuck_timer = 0.0
+			recover_vehicle()
+			return
+	else:
+		stuck_timer = 0.0
+
 	if is_upside_down or is_falling_out_of_world:
 		rollover_timer += delta
 		if rollover_timer >= 0.75 or is_falling_out_of_world:
@@ -376,7 +415,7 @@ func trigger_nitro_boost(duration: float) -> void:
 func set_color(new_color: int) -> void:
 	current_color = new_color
 	if visual_node:
-		VehicleVisuals.apply_gameplay_color(visual_node, new_color)
+		VehicleVisuals.apply_gameplay_color(visual_node, new_color, paint_finish)
 	color_changed.emit(new_color)
 
 func set_vehicle_type(new_id: String) -> void:

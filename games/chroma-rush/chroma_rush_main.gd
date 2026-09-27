@@ -64,6 +64,10 @@ var rival_agents: Array[RivalAI] = []
 var chase_camera: Camera3D
 var camera_spring_arm: SpringArm3D
 var target_beacon: Node3D
+var main_env_node: WorldEnvironment
+var main_light_node: DirectionalLight3D
+var menu_environment: Environment = null
+var selected_target_id: String = ""
 
 # UI Nodes
 var hud: ChromaHUD
@@ -109,27 +113,30 @@ func _init_subsystems() -> void:
 		selected_paint_color = Color(paint_arr[0], paint_arr[1], paint_arr[2])
 
 func _init_environment() -> void:
-	var env = WorldEnvironment.new()
+	main_env_node = WorldEnvironment.new()
+	main_env_node.name = "MainMenuEnvironment"
 	var environment = Environment.new()
 	environment.background_mode = Environment.BG_COLOR
 	environment.background_color = Color(0.04, 0.05, 0.09)
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color(0.25, 0.30, 0.45)
-	environment.ambient_light_energy = 1.3
+	environment.ambient_light_color = Color(0.20, 0.25, 0.35)
+	environment.ambient_light_energy = 1.0
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	environment.tonemap_exposure = 1.15
+	environment.tonemap_exposure = 1.0
 	environment.glow_enabled = true
-	environment.glow_intensity = 0.8
-	environment.glow_bloom = 0.25
-	env.environment = environment
-	add_child(env)
+	environment.glow_intensity = 0.4
+	environment.glow_bloom = 0.05
+	menu_environment = environment
+	main_env_node.environment = environment
+	add_child(main_env_node)
 
-	var dir_light = DirectionalLight3D.new()
-	dir_light.rotation_degrees = Vector3(-45.0, 35.0, 0.0)
-	dir_light.light_color = Color(0.95, 0.95, 1.0)
-	dir_light.light_energy = 1.2
-	dir_light.shadow_enabled = true
-	add_child(dir_light)
+	main_light_node = DirectionalLight3D.new()
+	main_light_node.name = "MainMenuLight"
+	main_light_node.rotation_degrees = Vector3(-45.0, 35.0, 0.0)
+	main_light_node.light_color = Color(0.95, 0.95, 1.0)
+	main_light_node.light_energy = 1.0
+	main_light_node.shadow_enabled = true
+	add_child(main_light_node)
 
 	_init_target_beacon()
 
@@ -366,9 +373,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_M:
 		_toggle_full_map()
 	elif current_state == State.PLAYING:
-		if event.is_action_pressed("swap"):
+		if event.is_action_pressed("swap") or (event is InputEventKey and event.pressed and event.keycode == KEY_E):
 			_on_swap_requested()
-		elif event.is_action_pressed("target_cycle"):
+		elif event.is_action_pressed("target_cycle") or (event is InputEventKey and event.pressed and event.keycode == KEY_TAB):
 			_on_target_cycle_requested()
 
 func _physics_process(delta: float) -> void:
@@ -421,16 +428,20 @@ func _update_camera(delta: float) -> void:
 		camera_spring_arm.rotation.x = deg_to_rad(-12.0)
 
 func _update_swap_eligibility() -> void:
-	if not is_instance_valid(player_vehicle) or not is_instance_valid(swap_engine):
+	if not is_instance_valid(player_vehicle) or not is_instance_valid(swap_engine) or not is_instance_valid(hud):
 		return
-	var nearest_info = swap_engine.find_nearest_eligible_target("player")
-	var target_id = nearest_info.get("target_id", "")
-	if not target_id.is_empty():
+
+	var target_id = selected_target_id
+	if target_id.is_empty() or not swap_engine.has_vehicle(target_id):
+		var nearest_info = swap_engine.find_nearest_eligible_target("player")
+		target_id = nearest_info.get("target_id", "")
+
+	if not target_id.is_empty() and swap_engine.has_vehicle(target_id):
 		var target_color = swap_engine.get_vehicle_color(target_id)
 		var check = swap_engine.evaluate_eligibility("player", target_id, false)
 		var progress = check.get("alignment_progress", 0.0)
 		hud.set_alignment_progress(progress)
-		hud.show_swap_prompt(nearest_info.get("eligible", false), target_color)
+		hud.show_swap_prompt(check.get("eligible", false), target_color)
 	else:
 		hud.set_alignment_progress(0.0)
 		hud.hide_swap_prompt()
@@ -561,7 +572,12 @@ func _load_world(world_id: String) -> void:
 
 	active_world.name = "ActiveWorld"
 	world_container.add_child(active_world)
-	active_world._ready()
+
+	# Deactivate main menu environment & light so active_world's lighting has full authority
+	if is_instance_valid(main_env_node):
+		main_env_node.environment = null
+	if is_instance_valid(main_light_node):
+		main_light_node.visible = false
 
 	# Connect checkpoint triggers
 	for gate in active_world.checkpoints:
@@ -586,7 +602,6 @@ func _spawn_player_vehicle(mission_data: Dictionary) -> void:
 	player_vehicle.global_transform = spawn_xf
 
 	world_container.add_child(player_vehicle)
-	player_vehicle._ready()
 	swap_engine.register_vehicle("player", player_vehicle, start_col, false)
 
 	if camera_spring_arm:
@@ -628,7 +643,6 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 		veh.global_transform = Transform3D(basis, spawn_pt)
 
 		world_container.add_child(veh)
-		veh._ready()
 
 		var agent = TrafficAgent.new(veh, swap_engine, agent_id, col)
 		agent.set_waypoints(wps, wp_idx)
@@ -661,12 +675,13 @@ func _spawn_rivals(mission_data: Dictionary) -> void:
 		veh.global_transform = Transform3D(basis, spawn_pt)
 
 		world_container.add_child(veh)
-		veh._ready()
 
 		var rival = RivalAI.new(veh, swap_engine, rival_id, ChromaConstants.ChromaColor.NONE, "skilled")
 		rival_agents.append(rival)
 
 func clean_up_session() -> void:
+	selected_target_id = ""
+
 	if is_instance_valid(swap_engine):
 		for id in swap_engine.get_registered_vehicle_ids():
 			swap_engine.unregister_vehicle(id)
@@ -689,6 +704,12 @@ func clean_up_session() -> void:
 		active_world.queue_free()
 		active_world = null
 
+	# Restore main menu environment & light for garage/menu screens
+	if is_instance_valid(main_env_node):
+		main_env_node.environment = menu_environment
+	if is_instance_valid(main_light_node):
+		main_light_node.visible = true
+
 	if is_instance_valid(target_beacon):
 		target_beacon.visible = false
 
@@ -707,8 +728,10 @@ func clean_up_session() -> void:
 func _on_swap_requested() -> void:
 	if not is_instance_valid(player_vehicle) or not is_instance_valid(swap_engine):
 		return
-	var nearest_info = swap_engine.find_nearest_eligible_target("player")
-	var target_id = nearest_info.get("target_id", "")
+	var target_id = selected_target_id
+	if target_id.is_empty() or not swap_engine.has_vehicle(target_id):
+		var nearest_info = swap_engine.find_nearest_eligible_target("player")
+		target_id = nearest_info.get("target_id", "")
 	if not target_id.is_empty():
 		swap_engine.request_swap("player", target_id)
 
@@ -716,6 +739,22 @@ func _on_target_cycle_requested() -> void:
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am and am.has_method("play_sfx"):
 		am.play_sfx("ui_hover")
+
+	if not is_instance_valid(swap_engine) or not is_instance_valid(player_vehicle):
+		return
+
+	var all_ids = swap_engine.get_registered_vehicle_ids()
+	var candidates: Array[String] = []
+	for id in all_ids:
+		if id != "player":
+			candidates.append(id)
+
+	if candidates.is_empty():
+		return
+
+	var cur_idx = candidates.find(selected_target_id)
+	var next_idx = (cur_idx + 1) % candidates.size()
+	selected_target_id = candidates[next_idx]
 
 func _on_swap_committed(initiator_id: String, target_id: String, initiator_color: int, target_color: int) -> void:
 	var am = GameConstants.get_autoload(self, "AudioManager")

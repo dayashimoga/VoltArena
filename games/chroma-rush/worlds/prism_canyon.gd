@@ -110,10 +110,8 @@ func generate_waypoints() -> void:
 	]
 
 func build_road_mesh() -> void:
-	for i in range(waypoints.size()):
-		var p1 = waypoints[i]
-		var p2 = waypoints[(i + 1) % waypoints.size()]
-		add_road_segment(p1, p2, 13.0)
+	var road_w = 14.0
+	build_continuous_road_network(waypoints, road_w)
 
 func build_checkpoints() -> void:
 	checkpoints.clear()

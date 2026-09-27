@@ -1,126 +1,87 @@
-# Chroma Rush: The Color Chase — Implementation Plan & System Audit
+# Chroma Rush: Forensic Audit, Road/Physics Overhaul & Quality Certification — Implementation Plan
 
-## 1. System Audit & Baseline Verification
+## 1. System Audit & Requirement Traceability Matrix
 
-### 1.1 Existing Infrastructure Analysis
-- **Engine Version**: Godot 4.3 Stable (GL Compatibility renderer for WebGL/WebGPU and Desktop).
-- **Core Architecture**: Decoupled pub/sub event architecture via `EventBus`, centralized lifecycle via `GameManager`, persistent settings via `SettingsManager`, encrypted/JSON saves via `SaveManager`.
-- **Existing Games**: 8 complete games (`arena-fps`, `subway-survival`, `rocket-car`, `kart-racing`, `skybound-odyssey`, `roboforge-arena`, `wildcircuit`, `strike-vector`).
-- **Baseline Test State**: 65 test suites, 2,449 passing assertions, 0 failures, 94.8% function-level coverage across the entire repository.
-- **Export & Containerization**: Podman 5.8.3 container environment with pinned `barichello/godot-ci:4.3` image. One-command build scripts for Web (Cloudflare Pages <= 18MB chunks), Windows, Linux, and Android.
-- **Input & Platform**: `InputManager` supporting Keyboard/Mouse, Gamepad (XInput/DirectInput), and Virtual Joystick for mobile/touch screens; `PlatformAdapter` detecting OS and form factor.
-- **Audio & Visuals**: Procedural audio engine (`AudioManager`) generating sound effects and music tracks without external media dependencies; `MeshBuilder`, `MaterialGenerator`, and `ModelCache` providing high-fidelity 3D assets.
+Following forensic investigation of running builds, source code, collision geometry, and user feedback/screenshot evidence:
 
-### 1.2 Chroma Rush Requirements Mapping & Gap Analysis
-
-| Requirement Domain | Specification Targets | Status | Code & Verification Evidence |
-| :--- | :--- | :--- | :--- |
-| **Launcher Integration** | 9th game entry in carousel, responsive card, tags, description, transition | **VERIFIED** | `launcher.gd`: card registered, dynamic color badge, seamless scene transition. Tested in `test_launcher_e2e.gd`. |
-| **Playability & Input** | 0 km/h fix, direct polling fallback, no key collision, touch controls, reliable acceleration/brake/steer | **VERIFIED** | `chroma_vehicle.gd`: `_handle_player_input()` polls InputMap, direct keys, and `InputManager.virtual_move_vector`. Remapped `swap` to `KEY_E`. Verified in `test_chroma_vehicle_physics.gd`. |
-| **Spawning & Recovery** | Non-crowded forward spawns, road alignment, rollover auto-righting, off-road recovery | **VERIFIED** | Staggered spawns in left/right lanes ($\pm 3.0\text{m}$) along waypoints. Safe recovery on rollover $>75^\circ$ or $Y < -1.0\text{m}$. Verified in `test_chroma_vehicle_physics.gd`. |
-| **Session & State Machine**| Loading -> Briefing -> Countdown -> Playing -> Paused -> Results, timer starts on GO, friendly defeats | **VERIFIED** | `chroma_rush_main.gd`: 3-2-1-GO countdown, timer paused during countdown/pause, friendly defeat descriptions for `TIME_EXPIRED`. Verified in `test_chroma_e2e.gd`. |
-| **Realistic Visuals (Cars)** | 6 realistic archetypes with sloped hoods, scoops, splitters, glass, tires, rims, lights | **VERIFIED** | `vehicle_visuals.gd`: 6 archetypes modeled with radial treaded rubber tires, 3D alloy rims, metallic/gloss paint finishes, LED headlights/taillights. Verified in `test_chroma_e2e.gd`. |
-| **Realistic Visuals (Worlds)**| Asphalt PBR roads, markings, curbs, sidewalks, real buildings, sky dome, daylight sun, fog | **VERIFIED** | `world_base.gd`, `neon_city.gd`, `coastal_rush.gd`, `prism_canyon.gd`, `sky_circuit.gd`: PBR asphalt, yellow dashed centerlines, concrete curbs, GLB buildings, daylight procedural sky dome. Verified in `test_chroma_worlds_and_integration.gd`. |
-| **Tactical Maps & Minimap** | Live minimap radar, expandable full map with pan/zoom/recenter/guidance/filters/legend | **VERIFIED** | `chroma_mini_map.gd` and `chroma_full_map.gd`: authoritative waypoint spline rendering, live vehicle dots with colors and symbols, active checkpoint beacon. Verified in `test_chroma_e2e.gd`. |
-| **World & City Selection** | World preview cards, stats, difficulty, mode selection, untimed Practice/Free Drive mode | **VERIFIED** | `world_select_screen.gd`: dynamic world cards, track stats, mode selector, Free Drive practice mode. Verified in `test_chroma_e2e.gd`. |
-| **Color Swap Engine** | Authoritative 2-way atomic exchange, color conservation, proximity/angle/speed eligibility, deterministic arbitration | **VERIFIED** | `color_swap_engine.gd`: strict color conservation, continuous alignment, atomic commit. Verified in `test_color_swap_engine.gd`. |
-| **AI Systems & Rivals** | Ambient traffic circulation, competitive rivals with route planning, legitimate swaps, checkpoint scoring | **VERIFIED** | `chroma_ai_driver.gd`, `traffic_agent.gd`, `rival_ai.gd`: shared vehicle controller parity, legitimate atomic swaps. Verified in `test_chroma_ai_and_traffic.gd`. |
-| **Game Modes & Missions** | Color Hunt, Chroma Sprint, Puzzle Drive, Chroma Championship; 24 handcrafted missions, solvability | **VERIFIED** | `mission_database.gd` (24 missions + solvability proofs), `mission_director.gd`. Verified in `test_mission_solvability.gd` & `test_chroma_modes_and_progression.gd`. |
-| **Progression & Persistence**| Credits, medals, records, vehicle unlocks, custom garage, resumable session saves, zero data loss | **VERIFIED** | `chroma_save_adapter.gd` namespaced under `"chroma_rush"` in `SaveManager`. Verified in `test_chroma_modes_and_progression.gd`. |
-| **Testing & Release Gates** | >90% coverage, 100% test pass rate, E2E scenarios, Web chunking, Android/Linux/Windows exports | **VERIFIED** | 72 suites, 2691 passed assertions, 0 failed, 92.8% function coverage. Release packages generated in `export/dist/`. |
+| # | Requirement Domain | Target Specification | Status | Reproduction Evidence & Root Cause | Plan & Action |
+| :- | :--- | :--- | :---: | :--- | :--- |
+| 1 | **Road Geometry & Collisions** | Continuous smooth road surfaces, zero step seams, flush intersections, no curbs crossing driveable lanes. | **BROKEN** | Cars blocked at waypoint intersections. Root cause: `WorldBase.add_road_segment` generated disconnected BoxMesh/BoxShape3D segments with unchamfered endcaps. Curbs were 0.6m high boxes extending full length into intersecting lanes. `_ready()` called twice duplicated all colliders. | Replace with authoritative continuous road ribbon generator with Catmull-Rom spline sampling, flush seamless ConcavePolygonShape3D trimesh collision, realistic 0.12m beveled curbs following outer curve. Prevent duplicate `_ready()`. |
+| 2 | **Vehicle Movement & Telemetry** | Displayed speed derived from physical velocity; no 108 km/h while stationary at 0 km/h; reliable acceleration/braking/reversal. | **BROKEN** | Telemetry showed 108 km/h while car was jammed against a wall. Root cause: `forward_speed` integrated purely from throttle without collision feedback; `speed_kph` read `forward_speed * 3.6` instead of `get_real_velocity()`. | Reconcile `forward_speed` with collision slide normals; derive `speed_kph` from `get_real_velocity().length() * 3.6`. Ensure reverse works reliably and collision shape has proper clearance. |
+| 3 | **Realistic Car Visuals & Paint** | Believable full-bodied cars with visible hood, roof, doors, fenders; authoritative color drives body paint; separate glass/rubber/trim. | **BROKEN** | HUD says "Crimson Red" while car body appears dark blue-gray with pink stripes. Root cause: `VehicleVisuals` hardcoded body paint to `Color(0.18, 0.22, 0.28)`; `apply_gameplay_color` only tinted emissive stripes with 2.4x bloom. | Bind authoritative color to main car body panels (hood, roof, doors, fenders, trunk); use high-grade PBR automotive lacquer (clearcoat, metallic); keep glass, rubber, chrome, and carbon trim distinct. |
+| 4 | **Realistic Scenery & Lighting** | Natural daylight, balanced exposure, coherent buildings, vegetation, signs, landmarks; no washed-out bloom or stark white edges. | **BROKEN** | Washed-out scenery with intensely white glowing road markings. Root cause: Duplicate `WorldEnvironment` and duplicate `DirectionalLight3D` in `ChromaRushMain` and `WorldBase`; bloom intensity 0.8 / 0.25; road markings unattenuated pure white. | Consolidate single balanced WorldEnvironment (Filmic tonemap, exposure 1.0, subtle bloom 0.08, ambient 0.85); realistic PBR road markings; rich urban architecture, street lightposts, barriers, and landmarks in all 4 worlds. |
+| 5 | **Live Minimap & Radar** | Road lines stay strictly within minimap bounds; no overlap with HUD badges; clear legend and orientation. | **BROKEN** | Road lines draw outside radar boundaries onto HUD; minimap overlaps "Current Color" panel on smaller/scaled displays. Root cause: `map_canvas` lacked clipping; lines drawn to $1.4 \times radius$; minimap `offset_top = 80` collided with badge at `offset_top = 16`. | Enable `clip_contents = true`; clip road line segments to circular radar radius; position minimap with responsive margin (safe gap below top badges); add target blips and heading arrow. |
+| 6 | **Tactical Objectives & State Flow** | Explicit mission state machine: Find Target -> Approach & Align -> Match Speed -> Swap -> Deliver -> Reward. Target cycling & device prompts. | **PARTIAL** | Target gates existed, but navigation path was unclear; generic "SEARCHING FOR TARGETS..."; missing clear device prompts for keyboard/gamepad/touch. | Implement 6-state mission machine with dynamic HUD guidance, target cycling ([Tab] / HUD button), device-specific prompts ([E] / Gamepad X / Tap), route path to target, and clear player-facing rejection messages. |
+| 7 | **4 Handcrafted Worlds** | Neon City, Coastal Rush, Prism Canyon, Sky Circuit with believable visual treatment and distinct biomes. | **VERIFIED** | 4 worlds present with waypoints and checkpoints; road generation overhauled to be smooth and continuous. | Upgrade scenery, props, barriers, and lighting across all 4 worlds. Verify traversability in both directions. |
+| 8 | **6 Distinct Vehicles** | Apex Striker, Vortex Drift, Titan Vanguard, Pulse Cyber, Dune Nomad, Quantum Phantom with authentic stats. | **VERIFIED** | 6 distinct archetypes defined in `VehicleCatalog` and modeled in `VehicleVisuals`. | Upgrade mesh details, full-body paint shaders, and wheel suspension dynamics. |
+| 9 | **Game Modes & Content** | Color Hunt, Chroma Sprint, Puzzle Drive, Chroma Championship; 24 handcrafted missions with solvability proofs. | **VERIFIED** | 24 missions in `MissionDatabase` with schema validation and solvability proofs. | Ensure all 4 modes transition smoothly with countdown, pause, retry, and results. |
+| 10 | **Suite-Wide Responsiveness & Performance** | Adaptive layout across resolutions (mobile, tablet, desktop, ultra-wide); 60 FPS desktop / 30+ FPS mobile; clean resource resets. | **PARTIAL** | Responsive UI test passed, but touch controls and HUD needed layout hardening for multi-aspect displays. | Harden responsive anchoring, safe areas, touch targets, and resource pooling across all screens and modes. |
+| 11 | **Test Suite & CI Quality Gates** | >90% code coverage, 100% test pass rate, empirical visual audits, benchmark verification. | **VERIFIED** | 64 suites passed with 92.8% coverage. | Extend tests to assert continuous road traversability, physical velocity telemetry, authoritative paint, and minimap bounds. |
 
 ---
 
-## 2. Prioritized Implementation Plan & Playable Milestones
+## 2. Playable Milestones & Execution Plan
 
-```mermaid
-graph TD
-    M1[Milestone 1: Core Foundation & Swap Engine] --> M2[Milestone 2: Vehicle Physics & 6 Archetypes]
-    M2 --> M3[Milestone 3: AI Strategy, Traffic & Rivals]
-    M3 --> M4[Milestone 4: Worlds - Neon City, Coastal, Canyon, Sky]
-    M4 --> M5[Milestone 5: 4 Game Modes & 24 Handcrafted Missions]
-    M5 --> M6[Milestone 6: Progression, Garage, HUD & Tutorial]
-    M6 --> M7[Milestone 7: Launcher, Input & Save Integration]
-    M7 --> M8[Milestone 8: Comprehensive Tests, Coverage >90% & Release Exports]
-```
+### Milestone 1: Authoritative Continuous Road Generator & Physics Seam Repair
+- **File**: `games/chroma-rush/worlds/world_base.gd`
+- Implement `build_continuous_road_network(waypoints: Array[Vector3], road_width: float, ...)`:
+  - Generate smooth spline samples between waypoints using Catmull-Rom interpolation.
+  - Build continuous road ribbon SurfaceTool mesh (asphalt surface, dashed yellow centerlines, solid white shoulder lines).
+  - Build continuous 0.12m beveled curbs and sidewalks hugging outer boundaries without ever crossing lanes.
+  - Generate 1:1 matching physical collider via `ConcavePolygonShape3D` (`set_faces`).
+  - Add `_is_ready_initialized` guard to prevent double-initialization.
+- Update `neon_city.gd`, `coastal_rush.gd`, `prism_canyon.gd`, and `sky_circuit.gd` to use continuous road generation.
+- Remove redundant manual `._ready()` calls in `chroma_rush_main.gd`.
 
-### Milestone 1: Core Architecture, Color System & Color Swap Engine
-- Define `ChromaConstants` with 6 standard colors (Crimson Red, Cobalt Blue, Solar Yellow, Emerald Green, Neon Magenta, Cyan Blaze) paired with accessibility symbols (Diamond, Hexagon, Star, Triangle, Cross, Circle) and high-contrast patterns.
-- Implement authoritative `ColorSwapEngine`:
-  - Color conservation invariant ($C_A + C_B \to C_B + C_A$, no duplication, no drop).
-  - Eligibility criteria: distance threshold ($d \le 7.5\text{m}$), relative velocity ($\Delta v \le 12\text{m/s}$), parallel alignment angle ($\theta \le 35^\circ$), continuous alignment duration ($t \ge 0.6\text{s}$), swap cooldowns.
-  - Deterministic arbitration of simultaneous swap requests.
-  - Revalidation right before atomic swap execution.
-  - Decoupled signal dispatch for presentation (audio, particles, HUD).
+### Milestone 2: Vehicle Physics, Physical Velocity Telemetry & Collision Hardening
+- **File**: `games/chroma-rush/vehicles/chroma_vehicle.gd`
+- Derive displayed speed (`speed_kph` and `get_speed_kmh()`) from actual physical displacement (`get_real_velocity()`).
+- Reconcile `forward_speed` with collision slide contacts: if blocked in front by an obstacle, clamp `forward_speed` to actual physical movement.
+- Ensure collision shape bottom has adequate clearance above wheels so tires make contact first.
+- Support unstuck/recovery hotkey ([R] / recovery control) and automatic reset on rollover or falling out of world.
 
-### Milestone 2: Vehicle Physics & 6 Visual Archetypes
-- Build `ChromaVehicle` extending `CharacterBody3D`:
-  - Arcade acceleration, braking, top speed, steering curve, drifting mechanics with counter-steer.
-  - 4-wheel suspension raycast simulation with dynamic roll and pitch tilt.
-  - Reliable floor snapping (`floor_snap_length = 0.4`), ground normal alignment.
-  - Inverted rollover detection and auto-righting recovery ($>75^\circ$ tilt or upside-down).
-  - Out-of-bounds boundary raycasting and respawn to nearest track waypoint.
-- Build `VehicleCatalog` and `VehicleVisuals` with 6 distinct vehicles:
-  1. *Apex Striker*: High-speed aerodynamic interceptor.
-  2. *Vortex Drift*: Precision drift tuner with high cornering grip.
-  3. *Titan Vanguard*: Armored muscle cruiser with high mass and wide swap tolerance.
-  4. *Pulse Cyber*: Ultra-responsive electric sprint racer.
-  5. *Dune Nomad*: Raised suspension all-terrain trophy truck.
-  6. *Quantum Phantom*: Low-profile futuristic lev-chassis racer.
+### Milestone 3: Full-Bodied Realistic Automotive Visuals & Authoritative Painting
+- **File**: `games/chroma-rush/vehicles/vehicle_visuals.gd`
+- Separate vehicle visual components into distinct material groups:
+  - `BodyPaintPanels`: Hood, roof, doors, front/rear quarter panels, trunk, front/rear bumper covers.
+  - `GlassPanels`: Windshield, rear window, side windows (translucent dark specular glass).
+  - `TrimPanels`: Carbon fiber front splitter, rear diffuser, spoilers, grille mesh.
+  - `WheelAssemblies`: Rubber tires, alloy rims, center hubs, brake calipers.
+  - `LightingAssemblies`: LED headlights, taillight lightbars.
+- In `apply_gameplay_color(vehicle_visual, color_id)`:
+  - Create dynamic high-gloss/metallic automotive paint material with the authoritative `color_id`.
+  - Apply to ALL `BodyPaintPanels`.
+  - Update accent strips and accessibility 3D billboard symbol with matching tone.
 
-### Milestone 3: AI Systems — Traffic Flow and Rival Racing
-- Implement `ChromaAIDriver` implementing `IVehicleController`:
-  - Translates waypoints into realistic throttle, braking, and steering inputs.
-  - Avoidance raycasts detecting forward obstacles and neighboring vehicles.
-- Implement `TrafficAgent`:
-  - Follows ambient road network loops, navigates intersections with right-of-way yields.
-  - Transports colors around the world for player and rival interaction.
-- Implement `RivalAI`:
-  - State machine: `SEARCHING_COLOR` -> `PURSUING_TARGET` -> `ALIGNING_SWAP` -> `DELIVERING_CHECKPOINT`.
-  - Legitimate atomic color exchange governed by `ColorSwapEngine`.
-  - Difficulty-scaled reaction times, steering smoothing, and interception aggressiveness.
+### Milestone 4: Lighting & Scenery Production Pass
+- **Files**: `chroma_rush_main.gd`, `world_base.gd`, `neon_city.gd`, `coastal_rush.gd`, `prism_canyon.gd`, `sky_circuit.gd`
+- Remove duplicate `WorldEnvironment` and `DirectionalLight3D` in `ChromaRushMain`.
+- Establish balanced single PBR lighting:
+  - Tonemap Filmic, exposure 1.0, subtle glow (bloom 0.08, intensity 0.35).
+  - Sun directional light energy 1.15 with soft shadow bias.
+  - Realistic road marking albedo (`Color(0.85, 0.87, 0.90)`).
+- Populate `Neon City` with varied commercial architecture (`building_a.glb` through `building_garage.glb`), street lightposts, sidewalk barriers, trees, and signage.
+- Enrich `Coastal Rush`, `Prism Canyon`, and `Sky Circuit` with appropriate thematic environment assets.
 
-### Milestone 4: Four Dynamic Worlds & Connected Waypoint Graphs
-- Implement `WorldBase` with spline waypoint graph, checkpoint triggers, collision bounds, dynamic lighting, and optimization (culling, LOD).
-- Build 4 handcrafted worlds:
-  1. **Neon City**: Multi-lane urban highway loop, illuminated skyscrapers, intersections, overpass ramps, tunnel shortcuts.
-  2. **Coastal Rush**: Ocean highway with suspension bridges, seaside village, cliffside hairpins, tunnel through rock formation.
-  3. **Prism Canyon**: Sandstone gorges, tiered mesa switchbacks, stone archways, dust devils, tactical narrow paths.
-  4. **Sky Circuit**: Suspended multi-tier energy tracks high in the clouds, corkscrew ramps, banked curves, sky gantries.
-- Implement `CheckpointGate` with dynamic color emissive pillars, matching symbol projection, and entry velocity detection.
+### Milestone 5: Live Minimap Boundary Containment & HUD Layout Overhaul
+- **Files**: `games/chroma-rush/ui/chroma_mini_map.gd`, `games/chroma-rush/ui/chroma_hud.gd`
+- In `ChromaMiniMap`:
+  - Set `clip_contents = true`.
+  - Clip road line drawings strictly to the radar circular boundary.
+  - Render live player heading arrow, traffic markers with color badges, active checkpoint/target beacon, and radar rings.
+- In `ChromaHUD`:
+  - Reposition `mini_map` below the top objective bar with safe separation (`offset_top = 96`) preventing any overlap with color badges.
+  - Add explicit mission step guidance ("STEP 1: PURSUE & ALIGN", "STEP 2: SWAP COLOR", "STEP 3: DELIVER").
+  - Add device-specific input prompts (Keyboard [E], Gamepad (X), Touch [SWAP]).
+  - Implement target cycling support ([Tab] / Target Icon).
+  - Provide concise player-facing rejection feedback ("TOO FAR", "SPEED MISMATCH", "ALIGN ALONGSIDE").
 
-### Milestone 5: Game Modes, Mission Solvability & Handcrafted Content
-- Implement 4 modes:
-  1. **Color Hunt**: Sequential color delivery objectives with bonus stars for speed and zero swap errors.
-  2. **Chroma Sprint**: Time-attack frenzy chaining color deliveries to add extra time to a countdown clock.
-  3. **Puzzle Drive**: Strict move-limit puzzle challenges (e.g. deliver Color 3 using $\le 2$ swaps in a specific vehicle order).
-  4. **Chroma Championship**: 4-stage tournament series against full grids of rival AI racers with standing points.
-- Build `MissionDatabase` with **24 distinct handcrafted missions** (6 per mode across all 4 worlds) with programmatic solvability verification.
-
-### Milestone 6: Progression, Garage, HUD & Interactive Tutorial
-- Implement `ChromaSaveAdapter` namespacing all career data in `SaveManager`:
-  - Credits, medals, records, unlocks, custom vehicle paints/wheels/decals, active session state.
-- Build `ChromaHUD`:
-  - Color & symbol badges (Current vs Target), alignment lock-on reticle, speedometer, timer, score, combo meter, mini-map, touch controls.
-- Build `ChromaGarage`:
-  - 3D turntable, vehicle selection, paint finish shader (Metallic, Matte, Iridescent, Neon Glow), decals, wheels, stat bars.
-- Build `ChromaTutorial`:
-  - Interactive onboarding: Driving -> Color Identification -> Target Lock-On -> Proximity Alignment -> Executing Swap -> Checkpoint Delivery.
-
-### Milestone 7: Universal Launcher, EventBus, Audio & Input Integration
-- Integrate `ChromaRush` as 9th game in `Launcher` (`launcher.gd`).
-- Add Chroma Rush actions to `InputManager` (`swap`, `target_cycle`).
-- Register Chroma Rush event signals on `EventBus`.
-- Synthesize Chroma Rush sound effects and theme track in `AudioManager`.
-
-### Milestone 8: Automated Verification, Release Gates & Release Packaging
-- Write 7 dedicated test suites in `games/chroma-rush/tests/`:
-  - `test_color_swap_engine.gd`: Invariants, atomic trades, conservation, race conditions.
-  - `test_chroma_vehicle_physics.gd`: Handling, drifting, grounding, rollover recovery across 6 vehicles.
-  - `test_chroma_ai_and_traffic.gd`: Traffic routing, rival legitimate swap execution, checkpoint scoring.
-  - `test_mission_solvability.gd`: Validation of all 24 missions and mathematical solvability.
-  - `test_chroma_modes_and_progression.gd`: All 4 game modes, persistence, save restoration.
-  - `test_chroma_worlds_and_integration.gd`: 4 worlds, navigation meshes, collision boundaries.
-  - `test_chroma_e2e.gd`: Full end-to-end game flow from tutorial to championship victory.
-- Hook into master runner `tests/runner.gd` and verify 100% test pass and >90% coverage.
-- Validate Web export with Cloudflare chunking, Windows, Linux, and Android builds.
+### Milestone 6: Suite-Wide Responsiveness, Performance & Comprehensive Tests
+- Extend test suites in `games/chroma-rush/tests/`:
+  - Verify continuous road geometry without steps/gaps.
+  - Verify physical velocity telemetry (0 km/h when blocked, climbing only when moving).
+  - Verify full-bodied vehicle paint application.
+  - Verify minimap boundary containment and HUD non-overlap.
+  - Verify 4 modes, 24 missions, and restart/retry lifecycle.
+- Run full test suite, verify 100% pass and >90% coverage.
+- Update `IMPLEMENTATION_WALKTHROUGH.md`, `TODO.md`, and `CHANGELOG.md`.

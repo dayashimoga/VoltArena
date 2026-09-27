@@ -24,6 +24,7 @@ var expand_btn: Button
 
 func _init() -> void:
 	custom_minimum_size = Vector2(170, 170)
+	clip_contents = true
 
 func _ready() -> void:
 	# Glassmorphism dark radar container style
@@ -39,10 +40,12 @@ func _ready() -> void:
 	margin.add_theme_constant_override("margin_top", 6)
 	margin.add_theme_constant_override("margin_right", 6)
 	margin.add_theme_constant_override("margin_bottom", 6)
+	margin.clip_contents = true
 	add_child(margin)
 
 	map_canvas = Control.new()
 	map_canvas.custom_minimum_size = Vector2(158, 158)
+	map_canvas.clip_contents = true
 	map_canvas.draw.connect(_on_canvas_draw)
 	map_canvas.gui_input.connect(_on_canvas_input)
 	margin.add_child(map_canvas)
@@ -91,24 +94,56 @@ func _world_to_minimap(w_pos: Vector3, center_pt: Vector2, scale_factor: float) 
 	var ry = diff.x * sin_a + diff.z * cos_a
 	return center_pt + Vector2(rx, ry) * scale_factor
 
+## Mathematically clips a line segment [p1, p2] strictly inside a circle of radius R centered at center.
+## Returns an array of [clipped_p1, clipped_p2] or empty if entire segment is outside.
+func _clip_segment_to_circle(p1: Vector2, p2: Vector2, center: Vector2, radius: float) -> Array:
+	var d = p2 - p1
+	var f = p1 - center
+	var a = d.dot(d)
+	if a < 0.0001:
+		# Points are nearly identical
+		if f.length() <= radius:
+			return [p1, p2]
+		return []
+
+	var b = 2.0 * f.dot(d)
+	var c = f.dot(f) - radius * radius
+	var discriminant = b * b - 4.0 * a * c
+
+	if discriminant < 0.0:
+		# Line does not intersect circle
+		return []
+
+	var sqrt_disc = sqrt(discriminant)
+	var t1 = (-b - sqrt_disc) / (2.0 * a)
+	var t2 = (-b + sqrt_disc) / (2.0 * a)
+
+	var t_start = maxf(0.0, t1)
+	var t_end = minf(1.0, t2)
+
+	if t_start > t_end:
+		return []
+
+	return [p1 + d * t_start, p1 + d * t_end]
+
 func _on_canvas_draw() -> void:
 	if not is_instance_valid(map_canvas):
 		return
 	var size = map_canvas.size
 	var center = size * 0.5
-	var radius = minf(size.x, size.y) * 0.48
+	var radius = minf(size.x, size.y) * 0.46
 	var scale_factor = radius / radar_range
 
-	# Draw radar circular grid rings
-	map_canvas.draw_circle(center, radius, Color(0.04, 0.08, 0.15, 0.5))
+	# Draw radar circular background & grid rings
+	map_canvas.draw_circle(center, radius, Color(0.04, 0.08, 0.15, 0.85))
 	map_canvas.draw_arc(center, radius * 0.5, 0, TAU, 32, Color(0.2, 0.4, 0.6, 0.25), 1.0)
-	map_canvas.draw_arc(center, radius, 0, TAU, 32, Color(0.3, 0.6, 0.9, 0.40), 1.5)
+	map_canvas.draw_arc(center, radius, 0, TAU, 48, Color(0.15, 0.65, 0.95, 0.80), 2.0)
 
-	# Crosshair lines
+	# Crosshair lines clipped to radius
 	map_canvas.draw_line(Vector2(center.x, center.y - radius), Vector2(center.x, center.y + radius), Color(0.2, 0.4, 0.6, 0.2), 1.0)
 	map_canvas.draw_line(Vector2(center.x - radius, center.y), Vector2(center.x + radius, center.y), Color(0.2, 0.4, 0.6, 0.2), 1.0)
 
-	# Draw Authoritative Road Spline Lines
+	# Draw Authoritative Road Spline Lines clipped strictly within radar circle
 	if waypoints.size() > 1:
 		for i in range(waypoints.size()):
 			var p1 = waypoints[i]
@@ -116,12 +151,14 @@ func _on_canvas_draw() -> void:
 			var m1 = _world_to_minimap(p1, center, scale_factor)
 			var m2 = _world_to_minimap(p2, center, scale_factor)
 
-			# Check if either point is within radar bounds
-			if m1.distance_to(center) <= radius * 1.4 or m2.distance_to(center) <= radius * 1.4:
+			var clipped = _clip_segment_to_circle(m1, m2, center, radius - 1.5)
+			if clipped.size() == 2:
+				var c1: Vector2 = clipped[0]
+				var c2: Vector2 = clipped[1]
 				# Road base line
-				map_canvas.draw_line(m1, m2, Color(0.25, 0.32, 0.42, 0.85), 4.5)
+				map_canvas.draw_line(c1, c2, Color(0.22, 0.28, 0.38, 0.90), 4.5)
 				# Road center line
-				map_canvas.draw_line(m1, m2, Color(0.45, 0.55, 0.70, 0.9), 1.5)
+				map_canvas.draw_line(c1, c2, Color(0.45, 0.55, 0.70, 0.95), 1.5)
 
 	# Draw Objective Checkpoint / Target Beacon if active
 	if has_target:
@@ -146,7 +183,8 @@ func _on_canvas_draw() -> void:
 		var is_rival = v.get("is_rival", false)
 		var vm = _world_to_minimap(v_pos, center, scale_factor)
 
-		if vm.distance_to(center) <= radius:
+		# Strictly confine vehicle dots within radar radius
+		if vm.distance_to(center) <= radius - 4.0:
 			var dot_color = ChromaConstants.get_color_value(v_col_id) if v_col_id != ChromaConstants.ChromaColor.NONE else Color(0.8, 0.8, 0.8)
 			if is_rival:
 				# Diamond marker for rivals

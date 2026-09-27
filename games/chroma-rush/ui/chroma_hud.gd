@@ -36,6 +36,8 @@ var swaps_left_label: Label
 var reticle_container: Control
 var alignment_progress_bar: ProgressBar
 var swap_prompt_label: Label
+var guidance_lbl: Label
+var rejection_timer: float = 0.0
 
 # Bottom Left Gauge
 var speedometer_label: Label
@@ -122,9 +124,35 @@ func setup_hud_layout() -> void:
 	mini_map = ChromaMiniMap.new()
 	mini_map.name = "MiniMap"
 	mini_map.offset_left = 24
-	mini_map.offset_top = 80
+	mini_map.offset_top = 96
 	mini_map.map_expand_requested.connect(func(): map_expand_requested.emit())
 	root.add_child(mini_map)
+
+	# --- TOP CENTER: OBJECTIVE GUIDANCE BANNER ---
+	var guidance_box = PanelContainer.new()
+	guidance_box.name = "GuidanceBanner"
+	guidance_box.anchor_left = 0.5
+	guidance_box.anchor_right = 0.5
+	guidance_box.offset_left = -260
+	guidance_box.offset_top = 76
+	guidance_box.offset_right = 260
+	guidance_box.offset_bottom = 104
+	var g_style = StyleBoxFlat.new()
+	g_style.bg_color = Color(0.06, 0.09, 0.16, 0.82)
+	g_style.border_color = Color(0.15, 0.65, 0.95, 0.5)
+	g_style.set_border_width_all(1)
+	g_style.set_corner_radius_all(6)
+	guidance_box.add_theme_stylebox_override("panel", g_style)
+	root.add_child(guidance_box)
+
+	guidance_lbl = Label.new()
+	guidance_lbl.name = "GuidanceLabel"
+	guidance_lbl.text = "LOCATE & SWAP TO TARGET COLOR"
+	guidance_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	guidance_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	guidance_lbl.add_theme_font_size_override("font_size", 12)
+	guidance_lbl.add_theme_color_override("font_color", Color(0.85, 0.92, 1.0))
+	guidance_box.add_child(guidance_lbl)
 
 	# --- CENTER: SWAP LOCK RETICLE ---
 	reticle_container = Control.new()
@@ -261,16 +289,49 @@ func connect_systems(p_vehicle: ChromaVehicle, p_director: MissionDirector, p_en
 		update_target_objective(mission_director.get_current_target_color(), mission_director.get_current_target_gate_id())
 
 func _process(delta: float) -> void:
+	if rejection_timer > 0.0:
+		rejection_timer -= delta
+
 	if player_vehicle and is_instance_valid(player_vehicle):
 		var kph = int(player_vehicle.speed_kph)
 		speedometer_label.text = "%d KM/H" % kph
 		speed_bar.value = kph
 		boost_gauge.value = player_vehicle.drift_charge
 
-	if swap_engine and player_vehicle and is_instance_valid(player_vehicle):
+		# Update top guidance banner based on mission state
+		if mission_director and is_instance_valid(mission_director) and guidance_lbl:
+			var req_col = mission_director.get_current_target_color()
+			var gate_id = mission_director.get_current_target_gate_id()
+			if req_col != ChromaConstants.ChromaColor.NONE:
+				var col_name = ChromaConstants.get_color_name(req_col)
+				if player_vehicle.current_color == req_col:
+					guidance_lbl.text = "✓ COLOR MATCHED: Follow route ribbon to Checkpoint %s" % gate_id.to_upper()
+					guidance_lbl.modulate = Color(0.2, 1.0, 0.4)
+				else:
+					guidance_lbl.text = "STEP 1: Pursue & align with %s vehicle to swap [E / 🎮X]" % col_name.to_upper()
+					guidance_lbl.modulate = Color(0.85, 0.92, 1.0)
+			else:
+				guidance_lbl.text = "FREE DRIVE: Cruise and swap colors freely"
+				guidance_lbl.modulate = Color(0.7, 0.85, 1.0)
+
+	if swap_engine and player_vehicle and is_instance_valid(player_vehicle) and rejection_timer <= 0.0:
 		_update_swap_reticle()
 
 func _update_swap_reticle() -> void:
+	if rejection_timer > 0.0:
+		return
+
+	# If player vehicle already has the required target color, prompt delivery
+	if mission_director and is_instance_valid(mission_director):
+		var req_col = mission_director.get_current_target_color()
+		if req_col != ChromaConstants.ChromaColor.NONE and player_vehicle.current_color == req_col:
+			alignment_progress_bar.value = 1.0
+			alignment_progress_bar.modulate = Color(0.2, 1.0, 0.4)
+			var gate_id = mission_director.get_current_target_gate_id()
+			swap_prompt_label.text = "✓ COLOR MATCHED: Drive to Checkpoint %s" % gate_id.to_upper()
+			swap_prompt_label.modulate = Color(0.2, 1.0, 0.4)
+			return
+
 	var target_info = swap_engine.find_nearest_eligible_target("player", 18.0)
 	var tgt_id = target_info["target_id"]
 
@@ -280,20 +341,20 @@ func _update_swap_reticle() -> void:
 
 		if target_info["eligible"]:
 			alignment_progress_bar.modulate = Color(0.1, 1.0, 0.3)
-			swap_prompt_label.text = "⚡ SWAP READY! [E or TAP SWAP]"
+			swap_prompt_label.text = "⚡ SWAP READY! [E / 🎮X / TAP SWAP]"
 			swap_prompt_label.modulate = Color(0.1, 1.0, 0.3)
 		elif progress > 0.05:
 			alignment_progress_bar.modulate = Color(1.0, 0.8, 0.1)
-			swap_prompt_label.text = "ALIGNING... %d%%" % int(progress * 100)
+			swap_prompt_label.text = "ALIGNING... %d%% (Match speed)" % int(progress * 100)
 			swap_prompt_label.modulate = Color(1.0, 0.8, 0.1)
 		else:
 			alignment_progress_bar.modulate = Color(0.7, 0.7, 0.7)
-			swap_prompt_label.text = "PULL ALONGSIDE TO SWAP [E]"
+			swap_prompt_label.text = "PULL ALONGSIDE TO SWAP [E / 🎮X]"
 			swap_prompt_label.modulate = Color(0.8, 0.8, 0.8)
 	else:
 		alignment_progress_bar.value = 0.0
-		swap_prompt_label.text = "SEARCHING FOR TARGETS..."
-		swap_prompt_label.modulate = Color(0.5, 0.5, 0.6)
+		swap_prompt_label.text = "APPROACH TARGET VEHICLE (<14m)"
+		swap_prompt_label.modulate = Color(0.6, 0.7, 0.8)
 
 func update_player_color(col: int) -> void:
 	if current_color_label:
@@ -345,23 +406,28 @@ func set_alignment_progress(prog: float) -> void:
 		alignment_progress_bar.value = prog
 
 func show_swap_prompt(eligible: bool, target_color: int) -> void:
+	if rejection_timer > 0.0:
+		return
 	if swap_prompt_label:
 		swap_prompt_label.visible = true
 		if eligible:
 			var color_name = ChromaConstants.get_color_name(target_color)
 			var sym = ChromaConstants.get_color_symbol(target_color)
-			swap_prompt_label.text = "⚡ SWAP READY! Press [E] for %s %s" % [sym, color_name]
+			swap_prompt_label.text = "⚡ SWAP READY! Press [E / 🎮X] for %s %s" % [sym, color_name]
 			swap_prompt_label.modulate = Color(0.1, 1.0, 0.3)
 		else:
-			swap_prompt_label.text = "ALIGN ALONGSIDE TARGET TO SWAP [E]"
+			swap_prompt_label.text = "ALIGN ALONGSIDE TARGET TO SWAP [E / 🎮X]"
 			swap_prompt_label.modulate = Color(1.0, 0.8, 0.1)
 
 func hide_swap_prompt() -> void:
+	if rejection_timer > 0.0:
+		return
 	if swap_prompt_label:
-		swap_prompt_label.text = "SEARCHING FOR TARGETS..."
-		swap_prompt_label.modulate = Color(0.5, 0.5, 0.6)
+		swap_prompt_label.text = "APPROACH TARGET VEHICLE (<14m)"
+		swap_prompt_label.modulate = Color(0.6, 0.7, 0.8)
 
 func show_swap_rejected(reason: String) -> void:
+	rejection_timer = 2.0
 	if swap_prompt_label:
 		var msg = "SWAP FAILED"
 		match reason:

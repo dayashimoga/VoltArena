@@ -4,7 +4,7 @@ extends RefCounted
 ## High-fidelity procedural automotive visual builder for Chroma Rush.
 ## Generates realistic production vehicles with authentic proportions,
 ## bodywork, glasshouse canopies, headlights, taillights, alloy wheels with tires,
-## dynamic gameplay color panels, accessibility symbols, and paint finishes.
+## dynamic full-body gameplay automotive paint, accessibility symbols, and finishes.
 
 const ChromaConstants = preload("res://games/chroma-rush/core/chroma_constants.gd")
 const MaterialGenerator = preload("res://shared/graphics/material_generator.gd")
@@ -20,17 +20,17 @@ static func build_vehicle_visual(vehicle_id: String, base_color: int = ChromaCon
 	# 1. Build authentic vehicle bodywork for archetype
 	match vehicle_id:
 		ChromaConstants.VEHICLE_VORTEX:
-			_build_vortex_coupe(body_node, paint_finish)
+			_build_vortex_coupe(body_node, base_color, paint_finish)
 		ChromaConstants.VEHICLE_TITAN:
-			_build_titan_muscle(body_node, paint_finish)
+			_build_titan_muscle(body_node, base_color, paint_finish)
 		ChromaConstants.VEHICLE_PULSE:
-			_build_pulse_ev(body_node, paint_finish)
+			_build_pulse_ev(body_node, base_color, paint_finish)
 		ChromaConstants.VEHICLE_DUNE:
-			_build_dune_truck(body_node, paint_finish)
+			_build_dune_truck(body_node, base_color, paint_finish)
 		ChromaConstants.VEHICLE_QUANTUM:
-			_build_quantum_exotic(body_node, paint_finish)
+			_build_quantum_exotic(body_node, base_color, paint_finish)
 		_: # Apex Striker
-			_build_apex_gt(body_node, paint_finish)
+			_build_apex_gt(body_node, base_color, paint_finish)
 
 	# 2. Build 4 realistic alloy wheels with radial rubber tires
 	_build_wheels(root, vehicle_id)
@@ -47,31 +47,42 @@ static func build_vehicle_visual(vehicle_id: String, base_color: int = ChromaCon
 	symbol_node.position = Vector3(0, 1.85, 0)
 	root.add_child(symbol_node)
 
-	# 5. Apply initial gameplay color to color panels
-	apply_gameplay_color(root, base_color)
+	# 5. Apply authoritative gameplay color to all body paint panels and accents
+	apply_gameplay_color(root, base_color, paint_finish)
 
 	return root
 
-static func apply_gameplay_color(vehicle_visual: Node3D, color_id: int) -> void:
+static func apply_gameplay_color(vehicle_visual: Node3D, color_id: int, finish: String = "metallic") -> void:
 	if not is_instance_valid(vehicle_visual):
 		return
 
 	var col = ChromaConstants.get_color_value(color_id)
+
+	# 1. Authoritative Full-Body Automotive Paint Material
+	var mat_paint = _get_paint_material(finish, col)
+
+	var chassis = vehicle_visual.get_node_or_null("ChassisBody")
+	if chassis:
+		for child in chassis.get_children():
+			if child is MeshInstance3D and child.has_meta("is_body_paint"):
+				child.material_override = mat_paint
+
+	# 2. Update subtle accent lines
 	var panels = vehicle_visual.get_node_or_null("GameplayColorPanels")
 	if panels:
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = col
-		mat.emission_enabled = true
-		mat.emission = col
-		mat.emission_energy_multiplier = 2.4
-		mat.roughness = 0.25
-		mat.metallic = 0.55
+		var mat_accent = StandardMaterial3D.new()
+		mat_accent.albedo_color = col
+		mat_accent.emission_enabled = true
+		mat_accent.emission = col
+		mat_accent.emission_energy_multiplier = 0.9 # Subtle, realistic accent glow
+		mat_accent.roughness = 0.25
+		mat_accent.metallic = 0.60
 
 		for child in panels.get_children():
 			if child is MeshInstance3D:
-				child.material_override = mat
+				child.material_override = mat_accent
 
-	# Update accessibility symbol
+	# 3. Update accessibility symbol
 	var symbol_node = vehicle_visual.get_node_or_null("AccessibilitySymbol") as Label3D
 	if symbol_node:
 		symbol_node.text = ChromaConstants.get_color_symbol(color_id)
@@ -155,57 +166,55 @@ static func _build_wheels(root: Node3D, vehicle_id: String) -> void:
 # ARCHETYPE 1: APEX STRIKER (GT SPORTS COUPE)
 # ==============================================================================
 
-static func _build_apex_gt(body: Node3D, finish: String) -> void:
-	var mat_body = _get_paint_material(finish, Color(0.18, 0.22, 0.28))
+static func _build_apex_gt(body: Node3D, base_color: int, finish: String) -> void:
+	var init_col = ChromaConstants.get_color_value(base_color)
+	var mat_body = _get_paint_material(finish, init_col)
 	var mat_glass = _get_glass_material()
 	var mat_carbon = _get_carbon_material()
 	var mat_chrome = _get_chrome_material()
 	var mat_headlight = _get_headlight_material()
 	var mat_taillight = _get_taillight_material()
 
-	# 1. Main Lower Monocoque Chassis
-	_add_box(body, Vector3(1.78, 0.38, 3.80), Vector3(0, 0.38, 0.0), mat_body)
+	# 1. Main Lower Monocoque Chassis (Painted Body)
+	_add_paint_box(body, Vector3(1.78, 0.38, 3.80), Vector3(0, 0.38, 0.0), mat_body)
 
-	# 2. Sloped Aerodynamic Front Hood (-Z is forward)
-	var hood = _add_box(body, Vector3(1.64, 0.18, 1.35), Vector3(0, 0.44, -1.25), mat_body)
+	# 2. Sloped Aerodynamic Front Hood (Painted Body)
+	var hood = _add_paint_box(body, Vector3(1.64, 0.18, 1.35), Vector3(0, 0.44, -1.25), mat_body)
 	hood.rotation_degrees.x = 11.0
 
 	# 3. Front Bumper with Lower Carbon Splitter
-	_add_box(body, Vector3(1.82, 0.24, 0.45), Vector3(0, 0.26, -1.90), mat_body)
+	_add_paint_box(body, Vector3(1.82, 0.24, 0.45), Vector3(0, 0.26, -1.90), mat_body)
 	_add_box(body, Vector3(1.90, 0.06, 0.50), Vector3(0, 0.14, -1.95), mat_carbon)
-	# Radiator Grille Mesh
 	_add_box(body, Vector3(1.10, 0.16, 0.08), Vector3(0, 0.28, -2.10), mat_carbon)
 
-	# 4. High-Intensity LED Headlights
+	# 4. LED Headlights
 	for side in [-0.62, 0.62]:
 		var hl = _add_box(body, Vector3(0.28, 0.09, 0.20), Vector3(side, 0.44, -1.82), mat_headlight)
 		hl.rotation_degrees.y = -signf(side) * 15.0
 
-	# 5. Cockpit Glasshouse Canopy (Windshield, Roof, Windows)
-	# Cabin Roof
-	_add_box(body, Vector3(1.30, 0.32, 1.45), Vector3(0, 0.88, 0.05), mat_body)
-	# Sloped Windshield
+	# 5. Cockpit Glasshouse Canopy & Cabin Roof (Painted Roof + Glass)
+	_add_paint_box(body, Vector3(1.30, 0.32, 1.45), Vector3(0, 0.88, 0.05), mat_body)
+
 	var win_f = _add_box(body, Vector3(1.28, 0.42, 0.80), Vector3(0, 0.74, -0.65), mat_glass)
 	win_f.rotation_degrees.x = 35.0
-	# Rear Windshield
+
 	var win_r = _add_box(body, Vector3(1.24, 0.36, 0.75), Vector3(0, 0.74, 0.75), mat_glass)
 	win_r.rotation_degrees.x = -28.0
-	# Side Windows
+
 	for side in [-0.66, 0.66]:
 		_add_box(body, Vector3(0.04, 0.34, 1.30), Vector3(side, 0.80, 0.05), mat_glass)
 
-	# 6. Carbon Rear Spoiler Wing with Pylons (+Z is rear)
+	# 6. Carbon Rear Spoiler Wing
 	_add_box(body, Vector3(1.95, 0.06, 0.38), Vector3(0, 1.15, 1.70), mat_carbon)
 	for side in [-0.65, 0.65]:
 		_add_box(body, Vector3(0.06, 0.35, 0.12), Vector3(side, 0.95, 1.68), mat_carbon)
 
-	# 7. Rear Bumper, Diffuser & Taillights
-	_add_box(body, Vector3(1.78, 0.30, 0.40), Vector3(0, 0.38, 1.85), mat_body)
+	# 7. Rear Bumper (Painted) & Taillights
+	_add_paint_box(body, Vector3(1.78, 0.30, 0.40), Vector3(0, 0.38, 1.85), mat_body)
 	_add_box(body, Vector3(1.65, 0.16, 0.35), Vector3(0, 0.22, 1.95), mat_carbon)
 	for side in [-0.58, 0.58]:
 		_add_box(body, Vector3(0.32, 0.08, 0.08), Vector3(side, 0.52, 1.98), mat_taillight)
 
-	# Dual Exhaust Tips
 	for side in [-0.35, 0.35]:
 		var ex = _add_cyl(body, 0.06, 0.06, 0.16, Vector3(side, 0.24, 2.05), mat_chrome)
 		ex.rotation_degrees.x = 90.0
@@ -214,27 +223,29 @@ static func _build_apex_gt(body: Node3D, finish: String) -> void:
 # ARCHETYPE 2: VORTEX DRIFT (TUNER DRIFT COUPE)
 # ==============================================================================
 
-static func _build_vortex_coupe(body: Node3D, finish: String) -> void:
-	var mat_body = _get_paint_material(finish, Color(0.14, 0.18, 0.24))
+static func _build_vortex_coupe(body: Node3D, base_color: int, finish: String) -> void:
+	var init_col = ChromaConstants.get_color_value(base_color)
+	var mat_body = _get_paint_material(finish, init_col)
 	var mat_glass = _get_glass_material()
 	var mat_carbon = _get_carbon_material()
 	var mat_headlight = _get_headlight_material()
 	var mat_taillight = _get_taillight_material()
 
-	# Widebody Tuner Chassis with Flared Fenders
-	_add_box(body, Vector3(1.88, 0.36, 3.75), Vector3(0, 0.36, 0.0), mat_body)
-	# Aggressive Hood with Dual Heat Extractors
-	var hood = _add_box(body, Vector3(1.68, 0.16, 1.30), Vector3(0, 0.42, -1.22), mat_body)
+	# Widebody Tuner Chassis (Painted Body)
+	_add_paint_box(body, Vector3(1.88, 0.36, 3.75), Vector3(0, 0.36, 0.0), mat_body)
+
+	# Aggressive Hood (Painted)
+	var hood = _add_paint_box(body, Vector3(1.68, 0.16, 1.30), Vector3(0, 0.42, -1.22), mat_body)
 	hood.rotation_degrees.x = 10.0
 	_add_box(body, Vector3(0.70, 0.04, 0.40), Vector3(0, 0.48, -1.25), mat_carbon)
 
-	# Extended Front Drift Splitter & Canards
+	# Extended Front Drift Splitter
 	_add_box(body, Vector3(1.96, 0.06, 0.55), Vector3(0, 0.12, -1.95), mat_carbon)
 	for side in [-0.60, 0.60]:
 		_add_box(body, Vector3(0.30, 0.08, 0.18), Vector3(side, 0.40, -1.82), mat_headlight)
 
-	# Low-Profile Cockpit Canopy
-	_add_box(body, Vector3(1.28, 0.30, 1.40), Vector3(0, 0.82, 0.05), mat_body)
+	# Low-Profile Cockpit Canopy (Painted Roof)
+	_add_paint_box(body, Vector3(1.28, 0.30, 1.40), Vector3(0, 0.82, 0.05), mat_body)
 	var win = _add_box(body, Vector3(1.26, 0.40, 0.78), Vector3(0, 0.70, -0.62), mat_glass)
 	win.rotation_degrees.x = 34.0
 	_add_box(body, Vector3(1.24, 0.34, 0.70), Vector3(0, 0.70, 0.72), mat_glass).rotation_degrees.x = -26.0
@@ -251,37 +262,37 @@ static func _build_vortex_coupe(body: Node3D, finish: String) -> void:
 # ARCHETYPE 3: TITAN VANGUARD (HEAVY MUSCLE GT)
 # ==============================================================================
 
-static func _build_titan_muscle(body: Node3D, finish: String) -> void:
-	var mat_body = _get_paint_material(finish, Color(0.24, 0.16, 0.16))
+static func _build_titan_muscle(body: Node3D, base_color: int, finish: String) -> void:
+	var init_col = ChromaConstants.get_color_value(base_color)
+	var mat_body = _get_paint_material(finish, init_col)
 	var mat_glass = _get_glass_material()
 	var mat_carbon = _get_carbon_material()
 	var mat_chrome = _get_chrome_material()
 	var mat_headlight = _get_headlight_material()
 	var mat_taillight = _get_taillight_material()
 
-	# Muscular, Boxy High-Shoulder Chassis
-	_add_box(body, Vector3(1.92, 0.44, 3.90), Vector3(0, 0.42, 0.0), mat_body)
-	# Domed Hood with Massive Supercharger Air Intake
-	var hood = _add_box(body, Vector3(1.74, 0.22, 1.45), Vector3(0, 0.52, -1.25), mat_body)
+	# Muscular Chassis (Painted Body)
+	_add_paint_box(body, Vector3(1.92, 0.44, 3.90), Vector3(0, 0.42, 0.0), mat_body)
+
+	# Domed Hood with Massive Supercharger Intake
+	var hood = _add_paint_box(body, Vector3(1.74, 0.22, 1.45), Vector3(0, 0.52, -1.25), mat_body)
 	hood.rotation_degrees.x = 7.0
 	_add_box(body, Vector3(0.55, 0.14, 0.55), Vector3(0, 0.65, -1.15), mat_chrome)
 
-	# Aggressive Chrome Honeycomb Grille & Bumper
+	# Chrome Grille & Bumper
 	_add_box(body, Vector3(1.50, 0.28, 0.10), Vector3(0, 0.35, -2.00), mat_chrome)
-	# Quad Round Halo Headlights
 	for side in [-0.68, -0.45, 0.45, 0.68]:
 		var hl = _add_cyl(body, 0.08, 0.08, 0.10, Vector3(side, 0.42, -1.98), mat_headlight)
 		hl.rotation_degrees.x = 90.0
 
-	# Fastback Muscle Cabin
-	_add_box(body, Vector3(1.36, 0.35, 1.50), Vector3(0, 0.90, 0.08), mat_body)
+	# Fastback Muscle Cabin (Painted Roof)
+	_add_paint_box(body, Vector3(1.36, 0.35, 1.50), Vector3(0, 0.90, 0.08), mat_body)
 	var win = _add_box(body, Vector3(1.32, 0.44, 0.75), Vector3(0, 0.78, -0.65), mat_glass)
 	win.rotation_degrees.x = 32.0
 	_add_box(body, Vector3(1.30, 0.38, 0.85), Vector3(0, 0.76, 0.85), mat_glass).rotation_degrees.x = -22.0
 
 	# Integrated Ducktail Spoiler
 	_add_box(body, Vector3(1.85, 0.12, 0.25), Vector3(0, 0.72, 1.90), mat_carbon)
-	# Dual Quad Taillights
 	for side in [-0.65, -0.40, 0.40, 0.65]:
 		_add_box(body, Vector3(0.14, 0.10, 0.06), Vector3(side, 0.48, 1.98), mat_taillight)
 
@@ -289,20 +300,22 @@ static func _build_titan_muscle(body: Node3D, finish: String) -> void:
 # ARCHETYPE 4: PULSE CYBER (MODERN HYPER EV)
 # ==============================================================================
 
-static func _build_pulse_ev(body: Node3D, finish: String) -> void:
-	var mat_body = _get_paint_material(finish, Color(0.12, 0.16, 0.22))
+static func _build_pulse_ev(body: Node3D, base_color: int, finish: String) -> void:
+	var init_col = ChromaConstants.get_color_value(base_color)
+	var mat_body = _get_paint_material(finish, init_col)
 	var mat_glass = _get_glass_material()
 	var mat_carbon = _get_carbon_material()
 	var mat_headlight = _get_headlight_material()
 	var mat_taillight = _get_taillight_material()
 
-	# Teardrop Low-Drag Aerodynamic Monocoque
-	_add_box(body, Vector3(1.82, 0.34, 3.80), Vector3(0, 0.35, 0.0), mat_body)
-	# Sloped Low Nose
-	var hood = _add_box(body, Vector3(1.60, 0.16, 1.40), Vector3(0, 0.38, -1.30), mat_body)
+	# Teardrop Low-Drag Monocoque (Painted Body)
+	_add_paint_box(body, Vector3(1.82, 0.34, 3.80), Vector3(0, 0.35, 0.0), mat_body)
+
+	# Sloped Low Nose (Painted)
+	var hood = _add_paint_box(body, Vector3(1.60, 0.16, 1.40), Vector3(0, 0.38, -1.30), mat_body)
 	hood.rotation_degrees.x = 14.0
 
-	# Full-Width Seamless LED Laser Headlight Bar
+	# Full-Width LED Laser Headlight Bar
 	_add_box(body, Vector3(1.65, 0.05, 0.08), Vector3(0, 0.38, -1.96), mat_headlight)
 
 	# Continuous Glass Canopy Roof
@@ -310,23 +323,24 @@ static func _build_pulse_ev(body: Node3D, finish: String) -> void:
 
 	# Active Aero Underfloor Diffuser
 	_add_box(body, Vector3(1.70, 0.14, 0.45), Vector3(0, 0.18, 1.85), mat_carbon)
-	# Thin Horizontal Rear LED Strip
 	_add_box(body, Vector3(1.70, 0.04, 0.06), Vector3(0, 0.52, 1.95), mat_taillight)
 
 # ==============================================================================
 # ARCHETYPE 5: DUNE NOMAD (ALL-TERRAIN TROPHY BUGGY)
 # ==============================================================================
 
-static func _build_dune_truck(body: Node3D, finish: String) -> void:
-	var mat_body = _get_paint_material(finish, Color(0.28, 0.22, 0.16))
+static func _build_dune_truck(body: Node3D, base_color: int, finish: String) -> void:
+	var init_col = ChromaConstants.get_color_value(base_color)
+	var mat_body = _get_paint_material(finish, init_col)
 	var mat_metal = _get_chrome_material()
 	var mat_carbon = _get_carbon_material()
 	var mat_headlight = _get_headlight_material()
 	var mat_taillight = _get_taillight_material()
 
-	# Raised High-Clearance Trophy Chassis
-	_add_box(body, Vector3(1.70, 0.38, 3.40), Vector3(0, 0.52, 0.0), mat_body)
-	# Heavy Steel Bullbar with Front Skid Plate
+	# Raised High-Clearance Trophy Chassis (Painted Body)
+	_add_paint_box(body, Vector3(1.70, 0.38, 3.40), Vector3(0, 0.52, 0.0), mat_body)
+
+	# Steel Bullbar & Skid Plate
 	var skid = _add_box(body, Vector3(1.50, 0.08, 0.85), Vector3(0, 0.32, -1.65), mat_metal)
 	skid.rotation_degrees.x = 24.0
 
@@ -338,39 +352,39 @@ static func _build_dune_truck(body: Node3D, finish: String) -> void:
 	_add_box(body, Vector3(1.46, 0.06, 0.06), Vector3(0, 1.50, -0.65), mat_metal)
 	_add_box(body, Vector3(1.46, 0.06, 0.06), Vector3(0, 1.50, 0.45), mat_metal)
 
-	# Roof-Mounted Quad LED High-Beam Rally Pods
+	# Rally Light Pods
 	for lx in [-0.45, -0.15, 0.15, 0.45]:
 		var pod = _add_cyl(body, 0.06, 0.08, 0.12, Vector3(lx, 1.60, -0.62), mat_headlight)
 		pod.rotation_degrees.x = 90.0
 
-	# Dual Front Bumper Headlights
 	for bx in [-0.55, 0.55]:
 		var hl = _add_cyl(body, 0.08, 0.10, 0.10, Vector3(bx, 0.52, -1.75), mat_headlight)
 		hl.rotation_degrees.x = 90.0
 
-	# Rear High-Mounted Taillight Strip
 	_add_box(body, Vector3(1.20, 0.08, 0.08), Vector3(0, 0.75, 1.70), mat_taillight)
 
 # ==============================================================================
 # ARCHETYPE 6: QUANTUM PHANTOM (LE MANS EXOTIC PROTOTYPE)
 # ==============================================================================
 
-static func _build_quantum_exotic(body: Node3D, finish: String) -> void:
-	var mat_body = _get_paint_material(finish, Color(0.14, 0.14, 0.18))
+static func _build_quantum_exotic(body: Node3D, base_color: int, finish: String) -> void:
+	var init_col = ChromaConstants.get_color_value(base_color)
+	var mat_body = _get_paint_material(finish, init_col)
 	var mat_glass = _get_glass_material()
 	var mat_carbon = _get_carbon_material()
 	var mat_headlight = _get_headlight_material()
 	var mat_taillight = _get_taillight_material()
 
-	# Ultra-Low Prototype Monocoque Chassis
-	_add_box(body, Vector3(1.85, 0.28, 4.10), Vector3(0, 0.30, 0.0), mat_body)
-	# Dual Front Wheel Pontoon Fenders with Air Tunnels
+	# Prototype Monocoque Chassis (Painted Body)
+	_add_paint_box(body, Vector3(1.85, 0.28, 4.10), Vector3(0, 0.30, 0.0), mat_body)
+
+	# Dual Front Wheel Pontoon Fenders (Painted Body)
 	for side in [-0.75, 0.75]:
-		_add_box(body, Vector3(0.35, 0.28, 1.50), Vector3(side, 0.38, -1.30), mat_body)
+		_add_paint_box(body, Vector3(0.35, 0.28, 1.50), Vector3(side, 0.38, -1.30), mat_body)
 		_add_box(body, Vector3(0.18, 0.06, 0.15), Vector3(side, 0.42, -1.95), mat_headlight)
 
-	# Central Needle Nose & Front Carbon Wing
-	_add_box(body, Vector3(0.60, 0.18, 1.40), Vector3(0, 0.30, -1.40), mat_body)
+	# Central Needle Nose (Painted Body) & Front Carbon Wing
+	_add_paint_box(body, Vector3(0.60, 0.18, 1.40), Vector3(0, 0.30, -1.40), mat_body)
 	_add_box(body, Vector3(1.95, 0.05, 0.35), Vector3(0, 0.12, -2.05), mat_carbon)
 
 	# Bubble Canopy Cockpit
@@ -384,7 +398,6 @@ static func _build_quantum_exotic(body: Node3D, finish: String) -> void:
 	_add_box(body, Vector3(2.05, 0.05, 0.45), Vector3(0, 1.15, 1.95), mat_carbon)
 	_add_box(body, Vector3(1.90, 0.04, 0.35), Vector3(0, 0.95, 1.90), mat_carbon)
 
-	# Vertical Rear LED Blades
 	for side in [-0.85, 0.85]:
 		_add_box(body, Vector3(0.04, 0.45, 0.06), Vector3(side, 0.85, 2.05), mat_taillight)
 
@@ -467,24 +480,27 @@ static func _get_paint_material(finish: String, base_tint: Color) -> StandardMat
 	mat.albedo_color = base_tint
 	match finish.to_lower():
 		"matte":
-			mat.metallic = 0.05
-			mat.roughness = 0.82
+			mat.metallic = 0.08
+			mat.roughness = 0.78
 			mat.clearcoat_enabled = false
 		"gloss":
-			mat.metallic = 0.35
+			mat.metallic = 0.45
 			mat.roughness = 0.12
 			mat.clearcoat_enabled = true
-			mat.clearcoat = 0.70
+			mat.clearcoat = 0.85
+			mat.clearcoat_roughness = 0.08
 		"pearl", "iridescent":
-			mat.metallic = 0.75
+			mat.metallic = 0.80
+			mat.roughness = 0.18
+			mat.clearcoat_enabled = true
+			mat.clearcoat = 1.0
+			mat.clearcoat_roughness = 0.06
+		_: # Metallic (Default)
+			mat.metallic = 0.70
 			mat.roughness = 0.22
 			mat.clearcoat_enabled = true
-			mat.clearcoat = 0.95
-		_: # Metallic
-			mat.metallic = 0.88
-			mat.roughness = 0.20
-			mat.clearcoat_enabled = true
-			mat.clearcoat = 0.50
+			mat.clearcoat = 0.80
+			mat.clearcoat_roughness = 0.10
 	return mat
 
 static func _get_glass_material() -> StandardMaterial3D:
@@ -525,6 +541,18 @@ static func _get_taillight_material() -> StandardMaterial3D:
 	mat.emission = Color(1.0, 0.05, 0.08)
 	mat.emission_energy_multiplier = 3.0
 	return mat
+
+static func _add_paint_box(parent: Node3D, size: Vector3, pos: Vector3, mat: Material) -> MeshInstance3D:
+	var mi = MeshInstance3D.new()
+	var mesh = BoxMesh.new()
+	mesh.size = size
+	mi.mesh = mesh
+	mi.material_override = mat
+	mi.position = pos
+	mi.set_meta("is_body_paint", true)
+	mi.add_to_group("body_paint_meshes")
+	parent.add_child(mi)
+	return mi
 
 static func _add_box(parent: Node3D, size: Vector3, pos: Vector3, mat: Material) -> MeshInstance3D:
 	var mi = MeshInstance3D.new()

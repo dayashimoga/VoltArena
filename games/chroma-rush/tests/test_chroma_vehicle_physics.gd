@@ -23,6 +23,8 @@ func run_tests() -> Dictionary:
 	test_drift_mechanic_and_boost()
 	test_rollover_safe_recovery()
 	test_color_sync_and_visual_update()
+	test_speed_derivation_and_physical_telemetry()
+	test_full_body_car_paint_materials()
 
 	return {"passed": passed, "failed": failed}
 
@@ -199,6 +201,53 @@ func test_color_sync_and_visual_update() -> void:
 
 	v.free()
 
+func test_speed_derivation_and_physical_telemetry() -> void:
+	var v = ChromaVehicle.new()
+	v.vehicle_id = ChromaConstants.VEHICLE_APEX
+	v._ready()
+
+	# At rest
+	v.forward_speed = 0.0
+	assert_eq(int(v.get_speed_kmh()), 0, "Rest speed must be 0 km/h")
+
+	# With forward speed
+	v.forward_speed = 20.0
+	assert_eq(int(v.get_speed_kmh()), 72, "20 m/s must report 72 km/h")
+
+	# Test ground clearance: collision box center must sit at Y >= 0.50m
+	var col_shape = v.get_node_or_null("ChromaCollision") as CollisionShape3D
+	assert_true(col_shape != null, "ChromaCollision shape must exist")
+	assert_true(col_shape.position.y >= 0.50, "Collision box must be elevated >= 0.50m for clearance over curbs")
+
+	v.free()
+
+func test_full_body_car_paint_materials() -> void:
+	var v = ChromaVehicle.new()
+	v.vehicle_id = ChromaConstants.VEHICLE_APEX
+	v.paint_finish = "metallic"
+	v.initial_color = ChromaConstants.ChromaColor.CRIMSON
+	v._ready()
+
+	# Verify visual node has body paint nodes in ChassisBody
+	assert_true(v.visual_node != null, "Visual node exists")
+	var chassis = v.visual_node.get_node_or_null("ChassisBody")
+	assert_true(chassis != null, "ChassisBody exists")
+	var paint_boxes: Array[MeshInstance3D] = []
+	for child in chassis.get_children():
+		if child is MeshInstance3D and child.get_meta("is_body_paint", false):
+			paint_boxes.append(child)
+
+	assert_true(paint_boxes.size() >= 3, "Vehicle must have full-bodied paint panels (hood, roof, doors, rear)")
+
+	# Verify paint material is applied with crimson color
+	var first_mat = paint_boxes[0].material_override as StandardMaterial3D
+	assert_true(first_mat != null, "Paint material override must exist")
+	var crimson_val = ChromaConstants.get_color_value(ChromaConstants.ChromaColor.CRIMSON)
+	assert_true(first_mat.albedo_color.is_equal_approx(crimson_val), "Paint panel must match authoritative Crimson Red")
+	assert_true(first_mat.metallic >= 0.5, "Metallic finish must have metallic >= 0.5")
+
+	v.free()
+
 func get_coverage_entries() -> Array:
 	return [
 		["res://games/chroma-rush/vehicles/vehicle_catalog.gd", [
@@ -210,6 +259,7 @@ func get_coverage_entries() -> Array:
 		["res://games/chroma-rush/vehicles/chroma_vehicle.gd", [
 			"_ready", "_physics_process", "apply_catalog_stats", "setup_visuals",
 			"setup_collision_box", "setup_suspension_rays", "set_inputs",
-			"recover_vehicle", "trigger_nitro_boost", "set_color", "set_vehicle_type"
+			"recover_vehicle", "trigger_nitro_boost", "set_color", "set_vehicle_type",
+			"get_speed_kmh"
 		]]
 	]

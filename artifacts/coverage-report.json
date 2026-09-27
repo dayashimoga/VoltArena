@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 92.7970065481759,
+  "overall_coverage_pct": 92.8971962616822,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -190,12 +190,10 @@
       "untested": []
     },
     "res://games/chroma-rush/vehicles/chroma_vehicle.gd": {
-      "coverage_pct": 91.6666666666667,
-      "tested": 11,
+      "coverage_pct": 100,
+      "tested": 12,
       "total": 12,
-      "untested": [
-        "get_speed_kmh"
-      ]
+      "untested": []
     },
     "res://games/chroma-rush/vehicles/vehicle_catalog.gd": {
       "coverage_pct": 100,
@@ -251,9 +249,9 @@
       ]
     },
     "res://games/chroma-rush/worlds/world_base.gd": {
-      "coverage_pct": 64.2857142857143,
-      "tested": 9,
-      "total": 14,
+      "coverage_pct": 66.6666666666667,
+      "tested": 10,
+      "total": 15,
       "untested": [
         "setup_ground_plane",
         "generate_waypoints",
@@ -1051,7 +1049,7 @@
       "untested": []
     }
   },
-  "tested_functions": 992,
-  "timestamp": "2026-09-27T03:11:40",
-  "total_functions": 1069
+  "tested_functions": 994,
+  "timestamp": "2026-09-27T04:18:16",
+  "total_functions": 1070
 }

@@ -915,3 +915,32 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - `export/dist/VoltArena-Linux-x86_64.tar.gz` (93.77 MB)
   - `export/dist/VoltArena-Windows-x86_64.zip` (99.62 MB)
   - `export/dist/VoltArena-Android.apk` (108.73 MB)
+
+## [9.2.0-chroma-rush-continuous-roads-and-forensic-calibration] - 2026-09-27
+### Fixed
+- **Road Geometry & Collision Seams**:
+  - Implemented `build_continuous_road_network()` producing smooth Catmull-Rom spline road ribbons with flush `ConcavePolygonShape3D` trimesh collision.
+  - Replaced vertical 60cm wall curbs with 12cm beveled curb stone that follows outer road curves without crossing driveable lane intersections.
+  - Raised vehicle collision box ground clearance to 25cm (`BoxShape3D(1.75, 0.70, 3.70)` centered at $Y = 0.60\text{m}$), preventing snagging on curbs and inclines.
+  - Removed duplicate manual `_ready()` calls that previously caused double road meshes and overlapping static colliders.
+  - Added manual `[R]` recovery hotkey and automatic stuck recovery (throttle > 0.5, speed < 1 km/h on wall for 2.5s).
+- **Physical Velocity Telemetry & Speedometer**:
+  - Derived `speed_kph` and `get_speed_kmh()` from `get_real_velocity().length() * 3.6` when inside tree.
+  - Reconciled `forward_speed` against slide collision normals so displayed speedometer reflects physical velocity (resolving 0 km/h vs 108 km/h discrepancy).
+- **Washed-Out Scenery & Double Lighting**:
+  - Eliminated duplicate `WorldEnvironment` and `DirectionalLight3D` by disabling main menu environment (`main_env_node.environment = null`) and hiding main light when 3D worlds load.
+  - Calibrated Filmic tone mapping (exposure 1.0), subtle bloom (0.05), PBR dark asphalt roadways, white shoulder lines, and yellow dashed centerlines.
+- **Authoritative Full-Body Automotive Paint**:
+  - Tagged all body panels (hood, roof, doors, fenders, trunk, bumpers) with `is_body_paint` metadata in `VehicleVisuals`.
+  - Applied authoritative PBR automotive lacquer (metallic, gloss, clearcoat) to all body panels matching HUD and radar color badges (resolving blue-gray car with pink trim when HUD says Crimson Red).
+  - Calibrated subtle LED accent emission (0.9x) and separate realistic materials for glass, tires, alloy rims, and carbon trim.
+- **Minimap Line Clipping & Guidance**:
+  - Enabled `clip_contents = true` and mathematical line-circle segment clipping in `ChromaMiniMap` so road lines never escape radar boundaries.
+  - Repositioned minimap to `offset_top = 96`, eliminating overlap with objective badges.
+  - Added mission guidance banner (`STEP 1: Pursue & align with %s vehicle to swap [E / 🎮X]` -> `✓ COLOR MATCHED: Follow route ribbon to Checkpoint %s`).
+  - Added player-facing rejection feedback (`TOO FAR`, `SPEED DIFF`, etc.) with a 2-second hold timer and target cycling (`[TAB]`).
+
+### Verification & Release Gates
+- **Master Test Runner**: **65 test suites, 0 failures (100% pass rate, 79.47s)**.
+- **Function Coverage**: **92.9%** (994 / 1,070 functions tested).
+- **Suite-Wide Integrity**: Zero regressions across all 8 existing games (`arena-fps`, `subway-survival`, `rocket-car`, `kart-racing`, `skybound-odyssey`, `roboforge-arena`, `wildcircuit`, `strike-vector`).

@@ -26,6 +26,7 @@ func run_tests() -> Dictionary:
 	test_checkpoint_gate_trigger_matching()
 	test_checkpoint_gate_trigger_mismatching()
 	test_waypoint_navigation_queries()
+	test_continuous_road_mesh_and_collision()
 
 	return {"passed": passed, "failed": failed}
 
@@ -150,15 +151,34 @@ func test_waypoint_navigation_queries() -> void:
 
 	city.free()
 
+func test_continuous_road_mesh_and_collision() -> void:
+	var city = NeonCity.new()
+	city._ready()
+
+	# Verify continuous road network produces static bodies with ConcavePolygonShape3D
+	var road_body = city.road_container.get_node_or_null("ContinuousRoadNetwork") as StaticBody3D
+	assert_true(road_body != null, "ContinuousRoadNetwork must exist in road container")
+	var col_shape = road_body.get_node_or_null("ContinuousRoadCollision") as CollisionShape3D
+	assert_true(col_shape != null, "ContinuousRoadCollision must exist")
+	assert_true(col_shape.shape is ConcavePolygonShape3D, "Collision shape must be seamless ConcavePolygonShape3D (Trimesh)")
+	var trimesh = col_shape.shape as ConcavePolygonShape3D
+	assert_true(trimesh.get_faces().size() > 100, "Road trimesh must have faces representing all waypoints")
+
+	# Verify visual ribbon
+	var ribbon = road_body.get_node_or_null("RoadMesh") as MeshInstance3D
+	assert_true(ribbon != null, "RoadMesh visual must exist")
+
+	city.free()
+
 func get_coverage_entries() -> Array:
 	return [
 		["res://games/chroma-rush/worlds/checkpoint_gate.gd", [
 			"_ready", "setup_gate_visuals", "setup_gate_collision", "apply_target_color"
 		]],
 		["res://games/chroma-rush/worlds/world_base.gd", [
-			"_ready", "build_world", "setup_lighting", "get_nearest_waypoint_index",
-			"get_waypoint", "get_total_waypoints", "get_checkpoint", "get_checkpoint_by_id",
-			"add_road_segment"
+			"_ready", "build_world", "setup_lighting", "build_continuous_road_network",
+			"get_nearest_waypoint_index", "get_waypoint", "get_total_waypoints",
+			"get_checkpoint", "get_checkpoint_by_id", "add_road_segment"
 		]],
 		["res://games/chroma-rush/worlds/neon_city.gd", [
 			"generate_waypoints", "build_road_mesh", "build_checkpoints", "build_props"

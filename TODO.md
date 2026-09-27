@@ -882,3 +882,34 @@
   - `artifacts/coverage-report.json` (92.8% function coverage)
   - `export/dist/` release packages
   - `IMPLEMENTATION_PLAN.md` and `IMPLEMENTATION_WALKTHROUGH.md`
+
+### [2026-09-27 04:20:00 UTC] - Milestone Update: Forensic Defect Elimination, Continuous Road Ribbons & Realistic Visual Calibration
+- **Status**: COMPLETED
+- **Description**:
+  1. **Road Geometry & Vehicle Collision**:
+     - Built `build_continuous_road_network()` generating Catmull-Rom spline road ribbons with flush `ConcavePolygonShape3D` trimesh collision.
+     - Replaced 60cm vertical walls with 12cm beveled curbs following outer curves without crossing intersecting lanes.
+     - Elevated vehicle collision box to 25cm ground clearance (`BoxShape3D(1.75, 0.70, 3.70)` at $Y = 0.60\text{m}$), preventing snagging.
+     - Removed redundant manual `_ready()` calls that duplicated bodies and colliders in the scene tree.
+     - Added manual `[R]` recovery hotkey and automatic stuck recovery (throttle > 0.5, speed < 1 km/h on wall for 2.5s).
+  2. **Physical Velocity Telemetry**:
+     - Derived `speed_kph` and `get_speed_kmh()` from `get_real_velocity().length() * 3.6`.
+     - Reconciled `forward_speed` against slide collision normals so displayed speedometer reflects physical velocity.
+  3. **Visual Calibration & Lighting**:
+     - Eliminated double lighting by disabling main menu environment (`main_env_node.environment = null`) and hiding main light when 3D worlds load.
+     - Calibrated Filmic tone mapping, subtle bloom (0.05), PBR dark asphalt roadways, white shoulder lines, and yellow dashed centerlines.
+  4. **Full-Bodied Car Paint Architecture**:
+     - Redesigned `VehicleVisuals`: all bodywork panels (hood, roof, doors, fenders, trunk, bumpers) tagged with `is_body_paint`.
+     - `apply_gameplay_color()` applies authoritative PBR automotive lacquer (metallic, gloss, clearcoat) to all body panels matching HUD and radar colors.
+     - Calibrated subtle LED emission (0.9x) and distinct materials for glass, tires, alloy rims, and carbon trim.
+  5. **Minimap Line Clipping & Guidance**:
+     - Enabled `clip_contents = true` and mathematical line-circle clipping in `ChromaMiniMap` so road lines never escape radar boundaries.
+     - Moved minimap to `offset_top = 96`, eliminating overlap with objective badges.
+     - Added mission guidance banner (`STEP 1: Pursue & align with %s vehicle to swap [E / 🎮X]` -> `✓ COLOR MATCHED: Follow route ribbon to Checkpoint %s`).
+     - Added player-facing rejection feedback (`TOO FAR`, `SPEED DIFF`, etc.) with a 2-second hold timer and target cycling (`[TAB]`).
+  6. **Automated Verification**:
+     - Executed master test runner in Podman: **65 test suites, 0 failures (100% pass rate, 79.47s)**.
+     - Repository function coverage: **92.9%** (994 / 1,070 functions).
+- **Evidence**:
+  - `artifacts/test-results.json` (65 suites, 100% pass rate, 92.9% function coverage)
+  - `IMPLEMENTATION_PLAN.md` and `IMPLEMENTATION_WALKTHROUGH.md`

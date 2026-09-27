@@ -31,8 +31,12 @@ var suspension_stiffness: float = 14.0
 var vehicle_mass: float = 1100.0
 var gravity: float = 28.0
 
-# Current State
-var current_color: int = ChromaConstants.ChromaColor.CRIMSON
+var current_color: int = ChromaConstants.ChromaColor.CRIMSON:
+	set(val):
+		current_color = val
+		if visual_node and is_instance_valid(visual_node):
+			VehicleVisuals.apply_gameplay_color(visual_node, current_color, paint_finish)
+		color_changed.emit(current_color)
 var forward_speed: float = 0.0
 var steer_input: float = 0.0
 var throttle_input: float = 0.0
@@ -322,6 +326,13 @@ func _update_physics_movement(delta: float) -> void:
 					forward_speed = maxf(0.0, real_fwd_speed)
 				elif normal.dot(fwd) > 0.35 and forward_speed < 0.0:
 					forward_speed = minf(0.0, real_fwd_speed)
+
+				var collider = slide_col.get_collider()
+				if collider is CharacterBody3D:
+					var push_normal = slide_col.get_normal()
+					push_normal.y = 0.0
+					if push_normal.length_squared() > 0.01:
+						global_position += push_normal.normalized() * 0.05
 	else:
 		position += velocity * delta
 

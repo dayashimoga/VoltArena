@@ -328,28 +328,50 @@ func _update_swap_reticle() -> void:
 			alignment_progress_bar.value = 1.0
 			alignment_progress_bar.modulate = Color(0.2, 1.0, 0.4)
 			var gate_id = mission_director.get_current_target_gate_id()
-			swap_prompt_label.text = "✓ COLOR MATCHED: Drive to Checkpoint %s" % gate_id.to_upper()
+			swap_prompt_label.text = "✓ COLOR MATCHED: Drive through Checkpoint %s" % gate_id.to_upper()
 			swap_prompt_label.modulate = Color(0.2, 1.0, 0.4)
 			return
 
-	var target_info = swap_engine.find_nearest_eligible_target("player", 18.0)
-	var tgt_id = target_info["target_id"]
+	var tgt_id: String = ""
+	var is_eligible: bool = false
+
+	# Objective-guided prioritization: find vehicle carrying required color
+	if mission_director and is_instance_valid(mission_director):
+		var req_col = mission_director.get_current_target_color()
+		if req_col != ChromaConstants.ChromaColor.NONE and player_vehicle.current_color != req_col:
+			var match_id = swap_engine.find_target_with_color("player", req_col)
+			if not match_id.is_empty():
+				var node_b = swap_engine.get_vehicle_node(match_id)
+				if is_instance_valid(node_b):
+					var d = player_vehicle.global_position.distance_to(node_b.global_position)
+					if d < 35.0:
+						tgt_id = match_id
+						var check = swap_engine.evaluate_eligibility("player", tgt_id, false)
+						is_eligible = check.get("eligible", false)
+
+	if tgt_id.is_empty():
+		var target_info = swap_engine.find_nearest_eligible_target("player", 18.0)
+		tgt_id = target_info.get("target_id", "")
+		is_eligible = target_info.get("eligible", false)
 
 	if tgt_id != "":
 		var progress = swap_engine.get_alignment_progress("player", tgt_id)
 		alignment_progress_bar.value = progress
 
-		if target_info["eligible"]:
+		var tgt_color = swap_engine.get_vehicle_color(tgt_id)
+		var color_label = ChromaConstants.format_color_label(tgt_color)
+
+		if is_eligible:
 			alignment_progress_bar.modulate = Color(0.1, 1.0, 0.3)
-			swap_prompt_label.text = "⚡ SWAP READY! [E / 🎮X / TAP SWAP]"
+			swap_prompt_label.text = "⚡ SWAP READY! [%s] [E / 🎮X]" % color_label
 			swap_prompt_label.modulate = Color(0.1, 1.0, 0.3)
 		elif progress > 0.05:
 			alignment_progress_bar.modulate = Color(1.0, 0.8, 0.1)
-			swap_prompt_label.text = "ALIGNING... %d%% (Match speed)" % int(progress * 100)
+			swap_prompt_label.text = "ALIGNING [%s] %d%%" % [color_label, int(progress * 100)]
 			swap_prompt_label.modulate = Color(1.0, 0.8, 0.1)
 		else:
 			alignment_progress_bar.modulate = Color(0.7, 0.7, 0.7)
-			swap_prompt_label.text = "PULL ALONGSIDE TO SWAP [E / 🎮X]"
+			swap_prompt_label.text = "PULL ALONGSIDE [%s] TO SWAP" % color_label
 			swap_prompt_label.modulate = Color(0.8, 0.8, 0.8)
 	else:
 		alignment_progress_bar.value = 0.0

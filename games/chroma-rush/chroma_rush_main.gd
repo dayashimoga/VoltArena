@@ -433,8 +433,22 @@ func _update_swap_eligibility() -> void:
 
 	var target_id = selected_target_id
 	if target_id.is_empty() or not swap_engine.has_vehicle(target_id):
-		var nearest_info = swap_engine.find_nearest_eligible_target("player")
-		target_id = nearest_info.get("target_id", "")
+		# Objective-guided target selection: prioritize vehicle with required mission color
+		var req_col = ChromaConstants.ChromaColor.NONE
+		if is_instance_valid(mission_director):
+			req_col = mission_director.get_current_target_color()
+		if req_col != ChromaConstants.ChromaColor.NONE and player_vehicle.current_color != req_col:
+			var match_id = swap_engine.find_target_with_color("player", req_col)
+			if not match_id.is_empty():
+				var node_tgt = swap_engine.get_vehicle_node(match_id)
+				if is_instance_valid(node_tgt):
+					var dist = player_vehicle.global_position.distance_to(node_tgt.global_position)
+					if dist < 45.0:
+						target_id = match_id
+
+		if target_id.is_empty():
+			var nearest_info = swap_engine.find_nearest_eligible_target("player")
+			target_id = nearest_info.get("target_id", "")
 
 	if not target_id.is_empty() and swap_engine.has_vehicle(target_id):
 		var target_color = swap_engine.get_vehicle_color(target_id)
@@ -637,7 +651,8 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 		var p_next = wps[(wp_idx + 1) % wps.size()]
 		var fwd = (p_next - p_cur).normalized()
 		var right = Vector3.UP.cross(fwd).normalized()
-		var lane_offset = right * (3.0 if (i % 2 == 0) else -3.0)
+		var lane_dist = 3.2 if (i % 2 == 0) else -3.2
+		var lane_offset = right * lane_dist
 		var spawn_pt = p_cur + lane_offset + Vector3(0, 0.4, 0)
 		var basis = Basis(right, Vector3.UP, fwd)
 		veh.global_transform = Transform3D(basis, spawn_pt)
@@ -645,6 +660,7 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 		world_container.add_child(veh)
 
 		var agent = TrafficAgent.new(veh, swap_engine, agent_id, col)
+		agent.driver.desired_lane_offset = lane_dist
 		agent.set_waypoints(wps, wp_idx)
 		traffic_agents.append(agent)
 
@@ -768,9 +784,16 @@ func _on_swap_committed(initiator_id: String, target_id: String, initiator_color
 		bus.chroma_swap_committed.emit(node_a, node_b, initiator_color, target_color)
 
 	if initiator_id == "player" and is_instance_valid(player_vehicle):
-		player_vehicle.current_color = initiator_color
+		player_vehicle.set_color(initiator_color)
 	elif target_id == "player" and is_instance_valid(player_vehicle):
-		player_vehicle.current_color = target_color
+		player_vehicle.set_color(target_color)
+
+	var node_a = swap_engine.get_vehicle_node(initiator_id)
+	var node_b = swap_engine.get_vehicle_node(target_id)
+	if node_a and is_instance_valid(node_a) and node_a is ChromaVehicle and node_a != player_vehicle:
+		node_a.set_color(initiator_color)
+	if node_b and is_instance_valid(node_b) and node_b is ChromaVehicle and node_b != player_vehicle:
+		node_b.set_color(target_color)
 
 func _on_swap_rejected(initiator_id: String, _target_id: String, reason: String) -> void:
 	if initiator_id == "player":

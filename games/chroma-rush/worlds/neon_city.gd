@@ -99,31 +99,72 @@ func build_checkpoints() -> void:
 		checkpoints.append(gate)
 
 func build_props() -> void:
-	# 1. Place real architectural commercial buildings along the city avenues
-	var building_specs = [
-		{"path": "res://assets/models/environment/building_a.glb", "pos": Vector3(-28, 0, -45), "rot": 0.0, "scale": 1.2},
-		{"path": "res://assets/models/environment/building_b.glb", "pos": Vector3(28, 0, -45), "rot": 180.0, "scale": 1.4},
-		{"path": "res://assets/models/environment/building_c.glb", "pos": Vector3(-32, 0, -135), "rot": 90.0, "scale": 1.1},
-		{"path": "res://assets/models/environment/building_d.glb", "pos": Vector3(32, 0, -135), "rot": -90.0, "scale": 1.3},
-		{"path": "res://assets/models/environment/building_b.glb", "pos": Vector3(75, 0, -280), "rot": 0.0, "scale": 1.5},
-		{"path": "res://assets/models/environment/building_a.glb", "pos": Vector3(150, 0, -280), "rot": 0.0, "scale": 1.3},
-		{"path": "res://assets/models/environment/building_c.glb", "pos": Vector3(245, 0, -170), "rot": -90.0, "scale": 1.2},
-		{"path": "res://assets/models/environment/building_d.glb", "pos": Vector3(250, 0, 10), "rot": -90.0, "scale": 1.4},
-		{"path": "res://assets/models/environment/building_garage.glb", "pos": Vector3(115, 0, 145), "rot": 180.0, "scale": 1.2},
-		{"path": "res://assets/models/environment/building_a.glb", "pos": Vector3(-165, 0, 80), "rot": 90.0, "scale": 1.3},
-		{"path": "res://assets/models/environment/building_b.glb", "pos": Vector3(-165, 0, -30), "rot": 90.0, "scale": 1.4},
-		{"path": "res://assets/models/environment/building_c.glb", "pos": Vector3(-65, 0, 45), "rot": 180.0, "scale": 1.1}
+	var glb_paths = [
+		"res://assets/models/environment/building_a.glb",
+		"res://assets/models/environment/building_b.glb",
+		"res://assets/models/environment/building_c.glb",
+		"res://assets/models/environment/building_d.glb",
+		"res://assets/models/environment/building_garage.glb"
 	]
 
-	for spec in building_specs:
-		var b_node = ModelCache.get_model(spec["path"])
-		if not b_node:
-			# Fallback to realistic procedural building block
-			b_node = _build_procedural_commercial_block(spec["scale"] * 30.0, spec["scale"] * 18.0)
-		b_node.position = spec["pos"]
-		b_node.rotation_degrees.y = spec["rot"]
-		b_node.scale = Vector3.ONE * spec["scale"]
-		props_container.add_child(b_node)
+	# 1. Procedurally line BOTH sides of all avenue segments with realistic buildings and towers
+	var n_wp = waypoints.size()
+	for i in range(n_wp):
+		var p1 = waypoints[i]
+		var p2 = waypoints[(i + 1) % n_wp]
+		var seg_vec = p2 - p1
+		var seg_len = seg_vec.length()
+		if seg_len < 12.0:
+			continue
+		var dir = seg_vec.normalized()
+		var right = Vector3(-dir.z, 0, dir.x).normalized()
+		var rot_base = rad_to_deg(atan2(-dir.x, -dir.z))
+
+		# Step every 26-32 meters along this segment
+		var num_slots = max(1, int(seg_len / 28.0))
+		var step = seg_len / float(num_slots)
+
+		for s in range(num_slots):
+			var dist_along = (float(s) + 0.5) * step
+			var center_pt = p1 + dir * dist_along
+
+			# Left Side Building
+			var setback_l = 15.5 + float((i + s) % 3) * 2.5
+			var pos_l = center_pt - right * setback_l
+			pos_l.y = p1.y
+			var model_idx_l = (i * 3 + s) % glb_paths.size()
+			var b_l = ModelCache.get_model(glb_paths[model_idx_l])
+			if not b_l:
+				b_l = _build_procedural_commercial_block(28.0 + float((i + s) % 5) * 8.0, 22.0)
+			b_l.position = pos_l
+			b_l.rotation_degrees.y = rot_base + 90.0
+			b_l.scale = Vector3(1.3, 1.3, 1.3)
+			props_container.add_child(b_l)
+
+			# Right Side Building
+			var setback_r = 15.5 + float((i + s + 1) % 3) * 2.5
+			var pos_r = center_pt + right * setback_r
+			pos_r.y = p1.y
+			var model_idx_r = (i * 3 + s + 2) % glb_paths.size()
+			var b_r = ModelCache.get_model(glb_paths[model_idx_r])
+			if not b_r:
+				b_r = _build_procedural_commercial_block(32.0 + float((i + s + 2) % 4) * 9.0, 20.0)
+			b_r.position = pos_r
+			b_r.rotation_degrees.y = rot_base - 90.0
+			b_r.scale = Vector3(1.3, 1.3, 1.3)
+			props_container.add_child(b_r)
+
+			# Landscaped Street Trees along sidewalk verge
+			if s % 2 == 0 and p1.y < 1.0:
+				var tree_l = _build_street_tree()
+				tree_l.position = center_pt - right * 9.8
+				tree_l.position.y = p1.y
+				props_container.add_child(tree_l)
+
+				var tree_r = _build_street_tree()
+				tree_r.position = center_pt + right * 9.8
+				tree_r.position.y = p1.y
+				props_container.add_child(tree_r)
 
 	# 2. Place street light posts along sidewalks
 	for i in range(waypoints.size()):
@@ -133,7 +174,7 @@ func build_props() -> void:
 		var right = Vector3(-dir.z, 0, dir.x).normalized()
 
 		for side in [-1.0, 1.0]:
-			var lamp_pos = wp + right * (side * 10.2) + Vector3(0.0, 0.1, 0.0)
+			var lamp_pos = wp + right * (side * 9.8) + Vector3(0.0, 0.1, 0.0)
 			var lamp = ModelCache.get_model("res://assets/models/environment/road_lightposts.glb")
 			if not lamp:
 				lamp = _build_procedural_streetlight()
@@ -169,6 +210,51 @@ func _create_barrier(pos: Vector3, dir: Vector3, length: float) -> StaticBody3D:
 
 	return sb
 
+func _build_street_tree() -> Node3D:
+	var root = Node3D.new()
+	# Tree Trunk
+	var trunk_mi = MeshInstance3D.new()
+	var cyl = CylinderMesh.new()
+	cyl.top_radius = 0.14
+	cyl.bottom_radius = 0.18
+	cyl.height = 3.6
+	trunk_mi.mesh = cyl
+	var mat_trunk = StandardMaterial3D.new()
+	mat_trunk.albedo_color = Color(0.28, 0.20, 0.15)
+	mat_trunk.roughness = 0.92
+	mat_trunk.metallic = 0.02
+	trunk_mi.material_override = mat_trunk
+	trunk_mi.position = Vector3(0, 1.8, 0)
+	root.add_child(trunk_mi)
+
+	# Tree Foliage Crown (Lush Organic Green)
+	var crown_mi = MeshInstance3D.new()
+	var sph = SphereMesh.new()
+	sph.radius = 1.35
+	sph.height = 2.4
+	crown_mi.mesh = sph
+	var mat_crown = StandardMaterial3D.new()
+	mat_crown.albedo_color = Color(0.14, 0.44, 0.20)
+	mat_crown.roughness = 0.82
+	mat_crown.metallic = 0.0
+	crown_mi.material_override = mat_crown
+	crown_mi.position = Vector3(0, 4.0, 0)
+	root.add_child(crown_mi)
+
+	# Planter concrete rim
+	var rim_mi = MeshInstance3D.new()
+	var rim_mesh = BoxMesh.new()
+	rim_mesh.size = Vector3(1.2, 0.15, 1.2)
+	rim_mi.mesh = rim_mesh
+	var mat_rim = StandardMaterial3D.new()
+	mat_rim.albedo_color = Color(0.50, 0.52, 0.54)
+	mat_rim.roughness = 0.88
+	rim_mi.material_override = mat_rim
+	rim_mi.position = Vector3(0, 0.08, 0)
+	root.add_child(rim_mi)
+
+	return root
+
 func _build_procedural_commercial_block(height: float, width: float) -> Node3D:
 	var root = Node3D.new()
 	var mi = MeshInstance3D.new()
@@ -177,14 +263,14 @@ func _build_procedural_commercial_block(height: float, width: float) -> Node3D:
 	mi.mesh = box
 
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.24, 0.28, 0.35)
-	mat.roughness = 0.5
-	mat.metallic = 0.3
+	mat.albedo_color = Color(0.22, 0.25, 0.30)
+	mat.roughness = 0.55
+	mat.metallic = 0.35
 	mi.material_override = mat
 	mi.position = Vector3(0, height * 0.5, 0)
 	root.add_child(mi)
 
-	# Window bands
+	# Glass window bands
 	var floors = int(height / 4.0)
 	for f in range(floors):
 		var w_mi = MeshInstance3D.new()
@@ -192,9 +278,11 @@ func _build_procedural_commercial_block(height: float, width: float) -> Node3D:
 		w_box.size = Vector3(width + 0.1, 1.4, width * 0.9 + 0.1)
 		w_mi.mesh = w_box
 		var w_mat = StandardMaterial3D.new()
-		w_mat.albedo_color = Color(0.70, 0.85, 0.95)
-		w_mat.metallic = 0.85
-		w_mat.roughness = 0.15
+		w_mat.albedo_color = Color(0.35, 0.55, 0.70)
+		w_mat.metallic = 0.90
+		w_mat.roughness = 0.12
+		w_mat.clearcoat_enabled = true
+		w_mat.clearcoat = 0.9
 		w_mi.material_override = w_mat
 		w_mi.position = Vector3(0, float(f) * 4.0 + 2.0, 0)
 		root.add_child(w_mi)

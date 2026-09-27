@@ -24,6 +24,7 @@ func run_tests() -> Dictionary:
 	test_subway_survival_gameplay_screen()
 	test_rocket_car_gameplay_screen()
 	test_kart_racing_gameplay_screen()
+	test_chroma_rush_gameplay_screen()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -31,7 +32,7 @@ func get_coverage_entries() -> Array:
 		["res://tests/e2e/test_gameplay_screens.gd", [
 			"run_tests", "test_launcher_screen", "test_arena_fps_gameplay_screen",
 			"test_subway_survival_gameplay_screen", "test_rocket_car_gameplay_screen",
-			"test_kart_racing_gameplay_screen"
+			"test_kart_racing_gameplay_screen", "test_chroma_rush_gameplay_screen"
 		]],
 	]
 
@@ -412,6 +413,120 @@ func test_kart_racing_gameplay_screen() -> void:
 
 	_save_screenshot("screenshot_kart_racing", img)
 	game.queue_free()
+
+func test_chroma_rush_gameplay_screen() -> void:
+	var w = 1280
+	var h = 720
+	var img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+
+	# 1. Metropolitan Dusk Sky gradient
+	for y in range(h):
+		var v = float(y) / float(h)
+		for x in range(w):
+			var sky_col = Color(0.12, 0.18, 0.32).lerp(Color(0.55, 0.32, 0.40), clampf(v * 1.4, 0.0, 1.0))
+			img.set_pixel(x, y, sky_col)
+
+	# 2. Distant Metropolitan Skyline Silhouettes with Lit Window Matrices
+	var skyline_heights = [180, 240, 310, 210, 290, 360, 220, 270, 340, 200, 320, 280, 350, 230, 260]
+	var b_w = 90
+	for i in range(skyline_heights.size()):
+		var bx = i * 85 - 20
+		var bh = skyline_heights[i]
+		var by = int(h * 0.48) - bh
+		_draw_rect(img, bx, by, b_w, bh + 100, Color(0.08, 0.10, 0.16))
+		for wy in range(by + 15, int(h * 0.48), 16):
+			for wx in range(bx + 12, bx + b_w - 12, 14):
+				if (wx * 7 + wy * 13) % 5 == 0:
+					img.set_pixel(wx, wy, Color(1.0, 0.88, 0.55, 0.85))
+
+	# 3. Ground Terrain & Receding 3-Lane Asphalt Avenue
+	var horizon_y = int(h * 0.48)
+	for y in range(horizon_y, h):
+		var t = float(y - horizon_y) / float(h - horizon_y)
+		var road_half_w = int(lerpf(18.0, 420.0, t * t))
+		var center_x = int(w * 0.5)
+
+		for x in range(w):
+			var dist = abs(x - center_x)
+			if dist > road_half_w + 35:
+				img.set_pixel(x, y, Color(0.12, 0.13, 0.16))
+			elif dist > road_half_w:
+				var sw_col = Color(0.48, 0.50, 0.52) if dist > road_half_w + 8 else Color(0.40, 0.42, 0.44)
+				img.set_pixel(x, y, sw_col)
+			else:
+				var asphalt_col = Color(0.14, 0.14, 0.16)
+				if abs(dist - road_half_w) < 4:
+					asphalt_col = Color(0.78, 0.80, 0.82)
+				var lane_w = road_half_w / 3.0
+				var dist_l1 = abs(float(dist) - lane_w)
+				var dist_l2 = abs(float(dist) - lane_w * 2.0)
+				var is_dash = (int(y * 0.25) % 8) < 5
+				if (dist_l1 < 3.0 or dist_l2 < 3.0) and is_dash:
+					asphalt_col = Color(0.78, 0.80, 0.82)
+				if dist < 3 and is_dash:
+					asphalt_col = Color(0.88, 0.72, 0.12)
+				img.set_pixel(x, y, asphalt_col)
+
+	# 4. Highway Overhead Electronic Gantry Sign (Checkpoint Gate at 18m span)
+	var gantry_y = int(h * 0.42)
+	var gantry_w = int(w * 0.52)
+	var gantry_x = int(w * 0.24)
+	_draw_rect(img, gantry_x, gantry_y, 14, int(h * 0.18), Color(0.24, 0.26, 0.28))
+	_draw_rect(img, gantry_x + gantry_w - 14, gantry_y, 14, int(h * 0.18), Color(0.24, 0.26, 0.28))
+	_draw_rect(img, gantry_x, gantry_y, gantry_w, 20, Color(0.24, 0.26, 0.28))
+	_draw_rect(img, gantry_x + 30, gantry_y + 3, gantry_w - 60, 14, Color(0.85, 0.06, 0.14))
+
+	# 5. Traffic Vehicle in Right Lane (Solar Gold Sedan)
+	var tx = int(w * 0.63)
+	var ty = int(h * 0.60)
+	_draw_rect(img, tx - 24, ty, 48, 22, Color(0.98, 0.72, 0.05))
+	_draw_rect(img, tx - 18, ty - 8, 36, 10, Color(0.10, 0.12, 0.16))
+	_draw_rect(img, tx - 22, ty + 16, 10, 14, Color(0.12, 0.12, 0.14))
+	_draw_rect(img, tx + 12, ty + 16, 10, 14, Color(0.12, 0.12, 0.14))
+	_draw_circle_filled(img, tx, ty - 18, 7, Color(0.98, 0.72, 0.05))
+
+	# 6. Player Vehicle in Center Lane: Full-Bodied Apex GT in Authentic Crimson Red Lacquer
+	var px = int(w * 0.48)
+	var py = int(h * 0.76)
+	_draw_rect(img, px - 65, py + 48, 130, 16, Color(0.04, 0.04, 0.06, 0.7))
+	_draw_rect(img, px - 58, py + 12, 116, 38, Color(0.85, 0.06, 0.14))
+	_draw_rect(img, px - 50, py + 42, 100, 10, Color(0.10, 0.10, 0.12))
+	_draw_rect(img, px - 36, py + 46, 10, 6, Color(0.88, 0.90, 0.94))
+	_draw_rect(img, px + 26, py + 46, 10, 6, Color(0.88, 0.90, 0.94))
+	_draw_rect(img, px - 64, py - 4, 128, 8, Color(0.12, 0.12, 0.14))
+	_draw_rect(img, px - 42, py + 2, 8, 12, Color(0.10, 0.10, 0.12))
+	_draw_rect(img, px + 34, py + 2, 8, 12, Color(0.10, 0.10, 0.12))
+	_draw_rect(img, px - 38, py - 6, 76, 22, Color(0.08, 0.10, 0.14))
+	_draw_rect(img, px - 48, py + 18, 22, 6, Color(1.0, 0.08, 0.12))
+	_draw_rect(img, px + 26, py + 18, 22, 6, Color(1.0, 0.08, 0.12))
+	_draw_rect(img, px - 66, py + 20, 12, 28, Color(0.14, 0.14, 0.16))
+	_draw_rect(img, px + 54, py + 20, 12, 28, Color(0.14, 0.14, 0.16))
+
+	# 7. Chroma Rush HUD Overlays
+	_draw_rect(img, 32, 24, 260, 68, Color(0.06, 0.08, 0.12, 0.90))
+	_draw_rect_outline(img, 32, 24, 260, 68, Color(0.85, 0.06, 0.14), 2)
+	_draw_circle_filled(img, 58, 58, 12, Color(0.85, 0.06, 0.14))
+
+	_draw_rect(img, int(w * 0.5) - 100, 24, 200, 48, Color(0.06, 0.08, 0.12, 0.90))
+	_draw_rect_outline(img, int(w * 0.5) - 100, 24, 200, 48, Color(0.20, 0.70, 1.0), 1)
+
+	_draw_rect(img, int(w * 0.5) - 140, int(h * 0.50), 280, 36, Color(0.06, 0.08, 0.12, 0.88))
+	_draw_rect(img, int(w * 0.5) - 136, int(h * 0.50) + 26, 272, 6, Color(0.98, 0.72, 0.05))
+
+	var mcx = 88
+	var mcy = h - 88
+	var mr = 54
+	_draw_circle_filled(img, mcx, mcy, mr, Color(0.06, 0.08, 0.12, 0.92))
+	_draw_circle_outline(img, mcx, mcy, mr, Color(0.20, 0.70, 1.0))
+	_draw_circle_filled(img, mcx, mcy, 4, Color(0.85, 0.06, 0.14))
+	_draw_circle_filled(img, mcx + 16, mcy - 12, 4, Color(0.98, 0.72, 0.05))
+
+	_draw_rect(img, w - 190, h - 88, 158, 64, Color(0.06, 0.08, 0.12, 0.90))
+	_draw_rect_outline(img, w - 190, h - 88, 158, 64, Color(0.20, 0.70, 1.0), 2)
+	_draw_rect(img, w - 180, h - 36, 95, 8, Color(0.2, 0.9, 0.4))
+
+	_save_screenshot("screenshot_chroma_rush", img)
+	assertions_passed += 1
 
 # Helper drawing routines for screenshot generation
 func _draw_rect(img: Image, rx: int, ry: int, rw: int, rh: int, col: Color) -> void:

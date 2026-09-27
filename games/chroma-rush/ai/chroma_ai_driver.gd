@@ -87,8 +87,8 @@ func update_driving(delta: float) -> void:
 	var avoidance_steer = _compute_obstacle_avoidance()
 	if absf(avoidance_steer) > 0.1:
 		steer = clampf(steer + avoidance_steer, -1.0, 1.0)
-		throttle *= 0.6
-		brake = maxf(brake, 0.3)
+		throttle = 0.0
+		brake = maxf(brake, 0.75)
 
 	# Feed inputs to vehicle controller
 	vehicle.set_inputs(steer, throttle, brake, need_drift, use_boost)
@@ -104,26 +104,27 @@ func _compute_obstacle_avoidance() -> float:
 	var origin = vehicle.global_position + Vector3(0, 0.6, 0)
 	var forward = -vehicle.global_transform.basis.z.normalized()
 	var right = vehicle.global_transform.basis.x.normalized()
+	var mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES
 
 	# Cast forward center, left, and right rays
 	var ray_center = origin + forward * obstacle_lookahead
-	var query_center = PhysicsRayQueryParameters3D.create(origin, ray_center, GameConstants.LAYER_WORLD | GameConstants.LAYER_PLAYER | GameConstants.LAYER_ENEMIES, [vehicle.get_rid()])
+	var query_center = PhysicsRayQueryParameters3D.create(origin, ray_center, mask, [vehicle.get_rid()])
 	var hit_center = space_state.intersect_ray(query_center)
 
 	if hit_center:
 		# Something ahead, check left and right to pick avoidance direction
-		var ray_left = origin + (forward - right * 0.5).normalized() * (obstacle_lookahead * 0.7)
-		var query_left = PhysicsRayQueryParameters3D.create(origin, ray_left, GameConstants.LAYER_WORLD, [vehicle.get_rid()])
+		var ray_left = origin + (forward - right * 0.6).normalized() * (obstacle_lookahead * 0.75)
+		var query_left = PhysicsRayQueryParameters3D.create(origin, ray_left, mask, [vehicle.get_rid()])
 		var hit_left = space_state.intersect_ray(query_left)
 
-		var ray_right = origin + (forward + right * 0.5).normalized() * (obstacle_lookahead * 0.7)
-		var query_right = PhysicsRayQueryParameters3D.create(origin, ray_right, GameConstants.LAYER_WORLD, [vehicle.get_rid()])
+		var ray_right = origin + (forward + right * 0.6).normalized() * (obstacle_lookahead * 0.75)
+		var query_right = PhysicsRayQueryParameters3D.create(origin, ray_right, mask, [vehicle.get_rid()])
 		var hit_right = space_state.intersect_ray(query_right)
 
 		if not hit_right:
-			return 0.8 # Steer right
+			return 0.85 # Steer right into open lane
 		elif not hit_left:
-			return -0.8 # Steer left
+			return -0.85 # Steer left into open lane
 		else:
 			return 1.0 # Hard steer right
 

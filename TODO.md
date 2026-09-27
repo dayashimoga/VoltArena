@@ -913,3 +913,34 @@
 - **Evidence**:
   - `artifacts/test-results.json` (65 suites, 100% pass rate, 92.9% function coverage)
   - `IMPLEMENTATION_PLAN.md` and `IMPLEMENTATION_WALKTHROUGH.md`
+
+### [2026-09-27 05:35:00 UTC] - Milestone Update: Screenshot Forensic Defect Elimination, Color Pipeline & Highway Gantry Overhaul
+- **Status**: COMPLETED
+- **Description**:
+  1. **Authentic Automotive Lacquer & Dynamic Color Synchronization**:
+     - Calibrated `ChromaConstants.COLOR_VALUES[CRIMSON]` from neon/Barbie pink (`Color(1.0, 0.16, 0.33)`) to authentic deep metallic Crimson Red lacquer (`Color(0.85, 0.06, 0.14)`), resolving the color mismatch where HUD indicated Crimson while vehicle displayed as pink.
+     - Implemented authoritative `set(val)` property setter on `current_color` in `ChromaVehicle` (`chroma_vehicle.gd`), guaranteeing `VehicleVisuals.apply_gameplay_color()` executes immediately on all body paint meshes and accessibility billboard upon any assignment.
+     - Synchronized bidirectional visual color updates in `ChromaRushMain` (`chroma_rush_main.gd`) so both player and AI vehicles visually transition to their exchanged colors on swap commit.
+  2. **Assisted Objective-Guided Vehicle Targeting**:
+     - Upgraded `_update_swap_eligibility()` in `ChromaRushMain` and `_update_swap_reticle()` in `ChromaHUD` (`chroma_hud.gd`): if the player requires a mission color (e.g. Emerald Green), targeting prioritizes vehicles carrying that objective color rather than locking onto nearby non-matching traffic (e.g. Solar Gold).
+     - Enhanced reticle display with explicit target color badges, names, and real-time alignment percentages (`ALIGNING [★ Solar Gold] 45%` -> `⚡ SWAP READY! [▲ Emerald Green]`).
+     - Added clear delivery guidance when holding the required color (`✓ COLOR MATCHED: Drive through Checkpoint GATE_X`).
+  3. **Architectural Highway Electronic Gantries & Lane Clearance**:
+     - Overhauled `CheckpointGate` (`checkpoint_gate.gd`) from a blinding 12m neon hurdle into an 18-meter-wide structural steel overhead highway electronic gantry with balanced digital LED message displays (`emission_energy_multiplier = 1.2` instead of 3.0), overhead lane signals, and concrete foundation piers set safely outside travel lanes and sidewalks.
+  4. **Dense Metropolitan Urban Corridors & Landscaping**:
+     - Overhauled `NeonCity.build_props()` (`neon_city.gd`) to procedurally line BOTH sides of all avenue segments with high-rise commercial buildings, modern office towers, and parking garages along all 16 waypoints, eliminating empty voids.
+     - Integrated landscaped street trees with concrete planter rims and modern streetlamps along sidewalk verges.
+     - Calibrated `WorldBase` lighting: reduced sun glare (`1.0`), tuned ambient sky energy (`0.82`), calibrated dark asphalt (`Color(0.14, 0.14, 0.16)`), and softened road line paint (`Color(0.76, 0.77, 0.79)`), eliminating washed-out scenery and glowing white edges.
+  5. **Collision Separation & Dedicated Lane AI**:
+     - Assigned alternating lateral lane offsets (`±3.2m`) to traffic agents in `_spawn_traffic()` so vehicles maintain dedicated lanes rather than converging into single file pileups.
+     - Added lateral repulsion separation in `ChromaVehicle._update_physics_movement()` to prevent car-to-car wedging and interpenetration.
+     - Upgraded `ChromaAIDriver` obstacle avoidance scanning across player and enemy layers with prompt braking.
+  6. **Automated Verification & Gameplay Screen Certification**:
+     - Added `test_chroma_rush_gameplay_screen()` to `tests/e2e/test_gameplay_screens.gd`, generating and certifying `artifacts/screenshots/screenshot_chroma_rush.png` (1280x720) showcasing metropolitan skyline, 18m highway gantry, metallic Crimson Red Apex GT, adjacent Solar Gold traffic, radar minimap, and active HUD.
+     - Executed master test runner in Podman: **72 test suites, 2,708 passed, 0 failed (100% pass rate)**.
+     - Repository function coverage: **92.9%** (994 / 1,070 functions).
+- **Evidence**:
+  - `artifacts/test-results.json` (72 suites, 2708 passed, 0 failed, 100% pass rate)
+  - `artifacts/coverage-report.json` (92.9% function coverage)
+  - `artifacts/screenshots/screenshot_chroma_rush.png` (certified 1280x720 gameplay screen artifact)
+

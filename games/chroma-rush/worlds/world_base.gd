@@ -59,28 +59,28 @@ func _ready() -> void:
 
 func _init_materials() -> void:
 	mat_asphalt = StandardMaterial3D.new()
-	mat_asphalt.albedo_color = Color(0.16, 0.16, 0.18) # Calibrated realistic dark asphalt
-	mat_asphalt.roughness = 0.82
-	mat_asphalt.metallic = 0.04
+	mat_asphalt.albedo_color = Color(0.14, 0.14, 0.16) # Rich dark textured asphalt
+	mat_asphalt.roughness = 0.85
+	mat_asphalt.metallic = 0.02
 
 	mat_curb = StandardMaterial3D.new()
-	mat_curb.albedo_color = Color(0.52, 0.53, 0.55) # Paved concrete curb
-	mat_curb.roughness = 0.88
-	mat_curb.metallic = 0.02
+	mat_curb.albedo_color = Color(0.48, 0.49, 0.50) # Neutral concrete curb
+	mat_curb.roughness = 0.90
+	mat_curb.metallic = 0.01
 
 	mat_sidewalk = StandardMaterial3D.new()
-	mat_sidewalk.albedo_color = Color(0.58, 0.60, 0.62) # Concrete sidewalk slabs
-	mat_sidewalk.roughness = 0.85
-	mat_sidewalk.metallic = 0.02
+	mat_sidewalk.albedo_color = Color(0.50, 0.52, 0.54) # Concrete sidewalk pavers
+	mat_sidewalk.roughness = 0.88
+	mat_sidewalk.metallic = 0.01
 
 	mat_marking_white = StandardMaterial3D.new()
-	mat_marking_white.albedo_color = Color(0.85, 0.86, 0.88) # Calibrated non-washed-out white
-	mat_marking_white.roughness = 0.65
+	mat_marking_white.albedo_color = Color(0.76, 0.77, 0.79) # Calibrated non-glaring matte road paint
+	mat_marking_white.roughness = 0.80
 	mat_marking_white.metallic = 0.0
 
 	mat_marking_yellow = StandardMaterial3D.new()
-	mat_marking_yellow.albedo_color = Color(0.92, 0.78, 0.15) # Calibrated highway yellow
-	mat_marking_yellow.roughness = 0.65
+	mat_marking_yellow.albedo_color = Color(0.88, 0.72, 0.12) # Warm matte highway yellow
+	mat_marking_yellow.roughness = 0.75
 	mat_marking_yellow.metallic = 0.0
 
 func build_world() -> void:
@@ -100,24 +100,24 @@ func setup_lighting() -> void:
 
 		var sky = Sky.new()
 		var sky_mat = ProceduralSkyMaterial.new()
-		sky_mat.sky_top_color = Color(0.22, 0.44, 0.78)       # Natural daylight azure
-		sky_mat.sky_horizon_color = Color(0.68, 0.76, 0.85)   # Natural atmospheric haze
-		sky_mat.ground_bottom_color = Color(0.16, 0.18, 0.20) # Terrain ground tone
-		sky_mat.ground_horizon_color = Color(0.55, 0.65, 0.75)
+		sky_mat.sky_top_color = Color(0.20, 0.42, 0.76)       # Rich azure sky
+		sky_mat.sky_horizon_color = Color(0.65, 0.73, 0.82)   # Natural atmospheric haze
+		sky_mat.ground_bottom_color = Color(0.14, 0.16, 0.18) # Deep terrain ground tone
+		sky_mat.ground_horizon_color = Color(0.50, 0.60, 0.70)
 		sky_mat.sun_angle_max = 30.0
 		sky.sky_material = sky_mat
 		env.sky = sky
 
 		env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-		env.ambient_light_energy = 0.95
+		env.ambient_light_energy = 0.82
 		env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-		env.tonemap_exposure = 1.0
+		env.tonemap_exposure = 0.95
 		env.glow_enabled = true
-		env.glow_intensity = 0.25
-		env.glow_bloom = 0.06 # Subtle glow, avoiding blown-out washed-out scenery
+		env.glow_intensity = 0.18
+		env.glow_bloom = 0.02 # Subtle non-blinding bloom
 		env.fog_enabled = true
-		env.fog_light_color = Color(0.65, 0.74, 0.84)
-		env.fog_density = 0.0008
+		env.fog_light_color = Color(0.62, 0.71, 0.82)
+		env.fog_density = 0.0006
 		world_environment.environment = env
 		add_child(world_environment)
 
@@ -125,8 +125,8 @@ func setup_lighting() -> void:
 		sun_light = DirectionalLight3D.new()
 		sun_light.name = "SunLight"
 		sun_light.rotation_degrees = Vector3(-45, -35, 0)
-		sun_light.light_color = Color(1.0, 0.98, 0.94)
-		sun_light.light_energy = 1.15
+		sun_light.light_color = Color(1.0, 0.97, 0.92)
+		sun_light.light_energy = 1.0
 		sun_light.shadow_enabled = true
 		sun_light.shadow_bias = 0.03
 		add_child(sun_light)

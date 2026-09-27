@@ -36,13 +36,13 @@ const COLOR_NAMES = {
 }
 
 const COLOR_VALUES = {
-	ChromaColor.NONE: Color(0.6, 0.6, 0.65),
-	ChromaColor.CRIMSON: Color(1.0, 0.16, 0.33),  # #FF2A55
-	ChromaColor.COBALT: Color(0.0, 0.53, 1.0),    # #0088FF
-	ChromaColor.SOLAR: Color(1.0, 0.80, 0.0),     # #FFCC00
-	ChromaColor.EMERALD: Color(0.0, 0.90, 0.46),  # #00E676
-	ChromaColor.MAGENTA: Color(0.88, 0.25, 0.98), # #E040FB
-	ChromaColor.CYAN: Color(0.0, 0.94, 1.0)       # #00F0FF
+	ChromaColor.NONE: Color(0.48, 0.50, 0.54),
+	ChromaColor.CRIMSON: Color(0.85, 0.06, 0.14),  # Rich automotive Crimson Red
+	ChromaColor.COBALT: Color(0.06, 0.38, 0.92),   # Deep metallic Cobalt Blue
+	ChromaColor.SOLAR: Color(0.98, 0.72, 0.05),    # Rich warm Solar Gold
+	ChromaColor.EMERALD: Color(0.04, 0.80, 0.32),  # Racing Emerald Green
+	ChromaColor.MAGENTA: Color(0.82, 0.12, 0.78),  # Deep Metallic Magenta
+	ChromaColor.CYAN: Color(0.05, 0.80, 0.95)      # Vivid Electric Cyan
 }
 
 const PATTERN_TYPES = {

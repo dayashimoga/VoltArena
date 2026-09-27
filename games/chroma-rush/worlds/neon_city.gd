@@ -54,22 +54,6 @@ func build_road_mesh() -> void:
 	var road_w = 15.0
 	build_continuous_road_network(waypoints, road_w)
 
-	# Add protective guardrails on elevated flyovers and bridge ramps
-	for i in range(waypoints.size()):
-		var p1 = waypoints[i]
-		var p2 = waypoints[(i + 1) % waypoints.size()]
-		if p1.y > 0.5 or p2.y > 0.5 or i in [5, 6, 7, 8]:
-			var dir = (p2 - p1).normalized()
-			var right = Vector3(-dir.z, 0, dir.x).normalized()
-			var center = (p1 + p2) * 0.5
-			var seg_len = p1.distance_to(p2)
-
-			var barrier_l = _create_barrier(center - right * (road_w * 0.5 + 2.8), dir, seg_len)
-			road_container.add_child(barrier_l)
-
-			var barrier_r = _create_barrier(center + right * (road_w * 0.5 + 2.8), dir, seg_len)
-			road_container.add_child(barrier_r)
-
 func build_checkpoints() -> void:
 	checkpoints.clear()
 	# 6 Gate locations distributed around the city avenues
@@ -99,15 +83,23 @@ func build_checkpoints() -> void:
 		checkpoints.append(gate)
 
 func build_props() -> void:
-	var glb_paths = [
-		"res://assets/models/environment/building_a.glb",
-		"res://assets/models/environment/building_b.glb",
-		"res://assets/models/environment/building_c.glb",
-		"res://assets/models/environment/building_d.glb",
-		"res://assets/models/environment/building_garage.glb"
+	var skyscraper_paths = [
+		"res://assets/models/environment/building_skyscraper_a.glb",
+		"res://assets/models/environment/building_skyscraper_b.glb",
+		"res://assets/models/environment/building_skyscraper_c.glb",
+		"res://assets/models/environment/building_skyscraper_d.glb",
+		"res://assets/models/environment/building_skyscraper_e.glb"
+	]
+	var commercial_paths = [
+		"res://assets/models/environment/building_comm_a.glb",
+		"res://assets/models/environment/building_comm_b.glb",
+		"res://assets/models/environment/building_comm_c.glb",
+		"res://assets/models/environment/building_comm_d.glb",
+		"res://assets/models/environment/building_comm_e.glb",
+		"res://assets/models/environment/building_comm_f.glb"
 	]
 
-	# 1. Procedurally line BOTH sides of all avenue segments with realistic buildings and towers
+	# 1. Procedurally line BOTH sides of all avenue segments with realistic skyscrapers and commercial towers
 	var n_wp = waypoints.size()
 	for i in range(n_wp):
 		var p1 = waypoints[i]
@@ -120,49 +112,68 @@ func build_props() -> void:
 		var right = Vector3(-dir.z, 0, dir.x).normalized()
 		var rot_base = rad_to_deg(atan2(-dir.x, -dir.z))
 
-		# Step every 26-32 meters along this segment
-		var num_slots = max(1, int(seg_len / 28.0))
+		var num_slots = max(1, int(seg_len / 26.0))
 		var step = seg_len / float(num_slots)
 
 		for s in range(num_slots):
 			var dist_along = (float(s) + 0.5) * step
 			var center_pt = p1 + dir * dist_along
 
-			# Left Side Building
-			var setback_l = 15.5 + float((i + s) % 3) * 2.5
+			# Left Side: Towering Skyscraper or Commercial Block
+			var setback_l = 18.5 + float((i + s) % 3) * 3.0
 			var pos_l = center_pt - right * setback_l
 			pos_l.y = p1.y
-			var model_idx_l = (i * 3 + s) % glb_paths.size()
-			var b_l = ModelCache.get_model(glb_paths[model_idx_l])
+			var b_l: Node3D = null
+			if (i + s) % 2 == 0:
+				var m_idx = (i * 2 + s) % skyscraper_paths.size()
+				b_l = ModelCache.get_model(skyscraper_paths[m_idx])
+				if b_l:
+					b_l.scale = Vector3(11.0, 13.0, 11.0)
+			else:
+				var m_idx = (i * 2 + s) % commercial_paths.size()
+				b_l = ModelCache.get_model(commercial_paths[m_idx])
+				if b_l:
+					b_l.scale = Vector3(8.5, 9.0, 8.5)
+
 			if not b_l:
-				b_l = _build_procedural_commercial_block(28.0 + float((i + s) % 5) * 8.0, 22.0)
+				b_l = _build_procedural_commercial_block(35.0, 20.0)
+
 			b_l.position = pos_l
 			b_l.rotation_degrees.y = rot_base + 90.0
-			b_l.scale = Vector3(1.3, 1.3, 1.3)
 			props_container.add_child(b_l)
 
-			# Right Side Building
-			var setback_r = 15.5 + float((i + s + 1) % 3) * 2.5
+			# Right Side: Towering Skyscraper or Commercial Block
+			var setback_r = 18.5 + float((i + s + 1) % 3) * 3.0
 			var pos_r = center_pt + right * setback_r
 			pos_r.y = p1.y
-			var model_idx_r = (i * 3 + s + 2) % glb_paths.size()
-			var b_r = ModelCache.get_model(glb_paths[model_idx_r])
+			var b_r: Node3D = null
+			if (i + s + 1) % 2 == 0:
+				var m_idx = (i * 2 + s + 1) % skyscraper_paths.size()
+				b_r = ModelCache.get_model(skyscraper_paths[m_idx])
+				if b_r:
+					b_r.scale = Vector3(11.0, 13.0, 11.0)
+			else:
+				var m_idx = (i * 2 + s + 1) % commercial_paths.size()
+				b_r = ModelCache.get_model(commercial_paths[m_idx])
+				if b_r:
+					b_r.scale = Vector3(8.5, 9.0, 8.5)
+
 			if not b_r:
-				b_r = _build_procedural_commercial_block(32.0 + float((i + s + 2) % 4) * 9.0, 20.0)
+				b_r = _build_procedural_commercial_block(38.0, 22.0)
+
 			b_r.position = pos_r
 			b_r.rotation_degrees.y = rot_base - 90.0
-			b_r.scale = Vector3(1.3, 1.3, 1.3)
 			props_container.add_child(b_r)
 
 			# Landscaped Street Trees along sidewalk verge
 			if s % 2 == 0 and p1.y < 1.0:
 				var tree_l = _build_street_tree()
-				tree_l.position = center_pt - right * 9.8
+				tree_l.position = center_pt - right * 9.5
 				tree_l.position.y = p1.y
 				props_container.add_child(tree_l)
 
 				var tree_r = _build_street_tree()
-				tree_r.position = center_pt + right * 9.8
+				tree_r.position = center_pt + right * 9.5
 				tree_r.position.y = p1.y
 				props_container.add_child(tree_r)
 
@@ -174,7 +185,7 @@ func build_props() -> void:
 		var right = Vector3(-dir.z, 0, dir.x).normalized()
 
 		for side in [-1.0, 1.0]:
-			var lamp_pos = wp + right * (side * 9.8) + Vector3(0.0, 0.1, 0.0)
+			var lamp_pos = wp + right * (side * 9.6) + Vector3(0.0, 0.1, 0.0)
 			var lamp = ModelCache.get_model("res://assets/models/environment/road_lightposts.glb")
 			if not lamp:
 				lamp = _build_procedural_streetlight()
@@ -192,7 +203,7 @@ func _create_barrier(pos: Vector3, dir: Vector3, length: float) -> StaticBody3D:
 	mi.mesh = b_mesh
 
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.75, 0.78, 0.82) # Galvanized steel crash barrier
+	mat.albedo_color = Color(0.75, 0.78, 0.82)
 	mat.metallic = 0.90
 	mat.roughness = 0.25
 	mi.material_override = mat
@@ -211,35 +222,42 @@ func _create_barrier(pos: Vector3, dir: Vector3, length: float) -> StaticBody3D:
 	return sb
 
 func _build_street_tree() -> Node3D:
+	var tree_paths = [
+		"res://assets/models/environment/tree_oak.glb",
+		"res://assets/models/environment/tree_detailed.glb"
+	]
+	var p = tree_paths[randi() % tree_paths.size()]
+	var tree_model = ModelCache.get_model(p)
+	if tree_model:
+		tree_model.scale = Vector3(5.5, 5.5, 5.5)
+		return tree_model
+
+	# Fallback branching tree
 	var root = Node3D.new()
-	# Tree Trunk
 	var trunk_mi = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
-	cyl.top_radius = 0.14
-	cyl.bottom_radius = 0.18
-	cyl.height = 3.6
+	cyl.top_radius = 0.16
+	cyl.bottom_radius = 0.24
+	cyl.height = 4.2
 	trunk_mi.mesh = cyl
 	var mat_trunk = StandardMaterial3D.new()
-	mat_trunk.albedo_color = Color(0.28, 0.20, 0.15)
+	mat_trunk.albedo_color = Color(0.24, 0.17, 0.12)
 	mat_trunk.roughness = 0.92
-	mat_trunk.metallic = 0.02
 	trunk_mi.material_override = mat_trunk
-	trunk_mi.position = Vector3(0, 1.8, 0)
+	trunk_mi.position = Vector3(0, 2.1, 0)
 	root.add_child(trunk_mi)
 
-	# Tree Foliage Crown (Lush Organic Green)
 	var crown_mi = MeshInstance3D.new()
-	var sph = SphereMesh.new()
-	sph.radius = 1.35
-	sph.height = 2.4
-	crown_mi.mesh = sph
+	var pyr = PrismMesh.new()
+	pyr.size = Vector3(3.2, 4.8, 3.2)
+	crown_mi.mesh = pyr
 	var mat_crown = StandardMaterial3D.new()
-	mat_crown.albedo_color = Color(0.14, 0.44, 0.20)
+	mat_crown.albedo_color = Color(0.12, 0.38, 0.18)
 	mat_crown.roughness = 0.82
-	mat_crown.metallic = 0.0
 	crown_mi.material_override = mat_crown
-	crown_mi.position = Vector3(0, 4.0, 0)
+	crown_mi.position = Vector3(0, 4.6, 0)
 	root.add_child(crown_mi)
+	return root
 
 	# Planter concrete rim
 	var rim_mi = MeshInstance3D.new()

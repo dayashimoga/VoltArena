@@ -119,21 +119,6 @@ func build_road_mesh() -> void:
 	var road_w = 15.0
 	build_continuous_road_network(waypoints, road_w)
 
-	for i in range(waypoints.size()):
-		var p1 = waypoints[i]
-		var p2 = waypoints[(i + 1) % waypoints.size()]
-
-		# Add luminous energy guardrails
-		var dir = (p2 - p1).normalized()
-		var right = Vector3(-dir.z, 0, dir.x)
-		var center = (p1 + p2) * 0.5
-		var barrier_len = p1.distance_to(p2)
-
-		var bl = _create_energy_barrier(center - right * (road_w * 0.5 + 1.2), dir, barrier_len)
-		road_container.add_child(bl)
-		var br = _create_energy_barrier(center + right * (road_w * 0.5 + 1.2), dir, barrier_len)
-		road_container.add_child(br)
-
 func build_checkpoints() -> void:
 	checkpoints.clear()
 	var gate_defs = [
@@ -154,11 +139,11 @@ func build_checkpoints() -> void:
 		var next_wp = waypoints[(g["wp_idx"] + 1) % waypoints.size()]
 		var dir = (next_wp - wp).normalized()
 
-		gate.position = wp
-		if dir.length_squared() > 0.001:
-			gate.look_at_from_position(wp, wp + dir, Vector3.UP)
-
 		gates_container.add_child(gate)
+		gate.position = wp + Vector3(0.0, 0.2, 0.0)
+		if dir.length_squared() > 0.001:
+			gate.look_at_from_position(gate.position, gate.position + dir, Vector3.UP)
+
 		checkpoints.append(gate)
 
 func build_props() -> void:
@@ -191,31 +176,35 @@ func build_props() -> void:
 		mi.position = pos
 		props_container.add_child(mi)
 
-func _create_energy_barrier(pos: Vector3, dir: Vector3, length: float) -> StaticBody3D:
-	var sb = StaticBody3D.new()
-	sb.collision_layer = GameConstants.LAYER_WORLD
+	# High-altitude mega-skyscrapers rising from the clouds
+	var tower_spots = [
+		{"pos": Vector3(80, -10, -80), "type": "a"},
+		{"pos": Vector3(-80, -15, -120), "type": "b"},
+		{"pos": Vector3(160, -20, 50), "type": "c"},
+		{"pos": Vector3(-140, -10, 120), "type": "d"},
+		{"pos": Vector3(280, -25, -150), "type": "e"}
+	]
+	for spot in tower_spots:
+		var tower = _build_sky_skyscraper(spot["type"])
+		tower.position = spot["pos"]
+		props_container.add_child(tower)
 
+func _build_sky_skyscraper(variant: String) -> Node3D:
+	var path = "res://assets/models/environment/building_skyscraper_%s.glb" % variant
+	var model = ModelCache.get_model(path)
+	if model:
+		model.scale = Vector3(14.0, 28.0, 14.0)
+		return model
+
+	var root = Node3D.new()
 	var mi = MeshInstance3D.new()
-	var b_mesh = BoxMesh.new()
-	b_mesh.size = Vector3(0.3, 1.4, length)
-	mi.mesh = b_mesh
-
+	var box = BoxMesh.new()
+	box.size = Vector3(28.0, 120.0, 28.0)
+	mi.mesh = box
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.0, 0.8, 1.0)
-	mat.emission_enabled = true
-	mat.emission = Color(0.0, 0.8, 1.0)
-	mat.emission_energy_multiplier = 2.0
+	mat.albedo_color = Color(0.15, 0.18, 0.25)
+	mat.metallic = 0.8
 	mi.material_override = mat
-	sb.add_child(mi)
-
-	var col = CollisionShape3D.new()
-	var col_shape = BoxShape3D.new()
-	col_shape.size = Vector3(0.3, 1.4, length)
-	col.shape = col_shape
-	sb.add_child(col)
-
-	sb.position = pos + Vector3(0, 0.7, 0)
-	if dir.length_squared() > 0.001:
-		sb.look_at_from_position(sb.position, sb.position + dir, Vector3.UP)
-
-	return sb
+	mi.position = Vector3(0, 60.0, 0)
+	root.add_child(mi)
+	return root

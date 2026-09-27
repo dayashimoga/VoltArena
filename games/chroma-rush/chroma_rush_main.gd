@@ -434,31 +434,35 @@ func _update_swap_eligibility() -> void:
 	if not is_instance_valid(player_vehicle) or not is_instance_valid(swap_engine) or not is_instance_valid(hud):
 		return
 
+	var req_col = ChromaConstants.ChromaColor.NONE
+	if is_instance_valid(mission_director):
+		req_col = mission_director.get_current_target_color()
+
+	var player_has_req_col = (req_col != ChromaConstants.ChromaColor.NONE and player_vehicle.current_color == req_col)
+
 	var target_id = selected_target_id
-	if target_id.is_empty() or not swap_engine.has_vehicle(target_id):
-		# Objective-guided target selection: prioritize vehicle with required mission color
-		var req_col = ChromaConstants.ChromaColor.NONE
-		if is_instance_valid(mission_director):
-			req_col = mission_director.get_current_target_color()
-		if req_col != ChromaConstants.ChromaColor.NONE and player_vehicle.current_color != req_col:
+
+	# Target persistence & prioritization:
+	# If player needs mission color, lock onto vehicle carrying that color
+	if not player_has_req_col and req_col != ChromaConstants.ChromaColor.NONE:
+		if target_id.is_empty() or not swap_engine.has_vehicle(target_id) or swap_engine.get_vehicle_color(target_id) != req_col:
 			var match_id = swap_engine.find_target_with_color("player", req_col)
 			if not match_id.is_empty():
-				var node_tgt = swap_engine.get_vehicle_node(match_id)
-				if is_instance_valid(node_tgt):
-					var dist = player_vehicle.global_position.distance_to(node_tgt.global_position)
-					if dist < 45.0:
-						target_id = match_id
+				target_id = match_id
+				selected_target_id = match_id
 
-		if target_id.is_empty():
-			var nearest_info = swap_engine.find_nearest_eligible_target("player")
-			target_id = nearest_info.get("target_id", "")
+	if target_id.is_empty() or not swap_engine.has_vehicle(target_id):
+		var nearest_info = swap_engine.find_nearest_eligible_target("player")
+		target_id = nearest_info.get("target_id", "")
+		if selected_target_id.is_empty():
+			selected_target_id = target_id
 
 	if not target_id.is_empty() and swap_engine.has_vehicle(target_id):
 		var target_color = swap_engine.get_vehicle_color(target_id)
 		var check = swap_engine.evaluate_eligibility("player", target_id, false)
 		var progress = check.get("alignment_progress", 0.0)
 		hud.set_alignment_progress(progress)
-		hud.show_swap_prompt(check.get("eligible", false), target_color)
+		hud.show_swap_prompt(check.get("eligible", false), target_color, check.get("reason", ""), progress)
 	else:
 		hud.set_alignment_progress(0.0)
 		hud.hide_swap_prompt()
@@ -471,6 +475,7 @@ func _update_hud_telemetry(delta: float = 0.016) -> void:
 	var score = mission_director.score if not is_practice_mode else 0
 	var combo = mission_director.combo_multiplier if not is_practice_mode else 1.0
 	var req_color = mission_director.get_current_target_color()
+	var player_has_req_col = (req_color != ChromaConstants.ChromaColor.NONE and player_vehicle.current_color == req_color)
 
 	hud.update_hud(player_vehicle.current_color, req_color, speed_kmh, time_left, score, combo)
 
@@ -508,17 +513,35 @@ func _update_hud_telemetry(delta: float = 0.016) -> void:
 					has_target_gate = true
 					break
 
+	# Radar / MiniMap: if hunting, point to target vehicle; if delivering, point to gate
+	var radar_tgt_pos = target_gate_pos
+	var radar_tgt_col = target_gate_color
+	var radar_has_tgt = has_target_gate
+
+	if not player_has_req_col and not selected_target_id.is_empty() and swap_engine.has_vehicle(selected_target_id):
+		var node_tgt = swap_engine.get_vehicle_node(selected_target_id)
+		if is_instance_valid(node_tgt):
+			radar_tgt_pos = node_tgt.global_position
+			radar_tgt_col = swap_engine.get_vehicle_color(selected_target_id)
+			radar_has_tgt = true
+
 	if is_instance_valid(hud) and is_instance_valid(hud.mini_map):
-		hud.mini_map.update_radar(p_pos, p_rot_y, markers, target_gate_pos, target_gate_color, has_target_gate)
+		hud.mini_map.update_radar(p_pos, p_rot_y, markers, radar_tgt_pos, radar_tgt_col, radar_has_tgt)
 
 	if is_instance_valid(full_map) and full_map.visible:
-		full_map.update_full_map_telemetry(p_pos, p_rot_y, markers, target_gate_pos, target_gate_color, has_target_gate)
+		full_map.update_full_map_telemetry(p_pos, p_rot_y, markers, radar_tgt_pos, radar_tgt_col, radar_has_tgt)
 
 	if is_instance_valid(target_beacon):
-		if has_target_gate:
+		if player_has_req_col and has_target_gate:
 			target_beacon.visible = true
 			target_beacon.global_position = target_gate_pos
 			target_beacon.rotate_y(2.5 * delta)
+		elif not player_has_req_col and not selected_target_id.is_empty() and swap_engine.has_vehicle(selected_target_id):
+			var node_tgt = swap_engine.get_vehicle_node(selected_target_id)
+			if is_instance_valid(node_tgt):
+				target_beacon.visible = true
+				target_beacon.global_position = node_tgt.global_position + Vector3(0.0, 3.2, 0.0)
+				target_beacon.rotate_y(2.5 * delta)
 		else:
 			target_beacon.visible = false
 

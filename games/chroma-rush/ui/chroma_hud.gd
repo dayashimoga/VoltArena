@@ -362,6 +362,7 @@ func _update_swap_reticle() -> void:
 
 	var tgt_id: String = ""
 	var is_eligible: bool = false
+	var eval_reason: String = ""
 
 	# Objective-guided prioritization: find vehicle carrying required color
 	if mission_director and is_instance_valid(mission_director):
@@ -372,15 +373,19 @@ func _update_swap_reticle() -> void:
 				var node_b = swap_engine.get_vehicle_node(match_id)
 				if is_instance_valid(node_b):
 					var d = player_vehicle.global_position.distance_to(node_b.global_position)
-					if d < 35.0:
+					if d < 45.0:
 						tgt_id = match_id
 						var check = swap_engine.evaluate_eligibility("player", tgt_id, false)
 						is_eligible = check.get("eligible", false)
+						eval_reason = check.get("reason", "")
 
 	if tgt_id.is_empty():
 		var target_info = swap_engine.find_nearest_eligible_target("player", 18.0)
 		tgt_id = target_info.get("target_id", "")
 		is_eligible = target_info.get("eligible", false)
+		if not tgt_id.is_empty():
+			var check = swap_engine.evaluate_eligibility("player", tgt_id, false)
+			eval_reason = check.get("reason", "")
 
 	if tgt_id != "":
 		var progress = swap_engine.get_alignment_progress("player", tgt_id)
@@ -393,17 +398,41 @@ func _update_swap_reticle() -> void:
 			alignment_progress_bar.modulate = Color(0.1, 1.0, 0.3)
 			swap_prompt_label.text = "⚡ SWAP READY! [%s] [E / 🎮X]" % color_label
 			swap_prompt_label.modulate = Color(0.1, 1.0, 0.3)
+		elif eval_reason == ChromaConstants.REJECT_OBSTRUCTED:
+			alignment_progress_bar.modulate = Color(1.0, 0.45, 0.2)
+			swap_prompt_label.text = "TARGET SEPARATED BY BARRIER / OBSTACLE"
+			swap_prompt_label.modulate = Color(1.0, 0.45, 0.2)
+		elif eval_reason == ChromaConstants.REJECT_ELEVATION:
+			alignment_progress_bar.modulate = Color(1.0, 0.45, 0.2)
+			swap_prompt_label.text = "TARGET ON DIFFERENT ROAD LEVEL"
+			swap_prompt_label.modulate = Color(1.0, 0.45, 0.2)
+		elif eval_reason == ChromaConstants.REJECT_SPEED:
+			alignment_progress_bar.modulate = Color(1.0, 0.8, 0.2)
+			swap_prompt_label.text = "MATCH SPEED WITH TARGET [%s]" % color_label
+			swap_prompt_label.modulate = Color(1.0, 0.8, 0.2)
+		elif eval_reason == ChromaConstants.REJECT_ANGLE:
+			alignment_progress_bar.modulate = Color(1.0, 0.8, 0.2)
+			swap_prompt_label.text = "ALIGN PARALLEL TO [%s]" % color_label
+			swap_prompt_label.modulate = Color(1.0, 0.8, 0.2)
 		elif progress > 0.05:
 			alignment_progress_bar.modulate = Color(1.0, 0.8, 0.1)
-			swap_prompt_label.text = "ALIGNING [%s] %d%%" % [color_label, int(progress * 100)]
+			swap_prompt_label.text = "HOLD ALIGNMENT [%s] %d%%" % [color_label, int(progress * 100)]
 			swap_prompt_label.modulate = Color(1.0, 0.8, 0.1)
 		else:
 			alignment_progress_bar.modulate = Color(0.7, 0.7, 0.7)
-			swap_prompt_label.text = "PULL ALONGSIDE [%s] TO SWAP" % color_label
-			swap_prompt_label.modulate = Color(0.8, 0.8, 0.8)
+			swap_prompt_label.text = "PULL ALONGSIDE [%s] (<8m) TO SWAP" % color_label
+			swap_prompt_label.modulate = Color(0.85, 0.85, 0.85)
 	else:
 		alignment_progress_bar.value = 0.0
-		swap_prompt_label.text = "APPROACH TARGET VEHICLE (<14m)"
+		if mission_director and is_instance_valid(mission_director):
+			var req_col = mission_director.get_current_target_color()
+			if req_col != ChromaConstants.ChromaColor.NONE and player_vehicle.current_color != req_col:
+				var c_name = ChromaConstants.get_color_name(req_col)
+				swap_prompt_label.text = "PURSUE & INTERCEPT %s VEHICLE" % c_name.to_upper()
+			else:
+				swap_prompt_label.text = "APPROACH VEHICLE (<8m) TO SWAP"
+		else:
+			swap_prompt_label.text = "APPROACH VEHICLE (<8m) TO SWAP"
 		swap_prompt_label.modulate = Color(0.6, 0.7, 0.8)
 
 func update_player_color(col: int) -> void:
@@ -455,7 +484,7 @@ func set_alignment_progress(prog: float) -> void:
 	if alignment_progress_bar:
 		alignment_progress_bar.value = prog
 
-func show_swap_prompt(eligible: bool, target_color: int) -> void:
+func show_swap_prompt(eligible: bool, target_color: int, reason: String = "", progress: float = 0.0) -> void:
 	if rejection_timer > 0.0:
 		return
 	if swap_prompt_label:
@@ -465,15 +494,32 @@ func show_swap_prompt(eligible: bool, target_color: int) -> void:
 			var sym = ChromaConstants.get_color_symbol(target_color)
 			swap_prompt_label.text = "⚡ SWAP READY! Press [E / 🎮X] for %s %s" % [sym, color_name]
 			swap_prompt_label.modulate = Color(0.1, 1.0, 0.3)
+		elif reason == ChromaConstants.REJECT_OBSTRUCTED:
+			swap_prompt_label.text = "TARGET SEPARATED BY BARRIER / OBSTACLE"
+			swap_prompt_label.modulate = Color(1.0, 0.45, 0.2)
+		elif reason == ChromaConstants.REJECT_ELEVATION:
+			swap_prompt_label.text = "TARGET ON DIFFERENT ROAD LEVEL"
+			swap_prompt_label.modulate = Color(1.0, 0.45, 0.2)
+		elif reason == ChromaConstants.REJECT_SPEED:
+			swap_prompt_label.text = "MATCH SPEED WITH TARGET VEHICLE"
+			swap_prompt_label.modulate = Color(1.0, 0.8, 0.2)
+		elif reason == ChromaConstants.REJECT_ANGLE:
+			swap_prompt_label.text = "PULL PARALLEL (ALIGN HEADING)"
+			swap_prompt_label.modulate = Color(1.0, 0.8, 0.2)
+		elif progress > 0.05:
+			var color_name = ChromaConstants.get_color_name(target_color)
+			swap_prompt_label.text = "HOLD ALIGNMENT WITH %s (%d%%)" % [color_name.to_upper(), int(progress * 100)]
+			swap_prompt_label.modulate = Color(1.0, 0.85, 0.1)
 		else:
-			swap_prompt_label.text = "ALIGN ALONGSIDE TARGET TO SWAP [E / 🎮X]"
-			swap_prompt_label.modulate = Color(1.0, 0.8, 0.1)
+			var color_name = ChromaConstants.get_color_name(target_color)
+			swap_prompt_label.text = "PULL ALONGSIDE %s (<8m) TO SWAP [E / 🎮X]" % color_name.to_upper()
+			swap_prompt_label.modulate = Color(0.85, 0.85, 0.85)
 
 func hide_swap_prompt() -> void:
 	if rejection_timer > 0.0:
 		return
 	if swap_prompt_label:
-		swap_prompt_label.text = "APPROACH TARGET VEHICLE (<14m)"
+		swap_prompt_label.text = "APPROACH TARGET VEHICLE (<8m)"
 		swap_prompt_label.modulate = Color(0.6, 0.7, 0.8)
 
 func show_swap_rejected(reason: String) -> void:

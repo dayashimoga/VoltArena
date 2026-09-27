@@ -123,10 +123,20 @@ func setup_visuals() -> void:
 	visual_node = VehicleVisuals.build_vehicle_visual(vehicle_id, initial_color, paint_finish)
 	add_child(visual_node)
 
-	front_left_wheel = visual_node.get_node_or_null("FrontWheelLeft")
-	front_right_wheel = visual_node.get_node_or_null("FrontWheelRight")
-	rear_left_wheel = visual_node.get_node_or_null("RearWheelLeft")
-	rear_right_wheel = visual_node.get_node_or_null("RearWheelRight")
+	var model_root = visual_node.get_node_or_null("ModelRoot")
+	if model_root:
+		front_left_wheel = model_root.get_node_or_null("wheel-front-left")
+		front_right_wheel = model_root.get_node_or_null("wheel-front-right")
+		rear_left_wheel = model_root.get_node_or_null("wheel-back-left")
+		rear_right_wheel = model_root.get_node_or_null("wheel-back-right")
+	if not front_left_wheel:
+		front_left_wheel = visual_node.get_node_or_null("FrontWheelLeft")
+	if not front_right_wheel:
+		front_right_wheel = visual_node.get_node_or_null("FrontWheelRight")
+	if not rear_left_wheel:
+		rear_left_wheel = visual_node.get_node_or_null("RearWheelLeft")
+	if not rear_right_wheel:
+		rear_right_wheel = visual_node.get_node_or_null("RearWheelRight")
 
 func setup_collision_box() -> void:
 	if not has_node("ChromaCollision"):
@@ -301,31 +311,35 @@ func _update_physics_movement(delta: float) -> void:
 	# Compose 3D velocity
 	var t = global_transform if is_inside_tree() else transform
 	var forward_dir = -t.basis.z.normalized()
-	var horizontal_vel = forward_dir * forward_speed
 
-	# Gravity and vertical grounding
-	var vertical_vel = velocity.y
-	if not is_grounded:
-		vertical_vel -= gravity * delta
+	if is_grounded:
+		# Project forward driving direction onto ground plane to follow ramps and slopes
+		var slope_forward = (forward_dir - ground_normal * forward_dir.dot(ground_normal)).normalized()
+		var ground_drive_vel = slope_forward * forward_speed
+		var snap_down = -2.5
+		velocity = Vector3(ground_drive_vel.x, ground_drive_vel.y + snap_down, ground_drive_vel.z)
 	else:
-		vertical_vel = -2.0 # Downward snap force
+		# Mid-air ballistics
+		var h_vel = Vector3(forward_dir.x, 0.0, forward_dir.z).normalized() * forward_speed
+		velocity = Vector3(h_vel.x, velocity.y - gravity * delta, h_vel.z)
 
-	velocity = Vector3(horizontal_vel.x, vertical_vel, horizontal_vel.z)
 	if is_inside_tree():
 		move_and_slide()
 		var real_v = get_real_velocity()
 		var fwd = -t.basis.z.normalized()
 		var real_fwd_speed = real_v.dot(fwd)
 
-		# If colliding with an obstacle, clamp forward_speed so displayed speed matches physical displacement
+		# Only clamp forward_speed on REAL vertical wall collisions (normal.y < 0.4), NOT driveable slopes (normal.y >= 0.4)
 		if get_slide_collision_count() > 0:
 			for i in range(get_slide_collision_count()):
 				var slide_col = get_slide_collision(i)
 				var normal = slide_col.get_normal()
-				if normal.dot(fwd) < -0.35 and forward_speed > 0.0:
-					forward_speed = maxf(0.0, real_fwd_speed)
-				elif normal.dot(fwd) > 0.35 and forward_speed < 0.0:
-					forward_speed = minf(0.0, real_fwd_speed)
+				if absf(normal.y) < 0.4:
+					# This is a vertical wall / barrier / building collision
+					if normal.dot(fwd) < -0.35 and forward_speed > 0.0:
+						forward_speed = maxf(0.0, real_fwd_speed)
+					elif normal.dot(fwd) > 0.35 and forward_speed < 0.0:
+						forward_speed = minf(0.0, real_fwd_speed)
 
 				var collider = slide_col.get_collider()
 				if collider is CharacterBody3D:
@@ -349,11 +363,24 @@ func _update_visual_dynamics(delta: float) -> void:
 	var target_roll = -steer_input * deg_to_rad(4.5)
 	if is_drifting:
 		target_roll = -drift_direction * deg_to_rad(7.5)
-	visual_node.rotation.z = lerpf(visual_node.rotation.z, target_roll, delta * 8.0)
 
 	# Pitch tilt during accel/braking
 	var target_pitch = (brake_input - throttle_input) * deg_to_rad(3.5)
-	visual_node.rotation.x = lerpf(visual_node.rotation.x, target_pitch, delta * 8.0)
+
+	# Apply body suspension roll and pitch to the body mesh
+	var model_root = visual_node.get_node_or_null("ModelRoot")
+	var body_mesh = null
+	if model_root:
+		body_mesh = model_root.get_node_or_null("body")
+	if not body_mesh:
+		body_mesh = visual_node.get_node_or_null("ChassisBody")
+
+	if body_mesh:
+		body_mesh.rotation.z = lerpf(body_mesh.rotation.z, target_roll, delta * 8.0)
+		body_mesh.rotation.x = lerpf(body_mesh.rotation.x, target_pitch, delta * 8.0)
+	else:
+		visual_node.rotation.z = lerpf(visual_node.rotation.z, target_roll, delta * 8.0)
+		visual_node.rotation.x = lerpf(visual_node.rotation.x, target_pitch, delta * 8.0)
 
 	# Wheel rolling animation
 	wheel_roll_angle += (forward_speed / 0.36) * delta

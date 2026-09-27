@@ -17,6 +17,11 @@ var steer_sensitivity: float = 2.4
 var cornering_slowdown_factor: float = 0.65
 var obstacle_lookahead: float = 12.0
 
+# Recovery state
+var stuck_time: float = 0.0
+var reverse_time: float = 0.0
+var reverse_steer_dir: float = 1.0
+
 func _init(p_vehicle: ChromaVehicle = null) -> void:
 	vehicle = p_vehicle
 
@@ -32,6 +37,27 @@ func set_target(pos: Vector3, desired_speed: float = -1.0) -> void:
 
 func update_driving(delta: float) -> void:
 	if not vehicle or not is_instance_valid(vehicle):
+		return
+
+	# Overturned recovery: check if vehicle is upside-down or on side
+	if vehicle.is_inside_tree():
+		var up_vec = vehicle.global_transform.basis.y
+		if up_vec.dot(Vector3.UP) < 0.25:
+			# Auto-right the vehicle
+			var fwd = -vehicle.global_transform.basis.z
+			fwd.y = 0.0
+			if fwd.length_squared() > 0.01:
+				var right = Vector3.UP.cross(fwd).normalized()
+				var up = fwd.cross(right).normalized()
+				vehicle.global_transform.basis = Basis(right, up, -fwd.normalized())
+				vehicle.global_position.y += 0.6
+				vehicle.velocity = Vector3.ZERO
+				vehicle.forward_speed = 0.0
+
+	# Active reverse recovery maneuver
+	if reverse_time > 0.0:
+		reverse_time -= delta
+		vehicle.set_inputs(reverse_steer_dir, -0.85, 0.0, false, false)
 		return
 
 	# Transform target position into vehicle local space
@@ -79,6 +105,16 @@ func update_driving(delta: float) -> void:
 		# Maintain speed smoothly
 		throttle = 0.4
 		brake = 0.0
+
+	# Stuck detection: throttle requested but vehicle speed is near zero
+	if throttle > 0.5 and absf(current_spd) < 1.2:
+		stuck_time += delta
+		if stuck_time > 1.8:
+			reverse_time = 1.4
+			reverse_steer_dir = -signf(target_angle) if absf(target_angle) > 0.1 else 1.0
+			stuck_time = 0.0
+	else:
+		stuck_time = maxf(0.0, stuck_time - delta * 2.0)
 
 	# Nitro boost on straightaways if charged
 	var use_boost = (angle_abs_deg < 10.0 and dist > 35.0 and vehicle.drift_charge >= 1.0)

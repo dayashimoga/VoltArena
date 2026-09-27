@@ -114,21 +114,6 @@ func build_road_mesh() -> void:
 	var road_w = 14.0
 	build_continuous_road_network(waypoints, road_w)
 
-	# Add crash barriers along sea walls, bridges, and cliffs
-	for i in range(waypoints.size()):
-		var p1 = waypoints[i]
-		var p2 = waypoints[(i + 1) % waypoints.size()]
-		var dir = (p2 - p1).normalized()
-		var right = Vector3(-dir.z, 0, dir.x).normalized()
-		var center = (p1 + p2) * 0.5
-		var seg_len = p1.distance_to(p2)
-
-		var barrier_l = _create_barrier(center - right * (road_w * 0.5 + 2.8), dir, seg_len)
-		road_container.add_child(barrier_l)
-
-		var barrier_r = _create_barrier(center + right * (road_w * 0.5 + 2.8), dir, seg_len)
-		road_container.add_child(barrier_r)
-
 func build_checkpoints() -> void:
 	checkpoints.clear()
 	var gate_defs = [
@@ -149,48 +134,87 @@ func build_checkpoints() -> void:
 		var next_wp = waypoints[(g["wp_idx"] + 1) % waypoints.size()]
 		var dir = (next_wp - wp).normalized()
 
+		gates_container.add_child(gate)
 		gate.position = wp + Vector3(0.0, 0.2, 0.0)
 		if dir.length_squared() > 0.001:
 			gate.look_at_from_position(gate.position, gate.position + dir, Vector3.UP)
 
-		gates_container.add_child(gate)
 		checkpoints.append(gate)
 
 func build_props() -> void:
 	# Suspension Bridge Towers at waypoint 3 & 5
 	_build_bridge_tower(Vector3(140, 2, -200))
+	_build_bridge_tower(Vector3(220, 4, -200))
 	_build_bridge_tower(Vector3(300, 2, -180))
 
 	# Lighthouse on the bluff at waypoint 8
 	_build_lighthouse(Vector3(285, 10, 45))
 
-func _create_barrier(pos: Vector3, dir: Vector3, length: float) -> StaticBody3D:
-	var sb = StaticBody3D.new()
-	sb.collision_layer = GameConstants.LAYER_WORLD
+	# Seaside Promenade & Village Buildings (Waypoints 9, 10, 11)
+	var village_spots = [
+		{"pos": Vector3(230, 8, 110), "rot": 45.0, "type": "a"},
+		{"pos": Vector3(180, 7, 125), "rot": 10.0, "type": "b"},
+		{"pos": Vector3(140, 5, 140), "rot": 0.0, "type": "c"},
+		{"pos": Vector3(110, 4, 130), "rot": -25.0, "type": "d"},
+		{"pos": Vector3(60, 2, 125), "rot": -40.0, "type": "e"},
+		{"pos": Vector3(-20, 0, 80), "rot": 60.0, "type": "f"}
+	]
+	for spot in village_spots:
+		var bld = _build_coastal_building(spot["type"])
+		bld.position = spot["pos"]
+		bld.rotation_degrees = Vector3(0, spot["rot"], 0)
+		props_container.add_child(bld)
 
+	# Palm trees along the promenade and coastal road
+	var palm_positions = [
+		Vector3(15, 0, -40), Vector3(45, 0, -110), Vector3(70, 0, -135),
+		Vector3(160, 6, 120), Vector3(125, 4, 118), Vector3(90, 3, 112),
+		Vector3(40, 1, 90), Vector3(-10, 0, 65), Vector3(-45, 0, 25)
+	]
+	for pos in palm_positions:
+		var palm = _build_palm_tree()
+		palm.position = pos
+		props_container.add_child(palm)
+
+func _build_coastal_building(variant: String) -> Node3D:
+	var path = "res://assets/models/environment/building_comm_%s.glb" % variant
+	var model = ModelCache.get_model(path)
+	if model:
+		model.scale = Vector3(4.0, 4.0, 4.0)
+		return model
+
+	var root = Node3D.new()
 	var mi = MeshInstance3D.new()
-	var b_mesh = BoxMesh.new()
-	b_mesh.size = Vector3(0.35, 1.1, length)
-	mi.mesh = b_mesh
-
+	var box = BoxMesh.new()
+	box.size = Vector3(12.0, 8.0, 10.0)
+	mi.mesh = box
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.85, 0.88, 0.92) # Coastal white safety railing
-	mat.metallic = 0.85
-	mat.roughness = 0.2
+	mat.albedo_color = Color(0.92, 0.88, 0.82)
+	mat.roughness = 0.75
 	mi.material_override = mat
-	sb.add_child(mi)
+	mi.position = Vector3(0, 4.0, 0)
+	root.add_child(mi)
+	return root
 
-	var col = CollisionShape3D.new()
-	var col_shape = BoxShape3D.new()
-	col_shape.size = Vector3(0.35, 1.1, length)
-	col.shape = col_shape
-	sb.add_child(col)
+func _build_palm_tree() -> Node3D:
+	var model = ModelCache.get_model("res://assets/models/environment/tree_palm.glb")
+	if model:
+		model.scale = Vector3(4.8, 4.8, 4.8)
+		return model
 
-	sb.position = pos + Vector3(0, 0.55, 0)
-	if dir.length_squared() > 0.001:
-		sb.look_at_from_position(sb.position, sb.position + dir, Vector3.UP)
-
-	return sb
+	var root = Node3D.new()
+	var trunk = MeshInstance3D.new()
+	var cyl = CylinderMesh.new()
+	cyl.top_radius = 0.2
+	cyl.bottom_radius = 0.35
+	cyl.height = 6.0
+	trunk.mesh = cyl
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.42, 0.30, 0.20)
+	trunk.material_override = mat
+	trunk.position = Vector3(0, 3.0, 0)
+	root.add_child(trunk)
+	return root
 
 func _build_bridge_tower(pos: Vector3) -> void:
 	var tower = Node3D.new()

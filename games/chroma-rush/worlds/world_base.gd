@@ -57,31 +57,39 @@ func _ready() -> void:
 
 	build_world()
 
+var spline_samples: Array[Vector3] = []
+var mat_barrier: StandardMaterial3D
+
 func _init_materials() -> void:
 	mat_asphalt = StandardMaterial3D.new()
-	mat_asphalt.albedo_color = Color(0.14, 0.14, 0.16) # Rich dark textured asphalt
-	mat_asphalt.roughness = 0.85
+	mat_asphalt.albedo_color = Color(0.12, 0.12, 0.14) # Rich dark textured asphalt
+	mat_asphalt.roughness = 0.88
 	mat_asphalt.metallic = 0.02
 
 	mat_curb = StandardMaterial3D.new()
-	mat_curb.albedo_color = Color(0.48, 0.49, 0.50) # Neutral concrete curb
-	mat_curb.roughness = 0.90
+	mat_curb.albedo_color = Color(0.38, 0.40, 0.42) # Neutral dark concrete curb
+	mat_curb.roughness = 0.88
 	mat_curb.metallic = 0.01
 
 	mat_sidewalk = StandardMaterial3D.new()
-	mat_sidewalk.albedo_color = Color(0.50, 0.52, 0.54) # Concrete sidewalk pavers
-	mat_sidewalk.roughness = 0.88
+	mat_sidewalk.albedo_color = Color(0.28, 0.30, 0.32) # Dark concrete sidewalk pavers (non-blinding)
+	mat_sidewalk.roughness = 0.85
 	mat_sidewalk.metallic = 0.01
 
 	mat_marking_white = StandardMaterial3D.new()
-	mat_marking_white.albedo_color = Color(0.76, 0.77, 0.79) # Calibrated non-glaring matte road paint
-	mat_marking_white.roughness = 0.80
+	mat_marking_white.albedo_color = Color(0.80, 0.82, 0.85) # Calibrated non-glaring matte road paint
+	mat_marking_white.roughness = 0.75
 	mat_marking_white.metallic = 0.0
 
 	mat_marking_yellow = StandardMaterial3D.new()
-	mat_marking_yellow.albedo_color = Color(0.88, 0.72, 0.12) # Warm matte highway yellow
+	mat_marking_yellow.albedo_color = Color(0.92, 0.72, 0.10) # Warm matte highway yellow
 	mat_marking_yellow.roughness = 0.75
 	mat_marking_yellow.metallic = 0.0
+
+	mat_barrier = StandardMaterial3D.new()
+	mat_barrier.albedo_color = Color(0.70, 0.73, 0.78) # Galvanized steel crash barrier
+	mat_barrier.metallic = 0.90
+	mat_barrier.roughness = 0.25
 
 func build_world() -> void:
 	setup_lighting()
@@ -229,11 +237,13 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 			)
 			samples.append(pt)
 
+	spline_samples = samples
 	var total_samples = samples.size()
 	var half_w = road_width * 0.5
-	var curb_w = 0.30
-	var curb_h = 0.12 # Realistic 12cm curb height, not a 60cm wall
-	var sidewalk_w = 2.4
+	var curb_w = 0.25
+	var curb_h = 0.10 # Realistic 10cm curb height
+	var sidewalk_w = 1.60 # Realistic 1.6m sidewalk
+	var barrier_h = 0.90 # Standard highway guardrail height
 
 	var left_road_pts: Array[Vector3] = []
 	var right_road_pts: Array[Vector3] = []
@@ -243,6 +253,7 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 	var right_curb_out: Array[Vector3] = []
 	var left_sw_out: Array[Vector3] = []
 	var right_sw_out: Array[Vector3] = []
+	var normals: Array[Vector3] = []
 
 	var dists: Array[float] = []
 	var accum_dist: float = 0.0
@@ -259,19 +270,24 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 		var p_next = samples[(i + 1) % total_samples]
 
 		var tangent = (p_next - p_prev).normalized()
-		var right = Vector3(-tangent.z, 0.0, tangent.x).normalized()
+		var up = Vector3.UP
+		var right = tangent.cross(up).normalized()
+		if right.length_squared() < 0.01:
+			right = Vector3.RIGHT
+		var surf_normal = right.cross(tangent).normalized()
+		normals.append(surf_normal)
 
 		left_road_pts.append(p_curr - right * half_w)
 		right_road_pts.append(p_curr + right * half_w)
 
-		left_curb_top.append(p_curr - right * half_w + Vector3(0.0, curb_h, 0.0))
-		right_curb_top.append(p_curr + right * half_w + Vector3(0.0, curb_h, 0.0))
+		left_curb_top.append(p_curr - right * half_w + surf_normal * curb_h)
+		right_curb_top.append(p_curr + right * half_w + surf_normal * curb_h)
 
-		left_curb_out.append(p_curr - right * (half_w + curb_w) + Vector3(0.0, curb_h, 0.0))
-		right_curb_out.append(p_curr + right * (half_w + curb_w) + Vector3(0.0, curb_h, 0.0))
+		left_curb_out.append(p_curr - right * (half_w + curb_w) + surf_normal * curb_h)
+		right_curb_out.append(p_curr + right * (half_w + curb_w) + surf_normal * curb_h)
 
-		left_sw_out.append(p_curr - right * (half_w + curb_w + sidewalk_w) + Vector3(0.0, curb_h, 0.0))
-		right_sw_out.append(p_curr + right * (half_w + curb_w + sidewalk_w) + Vector3(0.0, curb_h, 0.0))
+		left_sw_out.append(p_curr - right * (half_w + curb_w + sidewalk_w) + surf_normal * curb_h)
+		right_sw_out.append(p_curr + right * (half_w + curb_w + sidewalk_w) + surf_normal * curb_h)
 
 	var st_road = SurfaceTool.new()
 	st_road.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -293,12 +309,19 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 	st_white.begin(Mesh.PRIMITIVE_TRIANGLES)
 	st_white.set_material(mat_marking_white)
 
+	var st_barrier = SurfaceTool.new()
+	st_barrier.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st_barrier.set_material(mat_barrier)
+
 	var collision_faces = PackedVector3Array()
+	var has_barriers = false
 
 	for i in range(total_samples):
 		var next_i = (i + 1) % total_samples
 		var d1 = dists[i]
 		var d2 = dists[i + 1]
+		var n1 = normals[i]
+		var n2 = normals[next_i]
 
 		var rl1 = left_road_pts[i]
 		var rr1 = right_road_pts[i]
@@ -306,74 +329,82 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 		var rr2 = right_road_pts[next_i]
 
 		# 1. Main Asphalt Surface
-		st_road.set_normal(Vector3.UP); st_road.set_uv(Vector2(0.0, d1 * 0.08)); st_road.add_vertex(rl1)
-		st_road.set_normal(Vector3.UP); st_road.set_uv(Vector2(1.0, d1 * 0.08)); st_road.add_vertex(rr1)
-		st_road.set_normal(Vector3.UP); st_road.set_uv(Vector2(0.0, d2 * 0.08)); st_road.add_vertex(rl2)
+		st_road.set_normal(n1); st_road.set_uv(Vector2(0.0, d1 * 0.08)); st_road.add_vertex(rl1)
+		st_road.set_normal(n1); st_road.set_uv(Vector2(1.0, d1 * 0.08)); st_road.add_vertex(rr1)
+		st_road.set_normal(n2); st_road.set_uv(Vector2(0.0, d2 * 0.08)); st_road.add_vertex(rl2)
 
-		st_road.set_normal(Vector3.UP); st_road.set_uv(Vector2(1.0, d1 * 0.08)); st_road.add_vertex(rr1)
-		st_road.set_normal(Vector3.UP); st_road.set_uv(Vector2(1.0, d2 * 0.08)); st_road.add_vertex(rr2)
-		st_road.set_normal(Vector3.UP); st_road.set_uv(Vector2(0.0, d2 * 0.08)); st_road.add_vertex(rl2)
+		st_road.set_normal(n1); st_road.set_uv(Vector2(1.0, d1 * 0.08)); st_road.add_vertex(rr1)
+		st_road.set_normal(n2); st_road.set_uv(Vector2(1.0, d2 * 0.08)); st_road.add_vertex(rr2)
+		st_road.set_normal(n2); st_road.set_uv(Vector2(0.0, d2 * 0.08)); st_road.add_vertex(rl2)
 
 		collision_faces.append(rl1); collision_faces.append(rr1); collision_faces.append(rl2)
 		collision_faces.append(rr1); collision_faces.append(rr2); collision_faces.append(rl2)
 
 		# 2. Yellow Centerline Dashes (3m dash, 3m gap)
-		var center1 = (rl1 + rr1) * 0.5 + Vector3(0.0, 0.015, 0.0)
-		var center2 = (rl2 + rr2) * 0.5 + Vector3(0.0, 0.015, 0.0)
+		var center1 = (rl1 + rr1) * 0.5 + n1 * 0.015
+		var center2 = (rl2 + rr2) * 0.5 + n2 * 0.015
 		var d_mod = fmod(d1, 6.0)
 		if d_mod < 3.2:
 			var norm_t = (center2 - center1).normalized()
-			var r_t = Vector3(-norm_t.z, 0.0, norm_t.x).normalized() * 0.14
+			var r_t = norm_t.cross(n1).normalized() * 0.14
 			var cl1 = center1 - r_t
 			var cr1 = center1 + r_t
 			var cl2 = center2 - r_t
 			var cr2 = center2 + r_t
-			st_lines.set_normal(Vector3.UP); st_lines.set_uv(Vector2(0, 0)); st_lines.add_vertex(cl1)
-			st_lines.set_normal(Vector3.UP); st_lines.set_uv(Vector2(1, 0)); st_lines.add_vertex(cr1)
-			st_lines.set_normal(Vector3.UP); st_lines.set_uv(Vector2(0, 1)); st_lines.add_vertex(cl2)
-			st_lines.set_normal(Vector3.UP); st_lines.set_uv(Vector2(1, 0)); st_lines.add_vertex(cr1)
-			st_lines.set_normal(Vector3.UP); st_lines.set_uv(Vector2(1, 1)); st_lines.add_vertex(cr2)
-			st_lines.set_normal(Vector3.UP); st_lines.set_uv(Vector2(0, 1)); st_lines.add_vertex(cl2)
+			st_lines.set_normal(n1); st_lines.set_uv(Vector2(0, 0)); st_lines.add_vertex(cl1)
+			st_lines.set_normal(n1); st_lines.set_uv(Vector2(1, 0)); st_lines.add_vertex(cr1)
+			st_lines.set_normal(n2); st_lines.set_uv(Vector2(0, 1)); st_lines.add_vertex(cl2)
+			st_lines.set_normal(n1); st_lines.set_uv(Vector2(1, 0)); st_lines.add_vertex(cr1)
+			st_lines.set_normal(n2); st_lines.set_uv(Vector2(1, 1)); st_lines.add_vertex(cr2)
+			st_lines.set_normal(n2); st_lines.set_uv(Vector2(0, 1)); st_lines.add_vertex(cl2)
 
 		# 3. Solid White Shoulder Lines
 		var line_w = 0.22
-		var l_sh1 = rl1 + (rr1 - rl1).normalized() * 0.45 + Vector3(0.0, 0.012, 0.0)
-		var l_sh2 = rl2 + (rr2 - rl2).normalized() * 0.45 + Vector3(0.0, 0.012, 0.0)
+		var l_sh1 = rl1 + (rr1 - rl1).normalized() * 0.45 + n1 * 0.012
+		var l_sh2 = rl2 + (rr2 - rl2).normalized() * 0.45 + n2 * 0.012
 		var l_out1 = l_sh1 - (rr1 - rl1).normalized() * line_w
 		var l_out2 = l_sh2 - (rr2 - rl2).normalized() * line_w
-		st_white.set_normal(Vector3.UP); st_white.set_uv(Vector2(0, 0)); st_white.add_vertex(l_out1)
-		st_white.set_normal(Vector3.UP); st_white.set_uv(Vector2(1, 0)); st_white.add_vertex(l_sh1)
-		st_white.set_normal(Vector3.UP); st_white.set_uv(Vector2(0, 1)); st_white.add_vertex(l_out2)
-		st_white.set_normal(Vector3.UP); st_white.set_uv(Vector2(1, 0)); st_white.add_vertex(l_sh1)
-		st_white.set_normal(Vector3.UP); st_white.set_uv(Vector2(1, 1)); st_white.add_vertex(l_sh2)
-		st_white.set_normal(Vector3.UP); st_white.set_uv(Vector2(0, 1)); st_white.add_vertex(l_out2)
+		st_white.set_normal(n1); st_white.set_uv(Vector2(0, 0)); st_white.add_vertex(l_out1)
+		st_white.set_normal(n1); st_white.set_uv(Vector2(1, 0)); st_white.add_vertex(l_sh1)
+		st_white.set_normal(n2); st_white.set_uv(Vector2(0, 1)); st_white.add_vertex(l_out2)
+		st_white.set_normal(n1); st_white.set_uv(Vector2(1, 0)); st_white.add_vertex(l_sh1)
+		st_white.set_normal(n2); st_white.set_uv(Vector2(1, 1)); st_white.add_vertex(l_sh2)
+		st_white.set_normal(n2); st_white.set_uv(Vector2(0, 1)); st_white.add_vertex(l_out2)
 
-		var r_sh1 = rr1 - (rr1 - rl1).normalized() * 0.45 + Vector3(0.0, 0.012, 0.0)
-		var r_sh2 = rr2 - (rr2 - rl2).normalized() * 0.45 + Vector3(0.0, 0.012, 0.0)
+		var r_sh1 = rr1 - (rr1 - rl1).normalized() * 0.45 + n1 * 0.012
+		var r_sh2 = rr2 - (rr2 - rl2).normalized() * 0.45 + n2 * 0.012
 		var r_out1 = r_sh1 + (rr1 - rl1).normalized() * line_w
 		var r_out2 = r_sh2 + (rr2 - rl2).normalized() * line_w
-		st_white.set_normal(Vector3.UP); st_white.set_uv(Vector2(0, 0)); st_white.add_vertex(r_sh1)
-		st_white.set_normal(Vector3.UP); st_white.set_uv(Vector2(1, 0)); st_white.add_vertex(r_out1)
-		st_white.set_normal(Vector3.UP); st_white.set_uv(Vector2(0, 1)); st_white.add_vertex(r_sh2)
-		st_white.set_normal(Vector3.UP); st_white.set_uv(Vector2(1, 0)); st_white.add_vertex(r_out1)
-		st_white.set_normal(Vector3.UP); st_white.set_uv(Vector2(1, 1)); st_white.add_vertex(r_out2)
-		st_white.set_normal(Vector3.UP); st_white.set_uv(Vector2(0, 1)); st_white.add_vertex(r_sh2)
+		st_white.set_normal(n1); st_white.set_uv(Vector2(0, 0)); st_white.add_vertex(r_sh1)
+		st_white.set_normal(n1); st_white.set_uv(Vector2(1, 0)); st_white.add_vertex(r_out1)
+		st_white.set_normal(n2); st_white.set_uv(Vector2(0, 1)); st_white.add_vertex(r_sh2)
+		st_white.set_normal(n1); st_white.set_uv(Vector2(1, 0)); st_white.add_vertex(r_out1)
+		st_white.set_normal(n2); st_white.set_uv(Vector2(1, 1)); st_white.add_vertex(r_out2)
+		st_white.set_normal(n2); st_white.set_uv(Vector2(0, 1)); st_white.add_vertex(r_sh2)
 
-		# 4. Curbs (Beveled 12cm curb stone)
+		# 4. Curbs (Beveled 10cm curb stone with valid UVs)
 		var lct1 = left_curb_top[i]
 		var lco1 = left_curb_out[i]
 		var lct2 = left_curb_top[next_i]
 		var lco2 = left_curb_out[next_i]
 
-		# Left Curb Incline (from road to curb top)
-		st_curb.set_normal(-Vector3.UP); st_curb.add_vertex(rl1); st_curb.add_vertex(lct1); st_curb.add_vertex(rl2)
-		st_curb.set_normal(-Vector3.UP); st_curb.add_vertex(lct1); st_curb.add_vertex(lct2); st_curb.add_vertex(rl2)
+		# Left Curb Incline
+		st_curb.set_normal(n1); st_curb.set_uv(Vector2(0.0, d1 * 0.15)); st_curb.add_vertex(rl1)
+		st_curb.set_normal(n1); st_curb.set_uv(Vector2(0.5, d1 * 0.15)); st_curb.add_vertex(lct1)
+		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.0, d2 * 0.15)); st_curb.add_vertex(rl2)
+		st_curb.set_normal(n1); st_curb.set_uv(Vector2(0.5, d1 * 0.15)); st_curb.add_vertex(lct1)
+		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.5, d2 * 0.15)); st_curb.add_vertex(lct2)
+		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.0, d2 * 0.15)); st_curb.add_vertex(rl2)
 		collision_faces.append(rl1); collision_faces.append(lct1); collision_faces.append(rl2)
 		collision_faces.append(lct1); collision_faces.append(lct2); collision_faces.append(rl2)
 
 		# Left Curb Top
-		st_curb.set_normal(Vector3.UP); st_curb.add_vertex(lct1); st_curb.add_vertex(lco1); st_curb.add_vertex(lct2)
-		st_curb.set_normal(Vector3.UP); st_curb.add_vertex(lco1); st_curb.add_vertex(lco2); st_curb.add_vertex(lct2)
+		st_curb.set_normal(n1); st_curb.set_uv(Vector2(0.5, d1 * 0.15)); st_curb.add_vertex(lct1)
+		st_curb.set_normal(n1); st_curb.set_uv(Vector2(1.0, d1 * 0.15)); st_curb.add_vertex(lco1)
+		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.5, d2 * 0.15)); st_curb.add_vertex(lct2)
+		st_curb.set_normal(n1); st_curb.set_uv(Vector2(1.0, d1 * 0.15)); st_curb.add_vertex(lco1)
+		st_curb.set_normal(n2); st_curb.set_uv(Vector2(1.0, d2 * 0.15)); st_curb.add_vertex(lco2)
+		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.5, d2 * 0.15)); st_curb.add_vertex(lct2)
 		collision_faces.append(lct1); collision_faces.append(lco1); collision_faces.append(lct2)
 		collision_faces.append(lco1); collision_faces.append(lco2); collision_faces.append(lct2)
 
@@ -383,32 +414,82 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 		var rct2 = right_curb_top[next_i]
 		var rco2 = right_curb_out[next_i]
 
-		st_curb.set_normal(Vector3.UP); st_curb.add_vertex(rct1); st_curb.add_vertex(rr1); st_curb.add_vertex(rct2)
-		st_curb.set_normal(Vector3.UP); st_curb.add_vertex(rr1); st_curb.add_vertex(rr2); st_curb.add_vertex(rct2)
+		st_curb.set_normal(n1); st_curb.set_uv(Vector2(0.0, d1 * 0.15)); st_curb.add_vertex(rct1)
+		st_curb.set_normal(n1); st_curb.set_uv(Vector2(0.5, d1 * 0.15)); st_curb.add_vertex(rr1)
+		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.0, d2 * 0.15)); st_curb.add_vertex(rct2)
+		st_curb.set_normal(n1); st_curb.set_uv(Vector2(0.5, d1 * 0.15)); st_curb.add_vertex(rr1)
+		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.5, d2 * 0.15)); st_curb.add_vertex(rr2)
+		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.0, d2 * 0.15)); st_curb.add_vertex(rct2)
 		collision_faces.append(rct1); collision_faces.append(rr1); collision_faces.append(rct2)
 		collision_faces.append(rr1); collision_faces.append(rr2); collision_faces.append(rct2)
 
-		st_curb.set_normal(Vector3.UP); st_curb.add_vertex(rco1); st_curb.add_vertex(rct1); st_curb.add_vertex(rco2)
-		st_curb.set_normal(Vector3.UP); st_curb.add_vertex(rct1); st_curb.add_vertex(rct2); st_curb.add_vertex(rco2)
+		st_curb.set_normal(n1); st_curb.set_uv(Vector2(0.5, d1 * 0.15)); st_curb.add_vertex(rco1)
+		st_curb.set_normal(n1); st_curb.set_uv(Vector2(1.0, d1 * 0.15)); st_curb.add_vertex(rct1)
+		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.5, d2 * 0.15)); st_curb.add_vertex(rco2)
+		st_curb.set_normal(n1); st_curb.set_uv(Vector2(1.0, d1 * 0.15)); st_curb.add_vertex(rct1)
+		st_curb.set_normal(n2); st_curb.set_uv(Vector2(1.0, d2 * 0.15)); st_curb.add_vertex(rct2)
+		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.5, d2 * 0.15)); st_curb.add_vertex(rco2)
 		collision_faces.append(rco1); collision_faces.append(rct1); collision_faces.append(rco2)
 		collision_faces.append(rct1); collision_faces.append(rct2); collision_faces.append(rco2)
 
-		# 5. Sidewalks
+		# 5. Sidewalks (with valid UVs)
 		var lsw1 = left_sw_out[i]
 		var lsw2 = left_sw_out[next_i]
-		st_sw.set_normal(Vector3.UP); st_sw.add_vertex(lco1); st_sw.add_vertex(lsw1); st_sw.add_vertex(lco2)
-		st_sw.set_normal(Vector3.UP); st_sw.add_vertex(lsw1); st_sw.add_vertex(lsw2); st_sw.add_vertex(lco2)
+		st_sw.set_normal(n1); st_sw.set_uv(Vector2(0.0, d1 * 0.12)); st_sw.add_vertex(lco1)
+		st_sw.set_normal(n1); st_sw.set_uv(Vector2(1.0, d1 * 0.12)); st_sw.add_vertex(lsw1)
+		st_sw.set_normal(n2); st_sw.set_uv(Vector2(0.0, d2 * 0.12)); st_sw.add_vertex(lco2)
+		st_sw.set_normal(n1); st_sw.set_uv(Vector2(1.0, d1 * 0.12)); st_sw.add_vertex(lsw1)
+		st_sw.set_normal(n2); st_sw.set_uv(Vector2(1.0, d2 * 0.12)); st_sw.add_vertex(lsw2)
+		st_sw.set_normal(n2); st_sw.set_uv(Vector2(0.0, d2 * 0.12)); st_sw.add_vertex(lco2)
 
 		var rsw1 = right_sw_out[i]
 		var rsw2 = right_sw_out[next_i]
-		st_sw.set_normal(Vector3.UP); st_sw.add_vertex(rsw1); st_sw.add_vertex(rco1); st_sw.add_vertex(rsw2)
-		st_sw.set_normal(Vector3.UP); st_sw.add_vertex(rco1); st_sw.add_vertex(rco2); st_sw.add_vertex(rsw2)
+		st_sw.set_normal(n1); st_sw.set_uv(Vector2(0.0, d1 * 0.12)); st_sw.add_vertex(rsw1)
+		st_sw.set_normal(n1); st_sw.set_uv(Vector2(1.0, d1 * 0.12)); st_sw.add_vertex(rco1)
+		st_sw.set_normal(n2); st_sw.set_uv(Vector2(0.0, d2 * 0.12)); st_sw.add_vertex(rsw2)
+		st_sw.set_normal(n1); st_sw.set_uv(Vector2(1.0, d1 * 0.12)); st_sw.add_vertex(rco1)
+		st_sw.set_normal(n2); st_sw.set_uv(Vector2(1.0, d2 * 0.12)); st_sw.add_vertex(rco2)
+		st_sw.set_normal(n2); st_sw.set_uv(Vector2(0.0, d2 * 0.12)); st_sw.add_vertex(rsw2)
+
+		# 6. Continuous Spline Guardrails on Elevated Sections
+		var is_elevated = (samples[i].y > 0.5 or samples[next_i].y > 0.5)
+		if is_elevated:
+			has_barriers = true
+			# Left barrier
+			var lb_b1 = lsw1
+			var lb_b2 = lsw2
+			var lb_t1 = lsw1 + n1 * barrier_h
+			var lb_t2 = lsw2 + n2 * barrier_h
+			st_barrier.set_normal(-Vector3.RIGHT); st_barrier.set_uv(Vector2(0, 0)); st_barrier.add_vertex(lb_b1)
+			st_barrier.set_normal(-Vector3.RIGHT); st_barrier.set_uv(Vector2(1, 0)); st_barrier.add_vertex(lb_t1)
+			st_barrier.set_normal(-Vector3.RIGHT); st_barrier.set_uv(Vector2(0, 1)); st_barrier.add_vertex(lb_b2)
+			st_barrier.set_normal(-Vector3.RIGHT); st_barrier.set_uv(Vector2(1, 0)); st_barrier.add_vertex(lb_t1)
+			st_barrier.set_normal(-Vector3.RIGHT); st_barrier.set_uv(Vector2(1, 1)); st_barrier.add_vertex(lb_t2)
+			st_barrier.set_normal(-Vector3.RIGHT); st_barrier.set_uv(Vector2(0, 1)); st_barrier.add_vertex(lb_b2)
+			collision_faces.append(lb_b1); collision_faces.append(lb_t1); collision_faces.append(lb_b2)
+			collision_faces.append(lb_t1); collision_faces.append(lb_t2); collision_faces.append(lb_b2)
+
+			# Right barrier
+			var rb_b1 = rsw1
+			var rb_b2 = rsw2
+			var rb_t1 = rsw1 + n1 * barrier_h
+			var rb_t2 = rsw2 + n2 * barrier_h
+			st_barrier.set_normal(Vector3.RIGHT); st_barrier.set_uv(Vector2(0, 0)); st_barrier.add_vertex(rb_t1)
+			st_barrier.set_normal(Vector3.RIGHT); st_barrier.set_uv(Vector2(1, 0)); st_barrier.add_vertex(rb_b1)
+			st_barrier.set_normal(Vector3.RIGHT); st_barrier.set_uv(Vector2(0, 1)); st_barrier.add_vertex(rb_t2)
+			st_barrier.set_normal(Vector3.RIGHT); st_barrier.set_uv(Vector2(1, 0)); st_barrier.add_vertex(rb_b1)
+			st_barrier.set_normal(Vector3.RIGHT); st_barrier.set_uv(Vector2(1, 1)); st_barrier.add_vertex(rb_b2)
+			st_barrier.set_normal(Vector3.RIGHT); st_barrier.set_uv(Vector2(0, 1)); st_barrier.add_vertex(rb_t2)
+			collision_faces.append(rb_t1); collision_faces.append(rb_b1); collision_faces.append(rb_t2)
+			collision_faces.append(rb_b1); collision_faces.append(rb_b2); collision_faces.append(rb_t2)
 
 	st_road.generate_tangents()
 	st_curb.generate_normals(); st_curb.generate_tangents()
 	st_sw.generate_normals(); st_sw.generate_tangents()
 	st_lines.generate_normals(); st_lines.generate_tangents()
 	st_white.generate_normals(); st_white.generate_tangents()
+	if has_barriers:
+		st_barrier.generate_normals(); st_barrier.generate_tangents()
 
 	var road_body = StaticBody3D.new()
 	road_body.name = "ContinuousRoadNetwork"
@@ -419,6 +500,8 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 	var m_sw = MeshInstance3D.new(); m_sw.name = "SidewalkMesh"; m_sw.mesh = st_sw.commit(); road_body.add_child(m_sw)
 	var m_lines = MeshInstance3D.new(); m_lines.name = "CenterLinesMesh"; m_lines.mesh = st_lines.commit(); road_body.add_child(m_lines)
 	var m_white = MeshInstance3D.new(); m_white.name = "ShoulderLinesMesh"; m_white.mesh = st_white.commit(); road_body.add_child(m_white)
+	if has_barriers:
+		var m_bar = MeshInstance3D.new(); m_bar.name = "BarrierMesh"; m_bar.mesh = st_barrier.commit(); road_body.add_child(m_bar)
 
 	var col = CollisionShape3D.new()
 	col.name = "ContinuousRoadCollision"
@@ -430,6 +513,26 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 
 	road_container.add_child(road_body)
 	return road_body
+
+func get_nearest_spline_index(pos: Vector3) -> int:
+	if spline_samples.is_empty():
+		return get_nearest_waypoint_index(pos)
+	var best_idx = 0
+	var best_dist = pos.distance_squared_to(spline_samples[0])
+	for i in range(1, spline_samples.size()):
+		var d = pos.distance_squared_to(spline_samples[i])
+		if d < best_dist:
+			best_dist = d
+			best_idx = i
+	return best_idx
+
+func get_spline_point(idx: int) -> Vector3:
+	if spline_samples.is_empty():
+		return get_waypoint(idx)
+	return spline_samples[idx % spline_samples.size()]
+
+func get_total_spline_points() -> int:
+	return spline_samples.size() if not spline_samples.is_empty() else waypoints.size()
 
 ## Fallback standalone segment with smooth, flush collision and beveled curbs
 func add_road_segment(start_pos: Vector3, end_pos: Vector3, road_width: float = 14.0) -> void:

@@ -133,11 +133,11 @@ func build_checkpoints() -> void:
 		var next_wp = waypoints[(g["wp_idx"] + 1) % waypoints.size()]
 		var dir = (next_wp - wp).normalized()
 
-		gate.position = wp
-		if dir.length_squared() > 0.001:
-			gate.look_at_from_position(wp, wp + dir, Vector3.UP)
-
 		gates_container.add_child(gate)
+		gate.position = wp + Vector3(0.0, 0.2, 0.0)
+		if dir.length_squared() > 0.001:
+			gate.look_at_from_position(gate.position, gate.position + dir, Vector3.UP)
+
 		checkpoints.append(gate)
 
 func build_props() -> void:
@@ -169,3 +169,44 @@ func build_props() -> void:
 		mi.material_override = rock_mat
 		mi.position = pos
 		props_container.add_child(mi)
+
+	# Pine trees along the canyon ridges and shoulders
+	var pine_positions = [
+		Vector3(40, 0, -40), Vector3(90, 2, -100), Vector3(130, 4, -130),
+		Vector3(200, 6, -90), Vector3(240, 8, -30), Vector3(210, 5, 20),
+		Vector3(130, 0, 30), Vector3(50, -2, 10), Vector3(-30, 2, -30)
+	]
+	for pos in pine_positions:
+		var pine = _build_pine_tree()
+		pine.position = pos
+		props_container.add_child(pine)
+
+func _build_pine_tree() -> Node3D:
+	var model = ModelCache.get_model("res://assets/models/environment/tree_pine.glb")
+	if model:
+		model.scale = Vector3(5.2, 5.2, 5.2)
+		return model
+
+	var root = Node3D.new()
+	var trunk = MeshInstance3D.new()
+	var cyl = CylinderMesh.new()
+	cyl.top_radius = 0.2
+	cyl.bottom_radius = 0.3
+	cyl.height = 5.0
+	trunk.mesh = cyl
+	var mat_trunk = StandardMaterial3D.new()
+	mat_trunk.albedo_color = Color(0.30, 0.20, 0.14)
+	trunk.material_override = mat_trunk
+	trunk.position = Vector3(0, 2.5, 0)
+	root.add_child(trunk)
+
+	var cone = MeshInstance3D.new()
+	var pyr = PrismMesh.new()
+	pyr.size = Vector3(3.0, 5.5, 3.0)
+	cone.mesh = pyr
+	var mat_leaf = StandardMaterial3D.new()
+	mat_leaf.albedo_color = Color(0.12, 0.32, 0.16)
+	cone.material_override = mat_leaf
+	cone.position = Vector3(0, 5.5, 0)
+	root.add_child(cone)
+	return root

@@ -220,21 +220,22 @@ func evaluate_eligibility(initiator_id: String, target_id: String, require_full_
 	if absf(pos_a.y - pos_b.y) > 2.8:
 		return {"eligible": false, "eligible_except_time": false, "reason": ChromaConstants.REJECT_ELEVATION}
 
-	# Line of sight check (never swap through buildings or walls)
+	# Line of sight check (never swap through buildings, walls, curbs, or barriers)
 	if node_a.is_inside_tree() and node_b.is_inside_tree():
 		var space_state = node_a.get_world_3d().direct_space_state
 		if space_state:
-			var p_from = node_a.global_position + Vector3(0, 0.6, 0)
-			var p_to = node_b.global_position + Vector3(0, 0.6, 0)
 			var exclude: Array[RID] = []
 			if node_a is CollisionObject3D:
 				exclude.append(node_a.get_rid())
 			if node_b is CollisionObject3D:
 				exclude.append(node_b.get_rid())
-			var query = PhysicsRayQueryParameters3D.create(p_from, p_to, GameConstants.LAYER_WORLD, exclude)
-			var hit = space_state.intersect_ray(query)
-			if hit and not hit.is_empty():
-				return {"eligible": false, "eligible_except_time": false, "reason": ChromaConstants.REJECT_OBSTRUCTED}
+			for h_off in [0.25, 0.65]:
+				var p_from = node_a.global_position + Vector3(0, h_off, 0)
+				var p_to = node_b.global_position + Vector3(0, h_off, 0)
+				var query = PhysicsRayQueryParameters3D.create(p_from, p_to, GameConstants.LAYER_WORLD, exclude)
+				var hit = space_state.intersect_ray(query)
+				if hit and not hit.is_empty():
+					return {"eligible": false, "eligible_except_time": false, "reason": ChromaConstants.REJECT_OBSTRUCTED}
 
 	# Velocity checks (using CharacterBody3D or velocity property if available)
 	var vel_a = _get_velocity(node_a)

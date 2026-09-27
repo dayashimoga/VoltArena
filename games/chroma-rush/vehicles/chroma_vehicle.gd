@@ -123,6 +123,8 @@ func setup_visuals() -> void:
 		visual_node.queue_free()
 
 	visual_node = VehicleVisuals.build_vehicle_visual(vehicle_id, initial_color, paint_finish)
+	# Calibrate visual node relative to elevated curb-clearing collision box to seat tire rubber onto asphalt
+	visual_node.position.y = -0.12
 	add_child(visual_node)
 
 	var model_root = visual_node.get_node_or_null("ModelRoot")
@@ -149,8 +151,6 @@ func setup_collision_box() -> void:
 		col.shape = box
 		col.position = Vector3(0, 0.50, 0)
 		add_child(col)
-
-
 
 func setup_suspension_rays() -> void:
 	wheel_raycasts.clear()
@@ -448,11 +448,11 @@ func reset_to_road(target_pos: Variant = null, target_rot_y: Variant = null) -> 
 	drift_charge = 0.0
 	smoothed_steer_input = 0.0
 
-	var dest_pos = last_valid_track_pos + Vector3(0, 0.45, 0)
+	var dest_pos = last_valid_track_pos + Vector3(0, 0.05, 0)
 	var dest_rot = last_valid_track_rot
 
 	if target_pos is Vector3 and target_pos != Vector3.ZERO:
-		dest_pos = target_pos + Vector3(0, 0.45, 0)
+		dest_pos = target_pos + Vector3(0, 0.05, 0)
 	if target_rot_y is float:
 		dest_rot = target_rot_y
 

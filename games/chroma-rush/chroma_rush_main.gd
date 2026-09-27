@@ -697,12 +697,21 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 
 	var wps = active_world.waypoints
 	var traffic_count = mini(6, wps.size() - 2)
+	var full_bodied_pool = [
+		ChromaConstants.VEHICLE_APEX,          # car_sedan_sports.glb (sports sedan)
+		ChromaConstants.VEHICLE_QUANTUM,       # car_hatchback_sports.glb (sports hatchback)
+		ChromaConstants.VEHICLE_TITAN,         # car_suv_luxury.glb (luxury SUV)
+		"traffic_sedan",                       # car_sedan.glb (executive sedan)
+		ChromaConstants.VEHICLE_DUNE,          # car_suv.glb (crossover SUV)
+		"traffic_taxi"                         # car_taxi.glb (metro cruiser)
+	]
+
 	for i in range(traffic_count):
 		var veh = ChromaVehicle.new()
 		var agent_id = "traffic_%d" % i
 		veh.name = agent_id
 		veh.vehicle_owner_id = agent_id
-		veh.vehicle_id = ChromaConstants.VEHICLE_VORTEX
+		veh.vehicle_id = full_bodied_pool[i % full_bodied_pool.size()]
 		veh.is_player = false
 		var col = available_colors[i % available_colors.size()]
 		veh.initial_color = col
@@ -713,12 +722,16 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 		var p_cur = wps[wp_idx]
 		var p_next = wps[(wp_idx + 1) % wps.size()]
 		var fwd = (p_next - p_cur).normalized()
-		var right = Vector3.UP.cross(fwd).normalized()
+		fwd.y = 0.0
+		if fwd.length_squared() < 0.001:
+			fwd = Vector3.FORWARD
+		fwd = fwd.normalized()
+		var right = fwd.cross(Vector3.UP).normalized()
 		var lane_dist = 3.2 if (i % 2 == 0) else -3.2
 		var lane_offset = right * lane_dist
-		var spawn_pt = p_cur + lane_offset + Vector3(0, 0.4, 0)
-		var basis = Basis(right, Vector3.UP, fwd)
-		veh.global_transform = Transform3D(basis, spawn_pt)
+		var spawn_pt = p_cur + lane_offset + Vector3(0, 0.05, 0)
+		veh.global_transform = Transform3D().looking_at(fwd, Vector3.UP)
+		veh.global_position = spawn_pt
 
 		world_container.add_child(veh)
 
@@ -737,7 +750,7 @@ func _spawn_rivals(mission_data: Dictionary) -> void:
 		var rival_id = "rival_%d" % i
 		veh.name = rival_id
 		veh.vehicle_owner_id = rival_id
-		veh.vehicle_id = ChromaConstants.VEHICLE_VORTEX if i % 2 == 0 else ChromaConstants.VEHICLE_QUANTUM
+		veh.vehicle_id = ChromaConstants.VEHICLE_APEX if i % 2 == 0 else ChromaConstants.VEHICLE_QUANTUM
 		veh.is_player = false
 		veh.initial_color = ChromaConstants.ChromaColor.NONE
 		veh.current_color = ChromaConstants.ChromaColor.NONE
@@ -747,11 +760,15 @@ func _spawn_rivals(mission_data: Dictionary) -> void:
 		var p_cur = wps[wp_idx]
 		var p_next = wps[(wp_idx + 1) % wps.size()]
 		var fwd = (p_next - p_cur).normalized()
-		var right = Vector3.UP.cross(fwd).normalized()
+		fwd.y = 0.0
+		if fwd.length_squared() < 0.001:
+			fwd = Vector3.FORWARD
+		fwd = fwd.normalized()
+		var right = fwd.cross(Vector3.UP).normalized()
 		var lane_offset = right * (-3.0 if (i % 2 == 0) else 3.0)
-		var spawn_pt = p_cur + lane_offset + Vector3(0, 0.4, 0)
-		var basis = Basis(right, Vector3.UP, fwd)
-		veh.global_transform = Transform3D(basis, spawn_pt)
+		var spawn_pt = p_cur + lane_offset + Vector3(0, 0.05, 0)
+		veh.global_transform = Transform3D().looking_at(fwd, Vector3.UP)
+		veh.global_position = spawn_pt
 
 		world_container.add_child(veh)
 

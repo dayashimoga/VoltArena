@@ -1013,4 +1013,34 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **Web Release Export**: Validated release build (`export/web/index.html`, `index.pck`, `index.wasm`) with verified Cloudflare Pages `_headers` (COOP/COEP isolation).
 - **Suite-Wide Stability**: 0 regressions across all 8 games in the VoltArena suite.
 
+## [9.5.0-chroma-rush-vehicle-grounding-and-urban-visual-overhaul] - 2026-09-27
+### Fixed & Enhanced
+- **Eliminated Floating Inverted AI Vehicles**:
+  - Replaced low-profile go-kart formula racer model (`car_race.glb`) with a varied fleet of full-bodied production cars (`car_sedan_sports.glb`, `car_hatchback_sports.glb`, `car_suv_luxury.glb`, `car_sedan.glb`, `car_taxi.glb`).
+  - Corrected flawed traffic spawn basis in `ChromaRushMain` by switching to canonical `Transform3D().looking_at(fwd, Vector3.UP)`, eliminating 180° backward-facing spawns.
+  - Fixed negative determinant ($-1.0$) reflection matrix in `ChromaAIDriver` overturn recovery, ensuring auto-righting always produces an upright, orthonormal coordinate frame and settling vehicles gently on the road surface without vertical accumulation.
+- **Grounding and Elimination of Vehicle Floating**:
+  - Calibrated visual node elevation (`visual_node.position.y = -0.12`) relative to the curb-clearing collision box ($Y = 0.50\text{m}$ center), seating tire rubber directly onto the asphalt surface ($0.01\text{m}$ clearance) with realistic tire compression.
+  - Added an unshaded, soft-falloff ground contact shadow quad (`_build_ground_contact_shadow()` in `VehicleVisuals`) directly beneath every vehicle chassis at $Y = 0.012\text{m}$, ensuring cars remain firmly anchored to the road even with low-angle directional sunlight.
+  - Lowered default vehicle spawn height from $+0.45\text{m}$ to $+0.05\text{m}$ across all worlds and in `reset_to_road()`, eliminating mid-air spawn drops.
+- **Architectural Diversity Pipeline (No Identical Buildings)**:
+  - Implemented an `ARCHITECTURAL_SHADER_CODE` shader pipeline in `NeonCity` with 6 distinct realistic PBR themes:
+    1. *Sapphire Financial Center*: Reflective deep blue curtain-wall glass (metallic 0.88, roughness 0.08, clearcoat 1.0) with brushed titanium silver base.
+    2. *Limestone & Bronze Executive Plaza*: Warm natural limestone masonry facade with dark bronze metal trim and bronze-tinted glass.
+    3. *Obsidian Tech Plaza*: Dark graphite/anthracite composite panels with polarized cyan-blue reflective glazing.
+    4. *Emerald Eco-Terrace Tower*: Crisp architectural white stone with cedar wood accents and garden terrace setbacks.
+    5. *Terracotta Metro Tower*: Warm European terracotta brick with patina copper trim.
+    6. *Titanium Modernist High-Rise*: Brushed aerospace metal panels with smoked dark privacy glazing.
+  - Dynamically styled both GLB models and procedural commercial high-rises so adjacent buildings along all avenues exhibit unique materials, colors, and silhouettes.
+  - Added urban granite paver foundations under all buildings and landscaped green verges along sidewalks.
+- **Realistic Natural Greenery & Foliage**:
+  - Replaced geometric low-poly faceted crowns and pyramid cones with realistic organic deciduous trees: natural tapered bark trunks with flared root bases and 5 overlapping spherical foliage clusters with rich natural chlorophyll greens and diffuse Burley light scattering.
+  - Added circular stone sidewalk planters with rich dark loamy soil and manicured turf verges with curbside shrubs.
+
+### Verification & Releases
+- **Master Test Runner**: **72 test suites, 2,708 passed assertions, 0 failures (100% pass rate)**.
+- **Function Coverage**: **92.0%** (994 / 1,080 functions tested).
+- **Web Release Export**: Validated production Web release bundle (`export/web/index.html`, `index.pck`, `index.wasm`) with COOP/COEP isolation headers.
+- **Suite-Wide Stability**: Zero regressions across all 8 games in the VoltArena suite.
+
 

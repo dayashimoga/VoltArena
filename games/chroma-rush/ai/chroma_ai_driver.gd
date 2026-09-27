@@ -39,20 +39,21 @@ func update_driving(delta: float) -> void:
 	if not vehicle or not is_instance_valid(vehicle):
 		return
 
-	# Overturned recovery: check if vehicle is upside-down or on side
+	# Overturned recovery: check if vehicle is genuine upside-down
 	if vehicle.is_inside_tree():
 		var up_vec = vehicle.global_transform.basis.y
-		if up_vec.dot(Vector3.UP) < 0.25:
-			# Auto-right the vehicle
+		if up_vec.dot(Vector3.UP) < -0.15:
+			# Auto-right the vehicle with an orthonormal positive-determinant transform
 			var fwd = -vehicle.global_transform.basis.z
 			fwd.y = 0.0
-			if fwd.length_squared() > 0.01:
-				var right = Vector3.UP.cross(fwd).normalized()
-				var up = fwd.cross(right).normalized()
-				vehicle.global_transform.basis = Basis(right, up, -fwd.normalized())
-				vehicle.global_position.y += 0.6
-				vehicle.velocity = Vector3.ZERO
-				vehicle.forward_speed = 0.0
+			if fwd.length_squared() < 0.01:
+				fwd = Vector3.FORWARD
+			fwd = fwd.normalized()
+			var righted_xf = Transform3D().looking_at(fwd, Vector3.UP)
+			vehicle.global_transform.basis = righted_xf.basis
+			vehicle.global_position.y = maxf(vehicle.global_position.y, 0.05)
+			vehicle.velocity = Vector3.ZERO
+			vehicle.forward_speed = 0.0
 
 	# Active reverse recovery maneuver
 	if reverse_time > 0.0:

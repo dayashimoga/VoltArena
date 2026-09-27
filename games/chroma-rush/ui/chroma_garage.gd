@@ -66,7 +66,7 @@ func setup_ui_layout() -> void:
 	add_child(sidebar)
 
 	var svbox = VBoxContainer.new()
-	svbox.theme_override_constants.separation = 12
+	svbox.add_theme_constant_override("separation", 12)
 	sidebar.add_child(svbox)
 
 	var title = Label.new()

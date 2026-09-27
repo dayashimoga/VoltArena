@@ -11,9 +11,9 @@ const ModelCache = preload("res://shared/graphics/model_cache.gd")
 
 const GLB_MAP = {
 	ChromaConstants.VEHICLE_APEX: "res://assets/models/vehicles/car_sedan_sports.glb",
-	ChromaConstants.VEHICLE_VORTEX: "res://assets/models/vehicles/car_race.glb",
+	ChromaConstants.VEHICLE_VORTEX: "res://assets/models/vehicles/car_sedan.glb",
 	ChromaConstants.VEHICLE_TITAN: "res://assets/models/vehicles/car_suv_luxury.glb",
-	ChromaConstants.VEHICLE_PULSE: "res://assets/models/vehicles/car_race_future.glb",
+	ChromaConstants.VEHICLE_PULSE: "res://assets/models/vehicles/car_police.glb",
 	ChromaConstants.VEHICLE_DUNE: "res://assets/models/vehicles/car_suv.glb",
 	ChromaConstants.VEHICLE_QUANTUM: "res://assets/models/vehicles/car_hatchback_sports.glb",
 	"traffic_sedan": "res://assets/models/vehicles/car_sedan.glb",
@@ -90,8 +90,22 @@ void fragment() {
 }
 """
 
+const CONTACT_SHADOW_SHADER_CODE = """
+shader_type spatial;
+render_mode blend_mix, depth_draw_never, cull_disabled, unshaded;
+
+void fragment() {
+	vec2 p = (UV - vec2(0.5)) * 2.0;
+	float d = length(max(abs(p) - vec2(0.32, 0.46), vec2(0.0)));
+	float alpha = smoothstep(0.68, 0.0, d) * 0.76;
+	ALBEDO = vec3(0.015, 0.015, 0.02);
+	ALPHA = alpha;
+}
+"""
+
 static var _cached_shader: Shader = null
 static var _cached_wheel_shader: Shader = null
+static var _cached_shadow_shader: Shader = null
 
 static func get_paint_shader() -> Shader:
 	if not _cached_shader:
@@ -104,6 +118,25 @@ static func get_wheel_shader() -> Shader:
 		_cached_wheel_shader = Shader.new()
 		_cached_wheel_shader.code = WHEEL_SHADER_CODE
 	return _cached_wheel_shader
+
+static func get_contact_shadow_shader() -> Shader:
+	if not _cached_shadow_shader:
+		_cached_shadow_shader = Shader.new()
+		_cached_shadow_shader.code = CONTACT_SHADOW_SHADER_CODE
+	return _cached_shadow_shader
+
+static func _build_ground_contact_shadow() -> MeshInstance3D:
+	var mi = MeshInstance3D.new()
+	mi.name = "GroundContactShadow"
+	var quad = QuadMesh.new()
+	quad.size = Vector2(2.1, 4.3)
+	mi.mesh = quad
+	mi.rotation_degrees.x = -90.0
+	mi.position = Vector3(0, 0.012, 0)
+	var mat = ShaderMaterial.new()
+	mat.shader = get_contact_shadow_shader()
+	mi.material_override = mat
+	return mi
 
 
 static func build_vehicle_visual(vehicle_id: String, base_color: int = ChromaConstants.ChromaColor.CRIMSON, paint_finish: String = "metallic") -> Node3D:
@@ -185,6 +218,10 @@ static func build_vehicle_visual(vehicle_id: String, base_color: int = ChromaCon
 
 	# 5. Apply authoritative gameplay color to all body paint surfaces
 	apply_gameplay_color(root, base_color, paint_finish)
+
+	# 6. Realistic Ambient Ground Contact Shadow Quad
+	var shadow_node = _build_ground_contact_shadow()
+	root.add_child(shadow_node)
 
 	return root
 

@@ -102,10 +102,8 @@ func generate_waypoints() -> void:
 	var p0 = waypoints[0]
 	var p1 = waypoints[1]
 	var forward = (p1 - p0).normalized()
-	var right = Vector3.UP.cross(forward).normalized()
-	var up = forward.cross(right).normalized()
-	var basis = Basis(right, up, forward)
-	player_spawn_transform = Transform3D(basis, p0 + Vector3(0, 0.4, 0))
+	player_spawn_transform = Transform3D().looking_at(forward, Vector3.UP)
+	player_spawn_transform.origin = p0 + Vector3(0, 0.05, 0)
 
 	traffic_spawn_data = [
 		{"waypoint_idx": 2, "color": ChromaConstants.ChromaColor.CYAN, "speed": 26.0},

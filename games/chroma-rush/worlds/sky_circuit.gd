@@ -13,25 +13,67 @@ func setup_lighting() -> void:
 	world_environment = WorldEnvironment.new()
 	world_environment.name = "WorldEnv"
 	var env = Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.12, 0.16, 0.32) # Twilight upper stratosphere
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.50, 0.60, 0.85)
-	env.ambient_light_energy = 1.25
+	env.background_mode = Environment.BG_SKY
+
+	var sky = Sky.new()
+	var sky_mat = ProceduralSkyMaterial.new()
+	sky_mat.sky_top_color = Color(0.12, 0.16, 0.36)       # Twilight upper stratosphere
+	sky_mat.sky_horizon_color = Color(0.48, 0.42, 0.65)   # Glowing lavender twilight horizon
+	sky_mat.ground_bottom_color = Color(0.18, 0.20, 0.30) # Soft cloud shadow floor
+	sky_mat.ground_horizon_color = Color(0.45, 0.40, 0.58)
+	sky_mat.sun_angle_max = 20.0
+	sky.sky_material = sky_mat
+	env.sky = sky
+
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.ambient_light_energy = 1.15
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.05
 	env.glow_enabled = true
-	env.glow_intensity = 0.9
-	env.glow_bloom = 0.3
+	env.glow_intensity = 0.5
+	env.glow_bloom = 0.15
+	env.fog_enabled = true
+	env.fog_light_color = Color(0.38, 0.36, 0.52)
+	env.fog_density = 0.0010
 	world_environment.environment = env
 	add_child(world_environment)
 
 	sun_light = DirectionalLight3D.new()
 	sun_light.name = "SunLight"
-	sun_light.rotation_degrees = Vector3(-60, 20, 0)
-	sun_light.light_color = Color(0.9, 0.95, 1.0)
-	sun_light.light_energy = 1.3
+	sun_light.rotation_degrees = Vector3(-55, 30, 0)
+	sun_light.light_color = Color(0.92, 0.94, 1.0)
+	sun_light.light_energy = 1.4
 	sun_light.shadow_enabled = true
+	sun_light.shadow_bias = 0.03
 	add_child(sun_light)
+
+func setup_ground_plane() -> void:
+	# Vast cloud deck plane beneath the elevated skyway
+	var cloud_deck = StaticBody3D.new()
+	cloud_deck.name = "CloudDeckPlane"
+	cloud_deck.collision_layer = GameConstants.LAYER_WORLD
+
+	var mi = MeshInstance3D.new()
+	var plane_mesh = PlaneMesh.new()
+	plane_mesh.size = Vector2(2000, 2000)
+	mi.mesh = plane_mesh
+
+	var mat_clouds = StandardMaterial3D.new()
+	mat_clouds.albedo_color = Color(0.80, 0.82, 0.90) # Volumetric-like silver-white cloud tops
+	mat_clouds.roughness = 0.98
+	mat_clouds.metallic = 0.0
+	mi.material_override = mat_clouds
+	cloud_deck.add_child(mi)
+
+	var col = CollisionShape3D.new()
+	var shape = BoxShape3D.new()
+	shape.size = Vector3(2000, 2.0, 2000)
+	col.shape = shape
+	col.position = Vector3(0, -1.0, 0)
+	cloud_deck.add_child(col)
+
+	cloud_deck.position = Vector3(0, 5.0, 0) # Cloud tops beneath elevated road
+	props_container.add_child(cloud_deck)
 
 func generate_waypoints() -> void:
 	waypoints.clear()
@@ -57,14 +99,20 @@ func generate_waypoints() -> void:
 	for p in raw_points:
 		waypoints.append(p)
 
-	player_spawn_transform = Transform3D(Basis(), Vector3(0, 50.4, 0))
+	var p0 = waypoints[0]
+	var p1 = waypoints[1]
+	var forward = (p1 - p0).normalized()
+	var right = Vector3.UP.cross(forward).normalized()
+	var up = forward.cross(right).normalized()
+	var basis = Basis(right, up, forward)
+	player_spawn_transform = Transform3D(basis, p0 + Vector3(0, 0.4, 0))
 
 	traffic_spawn_data = [
-		{"waypoint_idx": 1, "color": ChromaConstants.ChromaColor.CYAN, "speed": 26.0},
-		{"waypoint_idx": 4, "color": ChromaConstants.ChromaColor.MAGENTA, "speed": 24.0},
-		{"waypoint_idx": 7, "color": ChromaConstants.ChromaColor.CRIMSON, "speed": 27.0},
-		{"waypoint_idx": 9, "color": ChromaConstants.ChromaColor.EMERALD, "speed": 25.0},
-		{"waypoint_idx": 12, "color": ChromaConstants.ChromaColor.SOLAR, "speed": 28.0}
+		{"waypoint_idx": 2, "color": ChromaConstants.ChromaColor.CYAN, "speed": 26.0},
+		{"waypoint_idx": 5, "color": ChromaConstants.ChromaColor.MAGENTA, "speed": 24.0},
+		{"waypoint_idx": 8, "color": ChromaConstants.ChromaColor.CRIMSON, "speed": 27.0},
+		{"waypoint_idx": 11, "color": ChromaConstants.ChromaColor.EMERALD, "speed": 25.0},
+		{"waypoint_idx": 14, "color": ChromaConstants.ChromaColor.SOLAR, "speed": 28.0}
 	]
 
 func build_road_mesh() -> void:

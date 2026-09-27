@@ -850,3 +850,35 @@
   - `export/web/` (Cloudflare-compliant WASM/PCK chunks $\le 18\text{MB}$)
   - `export/dist/` (`VoltArena-Web.zip`, `VoltArena-Linux-x86_64.tar.gz`, `VoltArena-Windows-x86_64.zip`, `VoltArena-Android.apk`)
   - `IMPLEMENTATION_PLAN.md` and `IMPLEMENTATION_WALKTHROUGH.md`
+
+### [2026-09-27 03:20:00 UTC] - Milestone Update: Chroma Rush Playability, Realistic Visual Overhaul & Navigation Upgrade
+- **Status**: COMPLETED
+- **Description**:
+  1. **Playability & Movement Root Cause Fixes**:
+     - Eliminated stationary car bug (0 km/h) by implementing multi-tiered input polling in `ChromaVehicle` (`_handle_player_input`) with direct key fallbacks (WASD/arrows), touch/mobile `InputManager.virtual_move_vector` support, and explicit `controls_enabled` flag.
+     - Resolved keybinding conflict by remapping `swap` to `KEY_E`, reserving `KEY_SPACE` exclusively for nitro boost.
+     - Staggered vehicle spawning: player spawns at `player_spawn_transform`, traffic and rivals spawn in forward road-aligned left/right lanes ($\pm 3.0\text{m}$) spaced along waypoints, eliminating spawn crowding and physics clipping.
+     - Implemented state lifecycle: `LOADING` -> `BRIEFING` -> `COUNTDOWN` (3-2-1-GO!) -> `PLAYING` -> `PAUSED` -> `RESULTS`, starting mission timers strictly upon countdown completion.
+     - Replaced raw engine failure strings (`TIME_EXPIRED`, `WRONG_COLOR`, `OFF_COURSE`) with helpful, player-facing recovery explanations.
+  2. **Realistic Visual Overhaul Across All Worlds & Vehicles**:
+     - Redesigned all 6 vehicle archetypes in `vehicle_visuals.gd` with realistic proportions, sloped hoods, air intakes, tinted glasshouses, front splitters, rear diffusers, aerodynamic spoilers, chrome exhaust tips, treaded rubber tires, and 3D alloy rims.
+     - Rebuilt `world_base.gd` and `neon_city.gd` with PBR asphalt roadways, white outer boundary lines, yellow dashed centerlines, concrete curbs, sidewalks, street lamps, directional sunlight with shadows, procedural daylight sky dome, and authentic buildings (`building_a.glb` through `building_garage.glb`).
+     - Enhanced `coastal_rush.gd` (ocean plane, suspension bridge towers, lighthouse bluff), `prism_canyon.gd` (desert sunset sky, sandstone terrain, rock arches, mesas), and `sky_circuit.gd` (twilight stratosphere sky dome, rolling cloud deck, elevated flyovers).
+  3. **Minimap, Tactical Full Map & World Selection**:
+     - Implemented live HUD minimap radar (`ChromaMiniMap`) with real-time road splines, player heading arrow, moving vehicle dots with color badges and symbols, and active objective beacon.
+     - Implemented expandable tactical map modal (`ChromaFullMap`) with pan, zoom, recenter, route guidance line, distance readout, marker filters, and legend.
+     - Implemented World & City Selection screen (`WorldSelectScreen`) with scenic previews, difficulty ratings, track statistics, and game mode selector (Color Hunt, Chroma Sprint, Puzzle Drive, Championship, Free Drive Practice).
+     - Added untimed Free Drive (Practice) mode and interactive 6-step tutorial.
+  4. **Master Test Suite & Release Verification**:
+     - All 72 test suites passing with 100% success rate: **2,691 passed assertions, 0 failures**.
+     - Function coverage: **92.8%** (992 / 1,069 functions).
+     - Packaged release distribution archives generated in `export/dist/`:
+       - `export/dist/VoltArena-Web.zip` (157.00 MB)
+       - `export/dist/VoltArena-Linux-x86_64.tar.gz` (93.77 MB)
+       - `export/dist/VoltArena-Windows-x86_64.zip` (99.62 MB)
+       - `export/dist/VoltArena-Android.apk` (108.73 MB)
+- **Evidence**:
+  - `artifacts/test-results.json` (72 suites, 2691 passed, 0 failed, 100% pass rate)
+  - `artifacts/coverage-report.json` (92.8% function coverage)
+  - `export/dist/` release packages
+  - `IMPLEMENTATION_PLAN.md` and `IMPLEMENTATION_WALKTHROUGH.md`

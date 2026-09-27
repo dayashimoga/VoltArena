@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 93.1493815413891,
-  "coverage_tested_functions": 979,
-  "coverage_total_functions": 1051,
-  "execution_seconds": 65.659,
+  "coverage_percent": 92.7970065481759,
+  "coverage_tested_functions": 992,
+  "coverage_total_functions": 1069,
+  "execution_seconds": 69.908,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -42,7 +42,7 @@
     },
     "Chroma Rush E2E Scenarios": {
       "failed": 0,
-      "passed": 44,
+      "passed": 53,
       "status": "PASS"
     },
     "Chroma Vehicle Physics Unit": {
@@ -366,8 +366,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-27T02:07:54",
+  "timestamp": "2026-09-27T03:11:40",
   "total_failed": 0,
-  "total_passed": 2682,
+  "total_passed": 2691,
   "total_suites": 72
 }

@@ -11,6 +11,10 @@ const ChromaSaveAdapter = preload("res://games/chroma-rush/persistence/chroma_sa
 
 signal back_to_menu_requested()
 signal vehicle_selected_for_play(vehicle_id: String)
+signal garage_closed()
+signal vehicle_selected(vehicle_id: String, color: Color, finish: String)
+
+var save_adapter: Variant = null
 
 var vehicle_display_root: Node3D
 var current_preview_vehicle: Node3D
@@ -34,6 +38,10 @@ func _ready() -> void:
 
 	setup_ui_layout()
 	setup_3d_turntable()
+	refresh_display()
+
+func open_garage() -> void:
+	visible = true
 	refresh_display()
 
 func setup_ui_layout() -> void:
@@ -135,7 +143,10 @@ func setup_ui_layout() -> void:
 	# Back Button
 	var back_btn = Button.new()
 	back_btn.text = "BACK TO MENU"
-	back_btn.pressed.connect(func(): back_to_menu_requested.emit())
+	back_btn.pressed.connect(func():
+		back_to_menu_requested.emit()
+		garage_closed.emit()
+	)
 	svbox.add_child(back_btn)
 
 func setup_3d_turntable() -> void:
@@ -170,6 +181,13 @@ func _navigate_vehicle(dir: int) -> void:
 	refresh_display()
 
 func refresh_display() -> void:
+	if all_vehicle_ids.is_empty():
+		all_vehicle_ids = VehicleCatalog.get_all_vehicle_ids()
+	if all_vehicle_ids.is_empty() or selected_vehicle_idx >= all_vehicle_ids.size():
+		return
+	if not is_instance_valid(vehicle_name_label):
+		return
+
 	var v_id = all_vehicle_ids[selected_vehicle_idx]
 	var def = VehicleCatalog.get_vehicle_definition(v_id)
 	var is_unlocked = ChromaSaveAdapter.is_vehicle_unlocked(v_id)
@@ -248,10 +266,13 @@ func _on_action_pressed() -> void:
 	if ChromaSaveAdapter.is_vehicle_unlocked(v_id):
 		ChromaSaveAdapter.select_vehicle(v_id)
 		vehicle_selected_for_play.emit(v_id)
+		vehicle_selected.emit(v_id, Color.WHITE, "metallic")
 		refresh_display()
 	else:
 		if ChromaSaveAdapter.unlock_vehicle(v_id):
 			ChromaSaveAdapter.select_vehicle(v_id)
+			vehicle_selected_for_play.emit(v_id)
+			vehicle_selected.emit(v_id, Color.WHITE, "metallic")
 			refresh_display()
 
 func _format_number(n: int) -> String:

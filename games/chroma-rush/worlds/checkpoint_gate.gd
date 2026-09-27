@@ -9,6 +9,7 @@ const ChromaConstants = preload("res://games/chroma-rush/core/chroma_constants.g
 const ChromaVehicle = preload("res://games/chroma-rush/vehicles/chroma_vehicle.gd")
 
 signal gate_passed(vehicle: ChromaVehicle, is_match: bool)
+signal checkpoint_entered(body: Node3D)
 
 @export var gate_id: String = "gate_1"
 @export var target_color: int = ChromaConstants.ChromaColor.CRIMSON
@@ -103,6 +104,7 @@ func apply_target_color(new_color: int) -> void:
 		symbol_label.modulate = col.lightened(0.3)
 
 func _on_body_entered(body: Node3D) -> void:
+	checkpoint_entered.emit(body)
 	if body is ChromaVehicle:
 		var is_match = (body.current_color == target_color)
 		gate_passed.emit(body, is_match)

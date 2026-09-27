@@ -13,22 +13,61 @@ func setup_lighting() -> void:
 	world_environment = WorldEnvironment.new()
 	world_environment.name = "WorldEnv"
 	var env = Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.85, 0.55, 0.35) # Warm sandstone sunset sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.70, 0.45, 0.30)
-	env.ambient_light_energy = 1.2
+	env.background_mode = Environment.BG_SKY
+
+	var sky = Sky.new()
+	var sky_mat = ProceduralSkyMaterial.new()
+	sky_mat.sky_top_color = Color(0.85, 0.45, 0.22)       # Desert sunset amber
+	sky_mat.sky_horizon_color = Color(0.95, 0.65, 0.40)   # Golden glow horizon
+	sky_mat.ground_bottom_color = Color(0.35, 0.18, 0.10) # Red sandstone earth
+	sky_mat.ground_horizon_color = Color(0.70, 0.45, 0.25)
+	sky_mat.sun_angle_max = 25.0
+	sky.sky_material = sky_mat
+	env.sky = sky
+
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.ambient_light_energy = 1.10
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.05
+	env.fog_enabled = true
+	env.fog_light_color = Color(0.88, 0.62, 0.42)
+	env.fog_density = 0.0018
 	world_environment.environment = env
 	add_child(world_environment)
 
 	sun_light = DirectionalLight3D.new()
 	sun_light.name = "SunLight"
-	sun_light.rotation_degrees = Vector3(-35, -50, 0)
-	sun_light.light_color = Color(1.0, 0.85, 0.65)
-	sun_light.light_energy = 1.5
+	sun_light.rotation_degrees = Vector3(-30, -55, 0)
+	sun_light.light_color = Color(1.0, 0.88, 0.70)
+	sun_light.light_energy = 1.6
 	sun_light.shadow_enabled = true
+	sun_light.shadow_bias = 0.03
 	add_child(sun_light)
+
+func setup_ground_plane() -> void:
+	var ground = StaticBody3D.new()
+	ground.name = "CanyonGroundPlane"
+	ground.collision_layer = GameConstants.LAYER_WORLD
+
+	var mi = MeshInstance3D.new()
+	var plane_mesh = PlaneMesh.new()
+	plane_mesh.size = Vector2(1800, 1800)
+	mi.mesh = plane_mesh
+
+	var mat_ground = StandardMaterial3D.new()
+	mat_ground.albedo_color = Color(0.58, 0.32, 0.18) # Warm red-brown sandstone desert floor
+	mat_ground.roughness = 0.95
+	mi.material_override = mat_ground
+	ground.add_child(mi)
+
+	var col = CollisionShape3D.new()
+	var shape = BoxShape3D.new()
+	shape.size = Vector3(1800, 1.0, 1800)
+	col.shape = shape
+	col.position = Vector3(0, -5.5, 0)
+	ground.add_child(col)
+
+	props_container.add_child(ground)
 
 func generate_waypoints() -> void:
 	waypoints.clear()
@@ -54,14 +93,20 @@ func generate_waypoints() -> void:
 	for p in raw_points:
 		waypoints.append(p)
 
-	player_spawn_transform = Transform3D(Basis(), Vector3(0, 0.4, 0))
+	var p0 = waypoints[0]
+	var p1 = waypoints[1]
+	var forward = (p1 - p0).normalized()
+	var right = Vector3.UP.cross(forward).normalized()
+	var up = forward.cross(right).normalized()
+	var basis = Basis(right, up, forward)
+	player_spawn_transform = Transform3D(basis, p0 + Vector3(0, 0.4, 0))
 
 	traffic_spawn_data = [
-		{"waypoint_idx": 1, "color": ChromaConstants.ChromaColor.SOLAR, "speed": 22.0},
-		{"waypoint_idx": 4, "color": ChromaConstants.ChromaColor.CRIMSON, "speed": 25.0},
-		{"waypoint_idx": 7, "color": ChromaConstants.ChromaColor.EMERALD, "speed": 21.0},
-		{"waypoint_idx": 10, "color": ChromaConstants.ChromaColor.COBALT, "speed": 23.0},
-		{"waypoint_idx": 13, "color": ChromaConstants.ChromaColor.MAGENTA, "speed": 20.0}
+		{"waypoint_idx": 2, "color": ChromaConstants.ChromaColor.SOLAR, "speed": 22.0},
+		{"waypoint_idx": 5, "color": ChromaConstants.ChromaColor.CRIMSON, "speed": 25.0},
+		{"waypoint_idx": 8, "color": ChromaConstants.ChromaColor.EMERALD, "speed": 21.0},
+		{"waypoint_idx": 11, "color": ChromaConstants.ChromaColor.COBALT, "speed": 23.0},
+		{"waypoint_idx": 14, "color": ChromaConstants.ChromaColor.MAGENTA, "speed": 20.0}
 	]
 
 func build_road_mesh() -> void:

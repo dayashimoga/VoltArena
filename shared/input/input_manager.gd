@@ -36,7 +36,7 @@ func setup_default_actions() -> void:
 	add_action_key("reload", KEY_R, JOY_BUTTON_X)
 	add_action_key("boost", KEY_SPACE, JOY_BUTTON_B)
 	add_action_key("drift", KEY_SHIFT, JOY_BUTTON_X)
-	add_action_key("swap", KEY_SPACE, JOY_BUTTON_Y)
+	add_action_key("swap", KEY_E, JOY_BUTTON_Y)
 	add_action_key("target_cycle", KEY_TAB, JOY_BUTTON_RIGHT_SHOULDER)
 	add_action_key("pause", KEY_ESCAPE, JOY_BUTTON_START)
 	_cache_all_action_events()

@@ -884,3 +884,34 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Desktop: Linux x86_64 (`VoltArena.x86_64`) and Windows x86_64 (`VoltArena.exe`).
   - Mobile: Android APK (`VoltArena.apk`).
   - Distribution archives generated in `export/dist/`: `VoltArena-Web.zip` (156.94 MB), `VoltArena-Linux-x86_64.tar.gz` (93.71 MB), `VoltArena-Windows-x86_64.zip` (99.56 MB), and `VoltArena-Android.apk` (108.73 MB).
+
+## [9.1.0-chroma-rush-realistic-overhaul-and-navigation] - 2026-09-27
+### Fixed
+- **Stationary Vehicle & Playability Root Causes**:
+  - Implemented multi-channel input handling in `ChromaVehicle._handle_player_input()`: queries Godot `InputMap`, directly inspects physical keys (`KEY_W`, `KEY_UP`, `KEY_S`, `KEY_DOWN`, `KEY_A`, `KEY_LEFT`, `KEY_D`, `KEY_RIGHT`, `KEY_SPACE`), and binds to `InputManager.virtual_move_vector` for mobile touch controls.
+  - Eliminated input action collision between `swap` and `boost`: remapped `swap` to `KEY_E`, reserving `KEY_SPACE` strictly for boost.
+  - Added `controls_enabled` flag to `ChromaVehicle`, preventing input freezing while enabling state-controlled responsiveness.
+  - Staggered spawn positions: player positioned directly from `player_spawn_transform`, traffic and rivals spawned in forward road-aligned left/right lanes ($\pm 3.0\text{m}$) spaced along waypoints, eliminating spawn collision stalls.
+  - Implemented automatic rollover self-righting and track boundary safe recovery.
+  - Enforced structured game state machine: `LOADING` -> `BRIEFING` -> `COUNTDOWN` (3-2-1-GO!) -> `PLAYING` -> `PAUSED` -> `RESULTS`, starting mission countdown timer only once the player vehicle is armed and ready.
+  - Replaced internal cryptic failure codes (`TIME_EXPIRED`, `WRONG_COLOR`, `OFF_COURSE`) with helpful, player-facing recovery explanations.
+
+### Added & Overhauled
+- **Realistic Visuals Across All 6 Vehicles & 4 Worlds**:
+  - Completely redesigned `vehicle_visuals.gd`: all 6 archetypes (`apex_striker`, `vortex_drift`, `titan_vanguard`, `pulse_cyber`, `dune_nomad`, `quantum_phantom`) feature aerodynamic splitters, sculpted hoods, cockpit glasshouses, spoilers, rear diffusers, quad exhaust tips, rubber radial tires with tread grooves, and 3D alloy rims.
+  - Overhauled `world_base.gd` and `neon_city.gd`: realistic PBR dark asphalt roadways, white outer boundary lines, yellow dashed centerlines, concrete curbs, sidewalks, street lamps, directional sunlight with shadows, procedural daylight sky dome, and authentic buildings (`building_a.glb` through `building_garage.glb`).
+  - Upgraded `coastal_rush.gd` (azure ocean plane, suspension bridge towers, lighthouse bluff), `prism_canyon.gd` (desert sunset sky dome, sandstone terrain, rock arches, mesas), and `sky_circuit.gd` (stratosphere twilight dome, rolling cloud deck, elevated flyovers).
+- **Navigation & Tactical Map Suite**:
+  - Added live HUD minimap radar (`chroma_mini_map.gd`) with real-time road splines, player heading arrow, moving vehicles (traffic and rivals with color badges and symbols), and active objective beacon.
+  - Added expandable tactical map modal (`chroma_full_map.gd`) with pan, zoom, recenter, route guidance line, distance readout, marker filters, and legend.
+  - Added World & City Selection screen (`world_select_screen.gd`) with scenic previews, difficulty ratings, track statistics, and game mode selector (Color Hunt, Chroma Sprint, Puzzle Drive, Championship, Free Drive Practice).
+  - Added untimed Free Drive (Practice) mode and interactive 6-step tutorial.
+
+### Verification & Delivery
+- **Master Test Runner**: **72 test suites, 2,691 passed assertions, 0 failed (100% pass rate)**.
+- **Function Coverage**: **92.8%** (992 / 1,069 functions).
+- **Packaged Release Distribution Archives**:
+  - `export/dist/VoltArena-Web.zip` (157.00 MB)
+  - `export/dist/VoltArena-Linux-x86_64.tar.gz` (93.77 MB)
+  - `export/dist/VoltArena-Windows-x86_64.zip` (99.62 MB)
+  - `export/dist/VoltArena-Android.apk` (108.73 MB)

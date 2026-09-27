@@ -42,6 +42,7 @@ var drift_direction: float = 0.0 # -1 left, +1 right
 var drift_charge: float = 0.0
 var boost_time_left: float = 0.0
 var boost_speed_bonus: float = 12.0
+var controls_enabled: bool = true
 
 func get_speed_kmh() -> float:
 	return absf(forward_speed) * 3.6
@@ -159,10 +160,68 @@ func set_inputs(steer: float, throttle: float, brake: float, handbrake: bool, bo
 		trigger_nitro_boost(2.0)
 
 func _physics_process(delta: float) -> void:
+	if is_player:
+		_handle_player_input()
 	_update_grounding_and_suspension()
 	_update_physics_movement(delta)
 	_update_visual_dynamics(delta)
 	_check_rollover_and_recovery(delta)
+
+func _handle_player_input() -> void:
+	if not is_inside_tree():
+		return
+	if not controls_enabled:
+		set_inputs(0.0, 0.0, 0.8, false, false)
+		return
+
+	var steer: float = 0.0
+	var throttle: float = 0.0
+	var brake: float = 0.0
+	var handbrake: bool = false
+	var boost: bool = false
+
+	# 1. Action mappings with direct key fallbacks
+	if InputMap.has_action("move_left") and InputMap.has_action("move_right"):
+		steer = Input.get_axis("move_left", "move_right")
+	else:
+		if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
+			steer -= 1.0
+		if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
+			steer += 1.0
+
+	if InputMap.has_action("move_forward"):
+		throttle = Input.get_action_strength("move_forward")
+	else:
+		if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
+			throttle = 1.0
+
+	if InputMap.has_action("move_back"):
+		brake = Input.get_action_strength("move_back")
+	else:
+		if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
+			brake = 1.0
+
+	if InputMap.has_action("drift"):
+		handbrake = Input.is_action_pressed("drift")
+	else:
+		handbrake = Input.is_key_pressed(KEY_SHIFT)
+
+	if InputMap.has_action("boost"):
+		boost = Input.is_action_pressed("boost")
+	else:
+		boost = Input.is_key_pressed(KEY_SPACE)
+
+	# 2. Touch / Virtual Joystick input
+	var im = GameConstants.get_autoload(self, "InputManager")
+	if im and "virtual_move_vector" in im and im.virtual_move_vector != Vector2.ZERO:
+		if absf(im.virtual_move_vector.x) > 0.05:
+			steer = im.virtual_move_vector.x
+		if im.virtual_move_vector.y < -0.05:
+			throttle = maxf(throttle, -im.virtual_move_vector.y)
+		elif im.virtual_move_vector.y > 0.05:
+			brake = maxf(brake, im.virtual_move_vector.y)
+
+	set_inputs(steer, throttle, brake, handbrake, boost)
 
 func _update_grounding_and_suspension() -> void:
 	if not is_inside_tree():

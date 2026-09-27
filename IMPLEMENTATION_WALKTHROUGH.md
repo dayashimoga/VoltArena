@@ -158,6 +158,41 @@ This walkthrough documents all iterations, architectural implementations, contai
 
 ---
 
+## Iteration 8: Playability Root-Cause Fixes, Realistic Visual Overhaul & Tactical Navigation Suite
+- **Date**: 2026-09-27
+- **Goal**:
+  - Reproduce and resolve stationary vehicle problem (0 km/h) and `TIME_EXPIRED` failure.
+  - Replace primitive wireframe models with believable automotive styling and real-world road/city environments.
+  - Implement live HUD minimap radar and expandable tactical full map modal with route guidance and vehicle telemetry.
+  - Implement interactive World/City Selection screen and untimed Free Drive Practice mode.
+- **Root Cause Diagnostics**:
+  1. **Stationary Car (0 km/h)**:
+     - Vehicle input was exclusively listening to `InputMap` actions (`accelerate`, `brake_reverse`, `steer_left`, `steer_right`) without direct physical key polling or touch joystick binding. In certain window focus states or web contexts, `InputMap` actions were unhandled or intercepted by parent controls.
+     - Keybinding conflict: `swap` was mapped to `KEY_SPACE` which collided with `nitro_boost` (`KEY_SPACE`), causing erratic or blocked acceleration.
+     - Fixed in `chroma_vehicle.gd`: Implemented multi-tiered input polling in `_handle_player_input()` querying `InputMap` actions, direct key fallbacks (`KEY_W`, `KEY_UP`, `KEY_S`, `KEY_DOWN`, `KEY_A`, `KEY_LEFT`, `KEY_D`, `KEY_RIGHT`, `KEY_SPACE`, `KEY_SHIFT`), and touch `InputManager.virtual_move_vector`. Remapped `swap` to `KEY_E` in `input_manager.gd`.
+  2. **Spawn Crowding & Road Misalignment**:
+     - Traffic and rivals were spawned too close to the player origin, causing immediate bumper-to-bumper collision locking and road seam snagging.
+     - Fixed in `chroma_rush_main.gd`: Spawns are staggered starting at waypoints 2, 4, 6... for traffic and 3, 7... for rivals, offset into designated left/right lanes ($\pm 3.0\text{m}$) aligned with the road tangent forward vector.
+  3. **Premature Mission Failure (`TIME_EXPIRED`)**:
+     - Mission timer started immediately during scene loading before the player was armed or ready.
+     - Fixed in `chroma_rush_main.gd`: Enforced state machine (`LOADING` $\to$ `BRIEFING` $\to$ `COUNTDOWN` $\to$ `PLAYING` $\to$ `PAUSED` $\to$ `RESULTS`). Mission timer starts strictly after the 3-2-1-GO countdown completes. Replaced internal failure strings with friendly, actionable explanations.
+- **Realistic Visual Overhaul**:
+  - `vehicle_visuals.gd`: Redesigned all 6 vehicle archetypes with authentic proportions, sloped aerodynamic hoods, air scoops, front splitters, tinted cockpits, rear diffusers, quad chrome exhaust tips, treaded radial rubber tires, and 3D alloy rims.
+  - `world_base.gd` & `neon_city.gd`: Dark asphalt PBR roadways with high-contrast lane markings (white outer lines, yellow dashed centerlines), concrete curbs, sidewalks, street lamps, directional sunlight with real-time shadow casting, procedural daylight sky dome, horizon fog, and authentic modular 3D buildings (`building_a.glb` through `building_garage.glb`).
+  - `coastal_rush.gd`: Azure ocean water plane, suspension bridge towers, and coastal bluff.
+  - `prism_canyon.gd`: Desert sunset sky dome, sandstone terrain floor, rock arches, and mesas.
+  - `sky_circuit.gd`: Twilight stratosphere sky dome, rolling cloud deck, and elevated flyovers.
+- **Tactical Navigation & Map Suite**:
+  - `chroma_mini_map.gd`: HUD radar showing road spline paths, player heading arrow, moving vehicles (traffic/rivals with color badges and symbols), and active objective beacon.
+  - `chroma_full_map.gd`: Expandable tactical map modal with pan, zoom, recenter, route guidance line, distance readout, marker filters, and full map legend.
+  - `world_select_screen.gd`: City selector with scenic previews, difficulty ratings, track statistics, and game mode selector (Color Hunt, Chroma Sprint, Puzzle Drive, Championship, Free Drive Practice).
+- **Automated Verification**:
+  - Executed master test runner in Podman container: **72 test suites, 2,691 passed assertions, 0 failed (100% pass rate)**.
+  - Measured repository-wide function coverage: **92.8%** (992 / 1,069 functions).
+  - All release packages in `export/dist/` rebuilt and verified.
+
+---
+
 ## Requirement-to-Evidence Traceability Matrix
 
 | Requirement | Implementation Component | Verification Evidence | Status |

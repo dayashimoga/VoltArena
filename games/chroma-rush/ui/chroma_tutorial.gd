@@ -23,6 +23,7 @@ enum TutorialStep {
 }
 
 var current_step: TutorialStep = TutorialStep.DRIVING_BASICS
+var is_active: bool = false
 var player_vehicle: ChromaVehicle
 var swap_engine: ColorSwapEngine
 var step_progress: float = 0.0
@@ -62,6 +63,7 @@ func _init(p_vehicle: ChromaVehicle = null, p_engine: ColorSwapEngine = null) ->
 		swap_engine.swap_committed.connect(_on_swap_committed)
 
 func start_tutorial() -> void:
+	is_active = true
 	current_step = TutorialStep.DRIVING_BASICS
 	step_progress = 0.0
 	_emit_current_step()
@@ -107,6 +109,7 @@ func advance_step() -> void:
 	var next_idx = int(current_step) + 1
 	if next_idx >= TutorialStep.COMPLETED:
 		current_step = TutorialStep.COMPLETED
+		is_active = false
 		ChromaSaveAdapter.set_tutorial_completed(true)
 		tutorial_completed.emit()
 	else:

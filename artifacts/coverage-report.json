@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 93.1493815413891,
+  "overall_coverage_pct": 92.7970065481759,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -99,8 +99,8 @@
     },
     "res://games/chroma-rush/chroma_rush_main.gd": {
       "coverage_pct": 100,
-      "tested": 17,
-      "total": 17,
+      "tested": 19,
+      "total": 19,
       "untested": []
     },
     "res://games/chroma-rush/content/mission_database.gd": {
@@ -139,11 +139,18 @@
         "reset_all_data"
       ]
     },
+    "res://games/chroma-rush/ui/chroma_full_map.gd": {
+      "coverage_pct": 100,
+      "tested": 6,
+      "total": 6,
+      "untested": []
+    },
     "res://games/chroma-rush/ui/chroma_garage.gd": {
-      "coverage_pct": 60,
+      "coverage_pct": 50,
       "tested": 3,
-      "total": 5,
+      "total": 6,
       "untested": [
+        "open_garage",
         "setup_ui_layout",
         "setup_3d_turntable"
       ]
@@ -162,6 +169,12 @@
         "show_notification"
       ]
     },
+    "res://games/chroma-rush/ui/chroma_mini_map.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
     "res://games/chroma-rush/ui/chroma_tutorial.gd": {
       "coverage_pct": 83.3333333333333,
       "tested": 5,
@@ -169,6 +182,12 @@
       "untested": [
         "_init"
       ]
+    },
+    "res://games/chroma-rush/ui/world_select_screen.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
     },
     "res://games/chroma-rush/vehicles/chroma_vehicle.gd": {
       "coverage_pct": 91.6666666666667,
@@ -197,11 +216,12 @@
       "untested": []
     },
     "res://games/chroma-rush/worlds/coastal_rush.gd": {
-      "coverage_pct": 83.3333333333333,
+      "coverage_pct": 71.4285714285714,
       "tested": 5,
-      "total": 6,
+      "total": 7,
       "untested": [
-        "_init"
+        "_init",
+        "setup_ground_plane"
       ]
     },
     "res://games/chroma-rush/worlds/neon_city.gd": {
@@ -213,26 +233,29 @@
       ]
     },
     "res://games/chroma-rush/worlds/prism_canyon.gd": {
-      "coverage_pct": 83.3333333333333,
+      "coverage_pct": 71.4285714285714,
       "tested": 5,
-      "total": 6,
+      "total": 7,
       "untested": [
-        "_init"
+        "_init",
+        "setup_ground_plane"
       ]
     },
     "res://games/chroma-rush/worlds/sky_circuit.gd": {
-      "coverage_pct": 83.3333333333333,
+      "coverage_pct": 71.4285714285714,
       "tested": 5,
-      "total": 6,
+      "total": 7,
       "untested": [
-        "_init"
+        "_init",
+        "setup_ground_plane"
       ]
     },
     "res://games/chroma-rush/worlds/world_base.gd": {
-      "coverage_pct": 69.2307692307692,
+      "coverage_pct": 64.2857142857143,
       "tested": 9,
-      "total": 13,
+      "total": 14,
       "untested": [
+        "setup_ground_plane",
         "generate_waypoints",
         "build_road_mesh",
         "build_checkpoints",
@@ -1028,7 +1051,7 @@
       "untested": []
     }
   },
-  "tested_functions": 979,
-  "timestamp": "2026-09-27T02:07:54",
-  "total_functions": 1051
+  "tested_functions": 992,
+  "timestamp": "2026-09-27T03:11:40",
+  "total_functions": 1069
 }

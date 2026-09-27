@@ -61,7 +61,18 @@ func get_coverage_entries() -> Array:
 			"quick_play", "continue_game", "show_mission_select", "open_garage",
 			"_on_garage_vehicle_selected", "_on_garage_closed", "start_tutorial",
 			"_on_tutorial_completed", "_on_tutorial_skipped", "pause_game", "resume_game",
-			"restart_mission", "next_mission", "_get_next_mission_id", "return_to_menu", "quit_to_launcher"
+			"restart_mission", "next_mission", "_get_next_mission_id", "return_to_menu", "quit_to_launcher",
+			"_toggle_full_map", "_on_map_expand_requested", "_on_full_map_closed", "show_world_select",
+			"_on_world_mode_selected", "start_practice_mode", "_init_target_beacon"
+		]],
+		["res://games/chroma-rush/ui/chroma_mini_map.gd", [
+			"_init", "_ready", "set_world_data", "update_radar"
+		]],
+		["res://games/chroma-rush/ui/chroma_full_map.gd", [
+			"_ready", "open_map", "close_map", "recenter", "zoom_map", "update_full_map_telemetry"
+		]],
+		["res://games/chroma-rush/ui/world_select_screen.gd", [
+			"_ready"
 		]]
 	]
 
@@ -72,6 +83,7 @@ func test_scenario_1_tutorial_and_color_delivery() -> void:
 	var tree = Engine.get_main_loop() as SceneTree
 	if tree and tree.root:
 		tree.root.add_child(main)
+	main._ready()
 
 	main.start_tutorial()
 	assert_true(main.current_state == ChromaRushMain.State.TUTORIAL, "State should be TUTORIAL")
@@ -149,7 +161,7 @@ func test_scenario_3_all_four_modes_lifecycle() -> void:
 	assert_true(director.score >= 1000, "Score should be awarded")
 
 	# 2. Chroma Sprint (Failure on timeout -> Retry)
-	var sprint_def = MissionDatabase.get_mission_by_id("sprint_coastal_07")
+	var sprint_def = MissionDatabase.get_mission_by_id("sprint_neon_07")
 	director.start_mission(sprint_def)
 	director.update(sprint_def["time_limit"] + 5.0)
 	assert_true(director.is_finished, "Sprint mission should complete when timer expires")
@@ -168,7 +180,19 @@ func test_scenario_3_all_four_modes_lifecycle() -> void:
 	var champ_def = MissionDatabase.get_mission_by_id("champ_neon_19")
 	director.start_mission(champ_def)
 	assert_true(champ_def.get("mode") == ChromaConstants.GameMode.CHAMPIONSHIP, "Championship mode active")
+
+	# Objective 1: Cobalt to gate_2
+	v.current_color = ChromaConstants.ChromaColor.COBALT
+	gate.gate_id = "gate_2"
+	gate.target_color = ChromaConstants.ChromaColor.COBALT
 	director.handle_checkpoint_reached(v, gate)
+
+	# Objective 2: Solar to gate_3
+	v.current_color = ChromaConstants.ChromaColor.SOLAR
+	gate.gate_id = "gate_3"
+	gate.target_color = ChromaConstants.ChromaColor.SOLAR
+	director.handle_checkpoint_reached(v, gate)
+
 	assert_true(director.is_finished, "Championship stage cleared successfully")
 
 	v.free()

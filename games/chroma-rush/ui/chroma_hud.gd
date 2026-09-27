@@ -9,11 +9,16 @@ const ChromaConstants = preload("res://games/chroma-rush/core/chroma_constants.g
 const ChromaVehicle = preload("res://games/chroma-rush/vehicles/chroma_vehicle.gd")
 const MissionDirector = preload("res://games/chroma-rush/core/mission_director.gd")
 const ColorSwapEngine = preload("res://games/chroma-rush/core/color_swap_engine.gd")
+const ChromaMiniMap = preload("res://games/chroma-rush/ui/chroma_mini_map.gd")
 
 signal swap_button_pressed()
 signal pause_requested()
 signal swap_requested()
 signal target_cycle_requested()
+signal map_expand_requested()
+
+# MiniMap radar
+var mini_map: ChromaMiniMap
 
 # Top Objective Badges
 var current_color_badge: PanelContainer
@@ -47,7 +52,8 @@ var swap_engine: ColorSwapEngine
 
 func _ready() -> void:
 	layer = 10
-	setup_hud_layout()
+	if not is_instance_valid(mini_map):
+		setup_hud_layout()
 
 func setup_hud_layout() -> void:
 	var root = Control.new()
@@ -111,6 +117,14 @@ func setup_hud_layout() -> void:
 	stats_box.add_child(swaps_left_label)
 
 	top_bar.add_child(stats_box)
+
+	# --- TOP LEFT: MINI MAP RADAR ---
+	mini_map = ChromaMiniMap.new()
+	mini_map.name = "MiniMap"
+	mini_map.offset_left = 24
+	mini_map.offset_top = 80
+	mini_map.map_expand_requested.connect(func(): map_expand_requested.emit())
+	root.add_child(mini_map)
 
 	# --- CENTER: SWAP LOCK RETICLE ---
 	reticle_container = Control.new()
@@ -266,7 +280,7 @@ func _update_swap_reticle() -> void:
 
 		if target_info["eligible"]:
 			alignment_progress_bar.modulate = Color(0.1, 1.0, 0.3)
-			swap_prompt_label.text = "⚡ SWAP READY! [SPACE / TAP]"
+			swap_prompt_label.text = "⚡ SWAP READY! [E or TAP SWAP]"
 			swap_prompt_label.modulate = Color(0.1, 1.0, 0.3)
 		elif progress > 0.05:
 			alignment_progress_bar.modulate = Color(1.0, 0.8, 0.1)
@@ -274,7 +288,7 @@ func _update_swap_reticle() -> void:
 			swap_prompt_label.modulate = Color(1.0, 0.8, 0.1)
 		else:
 			alignment_progress_bar.modulate = Color(0.7, 0.7, 0.7)
-			swap_prompt_label.text = "PULL ALONGSIDE TO SWAP"
+			swap_prompt_label.text = "PULL ALONGSIDE TO SWAP [E]"
 			swap_prompt_label.modulate = Color(0.8, 0.8, 0.8)
 	else:
 		alignment_progress_bar.value = 0.0
@@ -292,19 +306,25 @@ func update_target_objective(col: int, gate_id: String) -> void:
 		target_color_label.add_theme_color_override("font_color", ChromaConstants.get_color_value(col))
 
 func update_score_and_combo(p_score: int, p_combo: float) -> void:
-	score_label.text = "SCORE: %d" % p_score
-	combo_label.text = "COMBO: x%.1f" % p_combo
+	if is_instance_valid(score_label):
+		score_label.text = "SCORE: %d" % p_score
+	if is_instance_valid(combo_label):
+		combo_label.text = "COMBO: x%.1f" % p_combo
 
 func update_timer(time_left: float) -> void:
-	timer_label.text = "TIME: %.1fs" % time_left
+	if is_instance_valid(timer_label):
+		timer_label.text = "TIME: %.1fs" % time_left
 
 func set_swaps_remaining(swaps_left: int) -> void:
-	if swaps_left >= 0:
-		swaps_left_label.text = "SWAPS LEFT: %d" % swaps_left
-	else:
-		swaps_left_label.text = ""
+	if is_instance_valid(swaps_left_label):
+		if swaps_left >= 0:
+			swaps_left_label.text = "SWAPS LEFT: %d" % swaps_left
+		else:
+			swaps_left_label.text = ""
 
 func setup_mission(title: String, time_limit: float) -> void:
+	if not is_instance_valid(timer_label):
+		setup_hud_layout()
 	update_timer(time_limit)
 	update_score_and_combo(0, 1.0)
 
@@ -328,10 +348,12 @@ func show_swap_prompt(eligible: bool, target_color: int) -> void:
 	if swap_prompt_label:
 		swap_prompt_label.visible = true
 		if eligible:
-			swap_prompt_label.text = "⚡ SWAP READY! [%s]" % ChromaConstants.get_color_name(target_color)
+			var color_name = ChromaConstants.get_color_name(target_color)
+			var sym = ChromaConstants.get_color_symbol(target_color)
+			swap_prompt_label.text = "⚡ SWAP READY! Press [E] for %s %s" % [sym, color_name]
 			swap_prompt_label.modulate = Color(0.1, 1.0, 0.3)
 		else:
-			swap_prompt_label.text = "ALIGNING WITH TARGET..."
+			swap_prompt_label.text = "ALIGN ALONGSIDE TARGET TO SWAP [E]"
 			swap_prompt_label.modulate = Color(1.0, 0.8, 0.1)
 
 func hide_swap_prompt() -> void:
@@ -341,8 +363,16 @@ func hide_swap_prompt() -> void:
 
 func show_swap_rejected(reason: String) -> void:
 	if swap_prompt_label:
-		swap_prompt_label.text = "REJECTED: " + reason.replace("_", " ")
-		swap_prompt_label.modulate = Color(1.0, 0.2, 0.2)
+		var msg = "SWAP FAILED"
+		match reason:
+			"DISTANCE_TOO_FAR": msg = "TOO FAR: Close within 14m"
+			"SPEED_DIFFERENCE_TOO_HIGH": msg = "SPEED DIFF: Match speeds (< 30 km/h)"
+			"NOT_ALIGNED": msg = "NOT ALIGNED: Drive alongside target"
+			"COOLDOWN": msg = "COOLDOWN: System recharging"
+			"SAME_COLOR": msg = "SAME COLOR: Already matches target"
+			_: msg = reason.replace("_", " ")
+		swap_prompt_label.text = "✕ " + msg
+		swap_prompt_label.modulate = Color(1.0, 0.3, 0.3)
 
 func show_notification(msg: String) -> void:
 	pass

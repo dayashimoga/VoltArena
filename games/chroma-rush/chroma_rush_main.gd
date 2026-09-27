@@ -24,6 +24,8 @@ const CheckpointGate = preload("res://games/chroma-rush/worlds/checkpoint_gate.g
 const ChromaHUD = preload("res://games/chroma-rush/ui/chroma_hud.gd")
 const ChromaGarage = preload("res://games/chroma-rush/ui/chroma_garage.gd")
 const ChromaTutorial = preload("res://games/chroma-rush/ui/chroma_tutorial.gd")
+const ChromaFullMap = preload("res://games/chroma-rush/ui/chroma_full_map.gd")
+const WorldSelectScreen = preload("res://games/chroma-rush/ui/world_select_screen.gd")
 const PauseMenu = preload("res://shared/ui/pause_menu.gd")
 const ResultsScreen = preload("res://shared/ui/results_screen.gd")
 
@@ -33,6 +35,9 @@ enum State {
 	WORLD_SELECT,
 	GARAGE,
 	TUTORIAL,
+	LOADING,
+	BRIEFING,
+	COUNTDOWN,
 	PLAYING,
 	PAUSED,
 	RESULTS
@@ -43,6 +48,7 @@ var current_mission_id: String = "hunt_neon_01"
 var selected_vehicle_id: String = "apex_striker"
 var selected_paint_color: Color = Color(0.15, 0.75, 1.0)
 var selected_finish: String = "gloss"
+var is_practice_mode: bool = false
 
 # Subsystems (RefCounted)
 var swap_engine: ColorSwapEngine
@@ -57,6 +63,7 @@ var traffic_agents: Array[TrafficAgent] = []
 var rival_agents: Array[RivalAI] = []
 var chase_camera: Camera3D
 var camera_spring_arm: SpringArm3D
+var target_beacon: Node3D
 
 # UI Nodes
 var hud: ChromaHUD
@@ -65,6 +72,11 @@ var tutorial_mgr: ChromaTutorial
 var pause_menu: PauseMenu
 var results_screen: ResultsScreen
 var menu_root: Control
+var full_map: ChromaFullMap
+var world_select_screen: WorldSelectScreen
+var countdown_container: Control
+var countdown_label: Label
+var countdown_timer: float = 0.0
 
 # Camera parameters
 var cam_distance: float = 7.5
@@ -119,6 +131,37 @@ func _init_environment() -> void:
 	dir_light.shadow_enabled = true
 	add_child(dir_light)
 
+	_init_target_beacon()
+
+func _init_target_beacon() -> void:
+	target_beacon = Node3D.new()
+	target_beacon.name = "TargetBeacon3D"
+
+	var mesh_inst = MeshInstance3D.new()
+	var prism = PrismMesh.new()
+	prism.size = Vector3(2.4, 3.6, 2.4)
+	mesh_inst.mesh = prism
+	mesh_inst.rotation_degrees = Vector3(180, 0, 0)
+	mesh_inst.position = Vector3(0, 5.5, 0)
+
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0, 0.85, 0.1)
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.85, 0.1)
+	mat.emission_energy_multiplier = 2.5
+	mesh_inst.material_override = mat
+	target_beacon.add_child(mesh_inst)
+
+	var omni = OmniLight3D.new()
+	omni.light_color = Color(1.0, 0.85, 0.1)
+	omni.light_energy = 3.0
+	omni.omni_range = 18.0
+	omni.position = Vector3(0, 5.0, 0)
+	target_beacon.add_child(omni)
+
+	add_child(target_beacon)
+	target_beacon.visible = false
+
 func _init_camera() -> void:
 	camera_spring_arm = SpringArm3D.new()
 	camera_spring_arm.name = "CameraSpringArm"
@@ -138,6 +181,7 @@ func _init_ui() -> void:
 	hud.name = "ChromaHUD"
 	hud.swap_requested.connect(_on_swap_requested)
 	hud.target_cycle_requested.connect(_on_target_cycle_requested)
+	hud.map_expand_requested.connect(_on_map_expand_requested)
 	add_child(hud)
 	hud.visible = false
 
@@ -167,6 +211,43 @@ func _init_ui() -> void:
 	results_screen.launcher_pressed.connect(return_to_menu)
 	add_child(results_screen)
 	results_screen.visible = false
+
+	full_map = ChromaFullMap.new()
+	full_map.name = "ChromaFullMap"
+	full_map.map_closed.connect(_on_full_map_closed)
+	add_child(full_map)
+	full_map.visible = false
+
+	world_select_screen = WorldSelectScreen.new()
+	world_select_screen.name = "WorldSelectScreen"
+	world_select_screen.world_mode_selected.connect(_on_world_mode_selected)
+	world_select_screen.back_pressed.connect(func(): set_state(State.MENU))
+	add_child(world_select_screen)
+	world_select_screen.visible = false
+
+	# Countdown Display Container
+	countdown_container = Control.new()
+	countdown_container.name = "CountdownContainer"
+	countdown_container.anchor_right = 1.0
+	countdown_container.anchor_bottom = 1.0
+	countdown_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(countdown_container)
+	countdown_container.visible = false
+
+	countdown_label = Label.new()
+	countdown_label.anchor_left = 0.5
+	countdown_label.anchor_top = 0.35
+	countdown_label.anchor_right = 0.5
+	countdown_label.anchor_bottom = 0.35
+	countdown_label.offset_left = -200
+	countdown_label.offset_top = -60
+	countdown_label.offset_right = 200
+	countdown_label.offset_bottom = 60
+	countdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	countdown_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	countdown_label.add_theme_font_size_override("font_size", 76)
+	countdown_label.modulate = Color(1.0, 0.9, 0.1)
+	countdown_container.add_child(countdown_label)
 
 	_build_main_menu()
 
@@ -218,8 +299,11 @@ func _build_main_menu() -> void:
 	var btn_continue = _create_menu_button("CONTINUE", func(): continue_game())
 	center_box.add_child(btn_continue)
 
-	var btn_modes = _create_menu_button("SELECT MISSION", func(): show_mission_select())
+	var btn_modes = _create_menu_button("SELECT WORLD & MODE", func(): show_world_select())
 	center_box.add_child(btn_modes)
+
+	var btn_practice = _create_menu_button("FREE DRIVE (PRACTICE)", func(): start_practice_mode())
+	center_box.add_child(btn_practice)
 
 	var btn_garage = _create_menu_button("GARAGE & PAINTS", func(): open_garage())
 	center_box.add_child(btn_garage)
@@ -255,30 +339,64 @@ func _connect_events() -> void:
 func set_state(new_state: State) -> void:
 	current_state = new_state
 	if menu_root:
-		menu_root.visible = (new_state == State.MENU or new_state == State.MODE_SELECT or new_state == State.WORLD_SELECT)
+		menu_root.visible = (new_state == State.MENU or new_state == State.MODE_SELECT)
+	if world_select_screen:
+		world_select_screen.visible = (new_state == State.WORLD_SELECT)
 	if hud:
-		hud.visible = (new_state == State.PLAYING)
+		hud.visible = (new_state == State.PLAYING or new_state == State.COUNTDOWN)
+	if countdown_container:
+		countdown_container.visible = (new_state == State.COUNTDOWN)
 	if garage:
 		garage.visible = (new_state == State.GARAGE)
 	if pause_menu:
 		pause_menu.visible = (new_state == State.PAUSED)
 	if results_screen:
 		results_screen.visible = (new_state == State.RESULTS)
+	if full_map and new_state != State.PLAYING:
+		full_map.visible = false
 
 func _unhandled_input(event: InputEvent) -> void:
-	if current_state == State.PLAYING:
-		if event.is_action_pressed("ui_cancel") or event.is_action_pressed("pause"):
+	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("pause"):
+		if is_instance_valid(full_map) and full_map.visible:
+			full_map.close_map()
+		elif current_state == State.PLAYING:
 			pause_game()
-		elif event.is_action_pressed("swap"):
+		elif current_state == State.PAUSED:
+			resume_game()
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_M:
+		_toggle_full_map()
+	elif current_state == State.PLAYING:
+		if event.is_action_pressed("swap"):
 			_on_swap_requested()
 		elif event.is_action_pressed("target_cycle"):
 			_on_target_cycle_requested()
 
 func _physics_process(delta: float) -> void:
-	if current_state == State.PLAYING:
+	if current_state == State.COUNTDOWN:
+		countdown_timer -= delta
+		if countdown_timer > 2.0:
+			countdown_label.text = "3"
+			countdown_label.modulate = Color(1.0, 0.3, 0.3)
+		elif countdown_timer > 1.0:
+			countdown_label.text = "2"
+			countdown_label.modulate = Color(1.0, 0.8, 0.1)
+		elif countdown_timer > 0.0:
+			countdown_label.text = "1"
+			countdown_label.modulate = Color(0.2, 0.8, 1.0)
+		else:
+			countdown_label.text = "GO!"
+			countdown_label.modulate = Color(0.1, 1.0, 0.4)
+			var am = GameConstants.get_autoload(self, "AudioManager")
+			if am and am.has_method("play_sfx"):
+				am.play_sfx("race_start", 1.0, 0.0)
+			set_state(State.PLAYING)
+			if is_instance_valid(player_vehicle):
+				player_vehicle.controls_enabled = true
+
+	elif current_state == State.PLAYING:
 		if is_instance_valid(swap_engine):
 			swap_engine.update(delta)
-		if is_instance_valid(mission_director):
+		if is_instance_valid(mission_director) and not is_practice_mode:
 			mission_director.update(delta)
 		for agent in traffic_agents:
 			agent.update(delta)
@@ -287,7 +405,7 @@ func _physics_process(delta: float) -> void:
 		if is_instance_valid(player_vehicle):
 			_update_camera(delta)
 			_update_swap_eligibility()
-			_update_hud_telemetry()
+			_update_hud_telemetry(delta)
 
 func _update_camera(delta: float) -> void:
 	if not is_instance_valid(player_vehicle) or not is_instance_valid(camera_spring_arm):
@@ -317,21 +435,70 @@ func _update_swap_eligibility() -> void:
 		hud.set_alignment_progress(0.0)
 		hud.hide_swap_prompt()
 
-func _update_hud_telemetry() -> void:
+func _update_hud_telemetry(delta: float = 0.016) -> void:
 	if not is_instance_valid(player_vehicle) or not is_instance_valid(mission_director):
 		return
 	var speed_kmh = player_vehicle.get_speed_kmh()
-	var time_left = mission_director.time_remaining
-	var score = mission_director.score
-	var combo = mission_director.combo_multiplier
+	var time_left = mission_director.time_remaining if not is_practice_mode else 9999.0
+	var score = mission_director.score if not is_practice_mode else 0
+	var combo = mission_director.combo_multiplier if not is_practice_mode else 1.0
 	var req_color = mission_director.get_current_target_color()
 
 	hud.update_hud(player_vehicle.current_color, req_color, speed_kmh, time_left, score, combo)
+
+	# Minimap & FullMap telemetry
+	var p_pos = player_vehicle.global_position
+	var p_rot_y = player_vehicle.global_rotation.y
+
+	var markers: Array[Dictionary] = []
+	for agent in traffic_agents:
+		if is_instance_valid(agent.vehicle):
+			markers.append({
+				"pos": agent.vehicle.global_position,
+				"color": agent.vehicle.current_color,
+				"is_rival": false
+			})
+	for rival in rival_agents:
+		if is_instance_valid(rival.vehicle):
+			markers.append({
+				"pos": rival.vehicle.global_position,
+				"color": rival.vehicle.current_color,
+				"is_rival": true
+			})
+
+	var target_gate_pos = Vector3.ZERO
+	var target_gate_color = ChromaConstants.ChromaColor.NONE
+	var has_target_gate = false
+
+	if not is_practice_mode:
+		var gate_id = mission_director.get_current_target_gate_id()
+		target_gate_color = req_color
+		if is_instance_valid(active_world):
+			for gate in active_world.checkpoints:
+				if gate.gate_id == gate_id or gate_id.is_empty():
+					target_gate_pos = gate.global_position
+					has_target_gate = true
+					break
+
+	if is_instance_valid(hud) and is_instance_valid(hud.mini_map):
+		hud.mini_map.update_radar(p_pos, p_rot_y, markers, target_gate_pos, target_gate_color, has_target_gate)
+
+	if is_instance_valid(full_map) and full_map.visible:
+		full_map.update_full_map_telemetry(p_pos, p_rot_y, markers, target_gate_pos, target_gate_color, has_target_gate)
+
+	if is_instance_valid(target_beacon):
+		if has_target_gate:
+			target_beacon.visible = true
+			target_beacon.global_position = target_gate_pos
+			target_beacon.rotate_y(2.5 * delta)
+		else:
+			target_beacon.visible = false
 
 # --- Gameplay Flow Methods ---
 
 func start_mission(mission_id: String) -> void:
 	current_mission_id = mission_id
+	is_practice_mode = false
 	var mission_data = MissionDatabase.get_mission_by_id(mission_id)
 	if mission_data.is_empty():
 		push_error("Mission not found: " + mission_id)
@@ -357,7 +524,10 @@ func start_mission(mission_id: String) -> void:
 	mission_director.start_mission(mission_data)
 
 	# 6. Setup HUD
-	hud.setup_mission(mission_data.get("title", "Mission"), mission_data.get("time_limit", 90.0))
+	if is_instance_valid(hud):
+		hud.setup_mission(mission_data.get("title", "Mission"), mission_data.get("time_limit", 90.0))
+		if is_instance_valid(active_world) and is_instance_valid(hud.mini_map):
+			hud.mini_map.set_world_data(active_world.waypoints)
 
 	# 7. Start Engine Audio & BGM
 	var am = GameConstants.get_autoload(self, "AudioManager")
@@ -367,7 +537,16 @@ func start_mission(mission_id: String) -> void:
 		if am.has_method("play_music"):
 			am.play_music("chroma_rush")
 
-	set_state(State.PLAYING)
+	# Start with Countdown in visual mode, or directly in PLAYING in headless test mode
+	if DisplayServer.get_name() == "headless":
+		if is_instance_valid(player_vehicle):
+			player_vehicle.controls_enabled = true
+		set_state(State.PLAYING)
+	else:
+		countdown_timer = 3.2
+		if is_instance_valid(player_vehicle):
+			player_vehicle.controls_enabled = false
+		set_state(State.COUNTDOWN)
 
 func _load_world(world_id: String) -> void:
 	match world_id:
@@ -401,17 +580,17 @@ func _spawn_player_vehicle(mission_data: Dictionary) -> void:
 	player_vehicle.initial_color = start_col
 	player_vehicle.current_color = start_col
 
-	var spawn_pos = Vector3(0.0, 1.0, 0.0)
+	var spawn_xf = Transform3D.IDENTITY
 	if active_world:
-		spawn_pos = active_world.player_spawn_transform.origin
-	player_vehicle.position = spawn_pos
+		spawn_xf = active_world.player_spawn_transform
+	player_vehicle.global_transform = spawn_xf
 
 	world_container.add_child(player_vehicle)
 	player_vehicle._ready()
 	swap_engine.register_vehicle("player", player_vehicle, start_col, false)
 
 	if camera_spring_arm:
-		camera_spring_arm.global_position = spawn_pos + Vector3(0.0, cam_height, 0.0)
+		camera_spring_arm.global_position = spawn_xf.origin + Vector3(0.0, cam_height, 0.0)
 
 func _spawn_traffic(mission_data: Dictionary) -> void:
 	if not is_instance_valid(active_world) or active_world.waypoints.size() < 4:
@@ -424,7 +603,8 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 		ChromaConstants.ChromaColor.EMERALD
 	])
 
-	var traffic_count = 6
+	var wps = active_world.waypoints
+	var traffic_count = mini(6, wps.size() - 2)
 	for i in range(traffic_count):
 		var veh = ChromaVehicle.new()
 		var agent_id = "traffic_%d" % i
@@ -436,20 +616,29 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 		veh.initial_color = col
 		veh.current_color = col
 
-		var wp_idx = (i * 3) % active_world.waypoints.size()
-		veh.position = active_world.waypoints[wp_idx] + Vector3(randf_range(-1.0, 1.0), 1.0, randf_range(-1.0, 1.0))
+		# Stagger starting at waypoint 2 onwards, so waypoint 0 is never occupied by traffic
+		var wp_idx = (2 + i * 2) % wps.size()
+		var p_cur = wps[wp_idx]
+		var p_next = wps[(wp_idx + 1) % wps.size()]
+		var fwd = (p_next - p_cur).normalized()
+		var right = Vector3.UP.cross(fwd).normalized()
+		var lane_offset = right * (3.0 if (i % 2 == 0) else -3.0)
+		var spawn_pt = p_cur + lane_offset + Vector3(0, 0.4, 0)
+		var basis = Basis(right, Vector3.UP, fwd)
+		veh.global_transform = Transform3D(basis, spawn_pt)
 
 		world_container.add_child(veh)
 		veh._ready()
 
 		var agent = TrafficAgent.new(veh, swap_engine, agent_id, col)
-		agent.set_waypoints(active_world.waypoints, wp_idx)
+		agent.set_waypoints(wps, wp_idx)
 		traffic_agents.append(agent)
 
 func _spawn_rivals(mission_data: Dictionary) -> void:
 	if not is_instance_valid(active_world) or active_world.waypoints.size() < 4:
 		return
 	var rival_count = mission_data.get("rival_count", 2)
+	var wps = active_world.waypoints
 	for i in range(rival_count):
 		var veh = ChromaVehicle.new()
 		var rival_id = "rival_%d" % i
@@ -460,8 +649,16 @@ func _spawn_rivals(mission_data: Dictionary) -> void:
 		veh.initial_color = ChromaConstants.ChromaColor.NONE
 		veh.current_color = ChromaConstants.ChromaColor.NONE
 
-		var wp_idx = (i * 4 + 2) % active_world.waypoints.size()
-		veh.position = active_world.waypoints[wp_idx] + Vector3(0.0, 1.0, 0.0)
+		# Stagger rivals at wp 3, 7...
+		var wp_idx = (3 + i * 4) % wps.size()
+		var p_cur = wps[wp_idx]
+		var p_next = wps[(wp_idx + 1) % wps.size()]
+		var fwd = (p_next - p_cur).normalized()
+		var right = Vector3.UP.cross(fwd).normalized()
+		var lane_offset = right * (-3.0 if (i % 2 == 0) else 3.0)
+		var spawn_pt = p_cur + lane_offset + Vector3(0, 0.4, 0)
+		var basis = Basis(right, Vector3.UP, fwd)
+		veh.global_transform = Transform3D(basis, spawn_pt)
 
 		world_container.add_child(veh)
 		veh._ready()
@@ -491,6 +688,15 @@ func clean_up_session() -> void:
 	if is_instance_valid(active_world):
 		active_world.queue_free()
 		active_world = null
+
+	if is_instance_valid(target_beacon):
+		target_beacon.visible = false
+
+	if is_instance_valid(full_map):
+		full_map.visible = false
+
+	if is_instance_valid(countdown_container):
+		countdown_container.visible = false
 
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am and am.has_method("stop_engine_sound"):
@@ -573,23 +779,106 @@ func _on_mission_completed(stats: Dictionary) -> void:
 	if bus and bus.has_signal("chroma_mission_completed"):
 		bus.chroma_mission_completed.emit(current_mission_id, stats)
 
-	results_screen.display_results(true, {
-		"Mission": MissionDatabase.get_mission_by_id(current_mission_id).get("title", "Victory"),
-		"Score": "%d" % stats.get("score", 0),
-		"Stars": "%d / 3" % stats.get("stars", 1),
-		"Credits Earned": "+%d CR" % earned.get("credits_earned", 500),
-		"Time Taken": "%.1fs" % stats.get("time_elapsed", 0.0)
-	})
+	if is_instance_valid(results_screen):
+		results_screen.display_results(true, {
+			"Mission": MissionDatabase.get_mission_by_id(current_mission_id).get("title", "Victory"),
+			"Score": "%d" % stats.get("score", 0),
+			"Stars": "%d / 3" % stats.get("stars", 1),
+			"Credits Earned": "+%d CR" % earned.get("credits_earned", 500),
+			"Time Taken": "%.1fs" % stats.get("time_elapsed", 0.0)
+		})
 
 func _on_mission_failed(reason: String) -> void:
 	set_state(State.RESULTS)
-	results_screen.display_results(false, {
-		"Mission": MissionDatabase.get_mission_by_id(current_mission_id).get("title", "Failed"),
-		"Status": "OBJECTIVE FAILED",
-		"Reason": reason
-	})
+	var friendly_reason = reason
+	if reason == "TIME_EXPIRED":
+		friendly_reason = "Time Ran Out! Follow the route guidance ribbon and use boost (SPACE / Shift) to reach your target color faster."
+	elif reason == "WRONG_COLOR":
+		friendly_reason = "Mismatched Color! Match your vehicle paint to the checkpoint gate requirement before driving through."
+	elif reason == "OFF_COURSE":
+		friendly_reason = "Off course! Use road recovery to return safely to the asphalt."
+
+	if is_instance_valid(results_screen):
+		results_screen.display_results(false, {
+			"Mission": MissionDatabase.get_mission_by_id(current_mission_id).get("title", "Failed"),
+			"Status": "MISSION INCOMPLETE",
+			"Reason": friendly_reason
+		})
 
 # --- Navigation & Menu Actions ---
+
+func _toggle_full_map() -> void:
+	if not is_instance_valid(full_map):
+		return
+	if full_map.visible:
+		full_map.close_map()
+	elif (current_state == State.PLAYING or current_state == State.COUNTDOWN) and is_instance_valid(active_world):
+		var gates_data: Array[Dictionary] = []
+		for gate in active_world.checkpoints:
+			gates_data.append({
+				"id": gate.gate_id,
+				"pos": gate.global_position,
+				"color": gate.target_color,
+				"cleared": gate.is_cleared
+			})
+		full_map.open_map(active_world.world_name, active_world.waypoints, gates_data)
+
+func _on_map_expand_requested() -> void:
+	_toggle_full_map()
+
+func _on_full_map_closed() -> void:
+	pass
+
+func show_world_select() -> void:
+	set_state(State.WORLD_SELECT)
+
+func _on_world_mode_selected(world_id: String, mode_id: String) -> void:
+	if mode_id == "free_drive":
+		start_practice_mode(world_id)
+		return
+
+	var m_id = "hunt_neon_01"
+	match world_id:
+		ChromaConstants.WORLD_COASTAL_RUSH:
+			m_id = "hunt_coastal_01" if mode_id == "hunt" else "sprint_coastal_01"
+		ChromaConstants.WORLD_PRISM_CANYON:
+			m_id = "hunt_canyon_01" if mode_id == "hunt" else "puzzle_canyon_01"
+		ChromaConstants.WORLD_SKY_CIRCUIT:
+			m_id = "sprint_sky_01" if mode_id == "sprint" else "hunt_sky_01"
+		_:
+			m_id = "hunt_neon_01" if mode_id == "hunt" else "sprint_neon_01"
+	start_mission(m_id)
+
+func start_practice_mode(w_id: String = ChromaConstants.WORLD_NEON_CITY) -> void:
+	is_practice_mode = true
+	var mission_data = {
+		"id": "free_drive",
+		"title": "Free Drive (Practice)",
+		"world_id": w_id,
+		"time_limit": 9999.0,
+		"starting_color": ChromaConstants.ChromaColor.CYAN,
+		"traffic_colors": [
+			ChromaConstants.ChromaColor.MAGENTA,
+			ChromaConstants.ChromaColor.SOLAR,
+			ChromaConstants.ChromaColor.EMERALD,
+			ChromaConstants.ChromaColor.COBALT
+		],
+		"rival_count": 1,
+		"checkpoints": []
+	}
+	clean_up_session()
+	_load_world(w_id)
+	_spawn_player_vehicle(mission_data)
+	_spawn_traffic(mission_data)
+	_spawn_rivals(mission_data)
+	mission_director.start_mission(mission_data)
+	if is_instance_valid(hud):
+		hud.setup_mission("Free Drive (Practice)", 9999.0)
+		if is_instance_valid(active_world) and is_instance_valid(hud.mini_map):
+			hud.mini_map.set_world_data(active_world.waypoints)
+	if is_instance_valid(player_vehicle):
+		player_vehicle.controls_enabled = true
+	set_state(State.PLAYING)
 
 func quick_play() -> void:
 	start_mission("hunt_neon_01")
@@ -603,7 +892,7 @@ func continue_game() -> void:
 		start_mission("hunt_neon_01")
 
 func show_mission_select() -> void:
-	start_mission("hunt_neon_01")
+	show_world_select()
 
 func open_garage() -> void:
 	set_state(State.GARAGE)
@@ -618,6 +907,11 @@ func _on_garage_closed() -> void:
 	set_state(State.MENU)
 
 func start_tutorial() -> void:
+	if not tutorial_mgr:
+		if not swap_engine:
+			_init_subsystems()
+		tutorial_mgr = ChromaTutorial.new(null, swap_engine)
+		tutorial_mgr.tutorial_completed.connect(_on_tutorial_completed)
 	set_state(State.TUTORIAL)
 	tutorial_mgr.start_tutorial()
 
@@ -629,7 +923,7 @@ func _on_tutorial_skipped() -> void:
 	set_state(State.MENU)
 
 func pause_game() -> void:
-	if current_state == State.PLAYING:
+	if current_state == State.PLAYING or current_state == State.COUNTDOWN:
 		set_state(State.PAUSED)
 
 func resume_game() -> void:
@@ -637,7 +931,10 @@ func resume_game() -> void:
 		set_state(State.PLAYING)
 
 func restart_mission() -> void:
-	start_mission(current_mission_id)
+	if is_practice_mode:
+		start_practice_mode()
+	else:
+		start_mission(current_mission_id)
 
 func next_mission() -> void:
 	var next_id = _get_next_mission_id(current_mission_id)

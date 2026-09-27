@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 96.0602549246813,
+  "overall_coverage_pct": 94.7963800904977,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -149,8 +149,8 @@
     },
     "res://games/roboforge-arena/roboforge_main.gd": {
       "coverage_pct": 100,
-      "tested": 6,
-      "total": 6,
+      "tested": 7,
+      "total": 7,
       "untested": []
     },
     "res://games/roboforge-arena/robot/modular_robot.gd": {
@@ -235,8 +235,8 @@
     },
     "res://games/skybound-odyssey/world/skybound_world.gd": {
       "coverage_pct": 100,
-      "tested": 8,
-      "total": 8,
+      "tested": 9,
+      "total": 9,
       "untested": []
     },
     "res://games/strike-vector/ai/ai_archetypes.gd": {
@@ -564,14 +564,14 @@
     },
     "res://games/wildcircuit/animals/wild_animal.gd": {
       "coverage_pct": 100,
-      "tested": 8,
-      "total": 8,
+      "tested": 10,
+      "total": 10,
       "untested": []
     },
     "res://games/wildcircuit/journal/field_journal.gd": {
       "coverage_pct": 100,
-      "tested": 5,
-      "total": 5,
+      "tested": 7,
+      "total": 7,
       "untested": []
     },
     "res://games/wildcircuit/photography/camera_mode.gd": {
@@ -620,6 +620,12 @@
       "coverage_pct": 100,
       "tested": 5,
       "total": 5,
+      "untested": []
+    },
+    "res://shared/animation/humanoid_animator.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
       "untested": []
     },
     "res://shared/audio/audio_manager.gd": {
@@ -707,23 +713,36 @@
       "untested": []
     },
     "res://shared/graphics/mesh_builder.gd": {
-      "coverage_pct": 89.2857142857143,
+      "coverage_pct": 75.7575757575758,
       "tested": 50,
-      "total": 56,
+      "total": 66,
       "untested": [
         "build_pit_building",
         "build_cargo_ship",
         "build_suspension_bridge_tower",
         "build_marshal_post",
         "build_mountain_peak",
-        "build_alpine_chalet"
+        "build_alpine_chalet",
+        "build_modular_robot_model",
+        "build_skybound_explorer_character",
+        "build_ancient_energy_shard_artifact",
+        "build_wildcircuit_ranger_character",
+        "build_safari_atv_vehicle",
+        "build_wildlife_animal_model",
+        "build_contextual_reward",
+        "build_turbo_boost_canister",
+        "build_shield_orb_pickup",
+        "build_emp_mine_pickup"
       ]
     },
     "res://shared/graphics/model_cache.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 81.8181818181818,
       "tested": 9,
-      "total": 9,
-      "untested": []
+      "total": 11,
+      "untested": [
+        "get_explorer_character",
+        "get_ranger_character"
+      ]
     },
     "res://shared/graphics/procedural_animator.gd": {
       "coverage_pct": 100,
@@ -843,7 +862,7 @@
       "untested": []
     }
   },
-  "tested_functions": 829,
-  "timestamp": "2026-09-20T08:17:50",
-  "total_functions": 863
+  "tested_functions": 838,
+  "timestamp": "2026-09-22T13:08:13",
+  "total_functions": 884
 }

@@ -65,6 +65,7 @@ func setup_scene() -> void:
 		results_screen = ResultsScreenScript.new()
 		results_screen.name = "ResultsScreen"
 		results_screen.restart_pressed.connect(_on_restart)
+		results_screen.next_stage_pressed.connect(_on_next_match_requested)
 		results_screen.launcher_pressed.connect(_on_quit_to_launcher)
 		add_child(results_screen)
 
@@ -323,7 +324,15 @@ func end_match() -> void:
 		"Orange Score": orange_score,
 		"Status": outcome,
 		"Arena": "Volt Park Arena" if selected_theme == "day" else "Cyber Dome"
-	})
+	}, "trophy_gold" if won else "trophy_bronze", "CHAMPIONSHIP TROPHY // NEXT ARENA UNLOCKED" if won else "CHALLENGER MEDAL")
+
+func _on_next_match_requested() -> void:
+	results_screen.hide_results()
+	var stadiums = ["day", "cyber", "coastal"]
+	var cur_idx = stadiums.find(selected_theme)
+	var next_theme = stadiums[(cur_idx + 1) % stadiums.size()]
+	select_stadium_theme(next_theme)
+	_on_restart()
 
 func _on_restart() -> void:
 	var bus = GameConstants.get_autoload(self, "EventBus")

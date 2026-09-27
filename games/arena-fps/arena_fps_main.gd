@@ -51,6 +51,7 @@ func setup_scene() -> void:
 		results_screen = ResultsScreen.new()
 		results_screen.name = "ResultsScreen"
 		results_screen.restart_pressed.connect(_on_restart)
+		results_screen.next_stage_pressed.connect(_on_next_match_requested)
 		results_screen.launcher_pressed.connect(_on_quit_to_launcher)
 		add_child(results_screen)
 
@@ -138,7 +139,7 @@ func _on_enemy_killed(_type: String, score_val: int) -> void:
 	if hud and hud.has_method("update_objective"):
 		hud.update_objective(frags_count, enemy_frags, target_kills_to_win)
 	elif hud and hud.has_method("update_frags"):
-		hud.update_frags(frags_count, target_kills_to_win)
+		hud.update_frags(frags_count, enemy_frags)
 	if hud and hud.has_method("add_killfeed_entry"):
 		hud.add_killfeed_entry("You", "Combat Bot", "Pulse Rifle")
 
@@ -165,6 +166,8 @@ func _on_player_died(_killer: String) -> void:
 	var enemy_frags = bot_score / 100
 	if hud and hud.has_method("update_objective"):
 		hud.update_objective(frags_count, enemy_frags, target_kills_to_win)
+	elif hud and hud.has_method("update_frags"):
+		hud.update_frags(frags_count, enemy_frags)
 	if hud and hud.has_method("add_killfeed_entry"):
 		hud.add_killfeed_entry("Combat Bot", "You", "Pulse Rifle")
 
@@ -198,7 +201,15 @@ func end_match() -> void:
 		"Eliminations": player_score / 100,
 		"Deaths": bot_score / 100,
 		"Time Remaining": "%ds" % int(time_remaining)
-	})
+	}, "trophy_gold" if won else "trophy_bronze", "GLADIATOR TROPHY // NEXT ARENA UNLOCKED" if won else "COMBAT COMMENDATION")
+
+func _on_next_match_requested() -> void:
+	results_screen.hide_results()
+	var maps = ["foundry", "citadel", "sektor"]
+	var cur_idx = maps.find(selected_map)
+	var next_map = maps[(cur_idx + 1) % maps.size()]
+	select_map(next_map)
+	_on_restart()
 
 func _on_resume() -> void:
 	var im = GameConstants.get_autoload(self, "InputManager")

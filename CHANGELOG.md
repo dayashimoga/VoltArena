@@ -811,6 +811,59 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
     - `VoltArena-Windows-x86_64.zip` (92.69 MB)
     - `VoltArena-Android.apk` (108.70 MB)
 
+## [8.8.0-visual-production-pass] - 2026-09-21
+### Added
+- **Humanoid Animation & Speed-Synchronized Locomotion (P0)**:
+  - Created `HumanoidAnimator` (`shared/animation/humanoid_animator.gd`) with full state machine (`Idle ↔ Walk ↔ Run ↔ Jump ↔ Land ↔ Crouch ↔ Aim/Strafe ↔ Attack ↔ Hit ↔ Death ↔ Glide`).
+  - Implemented stride-synchronized locomotion where playback speed scales dynamically with linear velocity, eliminating foot sliding.
+  - Added support for both rigged skeletal AnimationPlayers and articulated procedural biped nodes.
+  - Authored dedicated unit test suite `tests/unit/test_humanoid_animator.gd` (11 assertions passed).
+- **Skybound Odyssey Visual & World Overhaul**:
+  - Rebuilt island generation across 5 regions (`Emerald Isles`, `Crystal Caverns`, `Sunken Sky Temple`, `Frost Peaks`, `Storm Citadel`) with multi-tiered organic floating islands, stalactite underbellies, cascading waterfalls with mist particles, ruin pillars, arches, and ancient altars.
+  - Integrated `HumanoidAnimator` into explorer character (`sky_character.gd`).
+- **RoboForge Arena High-Tech Engineering Hangar**:
+  - Transformed workshop into a high-tech engineering hangar with diagnostic computer server racks, gantry crane, robotic arm, and glowing turntable.
+  - Rebuilt 7 mechanically distinct engineering challenges (`Payload Hauler`, `Steep Incline`, `Speed Trial`, `Rough Terrain`, `Precision Crane`, `Battle Arena`, `High-Altitude Hop`) with physical tradeoffs.
+- **WildCircuit Wildlife Exploration Overhaul**:
+  - Rebuilt multi-tiered rolling terrain, dense flora across 5 biomes (`Savannah`, `Forest`, `Wetlands`, `Desert`, `Mountains`), water bodies, and wildlife distribution.
+  - Upgraded Explorer ATV with dynamic wheel spin, front wheel steering, and suspension roll/pitch.
+  - Integrated `HumanoidAnimator` for Ranger character locomotion and camera mode aiming.
+- **Drift Storm UX Optimization**:
+  - Streamlined pre-race menu flow (`Track → Vehicle → Setup → Confirm`) and added 1-click `⚡ QUICK RACE` button for instant launches.
+- **Suite-Wide Systems Integration & Certification**:
+  - Integrated speed-synchronized animation playback across Strike Vector, Subway Survival, Arena FPS, and Nitro Kick.
+  - Master test runner: **64 test suites, 2,418 passed assertions, 0 failed (100% pass rate)**.
+  - Regenerated production certification and acceptance artifacts via `scripts/certifier.py`.
+
+## [8.9.0-p0-production-hardening] - 2026-09-22
+### Fixed
+- **RoboForge Arena Floor Falling & Dark Silhouette (P0)**:
+  - Added physical `BoxShape3D` collision to `WorkshopFloor` and `CylinderShape3D` to `TurntableBody`, eliminating robot falling into the void.
+  - Set `PreviewRobot.process_mode = PROCESS_MODE_DISABLED` in workshop mode and hid/disabled `PlayerRobot` until challenge launch.
+  - Added `WorldEnvironment` with ambient light (`energy = 1.1`), filmic tonemapping, and 3-point studio lighting (key, fill, rim).
+  - Integrated authentic scifi 3D props (`computer_terminal.glb`, `pipe_network.glb`, `stairs_industrial.glb`, `barrier_high.glb`).
+  - Redesigned HUD with a sleek side-docked panel leaving the central turntable and robot unobstructed.
+- **Drift Storm Racing & Victory Logic (P0)**:
+  - Refactored `RaceManager` to track all finishing karts independently.
+  - Stopped finished AI racers smoothly after crossing the finish line.
+  - Fixed false victory: 6th place finish records 6th place and `won = false`; 1st place finish records 1st place and `won = true`.
+  - Implemented tiered podium rewards: Gold for 1st, Silver for 2nd, Bronze for 3rd, Participation for 4th+.
+- **Skybound Odyssey Visual Rebuild (P0)**:
+  - Replaced primitive mannequin with rigged stylized 3D explorer character (`scout.glb` with 76 animations, folding glider wings, cloak, aviator goggles).
+  - Upgraded NPC Elder Zephyr to `trooper.glb` with active idle animation.
+  - Rebuilt Emerald Isles and 5 regions with dynamic `WorldEnvironment` (procedural sky dome, atmospheric fog, ambient sky lighting), multi-tiered islands, waterfalls, and classical temple ruins.
+- **WildCircuit Visual & Wildlife Overhaul (P0)**:
+  - Replaced primitive ranger with rigged stylized character (`scout.glb` with safari vest, hat, and binoculars).
+  - Added `WorldEnvironment` with dynamic `ProceduralSkyMaterial` to `DayNightCycle3D` to eliminate gray void.
+  - Rebuilt multi-segment articulated wildlife models for Gazelle, Lion, Elephant, and Zebra with distinct heads, snouts, ears, horns, and articulated legs.
+  - Upgraded acacia trees with branching limbs and layered umbrella foliage pads, and added rolling terrain with boulders.
+### Added
+- **Automated Behavioral Testing & Certification**:
+  - Authored `tests/unit/test_p0_visual_and_physics_gates.gd` covering all P0 gates (29 assertions passed).
+  - Master test runner: **65 test suites, 2,447 passed assertions, 0 failed (100% pass rate, 94.8% function coverage)**.
+  - Overall certification status: `RUNTIME_VERIFIED`.
+
+
 
 
 

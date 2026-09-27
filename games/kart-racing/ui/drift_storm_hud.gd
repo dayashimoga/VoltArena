@@ -522,6 +522,13 @@ func _ready() -> void:
 	
 	# In-race HUD is hidden while in pre-race menus
 	set_in_race_hud_visible(false)
+
+func _setup_ui() -> void:
+	if not onboarding_overlay:
+		setup_hud_layout()
+		_setup_minimap()
+		setup_onboarding_overlay()
+		set_in_race_hud_visible(false)
 	update_layout_positions()
 
 func _on_viewport_size_changed() -> void:
@@ -897,6 +904,15 @@ func setup_onboarding_overlay() -> void:
 	)
 	bottom_bar.add_child(launcher_btn)
 
+	var quick_btn = Button.new()
+	quick_btn.name = "QuickRaceButton"
+	quick_btn.text = "⚡ QUICK RACE"
+	quick_btn.custom_minimum_size = Vector2(160, 44)
+	quick_btn.add_theme_font_size_override("font_size", 13)
+	quick_btn.modulate = Color(1.0, 0.85, 0.2)
+	quick_btn.pressed.connect(_on_start_race_clicked)
+	bottom_bar.add_child(quick_btn)
+
 	var spacer_b = Control.new()
 	spacer_b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bottom_bar.add_child(spacer_b)
@@ -910,7 +926,7 @@ func setup_onboarding_overlay() -> void:
 
 	var continue_btn = Button.new()
 	continue_btn.name = "ContinueButton"
-	continue_btn.text = "CONTINUE ▶"
+	continue_btn.text = "RACE NOW ▶" if current_menu_state == MenuState.VEHICLE_SELECT else "CONTINUE ▶"
 	continue_btn.custom_minimum_size = Vector2(220, 44)
 	continue_btn.add_theme_font_size_override("font_size", 13)
 	continue_btn.modulate = Color(0.2, 0.95, 0.5)
@@ -1926,6 +1942,10 @@ func transition_menu_state(new_state: MenuState) -> void:
 					btn.modulate = Color(0.2, 1.0, 0.5)
 				else:
 					btn.modulate = Color(0.8, 0.85, 0.9)
+
+	var cont_btn = find_child("ContinueButton", true, false) as Button
+	if cont_btn:
+		cont_btn.text = "RACE NOW ▶" if new_state == MenuState.VEHICLE_SELECT else "CONTINUE ▶"
 
 func _on_prev_step_pressed() -> void:
 	match current_menu_state:

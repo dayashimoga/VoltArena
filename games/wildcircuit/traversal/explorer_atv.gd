@@ -21,48 +21,29 @@ func _ready() -> void:
 	collision_mask = GameConstants.LAYER_WORLD
 	setup_visuals()
 
+var wheels: Array[Node3D] = []
+var visual_body: Node3D = null
+var current_steer: float = 0.0
+
 func setup_visuals() -> void:
-	var body_mesh = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(1.6, 0.7, 2.4)
-	body_mesh.mesh = box
-	body_mesh.material_override = MaterialGenerator.get_material("chassis_carbon")
-	body_mesh.position = Vector3(0, 0.6, 0)
-	add_child(body_mesh)
+	visual_body = MeshBuilder.build_safari_atv_vehicle()
+	add_child(visual_body)
 
-	var rollbar = MeshInstance3D.new()
-	var r_box = BoxMesh.new()
-	r_box.size = Vector3(1.4, 0.9, 1.2)
-	rollbar.mesh = r_box
-	rollbar.material_override = MaterialGenerator.get_material("hazard_yellow")
-	rollbar.position = Vector3(0, 1.2, 0.2)
-	add_child(rollbar)
-
-	# 4 Heavy ATV balloon tires
-	for side in [-1.0, 1.0]:
-		for fwd in [-1.0, 1.0]:
-			var tire = MeshInstance3D.new()
-			var cyl = CylinderMesh.new()
-			cyl.top_radius = 0.4
-			cyl.bottom_radius = 0.4
-			cyl.height = 0.35
-			tire.mesh = cyl
-			tire.material_override = MaterialGenerator.get_material("tread_rubber")
-			tire.rotation_degrees.z = 90.0
-			tire.position = Vector3(side * 0.95, 0.4, fwd * 0.75)
-			add_child(tire)
+	for child in visual_body.get_children():
+		if "wheel" in child.name.to_lower():
+			wheels.append(child)
 
 	# Headlight for night expeditions
 	headlight = SpotLight3D.new()
-	headlight.position = Vector3(0, 0.8, -1.3)
-	headlight.spot_range = 25.0
-	headlight.spot_angle = 35.0
-	headlight.light_energy = 2.5
+	headlight.position = Vector3(0, 0.8, -1.4)
+	headlight.spot_range = 30.0
+	headlight.spot_angle = 38.0
+	headlight.light_energy = 3.0
 	add_child(headlight)
 
 	var col = CollisionShape3D.new()
 	var bs = BoxShape3D.new()
-	bs.size = Vector3(2.0, 1.4, 2.6)
+	bs.size = Vector3(2.0, 1.4, 2.8)
 	col.shape = bs
 	col.position = Vector3(0, 0.7, 0)
 	add_child(col)
@@ -108,6 +89,18 @@ func handle_driving(delta: float) -> void:
 	var fwd = -transform.basis.z
 	velocity.x = fwd.x * forward_speed
 	velocity.z = fwd.z * forward_speed
+
+	# Dynamic wheel spin, steering, and suspension roll/pitch
+	current_steer = lerpf(current_steer, steer * 0.45, delta * 10.0)
+	for i in range(wheels.size()):
+		var w = wheels[i]
+		w.rotate_x(forward_speed * delta * 2.5)
+		if i < 2:
+			w.rotation.y = current_steer
+
+	if visual_body:
+		visual_body.rotation.z = lerpf(visual_body.rotation.z, -steer * 0.08, delta * 8.0)
+		visual_body.rotation.x = lerpf(visual_body.rotation.x, (throttle * 0.05), delta * 8.0)
 
 	if driver:
 		driver.global_position = global_position + Vector3(0, 0.7, 0)

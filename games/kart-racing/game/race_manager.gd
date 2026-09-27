@@ -22,9 +22,12 @@ var checkpoints: Array = []
 func _ready() -> void:
 	pass
 
+var finished_racers: Array = []
+
 func initialize_race(all_racers: Array, all_checkpoints: Array) -> void:
 	racers = all_racers
 	checkpoints = all_checkpoints
+	finished_racers.clear()
 
 	for cp in checkpoints:
 		if not cp.checkpoint_hit.is_connected(_on_checkpoint_hit):
@@ -99,8 +102,17 @@ func _on_checkpoint_hit(kart: Node, cp_index: int) -> void:
 
 			if kart.current_lap > total_laps:
 				kart.race_finished = true
-				if kart.is_player:
-					finish_race(kart)
+				if not finished_racers.has(kart):
+					finished_racers.append(kart)
+					kart.set("final_rank", finished_racers.size())
+					kart.set("final_time", race_time)
+					if not kart.is_player:
+						if kart.get("forward_speed") != null:
+							kart.forward_speed = 0.0
+						if kart.get("velocity") != null:
+							kart.velocity = Vector3.ZERO
+				if kart.is_player or finished_racers.size() >= racers.size():
+					finish_race(finished_racers[0])
 		else:
 			# Initial start line crossing right after countdown release
 			kart.next_checkpoint_index = 1

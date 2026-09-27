@@ -65,13 +65,13 @@ static func score_photograph(camera: Camera3D, animal: Node3D, space_state: Phys
 		behavior_name = animal.get_current_behavior_name()
 	var state_val = animal.get("current_state") if "current_state" in animal else 0
 	match state_val:
-		2, 3: # Graze / Drink
+		2, 3, "graze", "graze_feed", "drink": # Graze / Drink
 			behavior_mult = 1.35
-		4: # Sleep
+		4, "sleep": # Sleep
 			behavior_mult = 1.25
-		6: # Investigate
+		6, "investigate": # Investigate
 			behavior_mult = 1.45
-		7: # Flee / Leaping
+		7, "flee": # Flee / Leaping
 			behavior_mult = 1.55
 
 	var raw_score = (framing_score + distance_score) * rarity_mult * behavior_mult

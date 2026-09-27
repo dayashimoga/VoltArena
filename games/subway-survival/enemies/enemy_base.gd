@@ -110,11 +110,14 @@ func steer_to_target(target_pos: Vector3, delta: float) -> void:
 		velocity.x = dir.x * move_speed
 		velocity.z = dir.z * move_speed
 		if creature_model:
-			ModelCacheScript.play_animation(creature_model, "Walk")
+			ModelCacheScript.play_animation(creature_model, "Walk", 0.15)
+			var ap = creature_model.find_child("*AnimationPlayer*", true, false) as AnimationPlayer
+			if ap and ap.is_playing():
+				ap.speed_scale = clampf(move_speed / 4.5, 0.7, 1.6)
 
 func perform_attack() -> void:
 	if creature_model:
-		ModelCacheScript.play_animation(creature_model, "Run", 0.1)
+		ModelCacheScript.play_animation(creature_model, "Attack", 0.1)
 	if target_player and is_instance_valid(target_player):
 		if target_player.has_node("HealthComponent"):
 			target_player.get_node("HealthComponent").take_damage(attack_damage, self)
@@ -125,7 +128,7 @@ func perform_attack() -> void:
 
 func _on_died(_source: Node) -> void:
 	if creature_model:
-		ModelCacheScript.play_animation(creature_model, "Idle", 0.1)
+		ModelCacheScript.play_animation(creature_model, "Death", 0.1)
 	var drop_pos = global_position if is_inside_tree() else position
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am:

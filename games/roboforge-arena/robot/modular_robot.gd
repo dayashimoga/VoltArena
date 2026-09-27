@@ -46,61 +46,63 @@ func rebuild_visuals() -> void:
 	if visual_root:
 		visual_root.queue_free()
 
-	visual_root = Node3D.new()
-	visual_root.name = "VisualRoot"
+	visual_root = MeshBuilder.build_modular_robot_model(blueprint)
 	add_child(visual_root)
 
 	var ch_id = blueprint.get("chassis", "scout")
-	var loc_id = blueprint.get("locomotion", "wheels")
 	var modules: Array = blueprint.get("modules", [])
 
-	# 1. Main Chassis Mesh
-	var ch_mesh = MeshInstance3D.new()
-	var b_box = BoxMesh.new()
 	var ch_size = Vector3(1.8, 0.7, 2.4)
 	if ch_id == "titan":
 		ch_size = Vector3(2.4, 0.9, 3.2)
 	elif ch_id == "scout":
 		ch_size = Vector3(1.4, 0.55, 1.8)
-	b_box.size = ch_size
-	ch_mesh.mesh = b_box
-	ch_mesh.material_override = MaterialGenerator.get_material("chassis_carbon")
-	ch_mesh.position = Vector3(0, 0.6, 0)
-	visual_root.add_child(ch_mesh)
 
-	# Hazard yellow decorative trim
-	var trim = MeshInstance3D.new()
-	var t_box = BoxMesh.new()
-	t_box.size = Vector3(ch_size.x + 0.05, 0.1, ch_size.z * 0.8)
-	trim.mesh = t_box
-	trim.material_override = MaterialGenerator.get_material("hazard_yellow")
-	trim.position = Vector3(0, 0.7, 0)
-	visual_root.add_child(trim)
+	front_socket = visual_root.get_node_or_null("FrontSocket") as Marker3D
+	top_socket = visual_root.get_node_or_null("TopSocket") as Marker3D
+	rear_socket = visual_root.get_node_or_null("RearSocket") as Marker3D
 
-	# 2. Locomotion Assemblies
-	if loc_id == "wheels":
-		_build_wheels(ch_size)
-	elif loc_id == "tracks":
-		_build_tracks(ch_size)
-	elif loc_id == "legs":
-		_build_legs(ch_size)
+	if front_socket == null:
+		front_socket = Marker3D.new()
+		front_socket.position = Vector3(0, 0.58, -ch_size.z * 0.5 - 0.15)
+		visual_root.add_child(front_socket)
+	if top_socket == null:
+		top_socket = Marker3D.new()
+		top_socket.position = Vector3(0, 0.65 + ch_size.y * 0.5 + 0.1, 0)
+		visual_root.add_child(top_socket)
+	if rear_socket == null:
+		rear_socket = Marker3D.new()
+		rear_socket.position = Vector3(0, 0.65, ch_size.z * 0.5 + 0.15)
+		visual_root.add_child(rear_socket)
 
-	# 3. Sockets for Modules
-	front_socket = Marker3D.new()
-	front_socket.position = Vector3(0, 0.6, -ch_size.z * 0.5 - 0.2)
-	visual_root.add_child(front_socket)
+	# Setup Grabber Area if hydraulic grabber is equipped
+	if modules.has("hydraulic_grabber"):
+		grab_area = Area3D.new()
+		grab_area.collision_layer = 0
+		grab_area.collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_BALL | GameConstants.LAYER_PICKUPS
+		var col_g = CollisionShape3D.new()
+		var b_g = BoxShape3D.new()
+		b_g.size = Vector3(1.4, 1.0, 1.4)
+		col_g.shape = b_g
+		col_g.position = Vector3(0, 0, -0.6)
+		grab_area.add_child(col_g)
+		front_socket.add_child(grab_area)
+	else:
+		grab_area = null
 
-	top_socket = Marker3D.new()
-	top_socket.position = Vector3(0, 0.6 + ch_size.y * 0.5 + 0.1, 0)
-	visual_root.add_child(top_socket)
-
-	rear_socket = Marker3D.new()
-	rear_socket.position = Vector3(0, 0.6, ch_size.z * 0.5 + 0.2)
-	visual_root.add_child(rear_socket)
-
-	# 4. Attach Installed Modules
-	for mod_id in modules:
-		_attach_module(mod_id)
+	# Setup Magnetic Area if magnetic arm is equipped
+	if modules.has("magnetic_arm"):
+		magnet_area = Area3D.new()
+		magnet_area.collision_layer = 0
+		magnet_area.collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_BALL | GameConstants.LAYER_PICKUPS
+		var col_m = CollisionShape3D.new()
+		var s_m = SphereShape3D.new()
+		s_m.radius = 6.0
+		col_m.shape = s_m
+		magnet_area.add_child(col_m)
+		top_socket.add_child(magnet_area)
+	else:
+		magnet_area = null
 
 	# Update collision shape
 	for c in get_children():
@@ -113,120 +115,6 @@ func rebuild_visuals() -> void:
 	col.shape = box_shape
 	col.position = Vector3(0, 0.7, 0)
 	add_child(col)
-
-func _build_wheels(ch_size: Vector3) -> void:
-	var positions = [
-		Vector3(-ch_size.x * 0.5 - 0.2, 0.35, -ch_size.z * 0.35),
-		Vector3(ch_size.x * 0.5 + 0.2, 0.35, -ch_size.z * 0.35),
-		Vector3(-ch_size.x * 0.5 - 0.2, 0.35, ch_size.z * 0.35),
-		Vector3(ch_size.x * 0.5 + 0.2, 0.35, ch_size.z * 0.35)
-	]
-	for p in positions:
-		var w = MeshInstance3D.new()
-		var cyl = CylinderMesh.new()
-		cyl.top_radius = 0.35
-		cyl.bottom_radius = 0.35
-		cyl.height = 0.25
-		w.mesh = cyl
-		w.material_override = MaterialGenerator.get_material("tread_rubber")
-		w.rotation_degrees.z = 90.0
-		w.position = p
-		visual_root.add_child(w)
-
-func _build_tracks(ch_size: Vector3) -> void:
-	for side in [-1.0, 1.0]:
-		var tr = MeshInstance3D.new()
-		var box = BoxMesh.new()
-		box.size = Vector3(0.35, 0.55, ch_size.z * 0.95)
-		tr.mesh = box
-		tr.material_override = MaterialGenerator.get_material("dark_hull")
-		tr.position = Vector3(side * (ch_size.x * 0.5 + 0.2), 0.32, 0)
-		visual_root.add_child(tr)
-
-func _build_legs(ch_size: Vector3) -> void:
-	for side in [-1.0, 1.0]:
-		for fwd in [-1.0, 1.0]:
-			var leg = Node3D.new()
-			leg.position = Vector3(side * (ch_size.x * 0.5 + 0.1), 0.4, fwd * (ch_size.z * 0.35))
-
-			var upper = MeshInstance3D.new()
-			var cyl1 = CylinderMesh.new()
-			cyl1.top_radius = 0.08
-			cyl1.bottom_radius = 0.08
-			cyl1.height = 0.5
-			upper.mesh = cyl1
-			upper.material_override = MaterialGenerator.get_material("hydraulic_chrome")
-			upper.rotation_degrees.x = 25.0 * fwd
-			upper.position = Vector3(0, -0.1, 0)
-			leg.add_child(upper)
-			visual_root.add_child(leg)
-
-func _attach_module(mod_id: String) -> void:
-	match mod_id:
-		"hydraulic_grabber":
-			var claw = MeshInstance3D.new()
-			var c_box = BoxMesh.new()
-			c_box.size = Vector3(0.8, 0.35, 0.6)
-			claw.mesh = c_box
-			claw.material_override = MaterialGenerator.get_material("hydraulic_chrome")
-			front_socket.add_child(claw)
-
-			grab_area = Area3D.new()
-			grab_area.collision_layer = 0
-			grab_area.collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_BALL | GameConstants.LAYER_PICKUPS
-			var col = CollisionShape3D.new()
-			var b = BoxShape3D.new()
-			b.size = Vector3(1.2, 1.0, 1.2)
-			col.shape = b
-			col.position = Vector3(0, 0, -0.6)
-			grab_area.add_child(col)
-			front_socket.add_child(grab_area)
-		"magnetic_arm":
-			var arm = MeshInstance3D.new()
-			var cyl = CylinderMesh.new()
-			cyl.top_radius = 0.12
-			cyl.bottom_radius = 0.15
-			cyl.height = 0.7
-			arm.mesh = cyl
-			arm.material_override = MaterialGenerator.get_material("copper_core")
-			arm.position = Vector3(0, 0.35, 0)
-			top_socket.add_child(arm)
-
-			magnet_area = Area3D.new()
-			magnet_area.collision_layer = 0
-			magnet_area.collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_BALL | GameConstants.LAYER_PICKUPS
-			var col = CollisionShape3D.new()
-			var s = SphereShape3D.new()
-			s.radius = 5.0
-			col.shape = s
-			magnet_area.add_child(col)
-			top_socket.add_child(magnet_area)
-		"rocket_booster":
-			var thruster = MeshInstance3D.new()
-			var cyl = CylinderMesh.new()
-			cyl.top_radius = 0.18
-			cyl.bottom_radius = 0.28
-			cyl.height = 0.5
-			thruster.mesh = cyl
-			thruster.material_override = MaterialGenerator.get_material("neon_orange")
-			thruster.rotation_degrees.x = 90.0
-			rear_socket.add_child(thruster)
-		"cargo_bed":
-			var bed = MeshInstance3D.new()
-			var b_box = BoxMesh.new()
-			b_box.size = Vector3(1.2, 0.15, 1.0)
-			bed.mesh = b_box
-			bed.material_override = MaterialGenerator.get_material("dark_hull")
-			rear_socket.add_child(bed)
-		"kinetic_shield":
-			var shield = MeshInstance3D.new()
-			var torus = TorusMesh.new()
-			torus.inner_radius = 1.0
-			torus.outer_radius = 1.2
-			shield.mesh = torus
-			shield.material_override = MaterialGenerator.get_material("neon_cyan")
-			shield.position = Vector3(0, 0.6, 0)
-			top_socket.add_child(shield)
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():

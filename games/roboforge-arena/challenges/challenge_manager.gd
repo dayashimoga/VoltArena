@@ -2,7 +2,7 @@ class_name ChallengeManager
 extends Node3D
 
 ## ChallengeManager: Generates and evaluates the 7 competitive engineering challenge courses
-## in RoboForge Arena.
+## in RoboForge Arena with distinct physical and engineering tradeoffs.
 
 signal challenge_completed(challenge_id: String, time_taken: float, score: int)
 signal challenge_failed(challenge_id: String)
@@ -26,6 +26,8 @@ func load_challenge(ch_id: String, arena_parent: Node3D) -> void:
 	active_challenge_id = ch_id
 	challenge_time = 0.0
 	is_active = true
+	cargo_crates.clear()
+	energy_cores.clear()
 
 	# Clean previous challenge objects
 	for child in arena_parent.get_children():
@@ -50,125 +52,147 @@ func load_challenge(ch_id: String, arena_parent: Node3D) -> void:
 			_build_obstacle_course(arena_parent)
 
 # ==============================================================================
-# 1. OBSTACLE COURSE
+# 1. OBSTACLE COURSE (High-Incline Ramps, Speed Bumps, Debris)
 # ==============================================================================
 func _build_obstacle_course(parent: Node3D) -> void:
-	# Starting floor
-	_add_slab(parent, Vector3(0, -0.5, 0), Vector3(12.0, 1.0, 12.0))
+	# Starting floor with hazard yellow grid
+	_add_slab(parent, Vector3(0, -0.5, 0), Vector3(14.0, 1.0, 14.0), "chassis_carbon")
 
-	# Inclined Ramp 1 (requiring torque / grip)
-	var ramp1 = _add_slab(parent, Vector3(0, 1.5, -12.0), Vector3(8.0, 0.5, 12.0), "hazard_yellow")
-	ramp1.rotation_degrees.x = 18.0
+	# Inclined Ramp 1 (22 degrees - requires high torque or crawler tracks)
+	var ramp1 = _add_slab(parent, Vector3(0, 2.2, -14.0), Vector3(9.0, 0.6, 14.0), "hazard_yellow")
+	ramp1.rotation_degrees.x = 22.0
 
-	# Elevated Plateau
-	_add_slab(parent, Vector3(0, 3.2, -24.0), Vector3(10.0, 1.0, 10.0))
+	# Elevated Plateau 1
+	_add_slab(parent, Vector3(0, 4.8, -26.0), Vector3(12.0, 1.0, 12.0), "dark_hull")
 
-	# Speed bumps / debris barrier
-	for i in range(3):
-		_add_slab(parent, Vector3(0, 3.8, -32.0 - i * 3.0), Vector3(8.0, 0.6, 0.8), "dark_hull")
+	# Staggered Debris Speed Bumps
+	for i in range(4):
+		var bump = _add_slab(parent, Vector3((i % 2 - 0.5) * 2.0, 5.5, -34.0 - i * 3.5), Vector3(9.0, 0.8, 1.2), "sci_fi_metal")
+		bump.rotation_degrees.z = (i % 2 - 0.5) * 8.0
 
-	# Finish pad
-	_create_finish_zone(parent, Vector3(0, 3.2, -45.0), 6.0)
+	# Elevated Plateau 2 & Finish
+	_add_slab(parent, Vector3(0, 4.8, -52.0), Vector3(14.0, 1.0, 14.0), "chassis_carbon")
+	_create_finish_zone(parent, Vector3(0, 5.0, -52.0), 6.5)
 
 # ==============================================================================
-# 2. CARGO DELIVERY
+# 2. CARGO DELIVERY (Heavy Magnetic Crates over Narrow Bridge)
 # ==============================================================================
 func _build_cargo_delivery(parent: Node3D) -> void:
-	_add_slab(parent, Vector3(0, -0.5, 0), Vector3(16.0, 1.0, 16.0))
-	_add_slab(parent, Vector3(0, -0.5, -30.0), Vector3(16.0, 1.0, 16.0))
+	# Depot Origin
+	_add_slab(parent, Vector3(0, -0.5, 0), Vector3(18.0, 1.0, 18.0), "chassis_carbon")
 
-	# Connecting bridge
-	_add_slab(parent, Vector3(0, -0.5, -15.0), Vector3(4.0, 0.8, 16.0), "chassis_carbon")
+	# Narrow Suspension Bridge over Chasm
+	_add_slab(parent, Vector3(0, -0.5, -20.0), Vector3(4.5, 0.8, 22.0), "hazard_yellow")
 
-	# Spawn 2 Heavy Physics Cargo Crates
-	_spawn_crate(parent, Vector3(-3.0, 1.0, 2.0))
-	_spawn_crate(parent, Vector3(3.0, 1.0, 2.0))
+	# Side Guardrails
+	_add_wall(parent, Vector3(-2.4, 0.5, -20.0), Vector3(0.3, 1.2, 22.0))
+	_add_wall(parent, Vector3(2.4, 0.5, -20.0), Vector3(0.3, 1.2, 22.0))
 
-	# Destination Depot Trigger
-	_create_cargo_depot(parent, Vector3(0, 0.5, -30.0), 2)
+	# Destination Loading Bay
+	_add_slab(parent, Vector3(0, -0.5, -40.0), Vector3(18.0, 1.0, 18.0), "dark_hull")
+
+	# 2 Heavy Physics Cargo Crates
+	_spawn_crate(parent, Vector3(-4.0, 1.2, 3.0))
+	_spawn_crate(parent, Vector3(4.0, 1.2, 3.0))
+
+	# Destination Depot Receptacle
+	_create_cargo_depot(parent, Vector3(0, 0.5, -40.0), 2)
 
 # ==============================================================================
-# 3. ENERGY COMPETITION
+# 3. ENERGY COMPETITION (Timed Collection of Scattered Cores)
 # ==============================================================================
 func _build_energy_competition(parent: Node3D) -> void:
-	_add_slab(parent, Vector3(0, -0.5, 0), Vector3(28.0, 1.0, 28.0), "chassis_carbon")
+	_add_slab(parent, Vector3(0, -0.5, 0), Vector3(34.0, 1.0, 34.0), "chassis_carbon")
 
-	# 3 Glowing Energy Cores scattered
-	_spawn_energy_core(parent, Vector3(-8.0, 1.0, -8.0))
-	_spawn_energy_core(parent, Vector3(8.0, 1.0, -8.0))
-	_spawn_energy_core(parent, Vector3(0.0, 1.0, 10.0))
+	# Peripheral barrier walls
+	_add_wall(parent, Vector3(0, 1.5, -17.0), Vector3(34.0, 3.0, 1.0))
+	_add_wall(parent, Vector3(0, 1.5, 17.0), Vector3(34.0, 3.0, 1.0))
+	_add_wall(parent, Vector3(-17.0, 1.5, 0), Vector3(1.0, 3.0, 34.0))
+	_add_wall(parent, Vector3(17.0, 1.5, 0), Vector3(1.0, 3.0, 34.0))
+
+	# 3 Glowing Energy Cores scattered in arena
+	_spawn_energy_core(parent, Vector3(-10.0, 1.0, -10.0))
+	_spawn_energy_core(parent, Vector3(10.0, 1.0, -10.0))
+	_spawn_energy_core(parent, Vector3(0.0, 1.0, 12.0))
 
 	# Central Generator Receptacle
 	_create_core_receptacle(parent, Vector3(0, 0.5, 0), 3)
 
 # ==============================================================================
-# 4. MAZE ESCAPE
+# 4. MAZE ESCAPE (Tight Labyrinth with Dead Ends)
 # ==============================================================================
 func _build_maze_escape(parent: Node3D) -> void:
-	_add_slab(parent, Vector3(0, -0.5, -15.0), Vector3(30.0, 1.0, 36.0))
+	_add_slab(parent, Vector3(0, -0.5, -18.0), Vector3(36.0, 1.0, 42.0), "dark_hull")
 
-	# Labyrinth Wall Segments
-	_add_wall(parent, Vector3(-6.0, 1.5, -5.0), Vector3(1.0, 3.0, 14.0))
-	_add_wall(parent, Vector3(6.0, 1.5, -12.0), Vector3(1.0, 3.0, 16.0))
-	_add_wall(parent, Vector3(0.0, 1.5, -20.0), Vector3(14.0, 3.0, 1.0))
+	# Labyrinth Wall Layout
+	_add_wall(parent, Vector3(-8.0, 1.8, -6.0), Vector3(1.0, 3.6, 16.0))
+	_add_wall(parent, Vector3(8.0, 1.8, -14.0), Vector3(1.0, 3.6, 20.0))
+	_add_wall(parent, Vector3(0.0, 1.8, -24.0), Vector3(16.0, 3.6, 1.0))
+	_add_wall(parent, Vector3(-12.0, 1.8, -20.0), Vector3(8.0, 3.6, 1.0))
+	_add_wall(parent, Vector3(4.0, 1.8, -32.0), Vector3(12.0, 3.6, 1.0))
 
-	# Exit finish zone
-	_create_finish_zone(parent, Vector3(0, 0.5, -30.0), 5.0)
+	# Finish zone at far end of labyrinth
+	_create_finish_zone(parent, Vector3(0, 0.5, -36.0), 5.5)
 
 # ==============================================================================
-# 5. PHYSICS PUZZLE (WEIGHT BALANCE)
+# 5. PHYSICS PUZZLE (Weight Balance Platform)
 # ==============================================================================
 func _build_physics_puzzle(parent: Node3D) -> void:
-	_add_slab(parent, Vector3(0, -0.5, 0), Vector3(24.0, 1.0, 32.0))
+	_add_slab(parent, Vector3(0, -0.5, 0), Vector3(26.0, 1.0, 36.0), "chassis_carbon")
 
-	# Weight scale plate
+	# Balance Plate Area
 	var plate = Area3D.new()
-	plate.position = Vector3(0, 0.1, -10.0)
+	plate.position = Vector3(0, 0.1, -12.0)
 	var col = CollisionShape3D.new()
 	var b = BoxShape3D.new()
-	b.size = Vector3(5.0, 0.5, 5.0)
+	b.size = Vector3(6.0, 0.6, 6.0)
 	col.shape = b
 	plate.add_child(col)
 	parent.add_child(plate)
 
 	# 2 Heavy weight blocks
-	_spawn_crate(parent, Vector3(-6.0, 1.0, 4.0))
-	_spawn_crate(parent, Vector3(6.0, 1.0, 4.0))
+	_spawn_crate(parent, Vector3(-7.0, 1.2, 5.0))
+	_spawn_crate(parent, Vector3(7.0, 1.2, 5.0))
 
-	_create_finish_zone(parent, Vector3(0, 0.5, -22.0), 5.0)
+	_create_finish_zone(parent, Vector3(0, 0.5, -26.0), 5.5)
 
 # ==============================================================================
-# 6. PRECISION PLATFORM
+# 6. PRECISION PLATFORM (Narrow Beams & Elevated Steps)
 # ==============================================================================
 func _build_precision_platform(parent: Node3D) -> void:
-	_add_slab(parent, Vector3(0, -0.5, 0), Vector3(8.0, 1.0, 8.0))
-	_add_slab(parent, Vector3(0, 1.0, -12.0), Vector3(2.5, 0.6, 12.0), "hazard_yellow") # Narrow beam
-	_add_slab(parent, Vector3(0, 2.5, -24.0), Vector3(6.0, 0.8, 6.0))
-	_add_slab(parent, Vector3(0, 4.0, -36.0), Vector3(2.5, 0.6, 12.0), "hazard_yellow")
-	_create_finish_zone(parent, Vector3(0, 4.5, -46.0), 6.0)
+	_add_slab(parent, Vector3(0, -0.5, 0), Vector3(9.0, 1.0, 9.0), "dark_hull")
+	# Narrow beam 1
+	_add_slab(parent, Vector3(0, 1.2, -14.0), Vector3(2.8, 0.6, 14.0), "hazard_yellow")
+	# Mid plateau
+	_add_slab(parent, Vector3(0, 2.8, -28.0), Vector3(7.0, 0.8, 7.0), "chassis_carbon")
+	# Narrow beam 2
+	_add_slab(parent, Vector3(0, 4.4, -42.0), Vector3(2.8, 0.6, 14.0), "hazard_yellow")
+	# Finish apex
+	_add_slab(parent, Vector3(0, 5.2, -54.0), Vector3(10.0, 1.0, 10.0), "dark_hull")
+	_create_finish_zone(parent, Vector3(0, 5.4, -54.0), 6.5)
 
 # ==============================================================================
-# 7. COOPERATIVE MACHINE REPAIR
+# 7. MACHINE REPAIR (Generator Drone Stations)
 # ==============================================================================
 func _build_machine_repair(parent: Node3D) -> void:
-	_add_slab(parent, Vector3(0, -0.5, 0), Vector3(30.0, 1.0, 30.0), "chassis_carbon")
+	_add_slab(parent, Vector3(0, -0.5, 0), Vector3(32.0, 1.0, 32.0), "chassis_carbon")
 
-	# Malfunctioning Generator Core
+	# Generator Drone Station
 	var gen = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
-	cyl.top_radius = 2.0
-	cyl.bottom_radius = 2.5
-	cyl.height = 4.0
+	cyl.top_radius = 2.2
+	cyl.bottom_radius = 2.8
+	cyl.height = 4.2
 	gen.mesh = cyl
 	gen.material_override = MaterialGenerator.get_material("sci_fi_metal")
-	gen.position = Vector3(0, 2.0, -10.0)
+	gen.position = Vector3(0, 2.1, -12.0)
 	parent.add_child(gen)
 
-	# 2 Repair parts
-	_spawn_crate(parent, Vector3(-8.0, 1.0, 5.0))
-	_spawn_crate(parent, Vector3(8.0, 1.0, 5.0))
+	# 2 Power Cores to install
+	_spawn_crate(parent, Vector3(-9.0, 1.2, 6.0))
+	_spawn_crate(parent, Vector3(9.0, 1.2, 6.0))
 
-	_create_cargo_depot(parent, Vector3(0, 0.5, -10.0), 2)
+	_create_cargo_depot(parent, Vector3(0, 0.5, -12.0), 2)
 
 # ==============================================================================
 # HELPER BUILDERS
@@ -206,14 +230,14 @@ func _spawn_crate(parent: Node3D, pos: Vector3) -> RigidBody3D:
 
 	var mi = MeshInstance3D.new()
 	var box = BoxMesh.new()
-	box.size = Vector3(1.2, 1.2, 1.2)
+	box.size = Vector3(1.3, 1.3, 1.3)
 	mi.mesh = box
 	mi.material_override = MaterialGenerator.get_material("hazard_yellow")
 	rb.add_child(mi)
 
 	var col = CollisionShape3D.new()
 	var bs = BoxShape3D.new()
-	bs.size = Vector3(1.2, 1.2, 1.2)
+	bs.size = Vector3(1.3, 1.3, 1.3)
 	col.shape = bs
 	rb.add_child(col)
 
@@ -230,15 +254,15 @@ func _spawn_energy_core(parent: Node3D, pos: Vector3) -> RigidBody3D:
 
 	var mi = MeshInstance3D.new()
 	var sphere = SphereMesh.new()
-	sphere.radius = 0.6
-	sphere.height = 1.2
+	sphere.radius = 0.65
+	sphere.height = 1.3
 	mi.mesh = sphere
-	mi.material_override = MaterialGenerator.get_material("crystal_cyan")
+	mi.material_override = MaterialGenerator.get_material("neon_cyan")
 	rb.add_child(mi)
 
 	var col = CollisionShape3D.new()
 	var ss = SphereShape3D.new()
-	ss.radius = 0.6
+	ss.radius = 0.65
 	col.shape = ss
 	rb.add_child(col)
 
@@ -261,7 +285,7 @@ func _create_finish_zone(parent: Node3D, pos: Vector3, radius: float) -> void:
 
 	var marker = MeshInstance3D.new()
 	var torus = TorusMesh.new()
-	torus.inner_radius = radius - 0.4
+	torus.inner_radius = radius - 0.5
 	torus.outer_radius = radius
 	marker.mesh = torus
 	marker.material_override = MaterialGenerator.get_material("neon_cyan")
@@ -283,7 +307,7 @@ func _create_cargo_depot(parent: Node3D, pos: Vector3, target_count: int) -> voi
 
 	var col = CollisionShape3D.new()
 	var box = BoxShape3D.new()
-	box.size = Vector3(6.0, 3.0, 6.0)
+	box.size = Vector3(7.0, 3.5, 7.0)
 	col.shape = box
 	area.add_child(col)
 
@@ -305,7 +329,7 @@ func _create_core_receptacle(parent: Node3D, pos: Vector3, target_count: int) ->
 
 	var col = CollisionShape3D.new()
 	var box = BoxShape3D.new()
-	box.size = Vector3(5.0, 2.5, 5.0)
+	box.size = Vector3(6.0, 3.0, 6.0)
 	col.shape = box
 	area.add_child(col)
 

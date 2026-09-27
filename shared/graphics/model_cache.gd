@@ -75,6 +75,26 @@ static func get_character(archetype: String = "assault") -> Node3D:
 	_ensure_animation_player(model)
 	return model
 
+static func get_explorer_character() -> Node3D:
+	var path = "res://assets/models/characters/scout.glb"
+	var model = get_model(path)
+	if not model:
+		return MeshBuilder.build_skybound_explorer_character()
+	model.scale = Vector3(1.0, 1.0, 1.0)
+	model.rotation_degrees.y = 0.0
+	_ensure_animation_player(model)
+	return model
+
+static func get_ranger_character() -> Node3D:
+	var path = "res://assets/models/characters/scout.glb"
+	var model = get_model(path)
+	if not model:
+		return MeshBuilder.build_wildcircuit_ranger_character()
+	model.scale = Vector3(1.0, 1.0, 1.0)
+	model.rotation_degrees.y = 0.0
+	_ensure_animation_player(model)
+	return model
+
 static func _apply_visor_tint(root: Node3D, tint: Color) -> void:
 	if not root:
 		return
@@ -551,13 +571,28 @@ static func _resolve_animation_name(anim: AnimationPlayer, generic_name: String)
 			if "idle" in a.to_lower():
 				return a
 
-	# 4. Action requests (aim, fire, reload)
+	# 4. Action requests (aim, fire, reload, jump, land, interact, hit, death)
+	if "jump" in g_lower:
+		for a in anim_list:
+			if "jump_start" in a.to_lower() or "jump_idle" in a.to_lower() or "jump" in a.to_lower(): return a
+	if "land" in g_lower:
+		for a in anim_list:
+			if "jump_land" in a.to_lower() or "land" in a.to_lower(): return a
+	if "interact" in g_lower or "pickup" in g_lower:
+		for a in anim_list:
+			if "interact" in a.to_lower() or "pickup" in a.to_lower(): return a
+	if "hit" in g_lower or "hurt" in g_lower or "damage" in g_lower:
+		for a in anim_list:
+			if "hitreact" in a.to_lower() or "hit_a" in a.to_lower() or "hit" in a.to_lower(): return a
+	if "death" in g_lower or "die" in g_lower or "dead" in g_lower:
+		for a in anim_list:
+			if "death_a" in a.to_lower() or "death" in a.to_lower(): return a
 	if "aim" in g_lower:
 		for a in anim_list:
 			if "aim" in a.to_lower(): return a
 	if "fire" in g_lower or "shoot" in g_lower or "attack" in g_lower:
 		for a in anim_list:
-			if "fire" in a.to_lower(): return a
+			if "fire" in a.to_lower() or "shoot" in a.to_lower() or "attack" in a.to_lower(): return a
 	if "reload" in g_lower:
 		for a in anim_list:
 			if "reload" in a.to_lower(): return a

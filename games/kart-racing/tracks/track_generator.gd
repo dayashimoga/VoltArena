@@ -150,10 +150,13 @@ func build_circuit() -> void:
 			sb_r.material_override = MaterialGenerator.get_material("stadium_banner_orange")
 			add_child(sb_r)
 
-	# PowerUp Item Pickups placed along the circuit
+	# PowerUp Item Pickups placed along the circuit (Contextual 3D Boost Canisters, Shield Orbs, EMP Mines)
 	var item_indices = [1, int(circuit_nodes.size() * 0.35), int(circuit_nodes.size() * 0.65), int(circuit_nodes.size() * 0.85)]
-	for idx in item_indices:
+	var item_types = [PowerUpItem.ItemType.TURBO_BOOST, PowerUpItem.ItemType.EMP_SHIELD, PowerUpItem.ItemType.SHOCK_MINE, PowerUpItem.ItemType.TURBO_BOOST]
+	for i in range(item_indices.size()):
+		var idx = item_indices[i]
 		var item = PowerUpItem.new()
+		item.item_type = item_types[i % item_types.size()]
 		item.position = circuit_nodes[idx] + Vector3(0, 0.4, 0)
 		add_child(item)
 

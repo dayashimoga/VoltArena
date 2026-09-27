@@ -40,6 +40,8 @@ var drift_charge_time: float = 0.0
 var boost_timer: float = 0.0
 var forward_speed: float = 0.0
 var current_steer_input: float = 0.0
+var steer_blend: float = 0.0
+var lateral_speed: float = 0.0
 
 # Race Progression
 var current_lap: int = 1
@@ -417,8 +419,12 @@ func apply_kart_controls(throttle: float, steer: float, want_drift: bool, delta:
 		throttle = 0.0
 		forward_speed = 0.0
 
-	current_steer_input = steer
 	current_throttle_input = throttle
+
+	# Progressive input ramping (eliminates instant keyboard snapping)
+	var ramp_rate = 7.5 if steer != 0.0 else 12.0
+	steer_blend = move_toward(steer_blend, steer, ramp_rate * delta)
+	current_steer_input = steer_blend
 
 	# Drift mechanics handling
 	if want_drift and abs(steer) > 0.2 and (is_on_floor() or wheel_contact_count >= 2) and forward_speed > 10.0:
@@ -436,22 +442,26 @@ func apply_kart_controls(throttle: float, steer: float, want_drift: bool, delta:
 			trigger_drift_boost()
 			is_drifting = false
 
-	# Steering
-	var effective_steer_speed = drift_steer_speed if is_drifting else steer_speed
+	# Speed-Sensitive Steering: low speed = larger steering angle, high speed = dampened sensitivity
+	var speed_ratio = clampf(absf(forward_speed) / base_speed, 0.0, 1.5)
+	var speed_sensitivity = lerpf(1.15, 0.48, clampf(speed_ratio, 0.0, 1.0))
+	var effective_steer_speed = (drift_steer_speed if is_drifting else steer_speed) * speed_sensitivity
 	var steer_multiplier = 1.0
 	if is_drifting:
 		steer_multiplier = 1.35 * drift_direction
 
-	if abs(forward_speed) > 0.5:
-		rotate_y(steer * effective_steer_speed * steer_multiplier * delta)
+	if abs(forward_speed) > 0.3:
+		rotate_y(steer_blend * effective_steer_speed * steer_multiplier * delta)
 
 	# Target top speed
 	var max_active_speed = base_speed
 	if boost_timer > 0.0:
 		max_active_speed = boost_top_speed
+		boost_timer = maxf(0.0, boost_timer - delta)
 	elif is_drifting:
-		max_active_speed = base_speed * 0.92
+		max_active_speed = base_speed * 0.94
 
+	# Continuous Acceleration and Braking
 	if throttle > 0.0:
 		forward_speed = move_toward(forward_speed, max_active_speed, acceleration * delta)
 	elif throttle < 0.0:
@@ -459,16 +469,36 @@ func apply_kart_controls(throttle: float, steer: float, want_drift: bool, delta:
 	else:
 		forward_speed = move_toward(forward_speed, 0.0, 10.0 * delta)
 
+	# Lateral Grip & Slip Physics
 	var fwd = -transform.basis.z
+	var right = transform.basis.x
+	var grip_force = 26.0
+	if is_drifting:
+		grip_force = 8.5 # Reduced lateral grip allows controlled powerslide outward slip
+	elif not is_on_floor() and wheel_contact_count == 0:
+		grip_force = 2.0
+
+	# When turning, generate lateral slip proportional to forward speed and steer angle
+	var lateral_slip_target = (steer_blend * forward_speed * 0.18) if is_drifting else 0.0
+	lateral_speed = move_toward(lateral_speed, lateral_slip_target, grip_force * delta)
+
+	# Visual chassis body response (roll & pitch)
+	if kart_visual and is_instance_valid(kart_visual):
+		var target_roll = -steer_blend * 0.08 if not is_drifting else -drift_direction * 0.14
+		kart_visual.rotation.z = lerpf(kart_visual.rotation.z, target_roll, delta * 9.0)
+		var target_pitch = (throttle * 0.035) if throttle != 0.0 else 0.0
+		kart_visual.rotation.x = lerpf(kart_visual.rotation.x, target_pitch, delta * 8.0)
+
 	if wheel_contact_count > 0 and surface_normal.dot(Vector3.UP) > 0.3:
 		var slope_fwd = (fwd - surface_normal * fwd.dot(surface_normal)).normalized()
+		var slope_right = (right - surface_normal * right.dot(surface_normal)).normalized()
 		var rest_len = 0.28
 		var susp_error = clampf(rest_len - ground_distance, -0.15, 0.15)
 		var susp_vy = susp_error * 18.0
-		velocity = slope_fwd * forward_speed + Vector3.UP * susp_vy
+		velocity = slope_fwd * forward_speed + slope_right * lateral_speed + Vector3.UP * susp_vy
 	else:
-		velocity.x = fwd.x * forward_speed
-		velocity.z = fwd.z * forward_speed
+		velocity.x = fwd.x * forward_speed + right.x * lateral_speed
+		velocity.z = fwd.z * forward_speed + right.z * lateral_speed
 
 func trigger_drift_boost() -> void:
 	var boost_level = 0

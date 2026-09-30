@@ -17,6 +17,7 @@ const GAME_SUBWAY_SURVIVAL: String = "subway_survival"
 const GAME_ROCKET_CAR: String = "rocket_car"
 const GAME_KART_RACING: String = "kart_racing"
 const GAME_STRIKE_VECTOR: String = "strike_vector"
+const GAME_CHROMA_RUSH: String = "chroma_rush"
 
 # Game States
 enum GameState {

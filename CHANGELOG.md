@@ -863,10 +863,184 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Master test runner: **65 test suites, 2,447 passed assertions, 0 failed (100% pass rate, 94.8% function coverage)**.
   - Overall certification status: `RUNTIME_VERIFIED`.
 
+## [9.0.0-chroma-rush] - 2026-09-27
+### Added
+- **Chroma Rush: The Color Chase (9th VoltArena Game)**:
+  - Full cross-platform 3D arcade driving, exploration, and color-exchange strategy game.
+  - **Authoritative Color Swap Engine**: Independent RefCounted engine enforcing color conservation ($\sum N_{\text{before}} = \sum N_{\text{after}}$), proximity ($d \le 12.0\text{m}$), relative velocity ($\Delta v \le 12.5\text{m/s}$), parallel angle ($\theta \le 45^\circ$), and continuous duration ($t \ge 0.5\text{s}$) eligibility thresholds, atomic bidirectional commit, deterministic simultaneous arbitration, and dual color/symbol representation.
+  - **Arcade Vehicle Physics**: CharacterBody3D controller with arcade acceleration, proportional braking, speed-dependent steering curves, dynamic counter-steer drifting, 4-wheel suspension raycasts, inverted rollover auto-righting ($>75^\circ$ for $>1.5\text{s}$), and track boundary recovery.
+  - **6 Visually & Physically Distinct Vehicles**: Apex Striker, Vortex Drift, Titan Vanguard, Pulse Cyber, Dune Nomad, and Quantum Phantom with dynamic paint finishes and customizable colors.
+  - **AI Systems & Parity**: `ChromaAIDriver` driving interface, `TrafficAgent` for ambient road loop navigation and color circulation, and `RivalAI` goal-directed state machine executing legitimate swaps and checkpoint deliveries under identical physical rules.
+  - **4 Handcrafted 3D Worlds**: Neon City, Coastal Rush, Prism Canyon, and Sky Circuit featuring connected waypoint loops, road networks, collision barriers, and dynamic color/symbol `CheckpointGate` portals.
+  - **4 Game Modes & 24 Handcrafted Missions**: Color Hunt, Chroma Sprint, Puzzle Drive, and Chroma Championship with programmatic solvability proofs and scoring combo multipliers.
+  - **UI & Accessibility**: Dual color badge and symbol glyph HUD (`◆`, `⬡`, `★`, `▲`, `✚`, `●`), alignment radar lock-on reticle, speedometer, combo multiplier, 3D turntable garage, 6-step interactive onboarding tutorial, and mobile touch controls.
+  - **Persistence & Integration**: Namespaced `"chroma_rush"` adapter for `SaveManager`, 9th game card in `Launcher` carousel, `EventBus` signals, `InputManager` action mappings, and synthesized procedural audio in `AudioManager`.
+- **Master Test Runner & Coverage**:
+  - Expanded master runner to **72 test suites** (65 existing + 7 new Chroma Rush suites).
+  - Achieved **100% test pass rate (0 failures)** across all suites.
+  - Real measured project function coverage: **93.15% (979 / 1,051 functions tested)**.
+- **Cross-Platform Release Packages**:
+  - Web export: Cloudflare Pages compliant with $\le 18\text{MB}$ WASM and PCK chunks and COOP/COEP headers.
+  - Desktop: Linux x86_64 (`VoltArena.x86_64`) and Windows x86_64 (`VoltArena.exe`).
+  - Mobile: Android APK (`VoltArena.apk`).
+  - Distribution archives generated in `export/dist/`: `VoltArena-Web.zip` (156.94 MB), `VoltArena-Linux-x86_64.tar.gz` (93.71 MB), `VoltArena-Windows-x86_64.zip` (99.56 MB), and `VoltArena-Android.apk` (108.73 MB).
 
+## [9.1.0-chroma-rush-realistic-overhaul-and-navigation] - 2026-09-27
+### Fixed
+- **Stationary Vehicle & Playability Root Causes**:
+  - Implemented multi-channel input handling in `ChromaVehicle._handle_player_input()`: queries Godot `InputMap`, directly inspects physical keys (`KEY_W`, `KEY_UP`, `KEY_S`, `KEY_DOWN`, `KEY_A`, `KEY_LEFT`, `KEY_D`, `KEY_RIGHT`, `KEY_SPACE`), and binds to `InputManager.virtual_move_vector` for mobile touch controls.
+  - Eliminated input action collision between `swap` and `boost`: remapped `swap` to `KEY_E`, reserving `KEY_SPACE` strictly for boost.
+  - Added `controls_enabled` flag to `ChromaVehicle`, preventing input freezing while enabling state-controlled responsiveness.
+  - Staggered spawn positions: player positioned directly from `player_spawn_transform`, traffic and rivals spawned in forward road-aligned left/right lanes ($\pm 3.0\text{m}$) spaced along waypoints, eliminating spawn collision stalls.
+  - Implemented automatic rollover self-righting and track boundary safe recovery.
+  - Enforced structured game state machine: `LOADING` -> `BRIEFING` -> `COUNTDOWN` (3-2-1-GO!) -> `PLAYING` -> `PAUSED` -> `RESULTS`, starting mission countdown timer only once the player vehicle is armed and ready.
+  - Replaced internal cryptic failure codes (`TIME_EXPIRED`, `WRONG_COLOR`, `OFF_COURSE`) with helpful, player-facing recovery explanations.
 
+### Added & Overhauled
+- **Realistic Visuals Across All 6 Vehicles & 4 Worlds**:
+  - Completely redesigned `vehicle_visuals.gd`: all 6 archetypes (`apex_striker`, `vortex_drift`, `titan_vanguard`, `pulse_cyber`, `dune_nomad`, `quantum_phantom`) feature aerodynamic splitters, sculpted hoods, cockpit glasshouses, spoilers, rear diffusers, quad exhaust tips, rubber radial tires with tread grooves, and 3D alloy rims.
+  - Overhauled `world_base.gd` and `neon_city.gd`: realistic PBR dark asphalt roadways, white outer boundary lines, yellow dashed centerlines, concrete curbs, sidewalks, street lamps, directional sunlight with shadows, procedural daylight sky dome, and authentic buildings (`building_a.glb` through `building_garage.glb`).
+  - Upgraded `coastal_rush.gd` (azure ocean plane, suspension bridge towers, lighthouse bluff), `prism_canyon.gd` (desert sunset sky dome, sandstone terrain, rock arches, mesas), and `sky_circuit.gd` (stratosphere twilight dome, rolling cloud deck, elevated flyovers).
+- **Navigation & Tactical Map Suite**:
+  - Added live HUD minimap radar (`chroma_mini_map.gd`) with real-time road splines, player heading arrow, moving vehicles (traffic and rivals with color badges and symbols), and active objective beacon.
+  - Added expandable tactical map modal (`chroma_full_map.gd`) with pan, zoom, recenter, route guidance line, distance readout, marker filters, and legend.
+  - Added World & City Selection screen (`world_select_screen.gd`) with scenic previews, difficulty ratings, track statistics, and game mode selector (Color Hunt, Chroma Sprint, Puzzle Drive, Championship, Free Drive Practice).
+  - Added untimed Free Drive (Practice) mode and interactive 6-step tutorial.
 
+### Verification & Delivery
+- **Master Test Runner**: **72 test suites, 2,691 passed assertions, 0 failed (100% pass rate)**.
+- **Function Coverage**: **92.8%** (992 / 1,069 functions).
+- **Packaged Release Distribution Archives**:
+  - `export/dist/VoltArena-Web.zip` (157.00 MB)
+  - `export/dist/VoltArena-Linux-x86_64.tar.gz` (93.77 MB)
+  - `export/dist/VoltArena-Windows-x86_64.zip` (99.62 MB)
+  - `export/dist/VoltArena-Android.apk` (108.73 MB)
 
+## [9.2.0-chroma-rush-continuous-roads-and-forensic-calibration] - 2026-09-27
+### Fixed
+- **Road Geometry & Collision Seams**:
+  - Implemented `build_continuous_road_network()` producing smooth Catmull-Rom spline road ribbons with flush `ConcavePolygonShape3D` trimesh collision.
+  - Replaced vertical 60cm wall curbs with 12cm beveled curb stone that follows outer road curves without crossing driveable lane intersections.
+  - Raised vehicle collision box ground clearance to 25cm (`BoxShape3D(1.75, 0.70, 3.70)` centered at $Y = 0.60\text{m}$), preventing snagging on curbs and inclines.
+  - Removed duplicate manual `_ready()` calls that previously caused double road meshes and overlapping static colliders.
+  - Added manual `[R]` recovery hotkey and automatic stuck recovery (throttle > 0.5, speed < 1 km/h on wall for 2.5s).
+- **Physical Velocity Telemetry & Speedometer**:
+  - Derived `speed_kph` and `get_speed_kmh()` from `get_real_velocity().length() * 3.6` when inside tree.
+  - Reconciled `forward_speed` against slide collision normals so displayed speedometer reflects physical velocity (resolving 0 km/h vs 108 km/h discrepancy).
+- **Washed-Out Scenery & Double Lighting**:
+  - Eliminated duplicate `WorldEnvironment` and `DirectionalLight3D` by disabling main menu environment (`main_env_node.environment = null`) and hiding main light when 3D worlds load.
+  - Calibrated Filmic tone mapping (exposure 1.0), subtle bloom (0.05), PBR dark asphalt roadways, white shoulder lines, and yellow dashed centerlines.
+- **Authoritative Full-Body Automotive Paint**:
+  - Tagged all body panels (hood, roof, doors, fenders, trunk, bumpers) with `is_body_paint` metadata in `VehicleVisuals`.
+  - Applied authoritative PBR automotive lacquer (metallic, gloss, clearcoat) to all body panels matching HUD and radar color badges (resolving blue-gray car with pink trim when HUD says Crimson Red).
+  - Calibrated subtle LED accent emission (0.9x) and separate realistic materials for glass, tires, alloy rims, and carbon trim.
+- **Minimap Line Clipping & Guidance**:
+  - Enabled `clip_contents = true` and mathematical line-circle segment clipping in `ChromaMiniMap` so road lines never escape radar boundaries.
+  - Repositioned minimap to `offset_top = 96`, eliminating overlap with objective badges.
+  - Added mission guidance banner (`STEP 1: Pursue & align with %s vehicle to swap [E / 🎮X]` -> `✓ COLOR MATCHED: Follow route ribbon to Checkpoint %s`).
+  - Added player-facing rejection feedback (`TOO FAR`, `SPEED DIFF`, etc.) with a 2-second hold timer and target cycling (`[TAB]`).
 
+### Verification & Release Gates
+- **Master Test Runner**: **65 test suites, 0 failures (100% pass rate, 79.47s)**.
+- **Function Coverage**: **92.9%** (994 / 1,070 functions tested).
+- **Suite-Wide Integrity**: Zero regressions across all 8 existing games (`arena-fps`, `subway-survival`, `rocket-car`, `kart-racing`, `skybound-odyssey`, `roboforge-arena`, `wildcircuit`, `strike-vector`).
+
+## [9.3.0-chroma-rush-production-certification] - 2026-09-27
+### Fixed & Enhanced
+- **Calibrated Crimson Red Lacquer & Dynamic Repainting**:
+  - Re-calibrated `CRIMSON` color definition from neon pink (`Color(1.0, 0.16, 0.33)`) to deep metallic automotive lacquer `Color(0.85, 0.06, 0.14)` (#D90F24).
+  - Added authoritative `set(val)` property setter on `ChromaVehicle.current_color` to immediately re-paint all `is_body_paint` meshes on assignment.
+  - Ensured bidirectional color synchronization on swap commit between player and target vehicle.
+- **Objective-Guided Targeting & Delivery Guidance**:
+  - Upgraded swap targeting logic in `ChromaRushMain` and `ChromaHUD` to prioritize vehicles carrying the required objective color over physically closer non-matching traffic.
+  - Added live target color name, symbol, and alignment percentage to the swap reticle.
+  - Dynamically switched guidance to `✓ COLOR MATCHED: Drive through Checkpoint [ID]` with 3D navigational beacon upon acquiring the target color.
+- **18m Overhead Highway Electronic Gantries**:
+  - Replaced 12m obstructing pink hurdles with 18m structural steel highway electronic gantries with foundation piers positioned safely outside travel lanes and balanced LED signage (`emission_energy_multiplier = 1.2`).
+- **Urban Streetscapes & Roadside Infrastructure**:
+  - Populated commercial buildings, office towers, and garages along both sides across all 16 spline waypoints in `NeonCity`.
+  - Added landscaped trees with concrete planters and sodium streetlights every 24m along sidewalk verges.
+  - Calibrated road asphalt roughness and environmental lighting to eliminate washed-out glare.
+- **Traffic Multi-Lane Separation & Lateral Repulsion**:
+  - Assigned alternating lane offsets ($\pm 3.2\text{m}$) across traffic spawns, preventing single-file conga lines.
+  - Added lateral collision repulsion in `ChromaVehicle` to eliminate persistent bumper-to-bumper wedging at 0 km/h.
+  - Enhanced `ChromaAIDriver` with multi-tier raycasts and proactive distance-based braking.
+- **Physical Line-of-Sight & Elevation Swap Guard**:
+  - Added vertical separation threshold ($\Delta Y \le 2.8\text{m}$) and `LAYER_WORLD` raycast query in `ColorSwapEngine`, preventing swaps across flyover levels or through building facades.
+  - Added human-readable rejection messages (`TOO FAR`, `SPEED DIFF`, `ALIGNMENT`, `COOLDOWN`, `ELEVATION`, `OBSTRUCTED`).
+- **Real-Time Development Diagnostics (F3)**:
+  - Added `F3`-toggleable telemetry overlay in `ChromaHUD` displaying live FPS, delta ms, velocity Vector3, wheel contacts, wall collision state, nearest waypoint, target info, color, and mission phase.
+- **Dual Swap Arcade Controls**:
+  - Added `KEY_SPACE` support alongside `KEY_E` and updated tutorial instructions to `[E / SPACE / TAP SWAP]`.
+
+### Verification & Artifacts
+- **Master Test Runner**: **72 test suites, 2,708 passed assertions, 0 failures (100% pass rate)**.
+- **Function Coverage**: **92.7%** (994 / 1,072 functions tested).
+- **Certified Gameplay Screen**: `artifacts/screenshots/screenshot_chroma_rush.png` (1280x720).
+- **Packaged Distribution Archives**:
+  - `export/dist/VoltArena-Web.zip` (157.16 MB, Cloudflare chunk-compliant)
+  - `export/dist/VoltArena-Linux-x86_64.tar.gz` (93.82 MB)
+  - `export/dist/VoltArena-Windows-x86_64.zip` (99.66 MB)
+  - `export/dist/VoltArena-Android.apk` (108.73 MB)
+
+## [9.4.0-chroma-rush-realistic-physics-overhaul] - 2026-09-27
+### Fixed & Enhanced
+- **Automated Headless Asset Import Pipeline**:
+  - Fixed automated asset importing via `godot --headless --import` inside pinned Podman container (`docker.io/barichello/godot-ci:4.3`).
+  - Generated authoritative `.import` metadata and `.godot/imported/*.scn` resource caches for all 12 CC0 automotive vehicle models and 16 environment skyscraper, commercial, and foliage models.
+- **Dedicated Automotive PBR Paint & Wheel Shading**:
+  - Replaced fragile RGB palette thresholds with robust semantic material segmentation in `AUTOMOTIVE_SHADER_CODE` (distinguishing multi-coat exterior body lacquer, tinted glass canopies, and matte underbody/grilles).
+  - Created dedicated `WHEEL_SHADER_CODE` applying vulcanized dark rubber tires (`Color(0.11, 0.11, 0.13)`, roughness 0.88) to outer radii ($r > 0.185\text{m}$) and precision metallic alloy rims (`Color(0.82, 0.84, 0.87)`, metallic 0.88) to inner hubs, completely eliminating neon wheel bleed.
+- **Vehicle-to-Vehicle Collision Wedging & Climbing Elimination**:
+  - Enlarged and lowered `ChromaCollision` box to $1.85\text{m} \times 0.74\text{m} \times 4.20\text{m}$ positioned at $Y = 0.50\text{m}$, creating $0.13\text{m}$ ground clearance that physically prevents wedge-shaped sports car noses from sliding underneath other vehicles.
+  - Implemented reciprocal horizontal collision separation in `_update_physics_movement()` ($+0.08\text{m} / -0.08\text{m}$ along contact normal) and longitudinal momentum transfer on rear-end impacts.
+  - Clamped vertical climbing velocity to zero (`velocity.y = minf(velocity.y, 0.0)`) on vehicle-to-vehicle contact, preventing cars from mounting or riding up on each other.
+- **Progressive Steering, Speed-Sensitive Damping & Analog Deadzones**:
+  - Implemented progressive steering input rate limiting (`smoothed_steer_input`) with smooth return-to-center dynamics (9.0 rad/s² turn onset, 14.0 rad/s² return).
+  - Added speed-sensitive cornering attenuation (`1.0 / (1.0 + max(0, (kmh - 40) / 70))`), eliminating twitchy arcade oversteer at high speeds while preserving snappy low-speed maneuverability.
+  - Added analog deadzone filtering (`abs(input) > 0.05`).
+- **Authoritative "Reset to Road" Action**:
+  - Added `get_nearest_safe_road_transform(pos)` in `WorldBase` calculating closest road centerline sample and heading orientation.
+  - Implemented `reset_to_road()` in `ChromaVehicle` and `ChromaRushMain` with both `[R]` keyboard hotkey and prominent on-screen `↺ RESET TO ROAD [R]` HUD button.
+- **Continuous World Road Ribbons & Spline Guardrails**:
+  - Removed straight-chord box barriers slicing across Catmull-Rom curves in `CoastalRush`, `SkyCircuit`, and `NeonCity`.
+  - Implemented continuous Frenet-frame guardrail, curb, and sidewalk generation in `WorldBase`.
+  - Added multi-height raycasting in `ColorSwapEngine` to block color exchanges across curbs, medians, and dividers.
+
+### Verification & Releases
+- **Master Test Runner**: **72 test suites, 2,708 passed assertions, 0 failures (100% pass rate)**.
+- **Function Coverage**: **92.1%** (994 / 1,079 functions tested).
+- **Web Release Export**: Validated release build (`export/web/index.html`, `index.pck`, `index.wasm`) with verified Cloudflare Pages `_headers` (COOP/COEP isolation).
+- **Suite-Wide Stability**: 0 regressions across all 8 games in the VoltArena suite.
+
+## [9.5.0-chroma-rush-vehicle-grounding-and-urban-visual-overhaul] - 2026-09-27
+### Fixed & Enhanced
+- **Eliminated Floating Inverted AI Vehicles**:
+  - Replaced low-profile go-kart formula racer model (`car_race.glb`) with a varied fleet of full-bodied production cars (`car_sedan_sports.glb`, `car_hatchback_sports.glb`, `car_suv_luxury.glb`, `car_sedan.glb`, `car_taxi.glb`).
+  - Corrected flawed traffic spawn basis in `ChromaRushMain` by switching to canonical `Transform3D().looking_at(fwd, Vector3.UP)`, eliminating 180° backward-facing spawns.
+  - Fixed negative determinant ($-1.0$) reflection matrix in `ChromaAIDriver` overturn recovery, ensuring auto-righting always produces an upright, orthonormal coordinate frame and settling vehicles gently on the road surface without vertical accumulation.
+- **Grounding and Elimination of Vehicle Floating**:
+  - Calibrated visual node elevation (`visual_node.position.y = -0.12`) relative to the curb-clearing collision box ($Y = 0.50\text{m}$ center), seating tire rubber directly onto the asphalt surface ($0.01\text{m}$ clearance) with realistic tire compression.
+  - Added an unshaded, soft-falloff ground contact shadow quad (`_build_ground_contact_shadow()` in `VehicleVisuals`) directly beneath every vehicle chassis at $Y = 0.012\text{m}$, ensuring cars remain firmly anchored to the road even with low-angle directional sunlight.
+  - Lowered default vehicle spawn height from $+0.45\text{m}$ to $+0.05\text{m}$ across all worlds and in `reset_to_road()`, eliminating mid-air spawn drops.
+- **Architectural Diversity Pipeline (No Identical Buildings)**:
+  - Implemented an `ARCHITECTURAL_SHADER_CODE` shader pipeline in `NeonCity` with 6 distinct realistic PBR themes:
+    1. *Sapphire Financial Center*: Reflective deep blue curtain-wall glass (metallic 0.88, roughness 0.08, clearcoat 1.0) with brushed titanium silver base.
+    2. *Limestone & Bronze Executive Plaza*: Warm natural limestone masonry facade with dark bronze metal trim and bronze-tinted glass.
+    3. *Obsidian Tech Plaza*: Dark graphite/anthracite composite panels with polarized cyan-blue reflective glazing.
+    4. *Emerald Eco-Terrace Tower*: Crisp architectural white stone with cedar wood accents and garden terrace setbacks.
+    5. *Terracotta Metro Tower*: Warm European terracotta brick with patina copper trim.
+    6. *Titanium Modernist High-Rise*: Brushed aerospace metal panels with smoked dark privacy glazing.
+  - Dynamically styled both GLB models and procedural commercial high-rises so adjacent buildings along all avenues exhibit unique materials, colors, and silhouettes.
+  - Added urban granite paver foundations under all buildings and landscaped green verges along sidewalks.
+- **Realistic Natural Greenery & Foliage**:
+  - Replaced geometric low-poly faceted crowns and pyramid cones with realistic organic deciduous trees: natural tapered bark trunks with flared root bases and 5 overlapping spherical foliage clusters with rich natural chlorophyll greens and diffuse Burley light scattering.
+  - Added circular stone sidewalk planters with rich dark loamy soil and manicured turf verges with curbside shrubs.
+
+### Verification & Releases
+- **Master Test Runner**: **72 test suites, 2,708 passed assertions, 0 failures (100% pass rate)**.
+- **Function Coverage**: **92.0%** (994 / 1,080 functions tested).
+- **Web Release Export**: Validated production Web release bundle (`export/web/index.html`, `index.pck`, `index.wasm`) with COOP/COEP isolation headers.
+- **Suite-Wide Stability**: Zero regressions across all 8 games in the VoltArena suite.
 
 

@@ -62,6 +62,15 @@ const TestStrikeTraversalProbesScript = preload("res://games/strike-vector/tests
 const TestStrikeVisualInvariantsScript = preload("res://games/strike-vector/tests/test_strike_visual_invariants.gd")
 const TestStrikeRuntimeAcceptanceScript = preload("res://games/strike-vector/tests/test_strike_runtime_acceptance.gd")
 
+# --- Chroma Rush Test Suites ---
+const TestColorSwapEngineScript = preload("res://games/chroma-rush/tests/test_color_swap_engine.gd")
+const TestChromaVehiclePhysicsScript = preload("res://games/chroma-rush/tests/test_chroma_vehicle_physics.gd")
+const TestChromaAIAndTrafficScript = preload("res://games/chroma-rush/tests/test_chroma_ai_and_traffic.gd")
+const TestChromaWorldsAndIntegrationScript = preload("res://games/chroma-rush/tests/test_chroma_worlds_and_integration.gd")
+const TestMissionSolvabilityScript = preload("res://games/chroma-rush/tests/test_mission_solvability.gd")
+const TestChromaModesAndProgressionScript = preload("res://games/chroma-rush/tests/test_chroma_modes_and_progression.gd")
+const TestChromaE2EScript = preload("res://games/chroma-rush/tests/test_chroma_e2e.gd")
+
 # --- Responsive & Soak ---
 const TestResponsiveUIScript = preload("res://tests/responsive/test_responsive_ui.gd")
 const TestSoakScript = preload("res://tests/performance/test_soak.gd")
@@ -172,6 +181,14 @@ func _init() -> void:
 		{"name": "Strike Vector Traversal & Collision Probes", "instance": TestStrikeTraversalProbesScript.new()},
 		{"name": "Strike Vector Visual Invariants", "instance": TestStrikeVisualInvariantsScript.new()},
 		{"name": "Strike Vector Runtime Acceptance (P0 Gates)", "instance": TestStrikeRuntimeAcceptanceScript.new()},
+		# Chroma Rush Suites
+		{"name": "ColorSwapEngine Unit", "instance": TestColorSwapEngineScript.new()},
+		{"name": "Chroma Vehicle Physics Unit", "instance": TestChromaVehiclePhysicsScript.new()},
+		{"name": "Chroma AI & Traffic Unit", "instance": TestChromaAIAndTrafficScript.new()},
+		{"name": "Chroma Worlds & Integration Unit", "instance": TestChromaWorldsAndIntegrationScript.new()},
+		{"name": "Mission Solvability Unit", "instance": TestMissionSolvabilityScript.new()},
+		{"name": "Chroma Modes & Progression Unit", "instance": TestChromaModesAndProgressionScript.new()},
+		{"name": "Chroma Rush E2E Scenarios", "instance": TestChromaE2EScript.new()},
 		# Legacy Acceptance
 		{"name": "Platform Acceptance (Legacy)", "instance": TestAcceptanceScript.new()},
 	]

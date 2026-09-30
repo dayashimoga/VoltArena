@@ -88,6 +88,15 @@ var games_meta = [
 		"tags": ["CAMPAIGN", "RUN-AND-GUN", "BOSSES", "WEAPONS"],
 		"color": Color(1.0, 0.45, 0.1),
 		"scene": "res://games/strike-vector/strike_vector_main.tscn"
+	},
+	{
+		"id": "chroma_rush",
+		"title": "CHROMA RUSH",
+		"tagline": "The Color Chase",
+		"desc": "High-speed 3D arcade driving and color-exchange strategy across 4 dynamic worlds with rival racers and tactical swap mechanics.",
+		"tags": ["ARCADE", "DRIVING", "COLOR-SWAP", "STRATEGY"],
+		"color": Color(0.95, 0.25, 0.8),
+		"scene": "res://games/chroma-rush/chroma_rush_main.tscn"
 	}
 ]
 
@@ -347,6 +356,11 @@ func get_game_career_stats(game_id: String) -> String:
 		"kart_racing":
 			var best = stats.get("best_lap_canyon", 999.0)
 			return "Races: %d | Best Lap: %s" % [stats.get("races_finished", 0), ("%.1fs" % best) if best < 900.0 else "--"]
+		"chroma_rush":
+			var cr_data = sm.save_data.get("chroma_rush", {})
+			var credits = cr_data.get("credits", 0)
+			var medals = cr_data.get("medals", 0)
+			return "Credits: %d | Medals: %d" % [credits, medals]
 		_:
 			return ""
 

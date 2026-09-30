@@ -102,11 +102,17 @@ func generate_all_procedural_sounds() -> void:
 	sound_cache["ui_hover"] = create_click_sound(0.04)
 	sound_cache["ui_click"] = create_click_sound(0.08)
 
-	# Generate all 4 game background music tracks
+	# Chroma Rush audio assets
+	sound_cache["chroma_swap"] = create_two_tone_sound(440.0, 880.0, 0.22, 0.85)
+	sound_cache["chroma_gate_success"] = create_two_tone_sound(587.33, 1174.66, 0.35, 0.9)
+	sound_cache["chroma_gate_fail"] = create_synth_sound(180.0, 80.0, 0.28, 0.8, "saw")
+
+	# Generate all game background music tracks
 	sound_cache["music_iron_crucible"] = create_music_track("iron_crucible")
 	sound_cache["music_metro_siege"] = create_music_track("metro_siege")
 	sound_cache["music_nitro_kick"] = create_music_track("nitro_kick")
 	sound_cache["music_drift_storm"] = create_music_track("drift_storm")
+	sound_cache["music_chroma_rush"] = create_music_track("chroma_rush")
 	sound_cache["engine_loop"] = create_engine_loop_sound()
 
 func start_engine_sound() -> void:
@@ -370,6 +376,28 @@ func create_music_track(track_name: String) -> AudioStreamWAV:
 				var lead: float = (sin(t * a_freq * TAU) + sin(t * a_freq * 2.0 * TAU) * 0.25) * a_env * 0.18
 
 				var mixed: float = kick + bass + lead
+				data[i] = clampi(int(mixed * 127.0) + 128, 0, 255)
+		"chroma_rush":
+			# High-tempo futuristic neon arcade chase: punchy kick, bouncy synth bass, and sparkling arpeggio
+			var chroma_bass = [130.81, 146.83, 164.81, 174.61, 196.00, 174.61, 164.81, 146.83]
+			var chroma_lead = [523.25, 659.25, 783.99, 1046.50, 880.00, 783.99, 659.25, 587.33]
+			for i in range(num_samples):
+				var t: float = float(i) / float(sample_rate)
+				var kick_t: float = fmod(t * 4.0, 1.0)
+				var kick_env: float = maxf(0.0, 1.0 - kick_t * 3.5)
+				var kick: float = sin(kick_t * lerpf(90.0, 40.0, kick_t) * TAU) * kick_env * 0.38
+
+				var b_step: int = int(t * 8.0) % chroma_bass.size()
+				var b_t: float = fmod(t * 8.0, 1.0)
+				var b_env: float = maxf(0.0, 1.0 - b_t * 2.0)
+				var b_val: float = sin(t * chroma_bass[b_step] * TAU) * b_env * 0.26
+
+				var l_step: int = int(t * 16.0) % chroma_lead.size()
+				var l_t: float = fmod(t * 16.0, 1.0)
+				var l_env: float = maxf(0.0, 1.0 - l_t * 3.0)
+				var l_val: float = sin(t * chroma_lead[l_step] * TAU) * l_env * 0.16
+
+				var mixed: float = kick + b_val + l_val
 				data[i] = clampi(int(mixed * 127.0) + 128, 0, 255)
 		_:
 			for i in range(num_samples):

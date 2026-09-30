@@ -40,6 +40,11 @@ signal lap_completed(racer_id: int, lap_number: int, lap_time: float)
 signal race_position_updated(racer_id: int, position: int, total_racers: int)
 signal powerup_acquired(powerup_id: String)
 
+# Chroma Rush Events
+signal chroma_swap_committed(source_id: String, target_id: String, old_c: int, new_c: int)
+signal chroma_checkpoint_cleared(vehicle_id: String, color_id: int, is_match: bool)
+signal chroma_mission_completed(mission_id: String, victory: bool, score: int)
+
 # Settings & Audio
 signal settings_updated()
 signal play_sound_requested(sound_name: String, position: Vector3, pitch_variation: float)

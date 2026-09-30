@@ -36,6 +36,8 @@ func setup_default_actions() -> void:
 	add_action_key("reload", KEY_R, JOY_BUTTON_X)
 	add_action_key("boost", KEY_SPACE, JOY_BUTTON_B)
 	add_action_key("drift", KEY_SHIFT, JOY_BUTTON_X)
+	add_action_key("swap", KEY_E, JOY_BUTTON_Y)
+	add_action_key("target_cycle", KEY_TAB, JOY_BUTTON_RIGHT_SHOULDER)
 	add_action_key("pause", KEY_ESCAPE, JOY_BUTTON_START)
 	_cache_all_action_events()
 
@@ -43,7 +45,7 @@ func _cache_all_action_events() -> void:
 	var standard_actions = [
 		"move_forward", "move_back", "move_left", "move_right",
 		"fire", "alt_fire", "jump", "sprint", "crouch", "reload",
-		"boost", "drift", "pause"
+		"boost", "drift", "swap", "target_cycle", "pause"
 	]
 	for a in standard_actions:
 		if InputMap.has_action(a):
@@ -62,6 +64,8 @@ func set_game_context(game_id: String) -> void:
 			allowed = ["move_forward", "move_back", "move_left", "move_right", "fire", "alt_fire", "reload", "jump", "sprint", "crouch", "pause"]
 		"rocket_car", "kart_racing":
 			allowed = ["move_forward", "move_back", "move_left", "move_right", "boost", "drift", "jump", "pause"]
+		"chroma_rush":
+			allowed = ["move_forward", "move_back", "move_left", "move_right", "boost", "drift", "swap", "target_cycle", "pause"]
 		_:
 			allowed = _action_events_cache.keys()
 

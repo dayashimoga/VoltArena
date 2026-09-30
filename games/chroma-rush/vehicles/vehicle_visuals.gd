@@ -156,6 +156,9 @@ static func build_vehicle_visual(vehicle_id: String, base_color: int = ChromaCon
 
 		raw_model.name = "ModelRoot"
 		raw_model.scale = model_scale
+		# Rotate 180° around Y so model front (hood & headlights at GLB +Z) points to Godot's forward (-Z),
+		# and rear (spoiler & taillights at GLB -Z) faces the chase camera (+Z).
+		raw_model.rotation.y = PI
 		root.add_child(raw_model)
 
 		# Setup body and wheel nodes with standardized naming
@@ -186,6 +189,9 @@ static func build_vehicle_visual(vehicle_id: String, base_color: int = ChromaCon
 			body_node.add_to_group("body_paint_meshes")
 
 		# Create wheel references and aliases
+		# With ModelRoot rotated 180°:
+		# Front wheels are at model +Z -> vehicle world -Z
+		# Rear wheels are at model -Z -> vehicle world +Z
 		var wl_f = raw_model.get_node_or_null("wheel-front-left")
 		var wr_f = raw_model.get_node_or_null("wheel-front-right")
 		var wl_r = raw_model.get_node_or_null("wheel-back-left")
@@ -195,6 +201,7 @@ static func build_vehicle_visual(vehicle_id: String, base_color: int = ChromaCon
 		_create_wheel_alias(root, "FrontWheelRight", wr_f)
 		_create_wheel_alias(root, "RearWheelLeft", wl_r)
 		_create_wheel_alias(root, "RearWheelRight", wr_r)
+
 
 	else:
 		# Fallback procedural builder if GLB model is unavailable

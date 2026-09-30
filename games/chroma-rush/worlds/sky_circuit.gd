@@ -154,25 +154,48 @@ func build_props() -> void:
 	gantry2.position = Vector3(170, 68.0, -210)
 	props_container.add_child(gantry2)
 
-	# Massive support pylons anchoring the floating circuit into the clouds below
-	var pylon_positions = [
-		Vector3(0, 25, -90), Vector3(90, 30, -230), Vector3(230, 25, -70),
-		Vector3(110, 20, 140), Vector3(-110, 22, 50)
+	# Massive support pylons anchoring the floating circuit into the clouds below (strictly clamped beneath road underside)
+	var pylon_anchors = [
+		{"xz": Vector2(0, -90), "road_y": 50.0},
+		{"xz": Vector2(90, -230), "road_y": 62.0},
+		{"xz": Vector2(250, -70), "road_y": 58.0},
+		{"xz": Vector2(110, 140), "road_y": 40.0},
+		{"xz": Vector2(-110, 50), "road_y": 46.0}
 	]
 	var pylon_mat = StandardMaterial3D.new()
 	pylon_mat.albedo_color = Color(0.18, 0.20, 0.28)
 	pylon_mat.metallic = 0.9
 
-	for pos in pylon_positions:
+	for anchor in pylon_anchors:
+		var xz: Vector2 = anchor["xz"]
+		var road_y: float = anchor["road_y"]
+		var underside_y = road_y - 0.50
+		var cloud_y = 5.0
+		var pier_h = maxf(10.0, underside_y - cloud_y)
+		var center_y = cloud_y + pier_h * 0.5
+
+		var pier = StaticBody3D.new()
+		pier.name = "SkySupportPier"
+		pier.collision_layer = GameConstants.LAYER_WORLD
+
 		var mi = MeshInstance3D.new()
 		var p_mesh = CylinderMesh.new()
 		p_mesh.top_radius = 4.0
-		p_mesh.bottom_radius = 8.0
-		p_mesh.height = 70.0
+		p_mesh.bottom_radius = 7.0
+		p_mesh.height = pier_h
 		mi.mesh = p_mesh
 		mi.material_override = pylon_mat
-		mi.position = pos
-		props_container.add_child(mi)
+		pier.add_child(mi)
+
+		var col = CollisionShape3D.new()
+		var c_shape = CylinderShape3D.new()
+		c_shape.radius = 5.0
+		c_shape.height = pier_h
+		col.shape = c_shape
+		pier.add_child(col)
+
+		pier.position = Vector3(xz.x, center_y, xz.y)
+		props_container.add_child(pier)
 
 	# High-altitude mega-skyscrapers rising from the clouds
 	var tower_spots = [
@@ -190,19 +213,30 @@ func build_props() -> void:
 func _build_sky_skyscraper(variant: String) -> Node3D:
 	var path = "res://assets/models/environment/building_skyscraper_%s.glb" % variant
 	var model = ModelCache.get_model(path)
+	var root = StaticBody3D.new()
+	root.name = "SkySkyscraper"
+	root.collision_layer = GameConstants.LAYER_WORLD
+
 	if model:
 		model.scale = Vector3(14.0, 28.0, 14.0)
-		return model
+		root.add_child(model)
+	else:
+		var mi = MeshInstance3D.new()
+		var box = BoxMesh.new()
+		box.size = Vector3(28.0, 120.0, 28.0)
+		mi.mesh = box
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.15, 0.18, 0.25)
+		mat.metallic = 0.8
+		mi.material_override = mat
+		mi.position = Vector3(0, 60.0, 0)
+		root.add_child(mi)
 
-	var root = Node3D.new()
-	var mi = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(28.0, 120.0, 28.0)
-	mi.mesh = box
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.15, 0.18, 0.25)
-	mat.metallic = 0.8
-	mi.material_override = mat
-	mi.position = Vector3(0, 60.0, 0)
-	root.add_child(mi)
+	var col = CollisionShape3D.new()
+	var b_shape = BoxShape3D.new()
+	b_shape.size = Vector3(30.0, 140.0, 30.0)
+	col.shape = b_shape
+	col.position = Vector3(0, 70.0, 0)
+	root.add_child(col)
+
 	return root

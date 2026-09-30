@@ -505,15 +505,27 @@ func set_alignment_progress(prog: float) -> void:
 	if alignment_progress_bar:
 		alignment_progress_bar.value = prog
 
-func show_swap_prompt(eligible: bool, target_color: int, reason: String = "", progress: float = 0.0) -> void:
+func show_delivery_prompt(gate_id: String) -> void:
+	if rejection_timer > 0.0:
+		return
+	if alignment_progress_bar:
+		alignment_progress_bar.value = 1.0
+		alignment_progress_bar.modulate = Color(0.2, 1.0, 0.4)
+	if swap_prompt_label:
+		swap_prompt_label.visible = true
+		swap_prompt_label.text = "✓ COLOR MATCHED: Drive through Checkpoint %s" % gate_id.to_upper()
+		swap_prompt_label.modulate = Color(0.2, 1.0, 0.4)
+
+func show_swap_prompt(eligible: bool, target_color: int, reason: String = "", progress: float = 0.0, is_optional: bool = false) -> void:
 	if rejection_timer > 0.0:
 		return
 	if swap_prompt_label:
 		swap_prompt_label.visible = true
+		var prefix = "(OPTIONAL SWAP) " if is_optional else ""
 		if eligible:
 			var color_name = ChromaConstants.get_color_name(target_color)
 			var sym = ChromaConstants.get_color_symbol(target_color)
-			swap_prompt_label.text = "⚡ SWAP READY! Press [E / 🎮X] for %s %s" % [sym, color_name]
+			swap_prompt_label.text = "⚡ %sSWAP READY! Press [E / 🎮X] for %s %s" % [prefix, sym, color_name]
 			swap_prompt_label.modulate = Color(0.1, 1.0, 0.3)
 		elif reason == ChromaConstants.REJECT_OBSTRUCTED:
 			swap_prompt_label.text = "TARGET SEPARATED BY BARRIER / OBSTACLE"
@@ -529,11 +541,11 @@ func show_swap_prompt(eligible: bool, target_color: int, reason: String = "", pr
 			swap_prompt_label.modulate = Color(1.0, 0.8, 0.2)
 		elif progress > 0.05:
 			var color_name = ChromaConstants.get_color_name(target_color)
-			swap_prompt_label.text = "HOLD ALIGNMENT WITH %s (%d%%)" % [color_name.to_upper(), int(progress * 100)]
+			swap_prompt_label.text = "%sHOLD ALIGNMENT WITH %s (%d%%)" % [prefix, color_name.to_upper(), int(progress * 100)]
 			swap_prompt_label.modulate = Color(1.0, 0.85, 0.1)
 		else:
 			var color_name = ChromaConstants.get_color_name(target_color)
-			swap_prompt_label.text = "PULL ALONGSIDE %s (<8m) TO SWAP [E / 🎮X]" % color_name.to_upper()
+			swap_prompt_label.text = "%sPULL ALONGSIDE %s (<8m) TO SWAP [E / 🎮X]" % [prefix, color_name.to_upper()]
 			swap_prompt_label.modulate = Color(0.85, 0.85, 0.85)
 
 func hide_swap_prompt() -> void:

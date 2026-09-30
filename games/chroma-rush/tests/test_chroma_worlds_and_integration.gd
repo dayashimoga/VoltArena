@@ -27,6 +27,9 @@ func run_tests() -> Dictionary:
 	test_checkpoint_gate_trigger_mismatching()
 	test_waypoint_navigation_queries()
 	test_continuous_road_mesh_and_collision()
+	test_neon_city_street_tree_and_plaza_colliders()
+	test_coastal_rush_bridge_pylon_clearance()
+	test_road_deck_thickness_and_safe_road_transform()
 
 	return {"passed": passed, "failed": failed}
 
@@ -167,6 +170,62 @@ func test_continuous_road_mesh_and_collision() -> void:
 	# Verify visual ribbon
 	var ribbon = road_body.get_node_or_null("RoadMesh") as MeshInstance3D
 	assert_true(ribbon != null, "RoadMesh visual must exist")
+
+	city.free()
+
+func test_neon_city_street_tree_and_plaza_colliders() -> void:
+	var city = NeonCity.new()
+	city._ready()
+
+	# Verify street trees possess solid StaticBody3D with CylinderShape3D colliders (DEF-01)
+	var found_tree_collider = false
+	var found_plaza_collider = false
+	for child in city.props_container.get_children():
+		if child is StaticBody3D:
+			if child.name.find("Tree") != -1:
+				for sc in child.get_children():
+					if sc is CollisionShape3D and sc.shape is CylinderShape3D:
+						found_tree_collider = true
+			elif child.name.find("Plaza") != -1:
+				for sc in child.get_children():
+					if sc is CollisionShape3D and sc.shape is BoxShape3D:
+						found_plaza_collider = true
+
+	assert_true(found_tree_collider, "Street trees must have solid StaticBody3D colliders to prevent driving through trunks")
+	assert_true(found_plaza_collider, "Urban plaza foundation must have solid ground-anchored box collider")
+
+	city.free()
+
+func test_coastal_rush_bridge_pylon_clearance() -> void:
+	var coast = CoastalRush.new()
+	coast._ready()
+
+	# Verify suspension bridge pylons are located outside driveable road deck (DEF-04)
+	var found_pylons = false
+	for child in coast.props_container.get_children():
+		if child.name.find("BridgeTower") != -1:
+			found_pylons = true
+			for sub in child.get_children():
+				if sub is StaticBody3D:
+					# Each pylon column has lateral offset >= 11m from road centerline
+					assert_true(absf(sub.position.x) >= 11.0 or absf(sub.position.z) >= 11.0, "Bridge pylons must stand outside road boundaries")
+
+	assert_true(found_pylons, "Suspension bridge towers must be constructed in Coastal Rush")
+	coast.free()
+
+func test_road_deck_thickness_and_safe_road_transform() -> void:
+	var city = NeonCity.new()
+	city._ready()
+
+	# Verify authoritative road spline samples exist (DEF-08)
+	var splines = city.get_spline_samples()
+	assert_true(splines.size() >= 32, "Continuous spline samples must provide dense path representation")
+
+	# Verify safe road transform elevation and alignment (DEF-03, DEF-05)
+	var query_pt = Vector3(10.0, -1.0, -80.0) # slightly off-road / below
+	var safe_xf = city.get_nearest_safe_road_transform(query_pt)
+	assert_true(safe_xf.origin.y >= 0.15, "Safe road transform must elevate chassis safely above asphalt")
+	assert_true(safe_xf.basis.is_orthogonal(), "Safe road transform basis must be orthonormal")
 
 	city.free()
 

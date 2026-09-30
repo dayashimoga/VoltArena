@@ -25,6 +25,7 @@ func run_tests() -> Dictionary:
 	test_atomic_swap_success()
 	test_deterministic_simultaneous_swap()
 	test_ai_vehicle_swap_parity()
+	test_stopped_side_by_side_swap_eligibility()
 
 	return {"passed": passed, "failed": failed}
 
@@ -269,6 +270,29 @@ func test_ai_vehicle_swap_parity() -> void:
 
 	d_ai1.free()
 	d_ai2.free()
+
+func test_stopped_side_by_side_swap_eligibility() -> void:
+	var engine = ColorSwapEngine.new()
+	# Both vehicles fully stopped (vel = Vector3.ZERO) facing parallel forward (-Z)
+	var d1 = _create_dummy_vehicle(Vector3(0, 0, 0), Vector3.ZERO, Vector3(0, 0, -1))
+	var d2 = _create_dummy_vehicle(Vector3(2.5, 0, 0), Vector3.ZERO, Vector3(0, 0, -1))
+
+	engine.register_vehicle("car_stopped_a", d1, ChromaConstants.ChromaColor.CRIMSON)
+	engine.register_vehicle("car_stopped_b", d2, ChromaConstants.ChromaColor.EMERALD)
+
+	# Verify stopped vehicles are eligible using orientation rather than requiring velocity
+	var check = engine.evaluate_eligibility("car_stopped_a", "car_stopped_b", false)
+	assert_true(check["eligible_except_time"], "Stopped side-by-side vehicles must be eligible to swap based on orientation")
+	assert_eq(check["relative_speed"], 0.0, "Relative speed between stopped vehicles is zero")
+
+	engine.prime_alignment("car_stopped_a", "car_stopped_b", ChromaConstants.REQUIRED_ALIGNMENT_DURATION + 0.1)
+	var res = engine.request_swap("car_stopped_a", "car_stopped_b")
+	assert_true(res["success"], "Stopped swap commit must succeed atomically")
+	assert_eq(engine.get_vehicle_color("car_stopped_a"), ChromaConstants.ChromaColor.EMERALD, "Car A received emerald while stopped")
+	assert_eq(engine.get_vehicle_color("car_stopped_b"), ChromaConstants.ChromaColor.CRIMSON, "Car B received crimson while stopped")
+
+	d1.free()
+	d2.free()
 
 func get_coverage_entries() -> Array:
 	return [

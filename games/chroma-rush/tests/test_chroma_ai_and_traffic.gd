@@ -19,6 +19,7 @@ func run_tests() -> Dictionary:
 
 	test_ai_driver_steering_towards_target()
 	test_ai_driver_braking_for_sharp_turns()
+	test_ai_reverse_recovery_maneuver()
 	test_traffic_agent_waypoint_progression()
 	test_rival_ai_color_search_and_pursuit()
 	test_rival_ai_legitimate_swap_execution()
@@ -78,6 +79,22 @@ func test_ai_driver_braking_for_sharp_turns() -> void:
 	driver.update_driving(0.1)
 
 	assert_true(v.brake_input > 0.0 or v.throttle_input < 0.5, "Driver must reduce throttle or apply brake before sharp turn")
+
+	v.free()
+
+func test_ai_reverse_recovery_maneuver() -> void:
+	var v = _create_test_vehicle(Vector3.ZERO)
+	v.forward_speed = 0.0
+	var driver = ChromaAIDriver.new(v)
+
+	# Trigger active reverse maneuver (DEF-07)
+	driver.reverse_time = 1.2
+	driver.reverse_steer_dir = -1.0
+	driver.update_driving(0.1)
+
+	assert_eq(v.throttle_input, 0.0, "Reverse maneuver must not apply forward throttle")
+	assert_true(v.brake_input > 0.5, "Reverse maneuver must apply positive brake input to engage reverse in ChromaVehicle")
+	assert_eq(v.steer_input, -1.0, "Steer input must match reverse steer direction")
 
 	v.free()
 

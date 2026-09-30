@@ -165,6 +165,11 @@ func _build_ui() -> void:
 	btn_recenter.pressed.connect(func(): recenter())
 	s_vbox.add_child(btn_recenter)
 
+	var btn_fit = Button.new()
+	btn_fit.text = "⛶ FIT WHOLE STAGE"
+	btn_fit.pressed.connect(func(): fit_to_stage())
+	s_vbox.add_child(btn_fit)
+
 	var sep1 = HSeparator.new()
 	s_vbox.add_child(sep1)
 
@@ -228,7 +233,7 @@ func open_map(w_name: String, road_waypoints: Array[Vector3], gates: Array[Dicti
 	visible = true
 	if is_instance_valid(title_label):
 		title_label.text = "TACTICAL MAP: " + world_name.to_upper()
-	recenter()
+	fit_to_stage()
 
 func close_map() -> void:
 	visible = false
@@ -236,6 +241,38 @@ func close_map() -> void:
 
 func recenter() -> void:
 	pan_offset = -Vector2(player_pos.x, player_pos.z)
+	if is_instance_valid(map_viewport):
+		map_viewport.queue_redraw()
+
+func fit_to_stage() -> void:
+	if waypoints.is_empty():
+		recenter()
+		return
+
+	var min_x = 1e9
+	var max_x = -1e9
+	var min_z = 1e9
+	var max_z = -1e9
+
+	for p in waypoints:
+		min_x = minf(min_x, p.x)
+		max_x = maxf(max_x, p.x)
+		min_z = minf(min_z, p.z)
+		max_z = maxf(max_z, p.z)
+
+	var center_x = (min_x + max_x) * 0.5
+	var center_z = (min_z + max_z) * 0.5
+	pan_offset = -Vector2(center_x, center_z)
+
+	var span_x = maxf(100.0, max_x - min_x + 60.0)
+	var span_z = maxf(100.0, max_z - min_z + 60.0)
+
+	var vp_size = map_viewport.size if is_instance_valid(map_viewport) and map_viewport.size.x > 10 else Vector2(800, 600)
+	var scale_x = vp_size.x / span_x
+	var scale_z = vp_size.y / span_z
+	var optimal_scale = minf(scale_x, scale_z)
+	zoom_level = clampf(optimal_scale / 1.8, 0.35, 2.5)
+
 	if is_instance_valid(map_viewport):
 		map_viewport.queue_redraw()
 

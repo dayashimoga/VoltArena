@@ -58,7 +58,8 @@ func update_driving(delta: float) -> void:
 	# Active reverse recovery maneuver
 	if reverse_time > 0.0:
 		reverse_time -= delta
-		vehicle.set_inputs(reverse_steer_dir, -0.85, 0.0, false, false)
+		# Deliberate brake-to-reverse: zero throttle and positive brake in ChromaVehicle engages reverse
+		vehicle.set_inputs(reverse_steer_dir, 0.0, 0.9, false, false)
 		return
 
 	# Transform target position into vehicle local space
@@ -124,8 +125,13 @@ func update_driving(delta: float) -> void:
 	var avoidance_steer = _compute_obstacle_avoidance()
 	if absf(avoidance_steer) > 0.1:
 		steer = clampf(steer + avoidance_steer, -1.0, 1.0)
-		throttle = 0.0
-		brake = maxf(brake, 0.75)
+		if current_spd > 8.0:
+			throttle = 0.0
+			brake = 0.6
+		else:
+			# Creep forward while turning to navigate around obstacle
+			throttle = 0.35
+			brake = 0.0
 
 	# Feed inputs to vehicle controller
 	vehicle.set_inputs(steer, throttle, brake, need_drift, use_boost)

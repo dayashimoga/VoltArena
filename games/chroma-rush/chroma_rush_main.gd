@@ -443,6 +443,12 @@ func _update_swap_eligibility() -> void:
 
 	var player_has_req_col = (req_col != ChromaConstants.ChromaColor.NONE and player_vehicle.current_color == req_col)
 
+	# When player already holds required objective color, prioritize checkpoint delivery guidance
+	if player_has_req_col and not is_practice_mode:
+		var gate_id = mission_director.get_current_target_gate_id()
+		hud.show_delivery_prompt(gate_id)
+		return
+
 	var target_id = selected_target_id
 
 	# Target persistence & prioritization:
@@ -465,7 +471,8 @@ func _update_swap_eligibility() -> void:
 		var check = swap_engine.evaluate_eligibility("player", target_id, false)
 		var progress = check.get("alignment_progress", 0.0)
 		hud.set_alignment_progress(progress)
-		hud.show_swap_prompt(check.get("eligible", false), target_color, check.get("reason", ""), progress)
+		var is_optional = (req_col != ChromaConstants.ChromaColor.NONE and target_color != req_col)
+		hud.show_swap_prompt(check.get("eligible", false), target_color, check.get("reason", ""), progress, is_optional)
 	else:
 		hud.set_alignment_progress(0.0)
 		hud.hide_swap_prompt()
@@ -615,7 +622,7 @@ func start_mission(mission_id: String) -> void:
 	if is_instance_valid(hud):
 		hud.setup_mission(mission_data.get("title", "Mission"), mission_data.get("time_limit", 90.0))
 		if is_instance_valid(active_world) and is_instance_valid(hud.mini_map):
-			hud.mini_map.set_world_data(active_world.waypoints)
+			hud.mini_map.set_world_data(active_world.get_spline_samples())
 
 	# 7. Start Engine Audio & BGM
 	var am = GameConstants.get_autoload(self, "AudioManager")
@@ -735,9 +742,14 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 
 		world_container.add_child(veh)
 
+		var spline_pts = active_world.get_spline_samples()
+		var lane_samples: Array[Vector3] = []
+		for s_idx in range(spline_pts.size()):
+			lane_samples.append(active_world.get_lane_point(s_idx, lane_dist))
+
 		var agent = TrafficAgent.new(veh, swap_engine, agent_id, col)
-		agent.driver.desired_lane_offset = lane_dist
-		agent.set_waypoints(wps, wp_idx)
+		agent.driver.desired_lane_offset = 0.0
+		agent.set_waypoints(lane_samples, wp_idx % max(1, lane_samples.size()))
 		traffic_agents.append(agent)
 
 func _spawn_rivals(mission_data: Dictionary) -> void:
@@ -870,10 +882,11 @@ func _on_swap_committed(initiator_id: String, target_id: String, initiator_color
 	if am and am.has_method("play_sfx"):
 		am.play_sfx("chroma_swap", 1.0, 0.0)
 
+	var node_a = swap_engine.get_vehicle_node(initiator_id)
+	var node_b = swap_engine.get_vehicle_node(target_id)
+
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus and bus.has_signal("chroma_swap_committed"):
-		var node_a = swap_engine.get_vehicle_node(initiator_id)
-		var node_b = swap_engine.get_vehicle_node(target_id)
 		bus.chroma_swap_committed.emit(node_a, node_b, initiator_color, target_color)
 
 	if initiator_id == "player" and is_instance_valid(player_vehicle):
@@ -881,12 +894,52 @@ func _on_swap_committed(initiator_id: String, target_id: String, initiator_color
 	elif target_id == "player" and is_instance_valid(player_vehicle):
 		player_vehicle.set_color(target_color)
 
-	var node_a = swap_engine.get_vehicle_node(initiator_id)
-	var node_b = swap_engine.get_vehicle_node(target_id)
 	if node_a and is_instance_valid(node_a) and node_a is ChromaVehicle and node_a != player_vehicle:
 		node_a.set_color(initiator_color)
 	if node_b and is_instance_valid(node_b) and node_b is ChromaVehicle and node_b != player_vehicle:
 		node_b.set_color(target_color)
+
+	_spawn_swap_vfx(node_a, node_b, initiator_color, target_color)
+
+func _spawn_swap_vfx(node_a: Node3D, node_b: Node3D, col_a: int, col_b: int) -> void:
+	if not is_instance_valid(node_a) or not is_instance_valid(node_b):
+		return
+
+	# Haptic pulse if supported
+	if Input.has_method("vibrate_handheld"):
+		Input.vibrate_handheld(100)
+
+	# Pulse scale animation on vehicle bodies for energetic feedback
+	var tw = create_tween().set_parallel(true)
+	tw.tween_property(node_a, "scale", Vector3(1.08, 1.12, 1.08), 0.08).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(node_b, "scale", Vector3(1.08, 1.12, 1.08), 0.08).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.chain().tween_property(node_a, "scale", Vector3.ONE, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(node_b, "scale", Vector3.ONE, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+	# 3D Energy Arc Line between vehicles
+	var arc = MeshInstance3D.new()
+	var immediate_mesh = ImmediateMesh.new()
+	arc.mesh = immediate_mesh
+	var arc_mat = StandardMaterial3D.new()
+	arc_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	var color_val = ChromaConstants.get_color_value(col_a)
+	arc_mat.albedo_color = color_val.lightened(0.2)
+	arc_mat.emission_enabled = true
+	arc_mat.emission = color_val
+	arc_mat.emission_energy_multiplier = 3.5
+	arc.material_override = arc_mat
+
+	var p1 = node_a.global_position + Vector3(0, 0.6, 0)
+	var p2 = node_b.global_position + Vector3(0, 0.6, 0)
+	immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+	immediate_mesh.surface_add_vertex(p1)
+	immediate_mesh.surface_add_vertex(p2)
+	immediate_mesh.surface_end()
+
+	add_child(arc)
+	var arc_tw = create_tween()
+	arc_tw.tween_property(arc_mat, "albedo_color:a", 0.0, 0.3)
+	arc_tw.tween_callback(arc.queue_free)
 
 func _on_swap_rejected(initiator_id: String, _target_id: String, reason: String) -> void:
 	if initiator_id == "player":
@@ -976,7 +1029,7 @@ func _toggle_full_map() -> void:
 				"color": gate.target_color,
 				"cleared": gate.is_cleared
 			})
-		full_map.open_map(active_world.world_name, active_world.waypoints, gates_data)
+		full_map.open_map(active_world.world_name, active_world.get_spline_samples(), gates_data)
 
 func _on_map_expand_requested() -> void:
 	_toggle_full_map()
@@ -1030,7 +1083,7 @@ func start_practice_mode(w_id: String = ChromaConstants.WORLD_NEON_CITY) -> void
 	if is_instance_valid(hud):
 		hud.setup_mission("Free Drive (Practice)", 9999.0)
 		if is_instance_valid(active_world) and is_instance_valid(hud.mini_map):
-			hud.mini_map.set_world_data(active_world.waypoints)
+			hud.mini_map.set_world_data(active_world.get_spline_samples())
 	if is_instance_valid(player_vehicle):
 		player_vehicle.controls_enabled = true
 	set_state(State.PLAYING)

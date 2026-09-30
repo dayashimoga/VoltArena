@@ -270,16 +270,38 @@ func build_props() -> void:
 
 			if (i + s) % 2 == 0:
 				var m_idx = (i * 2 + s) % skyscraper_paths.size()
-				b_l = ModelCache.get_model(skyscraper_paths[m_idx])
-				if b_l:
-					b_l.scale = Vector3(11.0, 13.0, 11.0)
-					_style_building(b_l, theme_l)
+				var glb_model = ModelCache.get_model(skyscraper_paths[m_idx])
+				if glb_model:
+					glb_model.scale = Vector3(11.0, 13.0, 11.0)
+					_style_building(glb_model, theme_l)
+					var b_body = StaticBody3D.new()
+					b_body.name = "SkyscraperLeft_%d_%d" % [i, s]
+					b_body.collision_layer = GameConstants.LAYER_WORLD
+					b_body.add_child(glb_model)
+					var col = CollisionShape3D.new()
+					var b_shape = BoxShape3D.new()
+					b_shape.size = Vector3(22.0, 52.0, 22.0)
+					col.shape = b_shape
+					col.position = Vector3(0, 26.0, 0)
+					b_body.add_child(col)
+					b_l = b_body
 			else:
 				var m_idx = (i * 2 + s) % commercial_paths.size()
-				b_l = ModelCache.get_model(commercial_paths[m_idx])
-				if b_l:
-					b_l.scale = Vector3(8.5, 9.0, 8.5)
-					_style_building(b_l, theme_l)
+				var glb_model = ModelCache.get_model(commercial_paths[m_idx])
+				if glb_model:
+					glb_model.scale = Vector3(8.5, 9.0, 8.5)
+					_style_building(glb_model, theme_l)
+					var b_body = StaticBody3D.new()
+					b_body.name = "CommercialLeft_%d_%d" % [i, s]
+					b_body.collision_layer = GameConstants.LAYER_WORLD
+					b_body.add_child(glb_model)
+					var col = CollisionShape3D.new()
+					var b_shape = BoxShape3D.new()
+					b_shape.size = Vector3(18.0, 32.0, 18.0)
+					col.shape = b_shape
+					col.position = Vector3(0, 16.0, 0)
+					b_body.add_child(col)
+					b_l = b_body
 
 			if not b_l:
 				b_l = _build_procedural_commercial_block(36.0 + float((i + s) % 5) * 8.0, 22.0, theme_l)
@@ -288,10 +310,9 @@ func build_props() -> void:
 			b_l.rotation_degrees.y = rot_base + 90.0
 			props_container.add_child(b_l)
 
-			# Urban Plaza Foundation beneath left building
-			var plaza_l = _build_urban_plaza_foundation(28.0, 28.0)
-			plaza_l.position = pos_l
-			plaza_l.position.y = p1.y + 0.05
+			# Urban Plaza Foundation beneath left building (anchored to ground y=0 so no hollow under-slabs)
+			var plaza_l = _build_urban_plaza_foundation(30.0, 30.0, 0.0, p1.y + 0.10)
+			plaza_l.position = Vector3(pos_l.x, 0.0, pos_l.z)
 			plaza_l.rotation_degrees.y = rot_base + 90.0
 			props_container.add_child(plaza_l)
 
@@ -304,16 +325,38 @@ func build_props() -> void:
 
 			if (i + s + 1) % 2 == 0:
 				var m_idx = (i * 2 + s + 1) % skyscraper_paths.size()
-				b_r = ModelCache.get_model(skyscraper_paths[m_idx])
-				if b_r:
-					b_r.scale = Vector3(11.0, 13.0, 11.0)
-					_style_building(b_r, theme_r)
+				var glb_model = ModelCache.get_model(skyscraper_paths[m_idx])
+				if glb_model:
+					glb_model.scale = Vector3(11.0, 13.0, 11.0)
+					_style_building(glb_model, theme_r)
+					var b_body = StaticBody3D.new()
+					b_body.name = "SkyscraperRight_%d_%d" % [i, s]
+					b_body.collision_layer = GameConstants.LAYER_WORLD
+					b_body.add_child(glb_model)
+					var col = CollisionShape3D.new()
+					var b_shape = BoxShape3D.new()
+					b_shape.size = Vector3(22.0, 52.0, 22.0)
+					col.shape = b_shape
+					col.position = Vector3(0, 26.0, 0)
+					b_body.add_child(col)
+					b_r = b_body
 			else:
 				var m_idx = (i * 2 + s + 1) % commercial_paths.size()
-				b_r = ModelCache.get_model(commercial_paths[m_idx])
-				if b_r:
-					b_r.scale = Vector3(8.5, 9.0, 8.5)
-					_style_building(b_r, theme_r)
+				var glb_model = ModelCache.get_model(commercial_paths[m_idx])
+				if glb_model:
+					glb_model.scale = Vector3(8.5, 9.0, 8.5)
+					_style_building(glb_model, theme_r)
+					var b_body = StaticBody3D.new()
+					b_body.name = "CommercialRight_%d_%d" % [i, s]
+					b_body.collision_layer = GameConstants.LAYER_WORLD
+					b_body.add_child(glb_model)
+					var col = CollisionShape3D.new()
+					var b_shape = BoxShape3D.new()
+					b_shape.size = Vector3(18.0, 32.0, 18.0)
+					col.shape = b_shape
+					col.position = Vector3(0, 16.0, 0)
+					b_body.add_child(col)
+					b_r = b_body
 
 			if not b_r:
 				b_r = _build_procedural_commercial_block(40.0 + float((i + s + 1) % 5) * 8.0, 24.0, theme_r)
@@ -322,10 +365,9 @@ func build_props() -> void:
 			b_r.rotation_degrees.y = rot_base - 90.0
 			props_container.add_child(b_r)
 
-			# Urban Plaza Foundation beneath right building
-			var plaza_r = _build_urban_plaza_foundation(28.0, 28.0)
-			plaza_r.position = pos_r
-			plaza_r.position.y = p1.y + 0.05
+			# Urban Plaza Foundation beneath right building (anchored to ground y=0 so no hollow under-slabs)
+			var plaza_r = _build_urban_plaza_foundation(30.0, 30.0, 0.0, p1.y + 0.10)
+			plaza_r.position = Vector3(pos_r.x, 0.0, pos_r.z)
 			plaza_r.rotation_degrees.y = rot_base - 90.0
 			props_container.add_child(plaza_r)
 
@@ -366,12 +408,11 @@ func build_props() -> void:
 
 		for side in [-1.0, 1.0]:
 			var lamp_pos = wp + right * (side * 9.6) + Vector3(0.0, 0.1, 0.0)
-			var lamp = ModelCache.get_model("res://assets/models/environment/road_lightposts.glb")
-			if not lamp:
-				lamp = _build_procedural_streetlight()
+			var lamp = _build_procedural_streetlight()
 			lamp.position = lamp_pos
 			lamp.rotation_degrees.y = rad_to_deg(atan2(-dir.x, -dir.z)) + (90.0 if side > 0 else -90.0)
 			props_container.add_child(lamp)
+
 
 func _style_building(building: Node3D, theme_idx: int) -> void:
 	if not building:
@@ -405,19 +446,31 @@ func _gather_meshes(node: Node, result: Array[MeshInstance3D]) -> void:
 	for child in node.get_children():
 		_gather_meshes(child, result)
 
-func _build_urban_plaza_foundation(width: float, depth: float) -> Node3D:
-	var root = Node3D.new()
+func _build_urban_plaza_foundation(width: float, depth: float, base_y: float = 0.0, top_y: float = 0.16) -> Node3D:
+	var root = StaticBody3D.new()
+	root.name = "UrbanPlazaFoundation"
+	root.collision_layer = GameConstants.LAYER_WORLD
+
+	var total_h = maxf(0.24, top_y - base_y)
 	var mi = MeshInstance3D.new()
 	var box = BoxMesh.new()
-	box.size = Vector3(width, 0.16, depth)
+	box.size = Vector3(width, total_h, depth)
 	mi.mesh = box
 	var mat = StandardMaterial3D.new()
 	mat.albedo_color = Color(0.25, 0.27, 0.29) # Granite paver plaza
 	mat.roughness = 0.85
 	mat.metallic = 0.02
 	mi.material_override = mat
-	mi.position = Vector3(0, 0.08, 0)
+	mi.position = Vector3(0, total_h * 0.5, 0)
 	root.add_child(mi)
+
+	var col = CollisionShape3D.new()
+	var shape = BoxShape3D.new()
+	shape.size = Vector3(width, total_h, depth)
+	col.shape = shape
+	col.position = mi.position
+	root.add_child(col)
+
 	return root
 
 func _build_landscaped_verge(length: float, width: float) -> Node3D:
@@ -455,8 +508,19 @@ func _build_landscaped_verge(length: float, width: float) -> Node3D:
 	return root
 
 func _build_street_tree() -> Node3D:
-	var root = Node3D.new()
+	var root = StaticBody3D.new()
 	root.name = "RealisticStreetTree"
+	root.collision_layer = GameConstants.LAYER_WORLD
+
+	# Solid Trunk Collider (prevents vehicles driving into tree trunks)
+	var col = CollisionShape3D.new()
+	col.name = "TreeTrunkCollision"
+	var col_shape = CylinderShape3D.new()
+	col_shape.height = 4.2
+	col_shape.radius = 0.45
+	col.shape = col_shape
+	col.position = Vector3(0, 2.1, 0)
+	root.add_child(col)
 
 	# 1. Circular Stone Planter Curb on Sidewalk
 	var planter = MeshInstance3D.new()
@@ -508,7 +572,7 @@ func _build_street_tree() -> Node3D:
 	flare.position = Vector3(0, 0.45, 0)
 	root.add_child(flare)
 
-	# 4. Multi-Volume Organic Foliage Canopy (Deciduous Crown Clusters)
+	# 4. Multi-Volume Organic Foliage Canopy (Non-blocking decorative clusters)
 	var foliage_clusters = [
 		{"pos": Vector3(0.0, 4.4, 0.0), "r": 2.2, "h": 2.4, "col": Color(0.12, 0.38, 0.15)},
 		{"pos": Vector3(-0.85, 3.8, 0.45), "r": 1.65, "h": 1.9, "col": Color(0.10, 0.33, 0.13)},
@@ -539,7 +603,10 @@ func _build_street_tree() -> Node3D:
 	return root
 
 func _build_procedural_commercial_block(height: float, width: float, theme_idx: int = 0) -> Node3D:
-	var root = Node3D.new()
+	var root = StaticBody3D.new()
+	root.name = "ProceduralCommercialTower"
+	root.collision_layer = GameConstants.LAYER_WORLD
+
 	var theme = ARCHITECTURAL_THEMES[theme_idx % ARCHITECTURAL_THEMES.size()]
 
 	# Wall PBR Material
@@ -561,6 +628,14 @@ func _build_procedural_commercial_block(height: float, width: float, theme_idx: 
 	mat_glass.roughness = theme["window_roughness"]
 	mat_glass.clearcoat_enabled = true
 	mat_glass.clearcoat = theme["window_clearcoat"]
+
+	# Solid Box Collider for the entire building footprint
+	var col = CollisionShape3D.new()
+	var col_box = BoxShape3D.new()
+	col_box.size = Vector3(width, height + 4.0, width * 0.95)
+	col.shape = col_box
+	col.position = Vector3(0, (height + 4.0) * 0.5, 0)
+	root.add_child(col)
 
 	# 1. Ground Level Retail Podium (4m height)
 	var podium_mi = MeshInstance3D.new()
@@ -629,7 +704,20 @@ func _build_procedural_commercial_block(height: float, width: float, theme_idx: 
 	return root
 
 func _build_procedural_streetlight() -> Node3D:
-	var root = Node3D.new()
+	var root = StaticBody3D.new()
+	root.name = "StreetLight"
+	root.collision_layer = GameConstants.LAYER_WORLD
+
+	# Solid Post Collider
+	var col = CollisionShape3D.new()
+	col.name = "PostCollision"
+	var col_shape = CylinderShape3D.new()
+	col_shape.height = 7.0
+	col_shape.radius = 0.20
+	col.shape = col_shape
+	col.position = Vector3(0, 3.5, 0)
+	root.add_child(col)
+
 	var mat_pole = StandardMaterial3D.new()
 	mat_pole.albedo_color = Color(0.35, 0.38, 0.42)
 	mat_pole.metallic = 0.85
@@ -673,3 +761,4 @@ func _build_procedural_streetlight() -> Node3D:
 	root.add_child(lamp_mi)
 
 	return root
+

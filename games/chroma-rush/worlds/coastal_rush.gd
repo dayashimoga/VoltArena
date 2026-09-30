@@ -142,10 +142,18 @@ func build_checkpoints() -> void:
 		checkpoints.append(gate)
 
 func build_props() -> void:
-	# Suspension Bridge Towers at waypoint 3 & 5
-	_build_bridge_tower(Vector3(140, 2, -200))
-	_build_bridge_tower(Vector3(220, 4, -200))
-	_build_bridge_tower(Vector3(300, 2, -180))
+	# Suspension Bridge Towers along the ocean bridge span (strictly aligned to road heading and outside lanes)
+	var wp3 = waypoints[3]
+	var dir3 = (waypoints[4] - waypoints[3]).normalized()
+	_build_bridge_tower(wp3, dir3)
+
+	var wp4 = waypoints[4]
+	var dir4 = (waypoints[5] - waypoints[4]).normalized()
+	_build_bridge_tower(wp4, dir4)
+
+	var wp5 = waypoints[5]
+	var dir5 = (waypoints[6] - waypoints[5]).normalized()
+	_build_bridge_tower(wp5, dir5)
 
 	# Lighthouse on the bluff at waypoint 8
 	_build_lighthouse(Vector3(285, 10, 45))
@@ -179,30 +187,53 @@ func build_props() -> void:
 func _build_coastal_building(variant: String) -> Node3D:
 	var path = "res://assets/models/environment/building_comm_%s.glb" % variant
 	var model = ModelCache.get_model(path)
+	var root = StaticBody3D.new()
+	root.name = "CoastalBuilding"
+	root.collision_layer = GameConstants.LAYER_WORLD
+
 	if model:
 		model.scale = Vector3(4.0, 4.0, 4.0)
-		return model
+		root.add_child(model)
+	else:
+		var mi = MeshInstance3D.new()
+		var box = BoxMesh.new()
+		box.size = Vector3(12.0, 8.0, 10.0)
+		mi.mesh = box
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.92, 0.88, 0.82)
+		mat.roughness = 0.75
+		mi.material_override = mat
+		mi.position = Vector3(0, 4.0, 0)
+		root.add_child(mi)
 
-	var root = Node3D.new()
-	var mi = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(12.0, 8.0, 10.0)
-	mi.mesh = box
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.92, 0.88, 0.82)
-	mat.roughness = 0.75
-	mi.material_override = mat
-	mi.position = Vector3(0, 4.0, 0)
-	root.add_child(mi)
+	var col = CollisionShape3D.new()
+	var b_shape = BoxShape3D.new()
+	b_shape.size = Vector3(14.0, 10.0, 12.0)
+	col.shape = b_shape
+	col.position = Vector3(0, 5.0, 0)
+	root.add_child(col)
+
 	return root
 
 func _build_palm_tree() -> Node3D:
+	var root = StaticBody3D.new()
+	root.name = "PalmTree"
+	root.collision_layer = GameConstants.LAYER_WORLD
+
+	var col = CollisionShape3D.new()
+	var c_shape = CylinderShape3D.new()
+	c_shape.height = 6.0
+	c_shape.radius = 0.40
+	col.shape = c_shape
+	col.position = Vector3(0, 3.0, 0)
+	root.add_child(col)
+
 	var model = ModelCache.get_model("res://assets/models/environment/tree_palm.glb")
 	if model:
 		model.scale = Vector3(4.8, 4.8, 4.8)
-		return model
+		root.add_child(model)
+		return root
 
-	var root = Node3D.new()
 	var trunk = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
 	cyl.top_radius = 0.2
@@ -216,14 +247,18 @@ func _build_palm_tree() -> Node3D:
 	root.add_child(trunk)
 	return root
 
-func _build_bridge_tower(pos: Vector3) -> void:
-	var tower = Node3D.new()
+func _build_bridge_tower(pos: Vector3, dir: Vector3 = Vector3.ZERO) -> void:
+	var tower = StaticBody3D.new()
+	tower.name = "SuspensionBridgeTower"
+	tower.collision_layer = GameConstants.LAYER_WORLD
+
 	var mat_cable = StandardMaterial3D.new()
 	mat_cable.albedo_color = Color(0.88, 0.25, 0.20) # Red suspension bridge tower
 	mat_cable.metallic = 0.80
 	mat_cable.roughness = 0.35
 
-	for side in [-10.0, 10.0]:
+	# Pylons strictly outside roadway (+/-12.0m from centerline; road half-width is 8.85m)
+	for side in [-12.0, 12.0]:
 		var pylon = MeshInstance3D.new()
 		var cyl = CylinderMesh.new()
 		cyl.top_radius = 0.8
@@ -234,17 +269,28 @@ func _build_bridge_tower(pos: Vector3) -> void:
 		pylon.position = Vector3(side, 14.0, 0.0)
 		tower.add_child(pylon)
 
-	# Crossbeam
+		var col = CollisionShape3D.new()
+		var col_shape = CylinderShape3D.new()
+		col_shape.height = 32.0
+		col_shape.radius = 1.2
+		col.shape = col_shape
+		col.position = Vector3(side, 14.0, 0.0)
+		tower.add_child(col)
+
+	# Overhead Crossbeam
 	var beam = MeshInstance3D.new()
 	var box = BoxMesh.new()
-	box.size = Vector3(22.0, 1.8, 2.2)
+	box.size = Vector3(26.0, 1.8, 2.2)
 	beam.mesh = box
 	beam.material_override = mat_cable
 	beam.position = Vector3(0.0, 26.0, 0.0)
 	tower.add_child(beam)
 
 	tower.position = pos
+	if dir.length_squared() > 0.001:
+		tower.look_at_from_position(pos, pos + dir, Vector3.UP)
 	props_container.add_child(tower)
+
 
 func _build_lighthouse(pos: Vector3) -> void:
 	var root = Node3D.new()

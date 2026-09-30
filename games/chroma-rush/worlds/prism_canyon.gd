@@ -158,15 +158,30 @@ func build_props() -> void:
 		Vector3(-110, 10, 60), Vector3(-80, 4, -80)
 	]
 	for pos in mesa_positions:
+		var radius = 16.0
+		var height = 35.0
+		var mesa = StaticBody3D.new()
+		mesa.name = "MesaPillar"
+		mesa.collision_layer = GameConstants.LAYER_WORLD
+
 		var mi = MeshInstance3D.new()
 		var cyl = CylinderMesh.new()
-		cyl.top_radius = randf_range(12.0, 20.0)
-		cyl.bottom_radius = cyl.top_radius + 4.0
-		cyl.height = randf_range(25.0, 45.0)
+		cyl.top_radius = radius
+		cyl.bottom_radius = radius + 4.0
+		cyl.height = height
 		mi.mesh = cyl
 		mi.material_override = rock_mat
-		mi.position = pos
-		props_container.add_child(mi)
+		mesa.add_child(mi)
+
+		var col = CollisionShape3D.new()
+		var c_shape = CylinderShape3D.new()
+		c_shape.radius = radius + 2.0
+		c_shape.height = height
+		col.shape = c_shape
+		mesa.add_child(col)
+
+		mesa.position = pos
+		props_container.add_child(mesa)
 
 	# Pine trees along the canyon ridges and shoulders
 	var pine_positions = [
@@ -180,12 +195,24 @@ func build_props() -> void:
 		props_container.add_child(pine)
 
 func _build_pine_tree() -> Node3D:
+	var root = StaticBody3D.new()
+	root.name = "PineTree"
+	root.collision_layer = GameConstants.LAYER_WORLD
+
+	var col = CollisionShape3D.new()
+	var c_shape = CylinderShape3D.new()
+	c_shape.height = 5.0
+	c_shape.radius = 0.40
+	col.shape = c_shape
+	col.position = Vector3(0, 2.5, 0)
+	root.add_child(col)
+
 	var model = ModelCache.get_model("res://assets/models/environment/tree_pine.glb")
 	if model:
 		model.scale = Vector3(5.2, 5.2, 5.2)
-		return model
+		root.add_child(model)
+		return root
 
-	var root = Node3D.new()
 	var trunk = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
 	cyl.top_radius = 0.2

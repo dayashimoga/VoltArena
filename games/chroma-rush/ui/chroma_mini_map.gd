@@ -64,6 +64,34 @@ func _ready() -> void:
 	expand_btn.pressed.connect(func(): map_expand_requested.emit())
 	add_child(expand_btn)
 
+	# Minimap Zoom Range Cycle Button
+	var zoom_btn = Button.new()
+	zoom_btn.text = "🔍"
+	zoom_btn.tooltip_text = "Toggle Radar Zoom Range"
+	zoom_btn.custom_minimum_size = Vector2(24, 24)
+	zoom_btn.anchor_left = 1.0
+	zoom_btn.anchor_right = 1.0
+	zoom_btn.offset_left = -58
+	zoom_btn.offset_top = 4
+	zoom_btn.offset_right = -32
+	zoom_btn.offset_bottom = 28
+	zoom_btn.pressed.connect(func(): cycle_range())
+	add_child(zoom_btn)
+
+var radar_ranges: Array[float] = [75.0, 120.0, 200.0]
+var current_range_idx: int = 1
+
+func cycle_range() -> void:
+	current_range_idx = (current_range_idx + 1) % radar_ranges.size()
+	radar_range = radar_ranges[current_range_idx]
+	if is_instance_valid(map_canvas):
+		map_canvas.queue_redraw()
+
+func set_radar_range(r: float) -> void:
+	radar_range = clampf(r, 50.0, 300.0)
+	if is_instance_valid(map_canvas):
+		map_canvas.queue_redraw()
+
 func set_world_data(road_waypoints: Array[Vector3]) -> void:
 	waypoints = road_waypoints
 	if is_instance_valid(map_canvas):
@@ -81,8 +109,13 @@ func update_radar(p_pos: Vector3, p_rot_y: float, vehicles: Array[Dictionary], t
 		map_canvas.queue_redraw()
 
 func _on_canvas_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		map_expand_requested.emit()
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			map_expand_requested.emit()
+		elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			set_radar_range(radar_range - 25.0)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			set_radar_range(radar_range + 25.0)
 
 func _world_to_minimap(w_pos: Vector3, center_pt: Vector2, scale_factor: float) -> Vector2:
 	# Local offset relative to player

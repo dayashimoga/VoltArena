@@ -123,8 +123,8 @@ func setup_visuals() -> void:
 		visual_node.queue_free()
 
 	visual_node = VehicleVisuals.build_vehicle_visual(vehicle_id, initial_color, paint_finish)
-	# Calibrate visual node relative to elevated curb-clearing collision box to seat tire rubber onto asphalt
-	visual_node.position.y = -0.12
+	# Align visual node with physics origin so wheels make direct contact with road surface
+	visual_node.position.y = 0.0
 	add_child(visual_node)
 
 	var model_root = visual_node.get_node_or_null("ModelRoot")
@@ -147,23 +147,25 @@ func setup_collision_box() -> void:
 		var col = CollisionShape3D.new()
 		col.name = "ChromaCollision"
 		var box = BoxShape3D.new()
-		box.size = Vector3(1.85, 0.74, 4.20)
+		box.size = Vector3(1.85, 0.70, 4.10)
 		col.shape = box
-		col.position = Vector3(0, 0.50, 0)
+		# Center box at y=0.52 so bottom face is at y=0.17, giving 17cm curb/ramp clearance
+		col.position = Vector3(0, 0.52, 0)
 		add_child(col)
 
 func setup_suspension_rays() -> void:
 	wheel_raycasts.clear()
+	# Front wheels at -Z (-1.15m), rear wheels at +Z (+1.15m)
 	var ray_offsets = [
-		Vector3(-0.85, 0.5, -1.25),
-		Vector3(0.85, 0.5, -1.25),
-		Vector3(-0.90, 0.5, 1.30),
-		Vector3(0.90, 0.5, 1.30)
+		Vector3(-0.85, 0.45, -1.15),
+		Vector3(0.85, 0.45, -1.15),
+		Vector3(-0.85, 0.45, 1.15),
+		Vector3(0.85, 0.45, 1.15)
 	]
 	for i in range(4):
 		var ray = RayCast3D.new()
 		ray.name = "RayCast_" + str(i)
-		ray.target_position = Vector3(0, -0.95, 0)
+		ray.target_position = Vector3(0, -0.65, 0)
 		ray.position = ray_offsets[i]
 		ray.collision_mask = GameConstants.LAYER_WORLD
 		add_child(ray)
@@ -353,22 +355,15 @@ func _update_physics_movement(delta: float) -> void:
 
 				var collider = slide_col.get_collider()
 				if collider is CharacterBody3D:
-					var push_normal = slide_col.get_normal()
-					var push_dir = Vector3(push_normal.x, 0.0, push_normal.z)
-					if push_dir.length_squared() > 0.001:
-						push_dir = push_dir.normalized()
-						global_position += push_dir * 0.08
-						if collider is ChromaVehicle:
-							collider.global_position -= push_dir * 0.08
-							var rel_fwd = forward_speed - collider.forward_speed
-							if rel_fwd > 0.0:
-								forward_speed = maxf(0.0, collider.forward_speed + rel_fwd * 0.3)
-								collider.forward_speed += rel_fwd * 0.5
 					# Clamp upward velocity to prevent climbing or wedging
 					velocity.y = minf(velocity.y, 0.0)
+					if collider is ChromaVehicle:
+						var rel_fwd = forward_speed - collider.forward_speed
+						if rel_fwd > 0.0:
+							forward_speed = maxf(0.0, collider.forward_speed + rel_fwd * 0.3)
+							collider.forward_speed += rel_fwd * 0.5
 	else:
 		position += velocity * delta
-
 
 	# Track valid road coordinates if grounded and level
 	if is_grounded and t.basis.y.dot(Vector3.UP) > 0.7:
@@ -379,6 +374,9 @@ func _update_visual_dynamics(delta: float) -> void:
 	if not visual_node:
 		return
 
+	var model_root = visual_node.get_node_or_null("ModelRoot")
+	var has_model_root = (model_root != null)
+
 	# Body roll during cornering
 	var target_roll = -steer_input * deg_to_rad(4.5)
 	if is_drifting:
@@ -387,8 +385,12 @@ func _update_visual_dynamics(delta: float) -> void:
 	# Pitch tilt during accel/braking
 	var target_pitch = (brake_input - throttle_input) * deg_to_rad(3.5)
 
+	# Invert roll and pitch for 180° rotated ModelRoot coordinate frame
+	if has_model_root:
+		target_roll = -target_roll
+		target_pitch = -target_pitch
+
 	# Apply body suspension roll and pitch to the body mesh
-	var model_root = visual_node.get_node_or_null("ModelRoot")
 	var body_mesh = null
 	if model_root:
 		body_mesh = model_root.get_node_or_null("body")
@@ -402,14 +404,15 @@ func _update_visual_dynamics(delta: float) -> void:
 		visual_node.rotation.z = lerpf(visual_node.rotation.z, target_roll, delta * 8.0)
 		visual_node.rotation.x = lerpf(visual_node.rotation.x, target_pitch, delta * 8.0)
 
-	# Wheel rolling animation
-	wheel_roll_angle += (forward_speed / 0.36) * delta
+	# Wheel rolling animation: inverted rolling in 180-deg rotated model space
+	var roll_sign = -1.0 if has_model_root else 1.0
+	wheel_roll_angle += roll_sign * (forward_speed / 0.36) * delta
 	for w in [front_left_wheel, front_right_wheel, rear_left_wheel, rear_right_wheel]:
 		if is_instance_valid(w):
 			w.rotation.x = wheel_roll_angle
 
-	# Front wheel steering angle
-	var steer_angle = -steer_input * deg_to_rad(28.0)
+	# Front wheel steering angle aligned with car heading
+	var steer_angle = (steer_input if has_model_root else -steer_input) * deg_to_rad(28.0)
 	if is_instance_valid(front_left_wheel):
 		front_left_wheel.rotation.y = steer_angle
 	if is_instance_valid(front_right_wheel):
@@ -448,12 +451,22 @@ func reset_to_road(target_pos: Variant = null, target_rot_y: Variant = null) -> 
 	drift_charge = 0.0
 	smoothed_steer_input = 0.0
 
-	var dest_pos = last_valid_track_pos + Vector3(0, 0.05, 0)
+	var dest_pos = last_valid_track_pos + Vector3(0, 0.15, 0)
 	var dest_rot = last_valid_track_rot
 
 	if target_pos is Vector3 and target_pos != Vector3.ZERO:
-		dest_pos = target_pos + Vector3(0, 0.05, 0)
-	if target_rot_y is float:
+		dest_pos = target_pos + Vector3(0, 0.15, 0)
+		if target_rot_y is float:
+			dest_rot = target_rot_y
+	elif is_inside_tree():
+		var world = get_tree().get_first_node_in_group("chroma_world")
+		if world and world.has_method("get_nearest_safe_road_transform"):
+			var safe_xf = world.get_nearest_safe_road_transform(global_position)
+			dest_pos = safe_xf.origin
+			dest_rot = atan2(-safe_xf.basis.z.x, -safe_xf.basis.z.z)
+		elif target_rot_y is float:
+			dest_rot = target_rot_y
+	elif target_rot_y is float:
 		dest_rot = target_rot_y
 
 	if is_inside_tree():

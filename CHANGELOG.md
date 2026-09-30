@@ -1043,4 +1043,46 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **Web Release Export**: Validated production Web release bundle (`export/web/index.html`, `index.pck`, `index.wasm`) with COOP/COEP isolation headers.
 - **Suite-Wide Stability**: Zero regressions across all 8 games in the VoltArena suite.
 
+## [9.6.0-chroma-rush-productionization-and-physics-overhaul] - 2026-09-30
+### Fixed & Productionized
+- **DEF-01: Solid Street Tree Trunks & Foliage Geometry (`neon_city.gd`, `coastal_rush.gd`, `prism_canyon.gd`)**:
+  - Encapsulated all tree trunks with dedicated `StaticBody3D` nodes, `CylinderShape3D` colliders ($r=0.45\text{m}, h=4.2\text{m}$), and `LAYER_WORLD` collision masks, physically preventing vehicles from penetrating tree trunks.
+  - Foliage canopies remain non-blocking visual volumes for performance and visual fidelity.
+- **DEF-02: Ground-Anchored Plaza Foundations & Void Elimination (`neon_city.gd`)**:
+  - Reworked `_build_urban_plaza_foundation()` to anchor from ground $Y=0.0$ up to road elevation, providing solid `BoxShape3D` colliders and closing hollow under-slab voids where vehicles previously drove beneath buildings.
+- **DEF-03: Solid 0.45m Road Deck Thickness & Guardrail Fascia (`world_base.gd`)**:
+  - Implemented 0.45m vertical fascia drops along outer road and sidewalk edges with underside trimesh colliders on elevated sections ($Y > 0.4\text{m}$), preventing paper-thin polygon penetration and under-road travel.
+  - Generated double-sided solid guardrails with outward-pointing normals and anchored support piers beneath elevated skyways.
+- **DEF-04: Bridge Pylon Clearance Outside Lanes (`coastal_rush.gd`, `sky_circuit.gd`)**:
+  - Re-architected `_build_bridge_tower()` to calculate perpendicular lateral offsets ($\pm 12.0\text{m}$) relative to road curve tangents (well outside the 8.85m road half-width and sidewalks), eliminating support pylons obstructing traffic lanes.
+  - Added solid `StaticBody3D` colliders to suspension pylons, anchored from ground/water level to under-deck mounts.
+- **DEF-05: 180° Inverted Vehicle Model Alignment & Dynamics (`vehicle_visuals.gd`, `chroma_vehicle.gd`)**:
+  - Applied `raw_model.rotation.y = PI` to imported vehicle assets, aligning model front (hood/headlights) with Godot's canonical forward direction ($-Z$) and rear taillights with chase camera ($+Z$).
+  - Inverted wheel roll animation and aligned steering angles so wheels roll forward and turn in the correct direction.
+- **DEF-06: Accurate Grounding & 17cm Curb Clearance (`chroma_vehicle.gd`)**:
+  - Reset `visual_node.position.y = 0.0` (eliminating the previous $-0.12\text{m}$ offset that submerged tires into asphalt).
+  - Raised collision box center to $Y = 0.52\text{m}$ with height $0.70\text{m}$, creating 17cm of clearance beneath chassis to clear curbs, ramps, and seams without snagging.
+- **DEF-07: Deliberate Brake-to-Reverse & Deadlock Recovery (`chroma_ai_driver.gd`, `chroma_vehicle.gd`)**:
+  - Fixed AI reverse recovery: replaced invalid negative throttle (`throttle_input = -0.85`, which clamped to 0.0) with positive brake input (`brake_input = 0.9, throttle_input = 0.0`), properly engaging reverse gear in `ChromaVehicle`.
+  - Added smooth obstacle yielding so AI vehicles navigate around traffic without freezing.
+- **DEF-08: Continuous Spline Traffic Navigation (`traffic_agent.gd`, `chroma_rush_main.gd`, `world_base.gd`)**:
+  - Replaced sparse 16-point waypoint routes with dense, continuous 96-sample spline paths offset strictly along assigned road lanes, eliminating corner cutting across sidewalks and into trees.
+- **DEF-09: Objective-Prioritized HUD Delivery Guidance (`chroma_rush_main.gd`, `chroma_hud.gd`)**:
+  - Prioritized checkpoint delivery guidance whenever player holds the required color ("✓ COLOR MATCHED: Drive through Checkpoint X"), pointing radar and navigation beacon directly to the checkpoint gate and suppressing conflicting car swap prompts.
+  - Clearly labeled non-objective color exchanges as "(OPTIONAL SWAP)".
+- **DEF-10: Synchronized Swap VFX & Haptics (`chroma_rush_main.gd`)**:
+  - Implemented `_spawn_swap_vfx()` upon swap commitment: 3D illuminated energy arc line connecting both vehicles, simultaneous elastic body scale pulse, audio pulse, and optional haptic rumble.
+- **DEF-11: Zoomable Minimap & Whole-Stage Full Map (`chroma_mini_map.gd`, `chroma_full_map.gd`)**:
+  - Added zoom range cycling (75m, 120m, 200m) and mouse wheel zooming to HUD minimap.
+  - Added `fit_to_stage()` to tactical full map, automatically fitting the entire stage's road network within viewport bounds upon opening.
+- **DEF-12: Full Architectural Solid Colliders (`neon_city.gd`, `sky_circuit.gd`, `prism_canyon.gd`)**:
+  - Encapsulated all commercial high-rises, skyscrapers, and streetlights in `StaticBody3D` colliders on `LAYER_WORLD`.
+
+### Verification & Releases
+- **Master Test Runner**: **72 test suites, 2,725 passed assertions, 0 failures (100% pass rate)**.
+- **Function Coverage**: **91.53%** (994 / 1,086 functions tested).
+- **Responsive Resolutions**: **9 / 9 resolutions verified** (315 / 315 assertions passed).
+- **Suite Stability**: Zero regressions across all 8 games in the VoltArena suite.
+
+
 

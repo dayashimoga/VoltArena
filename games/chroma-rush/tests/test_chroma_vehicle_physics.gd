@@ -69,8 +69,22 @@ func test_vehicle_instantiation_and_visuals() -> void:
 	v._ready()
 
 	assert_true(v.visual_node != null, "Vehicle visual node must be created")
+	assert_eq(v.visual_node.position.y, 0.0, "Visual node must align at y=0 to seat tires on road without submerging")
 	assert_eq(v.current_color, ChromaConstants.ChromaColor.EMERALD, "Initial color must be set")
 	assert_true(v.wheel_raycasts.size() == 4, "Must have 4 suspension raycasts")
+
+	# Verify curb-clearing collision box (DEF-03)
+	var col = v.get_node_or_null("ChromaCollision") as CollisionShape3D
+	assert_true(col != null, "ChromaCollision shape must exist")
+	if col and col.shape is BoxShape3D:
+		var box = col.shape as BoxShape3D
+		var clearance = col.position.y - box.size.y * 0.5
+		assert_true(clearance >= 0.15, "Chassis bottom must maintain at least 15cm curb clearance")
+
+	# Verify 180° rotation of model root so front faces -Z forward (DEF-05)
+	var model_root = v.visual_node.get_node_or_null("ModelRoot")
+	if model_root:
+		assert_true(absf(model_root.rotation.y - PI) < 0.01, "ModelRoot must be rotated PI radians to face forward -Z")
 
 	v.free()
 

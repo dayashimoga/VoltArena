@@ -995,7 +995,39 @@
   - `artifacts/coverage-report.json` (92.38% function coverage)
   - `REQUIREMENTS_TRACEABILITY.md` (complete 14-requirement matrix)
   - `GAP_ANALYSIS.md` (GAP-56 through GAP-60 documented)
-  - `artifacts/screenshots/screenshot_chroma_rush.png`
-
-
-
+  - `artifacts/screenshots/screenshot_chroma_rush.png`### [2026-09-30 06:00:00 UTC] - Milestone Update: Chroma Rush Physics, Navigation, Colliders, HUD, and Productionization Overhaul
+- **Status**: COMPLETED
+- **Description**:
+  1. **Physics & World Collision Hardening (DEF-01, DEF-02, DEF-03, DEF-04, DEF-12)**:
+     - Fixed tree trunk penetration: encapsulated all tree trunks in `StaticBody3D` nodes with `CylinderShape3D` colliders ($r=0.45\text{m}, h=4.2\text{m}$) on `LAYER_WORLD`.
+     - Fixed hollow under-building voids: reworked `_build_urban_plaza_foundation()` with solid `BoxShape3D` grounded to $Y=0.0$.
+     - Fixed road deck slicing: added 0.45m vertical fascia drops along outer road and sidewalk perimeters with underside trimesh colliders on elevated sections ($Y > 0.4\text{m}$) and double-sided solid guardrails.
+     - Fixed bridge pylons in traffic lanes: relocated suspension bridge pylons to $\pm 12.0\text{m}$ lateral offset perpendicular to road tangents, safely outside lanes and sidewalks with solid colliders.
+     - Fixed commercial and skyscraper building collision: encapsulated all commercial blocks, skyscrapers, and streetlights with solid `StaticBody3D` colliders.
+  2. **Vehicle Dynamics, Grounding & Inverted Model Alignment (DEF-05, DEF-06)**:
+     - Fixed 180° reversed vehicle models: applied `raw_model.rotation.y = PI` to align hood and headlights with forward ($-Z$) and rear taillights with chase camera ($+Z$).
+     - Inverted wheel roll animation and aligned steering angles to track heading properly.
+     - Fixed submerged wheels: aligned visual node at $Y=0.0$ directly contacting road surface, and raised collision box center to $Y=0.52\text{m}$ (height $0.70\text{m}$) for 17cm curb/ramp clearance.
+     - Made `CharacterBody3D` the sole movement authority by removing direct position teleportation in collision sliding handlers.
+  3. **Traffic AI Navigation, Separation & Deliberate Reverse (DEF-07, DEF-08)**:
+     - Fixed AI traffic deadlock: corrected reverse recovery inputs to `throttle_input = 0.0` and `brake_input = 0.9`, engaging deliberate reverse in `ChromaVehicle`.
+     - Replaced sparse 16-point waypoints with dense continuous 96-sample spline paths offset strictly along assigned lanes, eliminating corner cutting across sidewalks.
+     - Enhanced obstacle avoidance raycasts to smoothly yield and creep around traffic without freezing.
+  4. **Swap Delivery Guidance, Synchronized VFX & Stopped Swaps (DEF-09, DEF-10)**:
+     - Prioritized checkpoint delivery guidance whenever player holds target color ("✓ COLOR MATCHED: Drive through Checkpoint X"), pointing radar and beacon directly to the gate and suppressing conflicting car swap prompts.
+     - Clearly labeled non-objective color exchanges as "(OPTIONAL SWAP)".
+     - Implemented `_spawn_swap_vfx()` upon swap commitment: 3D illuminated energy arc line connecting vehicles, synchronized body scale pulse, audio pulse, and optional haptic rumble.
+     - Verified stopped side-by-side swaps using orientation rather than velocity.
+  5. **Zoomable Minimap & Whole-Stage Full Tactical Map (DEF-11)**:
+     - Added zoom range cycling (75m, 120m, 200m) and mouse wheel zooming to HUD minimap.
+     - Added `fit_to_stage()` to tactical full map, automatically fitting the entire stage's road network within viewport bounds upon opening.
+  6. **Automated Verification & Traceability**:
+     - Executed master test runner in Podman: **72 test suites, 2,725 passed assertions, 0 failed (100% pass rate)**.
+     - Added regression tests in `test_chroma_worlds_and_integration.gd`, `test_chroma_vehicle_physics.gd`, `test_chroma_ai_and_traffic.gd`, and `test_color_swap_engine.gd`.
+     - Repository function coverage: **91.53%** (994 / 1,086 functions), exceeding the >90% required threshold.
+     - Responsive UI testing: **9 / 9 resolutions verified** (315 / 315 assertions passed).
+- **Evidence**:
+  - `artifacts/test-results.json` (72 suites, 2,725 passed, 0 failed, 100% pass rate)
+  - `artifacts/coverage-report.json` (91.53% function coverage)
+  - `artifacts/responsive-results.json` (315 passed, 0 failed across 9 resolutions)
+  - `CHANGELOG.md` (Version 9.6.0 release entry)

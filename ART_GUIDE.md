@@ -134,3 +134,39 @@ Each game implements customized third-person or first-person camera controllers:
 * **Maximum Triangles**: $\le 150,000$ active in frustum.
 * **Texture Memory**: $\le 64\text{ MB}$ total VRAM allocated for procedural and loaded textures.
 * **Target Frame Rate**: 60 FPS locked on desktop (1080p), 60 FPS on Web (720p).
+
+---
+
+## 6. Chroma Rush Metropolitan Art Direction & Procedural Environment
+
+### 6.1 6 Cohesive Urban Districts
+Neon City is organized into six visually and architecturally distinct zones:
+1. **Downtown Financial District**: Ultra-tall reflective glass curtain-wall skyscrapers (metallic 0.88, roughness 0.08, clearcoat 1.0) with brushed titanium spires and granite plaza podiums.
+2. **Commercial Plaza**: Terraced 5-story to 8-story mid-rises with warm stone masonry, storefront display windows, street-level awnings, and outdoor cafe plazas.
+3. **Logistics & Skyway**: Industrial warehouse bays with corrugated composite siding, freight docks, steel structural trusses, and elevated double-deck flyovers.
+4. **Neon Entertainment**: High-density nightlife avenues featuring illuminated vertical signage, dynamic neon trims, and holographic roadside billboards.
+5. **Waterfront Marina**: Coastal promenade with boardwalk pavers, nautical bollards, low-rise yacht pavilions, and open water reflections.
+6. **Historic Old Town**: Classical European terracotta brickwork, natural limestone arched entrances, and weathered copper patina mansard roofs.
+
+### 6.2 Secondary Block Filling & 360° Distant Skyline
+* **Secondary Block Geometry**: Eliminates hollow roadside facades by populating interior block space with secondary structures ($12\text{m}\text{--}28\text{m}$ height), service alleys, and inner courtyards.
+* **Parking Courtyards**: Urban blocks incorporate dedicated asphalt parking lots with painted parking stalls and parked vehicle props.
+* **360° Distant Skyline Ring**: A ring of 64 varied skyscraper silhouettes positioned at radius $R=380\text{m}\text{--}480\text{m}$ rendered via GPU MultiMesh instances, ensuring wide-angle and elevated perspectives show a dense metropolitan horizon with zero empty voids.
+* **Navigational World Landmarks**:
+  - *Apex Spire*: 110m stepped art-deco skyscraper crowned with a pulsating red aviation warning beacon ($1.0\text{ Hz}$).
+  - *Historic Clocktower*: Four-sided illuminated clock tower providing an instant orientation reference.
+
+### 6.3 Organic Branching Vegetation & Setbacks
+* **Realistic Tree Species**: Replaced low-poly blob spheres with five distinct organic species:
+  - *Metropolitan Oak*: Fluted tapered trunk with spreading branches and dense layered foliage clusters.
+  - *Sakura Cherry*: Delicate branching structure with soft pink diffuse blossom canopies.
+  - *Urban Birch*: Slender white-barked trunk with high airy foliage clusters.
+  - *Alpine Pine*: Conical evergreen tiers with dark needles.
+  - *Coastal Palm*: Curved ringed trunk with radiating frond canopies.
+* **Buffer Setback Invariant**: All trees are planted strictly at lateral offsets $\ge 11.6\text{m}$ from road centerlines, ensuring $>4.5\text{m}$ of physical clearance beyond outer sidewalk curbs and eliminating driving envelope clipping.
+
+### 6.4 Structural Highway Checkpoint Gantries
+* **Overhead Truss Architecture**: Replaced narrow roadside hurdles with 24.0m span overhead structural steel highway trusses.
+* **Clearance Standards**: Vertical support pylons anchored at $\pm 12.0\text{m}$ from road center ($>4.45\text{m}$ outside sidewalks); overhead clearance beam elevated to $5.2\text{m}$ height, easily clearing all vehicle archetypes.
+* **Balanced Digital Displays**: Digital LED destination panels displaying the active target color and symbol with calibrated emission ($1.2$).
+

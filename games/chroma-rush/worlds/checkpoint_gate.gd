@@ -15,8 +15,8 @@ signal checkpoint_entered(body: Node3D)
 
 @export var gate_id: String = "gate_1"
 @export var target_color: int = ChromaConstants.ChromaColor.CRIMSON
-@export var gate_width: float = 18.0 # Generous 18m width clears 15m avenue + sidewalks
-@export var gate_height: float = 6.2 # 6.2m height gives realistic 5.5m vehicle clearance
+@export var gate_width: float = 24.0 # Generous 24m clear-span clears 15m roadway + curbs + sidewalks with 4.5m safety margin
+@export var gate_height: float = 6.8 # 6.8m vertical clearance gives generous clearance for all vehicle classes
 
 var pillar_left: MeshInstance3D
 var pillar_right: MeshInstance3D
@@ -57,41 +57,44 @@ func _init_materials() -> void:
 	_mat_led_display.albedo_color = ChromaConstants.get_color_value(target_color)
 	_mat_led_display.emission_enabled = true
 	_mat_led_display.emission = ChromaConstants.get_color_value(target_color)
-	_mat_led_display.emission_energy_multiplier = 1.2
+	_mat_led_display.emission_energy_multiplier = 1.4
 	_mat_led_display.roughness = 0.20
 	_mat_led_display.metallic = 0.50
 
 func setup_gate_visuals() -> void:
 	var half_w = gate_width * 0.5
 
-	# 1. Left Support Column (Steel Truss + Concrete Footing)
-	var footing_l = _create_box_mesh(Vector3(1.6, 0.8, 1.6), Vector3(-half_w, 0.4, 0), _mat_concrete)
+	# 1. Left Support Column (Steel Truss + Concrete Footing safely outside road buffer)
+	var footing_l = _create_box_mesh(Vector3(1.4, 0.6, 1.4), Vector3(-half_w, 0.3, 0), _mat_concrete)
+	footing_l.name = "FootingLeft"
 	add_child(footing_l)
 
-	pillar_left = _create_box_mesh(Vector3(0.9, gate_height, 0.9), Vector3(-half_w, gate_height * 0.5 + 0.4, 0), _mat_steel)
+	pillar_left = _create_box_mesh(Vector3(0.8, gate_height, 0.8), Vector3(-half_w, gate_height * 0.5 + 0.3, 0), _mat_steel)
 	pillar_left.name = "PillarLeft"
 	add_child(pillar_left)
 
-	# 2. Right Support Column (Steel Truss + Concrete Footing)
-	var footing_r = _create_box_mesh(Vector3(1.6, 0.8, 1.6), Vector3(half_w, 0.4, 0), _mat_concrete)
+	# 2. Right Support Column (Steel Truss + Concrete Footing safely outside road buffer)
+	var footing_r = _create_box_mesh(Vector3(1.4, 0.6, 1.4), Vector3(half_w, 0.3, 0), _mat_concrete)
+	footing_r.name = "FootingRight"
 	add_child(footing_r)
 
-	pillar_right = _create_box_mesh(Vector3(0.9, gate_height, 0.9), Vector3(half_w, gate_height * 0.5 + 0.4, 0), _mat_steel)
+	pillar_right = _create_box_mesh(Vector3(0.8, gate_height, 0.8), Vector3(half_w, gate_height * 0.5 + 0.3, 0), _mat_steel)
 	pillar_right.name = "PillarRight"
 	add_child(pillar_right)
 
 	# 3. Overhead Horizontal Steel Truss Housing
-	crossbar = _create_box_mesh(Vector3(gate_width + 1.2, 0.85, 1.2), Vector3(0, gate_height + 0.4, 0), _mat_steel)
+	crossbar = _create_box_mesh(Vector3(gate_width + 1.2, 0.9, 1.2), Vector3(0, gate_height + 0.3, 0), _mat_steel)
 	crossbar.name = "Crossbar"
 	add_child(crossbar)
 
 	# 4. Digital Highway LED Variable Message Sign (VMS) Banner
-	led_display_panel = _create_box_mesh(Vector3(gate_width * 0.65, 0.65, 0.15), Vector3(0, gate_height + 0.4, -0.60), _mat_led_display)
+	led_display_panel = _create_box_mesh(Vector3(gate_width * 0.60, 0.75, 0.15), Vector3(0, gate_height + 0.3, -0.60), _mat_led_display)
 	led_display_panel.name = "LEDDisplayPanel"
 	add_child(led_display_panel)
 
 	# Reverse side VMS banner for oncoming/rear visibility
-	var led_display_rear = _create_box_mesh(Vector3(gate_width * 0.65, 0.65, 0.15), Vector3(0, gate_height + 0.4, 0.60), _mat_led_display)
+	var led_display_rear = _create_box_mesh(Vector3(gate_width * 0.60, 0.75, 0.15), Vector3(0, gate_height + 0.3, 0.60), _mat_led_display)
+	led_display_rear.name = "LEDDisplayRear"
 	add_child(led_display_rear)
 
 	# 5. Accessibility Symbol Billboard on Sign Face
@@ -102,7 +105,7 @@ func setup_gate_visuals() -> void:
 	symbol_label.font_size = 64
 	symbol_label.outline_size = 12
 	symbol_label.outline_modulate = Color(0.02, 0.02, 0.04)
-	symbol_label.position = Vector3(0, gate_height + 1.5, 0)
+	symbol_label.position = Vector3(0, gate_height + 1.6, 0)
 	add_child(symbol_label)
 
 	apply_target_color(target_color)
@@ -112,7 +115,8 @@ func setup_gate_collision() -> void:
 		collision_box = CollisionShape3D.new()
 		collision_box.name = "GateCollision"
 		var box = BoxShape3D.new()
-		box.size = Vector3(gate_width, gate_height, 3.5)
+		# Span full road width with generous trigger depth
+		box.size = Vector3(gate_width, gate_height, 4.0)
 		collision_box.shape = box
 		collision_box.position = Vector3(0, gate_height * 0.5, 0)
 		add_child(collision_box)

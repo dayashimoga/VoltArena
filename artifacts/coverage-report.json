@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 91.5285451197053,
+  "overall_coverage_pct": 92.4062214089661,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -90,9 +90,9 @@
       ]
     },
     "res://games/chroma-rush/ai/traffic_agent.gd": {
-      "coverage_pct": 83.3333333333333,
-      "tested": 5,
-      "total": 6,
+      "coverage_pct": 87.5,
+      "tested": 7,
+      "total": 8,
       "untested": [
         "_init"
       ]
@@ -139,6 +139,12 @@
         "reset_all_data"
       ]
     },
+    "res://games/chroma-rush/tools/world_audit_tool.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
     "res://games/chroma-rush/ui/chroma_full_map.gd": {
       "coverage_pct": 85.7142857142857,
       "tested": 6,
@@ -158,21 +164,10 @@
       ]
     },
     "res://games/chroma-rush/ui/chroma_hud.gd": {
-      "coverage_pct": 47.3684210526316,
-      "tested": 9,
-      "total": 19,
-      "untested": [
-        "setup_mission",
-        "update_hud",
-        "set_alignment_progress",
-        "show_delivery_prompt",
-        "show_swap_prompt",
-        "hide_swap_prompt",
-        "show_swap_rejected",
-        "toggle_diagnostics",
-        "update_diagnostics",
-        "show_notification"
-      ]
+      "coverage_pct": 100,
+      "tested": 21,
+      "total": 21,
+      "untested": []
     },
     "res://games/chroma-rush/ui/chroma_mini_map.gd": {
       "coverage_pct": 66.6666666666667,
@@ -212,13 +207,14 @@
       "untested": []
     },
     "res://games/chroma-rush/vehicles/vehicle_visuals.gd": {
-      "coverage_pct": 40,
+      "coverage_pct": 33.3333333333333,
       "tested": 2,
-      "total": 5,
+      "total": 6,
       "untested": [
         "get_paint_shader",
         "get_wheel_shader",
-        "get_contact_shadow_shader"
+        "get_contact_shadow_shader",
+        "update_vehicle_lights"
       ]
     },
     "res://games/chroma-rush/worlds/checkpoint_gate.gd": {
@@ -1069,7 +1065,7 @@
       "untested": []
     }
   },
-  "tested_functions": 994,
-  "timestamp": "2026-09-30T06:27:32",
-  "total_functions": 1086
+  "tested_functions": 1010,
+  "timestamp": "2026-10-04T12:36:18",
+  "total_functions": 1093
 }

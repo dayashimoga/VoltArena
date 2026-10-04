@@ -64,6 +64,11 @@ At 60 FPS, the maximum frame budget is **16.67 milliseconds**:
 * **Hardware Tier Profiles**: `GraphicsProfile` automatically scales viewport render scale ($0.75\times\text{--}1.0\times$), directional shadow map resolution ($512\text{--}4096$), and MSAA ($0\times\text{--}8\times$) according to target device tier (`TIER_LOW` to `TIER_ULTRA`).
 * **Deterministic Simulation Invariant**: Enforces `Engine.physics_ticks_per_second == 60` across all visual presets, guaranteeing identical vehicle handling, ball bounces, and kinematics across budget mobile devices, browsers, and high-end desktop rigs.
 
+### 3.8 Chroma Rush MultiMesh Instancing & Geometric Culling
+* **360° Distant Skyline GPU MultiMesh**: The 64 perimeter skyline skyscrapers are drawn using hardware GPU MultiMesh instances with a single draw call, providing complete horizon depth at near-zero CPU/GPU overhead ($<0.1\text{ ms}$).
+* **Instanced Organic Tree Foliage**: Natural branching tree leaf clusters share instanced material shaders, keeping draw calls well below budget while eliminating low-poly blob artifacts.
+* **Rapid Geometric Audit Tooling**: `WorldAuditTool` executes 96-segment clearance collision scans and autonomous bot traversals in $< 120\text{ ms}$ headless, enabling continuous CI gating without slowing down test suites.
+
 ---
 
 ## 4. Running Performance Benchmarks

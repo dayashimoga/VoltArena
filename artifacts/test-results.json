@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 91.5285451197053,
-  "coverage_tested_functions": 994,
-  "coverage_total_functions": 1086,
-  "execution_seconds": 70.283,
+  "coverage_percent": 92.4062214089661,
+  "coverage_tested_functions": 1010,
+  "coverage_total_functions": 1093,
+  "execution_seconds": 89.321,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -32,12 +32,12 @@
     },
     "Chroma AI & Traffic Unit": {
       "failed": 0,
-      "passed": 19,
+      "passed": 21,
       "status": "PASS"
     },
     "Chroma Modes & Progression Unit": {
       "failed": 0,
-      "passed": 30,
+      "passed": 35,
       "status": "PASS"
     },
     "Chroma Rush E2E Scenarios": {
@@ -52,7 +52,7 @@
     },
     "Chroma Worlds & Integration Unit": {
       "failed": 0,
-      "passed": 34,
+      "passed": 45,
       "status": "PASS"
     },
     "ColorSwapEngine Unit": {
@@ -366,8 +366,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-09-30T06:27:32",
+  "timestamp": "2026-10-04T12:36:18",
   "total_failed": 0,
-  "total_passed": 2725,
+  "total_passed": 2743,
   "total_suites": 72
 }

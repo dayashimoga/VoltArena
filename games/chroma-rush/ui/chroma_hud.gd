@@ -17,7 +17,7 @@ signal swap_requested()
 signal target_cycle_requested()
 signal map_expand_requested()
 signal reset_to_road_requested()
-
+signal briefing_dismissed()
 
 # MiniMap radar
 var mini_map: ChromaMiniMap
@@ -34,12 +34,21 @@ var combo_label: Label
 var timer_label: Label
 var swaps_left_label: Label
 
-# Center Alignment Reticle
+# Unobtrusive Lower Center Alignment Reticle
 var reticle_container: Control
 var alignment_progress_bar: ProgressBar
 var swap_prompt_label: Label
 var guidance_lbl: Label
 var rejection_timer: float = 0.0
+var is_reticle_active: bool = false
+
+# Launch Mission Briefing Overlay
+var briefing_card: PanelContainer
+var briefing_title_lbl: Label
+var briefing_district_lbl: Label
+var briefing_curr_badge: Label
+var briefing_target_badge: Label
+var briefing_objective_lbl: Label
 
 # Bottom Left Gauge
 var speedometer_label: Label
@@ -160,36 +169,61 @@ func setup_hud_layout() -> void:
 	guidance_lbl.add_theme_color_override("font_color", Color(0.85, 0.92, 1.0))
 	guidance_box.add_child(guidance_lbl)
 
-	# --- CENTER: SWAP LOCK RETICLE ---
-	reticle_container = Control.new()
+	# --- LOWER CENTER: SWAP LOCK RETICLE (UNOBTRUSIVE FLOATING STATUS PILL) ---
+	# Positioned near bottom so forward driving line-of-sight and vehicle remain completely clear
+	reticle_container = PanelContainer.new()
 	reticle_container.name = "SwapReticle"
 	reticle_container.anchor_left = 0.5
-	reticle_container.anchor_top = 0.5
+	reticle_container.anchor_top = 1.0
 	reticle_container.anchor_right = 0.5
-	reticle_container.anchor_bottom = 0.5
-	reticle_container.offset_left = -120
-	reticle_container.offset_top = 40
-	reticle_container.offset_right = 120
-	reticle_container.offset_bottom = 90
+	reticle_container.anchor_bottom = 1.0
+	reticle_container.offset_left = -220
+	reticle_container.offset_top = -122
+	reticle_container.offset_right = 220
+	reticle_container.offset_bottom = -68
 	reticle_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var ret_style = StyleBoxFlat.new()
+	ret_style.bg_color = Color(0.04, 0.07, 0.12, 0.88)
+	ret_style.border_color = Color(0.18, 0.65, 0.95, 0.45)
+	ret_style.set_border_width_all(1)
+	ret_style.set_corner_radius_all(8)
+	ret_style.content_margin_left = 12
+	ret_style.content_margin_right = 12
+	ret_style.content_margin_top = 6
+	ret_style.content_margin_bottom = 6
+	reticle_container.add_theme_stylebox_override("panel", ret_style)
 	root.add_child(reticle_container)
 
+	var ret_vbox = VBoxContainer.new()
+	ret_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ret_vbox.add_theme_constant_override("separation", 4)
+	reticle_container.add_child(ret_vbox)
+
 	alignment_progress_bar = ProgressBar.new()
-	alignment_progress_bar.anchor_right = 1.0
-	alignment_progress_bar.offset_bottom = 14
+	alignment_progress_bar.custom_minimum_size = Vector2(0, 8)
 	alignment_progress_bar.max_value = 1.0
 	alignment_progress_bar.value = 0.0
 	alignment_progress_bar.show_percentage = false
-	reticle_container.add_child(alignment_progress_bar)
+	var prog_bg = StyleBoxFlat.new()
+	prog_bg.bg_color = Color(0.08, 0.11, 0.16, 0.8)
+	prog_bg.set_corner_radius_all(4)
+	var prog_fill = StyleBoxFlat.new()
+	prog_fill.bg_color = Color(0.0, 0.95, 0.85)
+	prog_fill.set_corner_radius_all(4)
+	alignment_progress_bar.add_theme_stylebox_override("background", prog_bg)
+	alignment_progress_bar.add_theme_stylebox_override("fill", prog_fill)
+	ret_vbox.add_child(alignment_progress_bar)
 
 	swap_prompt_label = Label.new()
-	swap_prompt_label.anchor_right = 1.0
-	swap_prompt_label.offset_top = 18
-	swap_prompt_label.offset_bottom = 44
 	swap_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	swap_prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	swap_prompt_label.text = "ALIGN ALONGSIDE TO SWAP"
-	swap_prompt_label.add_theme_font_size_override("font_size", 14)
-	reticle_container.add_child(swap_prompt_label)
+	swap_prompt_label.add_theme_font_size_override("font_size", 13)
+	swap_prompt_label.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
+	ret_vbox.add_child(swap_prompt_label)
+
+	_setup_briefing_card(root)
 
 	# --- BOTTOM LEFT: SPEEDOMETER & BOOST ---
 	var gauge_box = VBoxContainer.new()
@@ -297,6 +331,112 @@ func _setup_mobile_touch_controls(root: Control) -> void:
 	diagnostics_label.add_theme_color_override("font_color", Color(0.7, 0.95, 1.0))
 	diagnostics_panel.add_child(diagnostics_label)
 
+func _setup_briefing_card(root: Control) -> void:
+	briefing_card = PanelContainer.new()
+	briefing_card.name = "MissionBriefingCard"
+	briefing_card.anchor_left = 0.5
+	briefing_card.anchor_top = 0.5
+	briefing_card.anchor_right = 0.5
+	briefing_card.anchor_bottom = 0.5
+	briefing_card.offset_left = -280
+	briefing_card.offset_top = -180
+	briefing_card.offset_right = 280
+	briefing_card.offset_bottom = 180
+	briefing_card.visible = false
+
+	var card_style = StyleBoxFlat.new()
+	card_style.bg_color = Color(0.04, 0.06, 0.10, 0.94)
+	card_style.border_color = Color(0.0, 0.85, 0.95, 0.8)
+	card_style.set_border_width_all(2)
+	card_style.set_corner_radius_all(12)
+	card_style.content_margin_left = 24
+	card_style.content_margin_right = 24
+	card_style.content_margin_top = 20
+	card_style.content_margin_bottom = 20
+	briefing_card.add_theme_stylebox_override("panel", card_style)
+	root.add_child(briefing_card)
+
+	var vb = VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 10)
+	briefing_card.add_child(vb)
+
+	briefing_title_lbl = Label.new()
+	briefing_title_lbl.name = "BriefingTitle"
+	briefing_title_lbl.text = "MISSION BRIEFING"
+	briefing_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	briefing_title_lbl.add_theme_font_size_override("font_size", 22)
+	briefing_title_lbl.add_theme_color_override("font_color", Color(0.0, 1.0, 0.85))
+	vb.add_child(briefing_title_lbl)
+
+	briefing_district_lbl = Label.new()
+	briefing_district_lbl.name = "BriefingDistrict"
+	briefing_district_lbl.text = "DISTRICT: DOWNTOWN FINANCIAL"
+	briefing_district_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	briefing_district_lbl.add_theme_font_size_override("font_size", 13)
+	briefing_district_lbl.add_theme_color_override("font_color", Color(0.65, 0.8, 1.0))
+	vb.add_child(briefing_district_lbl)
+
+	var hsep = HSeparator.new()
+	vb.add_child(hsep)
+
+	var badges_hb = HBoxContainer.new()
+	badges_hb.alignment = BoxContainer.ALIGNMENT_CENTER
+	badges_hb.add_theme_constant_override("separation", 24)
+	vb.add_child(badges_hb)
+
+	briefing_curr_badge = Label.new()
+	briefing_curr_badge.text = "START: CRIMSON RED"
+	briefing_curr_badge.add_theme_font_size_override("font_size", 14)
+	badges_hb.add_child(briefing_curr_badge)
+
+	var arrow_lbl = Label.new()
+	arrow_lbl.text = "➔"
+	arrow_lbl.add_theme_font_size_override("font_size", 16)
+	arrow_lbl.add_theme_color_override("font_color", Color(1.0, 0.9, 0.2))
+	badges_hb.add_child(arrow_lbl)
+
+	briefing_target_badge = Label.new()
+	briefing_target_badge.text = "TARGET: EMERALD GREEN"
+	briefing_target_badge.add_theme_font_size_override("font_size", 14)
+	badges_hb.add_child(briefing_target_badge)
+
+	briefing_objective_lbl = Label.new()
+	briefing_objective_lbl.name = "BriefingObjective"
+	briefing_objective_lbl.text = "1. Locate target vehicle along traffic corridors\n2. Match speed & pull alongside (<8m)\n3. Hold parallel alignment and press [E / 🎮X] to swap\n4. Deliver color to designated checkpoint gate"
+	briefing_objective_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	briefing_objective_lbl.add_theme_font_size_override("font_size", 12)
+	briefing_objective_lbl.add_theme_color_override("font_color", Color(0.85, 0.9, 0.95))
+	vb.add_child(briefing_objective_lbl)
+
+	var launch_btn = Button.new()
+	launch_btn.text = "ENGAGE MISSION [SPACE / ENTER]"
+	launch_btn.custom_minimum_size = Vector2(240, 36)
+	launch_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	launch_btn.pressed.connect(func(): briefing_dismissed.emit())
+	vb.add_child(launch_btn)
+
+func show_mission_briefing(title: String, district: String, cur_col: int, tgt_col: int, clues: String = "") -> void:
+	if not is_instance_valid(briefing_card):
+		setup_hud_layout()
+	if briefing_title_lbl:
+		briefing_title_lbl.text = title.to_upper()
+	if briefing_district_lbl:
+		briefing_district_lbl.text = "SECTOR: %s" % district.to_upper()
+	if briefing_curr_badge:
+		briefing_curr_badge.text = "START: %s" % ChromaConstants.format_color_label(cur_col)
+		briefing_curr_badge.add_theme_color_override("font_color", ChromaConstants.get_color_value(cur_col))
+	if briefing_target_badge:
+		briefing_target_badge.text = "TARGET: %s" % ChromaConstants.format_color_label(tgt_col)
+		briefing_target_badge.add_theme_color_override("font_color", ChromaConstants.get_color_value(tgt_col))
+	if briefing_objective_lbl and not clues.is_empty():
+		briefing_objective_lbl.text = clues
+	if briefing_card:
+		briefing_card.visible = true
+
+func hide_mission_briefing() -> void:
+	if is_instance_valid(briefing_card):
+		briefing_card.visible = false
+
 func _create_badge(title: String, col_id: int) -> PanelContainer:
 	var pc = PanelContainer.new()
 	pc.custom_minimum_size = Vector2(160, 50)
@@ -341,6 +481,12 @@ func _process(delta: float) -> void:
 	if rejection_timer > 0.0:
 		rejection_timer -= delta
 
+	# Contextual reticle auto-fade: when in proximity/aligning, full opacity (1.0).
+	# When idle/cruising without a target nearby, gracefully fade to subtle 0.35 so driving view remains clear
+	if is_instance_valid(reticle_container):
+		var target_alpha = 1.0 if (is_reticle_active or rejection_timer > 0.0) else 0.35
+		reticle_container.modulate.a = move_toward(reticle_container.modulate.a, target_alpha, delta * 3.0)
+
 	if player_vehicle and is_instance_valid(player_vehicle):
 		var kph = int(player_vehicle.speed_kph)
 		speedometer_label.text = "%d KM/H" % kph
@@ -374,6 +520,7 @@ func _update_swap_reticle() -> void:
 	if mission_director and is_instance_valid(mission_director):
 		var req_col = mission_director.get_current_target_color()
 		if req_col != ChromaConstants.ChromaColor.NONE and player_vehicle.current_color == req_col:
+			is_reticle_active = true
 			alignment_progress_bar.value = 1.0
 			alignment_progress_bar.modulate = Color(0.2, 1.0, 0.4)
 			var gate_id = mission_director.get_current_target_gate_id()
@@ -519,6 +666,7 @@ func show_delivery_prompt(gate_id: String) -> void:
 func show_swap_prompt(eligible: bool, target_color: int, reason: String = "", progress: float = 0.0, is_optional: bool = false) -> void:
 	if rejection_timer > 0.0:
 		return
+	is_reticle_active = (eligible or progress > 0.05 or not reason.is_empty())
 	if swap_prompt_label:
 		swap_prompt_label.visible = true
 		var prefix = "(OPTIONAL SWAP) " if is_optional else ""
@@ -549,6 +697,7 @@ func show_swap_prompt(eligible: bool, target_color: int, reason: String = "", pr
 			swap_prompt_label.modulate = Color(0.85, 0.85, 0.85)
 
 func hide_swap_prompt() -> void:
+	is_reticle_active = false
 	if rejection_timer > 0.0:
 		return
 	if swap_prompt_label:

@@ -418,6 +418,11 @@ func _update_visual_dynamics(delta: float) -> void:
 	if is_instance_valid(front_right_wheel):
 		front_right_wheel.rotation.y = steer_angle
 
+	# Dynamic tail/brake and reverse lighting
+	var is_b = (brake_input > 0.05 and forward_speed > 0.5)
+	var is_rev = (forward_speed < -0.1 and brake_input > 0.05)
+	VehicleVisuals.update_vehicle_lights(visual_node, is_b, is_rev)
+
 func _check_rollover_and_recovery(delta: float) -> void:
 	var t = global_transform if is_inside_tree() else transform
 	var pos = global_position if is_inside_tree() else position

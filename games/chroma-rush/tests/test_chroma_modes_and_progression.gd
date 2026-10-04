@@ -159,6 +159,19 @@ func test_hud_signal_and_badge_updates() -> void:
 	hud.swap_button_pressed.emit()
 	assert_true(swap_btn_clicked["clicked"], "Touch swap button signal received")
 
+	# Test Mission Briefing Card
+	hud.show_mission_briefing("Neon Circuit Hunt", "Downtown Financial", ChromaConstants.ChromaColor.CRIMSON, ChromaConstants.ChromaColor.EMERALD, "Pursue target vehicle")
+	assert_true(hud.briefing_card.visible, "Mission briefing card is visible")
+	assert_true(hud.briefing_title_lbl.text.contains("NEON CIRCUIT HUNT"), "Mission title displayed in briefing")
+	hud.hide_mission_briefing()
+	assert_false(hud.briefing_card.visible, "Mission briefing card hidden after dismiss")
+
+	# Test Swap Prompt & Reticle visibility
+	hud.show_swap_prompt(true, ChromaConstants.ChromaColor.EMERALD)
+	assert_true(hud.is_reticle_active, "Reticle active when swap prompt shown")
+	hud.hide_swap_prompt()
+	assert_false(hud.is_reticle_active, "Reticle inactive when swap prompt hidden")
+
 	hud.free()
 
 func get_coverage_entries() -> Array:
@@ -180,7 +193,11 @@ func get_coverage_entries() -> Array:
 		]],
 		["res://games/chroma-rush/ui/chroma_hud.gd", [
 			"_ready", "setup_hud_layout", "connect_systems", "_process",
+			"show_mission_briefing", "hide_mission_briefing",
 			"update_player_color", "update_target_objective", "update_score_and_combo",
-			"update_timer", "set_swaps_remaining"
+			"update_timer", "set_swaps_remaining", "setup_mission", "update_hud",
+			"set_alignment_progress", "show_delivery_prompt", "show_swap_prompt",
+			"hide_swap_prompt", "show_swap_rejected", "toggle_diagnostics",
+			"update_diagnostics", "show_notification"
 		]]
 	]

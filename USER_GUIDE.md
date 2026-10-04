@@ -8,7 +8,7 @@
 ## 2. Navigating the Launcher
 
 Upon launching VoltArena, you are greeted by the 3D Holographic Menu:
-* **Game Carousel**: The 8 games are displayed as interactive holographic cards:
+* **Game Carousel**: The 9 games are displayed as interactive holographic cards:
   1. **Iron Crucible** (Tactical Arena FPS)
   2. **Metro Siege** (Subway Survival FPS)
   3. **Nitro Kick** (Rocket-Car Football)
@@ -17,6 +17,7 @@ Upon launching VoltArena, you are greeted by the 3D Holographic Menu:
   6. **RoboForge Arena** (Combat Robot Builder & Physics Battler)
   7. **WildCircuit** (Wildlife Safari & Photography Traversal)
   8. **Strike Vector** (Forward-Moving Run-and-Gun Shooter)
+  9. **Chroma Rush** (High-Speed Pursuit & Color Chase)
 * **Launching a Game**: Click on any game card or press the corresponding **PLAY** button. The game assets will instantly load without scene hitches.
 * **Global Settings**: Click the **SETTINGS** button in the upper-right corner to configure graphics quality presets (Low, Medium, High, Ultra), audio volume sliders (Master, Music, SFX), and mouse sensitivity.
 
@@ -90,6 +91,14 @@ When a match concludes (time runs out, all waves survived, race finished, or goa
 * **Slide-Fire & Dodge-Roll**: Combine sprint with crouch (`Shift` + `C`) to slide-fire underneath incoming projectile barrages. Tap `Ctrl` or double-tap direction to dodge-roll away from grenade blast radii.
 * **Weakpoint Prioritization**: Aim for glowing head units and heat sinks on Elites and Mechs for $2.0\times$ to $2.5\times$ damage multipliers.
 * **Power Module Combos**: Stacking Piercing Module with Overdrive turns high-density enemy choke-points into instant multi-kill score bonuses.
+
+### 6.6 Chroma Rush: The Color Chase
+* **Mission Briefing Review**: Carefully study the pre-mission briefing card during the opening orbital sweep to note the target color, target archetype, and active city sector. Press `[SPACE / ENTER]` to start the countdown.
+* **Pursuit & Interception**: Moving targets actively detect your pursuit within $35\text{m}$ and surge speed. Conserve your nitrous boost (`Shift`) for straightaways and draft behind traffic to close the distance.
+* **Pulling Alongside**: Match speed ($\Delta v \le 12.5\text{ m/s}$) and steer parallel within $8\text{m}$. The bottom-center floating reticle pill will fade in and turn green with live alignment percentage.
+* **Executing the Color Swap**: Press `[E]` or `[SPACE]` to trigger the atomic color exchange. A camera FOV shockwave impulse and expanding 3D energy ring confirm the swap.
+* **Checkpoint Delivery**: Once carrying the mission target color, follow the 3D navigational beacon and radar directly to the corresponding colored 24m overhead highway gantry.
+* **Reset Recovery**: If you spin out or collide with heavy obstacles, press `[R]` to immediately reset your vehicle smoothly to the road centerline.
 
 ---
 

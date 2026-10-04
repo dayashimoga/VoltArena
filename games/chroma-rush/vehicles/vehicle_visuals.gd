@@ -28,42 +28,66 @@ render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_sc
 
 uniform sampler2D albedo_texture : source_color, filter_linear_mipmap;
 uniform vec4 paint_color : source_color = vec4(0.85, 0.06, 0.14, 1.0);
-uniform float metallic_val : hint_range(0.0, 1.0) = 0.82;
-uniform float roughness_val : hint_range(0.0, 1.0) = 0.22;
-uniform float clearcoat_val : hint_range(0.0, 1.0) = 0.80;
+uniform float metallic_val : hint_range(0.0, 1.0) = 0.85;
+uniform float roughness_val : hint_range(0.0, 1.0) = 0.18;
+uniform float clearcoat_val : hint_range(0.0, 1.0) = 0.90;
+uniform bool is_braking = false;
+uniform bool is_reversing = false;
 
 void fragment() {
 	vec4 tex = texture(albedo_texture, UV);
-	bool is_trim = (tex.r < 0.28 && tex.g < 0.28 && tex.b < 0.28);
-	bool is_glass = (tex.b > 0.70 && tex.r > 0.45 && tex.g > 0.55);
 
-	if (is_trim) {
-		ALBEDO = tex.rgb;
-		if (VERTEX.y > 0.45 && abs(VERTEX.x) < 0.85) {
-			// Tinted glass canopy / cockpit
-			ROUGHNESS = 0.08;
-			METALLIC = 0.35;
-			SPECULAR = 0.7;
-		} else {
-			// Dark lower chassis, diffusers, grilles, and aerodynamic trim
-			ROUGHNESS = 0.85;
-			METALLIC = 0.10;
-			SPECULAR = 0.2;
-		}
+	bool is_trim = (tex.r < 0.28 && tex.g < 0.28 && tex.b < 0.28);
+	bool is_glass = (tex.b > 0.65 && tex.g > 0.45 && tex.r < 0.55);
+	bool is_headlight = (tex.r > 0.88 && tex.g > 0.88 && tex.b > 0.88);
+	bool is_taillight = (tex.r > 0.70 && tex.g < 0.42 && tex.b < 0.42);
+	bool is_amber = (tex.r > 0.85 && tex.g > 0.42 && tex.g < 0.68 && tex.b < 0.35);
+
+	if (is_headlight) {
+		// Projector LED Headlamps
+		ALBEDO = vec3(0.95, 0.98, 1.0);
+		EMISSION = vec3(1.0, 0.98, 0.92) * 2.8;
+		METALLIC = 0.6;
+		ROUGHNESS = 0.08;
+		SPECULAR = 0.85;
+	} else if (is_taillight) {
+		// Reactive Rear Taillamps and Brake Lights
+		ALBEDO = vec3(0.88, 0.06, 0.08);
+		float brake_mult = is_reversing ? 3.5 : (is_braking ? 4.2 : 1.2);
+		vec3 emit_col = is_reversing ? vec3(1.0, 0.98, 0.90) : vec3(1.0, 0.04, 0.06);
+		EMISSION = emit_col * brake_mult;
+		METALLIC = 0.3;
+		ROUGHNESS = 0.15;
+		SPECULAR = 0.7;
+	} else if (is_amber) {
+		// Amber Turn Signals / Side Markers
+		ALBEDO = vec3(1.0, 0.55, 0.15);
+		EMISSION = vec3(1.0, 0.50, 0.10) * 1.5;
+		METALLIC = 0.2;
+		ROUGHNESS = 0.20;
 	} else if (is_glass) {
-		// High-reflectance clear canopy glass
-		ALBEDO = vec3(0.08, 0.10, 0.14);
-		ROUGHNESS = 0.06;
-		METALLIC = 0.40;
-		SPECULAR = 0.8;
+		// Reflective Smoked Glass Canopy
+		ALBEDO = vec3(0.06, 0.08, 0.12);
+		ROUGHNESS = 0.04;
+		METALLIC = 0.30;
+		CLEARCOAT = 1.0;
+		SPECULAR = 0.95;
+	} else if (is_trim) {
+		// Matte Carbon Fiber Aero Trim, Splitters & Diffusers
+		ALBEDO = vec3(0.07, 0.07, 0.08);
+		ROUGHNESS = 0.82;
+		METALLIC = 0.10;
+		SPECULAR = 0.25;
 	} else {
-		// Authoritative multi-coat automotive paint
+		// Deep Multi-Coat Automotive Metallic Paint
 		float lum = (tex.r * 0.299 + tex.g * 0.587 + tex.b * 0.114);
-		float factor = clamp(lum / 0.65, 0.70, 1.25);
+		float factor = clamp(lum / 0.65, 0.82, 1.20);
 		ALBEDO = paint_color.rgb * factor;
 		METALLIC = metallic_val;
 		ROUGHNESS = roughness_val;
-		SPECULAR = 0.5;
+		CLEARCOAT = clearcoat_val;
+		CLEARCOAT_ROUGHNESS = 0.08;
+		SPECULAR = 0.65;
 	}
 }
 """
@@ -74,18 +98,18 @@ render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_sc
 
 void fragment() {
 	float r = length(VERTEX.yz);
-	if (r > 0.185) {
+	if (r > 0.19) {
 		// Vulcanized rubber tire tread and sidewall
-		ALBEDO = vec3(0.11, 0.11, 0.13);
-		ROUGHNESS = 0.88;
-		METALLIC = 0.04;
-		SPECULAR = 0.2;
+		ALBEDO = vec3(0.10, 0.10, 0.12);
+		ROUGHNESS = 0.92;
+		METALLIC = 0.02;
+		SPECULAR = 0.15;
 	} else {
 		// High-grade precision alloy rim
-		ALBEDO = vec3(0.82, 0.84, 0.87);
-		ROUGHNESS = 0.22;
-		METALLIC = 0.88;
-		SPECULAR = 0.6;
+		ALBEDO = vec3(0.85, 0.88, 0.92);
+		ROUGHNESS = 0.18;
+		METALLIC = 0.92;
+		SPECULAR = 0.80;
 	}
 }
 """
@@ -211,6 +235,26 @@ static func build_vehicle_visual(vehicle_id: String, base_color: int = ChromaCon
 		_build_procedural_fallback_body(fallback_body, base_color, paint_finish)
 		_build_procedural_fallback_wheels(root)
 
+		# Chrome dual exhaust tips at the rear
+		var exhaust_node = Node3D.new()
+		exhaust_node.name = "ExhaustTips"
+		var mat_chrome = StandardMaterial3D.new()
+		mat_chrome.albedo_color = Color(0.90, 0.92, 0.95)
+		mat_chrome.metallic = 0.98
+		mat_chrome.roughness = 0.12
+		for ex_side in [-0.42, 0.42]:
+			var tip = MeshInstance3D.new()
+			var tip_cyl = CylinderMesh.new()
+			tip_cyl.top_radius = 0.07
+			tip_cyl.bottom_radius = 0.07
+			tip_cyl.height = 0.28
+			tip.mesh = tip_cyl
+			tip.material_override = mat_chrome
+			tip.rotation_degrees.x = 90.0
+			tip.position = Vector3(ex_side, 0.28, 1.95)
+			exhaust_node.add_child(tip)
+		root.add_child(exhaust_node)
+
 	# 3. Dynamic Gameplay Color Accent Panels & Underglow
 	var color_panels = Node3D.new()
 	color_panels.name = "GameplayColorPanels"
@@ -231,6 +275,17 @@ static func build_vehicle_visual(vehicle_id: String, base_color: int = ChromaCon
 	root.add_child(shadow_node)
 
 	return root
+
+static func update_vehicle_lights(vehicle_visual: Node3D, is_braking: bool, is_reversing: bool) -> void:
+	if not is_instance_valid(vehicle_visual):
+		return
+	var model_root = vehicle_visual.get_node_or_null("ModelRoot")
+	if model_root:
+		for child in model_root.get_children():
+			if child is MeshInstance3D and child.material_override is ShaderMaterial:
+				var sm = child.material_override as ShaderMaterial
+				sm.set_shader_parameter("is_braking", is_braking)
+				sm.set_shader_parameter("is_reversing", is_reversing)
 
 static func _create_wheel_alias(root: Node3D, alias_name: String, target_node: Node3D) -> void:
 	if not target_node:

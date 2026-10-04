@@ -211,19 +211,49 @@ graph LR
 
 ---
 
-## 10. Complete Controls Reference
+## 10. Chroma Rush: The Color Chase Gameplay
 
-| Action | Iron Crucible / Metro Siege | Strike Vector | Nitro Kick | Drift Storm | Skybound Odyssey | RoboForge Arena | WildCircuit |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Move / Steer** | `W`, `A`, `S`, `D` | `W`, `A`, `S`, `D` | `W`, `S` (Throttle), `A`, `D` | `W`, `S` (Throttle), `A`, `D` | `W`, `A`, `S`, `D` | `W`, `A`, `S`, `D` | `W`, `A`, `S`, `D` |
-| **Look / Orbit** | Mouse Movement | Mouse Aim / Turn | Mouse Orbit | Dynamic Chase | Mouse Orbit | 360° Workshop Cam | Mouse Orbit |
-| **Jump / Boost** | `Space` (Jump) | `Space` (Jump / Mantle)| `Space` (Jump / Flip) | `Space` (Drift) | `Space` (Jump / Mantle)| `Space` (Activate Tool) | `Space` (ATV Brake / Jump)|
-| **Sprint / Nitro**| `Shift` (Sprint) | `Shift` (Sprint / Slide)| `Shift` (Boost) | `Shift` (Drift) | `Shift` (Sprint / Glide)| `Shift` (Booster) | `Shift` (ATV Turbo / Sprint)|
-| **Action 1** | Left Mouse (Fire) | Left Mouse (Fire Weapon)| Left Mouse (Boost) | `E` / Click (Use Item) | `E` (Interact / Action)| Left Click (Mount Part)| Left Mouse (Snap Photo) |
-| **Action 2** | Right Mouse (ADS) | Right Mouse (ADS Zoom) | Right Mouse (Ball Cam)| `R` (Recovery) | Right Mouse (Grapple) | Right Click (Rotate Bay)| Right Mouse (Viewfinder Zoom)|
-| **Crouch / Roll**| `C` (Crouch) | `C` / `Ctrl` (Crouch/Roll)| — | — | — | — | — |
-| **Switch Weapon**| `1`-`5` / Scroll | `1`-`9` / Scroll | — | — | Mouse Wheel (Cam Zoom) | Mouse Wheel (Bay Zoom)| Mouse Wheel (24-300mm Zoom)|
-| **Grenade / Power**| `G` (Grenade) | `G` (Toss Grenade) | — | — | — | — | — |
-| **Reload** | `R` (Reload) | `R` (Reload Magazine) | `R` (Reset Car) | `R` (Reset Kart) | Safe Ground Auto | `R` (Reset Course) | `R` (Flip ATV) |
-| **Pause Menu** | `Escape` | `Escape` | `Escape` | `Escape` | `Escape` | `Escape` | `Escape` |
+### 10.1 Core Gameplay Loop
+The gameplay loop emphasizes high-speed precision pursuit, spatial positioning, and quick color decision-making:
+$$\textbf{EXPLORE} \longrightarrow \textbf{LOCATE MOVING TARGET} \longrightarrow \textbf{CHASE} \longrightarrow \textbf{POSITION/ALIGN} \longrightarrow \textbf{COLOR SWAP} \longrightarrow \textbf{ESCAPE / NEXT TARGET} \longrightarrow \textbf{SCORE / COMBO}$$
+
+1. **Explore & Scan**: Navigate dynamic city districts using the minimap radar and 3D navigation beacon to identify circulating traffic and target candidates.
+2. **Locate Moving Target**: Identify vehicles bearing the required objective color or high-value combo colors. Targets actively drive realistic routes through the metropolis.
+3. **Chase & Close Distance**: Accelerate through highway lanes, overpasses, and avenues to close the gap into pursuit range ($<35\text{m}$).
+4. **Position & Align**: Pull alongside the target vehicle within $8\text{m}$, match relative speed ($\Delta v \le 12.5\text{ m/s}$), and align forward headings within $45^\circ$.
+5. **Color Swap Commitment**: Press `[E]` or `[SPACE]` to trigger atomic color exchange, executing camera FOV shockwave impulse and expanding 3D energy ring VFX.
+6. **Delivery / Next Target**: If carrying target color, follow guidance beacon directly to matching colored checkpoint gantry; otherwise, chain into the next target vehicle to build combo score multipliers.
+
+### 10.2 Dynamic Pursuit Evasion & Difficulty Tiers
+Moving targets dynamically perceive player pursuit when approached from behind ($<35\text{m}$):
+* **Easy Tier**: Target cruises at $18\text{ km/h}$ with gentle steering; generous alignment window ($\pm 3.5\text{m}$, $\pm 35^\circ$).
+* **Medium Tier**: Target cruises at $24\text{ km/h}$ through arterial avenues; standard alignment window ($\pm 2.8\text{m}$, $\pm 25^\circ$).
+* **Hard Tier**: Target cruises at $30\text{ km/h}$; upon detecting player in rear quadrant ($<35\text{m}$), surges speed up to $+25\%$ and executes lateral lane-weaving evasion maneuvers.
+* **Expert Tier**: Target cruises at $36\text{ km/h}$; aggressive defensive lane weaving through high-density traffic; requires nitro bursts to close and align.
+
+### 10.3 4 Game Modes
+1. **Color Hunt**: Locate and acquire designated colors from moving traffic, then deliver them through matching overhead highway checkpoint gantries.
+2. **Chroma Sprint**: Fast-paced time trial where each successful swap adds $+15\text{s}$ to $+25\text{s}$ of bonus time to the countdown clock.
+3. **Puzzle Drive**: Complete color chains and deliveries under strict swap count limits (e.g., maximum 4 swaps to reach the final gate color).
+4. **Chroma Championship**: Multi-stage point tournament competing against rival AI racers who hunt colors and score simultaneously.
+
+---
+
+## 11. Complete Controls Reference
+
+| Action | Iron Crucible / Metro Siege | Strike Vector | Nitro Kick | Drift Storm | Skybound Odyssey | RoboForge Arena | WildCircuit | Chroma Rush |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Move / Steer** | `W`, `A`, `S`, `D` | `W`, `A`, `S`, `D` | `W`, `S` (Throttle), `A`, `D` | `W`, `S` (Throttle), `A`, `D` | `W`, `A`, `S`, `D` | `W`, `A`, `S`, `D` | `W`, `A`, `S`, `D` | `W`, `S` (Throttle/Brake), `A`, `D` (Steer) |
+| **Look / Orbit** | Mouse Movement | Mouse Aim / Turn | Mouse Orbit | Dynamic Chase | Mouse Orbit | 360° Workshop Cam | Mouse Orbit | Speed-Adaptive Chase Camera |
+| **Jump / Boost** | `Space` (Jump) | `Space` (Jump / Mantle)| `Space` (Jump / Flip) | `Space` (Drift) | `Space` (Jump / Mantle)| `Space` (Activate Tool) | `Space` (ATV Brake / Jump)| `Space` / `E` (Color Swap) |
+| **Sprint / Nitro**| `Shift` (Sprint) | `Shift` (Sprint / Slide)| `Shift` (Boost) | `Shift` (Drift) | `Shift` (Sprint / Glide)| `Shift` (Booster) | `Shift` (ATV Turbo / Sprint)| `Shift` (Nitro Boost) |
+| **Action 1** | Left Mouse (Fire) | Left Mouse (Fire Weapon)| Left Mouse (Boost) | `E` / Click (Use Item) | `E` (Interact / Action)| Left Click (Mount Part)| Left Mouse (Snap Photo) | `E` / `Space` (Color Swap) |
+| **Action 2** | Right Mouse (ADS) | Right Mouse (ADS Zoom) | Right Mouse (Ball Cam)| `R` (Recovery) | Right Mouse (Grapple) | Right Click (Rotate Bay)| Right Mouse (Viewfinder Zoom)| `Tab` / `Q` (Cycle Target) |
+| **Crouch / Roll**| `C` (Crouch) | `C` / `Ctrl` (Crouch/Roll)| — | — | — | — | — | Handbrake / Drift (`Space` when drifting) |
+| **Switch Weapon**| `1`-`5` / Scroll | `1`-`9` / Scroll | — | — | Mouse Wheel (Cam Zoom) | Mouse Wheel (Bay Zoom)| Mouse Wheel (24-300mm Zoom)| Minimap Zoom (`Wheel` / `Z`) |
+| **Tactical Map** | — | `M` (Tactical Map) | — | — | `M` (World Map) | — | `M` (Field Map) | `M` (Full City Map) |
+| **Reload / Reset**| `R` (Reload) | `R` (Reload Magazine) | `R` (Reset Car) | `R` (Reset Kart) | Safe Ground Auto | `R` (Reset Course) | `R` (Flip ATV) | `R` (Reset to Road Centerline) |
+| **Pause Menu** | `Escape` | `Escape` | `Escape` | `Escape` | `Escape` | `Escape` | `Escape` | `Escape` |
+| **Diagnostics** | `F3` | `F3` | `F3` | `F3` | `F3` | `F3` | `F3` | `F3` (Live Telemetry & Graph) |
+
 

@@ -190,6 +190,7 @@ func _init_ui() -> void:
 	hud.target_cycle_requested.connect(_on_target_cycle_requested)
 	hud.map_expand_requested.connect(_on_map_expand_requested)
 	hud.reset_to_road_requested.connect(_on_reset_to_road_requested)
+	hud.briefing_dismissed.connect(_on_briefing_dismissed)
 	add_child(hud)
 	hud.visible = false
 
@@ -351,7 +352,7 @@ func set_state(new_state: State) -> void:
 	if world_select_screen:
 		world_select_screen.visible = (new_state == State.WORLD_SELECT)
 	if hud:
-		hud.visible = (new_state == State.PLAYING or new_state == State.COUNTDOWN)
+		hud.visible = (new_state == State.PLAYING or new_state == State.COUNTDOWN or new_state == State.BRIEFING)
 	if countdown_container:
 		countdown_container.visible = (new_state == State.COUNTDOWN)
 	if garage:
@@ -364,6 +365,11 @@ func set_state(new_state: State) -> void:
 		full_map.visible = false
 
 func _unhandled_input(event: InputEvent) -> void:
+	if current_state == State.BRIEFING:
+		if event.is_pressed() and not (event is InputEventMouseMotion):
+			_on_briefing_dismissed()
+			return
+
 	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("pause"):
 		if is_instance_valid(full_map) and full_map.visible:
 			full_map.close_map()
@@ -385,7 +391,17 @@ func _unhandled_input(event: InputEvent) -> void:
 			_on_reset_to_road_requested()
 
 func _physics_process(delta: float) -> void:
-	if current_state == State.COUNTDOWN:
+	if current_state == State.BRIEFING:
+		# Cinematic establishing camera orbit shot around player vehicle and skyline
+		if is_instance_valid(player_vehicle) and is_instance_valid(camera_spring_arm):
+			var target_pos = player_vehicle.global_position + Vector3(0.0, 4.0, 0.0)
+			camera_spring_arm.global_position = camera_spring_arm.global_position.lerp(target_pos, 4.0 * delta)
+			camera_spring_arm.rotation.y += 0.35 * delta
+			camera_spring_arm.rotation.x = deg_to_rad(-16.0)
+			if is_instance_valid(chase_camera):
+				chase_camera.position = Vector3(0.0, 0.0, 10.0)
+
+	elif current_state == State.COUNTDOWN:
 		countdown_timer -= delta
 		if countdown_timer > 2.0:
 			countdown_label.text = "3"
@@ -632,15 +648,35 @@ func start_mission(mission_id: String) -> void:
 		if am.has_method("play_music"):
 			am.play_music("chroma_rush")
 
-	# Start with Countdown in visual mode, or directly in PLAYING in headless test mode
+	# Start with cinematic briefing in visual mode, or directly in PLAYING in headless test mode
 	if DisplayServer.get_name() == "headless":
 		if is_instance_valid(player_vehicle):
 			player_vehicle.controls_enabled = true
 		set_state(State.PLAYING)
 	else:
+		if is_instance_valid(player_vehicle):
+			player_vehicle.controls_enabled = false
+		var m_title = mission_data.get("title", "Mission")
+		var district_str = "Downtown Financial"
+		if active_world and active_world.has_method("get_district_for_position") and is_instance_valid(player_vehicle):
+			district_str = active_world.get_district_for_position(player_vehicle.global_position)
+		var start_col = mission_data.get("starting_color", ChromaConstants.ChromaColor.CRIMSON)
+		var tgt_cols = mission_data.get("target_colors", [ChromaConstants.ChromaColor.EMERALD])
+		var tgt_col = tgt_cols[0] if tgt_cols.size() > 0 else ChromaConstants.ChromaColor.EMERALD
+		var clues = "1. Locate target vehicle along traffic corridors\n2. Match speed & pull alongside (<8m)\n3. Hold parallel alignment and press [E / 🎮X] to swap\n4. Deliver color to designated checkpoint gate"
+		if is_instance_valid(hud):
+			hud.show_mission_briefing(m_title, district_str, start_col, tgt_col, clues)
+		set_state(State.BRIEFING)
+
+func _on_briefing_dismissed() -> void:
+	if current_state == State.BRIEFING:
+		if is_instance_valid(hud):
+			hud.hide_mission_briefing()
 		countdown_timer = 3.2
 		if is_instance_valid(player_vehicle):
 			player_vehicle.controls_enabled = false
+		if is_instance_valid(chase_camera):
+			chase_camera.position = Vector3(0.0, 0.0, cam_distance)
 		set_state(State.COUNTDOWN)
 
 func _load_world(world_id: String) -> void:
@@ -695,6 +731,30 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 	if not is_instance_valid(active_world) or active_world.waypoints.size() < 4:
 		return
 
+	# Deterministic seeded randomness for dynamic variation in traffic placement
+	var seed_val = mission_data.get("seed", 0)
+	if seed_val == 0:
+		seed_val = int(Time.get_ticks_msec())
+	var rng = RandomNumberGenerator.new()
+	rng.seed = seed_val
+
+	var diff_str = str(mission_data.get("difficulty", "medium")).to_lower()
+	var base_spd = 22.0
+	var evasion_agg = 1.0
+	match diff_str:
+		"easy":
+			base_spd = 18.0
+			evasion_agg = 0.5
+		"medium":
+			base_spd = 24.0
+			evasion_agg = 1.0
+		"hard":
+			base_spd = 30.0
+			evasion_agg = 1.5
+		"expert":
+			base_spd = 36.0
+			evasion_agg = 2.0
+
 	var available_colors = mission_data.get("traffic_colors", [
 		ChromaConstants.ChromaColor.CYAN,
 		ChromaConstants.ChromaColor.MAGENTA,
@@ -713,6 +773,8 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 		"traffic_taxi"                         # car_taxi.glb (metro cruiser)
 	]
 
+	var start_offset = rng.randi_range(1, 3)
+
 	for i in range(traffic_count):
 		var veh = ChromaVehicle.new()
 		var agent_id = "traffic_%d" % i
@@ -724,8 +786,10 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 		veh.initial_color = col
 		veh.current_color = col
 
-		# Stagger starting at waypoint 2 onwards, so waypoint 0 is never occupied by traffic
-		var wp_idx = (2 + i * 2) % wps.size()
+		# Seeded staggered waypoint distribution avoiding player spawn at waypoint 0
+		var wp_idx = (start_offset + i * 2) % wps.size()
+		if wp_idx == 0:
+			wp_idx = 1
 		var p_cur = wps[wp_idx]
 		var p_next = wps[(wp_idx + 1) % wps.size()]
 		var fwd = (p_next - p_cur).normalized()
@@ -749,6 +813,9 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 
 		var agent = TrafficAgent.new(veh, swap_engine, agent_id, col)
 		agent.driver.desired_lane_offset = 0.0
+		agent.set_cruise_speed(base_spd + rng.randf_range(-1.5, 2.5))
+		if is_instance_valid(player_vehicle):
+			agent.set_evasion_threat(player_vehicle, evasion_agg)
 		agent.set_waypoints(lane_samples, wp_idx % max(1, lane_samples.size()))
 		traffic_agents.append(agent)
 
@@ -909,6 +976,12 @@ func _spawn_swap_vfx(node_a: Node3D, node_b: Node3D, col_a: int, col_b: int) -> 
 	if Input.has_method("vibrate_handheld"):
 		Input.vibrate_handheld(100)
 
+	# Camera impulse / FOV shockwave
+	if is_instance_valid(chase_camera):
+		var cam_tw = create_tween()
+		cam_tw.tween_property(chase_camera, "fov", 79.0, 0.08).set_trans(Tween.TRANS_BACK)
+		cam_tw.tween_property(chase_camera, "fov", 72.0, 0.22).set_trans(Tween.TRANS_SINE)
+
 	# Pulse scale animation on vehicle bodies for energetic feedback
 	var tw = create_tween().set_parallel(true)
 	tw.tween_property(node_a, "scale", Vector3(1.08, 1.12, 1.08), 0.08).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -916,21 +989,44 @@ func _spawn_swap_vfx(node_a: Node3D, node_b: Node3D, col_a: int, col_b: int) -> 
 	tw.chain().tween_property(node_a, "scale", Vector3.ONE, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tw.parallel().tween_property(node_b, "scale", Vector3.ONE, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 
+	var p1 = node_a.global_position + Vector3(0, 0.6, 0)
+	var p2 = node_b.global_position + Vector3(0, 0.6, 0)
+	var color_val = ChromaConstants.get_color_value(col_a)
+
+	# 3D Expanding Energy Shockwave Ring
+	var shockwave = MeshInstance3D.new()
+	var torus = TorusMesh.new()
+	torus.inner_radius = 0.4
+	torus.outer_radius = 1.1
+	shockwave.mesh = torus
+	var s_mat = StandardMaterial3D.new()
+	s_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	s_mat.albedo_color = color_val
+	s_mat.emission_enabled = true
+	s_mat.emission = color_val
+	s_mat.emission_energy_multiplier = 4.0
+	shockwave.material_override = s_mat
+	shockwave.global_position = (p1 + p2) * 0.5
+	shockwave.rotation_degrees = Vector3(90, 0, 0)
+	add_child(shockwave)
+
+	var sw_tw = create_tween().set_parallel(true)
+	sw_tw.tween_property(shockwave, "scale", Vector3(3.2, 3.2, 3.2), 0.26).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	sw_tw.tween_property(s_mat, "albedo_color:a", 0.0, 0.26)
+	sw_tw.chain().tween_callback(shockwave.queue_free)
+
 	# 3D Energy Arc Line between vehicles
 	var arc = MeshInstance3D.new()
 	var immediate_mesh = ImmediateMesh.new()
 	arc.mesh = immediate_mesh
 	var arc_mat = StandardMaterial3D.new()
 	arc_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	var color_val = ChromaConstants.get_color_value(col_a)
 	arc_mat.albedo_color = color_val.lightened(0.2)
 	arc_mat.emission_enabled = true
 	arc_mat.emission = color_val
 	arc_mat.emission_energy_multiplier = 3.5
 	arc.material_override = arc_mat
 
-	var p1 = node_a.global_position + Vector3(0, 0.6, 0)
-	var p2 = node_b.global_position + Vector3(0, 0.6, 0)
 	immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
 	immediate_mesh.surface_add_vertex(p1)
 	immediate_mesh.surface_add_vertex(p2)

@@ -21,6 +21,7 @@ func run_tests() -> Dictionary:
 	test_ai_driver_braking_for_sharp_turns()
 	test_ai_reverse_recovery_maneuver()
 	test_traffic_agent_waypoint_progression()
+	test_traffic_agent_evasion_behavior()
 	test_rival_ai_color_search_and_pursuit()
 	test_rival_ai_legitimate_swap_execution()
 	test_rival_ai_checkpoint_delivery_transition()
@@ -122,6 +123,26 @@ func test_traffic_agent_waypoint_progression() -> void:
 	agent.cleanup()
 	v.free()
 
+func test_traffic_agent_evasion_behavior() -> void:
+	var engine = ColorSwapEngine.new()
+	var v_traffic = _create_test_vehicle(Vector3(0, 0, -20))
+	var v_threat = _create_test_vehicle(Vector3(0, 0, -5))
+
+	var agent = TrafficAgent.new(v_traffic, engine, "target_hunt", ChromaConstants.ChromaColor.EMERALD)
+	agent.set_evasion_threat(v_threat, 1.5)
+	assert_false(agent.is_evading(), "Evasion starts inactive")
+
+	var wps: Array[Vector3] = [Vector3(0, 0, -50), Vector3(0, 0, -100)]
+	agent.set_waypoints(wps, 0)
+	agent.set_cruise_speed(20.0)
+
+	agent.update(0.1)
+	assert_eq(agent.get_current_color(), ChromaConstants.ChromaColor.EMERALD, "Target agent color preserved")
+
+	agent.cleanup()
+	v_traffic.free()
+	v_threat.free()
+
 func test_rival_ai_color_search_and_pursuit() -> void:
 	var engine = ColorSwapEngine.new()
 	var v_rival = _create_test_vehicle(Vector3(0, 0, 0))
@@ -193,7 +214,7 @@ func get_coverage_entries() -> Array:
 			"set_vehicle", "set_target", "update_driving"
 		]],
 		["res://games/chroma-rush/ai/traffic_agent.gd", [
-			"set_waypoints", "update", "get_current_color", "set_cruise_speed", "cleanup"
+			"set_waypoints", "set_evasion_threat", "is_evading", "update", "get_current_color", "set_cruise_speed", "cleanup"
 		]],
 		["res://games/chroma-rush/ai/rival_ai.gd", [
 			"set_required_objective", "update", "get_current_color", "cleanup"

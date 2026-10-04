@@ -1031,3 +1031,36 @@
   - `artifacts/coverage-report.json` (91.53% function coverage)
   - `artifacts/responsive-results.json` (315 passed, 0 failed across 9 resolutions)
   - `CHANGELOG.md` (Version 9.6.0 release entry)
+
+### [2026-10-04 17:55:00 UTC] - Milestone Update: Chroma Rush AAA Driving-World Overhaul, Road Obstruction Elimination & Dynamic Pursuit
+- **Status**: COMPLETED
+- **Description**:
+  1. **Road Obstructions & Vehicle-Stuck Remediation (Screenshot Issues 1, 2, 3)**:
+     - *Root Cause 1 (Overhead Gantry in Road)*: `CheckpointGate` default `gate_width` was 18.0m (pillars at $\pm 9.0\text{m}$, directly clipping the 9.35m roadway+sidewalk edge) and placed with chord look-at across curved waypoints. Fixed by widening truss span to 24.0m ($\pm 12.0\text{m}$ pillar centers), positioning footings 4.5m outside road edge, and locking gate positions to straight avenue tangent segments.
+     - *Root Cause 2 (Grass Island / Verge Road Slicing)*: `_build_landscaped_verge` generated straight-chord 25m boxes between waypoints, which sliced directly across Catmull-Rom road curves into traffic lanes. Completely removed straight box verges in favor of dense spline-conforming sidewalks.
+     - *Root Cause 3 (Trees Inside Turning Clear Zone)*: Blob lollipop trees placed on inside turns encroached on clearance zones. Replaced with realistic branching trees (5 species: oak, cherry, birch, pine, palm) with fluted trunks and Burley-diffuse leaf canopies set back 11.6m ($>4.5\text{m}$ clearance beyond curbs).
+  2. **City Reconstruction & Background Depth**:
+     - Built multi-district layout across Neon City: *Downtown Financial*, *Commercial Plaza*, *Logistics Skyway*, *Neon Entertainment*, *Waterfront Marina*, and *Historic Old Town*.
+     - Added secondary populated city blocks, parking courtyards with parked vehicle props, and 360-degree perimeter MultiMesh distant skyline backdrop, eliminating empty void.
+     - Built iconic landmarks: 110m *Apex Spire* with flashing aviation warning beacon and *Historic Clocktower*.
+  3. **Vehicle Visual Overhaul & Automotive PBR Clearcoat**:
+     - Upgraded `AUTOMOTIVE_SHADER_CODE` with multi-coat metallic clearcoat, projector LED headlamp emission, smoked canopy glass, carbon fiber trim, and reactive red brake lights and white reverse lights.
+     - Added dual chrome exhaust tips and suspension roll/pitch reactive lighting.
+  4. **Dynamic Seeded Target Hunting & Evasion AI**:
+     - Replaced rigid traffic spawn placement with deterministic seeded random distribution along valid road splines based on mission seed.
+     - Implemented dynamic pursuit evasion in `TrafficAgent`: when player approaches from behind ($<35\text{m}$), target accelerates and executes evasive lane shifts.
+     - Difficulty tiers: Easy (18 km/h), Medium (24 km/h), Hard (30 km/h, aggressive evasion), Expert (36 km/h).
+  5. **Polished Launch Briefing & Unobtrusive HUD**:
+     - Relocated centered reticle away from vehicle center down to lower-center floating status pill with auto-fade when idle.
+     - Implemented cinematic launch briefing overlay (`show_mission_briefing`) featuring mission title, sector/district, current color, target color, and tactical driving clues with cinematic camera orbit.
+     - Enhanced color swap feedback with camera FOV impulse shake and expanding 3D energy shockwave ring.
+  6. **Automated World Clearance & Traversal Audit Tooling**:
+     - Built `WorldAuditTool` (`games/chroma-rush/tools/world_audit_tool.gd`) with geometric road clearance verification and autonomous bot traversal simulation in forward and reverse directions.
+  7. **Testing & Coverage Verification**:
+     - Executed full master test suite in Podman container (`docker.io/barichello/godot-ci:4.3`): **72 test suites, 2,743 passed assertions, 0 failed (100% pass rate)**.
+     - Function coverage increased to **92.41%** (1,010 / 1,093 functions tested), exceeding $>90\%$ requirement.
+- **Evidence**:
+  - `artifacts/test-results.json` (72 suites, 2,743 passed, 0 failed, 100% pass rate)
+  - `artifacts/coverage-report.json` (92.41% function coverage)
+  - `games/chroma-rush/tools/world_audit_tool.gd` (automated audit tool)
+  - `CHANGELOG.md` (Version 9.7.0 entry)

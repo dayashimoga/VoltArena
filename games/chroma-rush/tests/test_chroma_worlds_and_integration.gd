@@ -11,6 +11,7 @@ const PrismCanyon = preload("res://games/chroma-rush/worlds/prism_canyon.gd")
 const SkyCircuit = preload("res://games/chroma-rush/worlds/sky_circuit.gd")
 const CheckpointGate = preload("res://games/chroma-rush/worlds/checkpoint_gate.gd")
 const ChromaVehicle = preload("res://games/chroma-rush/vehicles/chroma_vehicle.gd")
+const WorldAuditTool = preload("res://games/chroma-rush/tools/world_audit_tool.gd")
 
 var passed: int = 0
 var failed: int = 0
@@ -30,6 +31,8 @@ func run_tests() -> Dictionary:
 	test_neon_city_street_tree_and_plaza_colliders()
 	test_coastal_rush_bridge_pylon_clearance()
 	test_road_deck_thickness_and_safe_road_transform()
+	test_world_audit_tool_neon_city()
+	test_autonomous_bot_circuit_traversal()
 
 	return {"passed": passed, "failed": failed}
 
@@ -225,12 +228,45 @@ func test_road_deck_thickness_and_safe_road_transform() -> void:
 	var query_pt = Vector3(10.0, -1.0, -80.0) # slightly off-road / below
 	var safe_xf = city.get_nearest_safe_road_transform(query_pt)
 	assert_true(safe_xf.origin.y >= 0.15, "Safe road transform must elevate chassis safely above asphalt")
-	assert_true(safe_xf.basis.is_orthogonal(), "Safe road transform basis must be orthonormal")
+	assert_true(safe_xf.basis.is_conformal() and absf(safe_xf.basis.determinant() - 1.0) < 0.05, "Safe road transform basis must be orthonormal")
+
+	city.free()
+
+func test_world_audit_tool_neon_city() -> void:
+	var city = NeonCity.new()
+	city._ready()
+
+	var audit = WorldAuditTool.audit_world(city, 7.0, 20.0)
+	assert_true(audit["road_continuity_valid"], "Road continuity must be fully valid")
+	assert_eq(audit["blocked_segments"].size(), 0, "Road must have 0 blocked segments")
+	assert_eq(audit["lane_prop_intersections"].size(), 0, "No lane/prop intersections inside road envelope")
+	assert_eq(audit["floating_objects"].size(), 0, "No floating scenery objects")
+	assert_true(audit["total_spline_samples"] >= 32, "Spline sample count sufficient")
+	assert_true(audit["overall_passed"], "Neon City passes comprehensive geometric road clearance audit")
+
+	city.free()
+
+func test_autonomous_bot_circuit_traversal() -> void:
+	var city = NeonCity.new()
+	city._ready()
+
+	# Test autonomous bot traversal forward direction with sports vehicle (350 steps ~ 17.5s)
+	var res_fwd = WorldAuditTool.run_traversal_test(city, "apex_striker", 1, 350)
+	assert_true(res_fwd["passed"], "Autonomous bot traversal (forward) successfully traverses circuit")
+	assert_true(res_fwd["waypoints_reached"] >= 2, "Bot reaches waypoints during forward run")
+
+	# Test autonomous bot traversal reverse direction with heavy SUV
+	var res_rev = WorldAuditTool.run_traversal_test(city, "titan_hauler", -1, 350)
+	assert_true(res_rev["passed"], "Autonomous bot traversal (reverse) successfully traverses circuit")
+	assert_true(res_rev["waypoints_reached"] >= 2, "Bot reaches waypoints during reverse run")
 
 	city.free()
 
 func get_coverage_entries() -> Array:
 	return [
+		["res://games/chroma-rush/tools/world_audit_tool.gd", [
+			"audit_world", "run_traversal_test"
+		]],
 		["res://games/chroma-rush/worlds/checkpoint_gate.gd", [
 			"_ready", "setup_gate_visuals", "setup_gate_collision", "apply_target_color"
 		]],

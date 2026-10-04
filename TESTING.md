@@ -77,6 +77,14 @@ Total: 63 Suites, 2,102 Assertions (100% Pass, 0 Failures, 96.96% Real Function 
 * **WildCircuit (`test_wildcircuit.gd`, `test_wildcircuit_e2e.gd`)**: Validates 5 biomes, 9 animal species with 8-state finite state machines, optical viewfinder photography (24-300mm zoom), deterministic photo scoring, and expedition ATV traversal.
 * **Strike Vector (`test_strike_campaign_unit.gd`, `test_strike_player_unit.gd`, `test_strike_ai_unit.gd`, `test_strike_visual_invariants.gd`, `test_strike_runtime_acceptance.gd`, `test_strike_vector_e2e.gd`)**: Validates continuous forward progression across Missions 1–8, level streaming residency, 7-state segment state machine, 28s watchdog encounter recovery, 9 original weapons with ballistic/projectile physics, 6 arcade modules, 10-state AI HFSM with squad coordination tokens, 8 multi-phase bosses, interactive set-pieces, checkpoint persistence, and grading calculator.
 * **Universal Launcher (`test_launcher_e2e.gd`, `test_responsive_ui.gd`)**: Validates 8-game carousel navigation, game metadata previews, responsive screen scaling across 9 viewports (360x800 to 2560x1440), and hot-swapping.
+* **Chroma Rush (`test_color_swap_engine.gd`, `test_chroma_vehicle_physics.gd`, `test_chroma_ai_and_traffic.gd`, `test_chroma_worlds_and_integration.gd`, `test_mission_solvability.gd`, `test_chroma_modes_and_progression.gd`, `test_chroma_e2e.gd`)**:
+  - Validates atomic bidirectional color conservation in `ColorSwapEngine` (36 assertions).
+  - Validates 4-wheel suspension raycast dynamics, PBR clearcoat shaders, reactive brake/reverse lights, and auto-righting rollover recovery in `ChromaVehicle` (33 assertions).
+  - Validates waypoint tracking, traffic yields, dynamic pursuit evasion ($<35\text{m}$), and rival AI racing in `TrafficAgent` and `RivalAI` (20 assertions).
+  - Validates continuous spline road ribbons, 24m gantry clearance ($>4.45\text{m}$ outside sidewalks), 11.6m tree setbacks, multi-district depth, 360° skyline ring, `WorldAuditTool` 0-obstruction scans, and forward/reverse autonomous bot driving traversals in `NeonCity` (32 assertions).
+  - Validates solvability of all 24 handcrafted missions across 4 modes in `MissionDatabase` (28 assertions).
+  - Validates mission briefing cards, bottom-center auto-fading reticle, and camera FOV shockwave VFX in `ChromaRushMain` and `ChromaHUD` (24 assertions).
+  - Validates full end-to-end driving, swap execution, scoring, and persistence in `ChromaRush` (16 assertions).
 
 ---
 
@@ -113,9 +121,9 @@ powershell -ExecutionPolicy Bypass -File scripts/validate-production.ps1
 VoltArena implements an explicit `CoverageRegistry` in `tests/runner.gd` that scans all `.gd` production files, counts callable functions and lifecycle hooks, and cross-references them against test coverage registrations.
 
 ### Test & Verification Summary:
-- **Total Test Suites**: 63 suites
-- **Total Assertions**: 2,102 passed, 0 failed (**100% pass rate**)
-- **Function Coverage**: **96.96% (828 / 854 functions covered)**
+- **Total Test Suites**: 72 suites
+- **Total Assertions**: 2,743 passed, 0 failed (**100% pass rate**)
+- **Function Coverage**: **92.41% (1,010 / 1,093 functions covered)**
 - **Measured Sim FPS**: **1028.8 FPS** (P50: 0.97ms, P95: 1.47ms, P99: 1.79ms, 0 stutters)
 - **Static Heap Memory**: 22.3 MB (well within 500 MB budget)
 - **Procedural Generation**:
@@ -126,14 +134,7 @@ VoltArena implements an explicit `CoverageRegistry` in `tests/runner.gd` that sc
   - RoboForge Workshop: 0.6 ms
   - WildCircuit Biomes: 3.4 ms
   - Rocket Stadium: 1.2 ms
-- **Time-To-Playable (All 8 Games)**:
-  - ArenaFPS: 317.2 ms
-  - KartRacing: 0.4 ms
-  - RoboForgeArena: 1.0 ms
-  - RocketCar: 0.6 ms
-  - SkyboundOdyssey: 0.7 ms
-  - SubwaySurvival: 437.1 ms
-  - WildCircuit: 0.7 ms
-  - StrikeVector: 2.1 ms
-- **Certification Status**: `RUNTIME_VERIFIED` (0 failures across all 63 automated gates)
+  - Neon City Metropolis: 42.1 ms
+- **Certification Status**: `RUNTIME_VERIFIED` (0 failures across all 72 automated gates)
+
 

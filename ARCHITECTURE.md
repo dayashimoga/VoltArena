@@ -355,3 +355,43 @@ Located at `games/chroma-rush/persistence/`:
 * Versioned schema (`version = 1`), atomic JSON writes, corruption recovery, and migration safety.
 * Tracks unlocked vehicles, paint finishes, custom vehicle colors, stars, medals, high scores, credits, and resumable in-progress sessions.
 
+### 9.7 Automated World Audit & Traversal Subsystem (`WorldAuditTool`)
+Located at `games/chroma-rush/tools/world_audit_tool.gd`:
+* **Headless Geometric Collision Scans**: Evaluates drivable road splines at 0.5m intervals against the full physics world:
+  - Roadway corridor: $7.6\text{m}$ width, $4.2\text{m}$ height.
+  - Clearance envelope: verifies all structures, pylons, and trees maintain $\ge 4.5\text{m}$ buffer distance outside road and curb margins.
+  - Validates zero road discontinuities, zero floating or sunken scenery items, and zero prop collision masks intersecting active driving corridors.
+* **Autonomous Bot Traversal Agent**: Simulates virtual vehicle navigation across all road spline segments in both forward and reverse directions:
+  - Closed-loop proportional steering following waypoint tangents.
+  - Stuck-state watchdog detecting velocity stalling ($<0.5\text{ m/s}$ for $>2.0\text{s}$) or continuous obstacle contact.
+  - Confirms 100% graph connectivity and reachability across all road sectors.
+
+### 9.8 Cinematic Launch & Mission Briefing State Flow
+Located in `chroma_rush_main.gd` and `chroma_hud.gd`:
+* **State Machine Coordination**: Extends gameplay lifecycle with `State.BRIEFING`:
+  $$\text{INIT} \longrightarrow \text{BRIEFING} \longrightarrow \text{COUNTDOWN} \longrightarrow \text{PLAYING} \longrightarrow \text{COMPLETED / FAILED}$$
+* **Briefing Presentation**:
+  - Sets orbital camera revolving slowly around player vehicle while keeping controls locked.
+  - Displays Mission Briefing Card overlay showing Mission Title, Target District, Target Color, Target Vehicle Archetype, and Tactical Driving Objectives.
+  - User can press `[SPACE / ENTER / TAP]` to confirm briefing, smoothly initiating 3-2-1 countdown transition.
+* **Context-Aware Unobtrusive Reticle**:
+  - Relocated from vehicle chase center to lower-center floating status pill docked below bumper view.
+  - Dynamic opacity fading: hidden ($0.0$ alpha) during open road cruising; smoothly eases to $0.95$ alpha when candidate vehicles enter pursuit proximity ($<25\text{m}$).
+
+### 9.9 Automotive PBR Clearcoat & Reactive Lighting System
+Located in `vehicle_visuals.gd` and `chroma_vehicle.gd`:
+* **Multi-Layer PBR Clearcoat**: Custom `AUTOMOTIVE_SHADER_CODE` combining metallic base coat, micro-roughness specular reflections, and clearcoat gloss.
+* **Projector LED & Smoked Glass**: Smoked canopy glass with realistic fresnel falloff, high-intensity projector headlamps, and carbon fiber side trim.
+* **Reactive Lighting Telemetry**:
+  - Tail light LED strip intensifies $4.5\times$ with vivid crimson bloom when braking.
+  - Dual white reverse lamps ignite automatically when reverse gear or deceleration reversal is engaged.
+
+### 9.10 Dynamic Seeded Target Hunting & Evasion Behavior
+Located in `traffic_agent.gd` and `chroma_rush_main.gd`:
+* **Deterministic Mission Seeding**: Uses mission seed to distribute moving targets and ambient traffic across distinct districts and valid road sectors.
+* **AI Pursuit Evasion**:
+  - `TrafficAgent.set_evasion_threat(player_pos, distance, rel_speed)` calculates rear pursuit bearing and proximity.
+  - When chased within $35\text{m}$, targets trigger an evasion state: boosting cruise speed by up to $+25\%$ and weaving between lanes to defend against alignment.
+* **Four Difficulty Tiers**: Easy ($18\text{ km/h}$, gentle tracking), Medium ($24\text{ km/h}$, lane changing), Hard ($30\text{ km/h}$, active evasion), Expert ($36\text{ km/h}$, aggressive lane defense).
+
+

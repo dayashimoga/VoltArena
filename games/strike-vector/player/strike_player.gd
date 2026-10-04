@@ -26,6 +26,7 @@ const PlayerLocomotionScript = preload("res://games/strike-vector/player/player_
 var current_health: float = 100.0
 var current_armor: float = 50.0
 var is_alive: bool = true
+var is_throwing_grenade: bool = false
 
 # Locomotion & Physics
 var locomotion: RefCounted = null
@@ -144,16 +145,51 @@ func _setup_weapons() -> void:
 
 	select_weapon(0)
 
+func _unhandled_input(event: InputEvent) -> void:
+	if not is_alive:
+		return
+
+	# Quick weapon slot selection via number keys 1 - 6
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode >= KEY_1 and event.keycode <= KEY_6:
+			select_weapon(event.keycode - KEY_1)
+		elif event.keycode == KEY_G:
+			throw_grenade()
+
+	# Mouse wheel cycling through tactical arsenal
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			cycle_weapon(-1)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			cycle_weapon(1)
+
+func cycle_weapon(step: int) -> void:
+	if weapons.is_empty():
+		return
+	var slot_count = mini(weapons.size(), 6)
+	var new_idx = (active_weapon_index + step) % slot_count
+	if new_idx < 0:
+		new_idx += slot_count
+	select_weapon(new_idx)
+
 func select_weapon(index: int) -> void:
 	if weapons.is_empty():
 		return
 	index = clampi(index, 0, weapons.size() - 1)
+
+	# Cleanly cancel any active reload on current weapon before switching
 	if is_instance_valid(active_weapon):
+		if "is_reloading" in active_weapon:
+			active_weapon.is_reloading = false
 		if active_weapon.get_parent():
 			active_weapon.get_parent().remove_child(active_weapon)
 
 	active_weapon_index = index
 	active_weapon = weapons[active_weapon_index]
+
+	# Reset firing cooldown on equip
+	if "fire_cooldown" in active_weapon:
+		active_weapon.fire_cooldown = 0.0
 
 	# Attach to visual weapon grip
 	var target_grip = null
@@ -171,7 +207,123 @@ func select_weapon(index: int) -> void:
 		add_child(active_weapon)
 
 	_sync_active_modules_to_weapon()
+
+	# Audio feedback on weapon equip
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am and am.has_method("play_sound"):
+		am.play_sound("laser_fire", 0.6)
+
 	weapon_switched.emit(active_weapon_index, active_weapon.weapon_name, active_weapon.ammo_in_mag, active_weapon.reserve_ammo)
+
+func throw_grenade() -> void:
+	if not is_alive or grenade_count <= 0 or is_throwing_grenade:
+		return
+	grenade_count -= 1
+	is_throwing_grenade = true
+
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am and am.has_method("play_sound"):
+		am.play_sound("jump", 1.2)
+
+	# Calculate throw trajectory from camera or player orientation
+	var cam = get_viewport().get_camera_3d() if is_inside_tree() else null
+	var throw_dir = (-global_transform.basis.z + Vector3(0, 0.35, 0)).normalized()
+	if cam:
+		throw_dir = (-cam.global_transform.basis.z + Vector3(0, 0.28, 0)).normalized()
+
+	var grenade = RigidBody3D.new()
+	grenade.name = "FragGrenade"
+	grenade.collision_layer = GameConstants.LAYER_PROJECTILES
+	grenade.collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_ENEMIES
+	grenade.mass = 0.6
+
+	var col = CollisionShape3D.new()
+	var sph = SphereShape3D.new()
+	sph.radius = 0.20
+	col.shape = sph
+	grenade.add_child(col)
+
+	var mi = MeshInstance3D.new()
+	var c_sph = SphereMesh.new()
+	c_sph.radius = 0.20
+	c_sph.height = 0.40
+	mi.mesh = c_sph
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.2, 0.25, 0.2)
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.25, 0.1)
+	mat.emission_energy_multiplier = 3.5
+	mi.material_override = mat
+	grenade.add_child(mi)
+
+	var spawn_pos = (global_position if is_inside_tree() else position) + Vector3(0, 1.4, 0) + throw_dir * 0.8
+	var scene_root = get_parent() if get_parent() else self
+	scene_root.add_child(grenade)
+	grenade.global_position = spawn_pos
+	grenade.linear_velocity = throw_dir * 18.0
+
+	var tree = get_tree()
+	if tree:
+		tree.create_timer(1.6).timeout.connect(func(): _detonate_grenade(grenade))
+		tree.create_timer(0.6).timeout.connect(func(): is_throwing_grenade = false)
+	else:
+		is_throwing_grenade = false
+
+	if is_instance_valid(active_weapon):
+		ammo_updated.emit(active_weapon.weapon_name, active_weapon.ammo_in_mag, active_weapon.reserve_ammo)
+
+func _detonate_grenade(grenade: RigidBody3D) -> void:
+	if not is_instance_valid(grenade):
+		return
+	var pos = grenade.global_position
+
+	# Explosion visual blast sphere
+	var blast = MeshInstance3D.new()
+	var s_mesh = SphereMesh.new()
+	s_mesh.radius = 1.0
+	s_mesh.height = 2.0
+	blast.mesh = s_mesh
+	var mat_b = StandardMaterial3D.new()
+	mat_b.albedo_color = Color(1.0, 0.5, 0.1)
+	mat_b.emission_enabled = true
+	mat_b.emission = Color(1.0, 0.5, 0.1)
+	mat_b.emission_energy_multiplier = 5.0
+	blast.material_override = mat_b
+	if grenade.get_parent():
+		grenade.get_parent().add_child(blast)
+		blast.global_position = pos
+		var tw = blast.create_tween()
+		if tw:
+			tw.tween_property(blast, "scale", Vector3(5.5, 5.5, 5.5), 0.3)
+			tw.tween_callback(blast.queue_free)
+		else:
+			blast.queue_free()
+
+	# Explosion Audio
+	var am = GameConstants.get_autoload(self, "AudioManager")
+	if am and am.has_method("play_sound"):
+		am.play_sound("explosion", 1.2)
+
+	# Radial Damage to enemies and destructibles within 5.5m
+	var enemies = get_tree().get_nodes_in_group("enemies") if get_tree() else []
+	for e in enemies:
+		if is_instance_valid(e) and e is Node3D:
+			var d = pos.distance_to(e.global_position)
+			if d <= 5.5:
+				var falloff = 1.0 - (d / 5.5)
+				var dmg = 120.0 * falloff
+				if e.has_method("take_damage"):
+					e.take_damage(dmg, "FragGrenade", "Explosive")
+
+	var destructibles = get_tree().get_nodes_in_group("destructibles") if get_tree() else []
+	for prop in destructibles:
+		if is_instance_valid(prop) and prop is Node3D:
+			var d = pos.distance_to(prop.global_position)
+			if d <= 5.5:
+				if prop.has_method("take_damage"):
+					prop.take_damage(120.0, "FragGrenade", "Explosive")
+
+	grenade.queue_free()
 
 func _sync_active_modules_to_weapon() -> void:
 	if not is_instance_valid(active_weapon):
@@ -333,12 +485,6 @@ func _get_input_vector() -> Vector2:
 func _handle_weapon_input(delta: float) -> void:
 	if not is_alive or not is_instance_valid(active_weapon):
 		return
-
-	# Quick weapon switch via keys 1-9
-	for i in range(1, 10):
-		if Input.is_key_pressed(KEY_0 + i):
-			select_weapon(i - 1)
-			break
 
 	# Crosshair raycast convergence to find 3D aim target
 	var cam = get_viewport().get_camera_3d() if is_inside_tree() else null
@@ -570,6 +716,8 @@ func fire_weapon() -> void:
 	if not is_alive:
 		return
 	if is_instance_valid(active_weapon):
-		var aim_origin = global_position + Vector3(0, 1.4, 0)
-		var aim_dir = -global_transform.basis.z
+		if active_weapon.fire_cooldown > 0.0:
+			active_weapon.fire_cooldown = 0.0
+		var aim_origin = (global_position if is_inside_tree() else position) + Vector3(0, 1.4, 0)
+		var aim_dir = -(global_transform.basis.z if is_inside_tree() else transform.basis.z)
 		active_weapon.trigger_pull(aim_origin, aim_dir, false, false, false)

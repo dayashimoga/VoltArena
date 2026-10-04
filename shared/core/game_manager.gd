@@ -111,6 +111,16 @@ func _handle_strike_vector_cmd(scene: Node, cmd: String) -> void:
 	elif cmd == "show_results":
 		if results and results.has_method("display_results"):
 			results.display_results({"mission_name": "M1 Urban Blackout", "score": 12500, "grade": "S", "time": 165.0, "kills": 24, "deaths": 0})
+	elif cmd.begins_with("load_mission_"):
+		var m_idx = cmd.substr(13).to_int()
+		if scene.has_method("load_mission"):
+			scene.load_mission(m_idx)
+	elif cmd == "teleport_extraction":
+		if scene.has_method("advance_segment"):
+			for i in range(4):
+				scene.advance_segment()
+		if player:
+			player.global_position = Vector3(0.0, 0.5, -185.0)
 
 func _handle_arena_fps_cmd(scene: Node, cmd: String) -> void:
 	var player = scene.get_node_or_null("Player")

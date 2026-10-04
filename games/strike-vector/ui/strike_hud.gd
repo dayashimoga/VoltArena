@@ -4,12 +4,14 @@ extends Control
 ## Cyberpunk Tactical HUD for Strike Vector.
 ## Features:
 ## - Top-center Compass Tape with degree ticks, cardinal points, and objective waypoint bearing/distance.
-## - Top-right Circular Minimap/Radar with player orientation, road bounds, objective beacon,
-##   and threat-aware fading hostile blips (no omniscient reveals).
-## - Tactical Map Modal (toggleable via 'M' key or controller).
+## - Top-center Tactical Directive Banner with dynamic turn guidance and context instructions.
+## - Top-right Circular 2D Minimap/Radar with full multi-street city topology, view cone, road bounds,
+##   objective beacon, and threat-aware hostile blips.
+## - Tactical Operations Map Modal (toggleable via 'M' key or controller) showing full 2D level topology,
+##   district sectors, mission progression chain, POIs, and legend.
 ## - Dynamic Crosshair with spread expansion and hit indicators.
 ## - Bottom-left HP / Armor status gauges.
-## - Bottom-right Weapon, Fire-mode, Ammo reserve, and Grenade counters.
+## - Bottom-right 6-slot Weapon Arsenal Rack, Fire-mode, Ammo reserve, and Grenade counters.
 ## - Contextual alerts, interaction prompts, and Boss health bar.
 
 const ThemeGen = preload("res://shared/ui/theme_generator.gd")
@@ -34,11 +36,14 @@ var ammo_label: Label
 var grenade_label: Label
 var module_badge: PanelContainer
 var module_label: Label
+var weapon_slots_container: HBoxContainer
+var weapon_slot_labels: Array[Label] = []
 
-# Top-center Objective
+# Top-center Objective & Directive
 var objective_badge: PanelContainer
 var objective_label: Label
 var objective_dist_label: Label
+var directive_label: Label
 
 # Context Alerts
 var alert_label: Label
@@ -53,8 +58,9 @@ var boss_phase_label: Label
 # Navigation Tracking State
 var active_objective_pos: Vector3 = Vector3(0, 0, -160.0)
 var active_objective_name: String = "DESTROY JAMMER"
-var extraction_pos: Vector3 = Vector3(0, 0, -240.0)
+var extraction_pos: Vector3 = Vector3(0, 0, -200.0)
 var has_extraction: bool = false
+var current_weapon_slot: int = 0
 
 # ==============================================================================
 # SUBCOMPONENT 1: DYNAMIC CROSSHAIR
@@ -94,89 +100,67 @@ class StrikeCrosshair extends Control:
 			draw_line(Vector2(h_l, h_l), Vector2(h_s, h_s), hit_col, 2.0)
 
 # ==============================================================================
-# SUBCOMPONENT: DIRECTIONAL DAMAGE INDICATOR
+# SUBCOMPONENT 2: DIRECTIONAL DAMAGE INDICATOR
 # ==============================================================================
 class StrikeDirectionalDamageIndicator extends Control:
 	var active_indicators: Array = []
-	var vignette_alpha: float = 0.0
 
-	func add_hit(hit_dir_angle: float) -> void:
+	func add_hit(angle_rad: float) -> void:
 		active_indicators.append({
-			"angle_rad": hit_dir_angle,
-			"alpha": 1.0,
-			"lifetime": 1.2
+			"angle": angle_rad,
+			"alpha": 1.0
 		})
-		vignette_alpha = 0.45
 		queue_redraw()
 
 	func _process(delta: float) -> void:
+		if active_indicators.is_empty():
+			return
 		var redraw_needed = false
-		if vignette_alpha > 0.0:
-			vignette_alpha = maxf(0.0, vignette_alpha - delta * 1.5)
+		for ind in active_indicators:
+			ind["alpha"] -= delta * 1.8
 			redraw_needed = true
-
 		var expired = []
 		for ind in active_indicators:
-			ind.lifetime -= delta
-			ind.alpha = clampf(ind.lifetime / 1.2, 0.0, 1.0)
-			redraw_needed = true
-			if ind.lifetime <= 0.0:
+			if ind["alpha"] <= 0.0:
+				redraw_needed = true
 				expired.append(ind)
-
 		for exp_ind in expired:
 			active_indicators.erase(exp_ind)
-
 		if redraw_needed:
 			queue_redraw()
 
 	func _draw() -> void:
 		var center = size * 0.5
-		var radius = 64.0
-
-		if vignette_alpha > 0.01:
-			var vig_col = Color(0.85, 0.05, 0.05, vignette_alpha * 0.35)
-			draw_rect(Rect2(Vector2.ZERO, size), vig_col, false, 8.0)
-
+		var radius = minf(size.x, size.y) * 0.32
 		for ind in active_indicators:
-			var angle = ind.angle_rad
-			var col = Color(1.0, 0.12, 0.08, ind.alpha * 0.90)
-			var col_glow = Color(1.0, 0.45, 0.1, ind.alpha * 0.50)
-
-			var start_ang = angle - 0.28
-			var end_ang = angle + 0.28
-			draw_arc(center, radius, start_ang, end_ang, 12, col, 4.0)
-			draw_arc(center, radius + 2.0, start_ang, end_ang, 12, col_glow, 2.0)
-
-			var tip = center + Vector2(cos(angle), sin(angle)) * (radius + 14.0)
-			var left_pt = center + Vector2(cos(angle - 0.15), sin(angle - 0.15)) * (radius + 4.0)
-			var right_pt = center + Vector2(cos(angle + 0.15), sin(angle + 0.15)) * (radius + 4.0)
+			var ang = ind["angle"]
+			var col = Color(1.0, 0.1, 0.1, ind["alpha"] * 0.85)
+			var tip = center + Vector2(cos(ang), sin(ang)) * radius
+			var left_pt = center + Vector2(cos(ang - 0.25), sin(ang - 0.25)) * (radius - 22.0)
+			var right_pt = center + Vector2(cos(ang + 0.25), sin(ang + 0.25)) * (radius - 22.0)
 			draw_colored_polygon(PackedVector2Array([tip, left_pt, right_pt]), col)
 
 # ==============================================================================
-# SUBCOMPONENT 2: COMPASS TAPE (TOP-CENTER)
+# SUBCOMPONENT 3: COMPASS TAPE (TOP-CENTER)
 # ==============================================================================
 class StrikeCompassTape extends Control:
-	var current_heading: float = 0.0 # degrees 0..360
-	var target_bearing: float = 0.0  # degrees 0..360
-	var has_target: bool = true
+	var current_heading: float = 0.0 # 0-360 degrees
+	var target_bearing: float = 0.0
+	var has_target: bool = false
+	var span_deg: float = 90.0
 
 	func _draw() -> void:
 		var w = size.x
 		var h = size.y
 		var center_x = w * 0.5
 
-		# Dark translucent background
-		draw_rect(Rect2(0, 0, w, h), Color(0.02, 0.06, 0.12, 0.80), true)
-		draw_rect(Rect2(0, 0, w, h), Color(0.15, 0.75, 0.95, 0.45), false, 1.0)
-
-		# Center heading indicator notch
-		draw_line(Vector2(center_x, 0), Vector2(center_x, 8), Color(0.1, 0.95, 1.0, 1.0), 2.0)
+		# Dark metallic background
+		draw_rect(Rect2(0, 0, w, h), Color(0.02, 0.06, 0.12, 0.85), true)
+		draw_rect(Rect2(0, 0, w, h), Color(0.15, 0.70, 0.95, 0.65), false, 1.5)
 
 		var font = get_theme_default_font()
-		var span_deg = 120.0 # visible horizontal field on tape
-
-		var start_deg = int(floor((current_heading - span_deg * 0.5) / 15.0)) * 15
-		var end_deg = int(ceil((current_heading + span_deg * 0.5) / 15.0)) * 15
+		var start_deg = int(floor(current_heading - span_deg * 0.5))
+		var end_deg = int(ceil(current_heading + span_deg * 0.5))
 
 		for d in range(start_deg, end_deg + 1, 15):
 			var norm_d = fposmod(float(d), 360.0)
@@ -232,17 +216,16 @@ class StrikeCompassTape extends Control:
 			draw_colored_polygon(d_pts, obj_col)
 
 # ==============================================================================
-# SUBCOMPONENT 3: MINIMAP / RADAR (TOP-RIGHT)
+# SUBCOMPONENT 4: 2D METROPOLITAN MINIMAP / RADAR (TOP-RIGHT)
 # ==============================================================================
 class StrikeMinimap extends Control:
 	var player_pos: Vector3 = Vector3.ZERO
 	var player_yaw: float = 0.0 # radians
 	var target_pos: Vector3 = Vector3(0, 0, -160.0)
-	var extraction_pos: Vector3 = Vector3(0, 0, -240.0)
+	var extraction_pos: Vector3 = Vector3(0, 0, -200.0)
 	var has_extraction: bool = false
-	var radar_range: float = 65.0
+	var radar_range: float = 75.0
 
-	# Threat awareness: hostile detections with fade out
 	var hostile_blips: Array[Dictionary] = []
 	var sweep_angle: float = 0.0
 
@@ -255,7 +238,7 @@ class StrikeMinimap extends Control:
 		var radius = minf(size.x, size.y) * 0.48
 
 		# Dark circular radar frame
-		draw_circle(center, radius, Color(0.02, 0.05, 0.10, 0.88))
+		draw_circle(center, radius, Color(0.02, 0.05, 0.10, 0.90))
 		draw_arc(center, radius, 0, TAU, 48, Color(0.15, 0.80, 1.0, 0.75), 2.0)
 
 		# Range Rings (25m & 50m)
@@ -266,19 +249,14 @@ class StrikeMinimap extends Control:
 		draw_line(Vector2(center.x - radius, center.y), Vector2(center.x + radius, center.y), Color(0.15, 0.45, 0.65, 0.25), 1.0)
 		draw_line(Vector2(center.x, center.y - radius), Vector2(center.x, center.y + radius), Color(0.15, 0.45, 0.65, 0.25), 1.0)
 
+		# 2D Multi-Street City Layout on Minimap
+		_draw_city_streets(center, radius)
+
 		# Radar rotating sweep
 		var sweep_dir = Vector2(cos(sweep_angle), sin(sweep_angle)) * radius
-		draw_line(center, center + sweep_dir, Color(0.2, 0.9, 1.0, 0.35), 1.5)
+		draw_line(center, center + sweep_dir, Color(0.2, 0.9, 1.0, 0.30), 1.5)
 
-		# Road Corridor Bounds (16m total street corridor)
-		var road_half_w = 8.0
-		var curb_screen_d = (road_half_w / radar_range) * radius
-		var fwd = Vector2(0, -1)
-		var right = Vector2(1, 0)
-		draw_line(center - right * curb_screen_d - fwd * radius * 0.85, center - right * curb_screen_d + fwd * radius * 0.85, Color(0.2, 0.6, 0.8, 0.35), 1.0)
-		draw_line(center + right * curb_screen_d - fwd * radius * 0.85, center + right * curb_screen_d + fwd * radius * 0.85, Color(0.2, 0.6, 0.8, 0.35), 1.0)
-
-		# Threat-Aware Hostile Blips (fading out over 3.0 seconds)
+		# Hostile Blips
 		var now = Time.get_ticks_msec() / 1000.0
 		var active_blips: Array[Dictionary] = []
 		for blip in hostile_blips:
@@ -318,16 +296,27 @@ class StrikeMinimap extends Control:
 		draw_colored_polygon(d_pts, Color(1.0, 0.78, 0.15, 0.95))
 		draw_arc(obj_screen, 8.0, 0, TAU, 16, Color(1.0, 0.85, 0.2, 0.65), 1.2)
 
-		# Extraction Marker
+		# Extraction LZ Marker
 		if has_extraction:
 			var ext_rel = extraction_pos - player_pos
 			var ext_rot_x = ext_rel.x * cos(-player_yaw) - ext_rel.z * sin(-player_yaw)
 			var ext_rot_z = ext_rel.x * sin(-player_yaw) + ext_rel.z * cos(-player_yaw)
 			var ext_vec = Vector2(ext_rot_x, ext_rot_z)
 			var ext_screen = center + ext_vec.normalized() * minf(radius - 8.0, ext_vec.length() * (radius / radar_range))
-			draw_circle(ext_screen, 4.5, Color(0.2, 1.0, 0.4, 0.95))
+			draw_circle(ext_screen, 5.0, Color(0.1, 0.95, 0.5, 0.95))
+			draw_arc(ext_screen, 8.0, 0, TAU, 16, Color(0.1, 0.95, 0.5, 0.75), 1.5)
 
-		# Player Indicator: Cyan chevron pointing UP (-Y in screen space)
+		# Player Vision Cone (60 degrees forward)
+		var cone_len = radius * 0.45
+		var cone_col = Color(0.1, 0.95, 1.0, 0.08)
+		var cone_pts = PackedVector2Array([
+			center,
+			center + Vector2(-cone_len * 0.5, -cone_len),
+			center + Vector2(cone_len * 0.5, -cone_len)
+		])
+		draw_colored_polygon(cone_pts, cone_col)
+
+		# Player Indicator: Cyan chevron pointing UP
 		var chevron = PackedVector2Array([
 			center + Vector2(0, -8),
 			center + Vector2(6, 6),
@@ -337,22 +326,50 @@ class StrikeMinimap extends Control:
 		draw_colored_polygon(chevron, Color(0.1, 0.95, 1.0, 1.0))
 		draw_circle(center, 1.5, Color.WHITE)
 
+	func _draw_city_streets(center: Vector2, radius: float) -> void:
+		# Draw continuous arterial boulevard and cross streets relative to player
+		var road_w = 16.0
+		var r_scale = radius / radar_range
+		var col_road = Color(0.2, 0.65, 0.9, 0.35)
+		var col_curb = Color(0.3, 0.8, 1.0, 0.6)
+
+		# Arterial Boulevard curbs (-8m and +8m from X=0 in world space)
+		for side in [-8.0, 8.0]:
+			var p1_w = Vector3(side, 0, player_pos.z - radar_range)
+			var p2_w = Vector3(side, 0, player_pos.z + radar_range)
+			var s1 = _world_to_minimap(p1_w, center, r_scale)
+			var s2 = _world_to_minimap(p2_w, center, r_scale)
+			draw_line(s1, s2, col_curb, 1.2)
+
+		# Cross-street intersections at z = 0, -40, -80, -120, -160, -200
+		var cross_zs = [0.0, -40.0, -80.0, -120.0, -160.0, -200.0]
+		for cz in cross_zs:
+			if abs(cz - player_pos.z) < radar_range:
+				var c_left = _world_to_minimap(Vector3(-24.0, 0, cz), center, r_scale)
+				var c_right = _world_to_minimap(Vector3(24.0, 0, cz), center, r_scale)
+				draw_line(c_left, c_right, col_road, 2.0)
+
+	func _world_to_minimap(world_pos: Vector3, center: Vector2, r_scale: float) -> Vector2:
+		var rel_3d = world_pos - player_pos
+		var rot_x = rel_3d.x * cos(-player_yaw) - rel_3d.z * sin(-player_yaw)
+		var rot_z = rel_3d.x * sin(-player_yaw) + rel_3d.z * cos(-player_yaw)
+		return center + Vector2(rot_x, rot_z) * r_scale
+
 # ==============================================================================
-# SUBCOMPONENT 4: TACTICAL MAP (M KEY TOGGLE OVERLAY)
+# SUBCOMPONENT 5: FULL-SCREEN TACTICAL OPERATIONS MAP ('M' KEY OVERLAY)
 # ==============================================================================
 class StrikeTacticalMap extends PanelContainer:
 	var player_z: float = 0.0
+	var player_x: float = 0.0
 	var target_z: float = -160.0
-	var max_mission_z: float = -240.0
+	var max_mission_z: float = -200.0
 
-	var milestones = [
-		{"name": "INSERTION DROP", "z": 0.0},
-		{"name": "DAMAGED INTERSECTION", "z": -40.0},
-		{"name": "SECURITY CHECKPOINT", "z": -80.0},
-		{"name": "WAREHOUSE ALLEY", "z": -120.0},
-		{"name": "COMMUNICATIONS JAMMER", "z": -160.0},
-		{"name": "EVACUATION PLAZA", "z": -200.0},
-		{"name": "EXTRACTION LZ", "z": -240.0}
+	var sectors = [
+		{"name": "SECTOR 1: CITY CENTRE & ENTRY PLAZA", "z": 0.0, "type": "entry"},
+		{"name": "SECTOR 2: COMMERCIAL DISTRICT & 4-WAY INTERSECTION", "z": -40.0, "type": "checkpoint"},
+		{"name": "SECTOR 3: METRO STATION & CENTRAL PARK PROMENADE", "z": -80.0, "type": "metro"},
+		{"name": "SECTOR 4: INDUSTRIAL LOGISTICS & WAREHOUSES", "z": -120.0, "type": "industrial"},
+		{"name": "SECTOR 5: ROOFTOP EXTRACTION HELIPAD LZ", "z": -160.0, "type": "extraction"}
 	]
 
 	func _init() -> void:
@@ -361,54 +378,93 @@ class StrikeTacticalMap extends PanelContainer:
 		anchor_top = 0.5
 		anchor_right = 0.5
 		anchor_bottom = 0.5
-		offset_left = -300
-		offset_top = -220
-		offset_right = 300
-		offset_bottom = 220
+		offset_left = -380
+		offset_top = -250
+		offset_right = 380
+		offset_bottom = 250
 
 	func _draw() -> void:
 		var w = size.x
 		var h = size.y
-		# Dark military panel
-		draw_rect(Rect2(0, 0, w, h), Color(0.03, 0.07, 0.12, 0.94), true)
-		draw_rect(Rect2(0, 0, w, h), Color(0.15, 0.75, 0.95, 0.8), false, 2.0)
+
+		# Tactical Blueprint Panel Background
+		draw_rect(Rect2(0, 0, w, h), Color(0.02, 0.06, 0.12, 0.96), true)
+		draw_rect(Rect2(0, 0, w, h), Color(0.15, 0.80, 1.0, 0.85), false, 2.0)
+
+		# Tactical Coordinate Grid lines
+		var grid_col = Color(0.15, 0.45, 0.70, 0.18)
+		for gx in range(40, int(w), 50):
+			draw_line(Vector2(float(gx), 40), Vector2(float(gx), h - 35), grid_col, 1.0)
+		for gy in range(50, int(h) - 30, 45):
+			draw_line(Vector2(20, float(gy)), Vector2(w - 20, float(gy)), grid_col, 1.0)
 
 		var font = get_theme_default_font()
 		if font:
-			draw_string(font, Vector2(24, 30), "TACTICAL OPERATIONS MAP // SECTOR 7 URBAN BLACKOUT", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.2, 0.95, 1.0))
-			draw_string(font, Vector2(24, h - 16), "[M / ESC] CLOSE SATELLITE UPLINK", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.6, 0.75, 0.9))
+			# Header
+			draw_string(font, Vector2(24, 28), "TACTICAL OPERATIONS MAP // SECTOR METROPOLITAN GRID", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.2, 0.95, 1.0))
+			draw_string(font, Vector2(w - 240, 28), "SATELLITE UPLINK: ACTIVE", HORIZONTAL_ALIGNMENT_RIGHT, -1, 11, Color(0.2, 1.0, 0.4))
+			# Footer
+			draw_string(font, Vector2(24, h - 14), "[M / ESC] CLOSE TACTICAL UPLINK", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.6, 0.75, 0.9))
 
-		# Progress Line from Top (Insertion) to Bottom (Extraction)
-		var line_x = 180.0
-		var line_top_y = 55.0
-		var line_bottom_y = h - 45.0
-		draw_line(Vector2(line_x, line_top_y), Vector2(line_x, line_bottom_y), Color(0.2, 0.45, 0.65, 0.6), 3.0)
+		# 2D Road Network Layout (Arterial Boulevard along center-left)
+		var road_cx = 240.0
+		var map_top_y = 65.0
+		var map_bottom_y = h - 55.0
+		var road_h = map_bottom_y - map_top_y
 
-		# Milestones
-		for m in milestones:
-			var ratio = clampf(m["z"] / max_mission_z, 0.0, 1.0)
-			var my = line_top_y + ratio * (line_bottom_y - line_top_y)
-			var is_cleared = player_z <= m["z"]
-			var is_target = abs(m["z"] - target_z) < 20.0
+		# Boulevard Main Road (dual lane)
+		draw_rect(Rect2(road_cx - 24, map_top_y, 48, road_h), Color(0.08, 0.16, 0.26, 0.8), true)
+		draw_rect(Rect2(road_cx - 24, map_top_y, 48, road_h), Color(0.2, 0.7, 0.95, 0.6), false, 1.5)
+		# Dividing center dashed line
+		for ly in range(int(map_top_y), int(map_bottom_y), 16):
+			draw_line(Vector2(road_cx, float(ly)), Vector2(road_cx, float(ly + 8)), Color(1.0, 0.8, 0.2, 0.6), 1.5)
 
-			var pt_col = Color(0.2, 1.0, 0.4) if is_cleared else (Color(1.0, 0.75, 0.2) if is_target else Color(0.4, 0.6, 0.7, 0.6))
-			draw_circle(Vector2(line_x, my), 5.0, pt_col)
+		# Cross-streets branching into districts
+		for i in range(sectors.size()):
+			var s = sectors[i]
+			var ratio = float(i) / float(sectors.size() - 1)
+			var sy = map_top_y + ratio * road_h
 
+			# Branching cross-streets left & right
+			draw_line(Vector2(road_cx - 95, sy), Vector2(road_cx + 95, sy), Color(0.2, 0.7, 0.95, 0.45), 2.5)
+
+			# Sector Node Indicator
+			var is_cleared = player_z <= s["z"]
+			var is_target = abs(s["z"] - target_z) < 20.0
+			var node_col = Color(0.2, 1.0, 0.4) if is_cleared else (Color(1.0, 0.75, 0.2) if is_target else Color(0.4, 0.6, 0.7, 0.6))
+
+			draw_circle(Vector2(road_cx, sy), 6.5, node_col)
+			draw_arc(Vector2(road_cx, sy), 9.5, 0, TAU, 16, node_col, 1.2)
+
+			# Sector Label & Status on right side
 			if font:
-				var m_label = m["name"] + (" [CLEARED]" if is_cleared else (" [OBJECTIVE]" if is_target else ""))
-				draw_string(font, Vector2(line_x + 18, my + 4), m_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, pt_col)
+				var tag = "[SECURED]" if is_cleared else ("[PRIMARY OBJECTIVE]" if is_target else "[EN ROUTE]")
+				var label_text = s["name"] + "  " + tag
+				draw_string(font, Vector2(road_cx + 115, sy + 4), label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, node_col)
 
-		# Player Position Indicator
+		# Operative Live Position Indicator
 		var p_ratio = clampf(player_z / max_mission_z, 0.0, 1.0)
-		var py = line_top_y + p_ratio * (line_bottom_y - line_top_y)
-		var p_pts = PackedVector2Array([
-			Vector2(line_x - 14, py - 5),
-			Vector2(line_x - 6, py),
-			Vector2(line_x - 14, py + 5)
+		var py = map_top_y + p_ratio * road_h
+		var p_marker = PackedVector2Array([
+			Vector2(road_cx - 16, py - 6),
+			Vector2(road_cx - 6, py),
+			Vector2(road_cx - 16, py + 6)
 		])
-		draw_colored_polygon(p_pts, Color(0.1, 0.95, 1.0, 1.0))
+		draw_colored_polygon(p_marker, Color(0.1, 0.95, 1.0, 1.0))
+		draw_circle(Vector2(road_cx, py), 3.5, Color(0.1, 0.95, 1.0))
+		draw_arc(Vector2(road_cx, py), 12.0, 0, TAU, 16, Color(0.1, 0.95, 1.0, 0.5), 1.0)
+
 		if font:
-			draw_string(font, Vector2(30, py + 4), "OPERATIVE", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.1, 0.95, 1.0))
+			draw_string(font, Vector2(road_cx - 140, py + 4), "OPERATIVE [LOC: Z=%.0fm]" % player_z, HORIZONTAL_ALIGNMENT_RIGHT, -1, 10, Color(0.1, 0.95, 1.0))
+
+		# Tactical Map Legend in Bottom-Right
+		if font:
+			var leg_x = w - 310
+			var leg_y = h - 65
+			draw_rect(Rect2(leg_x - 10, leg_y - 18, 300, 48), Color(0.04, 0.08, 0.14, 0.85), true)
+			draw_rect(Rect2(leg_x - 10, leg_y - 18, 300, 48), Color(0.2, 0.6, 0.8, 0.4), false, 1.0)
+			draw_string(font, Vector2(leg_x, leg_y), "LEGEND: [GREEN] SECURED  [AMBER] OBJECTIVE", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(0.7, 0.85, 0.95))
+			draw_string(font, Vector2(leg_x, leg_y + 16), "        [CYAN] OPERATIVE  [BLUE] EN ROUTE", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(0.7, 0.85, 0.95))
 
 # ==============================================================================
 # MAIN HUD SETUP
@@ -471,29 +527,40 @@ func _setup_compass_tape() -> void:
 	objective_badge.anchor_top = 0.0
 	objective_badge.anchor_right = 0.5
 	objective_badge.anchor_bottom = 0.0
-	objective_badge.offset_left = -220
+	objective_badge.offset_left = -260
 	objective_badge.offset_top = 46
-	objective_badge.offset_right = 220
-	objective_badge.offset_bottom = 76
+	objective_badge.offset_right = 260
+	objective_badge.offset_bottom = 96
 	objective_badge.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(objective_badge)
 
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+	objective_badge.add_child(vbox)
+
 	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 8)
-	objective_badge.add_child(hbox)
+	vbox.add_child(hbox)
 
 	objective_label = Label.new()
-	objective_label.text = "OBJECTIVE: DESTROY JAMMER"
+	objective_label.text = "OBJECTIVE: INFILTRATE COMMERCIAL SECTOR"
 	objective_label.size_flags_horizontal = SIZE_EXPAND_FILL
 	objective_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	objective_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	objective_label.modulate = Color(0.2, 0.9, 1.0)
+	objective_label.modulate = Color(0.2, 0.95, 1.0)
 	hbox.add_child(objective_label)
 
 	objective_dist_label = Label.new()
 	objective_dist_label.text = "160m"
 	objective_dist_label.modulate = Color(1.0, 0.78, 0.2)
 	hbox.add_child(objective_dist_label)
+
+	directive_label = Label.new()
+	directive_label.text = "[^] PROCEED DOWN ARTERIAL BOULEVARD"
+	directive_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	directive_label.add_theme_font_size_override("font_size", 11)
+	directive_label.modulate = Color(0.7, 0.85, 1.0)
+	vbox.add_child(directive_label)
 
 func _setup_minimap() -> void:
 	minimap = StrikeMinimap.new()
@@ -581,16 +648,31 @@ func _setup_bottom_right_weapon() -> void:
 	panel.anchor_top = 1.0
 	panel.anchor_right = 1.0
 	panel.anchor_bottom = 1.0
-	panel.offset_left = -240
-	panel.offset_top = -105
-	panel.offset_right = -24
+	panel.offset_left = -280
+	panel.offset_top = -125
+	panel.offset_right = -20
 	panel.offset_bottom = -20
 	panel.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(panel)
 
 	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 2)
+	vbox.add_theme_constant_override("separation", 3)
 	panel.add_child(vbox)
+
+	# 6-Slot Tactical Weapon Selector Rack
+	weapon_slots_container = HBoxContainer.new()
+	weapon_slots_container.add_theme_constant_override("separation", 4)
+	vbox.add_child(weapon_slots_container)
+
+	var slot_names = ["1:AR", "2:SMG", "3:SG", "4:DMR", "5:LMG", "6:PST"]
+	weapon_slot_labels.clear()
+	for i in range(slot_names.size()):
+		var s_lbl = Label.new()
+		s_lbl.text = "[" + slot_names[i] + "]"
+		s_lbl.add_theme_font_size_override("font_size", 9)
+		s_lbl.modulate = Color(0.1, 0.95, 1.0) if i == 0 else Color(0.4, 0.55, 0.65)
+		weapon_slots_container.add_child(s_lbl)
+		weapon_slot_labels.append(s_lbl)
 
 	var header_box = HBoxContainer.new()
 	vbox.add_child(header_box)
@@ -616,7 +698,7 @@ func _setup_bottom_right_weapon() -> void:
 	vbox.add_child(footer_box)
 
 	grenade_label = Label.new()
-	grenade_label.text = "FRAG: 3"
+	grenade_label.text = "FRAG: 3 [G]"
 	grenade_label.modulate = Color(1.0, 0.5, 0.2)
 	footer_box.add_child(grenade_label)
 
@@ -650,9 +732,9 @@ func _setup_context_alert() -> void:
 	interact_label.anchor_top = 0.6
 	interact_label.anchor_right = 0.5
 	interact_label.anchor_bottom = 0.6
-	interact_label.offset_left = -150
+	interact_label.offset_left = -180
 	interact_label.offset_top = -20
-	interact_label.offset_right = 150
+	interact_label.offset_right = 180
 	interact_label.offset_bottom = 20
 	interact_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	interact_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -710,7 +792,7 @@ func update_navigation_state(p_pos: Vector3, p_heading_rad: float, obj_pos: Vect
 
 	var p_yaw_deg = fposmod(rad_to_deg(-p_heading_rad), 360.0)
 
-	# Calculate bearing to objective in degrees (0 = North/forward, 90 = East, etc.)
+	# Calculate bearing to objective in degrees
 	var to_obj = obj_pos - p_pos
 	var obj_bearing_deg = fposmod(rad_to_deg(atan2(to_obj.x, -to_obj.z)), 360.0)
 	var dist_m = to_obj.length()
@@ -722,11 +804,28 @@ func update_navigation_state(p_pos: Vector3, p_heading_rad: float, obj_pos: Vect
 		compass_tape.has_target = true
 		compass_tape.queue_redraw()
 
-	# Update Objective badge readout
+	# Update Objective badge readout & directive
 	if is_instance_valid(objective_label):
 		objective_label.text = "OBJECTIVE: " + obj_name.to_upper()
 	if is_instance_valid(objective_dist_label):
 		objective_dist_label.text = "%dm" % int(dist_m)
+	if is_instance_valid(directive_label):
+		# Context-sensitive directive
+		if has_extraction:
+			directive_label.text = "[*] BOARD EXTRACTION SHUTTLE // LZ ACTIVE"
+			directive_label.modulate = Color(0.1, 1.0, 0.5)
+		elif dist_m <= 15.0:
+			directive_label.text = "[!] OBJECTIVE PROXIMITY // SECURE POSITION"
+			directive_label.modulate = Color(1.0, 0.85, 0.2)
+		elif abs(to_obj.x) > 12.0 and to_obj.x > 0:
+			directive_label.text = "[>] TURN RIGHT AT INTERSECTION"
+			directive_label.modulate = Color(0.2, 0.95, 1.0)
+		elif abs(to_obj.x) > 12.0 and to_obj.x < 0:
+			directive_label.text = "[<] TURN LEFT AT INTERSECTION"
+			directive_label.modulate = Color(0.2, 0.95, 1.0)
+		else:
+			directive_label.text = "[^] ADVANCE DOWN ARTERIAL BOULEVARD"
+			directive_label.modulate = Color(0.7, 0.85, 1.0)
 
 	# Update Minimap
 	if is_instance_valid(minimap):
@@ -747,6 +846,7 @@ func update_navigation_state(p_pos: Vector3, p_heading_rad: float, obj_pos: Vect
 	# Update Tactical Map
 	if is_instance_valid(tactical_map):
 		tactical_map.player_z = p_pos.z
+		tactical_map.player_x = p_pos.x
 		tactical_map.target_z = obj_pos.z
 		if tactical_map.visible:
 			tactical_map.queue_redraw()
@@ -772,6 +872,26 @@ func update_weapon(w_name: String, ammo: int, reserve: int, f_mode: String = "AU
 		ammo_label.text = "%d / %d" % [ammo, reserve]
 	if is_instance_valid(fire_mode_label):
 		fire_mode_label.text = "[%s]" % f_mode.to_upper()
+
+	# Highlight active weapon slot in rack
+	_update_slot_highlight(w_name)
+
+func _update_slot_highlight(w_name: String) -> void:
+	var active_slot = 0
+	var lower = w_name.to_lower()
+	if "smg" in lower or "tempest" in lower: active_slot = 1
+	elif "shotgun" in lower or "breach" in lower: active_slot = 2
+	elif "marksman" in lower or "longshot" in lower: active_slot = 3
+	elif "lmg" in lower or "cyclone" in lower or "pulse cannon" in lower or "arc" in lower: active_slot = 4
+	elif "sidearm" in lower or "pistol" in lower: active_slot = 5
+	else: active_slot = 0
+
+	current_weapon_slot = active_slot
+	for i in range(weapon_slot_labels.size()):
+		if i == active_slot:
+			weapon_slot_labels[i].modulate = Color(0.1, 0.95, 1.0) # Active Cyan
+		else:
+			weapon_slot_labels[i].modulate = Color(0.4, 0.55, 0.65) # Inactive
 
 func update_objective(text: String) -> void:
 	active_objective_name = text

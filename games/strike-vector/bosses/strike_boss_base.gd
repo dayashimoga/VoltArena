@@ -67,20 +67,40 @@ func _setup_boss_visual() -> void:
 	visual_root.name = "BossVisual"
 	add_child(visual_root)
 
-	# Telegraph warning laser / circle
+	# Sleek Holographic Targeting Ring & Crosshair Reticle
 	telegraph_indicator = MeshInstance3D.new()
 	telegraph_indicator.name = "Telegraph"
-	var cyl = CylinderMesh.new()
-	cyl.top_radius = 4.0
-	cyl.bottom_radius = 4.0
-	cyl.height = 0.1
-	telegraph_indicator.mesh = cyl
+
+	var torus = TorusMesh.new()
+	torus.inner_radius = 2.2
+	torus.outer_radius = 2.35
+	telegraph_indicator.mesh = torus
 	var mat_tel = StandardMaterial3D.new()
-	mat_tel.albedo_color = Color(1.0, 0.1, 0.1, 0.45)
+	mat_tel.albedo_color = Color(1.0, 0.2, 0.1, 0.85)
 	mat_tel.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat_tel.emission_enabled = true
-	mat_tel.emission = Color(1.0, 0.1, 0.1)
+	mat_tel.emission = Color(1.0, 0.2, 0.1)
+	mat_tel.emission_energy_multiplier = 3.5
 	telegraph_indicator.material_override = mat_tel
+	telegraph_indicator.position = Vector3(0, 0.05, 0)
+
+	# Crosshair ticks
+	var tick_mat = StandardMaterial3D.new()
+	tick_mat.albedo_color = Color(1.0, 0.3, 0.1)
+	tick_mat.emission_enabled = true
+	tick_mat.emission = Color(1.0, 0.3, 0.1)
+	tick_mat.emission_energy_multiplier = 3.0
+
+	var tick_offsets = [Vector3(0, 0.01, -2.3), Vector3(0, 0.01, 2.3), Vector3(-2.3, 0.01, 0), Vector3(2.3, 0.01, 0)]
+	for t_pos in tick_offsets:
+		var t_mi = MeshInstance3D.new()
+		var b = BoxMesh.new()
+		b.size = Vector3(0.12, 0.02, 0.5) if t_pos.x == 0 else Vector3(0.5, 0.02, 0.12)
+		t_mi.mesh = b
+		t_mi.material_override = tick_mat
+		t_mi.position = t_pos
+		telegraph_indicator.add_child(t_mi)
+
 	telegraph_indicator.visible = false
 	add_child(telegraph_indicator)
 

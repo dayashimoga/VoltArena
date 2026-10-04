@@ -15,12 +15,19 @@ var grade_label: Label
 var stats_vbox: VBoxContainer
 var btn_next: Button
 
-func _ready() -> void:
+func _init() -> void:
 	layer = 10
 	setup_ui()
 	hide_results()
 
+func _ready() -> void:
+	if panel == null:
+		setup_ui()
+	hide_results()
+
 func setup_ui() -> void:
+	if panel != null:
+		return
 	var control = Control.new()
 	control.anchor_right = 1.0
 	control.anchor_bottom = 1.0
@@ -89,8 +96,11 @@ func setup_ui() -> void:
 	btn_hbox.add_child(btn_launcher)
 
 func display_results(results: Dictionary) -> void:
-	for child in stats_vbox.get_children():
-		child.queue_free()
+	if stats_vbox == null:
+		setup_ui()
+	if is_instance_valid(stats_vbox):
+		for child in stats_vbox.get_children():
+			child.queue_free()
 
 	var m_name = results.get("mission_name", "Mission")
 	var grade = results.get("grade", "A")

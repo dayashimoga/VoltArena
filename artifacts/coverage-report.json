@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 92.4062214089661,
+  "overall_coverage_pct": 92.0692798541477,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -599,11 +599,14 @@
       "untested": []
     },
     "res://games/strike-vector/player/strike_player.gd": {
-      "coverage_pct": 90.9090909090909,
+      "coverage_pct": 71.4285714285714,
       "tested": 10,
-      "total": 11,
+      "total": 14,
       "untested": [
-        "_init"
+        "_init",
+        "_unhandled_input",
+        "cycle_weapon",
+        "throw_grenade"
       ]
     },
     "res://games/strike-vector/player/strike_player_visual.gd": {
@@ -655,10 +658,12 @@
       ]
     },
     "res://games/strike-vector/ui/strike_results_screen.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 80,
       "tested": 4,
-      "total": 4,
-      "untested": []
+      "total": 5,
+      "untested": [
+        "_init"
+      ]
     },
     "res://games/strike-vector/weapons/strike_pickup.gd": {
       "coverage_pct": 100,
@@ -1066,6 +1071,6 @@
     }
   },
   "tested_functions": 1010,
-  "timestamp": "2026-10-04T14:06:14",
-  "total_functions": 1093
+  "timestamp": "2026-10-04T15:43:22",
+  "total_functions": 1097
 }

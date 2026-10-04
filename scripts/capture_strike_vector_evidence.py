@@ -111,27 +111,46 @@ def capture_strike_vector_evidence():
             page.screenshot(path=fpath_wep)
             print(f"  [+] Captured: {fpath_wep}")
 
-            # 5. Extraction Helipad
+            # 5. Stage 2 (High-Speed Rail - Golden Hour)
+            print("  -> Loading Stage 2 (High-Speed Rail / Golden Hour)...")
+            page.evaluate("window.godotExec('load_mission_2')")
+            time.sleep(2.0)
+            fpath_m2 = os.path.join(OUTPUT_DIR, "strike_05_stage2_high_speed_rail.png")
+            page.screenshot(path=fpath_m2)
+            print(f"  [+] Captured: {fpath_m2}")
+
+            # 6. Stage 3 (Harbor Assault - Storm Environment)
+            print("  -> Loading Stage 3 (Harbor Assault / Storm Teal Environment)...")
+            page.evaluate("window.godotExec('load_mission_3')")
+            time.sleep(2.0)
+            fpath_m3 = os.path.join(OUTPUT_DIR, "strike_06_stage3_harbor_storm.png")
+            page.screenshot(path=fpath_m3)
+            print(f"  [+] Captured: {fpath_m3}")
+
+            # 7. Stage 7 (Sky Fortress / Neon Twilight Night Environment)
+            print("  -> Loading Stage 7 (Sky Fortress / Neon Twilight)...")
+            page.evaluate("window.godotExec('load_mission_7')")
+            time.sleep(2.0)
+            fpath_m7 = os.path.join(OUTPUT_DIR, "strike_08_stage7_night_twilight.png")
+            page.screenshot(path=fpath_m7)
+            print(f"  [+] Captured: {fpath_m7}")
+
+            # Return to Stage 1 for Extraction & Results
+            print("  -> Restoring Stage 1 for Extraction & Results...")
+            page.evaluate("window.godotExec('load_mission_1')")
+            time.sleep(2.0)
+
+            # 8. Extraction Helipad
             print("\n[4/4] Capturing Extraction Helipad & Stage Progression...")
-            # We can advance player forward to extraction zone
-            page.evaluate("""() => {
-                var p = window.godotGetPlayer ? window.godotGetPlayer() : null;
-                if (window.godotExec) {
-                    window.godotExec('cam_extraction');
-                }
-            }""")
+            page.evaluate("window.godotExec('teleport_extraction')")
             time.sleep(1.0)
             fpath_lz = os.path.join(OUTPUT_DIR, "strike_07_extraction_helipad.png")
             page.screenshot(path=fpath_lz)
             print(f"  [+] Captured: {fpath_lz}")
 
-            # Results Screen
+            # 9. Results Screen
             print("  -> Capturing Mission Results Screen...")
-            page.evaluate("""() => {
-                if (window.godotExec) {
-                    window.godotExec('show_results');
-                }
-            }""")
+            page.evaluate("window.godotExec('show_results')")
             time.sleep(1.0)
             fpath_res = os.path.join(OUTPUT_DIR, "strike_09_results_screen.png")
             page.screenshot(path=fpath_res)

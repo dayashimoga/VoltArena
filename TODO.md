@@ -1064,3 +1064,35 @@
   - `artifacts/coverage-report.json` (92.41% function coverage)
   - `games/chroma-rush/tools/world_audit_tool.gd` (automated audit tool)
   - `CHANGELOG.md` (Version 9.7.0 entry)
+
+### [2026-10-04 18:30:00 UTC] - Milestone Update: Forensic World Rebuild, Zero Road Obstructions, Multi-District Metropolis (32-Waypoint Network) & Cloudflare Packaging
+- **Status**: COMPLETED
+- **Description**:
+  1. **Forensic Obstruction & Geometry Resolution**:
+     - *Plaza Slabs*: Removed `_build_urban_plaza_foundation(32.0, 32.0)` which penetrated 1.5m into driving lanes. Added mathematical clearance check `_is_clear_of_spline(pos, radius + 8.5)`.
+     - *Streetlights*: Switched from straight chord tangents to dense Catmull-Rom Frenet frames with strict clearance guard (`_is_clear_of_spline(lamp_pos, 8.5)`), reducing lane prop intersections to 0.
+     - *Blob Trees*: Replaced `SphereMesh` clusters with procedural organic branching trees (fluted tapered trunks, 3 angled branch limbs, multi-tier canopies: Oak, Linden, Pine, Cherry, Palm, Birch) with $\ge 12\text{m}$ setbacks.
+     - *Vehicle Bumper Artifact*: Removed erroneous `is_amber` matching of Kenney orange palette in `AUTOMOTIVE_SHADER_CODE`. Applied PBR clearcoat, projector LED headlights, reactive brake ($4.8\times$) and reverse lights, smoked glass, and matte carbon diffusers. Added `"traffic_truck": "res://assets/models/vehicles/truck_yellow.glb"`.
+  2. **World Rebuild & 6 Distinct Districts**:
+     - Expanded Neon City to a **32-waypoint network spanning 940m × 900m (>3.5km total circuit)** across 6 distinct districts: Downtown Financial, Commercial Promenade, Industrial Skyway Flyover, Neon Entertainment, Waterfront Marina, and Historic Old Town.
+     - Ground plane expanded to $2800\text{m} \times 2800\text{m}$.
+     - Added 64-building GPU `MultiMeshInstance3D` perimeter ring at $R=540\text{m}$ providing complete 360° skyline depth.
+     - Gentle slopes ($1.8^\circ$) and continuous $C^1$ spline ribbons with flush trimesh collision.
+  3. **WorldAuditTool Overhaul & Verification**:
+     - Evaluated all world colliders relative to global spline coordinates. Deducted collider radius (`effective_clearance = nearest_spline_dist - collider_radius`). Verified 0 blocked segments, 0 lane/prop intersections, 0 floating objects.
+     - Autonomous bot traversal verified in forward (`apex_striker`) and reverse (`titan_hauler`) directions with 0 stuck states.
+  4. **Tactical Full Map & Minimap Navigation**:
+     - Adjusted `ChromaFullMap` zoom range (0.15 to 2.50) to cleanly display the full 940m metropolis with 80m padding margins.
+     - Verified `ChromaMiniMap` circular line clipping and range cycling (75m, 120m, 200m).
+  5. **Packaging & Cloudflare Delivery**:
+     - Web build (`scripts/build-web.ps1`) executed: 100% compliant with Cloudflare Pages $\le 18\text{MB}$ chunk limit (`index.pck.part00..05`, `index.wasm.part00..01`), transparent chunk reassembler hook active, `_headers` deployed.
+     - Desktop exports built: `export/windows/VoltArena.exe` (182.8 MB) and `export/linux/VoltArena.x86_64` (164.8 MB).
+  6. **Automated Testing & Coverage Verification**:
+     - Executed full master test runner in Podman container (`barichello/godot-ci:4.3`): **72 test suites, 2,743 passed assertions, 0 failed (100% pass rate, 92.41% function coverage, 74.75s)**. Zero regressions across all 8 existing VoltArena games.
+- **Evidence**:
+  - `artifacts/test-results.json` (72 suites, 2,743 passed, 0 failed, 100% pass rate)
+  - `export/web/` (Cloudflare-compliant chunks $\le 18\text{MB}$)
+  - `export/windows/VoltArena.exe` (182.8 MB)
+  - `export/linux/VoltArena.x86_64` (164.8 MB)
+  - `CHANGELOG.md` (Version 9.8.0 entry)
+

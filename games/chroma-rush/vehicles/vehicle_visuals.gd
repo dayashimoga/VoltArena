@@ -20,7 +20,9 @@ const GLB_MAP = {
 	"traffic_taxi": "res://assets/models/vehicles/car_taxi.glb",
 	"traffic_police": "res://assets/models/vehicles/car_police.glb",
 	"traffic_suv": "res://assets/models/vehicles/car_suv.glb",
+	"traffic_truck": "res://assets/models/vehicles/truck_yellow.glb",
 }
+
 
 const AUTOMOTIVE_SHADER_CODE = """
 shader_type spatial;
@@ -40,57 +42,51 @@ void fragment() {
 	bool is_trim = (tex.r < 0.28 && tex.g < 0.28 && tex.b < 0.28);
 	bool is_glass = (tex.b > 0.65 && tex.g > 0.45 && tex.r < 0.55);
 	bool is_headlight = (tex.r > 0.88 && tex.g > 0.88 && tex.b > 0.88);
-	bool is_taillight = (tex.r > 0.70 && tex.g < 0.42 && tex.b < 0.42);
-	bool is_amber = (tex.r > 0.85 && tex.g > 0.42 && tex.g < 0.68 && tex.b < 0.35);
+	bool is_taillight = (tex.r > 0.65 && tex.g < 0.22 && tex.b < 0.22);
 
 	if (is_headlight) {
 		// Projector LED Headlamps
-		ALBEDO = vec3(0.95, 0.98, 1.0);
-		EMISSION = vec3(1.0, 0.98, 0.92) * 2.8;
-		METALLIC = 0.6;
-		ROUGHNESS = 0.08;
-		SPECULAR = 0.85;
+		ALBEDO = vec3(0.96, 0.98, 1.0);
+		EMISSION = vec3(1.0, 0.98, 0.94) * 3.5;
+		METALLIC = 0.70;
+		ROUGHNESS = 0.06;
+		SPECULAR = 0.90;
 	} else if (is_taillight) {
 		// Reactive Rear Taillamps and Brake Lights
-		ALBEDO = vec3(0.88, 0.06, 0.08);
-		float brake_mult = is_reversing ? 3.5 : (is_braking ? 4.2 : 1.2);
-		vec3 emit_col = is_reversing ? vec3(1.0, 0.98, 0.90) : vec3(1.0, 0.04, 0.06);
+		ALBEDO = is_reversing ? vec3(0.95, 0.95, 0.92) : vec3(0.92, 0.04, 0.06);
+		float brake_mult = is_reversing ? 3.8 : (is_braking ? 4.8 : 1.2);
+		vec3 emit_col = is_reversing ? vec3(1.0, 0.98, 0.90) : vec3(1.0, 0.02, 0.04);
 		EMISSION = emit_col * brake_mult;
-		METALLIC = 0.3;
-		ROUGHNESS = 0.15;
-		SPECULAR = 0.7;
-	} else if (is_amber) {
-		// Amber Turn Signals / Side Markers
-		ALBEDO = vec3(1.0, 0.55, 0.15);
-		EMISSION = vec3(1.0, 0.50, 0.10) * 1.5;
-		METALLIC = 0.2;
-		ROUGHNESS = 0.20;
+		METALLIC = 0.35;
+		ROUGHNESS = 0.12;
+		SPECULAR = 0.75;
 	} else if (is_glass) {
-		// Reflective Smoked Glass Canopy
+		// Reflective Deep Smoked Glass Canopy
 		ALBEDO = vec3(0.06, 0.08, 0.12);
 		ROUGHNESS = 0.04;
-		METALLIC = 0.30;
+		METALLIC = 0.35;
 		CLEARCOAT = 1.0;
 		SPECULAR = 0.95;
 	} else if (is_trim) {
 		// Matte Carbon Fiber Aero Trim, Splitters & Diffusers
-		ALBEDO = vec3(0.07, 0.07, 0.08);
-		ROUGHNESS = 0.82;
+		ALBEDO = vec3(0.08, 0.08, 0.09);
+		ROUGHNESS = 0.85;
 		METALLIC = 0.10;
 		SPECULAR = 0.25;
 	} else {
-		// Deep Multi-Coat Automotive Metallic Paint
+		// Deep Multi-Coat Automotive Metallic Paint with Clearcoat
 		float lum = (tex.r * 0.299 + tex.g * 0.587 + tex.b * 0.114);
-		float factor = clamp(lum / 0.65, 0.82, 1.20);
+		float factor = clamp(lum / 0.65, 0.85, 1.18);
 		ALBEDO = paint_color.rgb * factor;
 		METALLIC = metallic_val;
 		ROUGHNESS = roughness_val;
 		CLEARCOAT = clearcoat_val;
-		CLEARCOAT_ROUGHNESS = 0.08;
-		SPECULAR = 0.65;
+		CLEARCOAT_ROUGHNESS = 0.06;
+		SPECULAR = 0.75;
 	}
 }
 """
+
 
 const WHEEL_SHADER_CODE = """
 shader_type spatial;

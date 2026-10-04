@@ -88,34 +88,55 @@ static func audit_world(world: Node3D, lane_half_width: float = 7.0, max_slope_d
 	# Check all static colliders in world
 	var colliders = _find_all_colliders(world)
 	for col in colliders:
-		var c_node = col.get("node") as Node3D
-		var c_pos = c_node.global_position if c_node.is_inside_tree() else c_node.position
+		var c_node = col.get("node") as CollisionShape3D
+		if not c_node or not is_instance_valid(c_node):
+			continue
+
+		var parent_body = c_node.get_parent()
+		if parent_body and (parent_body.name == "CityGroundPlane" or "Ground" in parent_body.name):
+			continue
+
+		var c_pos = _get_relative_position(c_node, world)
 
 		# Check for sunken (< -1.0m) or floating (> 5.0m unsupported)
-		if c_node.name.begins_with("Tree") or c_node.name.begins_with("Prop"):
+		if c_node.name.begins_with("Tree") or c_node.name.begins_with("Prop") or (parent_body and parent_body.name.begins_with("Tree")):
 			if c_pos.y < -0.8:
 				result["sunken_objects"].append(c_node.name)
 			elif c_pos.y > 6.0:
 				result["floating_objects"].append(c_node.name)
 
 		# Check distance to all spline points
-		# Road half-width is 6.0m (curb), clear zone is lane_half_width (7.0m)
+		# Road half-width is 7.5m, clear zone is lane_half_width (7.0m)
 		# Exempt checkpoint gates from road clearance since they span over the road
 		var is_checkpoint_component = false
-		var parent = c_node.get_parent()
+		var parent: Node = c_node.get_parent()
 		while parent and parent != world:
-			if "CheckpointGate" in parent.get_class() or parent.name.begins_with("Gate_"):
+			if "CheckpointGate" in parent.get_class() or parent.name.begins_with("Gate_") or parent.name == "CheckpointGates":
 				is_checkpoint_component = true
 				break
 			parent = parent.get_parent()
 
 		if not is_checkpoint_component:
+			var collider_radius: float = 0.0
+			if c_node.shape is BoxShape3D:
+				var bs = c_node.shape as BoxShape3D
+				collider_radius = minf(bs.size.x, bs.size.z) * 0.5
+			elif c_node.shape is CylinderShape3D:
+				var cs = c_node.shape as CylinderShape3D
+				collider_radius = cs.radius
+			elif c_node.shape is SphereShape3D:
+				var ss = c_node.shape as SphereShape3D
+				collider_radius = ss.radius
+
 			var nearest_spline_dist = _get_min_dist_to_spline(c_pos, spline_samples)
-			if nearest_spline_dist < lane_half_width:
+			var effective_clearance = nearest_spline_dist - collider_radius
+			if effective_clearance < lane_half_width:
 				result["lane_prop_intersections"].append({
 					"node": c_node.name,
+					"parent": parent_body.name if parent_body else "",
 					"pos": c_pos,
 					"distance_to_road": nearest_spline_dist,
+					"effective_clearance": effective_clearance,
 					"required_clearance": lane_half_width
 				})
 
@@ -124,11 +145,23 @@ static func audit_world(world: Node3D, lane_half_width: float = 7.0, max_slope_d
 
 	return result
 
+static func _get_relative_position(node: Node3D, root: Node3D) -> Vector3:
+	var t = Transform3D.IDENTITY
+	var curr: Node = node
+	while curr and curr != root:
+		if curr is Node3D:
+			t = (curr as Node3D).transform * t
+		curr = curr.get_parent()
+	return t.origin
+
 static func _find_all_colliders(world: Node3D) -> Array[Dictionary]:
 	var list: Array[Dictionary] = []
-	# Only audit obstacles, trees, buildings, and scenery props — exclude road mesh surface itself
-	if world and world.has_node("Props"):
-		_collect_colliders_recursive(world.get_node("Props"), list)
+	if not world:
+		return list
+	for child in world.get_children():
+		if child.name == "RoadNetwork":
+			continue
+		_collect_colliders_recursive(child, list)
 	return list
 
 static func _collect_colliders_recursive(node: Node, out_list: Array[Dictionary]) -> void:

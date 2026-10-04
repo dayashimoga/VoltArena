@@ -394,4 +394,124 @@ Located in `traffic_agent.gd` and `chroma_rush_main.gd`:
   - When chased within $35\text{m}$, targets trigger an evasion state: boosting cruise speed by up to $+25\%$ and weaving between lanes to defend against alignment.
 * **Four Difficulty Tiers**: Easy ($18\text{ km/h}$, gentle tracking), Medium ($24\text{ km/h}$, lane changing), Hard ($30\text{ km/h}$, active evasion), Expert ($36\text{ km/h}$, aggressive lane defense).
 
+---
+
+## 10. ASCII Architecture, Multi-District World & Gameplay Diagrams
+
+### 10.1 System Architecture Diagram
+```
++===================================================================================================+
+|                                    VOLTARENA / CHROMA RUSH                                        |
++===================================================================================================+
+|                                                                                                   |
+|  [ InputManager ]               [ ChromaHUD ]                  [ ChromaFullMap ]                  |
+|         |                              ^                              ^                           |
+|         v                              |                              |                           |
+|  [ ChromaVehicle ] <-----------> [ ChromaRushMain ] ------------> [ Tactical Radar ]              |
+|   - PBR Clearcoat                - Seeded Spawning                - Spline Frenet Projection      |
+|   - Projector LEDs               - Game Loop Coordinator          - Zoom (0.15 - 2.50)            |
+|   - Reactive Brake/Reverse       - Active Objective Tracking      - Road Line Clipping            |
+|   - 4-Wheel Raycast Suspension                                                                    |
+|         |                                                                                         |
+|         +------------------------+------------------------+                                       |
+|                                  |                        |                                       |
+|                                  v                        v                                       |
+|                     [ ColorSwapEngine ]       [ MissionDirector ]                                 |
+|                      - Conservation Check      - 4 Modes / 24 Missions                            |
+|                      - Atomic 2-Way Mutex      - Time & Swap Limits                               |
+|                      - Proximity (<=12m)       - Score & Multipliers                              |
+|                      - Delta V (<=12.5m/s)                                                        |
+|                      - Alignment (<=45 deg)                                                       |
+|                                  |                                                                |
+|         +------------------------+------------------------+                                       |
+|         |                                                 |                                       |
+|         v                                                 v                                       |
+|  [ TrafficAgent Fleet ]                             [ NeonCity 3D World ]                         |
+|   - Seeded Waypoint Patrol (WP 0..31)                - 32-Waypoint Spline (940m x 900m)           |
+|   - Pursuit Evasion (<35m Trigger)                   - 6 Distinct Thematic Districts              |
+|   - Speed Boost (+25%) & Lane Weave                  - Continuous Flush Trimesh Collision         |
+|   - Objective Color Circulation                      - Organic Branching Trees (Oak/Pine/Palm)    |
+|                                                      - 64-Tower GPU MultiMesh Distant Skyline     |
+|                                                      - Zero Road Carriageway Obstructions         |
++===================================================================================================+
+```
+
+### 10.2 Neon City Multi-District Layout & Circuit Topology
+```
+           [ DOWNTOWN FINANCIAL ]                [ COMMERCIAL PROMENADE ]
+               (Towers, Spires)                      (Retail, Plazas)
+               WP00 ------> WP01 ------> WP02 ------> WP03 ------> WP04
+                ^                                                   |
+                | (Grand Blvd)                                      v
+               WP31                                                WP05
+                ^                                                   |
+                |                                                   v
+   [ HISTORIC OLD TOWN ]                                           WP06
+     (Terracotta, Arches)                                           |
+               WP30                                                 v
+                ^                                                  WP07 [ INDUSTRIAL SKYWAY ]
+                |                                                   |   (Flyover, Logistics)
+               WP29                                                WP08
+                ^                                                   |
+                |                                                   v
+               WP28                                                WP09 (Elevated Ramp)
+                ^                                                   |
+                |                                                   v
+               WP27                                                WP10
+                ^                                                   |
+                |                                                   v
+               WP26                                                WP11
+                ^                                                   |
+                |                                                   v
+               WP25                                                WP12 [ NEON ENTERTAINMENT ]
+                ^                                                   |   (Night Avenues, Clubs)
+                |                                                   v
+               WP24 <------ WP23 <------ WP22 <------ WP21 <------ WP13
+              [ WATERFRONT MARINA ]
+              (Promenade, Water)
+               WP24 ------> WP20 ------> WP19 ------> WP18 ------> WP17
+```
+
+### 10.3 Core Gameplay Loop State Machine
+```
+   +------------------+
+   |   STAGE START    |  Seeded target selection & traffic placement
+   +------------------+
+            |
+            v
+   +------------------+
+   | EXPLORE METROPOLIS| Drive across 6 districts, check tactical minimap/radar
+   +------------------+
+            |
+            | Target Located (<120m on Radar)
+            v
+   +------------------+
+   |  PURSUIT & CHASE | Target detects pursuit (<35m), boosts speed +25%, weaves
+   +------------------+
+            |
+            | Close Distance (<12m) & Match Speed (<12.5 m/s diff)
+            v
+   +------------------+
+   | POSITION & ALIGN | Align within 45 degrees for >= 0.5s; HUD shows READY
+   +------------------+
+            |
+            | Press [E / Controller X]
+            v
+   +------------------+
+   | ATOMIC COLOR SWAP| Bidirectional exchange committed via ColorSwapEngine
+   +------------------+
+            |
+            v
+   +------------------+
+   | ESCAPE / DELIVER | Navigate to target checkpoint gate with matching color
+   +------------------+
+            |
+            | Pass Gate
+            v
+   +------------------+
+   | SCORE & PROGRESS | Earn points, combo multiplier, advance mission stage
+   +------------------+
+```
+
+
 

@@ -93,12 +93,22 @@ When a match concludes (time runs out, all waves survived, race finished, or goa
 * **Power Module Combos**: Stacking Piercing Module with Overdrive turns high-density enemy choke-points into instant multi-kill score bonuses.
 
 ### 6.6 Chroma Rush: The Color Chase
-* **Mission Briefing Review**: Carefully study the pre-mission briefing card during the opening orbital sweep to note the target color, target archetype, and active city sector. Press `[SPACE / ENTER]` to start the countdown.
-* **Pursuit & Interception**: Moving targets actively detect your pursuit within $35\text{m}$ and surge speed. Conserve your nitrous boost (`Shift`) for straightaways and draft behind traffic to close the distance.
+* **6 Distinct Districts**: Explore Neon City's expansive 32-waypoint network (>3.5km circuit) across 6 distinct architectural zones:
+  - *Downtown Financial*: Towering skyscrapers, titanium spires, wide multi-lane Grand Boulevards.
+  - *Commercial Promenade*: Shopping plazas, storefronts, and pedestrian courtyards.
+  - *Industrial Skyway Flyover*: Elevated freight overpasses, warehouses, and logistics yards.
+  - *Neon Entertainment*: Night avenues, vibrant illuminated signage, and entertainment hubs.
+  - *Waterfront Marina*: Coastal promenade with panoramic views and maritime lighting.
+  - *Historic Old Town*: Terracotta architecture, stone archways, and narrow street chicanes.
+* **Tactical Full Map (`M`) & Minimap**:
+  - Press `M` to toggle the full-screen tactical map. Drag with mouse to pan and use scroll wheel to zoom (0.15x to 2.50x) across the entire 940m metropolis.
+  - Top-left minimap radar shows nearby traffic, rival racers, road centerlines, and objective beacons. Click the expand button (`⛶`) or zoom button (`🔍`) to cycle radar range (75m, 120m, 200m).
+* **Pursuit & Evasion Tactics**: Moving targets actively detect your pursuit within $35\text{m}$ and surge speed by $+25\%$ while weaving between lanes. Conserve nitrous boost (`Shift`) for straightaways and draft behind traffic to close the distance.
 * **Pulling Alongside**: Match speed ($\Delta v \le 12.5\text{ m/s}$) and steer parallel within $8\text{m}$. The bottom-center floating reticle pill will fade in and turn green with live alignment percentage.
-* **Executing the Color Swap**: Press `[E]` or `[SPACE]` to trigger the atomic color exchange. A camera FOV shockwave impulse and expanding 3D energy ring confirm the swap.
+* **Executing the Color Swap**: Press `[E]` or controller `[X]` to trigger the atomic color exchange. A camera FOV shockwave impulse and expanding 3D energy ring confirm the swap.
 * **Checkpoint Delivery**: Once carrying the mission target color, follow the 3D navigational beacon and radar directly to the corresponding colored 24m overhead highway gantry.
-* **Reset Recovery**: If you spin out or collide with heavy obstacles, press `[R]` to immediately reset your vehicle smoothly to the road centerline.
+* **Vehicle Fleet**: Choose from 6 distinct automotive archetypes: *Apex Striker* (Hypercar), *Vortex Drift* (Sports Coupe), *Titan Vanguard* (Armored SUV), *Pulse Cyber* (EV), *Dune Nomad* (Offroader), and *Quantum Phantom* (Exotic). All feature clearcoat PBR paint, projector LED headlights, reactive brake ($4.8\times$) and reverse lights, smoked glass, and detailed alloy wheels.
+* **Reset Recovery**: If you spin out or collide with obstacles, press `[R]` to immediately reset your vehicle smoothly to the nearest safe road pose.
 
 ---
 

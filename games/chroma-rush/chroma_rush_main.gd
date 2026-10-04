@@ -763,17 +763,31 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 	])
 
 	var wps = active_world.waypoints
-	var traffic_count = mini(6, wps.size() - 2)
+	var traffic_count = mini(10, wps.size() - 2)
 	var full_bodied_pool = [
 		ChromaConstants.VEHICLE_APEX,          # car_sedan_sports.glb (sports sedan)
 		ChromaConstants.VEHICLE_QUANTUM,       # car_hatchback_sports.glb (sports hatchback)
 		ChromaConstants.VEHICLE_TITAN,         # car_suv_luxury.glb (luxury SUV)
 		"traffic_sedan",                       # car_sedan.glb (executive sedan)
 		ChromaConstants.VEHICLE_DUNE,          # car_suv.glb (crossover SUV)
-		"traffic_taxi"                         # car_taxi.glb (metro cruiser)
+		"traffic_taxi",                        # car_taxi.glb (metro cruiser)
+		"traffic_police",                      # car_police.glb (highway cruiser)
+		"traffic_truck"                        # truck_yellow.glb (delivery truck)
 	]
 
-	var start_offset = rng.randi_range(1, 3)
+	# Build prioritized color list: guaranteed required colors from mission objectives first
+	var prioritized_colors: Array[int] = []
+	if mission_data.has("objectives"):
+		for obj in mission_data["objectives"]:
+			var req_col = obj.get("color", ChromaConstants.ChromaColor.NONE)
+			if req_col != ChromaConstants.ChromaColor.NONE and not prioritized_colors.has(req_col):
+				prioritized_colors.append(req_col)
+	for col in available_colors:
+		if not prioritized_colors.has(col):
+			prioritized_colors.append(col)
+
+	var start_offset = rng.randi_range(2, 4)
+	var wp_step = max(2, int(wps.size() / float(traffic_count)))
 
 	for i in range(traffic_count):
 		var veh = ChromaVehicle.new()
@@ -782,12 +796,12 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 		veh.vehicle_owner_id = agent_id
 		veh.vehicle_id = full_bodied_pool[i % full_bodied_pool.size()]
 		veh.is_player = false
-		var col = available_colors[i % available_colors.size()]
+		var col = prioritized_colors[i % prioritized_colors.size()]
 		veh.initial_color = col
 		veh.current_color = col
 
-		# Seeded staggered waypoint distribution avoiding player spawn at waypoint 0
-		var wp_idx = (start_offset + i * 2) % wps.size()
+		# Seeded staggered waypoint distribution across all districts avoiding player spawn at waypoint 0
+		var wp_idx = (start_offset + i * wp_step) % wps.size()
 		if wp_idx == 0:
 			wp_idx = 1
 		var p_cur = wps[wp_idx]
@@ -818,6 +832,7 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 			agent.set_evasion_threat(player_vehicle, evasion_agg)
 		agent.set_waypoints(lane_samples, wp_idx % max(1, lane_samples.size()))
 		traffic_agents.append(agent)
+
 
 func _spawn_rivals(mission_data: Dictionary) -> void:
 	if not is_instance_valid(active_world) or active_world.waypoints.size() < 4:

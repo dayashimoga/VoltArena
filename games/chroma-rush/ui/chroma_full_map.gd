@@ -12,7 +12,7 @@ const CheckpointGate = preload("res://games/chroma-rush/worlds/checkpoint_gate.g
 signal map_closed()
 
 # Map Transform state
-var zoom_level: float = 1.0 # 0.4 to 2.5
+var zoom_level: float = 1.0 # 0.15 to 2.5
 var pan_offset: Vector2 = Vector2.ZERO
 var is_dragging: bool = false
 var drag_start_mouse: Vector2 = Vector2.ZERO
@@ -264,20 +264,20 @@ func fit_to_stage() -> void:
 	var center_z = (min_z + max_z) * 0.5
 	pan_offset = -Vector2(center_x, center_z)
 
-	var span_x = maxf(100.0, max_x - min_x + 60.0)
-	var span_z = maxf(100.0, max_z - min_z + 60.0)
+	var span_x = maxf(100.0, max_x - min_x + 80.0)
+	var span_z = maxf(100.0, max_z - min_z + 80.0)
 
 	var vp_size = map_viewport.size if is_instance_valid(map_viewport) and map_viewport.size.x > 10 else Vector2(800, 600)
 	var scale_x = vp_size.x / span_x
 	var scale_z = vp_size.y / span_z
 	var optimal_scale = minf(scale_x, scale_z)
-	zoom_level = clampf(optimal_scale / 1.8, 0.35, 2.5)
+	zoom_level = clampf(optimal_scale / 1.8, 0.15, 2.5)
 
 	if is_instance_valid(map_viewport):
 		map_viewport.queue_redraw()
 
 func zoom_map(delta: float) -> void:
-	zoom_level = clampf(zoom_level + delta, 0.4, 2.5)
+	zoom_level = clampf(zoom_level + delta, 0.15, 2.5)
 	if is_instance_valid(map_viewport):
 		map_viewport.queue_redraw()
 

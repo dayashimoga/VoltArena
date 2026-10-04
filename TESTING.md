@@ -53,7 +53,7 @@ tests/runner.gd
 └── Legacy Acceptance Suite (1 Suite, 19 assertions)
     └── TestPlatformAcceptance
 ─────────────────────────────────────────────────────────────
-Total: 63 Suites, 2,102 Assertions (100% Pass, 0 Failures, 96.96% Real Function Coverage: 828/854)
+Total: 72 Suites, 2,743 Assertions (100% Pass, 0 Failures, 92.41% Real Function Coverage: 1,010 / 1,093)
 ```
 
 ---
@@ -78,13 +78,13 @@ Total: 63 Suites, 2,102 Assertions (100% Pass, 0 Failures, 96.96% Real Function 
 * **Strike Vector (`test_strike_campaign_unit.gd`, `test_strike_player_unit.gd`, `test_strike_ai_unit.gd`, `test_strike_visual_invariants.gd`, `test_strike_runtime_acceptance.gd`, `test_strike_vector_e2e.gd`)**: Validates continuous forward progression across Missions 1–8, level streaming residency, 7-state segment state machine, 28s watchdog encounter recovery, 9 original weapons with ballistic/projectile physics, 6 arcade modules, 10-state AI HFSM with squad coordination tokens, 8 multi-phase bosses, interactive set-pieces, checkpoint persistence, and grading calculator.
 * **Universal Launcher (`test_launcher_e2e.gd`, `test_responsive_ui.gd`)**: Validates 8-game carousel navigation, game metadata previews, responsive screen scaling across 9 viewports (360x800 to 2560x1440), and hot-swapping.
 * **Chroma Rush (`test_color_swap_engine.gd`, `test_chroma_vehicle_physics.gd`, `test_chroma_ai_and_traffic.gd`, `test_chroma_worlds_and_integration.gd`, `test_mission_solvability.gd`, `test_chroma_modes_and_progression.gd`, `test_chroma_e2e.gd`)**:
-  - Validates atomic bidirectional color conservation in `ColorSwapEngine` (36 assertions).
-  - Validates 4-wheel suspension raycast dynamics, PBR clearcoat shaders, reactive brake/reverse lights, and auto-righting rollover recovery in `ChromaVehicle` (33 assertions).
-  - Validates waypoint tracking, traffic yields, dynamic pursuit evasion ($<35\text{m}$), and rival AI racing in `TrafficAgent` and `RivalAI` (20 assertions).
-  - Validates continuous spline road ribbons, 24m gantry clearance ($>4.45\text{m}$ outside sidewalks), 11.6m tree setbacks, multi-district depth, 360° skyline ring, `WorldAuditTool` 0-obstruction scans, and forward/reverse autonomous bot driving traversals in `NeonCity` (32 assertions).
-  - Validates solvability of all 24 handcrafted missions across 4 modes in `MissionDatabase` (28 assertions).
-  - Validates mission briefing cards, bottom-center auto-fading reticle, and camera FOV shockwave VFX in `ChromaRushMain` and `ChromaHUD` (24 assertions).
-  - Validates full end-to-end driving, swap execution, scoring, and persistence in `ChromaRush` (16 assertions).
+  - Validates atomic bidirectional color conservation in `ColorSwapEngine` (41 assertions).
+  - Validates 4-wheel suspension raycast dynamics, PBR clearcoat shaders, reactive brake ($4.8\times$) and reverse lights, and auto-righting rollover recovery in `ChromaVehicle` (44 assertions).
+  - Validates waypoint tracking across 32 waypoints, traffic yields, dynamic pursuit evasion ($<35\text{m}$), and rival AI racing in `TrafficAgent` and `RivalAI` (21 assertions).
+  - Validates continuous spline road ribbons, 24m gantry clearance, 12m organic tree setbacks, 6 distinct districts (Downtown, Commercial, Industrial, Neon, Waterfront, Historic), 64-building GPU MultiMesh perimeter ring ($R=540\text{m}$), `WorldAuditTool` 0-obstruction scans (0 blocked, 0 intruding), and forward/reverse autonomous bot driving traversals in `NeonCity` (45 assertions).
+  - Validates solvability of all 24 handcrafted missions across 4 modes in `MissionDatabase` (35 assertions).
+  - Validates mission briefing cards, bottom-center auto-fading reticle, and camera FOV shockwave VFX in `ChromaRushMain` and `ChromaHUD`.
+  - Validates full end-to-end driving, swap execution, scoring, and persistence in `ChromaRush` (53 assertions).
 
 ---
 

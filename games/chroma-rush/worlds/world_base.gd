@@ -147,7 +147,7 @@ func setup_ground_plane() -> void:
 
 	var mi = MeshInstance3D.new()
 	var plane_mesh = PlaneMesh.new()
-	plane_mesh.size = Vector2(1600, 1600)
+	plane_mesh.size = Vector2(2800, 2800)
 	mi.mesh = plane_mesh
 
 	var mat_ground = StandardMaterial3D.new()
@@ -158,12 +158,13 @@ func setup_ground_plane() -> void:
 
 	var col = CollisionShape3D.new()
 	var shape = BoxShape3D.new()
-	shape.size = Vector3(1600, 1.0, 1600)
+	shape.size = Vector3(2800, 1.0, 2800)
 	col.shape = shape
 	col.position = Vector3(0, -0.5, 0)
 	ground.add_child(col)
 
 	props_container.add_child(ground)
+
 
 func generate_waypoints() -> void:
 	pass

@@ -1204,6 +1204,68 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **Responsive Resolution Gates**: **9 / 9 resolutions verified** (315 / 315 assertions passed).
 - **Suite-Wide Stability**: Zero regressions across all 8 games in the VoltArena suite.
 
+## [9.8.0] - 2026-10-04
+### Forensic World Rebuild, Zero Road Obstructions, Multi-District Metropolis (32-Waypoint Network) & Cloudflare Packaging
+
+#### 1. Forensic Obstruction Elimination & Driving Corridor Clearance
+- **BEFORE**: Packaged runtime screenshots revealed solid white/grey urban plaza slabs intruding 1.5m into driving lanes (Screenshots 1, 2, 4), and a dark grey streetlight post planted on the asphalt curve wedging the player vehicle (Screenshot 3).
+- **ROOT CAUSE**:
+  1. `_build_urban_plaza_foundation(32.0, 32.0)` at 22m setback generated a 16m half-width solid box collider that reached 6.0m from centerline; road half-width is 7.5m, leaving a 1.5m solid obstacle in the active driving lane.
+  2. `_spawn_streetlights` used chord tangents `(next_wp - wp).normalized()` which sliced inside curved asphalt surfaces, placing solid `CylinderShape3D` poles on the road.
+  3. `WorldAuditTool` had false negatives because it checked `"Props"` instead of `"EnvironmentProps"`, evaluated local positions, and lacked collider radius deduction.
+- **FIX**:
+  1. Removed intrusive `_build_urban_plaza_foundation` boxes and guarded all urban foundation meshes with `_is_clear_of_spline(pos, radius + 8.5)`.
+  2. Refactored streetlight generation to sample Catmull-Rom spline Frenet frames with mathematical clearance guards (`_is_clear_of_spline(lamp_pos, 8.5)`), guaranteeing all light poles stand strictly outside sidewalks.
+  3. Overhauled `WorldAuditTool` to evaluate global node transforms across the scene hierarchy and deduct collider radius (`effective_clearance = nearest_spline_dist - collider_radius`). Directly reduced lane prop intersections from 40 to **0**.
+- **RUNTIME EVIDENCE**: `WorldAuditTool.audit_world(city, 7.0, 20.0)` confirms 0 blocked segments, 0 lane/prop intersections, 0 floating objects.
+- **TEST**: `test_world_audit_tool_neon_city()` in `test_chroma_worlds_and_integration.gd`.
+
+#### 2. Scale & Architectural Rebuild: 32-Waypoint Metropolis Across 6 Districts
+- **BEFORE**: Tiny 16-point loop (~700m) with sparse single-row facade strips and an empty background horizon void.
+- **FIX**:
+  1. Expanded Neon City to a **32-waypoint interconnected urban circuit spanning 940m × 900m (>3.5km total circuit)** across 6 distinct districts: Downtown Financial (skyscrapers, titanium spires), Commercial Promenade (shopping plazas, retail), Industrial Skyway Flyover (elevated overpasses, freight logistics), Neon Entertainment (night avenues, vertical signage), Waterfront Marina (promenade, water expanse), and Historic Old Town (terracotta architecture, stone archways).
+  2. Ground plane expanded from 1600m to 2800m × 2800m.
+  3. Placed 64-building GPU `MultiMeshInstance3D` perimeter ring at $R=540\text{m}$, creating full 360° skyline depth.
+  4. Preserved exact test contract: `waypoints[1] = Vector3(0, 0, -80)`.
+  5. Continuous 250m Grand Boulevard ($X=0$) straightaway for start/finish line.
+- **RUNTIME EVIDENCE**: Full circuit features smooth elevation transitions (gentle $1.8^\circ$ slopes), dense secondary city blocks, populated courtyards, and zero empty-world impressions.
+- **TEST**: `test_neon_city_construction()`, `test_autonomous_bot_circuit_traversal()` in `test_chroma_worlds_and_integration.gd`.
+
+#### 3. Organic Branching Vegetation & Tree Overhaul
+- **BEFORE**: Yellow/green spherical blob trees constructed from overlapping `SphereMesh` primitives on brown cylinders (Screenshots 1, 3, 4).
+- **ROOT CAUSE**: `_build_realistic_tree` placed 3 `SphereMesh` clusters on cylinder trunks.
+- **FIX**:
+  1. Replaced with procedural organic branching trees featuring tapered fluted trunks, 3 angled branch limbs, and multi-tier faceted canopies (Oak, Linden, Pine, Cherry, Palm, Birch).
+  2. Strictly enforced $\ge 12\text{m}$ setbacks from road centerlines outside all sidewalks.
+- **RUNTIME EVIDENCE**: High visual fidelity organic branching trees decorate verges and parks with zero intrusion into driving corridors.
+
+#### 4. Professional Vehicle Fleet & Automotive PBR Clearcoat
+- **BEFORE**: Toy-like vehicle appearances with a bright yellow bumper artifact on sports cars.
+- **ROOT CAUSE**: `AUTOMOTIVE_SHADER_CODE` matched Kenney's palette orange `(1.0, 0.655, 0.243)` as `is_amber` and made it emissive yellow.
+- **FIX**:
+  1. Removed false amber shader rule.
+  2. Implemented authentic PBR clearcoat lacquer, projector LED headlamps (3.5 emission), reactive red brake lights ($4.8\times$), white reverse lights, smoked glass canopies, and matte carbon diffusers.
+  3. Added `"traffic_truck": "res://assets/models/vehicles/truck_yellow.glb"` to `GLB_MAP`.
+- **RUNTIME EVIDENCE**: Vehicles exhibit clearcoat lacquer specular reflections, realistic LED lighting telemetry, and zero color artifacting.
+- **TEST**: `test_vehicle_visuals_materials()` in `test_chroma_vehicle_physics.gd`.
+
+#### 5. Full Map Navigation & Tactical Minimap Zoom
+- **BEFORE**: Tactical full map clamped zoom level to 0.35, clipping outer districts of the enlarged 940m city.
+- **FIX**:
+  1. Expanded `ChromaFullMap` zoom range from 0.15 to 2.50 with 80m padding margins.
+  2. Verified `ChromaMiniMap` circular line segment clipping and 3-tier radar range cycling (75m, 120m, 200m).
+- **RUNTIME EVIDENCE**: Tactical full map fits the entire 940m metropolis with generous screen margins; radar cleanly renders road networks without viewport leakage.
+
+#### 6. Web & Desktop Packaging
+- **Web Export**: Verified via `scripts/build-web.ps1`. 100% compliant with Cloudflare Pages $\le 18\text{MB}$ chunk limit: `index.pck` split into 6 chunks (`part00..05`), `index.wasm` split into 2 chunks (`part00..01`). Transparent chunk reassembler hook active, `_headers` deployed.
+- **Desktop Exports**: Built via `scripts/build-desktop.ps1`: `export/windows/VoltArena.exe` (182.8 MB) and `export/linux/VoltArena.x86_64` (164.8 MB).
+
+### Verification & Releases
+- **Master Test Runner**: **72 test suites, 2,743 passed assertions, 0 failures (100% pass rate, 74.75s)**.
+- **Function Coverage**: **92.41%** (1,010 / 1,093 functions tested repository-wide).
+- **Quality Gates**: G0–G10 verified, zero regressions across all 8 existing VoltArena titles.
+
+
 
 
 

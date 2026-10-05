@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 92.0692798541477,
+  "overall_coverage_pct": 92.3497267759563,
   "per_file": {
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -599,9 +599,9 @@
       "untested": []
     },
     "res://games/strike-vector/player/strike_player.gd": {
-      "coverage_pct": 71.4285714285714,
-      "tested": 10,
-      "total": 14,
+      "coverage_pct": 73.3333333333333,
+      "tested": 11,
+      "total": 15,
       "untested": [
         "_init",
         "_unhandled_input",
@@ -622,12 +622,10 @@
       "untested": []
     },
     "res://games/strike-vector/strike_vector_main.gd": {
-      "coverage_pct": 83.3333333333333,
-      "tested": 5,
+      "coverage_pct": 100,
+      "tested": 6,
       "total": 6,
-      "untested": [
-        "_process"
-      ]
+      "untested": []
     },
     "res://games/strike-vector/ui/strike_campaign_menu.gd": {
       "coverage_pct": 0,
@@ -944,13 +942,10 @@
       ]
     },
     "res://shared/graphics/model_cache.gd": {
-      "coverage_pct": 81.8181818181818,
-      "tested": 9,
+      "coverage_pct": 100,
+      "tested": 11,
       "total": 11,
-      "untested": [
-        "get_explorer_character",
-        "get_ranger_character"
-      ]
+      "untested": []
     },
     "res://shared/graphics/procedural_animator.gd": {
       "coverage_pct": 100,
@@ -1070,7 +1065,7 @@
       "untested": []
     }
   },
-  "tested_functions": 1010,
-  "timestamp": "2026-10-04T15:43:22",
-  "total_functions": 1097
+  "tested_functions": 1014,
+  "timestamp": "2026-10-05T04:20:13",
+  "total_functions": 1098
 }

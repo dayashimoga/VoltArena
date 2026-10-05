@@ -81,7 +81,8 @@ static func get_explorer_character() -> Node3D:
 	if not model:
 		return MeshBuilder.build_skybound_explorer_character()
 	model.scale = Vector3(1.0, 1.0, 1.0)
-	model.rotation_degrees.y = 0.0
+	model.rotation_degrees.y = 180.0
+	_clean_character_weapons(model)
 	_ensure_animation_player(model)
 	return model
 
@@ -91,9 +92,103 @@ static func get_ranger_character() -> Node3D:
 	if not model:
 		return MeshBuilder.build_wildcircuit_ranger_character()
 	model.scale = Vector3(1.0, 1.0, 1.0)
-	model.rotation_degrees.y = 0.0
+	model.rotation_degrees.y = 180.0
+	_clean_character_weapons(model)
+	_attach_ranger_camera(model)
 	_ensure_animation_player(model)
 	return model
+
+static func _clean_character_weapons(model: Node3D) -> void:
+	if not model:
+		return
+	var weapon_names = ["1H_Crossbow", "2H_Crossbow", "Knife", "Knife_Offhand", "Throwable"]
+	for w_name in weapon_names:
+		var node = model.find_child(w_name, true, false)
+		if node:
+			node.visible = false
+			if node is Node3D:
+				node.scale = Vector3.ZERO
+				node.position = Vector3(0, -100, 0)
+
+static func _attach_ranger_camera(model: Node3D) -> void:
+	if not model:
+		return
+	# Remove any existing camera prop
+	var old = model.find_child("FieldCameraProp", true, false)
+	if old:
+		old.queue_free()
+
+	var cam_root = Node3D.new()
+	cam_root.name = "FieldCameraProp"
+
+	var cam_body = MeshInstance3D.new()
+	var b_cam = BoxMesh.new()
+	b_cam.size = Vector3(0.22, 0.15, 0.12)
+	cam_body.mesh = b_cam
+	var mat_cam = StandardMaterial3D.new()
+	mat_cam.albedo_color = Color(0.12, 0.14, 0.18) # Matte dark SLR body
+	mat_cam.roughness = 0.65
+	mat_cam.metallic = 0.35
+	cam_body.material_override = mat_cam
+	cam_root.add_child(cam_body)
+
+	# Professional Telephoto Lens
+	var lens = MeshInstance3D.new()
+	var cyl = CylinderMesh.new()
+	cyl.top_radius = 0.05
+	cyl.bottom_radius = 0.065
+	cyl.height = 0.16
+	lens.mesh = cyl
+	lens.rotation_degrees.x = 90.0
+	lens.position = Vector3(0, 0, 0.12)
+	var mat_lens = StandardMaterial3D.new()
+	mat_lens.albedo_color = Color(0.08, 0.08, 0.10)
+	mat_lens.roughness = 0.20
+	mat_lens.metallic = 0.90
+	lens.material_override = mat_lens
+	cam_root.add_child(lens)
+
+	# Front glass lens element with cyan reflection
+	var glass = MeshInstance3D.new()
+	var g_cyl = CylinderMesh.new()
+	g_cyl.top_radius = 0.048
+	g_cyl.bottom_radius = 0.048
+	g_cyl.height = 0.01
+	glass.mesh = g_cyl
+	glass.rotation_degrees.x = 90.0
+	glass.position = Vector3(0, 0, 0.205)
+	var mat_glass = StandardMaterial3D.new()
+	mat_glass.albedo_color = Color(0.2, 0.8, 1.0, 0.85)
+	mat_glass.metallic = 0.95
+	mat_glass.roughness = 0.05
+	mat_glass.emission_enabled = true
+	mat_glass.emission = Color(0.1, 0.6, 0.9)
+	mat_glass.emission_energy_multiplier = 0.8
+	glass.material_override = mat_glass
+	cam_root.add_child(glass)
+
+	# Neck strap / mount
+	var strap = MeshInstance3D.new()
+	var s_torus = TorusMesh.new()
+	s_torus.inner_radius = 0.22
+	s_torus.outer_radius = 0.25
+	strap.mesh = s_torus
+	var mat_strap = StandardMaterial3D.new()
+	mat_strap.albedo_color = Color(0.45, 0.35, 0.25)
+	strap.material_override = mat_strap
+	strap.rotation_degrees.x = 45.0
+	strap.position = Vector3(0, 0.2, -0.05)
+	cam_root.add_child(strap)
+
+	# Attach to chest / neck of ranger
+	var chest = model.find_child("chest", true, false)
+	if chest:
+		chest.add_child(cam_root)
+		cam_root.position = Vector3(0, 0.05, 0.22)
+		cam_root.rotation_degrees = Vector3(10, 0, 0)
+	else:
+		model.add_child(cam_root)
+		cam_root.position = Vector3(0, 1.0, 0.22)
 
 static func _apply_visor_tint(root: Node3D, tint: Color) -> void:
 	if not root:

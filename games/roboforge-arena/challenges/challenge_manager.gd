@@ -33,6 +33,9 @@ func load_challenge(ch_id: String, arena_parent: Node3D) -> void:
 	for child in arena_parent.get_children():
 		child.queue_free()
 
+	# 0. Always construct full industrial arena surroundings
+	_build_arena_surroundings(arena_parent)
+
 	match ch_id:
 		"obstacle_course":
 			_build_obstacle_course(arena_parent)
@@ -52,27 +55,36 @@ func load_challenge(ch_id: String, arena_parent: Node3D) -> void:
 			_build_obstacle_course(arena_parent)
 
 # ==============================================================================
-# 1. OBSTACLE COURSE (High-Incline Ramps, Speed Bumps, Debris)
+# 1. OBSTACLE COURSE (High-Incline Continuous Ramps, Chamfer Bumps, Arena Finish)
 # ==============================================================================
 func _build_obstacle_course(parent: Node3D) -> void:
 	# Starting floor with hazard yellow grid
 	_add_slab(parent, Vector3(0, -0.5, 0), Vector3(14.0, 1.0, 14.0), "chassis_carbon")
+	# Side safety barriers on start platform
+	_add_wall(parent, Vector3(-7.1, 0.5, 0), Vector3(0.3, 1.2, 14.0))
+	_add_wall(parent, Vector3(7.1, 0.5, 0), Vector3(0.3, 1.2, 14.0))
 
-	# Inclined Ramp 1 (22 degrees - requires high torque or crawler tracks)
-	var ramp1 = _add_slab(parent, Vector3(0, 2.2, -14.0), Vector3(9.0, 0.6, 14.0), "hazard_yellow")
-	ramp1.rotation_degrees.x = 22.0
+	# Inclined Ramp 1: Perfectly continuous from (0, 0.0, -7.0) to (0, 4.5, -21.0)
+	_add_continuous_ramp(parent, Vector3(0, 0.0, -7.0), Vector3(0, 4.5, -21.0), 10.0, 0.6, "hazard_yellow")
 
 	# Elevated Plateau 1
-	_add_slab(parent, Vector3(0, 4.8, -26.0), Vector3(12.0, 1.0, 12.0), "dark_hull")
+	_add_slab(parent, Vector3(0, 4.0, -27.0), Vector3(12.0, 1.0, 12.0), "dark_hull")
+	_add_wall(parent, Vector3(-6.1, 5.0, -27.0), Vector3(0.3, 1.2, 12.0))
+	_add_wall(parent, Vector3(6.1, 5.0, -27.0), Vector3(0.3, 1.2, 12.0))
 
-	# Staggered Debris Speed Bumps
+	# Staggered Debris Speed Bumps (Chamfered obstacles)
 	for i in range(4):
-		var bump = _add_slab(parent, Vector3((i % 2 - 0.5) * 2.0, 5.5, -34.0 - i * 3.5), Vector3(9.0, 0.8, 1.2), "sci_fi_metal")
-		bump.rotation_degrees.z = (i % 2 - 0.5) * 8.0
+		var bump_z = -35.0 - i * 3.5
+		var bump = _add_slab(parent, Vector3((i % 2 - 0.5) * 1.5, 4.7, bump_z), Vector3(8.0, 0.4, 1.2), "sci_fi_metal")
+		bump.rotation_degrees.z = (i % 2 - 0.5) * 6.0
 
 	# Elevated Plateau 2 & Finish
-	_add_slab(parent, Vector3(0, 4.8, -52.0), Vector3(14.0, 1.0, 14.0), "chassis_carbon")
-	_create_finish_zone(parent, Vector3(0, 5.0, -52.0), 6.5)
+	_add_slab(parent, Vector3(0, 4.0, -52.0), Vector3(14.0, 1.0, 16.0), "chassis_carbon")
+	_add_wall(parent, Vector3(-7.1, 5.0, -52.0), Vector3(0.3, 1.2, 16.0))
+	_add_wall(parent, Vector3(7.1, 5.0, -52.0), Vector3(0.3, 1.2, 16.0))
+	_add_wall(parent, Vector3(0, 5.0, -60.1), Vector3(14.0, 1.2, 0.3))
+
+	_create_finish_zone(parent, Vector3(0, 4.6, -52.0), 6.5)
 
 # ==============================================================================
 # 2. CARGO DELIVERY (Heavy Magnetic Crates over Narrow Bridge)
@@ -220,6 +232,136 @@ func _add_slab(parent: Node3D, pos: Vector3, size: Vector3, mat_name: String = "
 
 func _add_wall(parent: Node3D, pos: Vector3, size: Vector3) -> StaticBody3D:
 	return _add_slab(parent, pos, size, "sci_fi_metal")
+
+func _add_continuous_ramp(parent: Node3D, start_pt: Vector3, end_pt: Vector3, width: float, thickness: float = 0.6, mat_name: String = "hazard_yellow") -> Node3D:
+	var ramp_root = Node3D.new()
+	ramp_root.name = "ContinuousRamp"
+	parent.add_child(ramp_root)
+
+	var diff = end_pt - start_pt
+	var horiz_dist = Vector2(diff.x, diff.z).length()
+	var slope_len = sqrt(diff.y * diff.y + horiz_dist * horiz_dist)
+	var pitch = atan2(diff.y, horiz_dist)
+
+	# Main tilted ramp slab
+	var mid_pt = (start_pt + end_pt) * 0.5
+	var ramp_sb = StaticBody3D.new()
+	ramp_sb.name = "RampSlab"
+	ramp_sb.collision_layer = GameConstants.LAYER_WORLD
+	ramp_sb.position = mid_pt + Vector3(0, -thickness * 0.5 * cos(pitch), 0)
+	ramp_sb.rotation.x = pitch
+
+	var mi = MeshInstance3D.new()
+	var b = BoxMesh.new()
+	b.size = Vector3(width, thickness, slope_len)
+	mi.mesh = b
+	mi.material_override = MaterialGenerator.get_material(mat_name)
+	ramp_sb.add_child(mi)
+
+	var col = CollisionShape3D.new()
+	var bs = BoxShape3D.new()
+	bs.size = Vector3(width, thickness, slope_len)
+	col.shape = bs
+	ramp_sb.add_child(col)
+	ramp_root.add_child(ramp_sb)
+
+	# Smooth lead-in bevel transition at start (eliminates vertical step lip)
+	var lead_in = StaticBody3D.new()
+	lead_in.name = "LeadInPlate"
+	lead_in.collision_layer = GameConstants.LAYER_WORLD
+	lead_in.position = start_pt + Vector3(0, -0.2, 0.5)
+	var mi_li = MeshInstance3D.new()
+	var b_li = BoxMesh.new()
+	b_li.size = Vector3(width, 0.4, 1.2)
+	mi_li.mesh = b_li
+	mi_li.material_override = MaterialGenerator.get_material("sci_fi_metal")
+	lead_in.add_child(mi_li)
+	var col_li = CollisionShape3D.new()
+	var bs_li = BoxShape3D.new()
+	bs_li.size = Vector3(width, 0.4, 1.2)
+	col_li.shape = bs_li
+	lead_in.add_child(col_li)
+	ramp_root.add_child(lead_in)
+
+	# Smooth lead-out bevel transition at end
+	var lead_out = StaticBody3D.new()
+	lead_out.name = "LeadOutPlate"
+	lead_out.collision_layer = GameConstants.LAYER_WORLD
+	lead_out.position = end_pt + Vector3(0, -0.2, -0.5)
+	var mi_lo = MeshInstance3D.new()
+	var b_lo = BoxMesh.new()
+	b_lo.size = Vector3(width, 0.4, 1.2)
+	mi_lo.mesh = b_lo
+	mi_lo.material_override = MaterialGenerator.get_material("sci_fi_metal")
+	lead_out.add_child(mi_lo)
+	var col_lo = CollisionShape3D.new()
+	var bs_lo = BoxShape3D.new()
+	bs_lo.size = Vector3(width, 0.4, 1.2)
+	col_lo.shape = bs_lo
+	lead_out.add_child(col_lo)
+	ramp_root.add_child(lead_out)
+
+	# Side Guardrails
+	var guard_h = 1.0
+	for side in [-1.0, 1.0]:
+		var g = StaticBody3D.new()
+		g.collision_layer = GameConstants.LAYER_WORLD
+		g.position = mid_pt + Vector3(side * (width * 0.5 + 0.15), guard_h * 0.5, 0)
+		g.rotation.x = pitch
+		var mi_g = MeshInstance3D.new()
+		var b_g = BoxMesh.new()
+		b_g.size = Vector3(0.3, guard_h, slope_len + 1.0)
+		mi_g.mesh = b_g
+		mi_g.material_override = MaterialGenerator.get_material("sci_fi_metal")
+		g.add_child(mi_g)
+		var col_g = CollisionShape3D.new()
+		var bs_g = BoxShape3D.new()
+		bs_g.size = Vector3(0.3, guard_h, slope_len + 1.0)
+		col_g.shape = bs_g
+		g.add_child(col_g)
+		ramp_root.add_child(g)
+
+	return ramp_root
+
+func _build_arena_surroundings(parent: Node3D) -> void:
+	var arena_root = Node3D.new()
+	arena_root.name = "ArenaSurroundings"
+	parent.add_child(arena_root)
+
+	# Low arena stadium ground
+	_add_slab(arena_root, Vector3(0, -2.5, -25.0), Vector3(100.0, 1.0, 130.0), "dark_hull")
+
+	# Outer Stadium Perimeter Walls
+	var wall_h = 18.0
+	_add_slab(arena_root, Vector3(0, wall_h * 0.5 - 2.0, -85.0), Vector3(90.0, wall_h, 2.5), "sci_fi_metal")
+	_add_slab(arena_root, Vector3(0, wall_h * 0.5 - 2.0, 35.0), Vector3(90.0, wall_h, 2.5), "sci_fi_metal")
+	_add_slab(arena_root, Vector3(-42.0, wall_h * 0.5 - 2.0, -25.0), Vector3(2.5, wall_h, 120.0), "sci_fi_metal")
+	_add_slab(arena_root, Vector3(42.0, wall_h * 0.5 - 2.0, -25.0), Vector3(2.5, wall_h, 120.0), "sci_fi_metal")
+
+	# 4 High-Intensity Floodlight Gantry Towers
+	var light_positions = [
+		Vector3(-35.0, 14.0, 20.0),
+		Vector3(35.0, 14.0, 20.0),
+		Vector3(-35.0, 14.0, -70.0),
+		Vector3(35.0, 14.0, -70.0)
+	]
+	for l_pos in light_positions:
+		var pole = MeshInstance3D.new()
+		var cyl = CylinderMesh.new()
+		cyl.top_radius = 0.3
+		cyl.bottom_radius = 0.5
+		cyl.height = 14.0
+		pole.mesh = cyl
+		pole.material_override = MaterialGenerator.get_material("sci_fi_metal")
+		pole.position = l_pos - Vector3(0, 7.0, 0)
+		arena_root.add_child(pole)
+
+		var omni = OmniLight3D.new()
+		omni.light_color = Color(0.9, 0.95, 1.0)
+		omni.light_energy = 3.5
+		omni.omni_range = 45.0
+		omni.position = l_pos
+		arena_root.add_child(omni)
 
 func _spawn_crate(parent: Node3D, pos: Vector3) -> RigidBody3D:
 	var rb = RigidBody3D.new()

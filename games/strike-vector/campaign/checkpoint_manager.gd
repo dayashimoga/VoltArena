@@ -57,10 +57,22 @@ func restore_player_to_checkpoint(player: Node) -> void:
 
 	player.set("velocity", Vector3.ZERO)
 
-	if player.has_method("set"):
-		player.set("current_health", maxf(50.0, saved_health))
-		player.set("current_armor", saved_armor)
-		player.set("is_alive", true)
+	var restored_hp = maxf(100.0, saved_health)
+	var restored_arm = maxf(50.0, saved_armor)
+
+	if player.has_method("restore_vitals"):
+		player.restore_vitals(restored_hp, restored_arm)
+	else:
+		if player.has_method("set"):
+			player.set("current_health", restored_hp)
+			player.set("current_armor", restored_arm)
+			player.set("is_alive", true)
+			if player.has_method("set_physics_process"):
+				player.set_physics_process(true)
+		if player.has_signal("health_changed"):
+			player.emit_signal("health_changed", restored_hp, 100.0)
+		if player.has_signal("armor_changed"):
+			player.emit_signal("armor_changed", restored_arm, 100.0)
 
 	if player.has_method("select_weapon"):
 		player.select_weapon(saved_weapon_index)

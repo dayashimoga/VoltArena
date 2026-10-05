@@ -43,6 +43,7 @@ const TestDriftStormStateMachineScript = preload("res://tests/unit/test_drift_st
 const TestCrossPlatformArchitectureScript = preload("res://tests/unit/test_cross_platform_architecture.gd")
 const TestHumanoidAnimatorScript = preload("res://tests/unit/test_humanoid_animator.gd")
 const TestP0GatesScript = preload("res://tests/unit/test_p0_visual_and_physics_gates.gd")
+const TestMultiGameOverhaulGatesScript = preload("res://tests/unit/test_multi_game_overhaul_gates.gd")
 
 # --- New Subsystems & 3 New Games (Unit) ---
 const TestQuestSystemScript = preload("res://tests/unit/test_quest_system.gd")
@@ -155,6 +156,7 @@ func _init() -> void:
 		{"name": "HumanoidAnimator Locomotion Unit", "instance": TestHumanoidAnimatorScript.new()},
 		{"name": "Engine Subsystems Unit", "instance": TestEngineSubsystemsScript.new()},
 		{"name": "P0 Visual & Physics Gates Unit", "instance": TestP0GatesScript.new()},
+		{"name": "Multi-Game Overhaul & Screenshot Defect Gates", "instance": TestMultiGameOverhaulGatesScript.new()},
 		# Responsive & Soak
 		{"name": "Responsive UI Multi-Resolution", "instance": TestResponsiveUIScript.new()},
 		{"name": "Soak & Stability Lifecycle", "instance": TestSoakScript.new()},

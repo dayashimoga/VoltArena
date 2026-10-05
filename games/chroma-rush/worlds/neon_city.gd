@@ -187,9 +187,9 @@ func generate_waypoints() -> void:
 		Vector3(-180, 0, -440),   # 26 Old Town Waterfront Gate
 		Vector3(-100, 0, -380),   # 27 Old Town Terracotta Gate (Historic Old Town)
 		Vector3(-80, 0, -260),    # 28 Clocktower Piazza
-		Vector3(-80, 0, -120),    # 29 Historic Masonry Avenue
-		Vector3(-60, 0, 0),       # 30 Cathedral Park South
-		Vector3(0, 0, 70)         # 31 Grand Boulevard South Approach (250m straight into WP 0)
+		Vector3(-80, 0, -100),    # 29 Historic Masonry Avenue
+		Vector3(-45, 0, 80),      # 30 Cathedral Park South
+		Vector3(0, 0, 75)         # 31 Grand Boulevard South Approach (straight into WP 0)
 	]
 	for p in raw_points:
 		waypoints.append(p)
@@ -622,9 +622,12 @@ func _build_distant_skyline_backdrop() -> void:
 	multimesh.instance_count = tower_count
 
 	var mat_distant = StandardMaterial3D.new()
-	mat_distant.albedo_color = Color(0.18, 0.24, 0.32)
-	mat_distant.metallic = 0.50
-	mat_distant.roughness = 0.60
+	mat_distant.albedo_color = Color(0.12, 0.18, 0.26)
+	mat_distant.metallic = 0.85
+	mat_distant.roughness = 0.18
+	mat_distant.emission_enabled = true
+	mat_distant.emission = Color(0.08, 0.14, 0.24)
+	mat_distant.emission_energy_multiplier = 1.25
 	mat_distant.vertex_color_use_as_albedo = true
 
 	for t in range(tower_count):
@@ -632,7 +635,7 @@ func _build_distant_skyline_backdrop() -> void:
 		var dist_var = radius + float(t % 7) * 35.0
 		var tx = cos(angle) * dist_var
 		var tz = sin(angle) * dist_var
-		var scale_y = 0.7 + float((t * 7) % 11) * 0.12
+		var scale_y = 0.7 + float((t * 7) % 11) * 0.14
 		var height = 100.0 * scale_y
 
 		var xf = Transform3D()
@@ -640,8 +643,9 @@ func _build_distant_skyline_backdrop() -> void:
 		xf.origin = Vector3(tx, height * 0.5, tz)
 		multimesh.set_instance_transform(t, xf)
 
-		var shade = 0.75 + float(t % 4) * 0.08
-		var col = Color(0.14 * shade, 0.20 * shade, 0.30 * shade, 1.0)
+		var shade = 0.75 + float(t % 4) * 0.12
+		var is_amber = (t % 3 == 0)
+		var col = Color(0.24 * shade, 0.20 * shade, 0.12 * shade, 1.0) if is_amber else Color(0.10 * shade, 0.24 * shade, 0.38 * shade, 1.0)
 		multimesh.set_instance_color(t, col)
 
 	var mm_inst = MultiMeshInstance3D.new()
@@ -705,112 +709,23 @@ func _build_realistic_tree(species: String, height: float, seed_val: int) -> Nod
 	soil.position = Vector3(0, 0.10, 0)
 	root.add_child(soil)
 
-	# 3. Organic Fluted Wood Trunk
-	var trunk = MeshInstance3D.new()
-	var t_cyl = CylinderMesh.new()
-	t_cyl.top_radius = 0.18
-	t_cyl.bottom_radius = 0.35
-	t_cyl.height = height * 0.65
-	trunk.mesh = t_cyl
-	var mat_bark = StandardMaterial3D.new()
-	if species == "birch":
-		mat_bark.albedo_color = Color(0.78, 0.78, 0.75) # Authentic birch bark
-	else:
-		mat_bark.albedo_color = Color(0.24, 0.18, 0.13) # Natural dark wood bark
-	mat_bark.roughness = 0.92
-	trunk.material_override = mat_bark
-	trunk.position = Vector3(0, t_cyl.height * 0.5, 0)
-	root.add_child(trunk)
-
-	# 4. Organic Branch Limbs (Angled outward from trunk fork)
-	if species != "palm":
-		for b_i in range(3):
-			var b_ang = float(b_i) * (TAU / 3.0) + float(seed_val % 7) * 0.2
-			var branch = MeshInstance3D.new()
-			var b_mesh = CylinderMesh.new()
-			b_mesh.top_radius = 0.08
-			b_mesh.bottom_radius = 0.14
-			b_mesh.height = 1.6
-			branch.mesh = b_mesh
-			branch.material_override = mat_bark
-			branch.position = Vector3(cos(b_ang) * 0.45, t_cyl.height * 0.85, sin(b_ang) * 0.45)
-			branch.rotation = Vector3(sin(b_ang) * deg_to_rad(28.0), b_ang, cos(b_ang) * deg_to_rad(-28.0))
-			root.add_child(branch)
-
-	# 5. Natural Organic Foliage Canopies (Zero SphereMesh blobs!)
-	var leaf_color = Color(0.12, 0.36, 0.15) # Rich Forest Oak Green
+	# 3. Authentic 3D Tree Mesh Asset
+	var tree_path = "res://assets/models/environment/tree_oak.glb"
 	match species:
-		"cherry":
-			leaf_color = Color(0.88, 0.46, 0.62) # Japanese Cherry Blossom Pink
-		"birch":
-			leaf_color = Color(0.32, 0.55, 0.26) # Fresh Spring Sage Green (NOT yellow!)
-		"pine":
-			leaf_color = Color(0.08, 0.24, 0.12) # Deep Conifer Green
-		"palm":
-			leaf_color = Color(0.16, 0.45, 0.18) # Coastal Tropical Palm Green
-		"linden":
-			leaf_color = Color(0.18, 0.48, 0.18) # Lush Summer Commercial Green
+		"palm": tree_path = "res://assets/models/environment/tree_palm.glb"
+		"pine": tree_path = "res://assets/models/environment/tree_pine.glb"
+		"birch": tree_path = "res://assets/models/environment/tree_detailed.glb"
+		"cherry": tree_path = "res://assets/models/environment/tree_detailed.glb"
+		"linden": tree_path = "res://assets/models/environment/tree_tall.glb"
+		_: tree_path = "res://assets/models/environment/tree_oak.glb"
 
-	var mat_fol = StandardMaterial3D.new()
-	mat_fol.albedo_color = leaf_color
-	mat_fol.roughness = 0.82
-	mat_fol.specular = 0.12
-	mat_fol.diffuse_mode = BaseMaterial3D.DIFFUSE_BURLEY
-
-	if species == "pine":
-		# Conical tiered conifer foliage layers
-		var pine_tiers = [
-			{"y": height * 0.55, "r": 2.2, "h": 1.6},
-			{"y": height * 0.72, "r": 1.7, "h": 1.5},
-			{"y": height * 0.88, "r": 1.2, "h": 1.4},
-			{"y": height * 1.02, "r": 0.6, "h": 1.2}
-		]
-		for pt in pine_tiers:
-			var fol = MeshInstance3D.new()
-			var cone = CylinderMesh.new()
-			cone.top_radius = 0.05
-			cone.bottom_radius = pt["r"]
-			cone.height = pt["h"]
-			fol.mesh = cone
-			fol.material_override = mat_fol
-			fol.position = Vector3(0, pt["y"], 0)
-			root.add_child(fol)
-
-	elif species == "palm":
-		# Tropical Palm: 8 radial drooping palm fronds
-		var crown_y = t_cyl.height * 0.95
-		for frond_i in range(8):
-			var frond_ang = float(frond_i) * (TAU / 8.0)
-			var frond = MeshInstance3D.new()
-			var f_box = BoxMesh.new()
-			f_box.size = Vector3(0.40, 0.05, 2.2)
-			frond.mesh = f_box
-			frond.material_override = mat_fol
-			frond.rotation = Vector3(deg_to_rad(-24.0), frond_ang, 0)
-			frond.position = Vector3(cos(frond_ang) * 0.8, crown_y, sin(frond_ang) * 0.8)
-			root.add_child(frond)
-
-	else:
-		# Multi-Tiered Organic Faceted Foliage Clusters
-		var clusters = [
-			{"pos": Vector3(0.0, height * 0.88, 0.0), "sx": 2.6, "sy": 1.8, "sz": 2.6, "rot": 0.0},
-			{"pos": Vector3(-0.9, height * 0.74, 0.5), "sx": 1.9, "sy": 1.5, "sz": 1.9, "rot": 42.0},
-			{"pos": Vector3(0.85, height * 0.76, -0.4), "sx": 2.0, "sy": 1.5, "sz": 2.0, "rot": -35.0},
-			{"pos": Vector3(0.2, height * 1.02, 0.2), "sx": 1.8, "sy": 1.6, "sz": 1.8, "rot": 18.0},
-			{"pos": Vector3(0.4, height * 0.82, 0.8), "sx": 1.7, "sy": 1.4, "sz": 1.7, "rot": 75.0}
-		]
-		for c in clusters:
-			var fol = MeshInstance3D.new()
-			var poly = CylinderMesh.new()
-			poly.top_radius = c["sx"] * 0.42
-			poly.bottom_radius = c["sx"] * 0.50
-			poly.height = c["sy"]
-			poly.radial_segments = 7 # Organic faceted geometry
-			fol.mesh = poly
-			fol.material_override = mat_fol
-			fol.position = c["pos"]
-			fol.rotation_degrees.y = c["rot"]
-			root.add_child(fol)
+	var tree_model = ModelCache.get_model(tree_path)
+	if tree_model:
+		var sc = height * 0.28
+		tree_model.scale = Vector3(sc, sc, sc)
+		tree_model.rotation_degrees.y = float(seed_val * 47 % 360)
+		tree_model.position = Vector3(0, 0.1, 0)
+		root.add_child(tree_model)
 
 	return root
 

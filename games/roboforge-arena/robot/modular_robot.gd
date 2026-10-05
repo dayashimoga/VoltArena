@@ -33,6 +33,10 @@ var magnet_area: Area3D
 func _ready() -> void:
 	collision_layer = GameConstants.LAYER_PLAYER if is_player_controlled else GameConstants.LAYER_ENEMIES
 	collision_mask = GameConstants.LAYER_WORLD | GameConstants.LAYER_PICKUPS | GameConstants.LAYER_BALL
+	floor_snap_length = 0.45
+	floor_max_angle = deg_to_rad(55.0)
+	floor_constant_speed = true
+	floor_stop_on_slope = false
 	if blueprint.is_empty():
 		load_blueprint(RobotDataScript.get_default_blueprint())
 
@@ -104,16 +108,18 @@ func rebuild_visuals() -> void:
 	else:
 		magnet_area = null
 
-	# Update collision shape
+	# Update collision shape with rounded base to prevent snagging on seams or ramps
 	for c in get_children():
 		if c is CollisionShape3D:
 			c.queue_free()
 
 	var col = CollisionShape3D.new()
-	var box_shape = BoxShape3D.new()
-	box_shape.size = Vector3(ch_size.x + 0.4, ch_size.y + 0.8, ch_size.z + 0.4)
-	col.shape = box_shape
-	col.position = Vector3(0, 0.7, 0)
+	col.name = "CollisionShape"
+	var cap_shape = CapsuleShape3D.new()
+	cap_shape.radius = minf(ch_size.x * 0.46, 0.65)
+	cap_shape.height = ch_size.y + 0.65
+	col.shape = cap_shape
+	col.position = Vector3(0, (ch_size.y + 0.65) * 0.5 + 0.08, 0)
 	add_child(col)
 
 func _physics_process(delta: float) -> void:
@@ -178,8 +184,17 @@ func handle_player_input(delta: float) -> void:
 		forward_speed = move_toward(forward_speed, 0.0, 18.0 * delta)
 
 	var fwd = -transform.basis.z
-	velocity.x = fwd.x * forward_speed
-	velocity.z = fwd.z * forward_speed
+	var move_vec = fwd * forward_speed
+	if is_on_floor():
+		var n = get_floor_normal()
+		if n.y > 0.1:
+			# Project forward vector onto floor plane to climb slopes smoothly
+			move_vec = (move_vec - n * move_vec.dot(n)).normalized() * abs(forward_speed)
+			if forward_speed < 0.0:
+				move_vec = -move_vec
+			velocity.y = move_vec.y
+	velocity.x = move_vec.x
+	velocity.z = move_vec.z
 
 	# Jump (legs locomotion)
 	var j_force = stats.get("jump_force", 0.0)

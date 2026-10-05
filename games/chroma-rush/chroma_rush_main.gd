@@ -144,26 +144,48 @@ func _init_target_beacon() -> void:
 	target_beacon = Node3D.new()
 	target_beacon.name = "TargetBeacon3D"
 
-	var mesh_inst = MeshInstance3D.new()
-	var prism = PrismMesh.new()
-	prism.size = Vector3(2.4, 3.6, 2.4)
-	mesh_inst.mesh = prism
-	mesh_inst.rotation_degrees = Vector3(180, 0, 0)
-	mesh_inst.position = Vector3(0, 5.5, 0)
-
+	# Sleek Holographic Diamond Target Beacon with Orbiting Guidance Ring
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.85, 0.1)
+	mat.albedo_color = Color(1.0, 0.85, 0.1, 0.85)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.emission_enabled = true
 	mat.emission = Color(1.0, 0.85, 0.1)
-	mat.emission_energy_multiplier = 2.5
-	mesh_inst.material_override = mat
-	target_beacon.add_child(mesh_inst)
+	mat.emission_energy_multiplier = 2.2
+
+	var top_cone = MeshInstance3D.new()
+	var t_cyl = CylinderMesh.new()
+	t_cyl.top_radius = 0.05
+	t_cyl.bottom_radius = 0.70
+	t_cyl.height = 1.3
+	top_cone.mesh = t_cyl
+	top_cone.material_override = mat
+	top_cone.position = Vector3(0, 4.15, 0)
+	target_beacon.add_child(top_cone)
+
+	var bottom_cone = MeshInstance3D.new()
+	var b_cyl = CylinderMesh.new()
+	b_cyl.top_radius = 0.70
+	b_cyl.bottom_radius = 0.05
+	b_cyl.height = 0.9
+	bottom_cone.mesh = b_cyl
+	bottom_cone.material_override = mat
+	bottom_cone.position = Vector3(0, 3.05, 0)
+	target_beacon.add_child(bottom_cone)
+
+	var ring = MeshInstance3D.new()
+	var torus = TorusMesh.new()
+	torus.inner_radius = 1.15
+	torus.outer_radius = 1.30
+	ring.mesh = torus
+	ring.material_override = mat
+	ring.position = Vector3(0, 3.5, 0)
+	target_beacon.add_child(ring)
 
 	var omni = OmniLight3D.new()
 	omni.light_color = Color(1.0, 0.85, 0.1)
-	omni.light_energy = 3.0
-	omni.omni_range = 18.0
-	omni.position = Vector3(0, 5.0, 0)
+	omni.light_energy = 2.0
+	omni.omni_range = 10.0
+	omni.position = Vector3(0, 3.5, 0)
 	target_beacon.add_child(omni)
 
 	add_child(target_beacon)

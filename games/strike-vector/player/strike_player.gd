@@ -587,11 +587,20 @@ func take_damage(amount: float, _dealer_name: String = "", _weapon: String = "")
 func _die() -> void:
 	is_alive = false
 	velocity = Vector3.ZERO
+	set_physics_process(false)
 	player_died.emit()
 
 	var bus = GameConstants.get_autoload(self, "EventBus")
 	if bus:
 		bus.player_died.emit()
+
+func restore_vitals(hp: float = 100.0, arm: float = 50.0) -> void:
+	current_health = clampf(hp, 1.0, max_health)
+	current_armor = clampf(arm, 0.0, max_armor)
+	is_alive = true
+	set_physics_process(true)
+	health_changed.emit(current_health, max_health)
+	armor_changed.emit(current_armor, max_armor)
 
 func apply_pickup(pickup_type: String, value: int) -> void:
 	match pickup_type:

@@ -16,6 +16,9 @@ func _ready() -> void:
 	build_all_biomes()
 
 func build_all_biomes() -> void:
+	# Continuous Base Natural Terrain Bed spanning entire nature reserve (eliminates void horizon)
+	_add_terrain_slab(self, Vector3(0, -1.2, 0), Vector3(600.0, 1.0, 600.0), "savannah_dirt")
+
 	# 1. Savannah (Center: 0, 0, 0)
 	build_savannah(Vector3(0, 0, 0))
 

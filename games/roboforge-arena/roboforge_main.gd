@@ -28,6 +28,40 @@ func _ready() -> void:
 	setup_game()
 
 func setup_game() -> void:
+	# Persistent Arena WorldEnvironment & Atmospheric Lighting
+	var world_env = WorldEnvironment.new()
+	world_env.name = "RoboForgeWorldEnv"
+	var env = Environment.new()
+	env.background_mode = Environment.BG_SKY
+	var sky = Sky.new()
+	var sky_mat = ProceduralSkyMaterial.new()
+	sky_mat.sky_top_color = Color(0.12, 0.22, 0.38) # Industrial arena navy
+	sky_mat.sky_horizon_color = Color(0.48, 0.58, 0.70)
+	sky_mat.ground_bottom_color = Color(0.08, 0.10, 0.14)
+	sky_mat.ground_horizon_color = Color(0.35, 0.42, 0.52)
+	sky_mat.energy_multiplier = 1.2
+	sky.sky_material = sky_mat
+	env.sky = sky
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.ambient_light_energy = 0.95
+	env.ambient_light_color = Color(0.45, 0.52, 0.65)
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.10
+	env.glow_enabled = true
+	env.glow_intensity = 0.45
+	env.glow_bloom = 0.15
+	world_env.environment = env
+	add_child(world_env)
+
+	var dir_light = DirectionalLight3D.new()
+	dir_light.name = "ArenaSunLight"
+	dir_light.rotation_degrees = Vector3(-50.0, -35.0, 0.0)
+	dir_light.light_color = Color(1.0, 0.98, 0.92)
+	dir_light.light_energy = 1.35
+	dir_light.shadow_enabled = true
+	dir_light.shadow_bias = 0.03
+	add_child(dir_light)
+
 	# 1. 3D Workshop Assembly Bay
 	workshop = Workshop3DScript.new()
 	workshop.name = "Workshop3D"

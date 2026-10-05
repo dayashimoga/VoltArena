@@ -6,9 +6,9 @@ extends Node3D
 ## auto-recentering, and configurable sensitivity & FOV.
 
 @export var target: Node3D
-@export var target_offset: Vector3 = Vector3(0, 1.6, 0)
-@export var distance: float = 5.0
-@export var min_distance: float = 1.0
+@export var target_offset: Vector3 = Vector3(0, 1.4, 0)
+@export var distance: float = 4.5
+@export var min_distance: float = 1.8
 @export var max_distance: float = 10.0
 @export var mouse_sensitivity: float = 0.003
 @export var gamepad_sensitivity: float = 2.5
@@ -16,13 +16,15 @@ extends Node3D
 @export var collision_margin: float = 0.25
 
 var yaw: float = 0.0
-var pitch: float = -0.2 # Slight downward angle
+var pitch: float = -0.22 # Comfortable slight downward pitch
 var camera: Camera3D
 
 func _ready() -> void:
 	camera = Camera3D.new()
 	camera.name = "Camera"
 	camera.current = true
+	camera.near = 0.05
+	camera.fov = 72.0
 	add_child(camera)
 	top_level = true
 
@@ -74,5 +76,5 @@ func set_target(p_target: Node3D) -> void:
 
 func recenter() -> void:
 	if is_instance_valid(target):
-		yaw = target.rotation.y + PI
-		pitch = -0.2
+		yaw = target.rotation.y
+		pitch = -0.22

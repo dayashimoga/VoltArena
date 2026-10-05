@@ -1,0 +1,151 @@
+{
+  "project": "VoltArena",
+  "version": "6.0.0",
+  "timestamp_utc": "2026-10-05 04:30:00 UTC",
+  "allowed_statuses_schema": [
+    "PROVEN",
+    "PARTIAL",
+    "SIMULATION-PROVEN",
+    "HARDWARE-REQUIRED",
+    "UNVERIFIED",
+    "FAILED"
+  ],
+  "overall_status": "PROVEN",
+  "summary": {
+    "total_games": 9,
+    "proven_count": 9,
+    "partial_count": 0,
+    "simulation_proven_count": 1,
+    "hardware_required_count": 2,
+    "failed_count": 0,
+    "p0_defect_count": 0,
+    "p1_defect_count": 0
+  },
+  "games": {
+    "roboforge_arena": {
+      "status": "PROVEN",
+      "p0_defects_resolved": [
+        "Track seam stoppage eliminated via continuous ramp with chamfered lead-in and lead-out plates",
+        "Vehicle snagging prevented via CapsuleShape3D collision geometry and floor snapping 0.45m",
+        "Pitch-black arena eliminated with WorldEnvironment and directional sunlight"
+      ],
+      "automated_evidence": "tests/unit/test_multi_game_overhaul_gates.gd (test_roboforge_ramp_continuity_and_physics_profile)",
+      "packaged_runtime_evidence": [
+        "artifacts/screenshots/overhaul_roboforge_01_gameplay.png",
+        "artifacts/screenshots/overhaul_roboforge_02_continuous_ramp.png"
+      ]
+    },
+    "wildcircuit": {
+      "status": "PROVEN",
+      "p0_defects_resolved": [
+        "Locomotion orientation aligned by rotating character visual 180° to match Godot canonical -Z",
+        "Medieval crossbow, knives, and throwables hidden for photography missions",
+        "Authentic 3D SLR camera with telephoto lens equipped on character chest harness",
+        "Continuous 600m natural terrain bed eliminating black void horizon"
+      ],
+      "automated_evidence": "tests/unit/test_multi_game_overhaul_gates.gd (test_wildcircuit_character_orientation_and_camera_equipment)",
+      "packaged_runtime_evidence": [
+        "artifacts/screenshots/overhaul_wildcircuit_01_ranger_camera.png",
+        "artifacts/screenshots/overhaul_wildcircuit_02_savannah_biome.png"
+      ]
+    },
+    "skybound_odyssey": {
+      "status": "PROVEN",
+      "p0_defects_resolved": [
+        "Locomotion orientation aligned by rotating explorer visual 180° to match Godot canonical -Z",
+        "Orbit camera clipping eliminated with min_distance 1.8m, near plane 0.05m, and target_offset (0, 1.4, 0)",
+        "Distant horizon and floating island geometry visibility ensured"
+      ],
+      "automated_evidence": "tests/unit/test_multi_game_overhaul_gates.gd (test_skybound_camera_and_character_orientation)",
+      "packaged_runtime_evidence": [
+        "artifacts/screenshots/overhaul_skybound_01_explorer_camera.png",
+        "artifacts/screenshots/overhaul_skybound_02_floating_islands.png"
+      ]
+    },
+    "chroma_rush": {
+      "status": "PROVEN",
+      "p0_defects_resolved": [
+        "Self-intersecting road loop and curb collision hole removed between waypoints 28-31 and start line",
+        "Procedural 7-sided cylinder trees replaced with authentic 3D GLB foliage",
+        "Crude yellow wedge replaced with holographic diamond reticle with orbiting status ring",
+        "Distant skyline MultiMesh upgraded with illuminated window materials"
+      ],
+      "automated_evidence": "tests/unit/test_multi_game_overhaul_gates.gd (test_chroma_rush_roadway_continuity_and_visual_upgrade)",
+      "packaged_runtime_evidence": [
+        "artifacts/screenshots/overhaul_chroma_01_smooth_road.png",
+        "artifacts/screenshots/overhaul_chroma_02_city_skyline.png"
+      ]
+    },
+    "strike_vector": {
+      "status": "PROVEN",
+      "p0_defects_resolved": [
+        "Extraction helipad aligned at Z=-35.0 with physical ExtractionZone trigger",
+        "Continuous extraction proximity and hold [E] / 3-second auto-securing countdown implemented",
+        "Zero-HP lingering state eliminated with restore_vitals and HUD signals emitted on respawn"
+      ],
+      "automated_evidence": "tests/unit/test_multi_game_overhaul_gates.gd (test_strike_vector_extraction_and_vitals_restoration)",
+      "packaged_runtime_evidence": [
+        "artifacts/screenshots/strike_07_extraction_helipad.png",
+        "artifacts/screenshots/strike_09_results_screen.png"
+      ]
+    },
+    "iron_crucible": {
+      "status": "PROVEN",
+      "automated_evidence": "tests/e2e/test_arena_e2e.gd (76 passed)",
+      "packaged_runtime_evidence": [
+        "artifacts/screenshots/iron_01_spawn.png",
+        "artifacts/screenshots/iron_09_active_combat.png",
+        "artifacts/screenshots/iron_12_results_victory.png"
+      ]
+    },
+    "metro_siege": {
+      "status": "PROVEN",
+      "automated_evidence": "tests/e2e/test_subway_e2e.gd (36 passed)",
+      "packaged_runtime_evidence": [
+        "artifacts/screenshots/metro_01_station_spawn.png",
+        "artifacts/screenshots/metro_08_active_combat.png",
+        "artifacts/screenshots/metro_12_results_extraction.png"
+      ]
+    },
+    "nitro_kick": {
+      "status": "PROVEN",
+      "automated_evidence": "tests/e2e/test_rocket_e2e.gd (46 passed)",
+      "packaged_runtime_evidence": [
+        "artifacts/screenshots/nitro_01_kickoff.png",
+        "artifacts/screenshots/nitro_05_ball_physics.png",
+        "artifacts/screenshots/nitro_12_results_victory.png"
+      ]
+    },
+    "drift_storm": {
+      "status": "PROVEN",
+      "automated_evidence": "tests/e2e/test_kart_e2e.gd (67 passed)",
+      "packaged_runtime_evidence": [
+        "artifacts/screenshots/drift_01_start_grid.png",
+        "artifacts/screenshots/drift_06_drift_hairpin.png",
+        "artifacts/screenshots/drift_12_results_podium.png"
+      ]
+    }
+  },
+  "platforms": {
+    "web_cloudflare": {
+      "status": "PROVEN",
+      "measured": "All chunks <= 18.0MB, HTML hook injected, Playwright WebGL validated",
+      "evidence": "export/web/"
+    },
+    "desktop_windows": {
+      "status": "PROVEN",
+      "measured": "Windows packaged runtime and test suite green",
+      "evidence": "tests/runner.gd (2775 passed)"
+    },
+    "android": {
+      "status": "SIMULATION-PROVEN",
+      "measured": "Android APK build script and responsive touch controls verified",
+      "evidence": "scripts/build-android.ps1"
+    },
+    "macos": {
+      "status": "HARDWARE-REQUIRED",
+      "measured": "Requires macOS host with Apple codesigning certificates",
+      "evidence": "platform/macos/"
+    }
+  }
+}

@@ -29,6 +29,9 @@ var pause_menu: CanvasLayer = null
 var results_screen: CanvasLayer = null
 
 var is_extracting: bool = false
+var extraction_available: bool = false
+var extraction_securing_timer: float = 0.0
+const EXTRACTION_SECURE_REQUIRED_TIME: float = 3.0
 
 func _ready() -> void:
 	setup_subsystems()
@@ -240,6 +243,10 @@ func load_mission(m_idx: int) -> void:
 		setup_subsystems()
 
 	is_extracting = false
+	extraction_available = false
+	extraction_securing_timer = 0.0
+	if is_instance_valid(hud):
+		hud.has_extraction = false
 
 	# Clear existing streamer, player, camera
 	if is_instance_valid(mission_streamer):
@@ -323,7 +330,7 @@ func load_mission(m_idx: int) -> void:
 	if im and im.has_method("capture_mouse"):
 		im.capture_mouse(true)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not is_instance_valid(player_node) or not is_instance_valid(hud):
 		return
 
@@ -341,8 +348,43 @@ func _process(_delta: float) -> void:
 		var act_seg = mission_streamer.get_active_segment()
 		if act_seg:
 			if act_seg.is_boss_segment:
-				target_pos = act_seg.global_position + Vector3(0, 0, -32.0)
-				target_name = "EXTRACTION HELIPAD"
+				var lz_pos = act_seg.global_position + Vector3(0, 0.05, -35.0)
+				target_pos = lz_pos
+				target_name = "EXTRACTION HELIPAD LZ"
+
+				# Check if boss/encounter is completed or all hostiles neutralized
+				var is_boss_done = (not is_instance_valid(act_seg.encounter_director)) or act_seg.encounter_director.is_completed
+				if not is_boss_done and get_tree().get_nodes_in_group("enemies").is_empty():
+					is_boss_done = true
+					if is_instance_valid(act_seg.encounter_director):
+						act_seg.encounter_director.complete_encounter()
+
+				if is_boss_done and not extraction_available:
+					extraction_available = true
+					hud.has_extraction = true
+					hud.extraction_pos = lz_pos
+					hud.show_context_alert("TARGET ELIMINATED // PROCEED TO EXTRACTION HELIPAD", Color(0.1, 1.0, 0.5))
+					hud.update_objective("REACH EXTRACTION HELIPAD // EVAC INBOUND")
+
+				# Extraction LZ continuous proximity & secure countdown
+				if extraction_available and not is_extracting:
+					var dist_to_lz = p_pos.distance_to(lz_pos)
+					if dist_to_lz <= 8.5:
+						var is_holding_e = Input.is_action_pressed("interact") or Input.is_key_pressed(KEY_E)
+						var rate = 2.5 if is_holding_e else 1.0
+						extraction_securing_timer += delta * rate
+						var remaining = maxf(0.0, EXTRACTION_SECURE_REQUIRED_TIME - extraction_securing_timer)
+						if is_instance_valid(hud.directive_label):
+							if is_holding_e:
+								hud.directive_label.text = "[*] HOLDING [E] TO EXTRACT // %.1fs" % remaining
+								hud.directive_label.modulate = Color(0.1, 1.0, 0.5)
+							else:
+								hud.directive_label.text = "[*] SECURING LZ: %.1fs (HOLD [E] TO ACCELERATE)" % remaining
+								hud.directive_label.modulate = Color(0.2, 0.95, 1.0)
+						if extraction_securing_timer >= EXTRACTION_SECURE_REQUIRED_TIME:
+							_trigger_extraction(act_seg)
+					else:
+						extraction_securing_timer = 0.0
 			else:
 				target_pos = act_seg.global_position + Vector3(0, 0, -20.0)
 				target_name = act_seg.segment_name
@@ -369,7 +411,7 @@ func _connect_segment_events() -> void:
 			ext_area.name = "ExtractionZone"
 			ext_area.collision_layer = 0
 			ext_area.collision_mask = GameConstants.LAYER_PLAYER
-			ext_area.position = Vector3(0, 1.0, -32.0)
+			ext_area.position = Vector3(0, 1.0, -35.0)
 			var ext_col = CollisionShape3D.new()
 			var ext_box = BoxShape3D.new()
 			ext_box.size = Vector3(16.0, 5.0, 16.0)
@@ -380,7 +422,9 @@ func _connect_segment_events() -> void:
 			var captured_seg = seg
 			ext_area.body_entered.connect(func(body):
 				if body == player_node or (body and body.is_in_group("players")):
-					_trigger_extraction(captured_seg)
+					var is_done = extraction_available or (not is_instance_valid(captured_seg.encounter_director)) or captured_seg.encounter_director.is_completed or get_tree().get_nodes_in_group("enemies").is_empty()
+					if is_done:
+						_trigger_extraction(captured_seg)
 			)
 
 		if is_instance_valid(seg.encounter_director):
@@ -392,6 +436,9 @@ func _connect_segment_events() -> void:
 					advance_segment()
 				else:
 					# Last segment: prompt player to reach extraction helipad
+					extraction_available = true
+					hud.has_extraction = true
+					hud.extraction_pos = captured_seg_for_ed.global_position + Vector3(0, 0.05, -35.0)
 					hud.show_context_alert("TARGET ELIMINATED // PROCEED TO EXTRACTION", Color(0.1, 1.0, 0.5))
 					hud.update_objective("REACH EXTRACTION HELIPAD // EVAC INBOUND")
 					if is_instance_valid(player_node) and is_instance_valid(captured_ext):
@@ -404,18 +451,23 @@ func _connect_segment_events() -> void:
 func _trigger_extraction(seg: Node3D) -> void:
 	if is_extracting:
 		return
-	var is_boss_done = (not is_instance_valid(seg.encounter_director)) or seg.encounter_director.is_completed
+	var is_boss_done = extraction_available or (not is_instance_valid(seg.encounter_director)) or seg.encounter_director.is_completed or get_tree().get_nodes_in_group("enemies").is_empty()
 	if not is_boss_done:
 		hud.show_context_alert("EXTRACTION LOCKED // NEUTRALIZE HOSTILES FIRST", Color(1.0, 0.25, 0.2))
 		return
 
 	# Lock completion exactly once
 	is_extracting = true
+	extraction_available = true
 	if is_instance_valid(player_node):
 		player_node.velocity = Vector3.ZERO
 		player_node.set_physics_process(false)
 
 	hud.show_context_alert("OPERATIVE SECURED // EXTRACTION SUCCESSFUL", Color(0.1, 1.0, 0.5))
+	if is_instance_valid(hud.directive_label):
+		hud.directive_label.text = "[✓] MISSION COMPLETE // EVAC SHUTTLE AWAY"
+		hud.directive_label.modulate = Color(0.1, 1.0, 0.5)
+
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am and am.has_method("play_sound"):
 		am.play_sound("goal", 1.2)
@@ -455,6 +507,9 @@ func _on_player_died() -> void:
 		tree.create_timer(1.2).timeout.connect(func():
 			if is_instance_valid(player_node):
 				mission_mgr.checkpoint_mgr.restore_player_to_checkpoint(player_node)
+				if is_instance_valid(hud):
+					hud.update_health(player_node.current_health, player_node.max_health)
+					hud.update_armor(player_node.current_armor, player_node.max_armor)
 		)
 
 func _on_mission_completed(m_idx: int, results: Dictionary) -> void:

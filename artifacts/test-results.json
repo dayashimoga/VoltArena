@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 92.0692798541477,
-  "coverage_tested_functions": 1010,
-  "coverage_total_functions": 1097,
-  "execution_seconds": 76.269,
+  "coverage_percent": 92.3497267759563,
+  "coverage_tested_functions": 1014,
+  "coverage_total_functions": 1098,
+  "execution_seconds": 78.199,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -183,6 +183,11 @@
     "ModelCache 3D glTF Assets Unit": {
       "failed": 0,
       "passed": 23,
+      "status": "PASS"
+    },
+    "Multi-Game Overhaul & Screenshot Defect Gates": {
+      "failed": 0,
+      "passed": 32,
       "status": "PASS"
     },
     "Nitro Kick E2E": {
@@ -366,8 +371,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-10-04T15:43:22",
+  "timestamp": "2026-10-05T04:20:13",
   "total_failed": 0,
-  "total_passed": 2743,
-  "total_suites": 72
+  "total_passed": 2775,
+  "total_suites": 73
 }

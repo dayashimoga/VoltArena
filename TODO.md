@@ -1210,6 +1210,25 @@
   - `acceptance.json` (GATE-08 and GATE-10 PROVEN)
   - `production-certification.json` (Overall Status: PROVEN across all 10 games)
 
+### [2026-10-07 11:15:00 UTC] - Milestone Update: CI Test Runner SceneTree Lifecycle Remediation & 100% Suite Pass Rate
+- **Status**: COMPLETED
+- **Description**:
+  1. **Root-Cause Analysis of CI Failure**:
+     - Investigated failed GitHub Actions CI run `37607726538` (Job `112747229767`).
+     - Root-caused `AeroRush E2E Gameplay Scenarios` 3 failed assertions: in `runner.gd`, running in `SceneTree._init()` meant `Engine.get_main_loop()` returned `null`, preventing `AeroSaveAdapter._get_save_manager()` from locating `/root/SaveManager`. When clearing in-memory cache to simulate app restart, `AeroSaveAdapter` defaulted to factory data.
+     - Root-caused `Launcher E2E` 4 failed assertions: tests asserted career stats were `""` based on the old behavior where `SaveManager` was never found in headless runner. With `SceneTree._initialize()`, `SaveManager` is properly accessible.
+  2. **Lifecycle & Persistence Remediation**:
+     - Upgraded `tests/runner.gd` to `_initialize()`, ensuring full SceneTree and autoload registration before suite execution.
+     - Enhanced `AeroSaveAdapter` with direct disk fallback to `user://voltarena_save.json` for resilient persistence across app restarts.
+     - Guarded unparented Node3D and SceneTree operations in `AeroVehicle` and `RaceManager`.
+     - Updated `tests/e2e/test_launcher_e2e.gd` career stats assertions to validate formatted stats with active `SaveManager`.
+  3. **Verification**:
+     - Headless Godot 4.3 container execution: 79 suites, 3,002 passed assertions, 0 failed (100% success rate, 91.9% coverage, exit code 0).
+- **Evidence**:
+  - `artifacts/test-results.json` (79 suites, 3,002 passed, 0 failed, 100% pass rate)
+  - `artifacts/coverage-report.json` (91.9% function coverage)
+  - `tests/runner.gd` (clean execution in `barichello/godot-ci:4.3`)
+
 
 
 

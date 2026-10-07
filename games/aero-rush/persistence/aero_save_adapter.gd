@@ -36,6 +36,18 @@ static func load_aero_data() -> Dictionary:
 			return _cached_data.duplicate(true)
 	if not _cached_data.is_empty():
 		return _cached_data.duplicate(true)
+	# Disk fallback if SaveManager is unmounted or in isolated test
+	if FileAccess.file_exists("user://voltarena_save.json"):
+		var f = FileAccess.open("user://voltarena_save.json", FileAccess.READ)
+		if f:
+			var txt = f.get_as_text()
+			f.close()
+			var json = JSON.new()
+			if json.parse(txt) == OK and typeof(json.get_data()) == TYPE_DICTIONARY:
+				var root_dict = json.get_data()
+				if root_dict.has(SAVE_KEY) and typeof(root_dict[SAVE_KEY]) == TYPE_DICTIONARY:
+					_cached_data = _migrate_and_verify(root_dict[SAVE_KEY])
+					return _cached_data.duplicate(true)
 	_cached_data = get_default_data()
 	return _cached_data.duplicate(true)
 
@@ -44,6 +56,22 @@ static func save_aero_data(data: Dictionary) -> void:
 	var sm = _get_save_manager()
 	if sm:
 		sm.set_custom_data(SAVE_KEY, data)
+	else:
+		# Direct disk fallback if SaveManager autoload not mounted
+		var save_dict: Dictionary = {}
+		if FileAccess.file_exists("user://voltarena_save.json"):
+			var f_in = FileAccess.open("user://voltarena_save.json", FileAccess.READ)
+			if f_in:
+				var txt = f_in.get_as_text()
+				f_in.close()
+				var json = JSON.new()
+				if json.parse(txt) == OK and typeof(json.get_data()) == TYPE_DICTIONARY:
+					save_dict = json.get_data()
+		save_dict[SAVE_KEY] = data
+		var f_out = FileAccess.open("user://voltarena_save.json", FileAccess.WRITE)
+		if f_out:
+			f_out.store_string(JSON.stringify(save_dict, "  "))
+			f_out.close()
 
 static func record_course_result(
 	course_id: String,
@@ -125,6 +153,6 @@ static func _migrate_and_verify(data: Dictionary) -> Dictionary:
 
 static func _get_save_manager() -> Node:
 	var tree = Engine.get_main_loop() as SceneTree
-	if tree and tree.root and tree.root.has_node("SaveManager"):
-		return tree.root.get_node("SaveManager")
+	if tree and tree.root:
+		return tree.root.get_node_or_null("SaveManager")
 	return null

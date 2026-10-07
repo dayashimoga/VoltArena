@@ -37,6 +37,7 @@ func test_signal_declarations() -> void:
 	]
 	for sig_name in required_signals:
 		assert_true(bus.has_signal(sig_name), "EventBus must declare signal: %s" % sig_name)
+	bus.free()
 
 func test_signal_emission() -> void:
 	var bus = EventBusScript.new()
@@ -50,6 +51,7 @@ func test_signal_emission() -> void:
 	bus.show_toast_requested.connect(func(_msg, _color): toast_received[0] = true)
 	bus.show_toast_requested.emit("Test", Color.WHITE)
 	assert_true(toast_received[0], "show_toast_requested must work")
+	bus.free()
 
 func test_signal_connections() -> void:
 	var bus = EventBusScript.new()
@@ -60,3 +62,4 @@ func test_signal_connections() -> void:
 	bus.player_health_changed.emit(80.0, 100.0)
 	bus.player_health_changed.emit(60.0, 100.0)
 	assert_true(counter[0] == 2, "Signal must fire to all connected callbacks")
+	bus.free()

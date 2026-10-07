@@ -79,8 +79,9 @@ func _on_checkpoint_hit(kart: Node, cp_index: int) -> void:
 	var is_finish = (cp_index == 0)
 
 	if cp_index < checkpoints.size():
-		kart.last_valid_checkpoint_pos = checkpoints[cp_index].global_position
-		kart.last_valid_checkpoint_rot = checkpoints[cp_index].rotation.y
+		var cp = checkpoints[cp_index]
+		kart.last_valid_checkpoint_pos = cp.global_position if (cp is Node3D and cp.is_inside_tree()) else (cp.position if cp is Node3D else Vector3.ZERO)
+		kart.last_valid_checkpoint_rot = cp.rotation.y if cp is Node3D else 0.0
 
 	if is_finish:
 		# Crossing finish line gate
@@ -151,10 +152,12 @@ func update_race_positions() -> void:
 			spline = tg.race_spline
 			break
 		p = p.get_parent()
-	if not spline and get_tree() and get_tree().root:
-		var tg = get_tree().root.find_child("TrackGenerator", true, false)
-		if tg and tg.get("race_spline"):
-			spline = tg.race_spline
+	if not spline:
+		var tree: SceneTree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+		if tree and tree.root:
+			var tg = tree.root.find_child("TrackGenerator", true, false)
+			if tg and tg.get("race_spline"):
+				spline = tg.race_spline
 
 	if spline and spline.track_length > 0.0:
 		racers.sort_custom(func(a, b):

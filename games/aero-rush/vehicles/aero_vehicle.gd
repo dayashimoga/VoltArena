@@ -100,8 +100,12 @@ func _ready() -> void:
 	_setup_suspension_raycasts()
 	_setup_visuals()
 
-	last_safe_checkpoint_pos = global_position
-	last_safe_checkpoint_basis = global_basis
+	if is_inside_tree():
+		last_safe_checkpoint_pos = global_position
+		last_safe_checkpoint_basis = global_basis
+	else:
+		last_safe_checkpoint_pos = position
+		last_safe_checkpoint_basis = basis
 
 func _apply_catalog_specs() -> void:
 	var def = AeroVehicleCatalog.get_vehicle_definition(vehicle_id)

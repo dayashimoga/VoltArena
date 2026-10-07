@@ -102,7 +102,7 @@ const TestPackagedAeroRushE2EScript = preload("res://tests/acceptance/test_packa
 # --- Coverage ---
 const CoverageRegistryScript = preload("res://tests/coverage_registry.gd")
 
-func _init() -> void:
+func _initialize() -> void:
 	print("==================================================")
 	print("   VOLTARENA COMPREHENSIVE TEST RUNNER v2.0       ")
 	print("==================================================")
@@ -210,7 +210,9 @@ func _init() -> void:
 		{"name": "Platform Acceptance (Legacy)", "instance": TestAcceptanceScript.new()},
 	]
 	var filter_str = ""
-	for arg in OS.get_cmdline_user_args():
+	var cmd_args = OS.get_cmdline_user_args()
+	cmd_args.append_array(OS.get_cmdline_args())
+	for arg in cmd_args:
 		if arg.begins_with("--filter="):
 			filter_str = arg.substr(9).to_lower()
 

@@ -144,18 +144,31 @@ func test_responsive_layout() -> void:
 
 func test_career_stats_formatting() -> void:
 	var launcher = LauncherScript.new()
+	var sm = GameConstants.get_autoload(launcher, "SaveManager")
 
 	var stats = launcher.get_game_career_stats("arena_fps")
-	assert_eq(stats, "", "Stats must be empty without SaveManager")
+	if sm != null:
+		assert_true(stats.begins_with("Kills:"), "Stats must format arena_fps stats with SaveManager")
+	else:
+		assert_eq(stats, "", "Stats must be empty without SaveManager")
 
 	stats = launcher.get_game_career_stats("subway_survival")
-	assert_eq(stats, "", "Stats must be empty without SaveManager")
+	if sm != null:
+		assert_true(stats.begins_with("Highest Wave:"), "Stats must format subway_survival stats with SaveManager")
+	else:
+		assert_eq(stats, "", "Stats must be empty without SaveManager")
 
 	stats = launcher.get_game_career_stats("rocket_car")
-	assert_eq(stats, "", "Stats must be empty without SaveManager")
+	if sm != null:
+		assert_true(stats.begins_with("Goals Scored:"), "Stats must format rocket_car stats with SaveManager")
+	else:
+		assert_eq(stats, "", "Stats must be empty without SaveManager")
 
 	stats = launcher.get_game_career_stats("kart_racing")
-	assert_eq(stats, "", "Stats must be empty without SaveManager")
+	if sm != null:
+		assert_true(stats.begins_with("Races:"), "Stats must format kart_racing stats with SaveManager")
+	else:
+		assert_eq(stats, "", "Stats must be empty without SaveManager")
 
 	stats = launcher.get_game_career_stats("nonexistent_game")
 	assert_eq(stats, "", "Unknown game must return empty stats")

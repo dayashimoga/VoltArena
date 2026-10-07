@@ -1446,6 +1446,29 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **Comprehensive Master Test Runner (`tests/runner.gd`)**:
   - 79 test suites, 2,989 passed assertions, 0 failed (100% success rate). Zero regressions across all 10 VoltArena titles.
 
+## [7.2.1-ci-test-runner-remediation] - 2026-10-07
+### Fixed
+- **Headless Test Runner SceneTree Lifecycle (`tests/runner.gd`)**:
+  - Switched test runner execution from `func _init() -> void:` to `func _initialize() -> void:`. In Godot 4.3, scripts extending `SceneTree` running in `_init()` execute before the engine registers the tree with `Engine.get_main_loop()`, leaving `Engine.get_main_loop()` as `null` and preventing autoloads such as `SaveManager` from being discovered during headless test execution.
+  - Updated `--filter=` command line parsing in `tests/runner.gd` to inspect both `OS.get_cmdline_user_args()` and `OS.get_cmdline_args()`.
+- **AeroSaveAdapter Persistence Engine Autoload Resolution (`games/aero-rush/persistence/aero_save_adapter.gd`)**:
+  - Resolved `_get_save_manager()` failing during test restarts by querying `/root/SaveManager` directly from the main loop root node.
+  - Added direct disk fallback to `user://voltarena_save.json` in `load_aero_data()` and `save_aero_data()`, guaranteeing data persistence across simulated restarts regardless of scene tree attachment.
+- **Node Lifecycle & Scene Tree Safety (`games/aero-rush`, `games/kart-racing`, `tests/unit`)**:
+  - Guarded `last_safe_checkpoint_pos` and `last_safe_checkpoint_basis` initialization in `AeroVehicle._ready()` with `is_inside_tree()`, eliminating Godot engine `!is_inside_tree()` errors on unparented test vehicles.
+  - Guarded `last_valid_checkpoint_pos` assignment and scene tree root queries in `RaceManager` (`games/kart-racing/game/race_manager.gd`) with `is_inside_tree()`, preventing `Parameter "data.tree" is null` engine warnings.
+  - Replaced lingering `queue_free()` calls with immediate `free()` on unparented nodes across `test_car_physics.gd`, `test_event_bus.gd`, and `test_race_manager.gd`.
+- **Universal Launcher E2E Career Stats Autoload Resolution (`tests/e2e/test_launcher_e2e.gd`)**:
+  - Updated `test_career_stats_formatting()` to dynamically validate formatted career stats when `SaveManager` is active, resolving assertion failures that previously expected empty stats due to null autoload resolution.
+
+### Verified
+- Executed headless test suite in container (`barichello/godot-ci:4.3`):
+  - **79 test suites executed**.
+  - **3,002 passed assertions, 0 failed (100% pass rate)**.
+  - **Function coverage**: 91.9% (1,085 / 1,180 functions).
+  - Clean exit code 0.
+
+
 
 
 

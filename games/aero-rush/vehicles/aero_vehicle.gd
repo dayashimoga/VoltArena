@@ -118,16 +118,17 @@ func _apply_catalog_specs() -> void:
 	air_roll_speed = def.get("air_control_roll", 4.5)
 
 func _setup_collision_shape() -> void:
-	# Capsule shaped chassis collision hull with rounded corners eliminates track seam catching
+	# Capsule shaped chassis collision hull with rounded corners eliminates track seam catching.
+	# Positioned with bottom at Y=+0.12m so hull never drags or snags into track road geometry beneath wheels.
 	var col = CollisionShape3D.new()
 	col.name = "VehicleCollisionHull"
 	var capsule = CapsuleShape3D.new()
-	capsule.radius = 0.85
-	capsule.height = 3.6
+	capsule.radius = 0.48
+	capsule.height = 3.2
 	col.shape = capsule
 	# Orient horizontally along forward axis
 	col.rotation_degrees.x = 90.0
-	col.position = Vector3(0, 0.55, 0)
+	col.position = Vector3(0, 0.60, 0)
 	add_child(col)
 
 func _setup_suspension_raycasts() -> void:
@@ -160,7 +161,7 @@ func get_speed_kmh() -> float:
 func get_speed_mps() -> float:
 	return absf(forward_speed)
 
-var programmatic_inputs: bool = false
+var programmatic_override: bool = false
 
 func set_inputs(steer: float, throttle: float, brake: float, handbrake: bool, boost: bool) -> void:
 	steer_input = clampf(steer, -1.0, 1.0)
@@ -168,10 +169,10 @@ func set_inputs(steer: float, throttle: float, brake: float, handbrake: bool, bo
 	brake_input = clampf(brake, 0.0, 1.0)
 	handbrake_held = handbrake
 	boost_requested = boost
-	programmatic_inputs = true
+	programmatic_override = true
 
 func _physics_process(delta: float) -> void:
-	if is_player and not programmatic_inputs:
+	if is_player and not programmatic_override:
 		_process_player_inputs()
 
 	_update_grounding_and_suspension(delta)
@@ -181,7 +182,11 @@ func _physics_process(delta: float) -> void:
 
 func _process_player_inputs() -> void:
 	if not controls_enabled:
-		set_inputs(0, 0, 0, false, false)
+		steer_input = 0.0
+		throttle_input = 0.0
+		brake_input = 0.0
+		handbrake_held = false
+		boost_requested = false
 		return
 
 	# Manual reset hotkey
@@ -195,39 +200,39 @@ func _process_player_inputs() -> void:
 	var handbrake: bool = false
 	var boost: bool = false
 
-	# Steering
-	if InputMap.has_action("move_left") and InputMap.has_action("move_right"):
+	# Steering (InputMap action with physical key fallbacks)
+	if InputMap.has_action("move_left") and InputMap.has_action("move_right") and not InputMap.action_get_events("move_left").is_empty():
 		steer = Input.get_axis("move_left", "move_right")
-	else:
+	if absf(steer) <= 0.01:
 		if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
 			steer -= 1.0
 		if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
 			steer += 1.0
 
-	# Throttle / Forward
-	if InputMap.has_action("move_forward"):
+	# Throttle / Forward (InputMap action with physical key fallbacks)
+	if InputMap.has_action("move_forward") and not InputMap.action_get_events("move_forward").is_empty():
 		throttle = Input.get_action_strength("move_forward")
-	else:
+	if throttle <= 0.01:
 		if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
 			throttle = 1.0
 
-	# Brake / Reverse
-	if InputMap.has_action("move_back"):
+	# Brake / Reverse (InputMap action with physical key fallbacks)
+	if InputMap.has_action("move_back") and not InputMap.action_get_events("move_back").is_empty():
 		brake = Input.get_action_strength("move_back")
-	else:
+	if brake <= 0.01:
 		if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
 			brake = 1.0
 
 	# Drift / Handbrake (Shift or action)
-	if InputMap.has_action("drift"):
+	if InputMap.has_action("drift") and not InputMap.action_get_events("drift").is_empty():
 		handbrake = Input.is_action_pressed("drift")
-	else:
+	if not handbrake:
 		handbrake = Input.is_key_pressed(KEY_SHIFT)
 
 	# Nitro Boost (Space or action)
-	if InputMap.has_action("boost"):
+	if InputMap.has_action("boost") and not InputMap.action_get_events("boost").is_empty():
 		boost = Input.is_action_pressed("boost")
-	else:
+	if not boost:
 		boost = Input.is_key_pressed(KEY_SPACE)
 
 	# Virtual / Mobile Joystick Support
@@ -240,7 +245,11 @@ func _process_player_inputs() -> void:
 		elif im.virtual_move_vector.y > 0.05:
 			brake = maxf(brake, im.virtual_move_vector.y)
 
-	set_inputs(steer, throttle, brake, handbrake, boost)
+	steer_input = clampf(steer, -1.0, 1.0)
+	throttle_input = clampf(throttle, 0.0, 1.0)
+	brake_input = clampf(brake, 0.0, 1.0)
+	handbrake_held = handbrake
+	boost_requested = boost
 
 func _update_grounding_and_suspension(delta: float) -> void:
 	var contact_count: int = 0
@@ -264,7 +273,12 @@ func _update_grounding_and_suspension(delta: float) -> void:
 	is_grounded = contact_count >= 1 or is_on_floor() or (not is_inside_tree() and is_grounded)
 
 	if is_grounded:
-		ground_normal = (avg_normal / float(contact_count)).normalized()
+		if contact_count >= 1:
+			ground_normal = (avg_normal / float(contact_count)).normalized()
+		elif is_on_floor():
+			ground_normal = get_floor_normal()
+		else:
+			ground_normal = Vector3.UP
 		up_direction = ground_normal
 
 		# Evaluate Touchdown on Transition from Air to Ground
@@ -380,7 +394,9 @@ func _process_movement(delta: float) -> void:
 	# Synchronize forward speed with actual horizontal velocity on ground if wall collision
 	if is_inside_tree() and is_on_wall():
 		var forward_dir = -global_basis.z.normalized()
-		forward_speed = velocity.dot(forward_dir)
+		var forward_proj = velocity.dot(forward_dir)
+		if forward_proj < forward_speed:
+			forward_speed = maxf(0.0, forward_proj)
 
 func _process_ground_movement(delta: float) -> void:
 	# 1. Nitro Boost
@@ -481,18 +497,21 @@ func _process_airborne_movement(delta: float) -> void:
 	velocity.z *= drag
 
 func _update_visual_dynamics(delta: float) -> void:
+	# 1. Wheel Axle Rolling Rotation
+	var travel_dist = forward_speed * delta
+	wheel_roll_rot += travel_dist / 0.35 # Approx tire radius 0.35m
+
+	if not chassis_node:
+		_setup_visuals()
 	if not chassis_node:
 		return
 
-	# 1. Front Wheels Steering Yaw
+	# 2. Front Wheels Steering Yaw
 	var target_steer_angle = deg_to_rad(-steer_input * 32.0)
 	if wheels.size() >= 2:
 		wheels[0].rotation.y = lerp_angle(wheels[0].rotation.y, target_steer_angle, delta * 16.0)
 		wheels[1].rotation.y = lerp_angle(wheels[1].rotation.y, target_steer_angle, delta * 16.0)
 
-	# 2. Wheel Axle Rolling Rotation
-	var travel_dist = forward_speed * delta
-	wheel_roll_rot += travel_dist / 0.35 # Approx tire radius 0.35m
 	for w in wheels:
 		var mesh = w.get_node_or_null("WheelMesh")
 		if mesh:

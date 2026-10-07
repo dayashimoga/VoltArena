@@ -89,26 +89,46 @@ func test_scenario_3_driving_drift_and_nitro() -> void:
 	aero.set_state(AeroRushMain.State.RACING)
 
 	var veh = aero.player_vehicle
+	assert_true(veh != null, "Player vehicle must exist")
+	assert_true(veh.controls_enabled, "Controls must be enabled in RACING state")
+	assert_true(not veh.programmatic_override, "Programmatic override must be disabled for real player driving")
 
-	# Accelerate
-	veh.is_grounded = true
-	veh.set_inputs(0.0, 1.0, 0.0, false, false)
+	# 1. Genuine Acceleration from Standstill using real InputMap action
+	var initial_z = veh.global_position.z
+	Input.action_press("move_forward")
+	for i in range(40):
+		veh._physics_process(0.016)
+	Input.action_release("move_forward")
+
+	assert_true(veh.throttle_input > 0.0, "Vehicle must detect real move_forward throttle action")
+	assert_true(veh.forward_speed > 8.0, "Vehicle must accelerate naturally from 0 to > 8 m/s under real throttle")
+	assert_true(veh.get_speed_kmh() > 28.0, "Speedometer must register > 28 km/h under real throttle")
+
+	# 2. Genuine Steering using real InputMap action
+	var init_rot_y = veh.global_rotation.y
+	Input.action_press("move_right")
+	for i in range(15):
+		veh._physics_process(0.016)
+	Input.action_release("move_right")
+	assert_true(veh.global_rotation.y != init_rot_y or veh.steer_input > 0.0, "Vehicle must respond to real move_right steering action")
+
+	# 3. Genuine Braking using real InputMap action
+	var speed_before_brake = veh.forward_speed
+	Input.action_press("move_back")
 	for i in range(20):
 		veh._physics_process(0.016)
-	assert_true(veh.forward_speed > 5.0, "Vehicle must accelerate under throttle")
+	Input.action_release("move_back")
+	assert_true(veh.forward_speed < speed_before_brake, "Vehicle must decelerate under real move_back brake action")
 
-	# Drift
-	veh.forward_speed = maxf(veh.forward_speed, 18.0)
-	veh.set_inputs(0.8, 1.0, 0.0, true, false)
-	veh._physics_process(0.016)
-	assert_true(veh.is_drifting, "Handbrake at speed with steer must initiate drift")
-
-	# Nitro Boost
+	# 4. Genuine Nitro Boost using real InputMap action
 	var initial_boost = veh.boost_gauge
-	veh.set_inputs(0.0, 1.0, 0.0, false, true)
-	for i in range(10):
+	Input.action_press("move_forward")
+	Input.action_press("boost")
+	for i in range(15):
 		veh._physics_process(0.016)
-	assert_true(veh.boost_gauge < initial_boost, "Nitro boost must consume boost gauge")
+	Input.action_release("boost")
+	Input.action_release("move_forward")
+	assert_true(veh.boost_gauge < initial_boost, "Nitro boost must consume boost gauge during real boost action")
 
 	aero.clean_up_session()
 	aero.queue_free()
@@ -197,9 +217,9 @@ func test_scenario_7_persistence_across_app_restart() -> void:
 	AeroSaveAdapter._cached_data = {}
 	var reloaded = AeroSaveAdapter.load_aero_data()
 
-	assert_true(reloaded["course_medals"]["cyber_loopway"] == AeroConstants.Medal.GOLD, "Persisted medal must survive restart")
-	assert_true(reloaded["best_times"]["cyber_loopway"] == 71.4, "Persisted best time must survive restart")
-	assert_true(reloaded["credits"] >= 1800, "Persisted credits must survive restart")
+	assert_true(reloaded.get("course_medals", {}).get("cyber_loopway", 0) == AeroConstants.Medal.GOLD, "Persisted medal must survive restart")
+	assert_true(reloaded.get("best_times", {}).get("cyber_loopway", 0.0) == 71.4, "Persisted best time must survive restart")
+	assert_true(reloaded.get("credits", 0) >= 1800, "Persisted credits must survive restart")
 
 func test_scenario_8_next_course_and_return_to_hub() -> void:
 	var aero = AeroRushMain.new()

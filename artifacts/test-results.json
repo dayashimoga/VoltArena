@@ -2,7 +2,7 @@
   "coverage_percent": 91.9491525423729,
   "coverage_tested_functions": 1085,
   "coverage_total_functions": 1180,
-  "execution_seconds": 92.165,
+  "execution_seconds": 106.421,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -17,7 +17,12 @@
     },
     "AeroRush E2E Gameplay Scenarios": {
       "failed": 0,
-      "passed": 24,
+      "passed": 30,
+      "status": "PASS"
+    },
+    "AeroRush Packaged Black-Box Acceptance": {
+      "failed": 0,
+      "passed": 22,
       "status": "PASS"
     },
     "AeroRush Physics & Stunts Unit": {
@@ -396,8 +401,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-10-07T08:29:35",
+  "timestamp": "2026-10-07T10:20:48",
   "total_failed": 0,
-  "total_passed": 2961,
-  "total_suites": 78
+  "total_passed": 2989,
+  "total_suites": 79
 }

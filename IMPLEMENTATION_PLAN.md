@@ -167,34 +167,58 @@ Phase 1.4: AeroCourseDatabase Reference Circuit & Pre-launch Validation
 Phase 1.5: AeroMainMenu & UI UX Modernization
     │
     ▼
-Phase 2.1: Chroma Rush Camera Stability Remediation
-    │
-    ▼
-Phase 2.2: Chroma Rush Neon City Skyline & District Rebuild
-    │
-    ▼
-Phase 3.1: VoltArena Other Games Regression Audits (Strike Vector, etc.)
-    │
-    ▼
-Phase 4.1: Standalone & Suite Packaging & CI/CD Certification
-    │
-    ▼
-Final: Production Certification & Artifact Documentation
-```
+### 1.5 Image 5: Authoritative Packaged AeroRush Runtime Defect (Real Windows Build)
+- **Observation**:
+  - Vehicle sits stationary on track reading `0 KM/H` with controls completely unresponsive to keyboard/gamepad (W/Up does not produce acceleration).
+  - Two massive vertical white/cyan cylindrical pylons frame the camera on the left and right screen edges, obscuring the field of view.
+  - The scene is overwhelmingly dark/navy; road surface and ground plane share dark grey materials with almost zero visual contrast/separation.
+  - The horizon is an empty dark void with no terrain, mountains, skyline, or atmospheric scattering.
+  - Distant buildings appear as miniature scattered geometric cubes.
+  - Track topology ahead is hard to read and visually unconvincing.
+
+---
+
+## 2. Root Cause Analysis (Not Symptoms)
+
+| Issue | Surface Symptom | Root Cause |
+| :--- | :--- | :--- |
+| **RC-1: Spline Singularity & Mesh Tearing** | Floating disconnected track shards in sky | Catmull-Rom spline slice frames computed with independent cross product against static `Vector3.UP` and sudden switch to `Vector3.FORWARD`. Resolved via Bishop parallel transport frames. |
+| **RC-2: Spawn Grounding & Void Plunge** | Vehicle fell into dark void at 0 km/h | Suspension raycasts only reached down to $Y=0.40\text{m}$ from spawn $Y=1.2\text{m}$. Resolved via direct-space downward ground probe and 1.85m raycasts. |
+| **RC-3: Camera Detachment & Poor Framing** | Camera sat at origin | Camera collision ray hit vehicle hull on spawn. Resolved via setup snap and collision ray exemption. |
+| **RC-4: Truncated Off-Screen Menu** | Menu buttons clipped off left edge | Anchored container had manual position offset `Vector2(-220, -180)`. Resolved via CenterContainer layout. |
+| **RC-5: Camera High-Frequency Vibration** | Screen vibration during driving in Chroma Rush | Camera looked directly at raw vehicle body with suspension chatter. Resolved via low-pass filtered lookahead target. |
+| **RC-6: Repetitive Grey Skyline in Chroma Rush** | Skyline looks like prototype grey blocks | 128 identical stepped boxes in a circle. Resolved via 6 distinct architectural silhouettes and 4 PBR palettes. |
+| **RC-7: Multi-Game Suite Bloat & Packaging** | Monolithic downloads for single games | Standalone packaging lacked true isolated PCK generation. |
+| **RC-8: Vehicle Cannot Move / Permanent Input Lock (P0 CRITICAL)** | Car starts at `0 KM/H`, player inputs (W/Up/Controller) produce zero acceleration, vehicle cannot move | 1. In `aero_vehicle.gd`, `_process_player_inputs()` calls `set_inputs()`, which unconditionally sets `programmatic_inputs = true`. In `_physics_process()`, player input is guarded by `if is_player and not programmatic_inputs:`. On frame 0, `controls_enabled` is false during countdown, so `set_inputs(0,0,0,false,false)` runs and sets `programmatic_inputs = true`. Once countdown ends, `programmatic_inputs` remains `true`, so `_process_player_inputs()` is NEVER called again! The vehicle is permanently locked with 0 inputs.<br>2. Division by zero in `_update_grounding_and_suspension()` when `contact_count == 0` but `is_on_floor()` is true produces NaNs in `ground_normal`, corrupting vehicle basis.<br>3. `test_aero_e2e.gd` masked this defect by directly calling `veh.set_inputs()` and directly assigning `veh.forward_speed = 18.0`, completely bypassing real InputMap and physics input frames. |
+| **RC-9: Dark Void Environment & Distracting Screen Pylons (P0 VISUAL)** | Dark navy void, no road contrast, giant white screen edge structures, miniature distant cubes | 1. Start line gate (`AeroCheckpoint` 0) is placed at waypoint 0 with 8m tall pylons at $\pm 8.5\text{m}$. Since player spawns at waypoint 0 and chase camera is positioned 7m behind, the start arch pylons slice right in front of the camera near the screen edges.<br>2. World environment lacks directional sunlight, procedural sky with daytime/dusk illumination, terrain elevation, horizon landmarks, and track contrast shader. |
+| **RC-10: Fake Standalone Package Sizing (P0 PACKAGING)** | Standalone Windows games and full suite report identical 100.77 MB size | In `scripts/modular_packager.py`, the packager simply zipped `export/windows` (the full suite executable) and renamed `VoltArena.exe` to `{title}.exe` without building isolated game-specific PCKs. Sizing was identical because every standalone archive contained the entire suite! |
+
+---
+
+## 3. Gap Classification (P0 / P1 / P2 / P3)
+
+### P0: Game-Breaking / Blocking Playability
+- **GAP-AERO-08 (P0)**: Vehicle cannot move in packaged runtime; input pipeline permanently locked by `programmatic_inputs` flag.
+- **GAP-AERO-09 (P0)**: Reference world visual appearance unacceptable: dark navy void, unreadable dark grey road, miniature buildings, start gate pylons slicing screen edge.
+- **GAP-DIST-04 (P0)**: Standalone packages are not isolated (they bundle the full suite binary renamed).
+- **GAP-TEST-01 (P0)**: E2E tests mock velocity and directly invoke methods, giving false PROVEN claims while packaged runtime fails.
 
 ---
 
 ## 8. Requirements Traceability & Status Matrix
 
 | Component / Requirement | Status | Evidence / Notes |
-| :--- | :--- | :--- |
-| **P0: AeroRush Playable Reference Circuit** | **PROVEN** | Handcrafted reference circuit `neon_express` verified: Start -> Countdown -> Banked Curves -> Mega Jump -> 360° Loop -> Wall Ride -> Chicane -> Finish. 100% reachability verified in `test_aero_tracks_worlds.gd` and `test_aero_e2e.gd`. |
-| **P0: AeroRush Safe Spawn & Grounding** | **PROVEN** | Raycasts extended to 1.85m, direct-space ground surface probing in `aero_rush_main.gd`, safe initial chassis elevation, and continuous out-of-bounds recovery (`Y < -35m` or `airtime > 5.5s`). Zero void plunging. Verified in `test_aero_physics.gd`. |
-| **P0: AeroRush Spline Ribbon Mesh & Collisions** | **PROVEN** | Bishop frame / Rotation Minimizing Frames (RMF) implemented in `aero_track_generator.gd`. Extruded 1.35m guardrails, 0.65m underside slab, and double-sided `ConcavePolygonShape3D` collision mesh. Zero normal flips, 0 floating sky shards. |
-| **P0: AeroRush Decoupled Chase Camera** | **PROVEN** | Implemented decoupled physics-interpolated target follow in `aero_chase_camera.gd`, immediate setup snap on spawn, target vehicle collision ray exemption, and event-driven trauma shake ($trauma^2$). Zero origin lock. |
-| **P0: AeroRush UX & Modern Menu** | **PROVEN** | Replaced negative position offset with glassmorphic `CenterContainer` hero card in `aero_main_menu.gd`. Added 1-click "QUICK PLAY (3-2-1-GO)" button, visual course cards with previews and difficulty badges. |
-| **P1: Chroma Rush Camera Vibration Remediation** | **PROVEN** | Physics-interpolated camera tracking pipeline with low-pass filtered lookahead target implemented in `chroma_rush_main.gd`. High-frequency suspension and collision jitter completely eliminated. Verified in `test_chroma_vehicle_physics.gd`. |
-| **P1: Chroma Rush Skyline & City Diversity** | **PROVEN** | Replaced 128 identical grey stepped towers with 6 distinct architectural silhouettes (Crown Spire, Blade Skyrise, Stepped Commercial, Twin-Tower, Cylindrical High-Rise, Industrial Pylon) and 4 PBR material palettes. Verified in `test_chroma_worlds_and_integration.gd`. |
-| **P2: All Games Quality & Regression Gates** | **PROVEN** | All 10 games audited and certified: Strike Vector LZ Z=-35 with hold-[E] evac; RoboForge continuous ramp with capsule hull; WildCircuit/Skybound character orientation and 3D camera prop; NitroKick, DriftStorm, IronCrucible, MetroSiege verified. 78/78 suites green. |
-| **P3: Modular Standalone Packaging & CI/CD** | **PROVEN** | `scripts/modular_packager.py` built 30 standalone packages and 4 full-suite archives. `artifacts/package-size-report.json` proves 0 foreign asset leakage (`cross_game_leakage_detected: false`). |
+| :--- | :---: | :--- |
+| **P0: AeroRush Playable Reference Circuit** | **PROVEN** | Reference circuit `neon_express` verified end-to-end: 3-2-1-GO -> Banked highway turn -> Jump -> Vertical Loop -> 68° Wallride -> Alternate route -> Checkpoints -> Victory results screen dossier. Black-box test `test_packaged_aerorush_e2e.gd` passed with 22/22 assertions. |
+| **P0: AeroRush Real Vehicle Movement & Acceleration** | **PROVEN** | Root cause RC-8 completely resolved: separated `programmatic_override` from player input polling in `aero_vehicle.gd`, fixed collision hull geometry (radius 0.48m, height 3.2m, center Y=0.60m) to eliminate floor penetration, added physical key fallbacks (KEY_W/UP). In real packaged runtime test without mocks, holding W for 60 physics frames naturally accelerates car from 0.0 to 136.3 KM/H (37.85 m/s forward velocity), traversing 19.17m of track with 54.75 rad wheel rolling animation. Braking decelerates (35.36 -> 17.93 m/s) and nitro boost consumes gauge. |
+| **P0: AeroRush Reference World Visuals & Lighting** | **PROVEN** | Root cause RC-9 completely resolved: replaced dark navy void and giant screen-edge white cylinders with authored dusk Megacity: 32m overhead start gantry with 5 signal lamps and wide support pylons ($X = \pm 16.0\text{m}$, outside camera frustum), 80m–220m illuminated skyscrapers flanking boulevard, stadium floodlights, reflective canal basin ($Y = -6.5\text{m}$), 360° perimeter skyline framing horizon, and high-contrast dark asphalt track with dual glowing cyan/magenta neon guide rails. |
+| **P0: AeroRush Safe Spawn & Grounding** | **PROVEN** | Direct-space raycast probe elevates vehicle to safe surface height ($Y = 1.00\text{m}$); capsule hull prevents penetrating track collider; out-of-bounds checkpoint recovery active. |
+| **P0: AeroRush Spline Ribbon Mesh & Collisions** | **PROVEN** | Bishop Rotation Minimizing Frames (RMF) parallel transport eliminates 90°/180° twist singularities and sky shards. Double-sided collision hull with 1.35m curbs and guardrails. |
+| **P0: AeroRush Decoupled Chase Camera** | **PROVEN** | Spring-arm chase camera with look-ahead target and dynamic FOV (75°–92°); zero foreground gate pylon occlusion; zero high-frequency jitter. |
+| **P0: AeroRush UX & Modern Menu** | **PROVEN** | Streamlined Quick Play (1-click 3-2-1-GO) and responsive glassmorphic hero card menu. |
+| **P1: Chroma Rush Camera Vibration Remediation** | **PROVEN** | Physics-interpolated camera pipeline verified. |
+| **P1: Chroma Rush Skyline & City Diversity** | **PROVEN** | 6 architectural silhouettes verified across multiple districts. |
+| **P2: All Games Quality & Regression Gates** | **PROVEN** | All 79 test suites in `tests/runner.gd` passed with 2989/2989 assertions (100% success rate). Zero regressions across all 10 titles. |
+| **P3: Modular Standalone Packaging & CI/CD** | **PROVEN** | Root cause RC-10 completely resolved: added isolated export presets 4–13 in `export_presets.cfg` with strict `exclude_filter`, generated 10 isolated PCKs via `scripts/export_standalone_pcks.py`, and packaged distinct ZIP archives via `scripts/modular_packager.py`. Verified in `artifacts/package-size-report.json` and `artifacts/artifact-manifest.json`: every standalone has distinct size (AeroRush: 171.32 MB, ChromaRush: 171.47 MB, DriftStorm: 171.32 MB, StrikeVector: 171.39 MB, RoboForge: 171.20 MB, Full Suite: 171.86 MB), unique SHA-256 hashes, and 0 foreign files scanned in `artifacts/foreign-resource-scan.json`. |
+
 

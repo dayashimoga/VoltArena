@@ -13,54 +13,69 @@ const TRACK_SHADER_CODE = """
 shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_lambert, specular_schlick_ggx;
 
-uniform vec4 asphalt_color : source_color = vec4(0.11, 0.12, 0.14, 1.0);
-uniform vec4 curb_color : source_color = vec4(0.98, 0.32, 0.08, 1.0);
-uniform vec4 neon_border_color : source_color = vec4(0.08, 0.88, 1.0, 1.0);
-uniform float roughness_val = 0.55;
+uniform vec4 asphalt_color : source_color = vec4(0.22, 0.24, 0.28, 1.0);
+uniform vec4 curb_color : source_color = vec4(1.0, 0.40, 0.06, 1.0);
+uniform vec4 neon_left_color : source_color = vec4(0.05, 0.92, 1.0, 1.0);
+uniform vec4 neon_right_color : source_color = vec4(1.0, 0.24, 0.65, 1.0);
+uniform float roughness_val = 0.50;
 
 void fragment() {
 	float u = UV.x;
-	bool is_border = (u < 0.05 || u > 0.95);
+	bool is_border_left = (u < 0.05);
+	bool is_border_right = (u > 0.95);
 	bool is_barrier_face = ((u >= 0.05 && u < 0.10) || (u > 0.90 && u <= 0.95));
 	bool is_curb = ((u >= 0.10 && u < 0.16) || (u > 0.84 && u <= 0.90));
 	bool is_center_line = (abs(u - 0.5) < 0.016);
+	bool is_tire_track = ((u >= 0.27 && u <= 0.37) || (u >= 0.63 && u <= 0.73));
 
-	if (is_border) {
-		// Glowing Neon Track Boundary
-		ALBEDO = neon_border_color.rgb;
-		EMISSION = neon_border_color.rgb * 3.2;
-		ROUGHNESS = 0.12;
-		METALLIC = 0.6;
+	if (is_border_left) {
+		// Glowing Cyan Left Guide Rail
+		ALBEDO = neon_left_color.rgb;
+		EMISSION = neon_left_color.rgb * 3.6;
+		ROUGHNESS = 0.10;
+		METALLIC = 0.7;
+	} else if (is_border_right) {
+		// Glowing Magenta/Amber Right Guide Rail
+		ALBEDO = neon_right_color.rgb;
+		EMISSION = neon_right_color.rgb * 3.6;
+		ROUGHNESS = 0.10;
+		METALLIC = 0.7;
 	} else if (is_barrier_face) {
 		// Reinforced Carbon Barrier Wall
 		ALBEDO = vec3(0.18, 0.20, 0.24);
-		ROUGHNESS = 0.70;
-		METALLIC = 0.40;
+		ROUGHNESS = 0.65;
+		METALLIC = 0.45;
 	} else if (is_curb) {
 		// High-contrast Orange / White Alternating Stunt Curb
 		float stripe = mod(UV.y * 6.0, 2.0);
-		vec3 c_col = (stripe < 1.0) ? curb_color.rgb : vec3(0.94, 0.94, 0.96);
+		vec3 c_col = (stripe < 1.0) ? curb_color.rgb : vec3(0.96, 0.96, 0.98);
 		ALBEDO = c_col;
-		EMISSION = (stripe < 1.0) ? curb_color.rgb * 0.6 : vec3(0.2);
-		ROUGHNESS = 0.40;
+		EMISSION = (stripe < 1.0) ? curb_color.rgb * 0.9 : vec3(0.25);
+		ROUGHNESS = 0.35;
 		METALLIC = 0.15;
 	} else if (is_center_line) {
 		// High-Speed Dashed Centerline
 		float dash = mod(UV.y * 5.0, 2.0);
 		if (dash < 1.0) {
 			ALBEDO = vec3(1.0, 0.92, 0.15);
-			EMISSION = vec3(1.0, 0.92, 0.15) * 1.5;
+			EMISSION = vec3(1.0, 0.92, 0.15) * 2.2;
 		} else {
 			ALBEDO = asphalt_color.rgb;
 		}
-		ROUGHNESS = 0.55;
+		ROUGHNESS = 0.45;
 		METALLIC = 0.05;
+	} else if (is_tire_track) {
+		// High-Speed Rubberized Tire Wear Groove
+		ALBEDO = vec3(0.15, 0.16, 0.19);
+		ROUGHNESS = 0.42;
+		METALLIC = 0.12;
+		SPECULAR = 0.45;
 	} else {
-		// Premium High-Grip Track Surface
+		// Premium High-Grip Asphalt Track Surface
 		ALBEDO = asphalt_color.rgb;
 		ROUGHNESS = roughness_val;
 		METALLIC = 0.10;
-		SPECULAR = 0.40;
+		SPECULAR = 0.35;
 	}
 }
 """
@@ -428,14 +443,15 @@ static func _generate_support_pylons(dense_points: Array[Dictionary], parent: No
 
 		if dist_accum >= pylon_spacing:
 			dist_accum = 0.0
-			var height = p_curr.y
-			if height > 4.5:
+			var ground_basin_y = -6.5
+			var col_height = p_curr.y - ground_basin_y
+			if col_height > 2.5:
 				var pylon = MeshInstance3D.new()
 				var cyl = CylinderMesh.new()
-				cyl.top_radius = 1.3
-				cyl.bottom_radius = 1.8
-				cyl.height = height
+				cyl.top_radius = 1.2
+				cyl.bottom_radius = 1.6
+				cyl.height = col_height
 				pylon.mesh = cyl
 				pylon.material_override = pylon_mat
-				pylon.position = Vector3(p_curr.x, height * 0.5, p_curr.z)
+				pylon.position = Vector3(p_curr.x, ground_basin_y + col_height * 0.5, p_curr.z)
 				parent.add_child(pylon)

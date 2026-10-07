@@ -1419,6 +1419,34 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **Modular Packaging**: Built 30 standalone packages and 4 full-suite packages using `scripts/modular_packager.py`. Verified zero foreign asset leakage (`cross_game_leakage_detected: false`).
 - **Production Status**: **PROVEN** across all 10 games in VoltArena.
 
+## [7.2.0-packaged-acceptance] - 2026-10-07
+### Fixed
+- **AeroRush P0 Runtime Input Lock & Vehicle Movement Failure (RC-8)**:
+  - Eliminated permanent player input lock caused by `_process_player_inputs()` calling `set_inputs()` during countdown, which set `programmatic_inputs = true` and prevented subsequent player input processing.
+  - Replaced `programmatic_inputs` with `programmatic_override` and decoupled player input polling from override in `aero_vehicle.gd`.
+  - Added physical key fallbacks (`KEY_W`, `KEY_UP`, `KEY_S`, `KEY_A`, `KEY_D`, `KEY_SHIFT`, `KEY_SPACE`) in addition to Godot `InputMap` action polling.
+  - Fixed collision hull ground penetration: resized vehicle `CapsuleShape3D` to radius 0.48m, height 3.2m, center $Y=0.60\text{m}$, ensuring vehicle hull clears track collision mesh and prevents `is_on_wall()` from zeroing forward velocity.
+  - Added safe ground surface probe elevation ($+0.55\text{m}$) in `aero_rush_main.gd`.
+- **AeroRush P0 Foreground Gate Obstruction & Dark Navy Void Visuals (RC-9)**:
+  - Replaced start line Checkpoint 0 pylons slicing the foreground edges of the chase camera with a wide 32m overhead racing gantry at $Y=11.5\text{m}$ featuring 5 start signal lamps and support pylons at $X=\pm 16.0\text{m}$ outside camera frustum.
+  - Overhauled `AeroWorldMegacity`: replaced dark navy void with authored golden-dusk twilight Megacity with directional key sunlight (energy 2.5, angle $-26^\circ$, shadow enabled), sapphire sky dome, golden sunset horizon, reflective canal/river basin at $Y=-6.5\text{m}$, stadium straight with covered grandstands and floodlight towers, 80m–220m skyscrapers flanking boulevard, high-altitude transit skybridges, and 360° perimeter skyline framing the entire horizon.
+  - Upgraded track shader: high-contrast dark slate asphalt (`vec4(0.22, 0.24, 0.28)`), dual glowing cyan/magenta neon guide rails, alternating orange/white curbs, rubber tire wear grooves, and glowing dashed yellow centerline.
+- **Standalone Package Sizing & Genuine Asset Isolation (RC-10)**:
+  - Root-caused identical 100.77 MB packages to `modular_packager.py` copying the monolithic suite binary and renaming it.
+  - Added standalone export presets 4–13 in `export_presets.cfg` (`Windows-AeroRush` through `Windows-IronCrucible`) with strict `exclude_filter` omitting all other 9 games' asset folders.
+  - Implemented `scripts/export_standalone_pcks.py` and exported isolated standalone PCKs.
+  - Overhauled `scripts/modular_packager.py` to package `{title}.exe` + `{title}.pck` + `standalone_manifest.json`.
+  - Generated independent verification reports in `artifacts/package-size-report.json`, `artifacts/artifact-manifest.json`, and `artifacts/foreign-resource-scan.json` demonstrating distinct byte sizes, unique SHA-256 hashes, and 0 foreign files across all standalone packages.
+
+### Added
+- **Packaged Black-Box Acceptance Test Suite (`tests/acceptance/test_packaged_aerorush_e2e.gd`)**:
+  - Validates real physical acceleration without mocks: vehicle starts at 0.0 KM/H, holding W for 60 physics frames naturally accelerates to 136.3 KM/H (37.85 m/s forward velocity), traversing 19.17m of track with 54.75 rad wheel rolling animation.
+  - Validates steering yaw, braking deceleration (35.36 -> 17.93 m/s), nitro boost gauge consumption, 6-checkpoint sequence, and transition to victory results dossier.
+  - 22 passed, 0 failed (100% success rate).
+- **Comprehensive Master Test Runner (`tests/runner.gd`)**:
+  - 79 test suites, 2,989 passed assertions, 0 failed (100% success rate). Zero regressions across all 10 VoltArena titles.
+
+
 
 
 

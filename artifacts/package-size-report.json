@@ -1,45 +1,180 @@
 {
-  "total_games": 10,
   "standalone_packages": {
-    "AeroRush-Linux-x86_64.tar.gz": 94.92,
-    "AeroRush-Web.zip": 158.36,
-    "AeroRush-Windows-x86_64.zip": 100.77,
-    "ChromaRush-Linux-x86_64.tar.gz": 94.92,
-    "ChromaRush-Web.zip": 158.36,
-    "ChromaRush-Windows-x86_64.zip": 100.77,
-    "DriftStorm-Linux-x86_64.tar.gz": 94.92,
-    "DriftStorm-Web.zip": 158.36,
-    "DriftStorm-Windows-x86_64.zip": 100.77,
-    "IronCrucible-Linux-x86_64.tar.gz": 94.92,
-    "IronCrucible-Web.zip": 158.36,
-    "IronCrucible-Windows-x86_64.zip": 100.77,
-    "MetroSiege-Linux-x86_64.tar.gz": 94.92,
-    "MetroSiege-Web.zip": 158.36,
-    "MetroSiege-Windows-x86_64.zip": 100.77,
-    "NitroKick-Linux-x86_64.tar.gz": 94.92,
-    "NitroKick-Web.zip": 158.36,
-    "NitroKick-Windows-x86_64.zip": 100.77,
-    "RoboForgeArena-Linux-x86_64.tar.gz": 94.92,
-    "RoboForgeArena-Web.zip": 158.36,
-    "RoboForgeArena-Windows-x86_64.zip": 100.77,
-    "SkyboundOdyssey-Linux-x86_64.tar.gz": 94.92,
-    "SkyboundOdyssey-Web.zip": 158.36,
-    "SkyboundOdyssey-Windows-x86_64.zip": 100.77,
-    "StrikeVector-Linux-x86_64.tar.gz": 94.92,
-    "StrikeVector-Web.zip": 158.36,
-    "StrikeVector-Windows-x86_64.zip": 100.77,
-    "WildCircuit-Linux-x86_64.tar.gz": 94.92,
-    "WildCircuit-Web.zip": 158.36,
-    "WildCircuit-Windows-x86_64.zip": 100.77
+    "AeroRush-Linux-x86_64.tar.gz": {
+      "size_mb": 165.46,
+      "size_bytes": 173492462,
+      "sha256": "12bfd770c94692bf99627cf9e71ff971d82b5d14efcca50878ec5240f6827cdb"
+    },
+    "AeroRush-Web.zip": {
+      "size_mb": 228.92,
+      "size_bytes": 240037108,
+      "sha256": "ebdf0ddc5eff3b6b644668425d63865429f1ea11894c28e46d249757dd7e567c"
+    },
+    "AeroRush-Windows-x86_64.zip": {
+      "size_mb": 171.32,
+      "size_bytes": 179643401,
+      "sha256": "212b7ce49e9fa1c9f85b579d4a40f0327e753b23a53dc1a70aa600187d0a208a"
+    },
+    "ChromaRush-Linux-x86_64.tar.gz": {
+      "size_mb": 165.61,
+      "size_bytes": 173650620,
+      "sha256": "108a1dd1e6f3338bbe337a85a115994540b4100d9a8ef7d1e932c1e9d05e91f6"
+    },
+    "ChromaRush-Web.zip": {
+      "size_mb": 229.07,
+      "size_bytes": 240196439,
+      "sha256": "f3d9e3141b09d77b631d0633001dd3e8c23e9c2552bc16e787ac7fe0f9f1e09d"
+    },
+    "ChromaRush-Windows-x86_64.zip": {
+      "size_mb": 171.47,
+      "size_bytes": 179802739,
+      "sha256": "4d6e382d5b4e8c4f97c41e86c5dc6927d9b8ee2a6f61c0963819c5757a298f2a"
+    },
+    "DriftStorm-Linux-x86_64.tar.gz": {
+      "size_mb": 165.45,
+      "size_bytes": 173489671,
+      "sha256": "da7d8e7dac6811d9f841efef20e60cd69e0836c078a372ae317216b1411014ef"
+    },
+    "DriftStorm-Web.zip": {
+      "size_mb": 228.92,
+      "size_bytes": 240035604,
+      "sha256": "82235280c3b0544b87207fc55d9b21b49576e6e990b372c940ab37071572ec4b"
+    },
+    "DriftStorm-Windows-x86_64.zip": {
+      "size_mb": 171.32,
+      "size_bytes": 179641906,
+      "sha256": "0792b3f37e757c3050ede386d445bac642e3518b35a25d7781d65581c184ff20"
+    },
+    "IronCrucible-Linux-x86_64.tar.gz": {
+      "size_mb": 165.36,
+      "size_bytes": 173390143,
+      "sha256": "725add9b5a18cd6f31c7734fa43bc7d24b1cf4ded691bf3ae54e566a593f77f2"
+    },
+    "IronCrucible-Web.zip": {
+      "size_mb": 228.82,
+      "size_bytes": 239935481,
+      "sha256": "ab221f809f5134fd16ae7af4dbc3b6ef2c1c1a4fb48b225cff4f3605124bf756"
+    },
+    "IronCrucible-Windows-x86_64.zip": {
+      "size_mb": 171.22,
+      "size_bytes": 179541787,
+      "sha256": "ccb7252f99e3cd2fa416a7a9b51c41a5146f4820c5738559c24662ab45a73af0"
+    },
+    "MetroSiege-Linux-x86_64.tar.gz": {
+      "size_mb": 165.35,
+      "size_bytes": 173382471,
+      "sha256": "125da393c34d4ba157b451436978261e3ef63b3a2f4c4fc2cfb77ebb9c169306"
+    },
+    "MetroSiege-Web.zip": {
+      "size_mb": 228.81,
+      "size_bytes": 239927601,
+      "sha256": "57f87dbd68e16f5beaabe8427c4cc34a45b7d2a4a4cd2eb6394ba88d1edc76a7"
+    },
+    "MetroSiege-Windows-x86_64.zip": {
+      "size_mb": 171.22,
+      "size_bytes": 179533905,
+      "sha256": "85b2d76dbf28e8fad1753683b96bb84deec3503c72ce14662d5b502be2cdd462"
+    },
+    "NitroKick-Linux-x86_64.tar.gz": {
+      "size_mb": 165.36,
+      "size_bytes": 173388968,
+      "sha256": "586deb1e80c4ca57f01e04ff999e2a0de2c83c73bbd026cedf519d8b6ad615c8"
+    },
+    "NitroKick-Web.zip": {
+      "size_mb": 228.82,
+      "size_bytes": 239934645,
+      "sha256": "996aa33aa4f8a1a66ac35d6f61ebe8b4d64adead480b1bd7e5fba1c4c83baf6f"
+    },
+    "NitroKick-Windows-x86_64.zip": {
+      "size_mb": 171.22,
+      "size_bytes": 179540944,
+      "sha256": "d881e1b6b854035bca036e567438df9361998d2d9c7585d6d598cf467ce2f6b4"
+    },
+    "RoboForgeArena-Linux-x86_64.tar.gz": {
+      "size_mb": 165.34,
+      "size_bytes": 173366806,
+      "sha256": "5ed81c61ef0a6eb5af7a4e6e80d130b31d2d013410d47dc6e4371d9aa69f87e1"
+    },
+    "RoboForgeArena-Web.zip": {
+      "size_mb": 228.8,
+      "size_bytes": 239912104,
+      "sha256": "3f1d598060f8aead400683116bbd393d7143fb28b286c22d05c20fc8d9f6abb8"
+    },
+    "RoboForgeArena-Windows-x86_64.zip": {
+      "size_mb": 171.2,
+      "size_bytes": 179518417,
+      "sha256": "0f2df8ae9ca6175ab46e2ce724600d46785f1aa0a399d5a8efde33c1f76dc985"
+    },
+    "SkyboundOdyssey-Linux-x86_64.tar.gz": {
+      "size_mb": 165.34,
+      "size_bytes": 173367258,
+      "sha256": "1cc95c894b2420dd00c4963f1f0ff309f70bd1a3459b94e3a4559bd7f40bef17"
+    },
+    "SkyboundOdyssey-Web.zip": {
+      "size_mb": 228.8,
+      "size_bytes": 239912451,
+      "sha256": "857bf6efcb5db2392e568dadd5dff83fd1ca10522fc893d686dbdc6fd7e97cb5"
+    },
+    "SkyboundOdyssey-Windows-x86_64.zip": {
+      "size_mb": 171.2,
+      "size_bytes": 179518764,
+      "sha256": "e2caaaf8899930d98d9f188a4fc14830135945d33d0ecb875f16880f448464db"
+    },
+    "StrikeVector-Linux-x86_64.tar.gz": {
+      "size_mb": 165.52,
+      "size_bytes": 173565108,
+      "sha256": "fbbe520891b3f567eb508f903db284003fc1a2e6fd463004c722a495335ba04c"
+    },
+    "StrikeVector-Web.zip": {
+      "size_mb": 228.99,
+      "size_bytes": 240110605,
+      "sha256": "5d023909d3503fa29a575240fc5b06c89c59bb0f33b6bd34cefe1eef9fb6262b"
+    },
+    "StrikeVector-Windows-x86_64.zip": {
+      "size_mb": 171.39,
+      "size_bytes": 179716910,
+      "sha256": "4a76bc9a37d9217f51a8f34876e5d383c14554e695af598045fa241618ffd20b"
+    },
+    "WildCircuit-Linux-x86_64.tar.gz": {
+      "size_mb": 165.34,
+      "size_bytes": 173369517,
+      "sha256": "24b60dfcd6b1b883fe5c9fa8e7cd2a99b252422c3ad55c15821af04b9b3ccf89"
+    },
+    "WildCircuit-Web.zip": {
+      "size_mb": 228.8,
+      "size_bytes": 239914742,
+      "sha256": "074984375d75d045cdd5b46fc71a98cd1a6c0e96478360b8566e554a987ec451"
+    },
+    "WildCircuit-Windows-x86_64.zip": {
+      "size_mb": 171.2,
+      "size_bytes": 179521039,
+      "sha256": "53f83fa78ac893155043eed6242d2321a59c1c4d30a092729c78d8d883176d23"
+    }
   },
   "suite_packages": {
-    "VoltArena-Full-Android.apk": 108.73,
-    "VoltArena-Full-Linux-x86_64.tar.gz": 94.92,
-    "VoltArena-Full-Web.zip": 158.36,
-    "VoltArena-Full-Windows-x86_64.zip": 100.77
+    "VoltArena-Full-Android.apk": {
+      "size_mb": 108.73,
+      "size_bytes": 114016668,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622"
+    },
+    "VoltArena-Full-Linux-x86_64.tar.gz": {
+      "size_mb": 94.92,
+      "size_bytes": 99526656,
+      "sha256": "ce7a6ba8aae41db09f52d555c473e1611d8c7fa5c88f90cddb6c50cf2218477d"
+    },
+    "VoltArena-Full-Web.zip": {
+      "size_mb": 158.36,
+      "size_bytes": 166055491,
+      "sha256": "4333d12671160dbd349f35da5013522a0416357a668d51c81c31715bc331807c"
+    },
+    "VoltArena-Full-Windows-x86_64.zip": {
+      "size_mb": 100.77,
+      "size_bytes": 105661751,
+      "sha256": "cfceb2897544015fba6f08280ce2bceb351553dc733e8700e763be3466f32e47"
+    }
   },
   "per_game_assets_kb": {
-    "aero-rush": 203.2,
+    "aero-rush": 217.1,
     "chroma-rush": 434.9,
     "kart-racing": 230.0,
     "strike-vector": 318.7,
@@ -50,5 +185,7 @@
     "subway-survival": 61.5,
     "arena-fps": 70.9
   },
-  "cross_game_leakage_detected": false
+  "isolation_verified": true,
+  "unique_standalone_sizes_count": 30,
+  "unique_standalone_hashes_count": 30
 }

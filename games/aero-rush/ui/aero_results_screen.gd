@@ -118,6 +118,8 @@ func _add_stat_row(grid: GridContainer, label_text: String, val_text: String, va
 		"CreditsStat": credits_label = v
 
 func display_results(results: Dictionary) -> void:
+	if not title_label:
+		_build_ui()
 	var course_name = results.get("course_name", "CIRCUIT")
 	var time_taken = results.get("time_taken", 0.0) as float
 	var stunt_score = results.get("stunt_score", 0) as int

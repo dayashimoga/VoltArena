@@ -87,6 +87,11 @@ func _ready() -> void:
 	_init_subsystems()
 	_init_ui()
 
+	# Ensure game context is registered so InputMap actions are fully populated
+	var im = GameConstants.get_autoload(self, "InputManager")
+	if im and im.has_method("set_game_context"):
+		im.set_game_context("aero_rush")
+
 	# Load saved vehicle selection
 	var saved_data = AeroSaveAdapter.load_aero_data()
 	selected_vehicle_id = saved_data.get("selected_vehicle", AeroConstants.VEHICLE_APEX)
@@ -134,6 +139,8 @@ func _init_ui() -> void:
 	hud.restart_requested.connect(restart_race)
 	hud.quit_to_menu_requested.connect(func(): set_state(State.MENU))
 	canvas.add_child(hud)
+	if not hud.is_node_ready():
+		hud._ready()
 
 	main_menu = AeroMainMenu.new()
 	main_menu.quick_play_requested.connect(quick_play)
@@ -141,16 +148,22 @@ func _init_ui() -> void:
 	main_menu.garage_menu_requested.connect(func(): set_state(State.GARAGE))
 	main_menu.return_to_hub_requested.connect(_on_return_to_hub)
 	canvas.add_child(main_menu)
+	if not main_menu.is_node_ready():
+		main_menu._ready()
 
 	garage = AeroGarage.new()
 	garage.vehicle_selected.connect(_on_vehicle_selected_in_garage)
 	garage.back_to_menu_requested.connect(func(): set_state(State.MENU))
 	canvas.add_child(garage)
+	if not garage.is_node_ready():
+		garage._ready()
 
 	course_select = AeroCourseSelect.new()
 	course_select.course_chosen.connect(start_race)
 	course_select.back_requested.connect(func(): set_state(State.MENU))
 	canvas.add_child(course_select)
+	if not course_select.is_node_ready():
+		course_select._ready()
 
 	results_screen = AeroResultsScreen.new()
 	results_screen.next_course_requested.connect(_on_next_course)
@@ -158,6 +171,8 @@ func _init_ui() -> void:
 	results_screen.return_to_menu_requested.connect(func(): set_state(State.MENU))
 	results_screen.return_to_hub_requested.connect(_on_return_to_hub)
 	canvas.add_child(results_screen)
+	if not results_screen.is_node_ready():
+		results_screen._ready()
 
 func set_state(new_state: State) -> void:
 	current_state = new_state
@@ -183,6 +198,7 @@ func set_state(new_state: State) -> void:
 		State.RACING:
 			if player_vehicle:
 				player_vehicle.controls_enabled = true
+				player_vehicle.programmatic_override = false
 			ghost_system.start_recording()
 
 func quick_play() -> void:
@@ -190,6 +206,10 @@ func quick_play() -> void:
 	start_race(selected_course_id)
 
 func start_race(course_id: String) -> void:
+	var im = GameConstants.get_autoload(self, "InputManager")
+	if im and im.has_method("set_game_context"):
+		im.set_game_context("aero_rush")
+
 	selected_course_id = course_id
 	course_def = AeroCourseDatabase.get_course_by_id(course_id)
 
@@ -274,10 +294,17 @@ func _build_track(c_def: Dictionary) -> void:
 			gate.checkpoint_passed.connect(_on_checkpoint_passed)
 			track_container.add_child(gate)
 
-			# Orient gate along forward direction AFTER adding to scene tree
+			# Orient gate along forward direction safely
 			var fwd = wp.get("forward", Vector3.FORWARD) as Vector3
-			if fwd.length_squared() > 0.001 and gate.is_inside_tree():
-				gate.look_at(gate.global_position + fwd, Vector3.UP)
+			if fwd.length_squared() > 0.001:
+				if gate.is_inside_tree():
+					gate.look_at(gate.global_position + fwd, Vector3.UP)
+				else:
+					var up = Vector3.UP
+					var z_axis = -fwd.normalized()
+					var x_axis = up.cross(z_axis).normalized()
+					var y_axis = z_axis.cross(x_axis).normalized()
+					gate.transform.basis = Basis(x_axis, y_axis, z_axis)
 
 			checkpoints.append(gate)
 
@@ -296,8 +323,9 @@ func _spawn_player_vehicle(c_def: Dictionary) -> void:
 	player_vehicle.is_player = true
 	player_vehicle.paint_color = selected_paint_color
 	player_vehicle.controls_enabled = false
+	player_vehicle.programmatic_override = false
 
-	var raw_spawn_pos = c_def.get("spawn_pos", Vector3(0, 0.45, 0)) as Vector3
+	var raw_spawn_pos = c_def.get("spawn_pos", Vector3(0, 0.55, 0)) as Vector3
 	var spawn_rot_y = c_def.get("spawn_rot_y", 0.0) as float
 	var safe_pos = _probe_track_surface_elevation(raw_spawn_pos)
 
@@ -305,6 +333,8 @@ func _spawn_player_vehicle(c_def: Dictionary) -> void:
 	player_vehicle.rotation_degrees.y = spawn_rot_y
 
 	racers_container.add_child(player_vehicle)
+	if not player_vehicle.is_node_ready():
+		player_vehicle._ready()
 
 	player_vehicle.last_safe_checkpoint_pos = player_vehicle.global_position if player_vehicle.is_inside_tree() else safe_pos
 	player_vehicle.last_safe_checkpoint_basis = player_vehicle.global_basis if player_vehicle.is_inside_tree() else Basis(Vector3.UP, deg_to_rad(spawn_rot_y))
@@ -313,6 +343,8 @@ func _spawn_player_vehicle(c_def: Dictionary) -> void:
 	chase_camera = AeroChaseCamera.new()
 	chase_camera.name = "AeroChaseCamera"
 	racers_container.add_child(chase_camera)
+	if not chase_camera.is_node_ready():
+		chase_camera._ready()
 	chase_camera.setup_target(player_vehicle)
 
 func _probe_track_surface_elevation(origin_pos: Vector3) -> Vector3:
@@ -326,8 +358,8 @@ func _probe_track_surface_elevation(origin_pos: Vector3) -> Vector3:
 		)
 		var hit = space.intersect_ray(query)
 		if not hit.is_empty():
-			return hit["position"] + Vector3(0, 0.45, 0)
-	return origin_pos + Vector3(0, 0.45, 0)
+			return hit["position"] + Vector3(0, 0.55, 0)
+	return origin_pos + Vector3(0, 0.55, 0)
 
 func _spawn_rivals(c_def: Dictionary) -> void:
 	rival_vehicles.clear()

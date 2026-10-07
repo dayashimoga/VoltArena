@@ -97,6 +97,7 @@ const TestGameplayScreensScript = preload("res://tests/e2e/test_gameplay_screens
 
 # --- Acceptance ---
 const TestAcceptanceScript = preload("res://tests/acceptance/test_platform_acceptance.gd")
+const TestPackagedAeroRushE2EScript = preload("res://tests/acceptance/test_packaged_aerorush_e2e.gd")
 
 # --- Coverage ---
 const CoverageRegistryScript = preload("res://tests/coverage_registry.gd")
@@ -204,6 +205,7 @@ func _init() -> void:
 		{"name": "AeroRush Tracks & Worlds Validation Unit", "instance": TestAeroTracksScript.new()},
 		{"name": "AeroRush AI, Ghosts & UI Unit", "instance": TestAeroAIScript.new()},
 		{"name": "AeroRush E2E Gameplay Scenarios", "instance": TestAeroE2EScript.new()},
+		{"name": "AeroRush Packaged Black-Box Acceptance", "instance": TestPackagedAeroRushE2EScript.new()},
 		# Legacy Acceptance
 		{"name": "Platform Acceptance (Legacy)", "instance": TestAcceptanceScript.new()},
 	]

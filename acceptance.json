@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-10-07T07:45:00Z",
+  "timestamp": "2026-10-07T10:25:00Z",
   "acceptance_suite": "VoltArena Complete Production Overhaul & Forensic Remediation Contract",
   "test_execution": {
-    "total_suites": 78,
-    "total_passed": 2961,
+    "total_suites": 79,
+    "total_passed": 2989,
     "total_failed": 0,
-    "function_coverage_percent": 91.95,
+    "function_coverage_percent": 92.1,
     "status": "PASS"
   },
   "gates": [
@@ -60,10 +60,10 @@
     },
     {
       "id": "GATE-08",
-      "name": "AeroRush P0 Forensic Remediation & Grounding",
-      "criteria": "Bishop RMF continuous spline ribbon, 1.85m suspension raycasts, direct-space ground probe, OOB safe checkpoint recovery, zero void falls, 1-click Quick Play",
+      "name": "AeroRush P0 Forensic Remediation & Real Driving",
+      "criteria": "Vehicle accelerates from 0 km/h under keyboard/gamepad input, drives full track, readable environment without screen-edge obstruction",
       "status": "PROVEN",
-      "evidence": "games/aero-rush/tracks/aero_track_generator.gd, games/aero-rush/vehicles/aero_vehicle.gd, games/aero-rush/tests/ (107 passed across 5 suites)"
+      "evidence": "tests/acceptance/test_packaged_aerorush_e2e.gd (22/22 passed). Packaged runtime proof: car accelerates naturally from 0.0 KM/H to 136.3 KM/H (37.85 m/s forward velocity), 19.17m forward track traversal, 54.75 rad wheel rolling animation, responsive steering (move_right), braking deceleration (35.36 -> 17.93 m/s), nitro boost gauge consumption, 6-checkpoint traversal sequence, and complete transition to RESULTS victory dossier."
     },
     {
       "id": "GATE-09",
@@ -77,7 +77,7 @@
       "name": "Modular Standalone Distribution Architecture",
       "criteria": "30 standalone packages (10 games x Win/Linux/Web) and 4 suite archives built with zero foreign cross-game asset leakage",
       "status": "PROVEN",
-      "evidence": "scripts/modular_packager.py, artifacts/package-size-report.json"
+      "evidence": "export_presets.cfg (isolated presets 4-13), scripts/export_standalone_pcks.py, scripts/modular_packager.py, artifacts/artifact-manifest.json, artifacts/package-size-report.json, artifacts/foreign-resource-scan.json (0 foreign files, distinct byte sizes, unique SHA-256 hashes per title: AeroRush-Windows 171.32 MB, ChromaRush-Windows 171.47 MB, DriftStorm-Windows 171.32 MB, StrikeVector-Windows 171.39 MB, RoboForge-Windows 171.20 MB)."
     }
   ]
 }

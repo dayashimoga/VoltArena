@@ -1,0 +1,152 @@
+{
+  "AeroRush-Linux-x86_64.tar.gz": {
+    "target_game": "aero-rush",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "AeroRush-Web.zip": {
+    "target_game": "aero-rush",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "AeroRush-Windows-x86_64.zip": {
+    "target_game": "aero-rush",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "ChromaRush-Linux-x86_64.tar.gz": {
+    "target_game": "chroma-rush",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "ChromaRush-Web.zip": {
+    "target_game": "chroma-rush",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "ChromaRush-Windows-x86_64.zip": {
+    "target_game": "chroma-rush",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "DriftStorm-Linux-x86_64.tar.gz": {
+    "target_game": "kart-racing",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "DriftStorm-Web.zip": {
+    "target_game": "kart-racing",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "DriftStorm-Windows-x86_64.zip": {
+    "target_game": "kart-racing",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "IronCrucible-Linux-x86_64.tar.gz": {
+    "target_game": "arena-fps",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "IronCrucible-Web.zip": {
+    "target_game": "arena-fps",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "IronCrucible-Windows-x86_64.zip": {
+    "target_game": "arena-fps",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "MetroSiege-Linux-x86_64.tar.gz": {
+    "target_game": "subway-survival",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "MetroSiege-Web.zip": {
+    "target_game": "subway-survival",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "MetroSiege-Windows-x86_64.zip": {
+    "target_game": "subway-survival",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "NitroKick-Linux-x86_64.tar.gz": {
+    "target_game": "rocket-car",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "NitroKick-Web.zip": {
+    "target_game": "rocket-car",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "NitroKick-Windows-x86_64.zip": {
+    "target_game": "rocket-car",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "RoboForgeArena-Linux-x86_64.tar.gz": {
+    "target_game": "roboforge-arena",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "RoboForgeArena-Web.zip": {
+    "target_game": "roboforge-arena",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "RoboForgeArena-Windows-x86_64.zip": {
+    "target_game": "roboforge-arena",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "SkyboundOdyssey-Linux-x86_64.tar.gz": {
+    "target_game": "skybound-odyssey",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "SkyboundOdyssey-Web.zip": {
+    "target_game": "skybound-odyssey",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "SkyboundOdyssey-Windows-x86_64.zip": {
+    "target_game": "skybound-odyssey",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "StrikeVector-Linux-x86_64.tar.gz": {
+    "target_game": "strike-vector",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "StrikeVector-Web.zip": {
+    "target_game": "strike-vector",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "StrikeVector-Windows-x86_64.zip": {
+    "target_game": "strike-vector",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "WildCircuit-Linux-x86_64.tar.gz": {
+    "target_game": "wildcircuit",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "WildCircuit-Web.zip": {
+    "target_game": "wildcircuit",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "WildCircuit-Windows-x86_64.zip": {
+    "target_game": "wildcircuit",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  }
+}

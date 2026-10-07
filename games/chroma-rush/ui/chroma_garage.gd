@@ -30,6 +30,7 @@ var stats_container: VBoxContainer
 var credits_label: Label
 var action_button: Button
 var paint_selector: OptionButton
+var garage_cam: Camera3D
 
 func _ready() -> void:
 	all_vehicle_ids = VehicleCatalog.get_all_vehicle_ids()
@@ -42,6 +43,8 @@ func _ready() -> void:
 
 func open_garage() -> void:
 	visible = true
+	if is_instance_valid(garage_cam):
+		garage_cam.make_current()
 	refresh_display()
 
 func setup_ui_layout() -> void:
@@ -144,6 +147,11 @@ func setup_ui_layout() -> void:
 	var back_btn = Button.new()
 	back_btn.text = "BACK TO MENU"
 	back_btn.pressed.connect(func():
+		if is_instance_valid(garage_cam):
+			garage_cam.current = false
+		if is_instance_valid(vehicle_display_root):
+			vehicle_display_root.visible = false
+		visible = false
 		back_to_menu_requested.emit()
 		garage_closed.emit()
 	)
@@ -152,6 +160,7 @@ func setup_ui_layout() -> void:
 func setup_3d_turntable() -> void:
 	vehicle_display_root = Node3D.new()
 	vehicle_display_root.name = "TurntableRoot"
+	vehicle_display_root.visible = false
 	add_child(vehicle_display_root)
 
 	# Studio 3-point lighting
@@ -166,10 +175,12 @@ func setup_3d_turntable() -> void:
 	fill_light.light_energy = 0.6
 	vehicle_display_root.add_child(fill_light)
 
-	var cam = Camera3D.new()
-	cam.position = Vector3(2.5, 1.8, 5.0)
-	cam.look_at(Vector3(0.5, 0.6, 0), Vector3.UP)
-	vehicle_display_root.add_child(cam)
+	garage_cam = Camera3D.new()
+	garage_cam.name = "GarageCam"
+	garage_cam.current = false
+	garage_cam.position = Vector3(2.5, 1.8, 5.0)
+	vehicle_display_root.add_child(garage_cam)
+	garage_cam.look_at(Vector3(0.5, 0.6, 0), Vector3.UP)
 
 func _process(delta: float) -> void:
 	if current_preview_vehicle and is_instance_valid(current_preview_vehicle):

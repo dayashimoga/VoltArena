@@ -86,6 +86,7 @@ var countdown_timer: float = 0.0
 var cam_distance: float = 7.5
 var cam_height: float = 3.2
 var cam_lerp_speed: float = 7.0
+var camera_override: bool = false
 
 func _ready() -> void:
 	_init_subsystems()
@@ -142,7 +143,7 @@ func _init_environment() -> void:
 
 func _init_target_beacon() -> void:
 	target_beacon = Node3D.new()
-	target_beacon.name = "TargetBeacon3D"
+	target_beacon.name = "BeaconTargetReticle"
 
 	# Sleek Holographic Diamond Target Beacon with Orbiting Guidance Ring
 	var mat = StandardMaterial3D.new()
@@ -195,15 +196,13 @@ func _init_camera() -> void:
 	camera_spring_arm = SpringArm3D.new()
 	camera_spring_arm.name = "CameraSpringArm"
 	camera_spring_arm.spring_length = cam_distance
-	camera_spring_arm.margin = 0.3
 	add_child(camera_spring_arm)
 
 	chase_camera = Camera3D.new()
 	chase_camera.name = "ChaseCamera"
 	chase_camera.current = true
 	chase_camera.fov = 72.0
-	camera_spring_arm.add_child(chase_camera)
-	chase_camera.position = Vector3(0.0, 0.0, cam_distance)
+	add_child(chase_camera)
 
 func _init_ui() -> void:
 	hud = ChromaHUD.new()
@@ -414,16 +413,18 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	if current_state == State.BRIEFING:
+		if camera_override:
+			return
 		# Cinematic establishing camera orbit shot around player vehicle and skyline
-		if is_instance_valid(player_vehicle) and is_instance_valid(camera_spring_arm):
-			var target_pos = player_vehicle.global_position + Vector3(0.0, 4.0, 0.0)
-			camera_spring_arm.global_position = camera_spring_arm.global_position.lerp(target_pos, 4.0 * delta)
-			camera_spring_arm.rotation.y += 0.35 * delta
-			camera_spring_arm.rotation.x = deg_to_rad(-16.0)
-			if is_instance_valid(chase_camera):
-				chase_camera.position = Vector3(0.0, 0.0, 10.0)
+		if is_instance_valid(player_vehicle) and is_instance_valid(chase_camera):
+			var car_pos = player_vehicle.global_position if player_vehicle.is_inside_tree() else player_vehicle.position
+			var orbit_angle = Time.get_ticks_msec() * 0.0004
+			var orbit_offset = Vector3(sin(orbit_angle) * 11.0, 3.8, cos(orbit_angle) * 11.0)
+			chase_camera.global_position = car_pos + orbit_offset
+			chase_camera.look_at(car_pos + Vector3(0.0, 1.2, 0.0), Vector3.UP)
 
 	elif current_state == State.COUNTDOWN:
+		_update_camera(delta)
 		countdown_timer -= delta
 		if countdown_timer > 2.0:
 			countdown_label.text = "3"
@@ -459,17 +460,33 @@ func _physics_process(delta: float) -> void:
 			_update_hud_telemetry(delta)
 
 func _update_camera(delta: float) -> void:
-	if not is_instance_valid(player_vehicle) or not is_instance_valid(camera_spring_arm):
+	if camera_override:
 		return
-	var target_pos = player_vehicle.global_position + Vector3(0.0, cam_height, 0.0)
-	camera_spring_arm.global_position = camera_spring_arm.global_position.lerp(target_pos, cam_lerp_speed * delta)
-	
-	var heading = -player_vehicle.global_transform.basis.z
-	heading.y = 0.0
-	if heading.length_squared() > 0.01:
-		var target_rot_y = atan2(-heading.x, -heading.z)
-		camera_spring_arm.rotation.y = lerp_angle(camera_spring_arm.rotation.y, target_rot_y, 4.0 * delta)
-		camera_spring_arm.rotation.x = deg_to_rad(-12.0)
+	if not is_instance_valid(player_vehicle) or not is_instance_valid(chase_camera):
+		return
+	if not chase_camera.current:
+		chase_camera.make_current()
+	var car_pos = player_vehicle.global_position if player_vehicle.is_inside_tree() else player_vehicle.position
+	var car_fwd = -player_vehicle.global_transform.basis.z if player_vehicle.is_inside_tree() else -player_vehicle.transform.basis.z
+	car_fwd.y = 0.0
+	if car_fwd.length_squared() < 0.01:
+		car_fwd = Vector3.FORWARD
+	car_fwd = car_fwd.normalized()
+
+	var target_cam_pos = car_pos - car_fwd * cam_distance + Vector3(0.0, cam_height, 0.0)
+	if chase_camera.global_position.distance_squared_to(car_pos) > 100.0 or chase_camera.global_position.length_squared() < 0.1:
+		chase_camera.global_position = target_cam_pos
+	else:
+		chase_camera.global_position = chase_camera.global_position.lerp(target_cam_pos, clampf(cam_lerp_speed * delta, 0.0, 1.0))
+
+	var look_target = car_pos + Vector3(0.0, 1.15, 0.0)
+	if chase_camera.is_inside_tree():
+		chase_camera.look_at(look_target, Vector3.UP)
+	else:
+		chase_camera.look_at_from_position(chase_camera.position, look_target, Vector3.UP)
+
+	if is_instance_valid(camera_spring_arm):
+		camera_spring_arm.global_position = chase_camera.global_position
 
 func _update_swap_eligibility() -> void:
 	if not is_instance_valid(player_vehicle) or not is_instance_valid(swap_engine) or not is_instance_valid(hud):
@@ -663,6 +680,8 @@ func start_mission(mission_id: String) -> void:
 			hud.mini_map.set_world_data(active_world.get_spline_samples())
 
 	# 7. Start Engine Audio & BGM
+	if is_instance_valid(chase_camera):
+		chase_camera.make_current()
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am:
 		if am.has_method("start_engine_sound"):
@@ -695,10 +714,25 @@ func _on_briefing_dismissed() -> void:
 		if is_instance_valid(hud):
 			hud.hide_mission_briefing()
 		countdown_timer = 3.2
+		if is_instance_valid(chase_camera):
+			chase_camera.make_current()
 		if is_instance_valid(player_vehicle):
 			player_vehicle.controls_enabled = false
-		if is_instance_valid(chase_camera):
-			chase_camera.position = Vector3(0.0, 0.0, cam_distance)
+			if is_instance_valid(chase_camera):
+				var p_pos = player_vehicle.global_position
+				var p_fwd = -player_vehicle.global_transform.basis.z
+				p_fwd.y = 0.0
+				if p_fwd.length_squared() > 0.01:
+					p_fwd = p_fwd.normalized()
+				else:
+					p_fwd = Vector3.FORWARD
+				chase_camera.global_position = p_pos - p_fwd * cam_distance + Vector3(0.0, cam_height, 0.0)
+				if chase_camera.is_inside_tree():
+					chase_camera.look_at(p_pos + Vector3(0.0, 1.15, 0.0), Vector3.UP)
+				else:
+					chase_camera.look_at_from_position(chase_camera.position, p_pos + Vector3(0.0, 1.15, 0.0), Vector3.UP)
+				if is_instance_valid(camera_spring_arm):
+					camera_spring_arm.global_position = chase_camera.global_position
 		set_state(State.COUNTDOWN)
 
 func _load_world(world_id: String) -> void:
@@ -741,13 +775,26 @@ func _spawn_player_vehicle(mission_data: Dictionary) -> void:
 	var spawn_xf = Transform3D.IDENTITY
 	if active_world:
 		spawn_xf = active_world.player_spawn_transform
-	player_vehicle.global_transform = spawn_xf
 
 	world_container.add_child(player_vehicle)
+	player_vehicle.global_transform = spawn_xf
 	swap_engine.register_vehicle("player", player_vehicle, start_col, false)
 
-	if camera_spring_arm:
-		camera_spring_arm.global_position = spawn_xf.origin + Vector3(0.0, cam_height, 0.0)
+	if is_instance_valid(chase_camera):
+		var p_pos = spawn_xf.origin
+		var p_fwd = -spawn_xf.basis.z
+		p_fwd.y = 0.0
+		if p_fwd.length_squared() > 0.01:
+			p_fwd = p_fwd.normalized()
+		else:
+			p_fwd = Vector3.FORWARD
+		chase_camera.global_position = p_pos - p_fwd * cam_distance + Vector3(0.0, cam_height, 0.0)
+		if chase_camera.is_inside_tree():
+			chase_camera.look_at(p_pos + Vector3(0.0, 1.15, 0.0), Vector3.UP)
+		else:
+			chase_camera.look_at_from_position(chase_camera.position, p_pos + Vector3(0.0, 1.15, 0.0), Vector3.UP)
+		if is_instance_valid(camera_spring_arm):
+			camera_spring_arm.global_position = chase_camera.global_position
 
 func _spawn_traffic(mission_data: Dictionary) -> void:
 	if not is_instance_valid(active_world) or active_world.waypoints.size() < 4:
@@ -822,10 +869,11 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 		veh.initial_color = col
 		veh.current_color = col
 
-		# Seeded staggered waypoint distribution across all districts avoiding player spawn at waypoint 0
-		var wp_idx = (start_offset + i * wp_step) % wps.size()
-		if wp_idx == 0:
-			wp_idx = 1
+		# Seeded staggered waypoint distribution across mid-track districts avoiding player spawn and rear approach
+		var min_safe_wp = 3
+		var max_safe_wp = max(4, wps.size() - 3)
+		var safe_range = max(1, max_safe_wp - min_safe_wp)
+		var wp_idx = min_safe_wp + (i * safe_range / traffic_count)
 		var p_cur = wps[wp_idx]
 		var p_next = wps[(wp_idx + 1) % wps.size()]
 		var fwd = (p_next - p_cur).normalized()
@@ -837,10 +885,9 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 		var lane_dist = 3.2 if (i % 2 == 0) else -3.2
 		var lane_offset = right * lane_dist
 		var spawn_pt = p_cur + lane_offset + Vector3(0, 0.05, 0)
+		world_container.add_child(veh)
 		veh.global_transform = Transform3D().looking_at(fwd, Vector3.UP)
 		veh.global_position = spawn_pt
-
-		world_container.add_child(veh)
 
 		var spline_pts = active_world.get_spline_samples()
 		var lane_samples: Array[Vector3] = []
@@ -852,7 +899,7 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 		agent.set_cruise_speed(base_spd + rng.randf_range(-1.5, 2.5))
 		if is_instance_valid(player_vehicle):
 			agent.set_evasion_threat(player_vehicle, evasion_agg)
-		agent.set_waypoints(lane_samples, wp_idx % max(1, lane_samples.size()))
+		agent.set_waypoints(lane_samples, (wp_idx * 6) % max(1, lane_samples.size()))
 		traffic_agents.append(agent)
 
 
@@ -883,10 +930,9 @@ func _spawn_rivals(mission_data: Dictionary) -> void:
 		var right = fwd.cross(Vector3.UP).normalized()
 		var lane_offset = right * (-3.0 if (i % 2 == 0) else 3.0)
 		var spawn_pt = p_cur + lane_offset + Vector3(0, 0.05, 0)
+		world_container.add_child(veh)
 		veh.global_transform = Transform3D().looking_at(fwd, Vector3.UP)
 		veh.global_position = spawn_pt
-
-		world_container.add_child(veh)
 
 		var rival = RivalAI.new(veh, swap_engine, rival_id, ChromaConstants.ChromaColor.NONE, "skilled")
 		rival_agents.append(rival)
@@ -1223,6 +1269,12 @@ func start_practice_mode(w_id: String = ChromaConstants.WORLD_NEON_CITY) -> void
 
 func quick_play() -> void:
 	start_mission("hunt_neon_01")
+	if current_state == State.BRIEFING:
+		_on_briefing_dismissed()
+		countdown_timer = 0.0
+		if is_instance_valid(player_vehicle):
+			player_vehicle.controls_enabled = true
+		set_state(State.PLAYING)
 
 func continue_game() -> void:
 	var profile = save_adapter.get_profile_data()
@@ -1246,6 +1298,8 @@ func _on_garage_vehicle_selected(v_id: String, color: Color, finish: String) -> 
 
 func _on_garage_closed() -> void:
 	set_state(State.MENU)
+	if is_instance_valid(chase_camera):
+		chase_camera.make_current()
 
 func start_tutorial() -> void:
 	if not tutorial_mgr:

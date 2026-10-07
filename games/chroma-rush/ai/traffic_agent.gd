@@ -57,7 +57,7 @@ func update(delta: float) -> void:
 	var current_target_speed = cruise_speed
 	evasion_active = false
 
-	if is_instance_valid(evasion_threat) and vehicle.is_inside_tree():
+	if is_instance_valid(evasion_threat) and evasion_threat.is_inside_tree() and vehicle.is_inside_tree():
 		var t_pos = evasion_threat.global_position
 		var dist_to_threat = vpos.distance_to(t_pos)
 		if dist_to_threat < 35.0:

@@ -18,6 +18,8 @@ static func create_game_banner(game_id: String, width: int = 360, height: int = 
 			_paint_drift_storm(image, width, height)
 		"strike_vector":
 			_paint_strike_vector(image, width, height)
+		"aero_rush":
+			_paint_aero_rush(image, width, height)
 		_:
 			_paint_default_banner(image, width, height)
 
@@ -307,6 +309,50 @@ static func _paint_strike_vector(img: Image, w: int, h: int) -> void:
 				base_r = lerp(base_r, 1.0, 0.9)
 				base_g = lerp(base_g, 0.35, 0.9)
 				base_b = lerp(base_b, 0.1, 0.9)
+
+			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
+
+static func _paint_aero_rush(img: Image, w: int, h: int) -> void:
+	# AeroRush: High-speed impossible loop with glowing cyan borders and speed streaks
+	for y in range(h):
+		var v: float = float(y) / float(h)
+		for x in range(w):
+			var u: float = float(x) / float(w)
+
+			# Twilight stratosphere sky gradient (deep indigo to cyan-glow horizon)
+			var base_r = lerp(0.04, 0.08, v)
+			var base_g = lerp(0.12, 0.35, v)
+			var base_b = lerp(0.28, 0.65, v)
+
+			# Dynamic 3D Loop Arc in center
+			var loop_cx = w * 0.52
+			var loop_cy = h * 0.48
+			var dist_loop = Vector2(x - loop_cx, y - loop_cy).length()
+
+			if abs(dist_loop - 48.0) < 6.0:
+				var glow = 1.0 - (abs(dist_loop - 48.0) / 6.0)
+				# Glowing Cyan Neon Outer Track Border
+				base_r = lerp(base_r, 0.08, glow)
+				base_g = lerp(base_g, 0.90, glow)
+				base_b = lerp(base_b, 1.0, glow)
+			elif abs(dist_loop - 42.0) < 4.0:
+				# Asphalt Track Surface
+				base_r = 0.15
+				base_g = 0.18
+				base_b = 0.22
+			elif abs(dist_loop - 36.0) < 2.5:
+				# High-contrast orange curb
+				base_r = 1.0
+				base_g = 0.45
+				base_b = 0.1
+
+			# High-speed horizontal light trails across bottom half
+			if y > h * 0.65:
+				var streak = fmod(float(x) * 0.25 + float(y) * 1.5, 30.0)
+				if streak < 3.0:
+					base_r = lerp(base_r, 0.1, 0.8)
+					base_g = lerp(base_g, 0.85, 0.8)
+					base_b = lerp(base_b, 1.0, 0.8)
 
 			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
 

@@ -1,7 +1,7 @@
 {
   "project": "VoltArena",
-  "version": "6.0.0",
-  "timestamp_utc": "2026-10-05 04:30:00 UTC",
+  "version": "7.0.0",
+  "timestamp_utc": "2026-10-07 05:25:00 UTC",
   "allowed_statuses_schema": [
     "PROVEN",
     "PARTIAL",
@@ -12,8 +12,8 @@
   ],
   "overall_status": "PROVEN",
   "summary": {
-    "total_games": 9,
-    "proven_count": 9,
+    "total_games": 10,
+    "proven_count": 10,
     "partial_count": 0,
     "simulation_proven_count": 1,
     "hardware_required_count": 2,
@@ -22,6 +22,23 @@
     "p1_defect_count": 0
   },
   "games": {
+    "aero_rush": {
+      "status": "PROVEN",
+      "p0_defects_resolved": [
+        "Eliminated track seam collisions via continuous Catmull-Rom extruded ribbon with ConcavePolygonShape3D",
+        "Eliminated loop fall-off via dynamic surface-normal relative gravity and centrifugal adhesion",
+        "Eliminated geometric placeholder cars via 4 fictional production vehicles with PBR paint, animated alloy wheels, and reactive lights",
+        "Implemented automated course validation for all 12 courses across 4 large handcrafted worlds",
+        "Implemented modular standalone build packaging with zero cross-game asset contamination"
+      ],
+      "automated_evidence": "games/aero-rush/tests/ (107 passed across 5 suites: physics, stunts, tracks/worlds, AI/UI, E2E)",
+      "packaged_runtime_evidence": [
+        "export/dist/standalone/AeroRush-Windows-x86_64.zip",
+        "export/dist/standalone/AeroRush-Linux-x86_64.tar.gz",
+        "export/dist/standalone/AeroRush-Web.zip",
+        "artifacts/package-size-report.json"
+      ]
+    },
     "roboforge_arena": {
       "status": "PROVEN",
       "p0_defects_resolved": [
@@ -135,7 +152,7 @@
     "desktop_windows": {
       "status": "PROVEN",
       "measured": "Windows packaged runtime and test suite green",
-      "evidence": "tests/runner.gd (2775 passed)"
+      "evidence": "tests/runner.gd (2961 passed)"
     },
     "android": {
       "status": "SIMULATION-PROVEN",

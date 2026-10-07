@@ -97,6 +97,15 @@ var games_meta = [
 		"tags": ["ARCADE", "DRIVING", "COLOR-SWAP", "STRATEGY"],
 		"color": Color(0.95, 0.25, 0.8),
 		"scene": "res://games/chroma-rush/chroma_rush_main.tscn"
+	},
+	{
+		"id": "aero_rush",
+		"title": "AERORUSH",
+		"tagline": "Impossible Circuit",
+		"desc": "High-speed arcade stunt driving with 360° loops, wall rides, aerial flips, kinetic hazard courses, and escalating combo chains.",
+		"tags": ["ARCADE", "STUNT", "LOOPS", "WALL-RIDE", "PHYSICS"],
+		"color": Color(0.08, 0.85, 1.0),
+		"scene": "res://games/aero-rush/aero_rush_main.tscn"
 	}
 ]
 

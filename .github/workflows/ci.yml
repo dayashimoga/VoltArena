@@ -575,31 +575,52 @@ jobs:
           retention-days: 7
 
   # ============================================
-  # STAGE 16: RELEASE PACKAGING
+  # STAGE 16: MODULAR RELEASE PACKAGING (STANDALONE + SUITE)
   # ============================================
   release:
-    name: Package Release Artifacts
+    name: Package Modular Release Artifacts
     runs-on: ubuntu-latest
     needs: certify
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
-          path: dist/
-      - name: Create release archive
+          path: artifacts/
+          merge-multiple: true
+      - name: Restore export directories
         run: |
-          mkdir -p release
-          cd dist
-          for dir in */; do
-            dirname="${dir%/}"
-            tar czf "../release/${dirname}.tar.gz" "$dir" || true
-          done
-      - name: Upload release
+          mkdir -p export/web export/linux export/windows export/android export/dist
+          if [ -d artifacts/web ]; then cp -r artifacts/web/* export/web/ 2>/dev/null || true; fi
+          if [ -f artifacts/index.html ]; then cp -r artifacts/index.* artifacts/_headers export/web/ 2>/dev/null || true; fi
+          if [ -f artifacts/VoltArena.x86_64 ]; then cp artifacts/VoltArena.x86_64 export/linux/ 2>/dev/null || true; fi
+          if [ -f artifacts/VoltArena.exe ]; then cp artifacts/VoltArena.exe export/windows/ 2>/dev/null || true; fi
+          if [ -f artifacts/VoltArena.apk ]; then cp artifacts/VoltArena.apk export/android/ 2>/dev/null || true; fi
+      - name: Run modular packager for all standalone games and full suite
+        run: python3 scripts/modular_packager.py all
+      - name: Upload standalone games distribution
         uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
-          name: release-bundle
-          path: release/
+          name: standalone-games
+          path: export/dist/standalone/
+          retention-days: 7
+      - name: Upload full suite distribution
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: voltarena-full-suite
+          path: export/dist/suite/
+          retention-days: 7
+      - name: Upload package size audit report
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: package-size-report
+          path: artifacts/package-size-report.json
           retention-days: 7

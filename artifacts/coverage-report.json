@@ -1,6 +1,177 @@
 {
-  "overall_coverage_pct": 92.3497267759563,
+  "overall_coverage_pct": 92.0271416454623,
   "per_file": {
+    "res://games/aero-rush/aero_rush_main.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://games/aero-rush/ai/aero_ghost_system.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://games/aero-rush/ai/aero_rival_ai.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/aero-rush/core/aero_combo_system.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/aero-rush/core/aero_stunt_detector.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/aero-rush/persistence/aero_save_adapter.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/aero-rush/tracks/aero_checkpoint.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/aero-rush/tracks/aero_course_database.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/aero-rush/tracks/aero_moving_hazard.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/aero-rush/tracks/aero_track_generator.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/aero-rush/tracks/aero_track_validator.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/aero-rush/ui/aero_course_select.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/aero-rush/ui/aero_garage.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/aero-rush/ui/aero_hud.gd": {
+      "coverage_pct": 100,
+      "tested": 11,
+      "total": 11,
+      "untested": []
+    },
+    "res://games/aero-rush/ui/aero_main_menu.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/aero-rush/ui/aero_results_screen.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/aero-rush/vehicles/aero_chase_camera.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 4,
+      "untested": [
+        "_ready",
+        "setup_target",
+        "_physics_process",
+        "add_shake"
+      ]
+    },
+    "res://games/aero-rush/vehicles/aero_physics_helpers.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/aero-rush/vehicles/aero_vehicle.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://games/aero-rush/vehicles/aero_vehicle_catalog.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/aero-rush/vehicles/aero_vehicle_visuals.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 1,
+      "untested": [
+        "build_vehicle_visuals"
+      ]
+    },
+    "res://games/aero-rush/worlds/aero_world_base.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/aero-rush/worlds/aero_world_canyon.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 1,
+      "untested": [
+        "build_environment"
+      ]
+    },
+    "res://games/aero-rush/worlds/aero_world_coastal.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 1,
+      "untested": [
+        "build_environment"
+      ]
+    },
+    "res://games/aero-rush/worlds/aero_world_megacity.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 1,
+      "untested": [
+        "build_environment"
+      ]
+    },
+    "res://games/aero-rush/worlds/aero_world_sky.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 1,
+      "untested": [
+        "build_environment"
+      ]
+    },
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
       "tested": 8,
@@ -805,10 +976,12 @@
       "untested": []
     },
     "res://games/wildcircuit/world/wild_biomes.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 87.5,
       "tested": 7,
-      "total": 7,
-      "untested": []
+      "total": 8,
+      "untested": [
+        "build_biome"
+      ]
     },
     "res://launcher/launcher.gd": {
       "coverage_pct": 100,
@@ -1065,7 +1238,7 @@
       "untested": []
     }
   },
-  "tested_functions": 1014,
-  "timestamp": "2026-10-05T04:20:13",
-  "total_functions": 1098
+  "tested_functions": 1085,
+  "timestamp": "2026-10-07T05:15:46",
+  "total_functions": 1179
 }

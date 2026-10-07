@@ -144,6 +144,7 @@ func setup_ground_plane() -> void:
 	var ground = StaticBody3D.new()
 	ground.name = "CityGroundPlane"
 	ground.collision_layer = GameConstants.LAYER_WORLD
+	ground.position = Vector3(0, -0.35, 0)
 
 	var mi = MeshInstance3D.new()
 	var plane_mesh = PlaneMesh.new()
@@ -336,6 +337,7 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 		var rr2 = right_road_pts[next_i]
 
 		# 1. Main Asphalt Surface
+		# 1. Main Asphalt Surface (CCW winding facing UP)
 		st_road.set_normal(n1); st_road.set_uv(Vector2(0.0, d1 * 0.08)); st_road.add_vertex(rl1)
 		st_road.set_normal(n1); st_road.set_uv(Vector2(1.0, d1 * 0.08)); st_road.add_vertex(rr1)
 		st_road.set_normal(n2); st_road.set_uv(Vector2(0.0, d2 * 0.08)); st_road.add_vertex(rl2)
@@ -344,8 +346,8 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 		st_road.set_normal(n2); st_road.set_uv(Vector2(1.0, d2 * 0.08)); st_road.add_vertex(rr2)
 		st_road.set_normal(n2); st_road.set_uv(Vector2(0.0, d2 * 0.08)); st_road.add_vertex(rl2)
 
-		collision_faces.append(rl1); collision_faces.append(rr1); collision_faces.append(rl2)
-		collision_faces.append(rr1); collision_faces.append(rr2); collision_faces.append(rl2)
+		collision_faces.append(rl1); collision_faces.append(rl2); collision_faces.append(rr1)
+		collision_faces.append(rr1); collision_faces.append(rl2); collision_faces.append(rr2)
 
 		# 2. Yellow Centerline Dashes (3m dash, 3m gap)
 		var center1 = (rl1 + rr1) * 0.5 + n1 * 0.015
@@ -389,7 +391,7 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 		st_white.set_normal(n2); st_white.set_uv(Vector2(1, 1)); st_white.add_vertex(r_out2)
 		st_white.set_normal(n2); st_white.set_uv(Vector2(0, 1)); st_white.add_vertex(r_sh2)
 
-		# 4. Curbs (Beveled 10cm curb stone with valid UVs)
+		# 4. Curbs (Beveled 10cm curb stone with valid UVs and CCW upward collision)
 		var lct1 = left_curb_top[i]
 		var lco1 = left_curb_out[i]
 		var lct2 = left_curb_top[next_i]
@@ -402,8 +404,8 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 		st_curb.set_normal(n1); st_curb.set_uv(Vector2(0.5, d1 * 0.15)); st_curb.add_vertex(lct1)
 		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.5, d2 * 0.15)); st_curb.add_vertex(lct2)
 		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.0, d2 * 0.15)); st_curb.add_vertex(rl2)
-		collision_faces.append(rl1); collision_faces.append(lct1); collision_faces.append(rl2)
-		collision_faces.append(lct1); collision_faces.append(lct2); collision_faces.append(rl2)
+		collision_faces.append(rl1); collision_faces.append(rl2); collision_faces.append(lct1)
+		collision_faces.append(lct1); collision_faces.append(rl2); collision_faces.append(lct2)
 
 		# Left Curb Top
 		st_curb.set_normal(n1); st_curb.set_uv(Vector2(0.5, d1 * 0.15)); st_curb.add_vertex(lct1)
@@ -412,8 +414,8 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 		st_curb.set_normal(n1); st_curb.set_uv(Vector2(1.0, d1 * 0.15)); st_curb.add_vertex(lco1)
 		st_curb.set_normal(n2); st_curb.set_uv(Vector2(1.0, d2 * 0.15)); st_curb.add_vertex(lco2)
 		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.5, d2 * 0.15)); st_curb.add_vertex(lct2)
-		collision_faces.append(lct1); collision_faces.append(lco1); collision_faces.append(lct2)
-		collision_faces.append(lco1); collision_faces.append(lco2); collision_faces.append(lct2)
+		collision_faces.append(lct1); collision_faces.append(lct2); collision_faces.append(lco1)
+		collision_faces.append(lco1); collision_faces.append(lct2); collision_faces.append(lco2)
 
 		# Right Curb
 		var rct1 = right_curb_top[i]
@@ -427,8 +429,8 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 		st_curb.set_normal(n1); st_curb.set_uv(Vector2(0.5, d1 * 0.15)); st_curb.add_vertex(rr1)
 		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.5, d2 * 0.15)); st_curb.add_vertex(rr2)
 		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.0, d2 * 0.15)); st_curb.add_vertex(rct2)
-		collision_faces.append(rct1); collision_faces.append(rr1); collision_faces.append(rct2)
-		collision_faces.append(rr1); collision_faces.append(rr2); collision_faces.append(rct2)
+		collision_faces.append(rct1); collision_faces.append(rct2); collision_faces.append(rr1)
+		collision_faces.append(rr1); collision_faces.append(rct2); collision_faces.append(rr2)
 
 		st_curb.set_normal(n1); st_curb.set_uv(Vector2(0.5, d1 * 0.15)); st_curb.add_vertex(rco1)
 		st_curb.set_normal(n1); st_curb.set_uv(Vector2(1.0, d1 * 0.15)); st_curb.add_vertex(rct1)
@@ -436,10 +438,10 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 		st_curb.set_normal(n1); st_curb.set_uv(Vector2(1.0, d1 * 0.15)); st_curb.add_vertex(rct1)
 		st_curb.set_normal(n2); st_curb.set_uv(Vector2(1.0, d2 * 0.15)); st_curb.add_vertex(rct2)
 		st_curb.set_normal(n2); st_curb.set_uv(Vector2(0.5, d2 * 0.15)); st_curb.add_vertex(rco2)
-		collision_faces.append(rco1); collision_faces.append(rct1); collision_faces.append(rco2)
-		collision_faces.append(rct1); collision_faces.append(rct2); collision_faces.append(rco2)
+		collision_faces.append(rco1); collision_faces.append(rco2); collision_faces.append(rct1)
+		collision_faces.append(rct1); collision_faces.append(rco2); collision_faces.append(rct2)
 
-		# 5. Sidewalks (with valid UVs)
+		# 5. Sidewalks (with valid UVs and CCW upward collision)
 		var lsw1 = left_sw_out[i]
 		var lsw2 = left_sw_out[next_i]
 		st_sw.set_normal(n1); st_sw.set_uv(Vector2(0.0, d1 * 0.12)); st_sw.add_vertex(lco1)
@@ -448,8 +450,8 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 		st_sw.set_normal(n1); st_sw.set_uv(Vector2(1.0, d1 * 0.12)); st_sw.add_vertex(lsw1)
 		st_sw.set_normal(n2); st_sw.set_uv(Vector2(1.0, d2 * 0.12)); st_sw.add_vertex(lsw2)
 		st_sw.set_normal(n2); st_sw.set_uv(Vector2(0.0, d2 * 0.12)); st_sw.add_vertex(lco2)
-		collision_faces.append(lco1); collision_faces.append(lsw1); collision_faces.append(lco2)
-		collision_faces.append(lsw1); collision_faces.append(lsw2); collision_faces.append(lco2)
+		collision_faces.append(lco1); collision_faces.append(lco2); collision_faces.append(lsw1)
+		collision_faces.append(lsw1); collision_faces.append(lco2); collision_faces.append(lsw2)
 
 		var rsw1 = right_sw_out[i]
 		var rsw2 = right_sw_out[next_i]
@@ -459,8 +461,8 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 		st_sw.set_normal(n1); st_sw.set_uv(Vector2(1.0, d1 * 0.12)); st_sw.add_vertex(rco1)
 		st_sw.set_normal(n2); st_sw.set_uv(Vector2(1.0, d2 * 0.12)); st_sw.add_vertex(rco2)
 		st_sw.set_normal(n2); st_sw.set_uv(Vector2(0.0, d2 * 0.12)); st_sw.add_vertex(rsw2)
-		collision_faces.append(rsw1); collision_faces.append(rco1); collision_faces.append(rsw2)
-		collision_faces.append(rco1); collision_faces.append(rco2); collision_faces.append(rsw2)
+		collision_faces.append(rsw1); collision_faces.append(rsw2); collision_faces.append(rco1)
+		collision_faces.append(rco1); collision_faces.append(rsw2); collision_faces.append(rco2)
 
 		# 6. Solid Outer Sidewalk Fascia Drops (Eliminates paper-thin edges & under-void clipping)
 		var lsw_b1 = lsw1 - n1 * road_deck_thickness
@@ -582,7 +584,7 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 	var col = CollisionShape3D.new()
 	col.name = "ContinuousRoadCollision"
 	var concave_shape = ConcavePolygonShape3D.new()
-	concave_shape.backface_collision = true
+	concave_shape.backface_collision = false
 	concave_shape.set_faces(collision_faces)
 	col.shape = concave_shape
 	road_body.add_child(col)

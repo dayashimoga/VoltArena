@@ -16,7 +16,7 @@ extends "res://games/chroma-rush/worlds/world_base.gd"
 
 const ARCHITECTURAL_SHADER_CODE = """
 shader_type spatial;
-render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
+render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_lambert, specular_schlick_ggx;
 
 uniform sampler2D albedo_texture : source_color, filter_linear_mipmap;
 uniform vec4 color_wall_primary : source_color;
@@ -28,7 +28,6 @@ uniform float wall_metallic : hint_range(0.0, 1.0) = 0.05;
 uniform float wall_roughness : hint_range(0.0, 1.0) = 0.82;
 uniform float window_metallic : hint_range(0.0, 1.0) = 0.85;
 uniform float window_roughness : hint_range(0.0, 1.0) = 0.08;
-uniform float window_clearcoat : hint_range(0.0, 1.0) = 0.90;
 
 void fragment() {
 	vec4 tex = texture(albedo_texture, UV);
@@ -41,7 +40,6 @@ void fragment() {
 		ALBEDO = color_window.rgb;
 		METALLIC = window_metallic;
 		ROUGHNESS = window_roughness;
-		CLEARCOAT = window_clearcoat;
 		SPECULAR = 0.7;
 	} else if (is_teal_base) {
 		ALBEDO = color_wall_secondary.rgb;
@@ -154,6 +152,11 @@ func _init() -> void:
 	world_id = ChromaConstants.WORLD_NEON_CITY
 	world_name = "Neon City"
 
+func _build_track_waypoints() -> Array[Vector3]:
+	if waypoints.is_empty():
+		generate_waypoints()
+	return waypoints
+
 func generate_waypoints() -> void:
 	waypoints.clear()
 	# 32-point interconnected metropolitan road network across 6 distinct districts (>3.5km total driving circuit)
@@ -251,12 +254,20 @@ func build_checkpoints() -> void:
 		gates_container.add_child(gate)
 		checkpoints.append(gate)
 
-func _is_clear_of_spline(pt: Vector3, min_clearance: float) -> bool:
+func _is_clear_of_spline(pt: Vector3, min_clearance: float, ignore_s_idx: int = -1, ignore_window: int = 6) -> bool:
 	var pt_2d = Vector2(pt.x, pt.z)
-	var n_s = spline_samples.size()
+	var pts_to_check = spline_samples if not spline_samples.is_empty() else waypoints
+	var n_s = pts_to_check.size()
+	if n_s < 2:
+		return true
 	for i in range(n_s):
-		var s1 = spline_samples[i]
-		var s2 = spline_samples[(i + 1) % n_s]
+		if ignore_s_idx >= 0 and not spline_samples.is_empty():
+			var diff = abs(i - ignore_s_idx)
+			var cyclic_diff = min(diff, n_s - diff)
+			if cyclic_diff <= ignore_window:
+				continue
+		var s1 = pts_to_check[i]
+		var s2 = pts_to_check[(i + 1) % n_s]
 		var s1_2d = Vector2(s1.x, s1.z)
 		var s2_2d = Vector2(s2.x, s2.z)
 		var seg = s2_2d - s1_2d
@@ -288,13 +299,19 @@ func build_props() -> void:
 		"res://assets/models/environment/building_comm_e.glb",
 		"res://assets/models/environment/building_comm_f.glb"
 	]
+	var residential_paths = [
+		"res://assets/models/environment/building_a.glb",
+		"res://assets/models/environment/building_b.glb",
+		"res://assets/models/environment/building_c.glb",
+		"res://assets/models/environment/building_d.glb"
+	]
 
 	var n_spline = spline_samples.size()
 	if n_spline < 10:
 		return
 
-	# 1. Primary Street-Facing City Blocks (Positioned at safe setback >= 24.0m, outside all sidewalks)
-	var building_interval = 6 # every ~35m along spline
+	# 1. Primary Street-Facing City Blocks (Positioned at safe setback >= 24.5m with complete block parcels)
+	var building_interval = 4 # every ~24m along spline for dense, continuous urban fabric
 	for s_idx in range(0, n_spline, building_interval):
 		var p_curr = spline_samples[s_idx]
 		var p_next = spline_samples[(s_idx + 1) % n_spline]
@@ -310,26 +327,23 @@ func build_props() -> void:
 		var wp_nearest = get_nearest_waypoint_index(p_curr)
 
 		for side in [-1.0, 1.0]:
-			var setback = 25.0 + float((s_idx + int(side > 0)) % 3) * 3.0
+			var setback = 27.5 + float((s_idx + int(side > 0)) % 3) * 3.0
 			var b_pos = p_curr + right * (side * setback)
 			b_pos.y = p_curr.y
 
-			# Enforce strict geometric clearance across the entire spline network
-			if not _is_clear_of_spline(b_pos, 17.5):
+			# Enforce strict geometric clearance across the entire spline network (>= 26.0m on non-local segments prevents any road/curb intrusion)
+			if not _is_clear_of_spline(b_pos, 26.0, s_idx, 6):
 				continue
 
 			var theme_idx = (s_idx * 3 + int(side > 0) * 2 + wp_nearest) % ARCHITECTURAL_THEMES.size()
 			var side_str = "Left" if side < 0 else "Right"
-			var b_node = _create_district_building(wp_nearest, s_idx, skyscraper_paths, commercial_paths, theme_idx, side_str)
+			var b_node = _create_district_building(wp_nearest, s_idx, skyscraper_paths, commercial_paths, residential_paths, theme_idx, side_str)
 			b_node.position = b_pos
 			b_node.rotation_degrees.y = rot_y + (90.0 if side < 0 else -90.0)
 			props_container.add_child(b_node)
 
-			# Urban Plaza Foundation beneath building: flush with ground, width 18m centered at 25m setback -> edge at 16m (6.6m clear of sidewalk!)
-			var plaza = _build_urban_plaza_foundation(18.0, 18.0, 0.0, b_pos.y + 0.04)
-			plaza.position = Vector3(b_pos.x, 0.0, b_pos.z)
-			plaza.rotation_degrees.y = b_node.rotation_degrees.y
-			props_container.add_child(plaza)
+			# Contiguous urban block parcel connecting road sidewalk to building with esplanade, plinth, verge & parking
+			_build_urban_block_parcel(p_curr, right * side, setback, b_pos, b_node.rotation_degrees.y, wp_nearest, s_idx)
 
 	# 2. Organic Branching Trees & Street Amenities (Positioned at lateral offset ±12.5m on verge/plaza)
 	var tree_interval = 4 # every ~24m along spline
@@ -368,6 +382,33 @@ func build_props() -> void:
 				tree_r.position = pos_r
 				tree_r.position.y = p_curr.y
 				props_container.add_child(tree_r)
+
+		elif s_idx % 16 == 8:
+			# Modern Bus Stop Shelter on pedestrian sidewalk verge at -12.0m
+			var shelter_pos = p_curr - right * 12.0
+			if _is_clear_of_spline(shelter_pos, 9.0):
+				var shelter = _build_bus_stop_shelter()
+				shelter.position = shelter_pos
+				shelter.position.y = p_curr.y
+				shelter.rotation_degrees.y = rot_y + 90.0
+				props_container.add_child(shelter)
+
+		elif s_idx % 8 == 2:
+			# Modern Fire Hydrant on sidewalk verge at -11.0m
+			var hydrant_pos = p_curr - right * 11.0
+			if _is_clear_of_spline(hydrant_pos, 8.5):
+				var hydrant = _build_fire_hydrant()
+				hydrant.position = hydrant_pos
+				hydrant.position.y = p_curr.y
+				props_container.add_child(hydrant)
+
+			# Street Trash Receptacle at +11.0m
+			var bin_pos = p_curr + right * 11.0
+			if _is_clear_of_spline(bin_pos, 8.5):
+				var bin = _build_trash_bin()
+				bin.position = bin_pos
+				bin.position.y = p_curr.y
+				props_container.add_child(bin)
 
 		elif s_idx % 8 == 4:
 			# Modern street benches safely placed at ±11.2m
@@ -413,9 +454,13 @@ func build_props() -> void:
 	# 6. 360-Degree Distant City Skyline Ring (MultiMesh GPU Instanced)
 	_build_distant_skyline_backdrop()
 
-func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: Array, theme_idx: int, side_name: String) -> Node3D:
+func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: Array, residentials: Array, theme_idx: int, side_name: String) -> Node3D:
 	var b_node: Node3D = null
-	if (i + s) % 2 == 0:
+	var pick_type = (i + s) % 3
+
+	# District-specific architectural selection
+	if (i <= 5 or (i >= 17 and i <= 21)) and pick_type != 2:
+		# CBD & Neon Strip: High-Rise Skyscraper Glass Towers
 		var m_idx = (i * 2 + s) % skyscrapers.size()
 		var glb_model = ModelCache.get_model(skyscrapers[m_idx])
 		if glb_model:
@@ -432,7 +477,26 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 			col.position = Vector3(0, 22.5, 0)
 			b_body.add_child(col)
 			b_node = b_body
+	elif (i >= 22 and i <= 31) and pick_type == 1:
+		# Marina & Old Town: Mid-Rise Classical / Residential Masonry
+		var m_idx = (i * 2 + s) % residentials.size()
+		var glb_model = ModelCache.get_model(residentials[m_idx])
+		if glb_model:
+			glb_model.scale = Vector3(7.0, 7.5, 7.0)
+			_style_building(glb_model, theme_idx)
+			var b_body = StaticBody3D.new()
+			b_body.name = "Residential%s_%d_%d" % [side_name, i, s]
+			b_body.collision_layer = GameConstants.LAYER_WORLD
+			b_body.add_child(glb_model)
+			var col = CollisionShape3D.new()
+			var b_shape = BoxShape3D.new()
+			b_shape.size = Vector3(14.0, 24.0, 14.0)
+			col.shape = b_shape
+			col.position = Vector3(0, 12.0, 0)
+			b_body.add_child(col)
+			b_node = b_body
 	else:
+		# Commercial Promenade & Mixed-Use Districts
 		var m_idx = (i * 2 + s) % commercials.size()
 		var glb_model = ModelCache.get_model(commercials[m_idx])
 		if glb_model:
@@ -459,46 +523,73 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 func _build_secondary_city_blocks() -> void:
 	# Secondary buildings, logistics warehouses, parking courtyards filling interior space
 	var block_configs = [
-		# Downtown Financial interior (Z: -100 to -300, X: 50 to 180)
-		{"pos": Vector3(80, 0, -80), "h": 58.0, "w": 26.0, "theme": 0},
-		{"pos": Vector3(120, 0, -140), "h": 68.0, "w": 28.0, "theme": 2},
-		{"pos": Vector3(100, 0, -220), "h": 52.0, "w": 24.0, "theme": 1},
-		{"pos": Vector3(180, 0, -240), "h": 46.0, "w": 22.0, "theme": 5},
-		# Commercial Promenade interior (X: 300 to 450, Z: -200 to 0)
-		{"pos": Vector3(360, 0, -180), "h": 44.0, "w": 24.0, "theme": 1},
-		{"pos": Vector3(400, 0, -100), "h": 38.0, "w": 26.0, "theme": 3},
-		{"pos": Vector3(340, 0, -40), "h": 42.0, "w": 22.0, "theme": 4},
-		# Logistics Hub freight yards (X: 100 to 300, Z: 200 to 380)
+		# 1. Downtown Financial Core Interior (WP 0-5)
+		{"pos": Vector3(80, 0, -80), "h": 68.0, "w": 26.0, "theme": 0},
+		{"pos": Vector3(120, 0, -140), "h": 78.0, "w": 28.0, "theme": 2},
+		{"pos": Vector3(100, 0, -220), "h": 58.0, "w": 24.0, "theme": 1},
+		{"pos": Vector3(180, 0, -240), "h": 52.0, "w": 22.0, "theme": 5},
+		{"pos": Vector3(140, 0, -80), "h": 62.0, "w": 24.0, "theme": 0},
+		{"pos": Vector3(70, 0, -280), "h": 54.0, "w": 22.0, "theme": 2},
+		{"pos": Vector3(220, 0, -180), "h": 48.0, "w": 26.0, "theme": 1},
+
+		# 2. Commercial Promenade & Retail Center (WP 6-10)
+		{"pos": Vector3(360, 0, -180), "h": 46.0, "w": 24.0, "theme": 1},
+		{"pos": Vector3(400, 0, -100), "h": 42.0, "w": 26.0, "theme": 3},
+		{"pos": Vector3(340, 0, -40), "h": 44.0, "w": 22.0, "theme": 4},
+		{"pos": Vector3(440, 0, -160), "h": 38.0, "w": 24.0, "theme": 1},
+		{"pos": Vector3(320, 0, -120), "h": 40.0, "w": 22.0, "theme": 3},
+		{"pos": Vector3(420, 0, 40), "h": 36.0, "w": 26.0, "theme": 4},
+		{"pos": Vector3(360, 0, 60), "h": 34.0, "w": 22.0, "theme": 1},
+
+		# 3. Logistics Hub Freight Yards & Skyway Underpass (WP 11-16)
 		{"pos": Vector3(240, 0, 240), "h": 22.0, "w": 34.0, "theme": 1},
 		{"pos": Vector3(180, 0, 300), "h": 26.0, "w": 36.0, "theme": 5},
 		{"pos": Vector3(120, 0, 340), "h": 20.0, "w": 32.0, "theme": 1},
-		# Neon District interior (X: -150 to -300, Z: 100 to 260)
-		{"pos": Vector3(-200, 0, 160), "h": 50.0, "w": 24.0, "theme": 2},
-		{"pos": Vector3(-260, 0, 140), "h": 56.0, "w": 26.0, "theme": 0},
-		{"pos": Vector3(-180, 0, 240), "h": 44.0, "w": 22.0, "theme": 2},
-		# Marina Waterfront interior (X: -240 to -380, Z: -100 to -260)
+		{"pos": Vector3(280, 0, 320), "h": 24.0, "w": 30.0, "theme": 5},
+		{"pos": Vector3(80, 0, 380), "h": 22.0, "w": 28.0, "theme": 1},
+		{"pos": Vector3(200, 0, 380), "h": 18.0, "w": 34.0, "theme": 5},
+
+		# 4. Neon District Interior & Cyber Concourse (WP 17-21)
+		{"pos": Vector3(-200, 0, 160), "h": 54.0, "w": 24.0, "theme": 2},
+		{"pos": Vector3(-260, 0, 140), "h": 60.0, "w": 26.0, "theme": 0},
+		{"pos": Vector3(-180, 0, 240), "h": 48.0, "w": 22.0, "theme": 2},
+		{"pos": Vector3(-140, 0, 200), "h": 44.0, "w": 24.0, "theme": 0},
+		{"pos": Vector3(-220, 0, 80), "h": 50.0, "w": 22.0, "theme": 2},
+		{"pos": Vector3(-280, 0, 220), "h": 46.0, "w": 24.0, "theme": 0},
+
+		# 5. Marina Waterfront Coastal District (WP 22-26)
 		{"pos": Vector3(-300, 0, -160), "h": 36.0, "w": 24.0, "theme": 3},
 		{"pos": Vector3(-320, 0, -220), "h": 32.0, "w": 22.0, "theme": 3},
-		# Historic Old Town interior (X: -80 to -200, Z: -250 to -380)
+		{"pos": Vector3(-240, 0, -180), "h": 38.0, "w": 24.0, "theme": 3},
+		{"pos": Vector3(-260, 0, -260), "h": 34.0, "w": 22.0, "theme": 3},
+		{"pos": Vector3(-340, 0, -120), "h": 30.0, "w": 20.0, "theme": 3},
+
+		# 6. Historic Old Town Interior (WP 27-31)
 		{"pos": Vector3(-140, 0, -280), "h": 34.0, "w": 20.0, "theme": 4},
 		{"pos": Vector3(-160, 0, -340), "h": 30.0, "w": 22.0, "theme": 4},
 		{"pos": Vector3(-120, 0, -180), "h": 38.0, "w": 20.0, "theme": 4},
-		# Outer perimeter skyline anchors
-		{"pos": Vector3(560, 0, -180), "h": 62.0, "w": 30.0, "theme": 0},
-		{"pos": Vector3(540, 0, 60), "h": 48.0, "w": 28.0, "theme": 1},
-		{"pos": Vector3(-480, 0, 180), "h": 46.0, "w": 26.0, "theme": 2},
-		{"pos": Vector3(-500, 0, -180), "h": 38.0, "w": 24.0, "theme": 3}
+		{"pos": Vector3(-160, 0, -220), "h": 32.0, "w": 20.0, "theme": 4},
+		{"pos": Vector3(-100, 0, -140), "h": 36.0, "w": 22.0, "theme": 4},
+
+		# 7. Metropolitan Outer Anchors (Filling all distant vistas)
+		{"pos": Vector3(560, 0, -180), "h": 72.0, "w": 30.0, "theme": 0},
+		{"pos": Vector3(540, 0, 60), "h": 58.0, "w": 28.0, "theme": 1},
+		{"pos": Vector3(-480, 0, 180), "h": 56.0, "w": 26.0, "theme": 2},
+		{"pos": Vector3(-500, 0, -180), "h": 44.0, "w": 24.0, "theme": 3},
+		{"pos": Vector3(480, 0, -320), "h": 64.0, "w": 28.0, "theme": 0},
+		{"pos": Vector3(-380, 0, 340), "h": 50.0, "w": 24.0, "theme": 2}
 	]
 
 	for cfg in block_configs:
-		if not _is_clear_of_spline(cfg["pos"], cfg["w"] * 0.5 + 8.5):
+		# Strict clearance from all spline samples: width/2 + road_half_w(7.5) + sidewalk(3.5) + buffer(2.5) = width/2 + 13.5
+		if not _is_clear_of_spline(cfg["pos"], cfg["w"] * 0.5 + 13.5):
 			continue
 
 		var block = _build_procedural_commercial_block(cfg["h"], cfg["w"], cfg["theme"])
 		block.position = cfg["pos"]
 		props_container.add_child(block)
 
-		var plaza = _build_urban_plaza_foundation(cfg["w"] + 4.0, cfg["w"] + 4.0, 0.0, 0.04)
+		var plaza = _build_urban_plaza_foundation(cfg["w"] + 6.0, cfg["w"] + 6.0, 0.0, 0.04)
 		plaza.position = cfg["pos"]
 		props_container.add_child(plaza)
 
@@ -610,37 +701,35 @@ func _build_city_landmarks() -> void:
 		props_container.add_child(clocktower)
 
 func _build_distant_skyline_backdrop() -> void:
-	# GPU MultiMesh perimeter ring creating 360° metropolitan horizon depth (zero empty space)
-	var tower_count = 64
-	var radius = 540.0
-
+	# GPU MultiMesh dual perimeter rings creating 360° architectural skyline (zero empty space)
+	var tower_count = 128
 	var multimesh = MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
 	multimesh.use_colors = true
-	multimesh.mesh = BoxMesh.new()
-	(multimesh.mesh as BoxMesh).size = Vector3(32.0, 100.0, 32.0)
+	multimesh.mesh = _create_stepped_skyline_mesh()
 	multimesh.instance_count = tower_count
 
 	var mat_distant = StandardMaterial3D.new()
-	mat_distant.albedo_color = Color(0.12, 0.18, 0.26)
+	mat_distant.albedo_color = Color(0.14, 0.20, 0.28)
 	mat_distant.metallic = 0.85
-	mat_distant.roughness = 0.18
+	mat_distant.roughness = 0.16
 	mat_distant.emission_enabled = true
-	mat_distant.emission = Color(0.08, 0.14, 0.24)
-	mat_distant.emission_energy_multiplier = 1.25
+	mat_distant.emission = Color(0.10, 0.18, 0.26)
+	mat_distant.emission_energy_multiplier = 1.35
 	mat_distant.vertex_color_use_as_albedo = true
 
 	for t in range(tower_count):
+		var ring_idx = t % 2
+		var radius = 480.0 if ring_idx == 0 else 660.0
 		var angle = (float(t) / float(tower_count)) * TAU
-		var dist_var = radius + float(t % 7) * 35.0
+		var dist_var = radius + float(t % 5) * 30.0
 		var tx = cos(angle) * dist_var
 		var tz = sin(angle) * dist_var
-		var scale_y = 0.7 + float((t * 7) % 11) * 0.14
-		var height = 100.0 * scale_y
+		var scale_y = 0.65 + float((t * 7) % 13) * 0.12
 
 		var xf = Transform3D()
-		xf = xf.scaled(Vector3(1.0 + float(t % 3) * 0.25, scale_y, 1.0 + float((t + 1) % 3) * 0.25))
-		xf.origin = Vector3(tx, height * 0.5, tz)
+		xf = xf.scaled(Vector3(1.0 + float(t % 3) * 0.22, scale_y, 1.0 + float((t + 1) % 3) * 0.22))
+		xf.origin = Vector3(tx, 0.0, tz)
 		multimesh.set_instance_transform(t, xf)
 
 		var shade = 0.75 + float(t % 4) * 0.12
@@ -653,6 +742,57 @@ func _build_distant_skyline_backdrop() -> void:
 	mm_inst.multimesh = multimesh
 	mm_inst.material_override = mat_distant
 	props_container.add_child(mm_inst)
+
+static func _create_stepped_skyline_mesh() -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+
+	# 1. Base Stepped Podium (36 x 24 x 36, center y = 12)
+	_add_box_to_st(st, Vector3(36.0, 24.0, 36.0), Vector3(0.0, 12.0, 0.0))
+	# 2. Main High-Rise Shaft (26 x 60 x 26, center y = 54)
+	_add_box_to_st(st, Vector3(26.0, 60.0, 26.0), Vector3(0.0, 54.0, 0.0))
+	# 3. Setback Penthouse Crown (16 x 26 x 16, center y = 97)
+	_add_box_to_st(st, Vector3(16.0, 26.0, 16.0), Vector3(0.0, 97.0, 0.0))
+	# 4. Rooftop Spire Mast (2.4 x 28 x 2.4, center y = 124)
+	_add_box_to_st(st, Vector3(2.4, 28.0, 2.4), Vector3(0.0, 124.0, 0.0))
+
+	st.generate_normals()
+	return st.commit()
+
+static func _add_box_to_st(st: SurfaceTool, size: Vector3, center: Vector3) -> void:
+	var h = size * 0.5
+	var v0 = center + Vector3(-h.x, -h.y, -h.z)
+	var v1 = center + Vector3( h.x, -h.y, -h.z)
+	var v2 = center + Vector3( h.x,  h.y, -h.z)
+	var v3 = center + Vector3(-h.x,  h.y, -h.z)
+	var v4 = center + Vector3(-h.x, -h.y,  h.z)
+	var v5 = center + Vector3( h.x, -h.y,  h.z)
+	var v6 = center + Vector3( h.x,  h.y,  h.z)
+	var v7 = center + Vector3(-h.x,  h.y,  h.z)
+
+	_add_quad_to_st(st, v0, v1, v2, v3, Vector3.BACK)
+	_add_quad_to_st(st, v5, v4, v7, v6, Vector3.FORWARD)
+	_add_quad_to_st(st, v4, v0, v3, v7, Vector3.LEFT)
+	_add_quad_to_st(st, v1, v5, v6, v2, Vector3.RIGHT)
+	_add_quad_to_st(st, v3, v2, v6, v7, Vector3.UP)
+	_add_quad_to_st(st, v4, v5, v1, v0, Vector3.DOWN)
+
+static func _add_quad_to_st(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, normal: Vector3) -> void:
+	st.set_normal(normal)
+	st.set_uv(Vector2(0, 0))
+	st.add_vertex(a)
+	st.set_uv(Vector2(1, 0))
+	st.add_vertex(b)
+	st.set_uv(Vector2(1, 1))
+	st.add_vertex(c)
+
+	st.set_normal(normal)
+	st.set_uv(Vector2(0, 0))
+	st.add_vertex(a)
+	st.set_uv(Vector2(1, 1))
+	st.add_vertex(c)
+	st.set_uv(Vector2(0, 1))
+	st.add_vertex(d)
 
 func _get_district_tree_species(wp_idx: int) -> String:
 	match wp_idx:
@@ -721,6 +861,7 @@ func _build_realistic_tree(species: String, height: float, seed_val: int) -> Nod
 
 	var tree_model = ModelCache.get_model(tree_path)
 	if tree_model:
+		tree_model.name = "AuthoredTree"
 		var sc = height * 0.28
 		tree_model.scale = Vector3(sc, sc, sc)
 		tree_model.rotation_degrees.y = float(seed_val * 47 % 360)
@@ -804,6 +945,88 @@ func _gather_meshes(node: Node, result: Array[MeshInstance3D]) -> void:
 		result.append(node)
 	for child in node.get_children():
 		_gather_meshes(child, result)
+
+func _build_urban_block_parcel(p_curr: Vector3, right_dir: Vector3, setback: float, b_pos: Vector3, b_rot_y: float, wp_idx: int, seed_val: int) -> void:
+	if not mat_sidewalk or not mat_asphalt:
+		_init_materials()
+	var parcel_root = Node3D.new()
+	parcel_root.name = "UrbanParcel_%d_%d" % [wp_idx, seed_val]
+	parcel_root.position = Vector3(b_pos.x, b_pos.y, b_pos.z)
+	parcel_root.rotation_degrees.y = b_rot_y
+
+	# 1. Main Plaza Plinth under building (30m x 0.22m x 30m)
+	var plinth = MeshInstance3D.new()
+	plinth.name = "PlinthFoundation"
+	var plinth_box = BoxMesh.new()
+	plinth_box.size = Vector3(30.0, 0.22, 30.0)
+	plinth.mesh = plinth_box
+	var mat_plinth = StandardMaterial3D.new()
+	mat_plinth.albedo_color = Color(0.24, 0.26, 0.28)
+	mat_plinth.roughness = 0.82
+	plinth.material_override = mat_plinth
+	plinth.position = Vector3(0.0, 0.11, 0.0)
+	parcel_root.add_child(plinth)
+
+	# 2. Continuous Pedestrian Apron connecting road sidewalk to building front
+	var apron = MeshInstance3D.new()
+	apron.name = "SidewalkApron"
+	var apron_box = BoxMesh.new()
+	apron_box.size = Vector3(26.0, 0.14, 18.0)
+	apron.mesh = apron_box
+	apron.material_override = mat_sidewalk
+	apron.position = Vector3(0.0, 0.07, -18.0)
+	parcel_root.add_child(apron)
+
+	# 3. Manicured Green Verge & Landscaping along frontage
+	var verge_mi = MeshInstance3D.new()
+	var verge_box = BoxMesh.new()
+	verge_box.size = Vector3(24.0, 0.16, 2.8)
+	verge_mi.mesh = verge_box
+	var mat_grass = StandardMaterial3D.new()
+	mat_grass.albedo_color = Color(0.18, 0.36, 0.16)
+	mat_grass.roughness = 0.95
+	verge_mi.material_override = mat_grass
+	verge_mi.position = Vector3(0.0, 0.08, -11.0)
+	parcel_root.add_child(verge_mi)
+
+	# 4. Modern Decorative Bollards along sidewalk curb
+	for bx in [-9.0, -4.5, 0.0, 4.5, 9.0]:
+		var bollard_mi = MeshInstance3D.new()
+		var b_cyl = CylinderMesh.new()
+		b_cyl.top_radius = 0.10
+		b_cyl.bottom_radius = 0.12
+		b_cyl.height = 0.70
+		bollard_mi.mesh = b_cyl
+		var mat_bollard = StandardMaterial3D.new()
+		mat_bollard.albedo_color = Color(0.75, 0.78, 0.82)
+		mat_bollard.metallic = 0.88
+		mat_bollard.roughness = 0.22
+		bollard_mi.material_override = mat_bollard
+		bollard_mi.position = Vector3(bx, 0.35, -26.0)
+		parcel_root.add_child(bollard_mi)
+
+	# 5. Side Parking Stall with Parked Vehicle (alternate blocks)
+	if seed_val % 2 == 0:
+		var parking_mi = MeshInstance3D.new()
+		var park_box = BoxMesh.new()
+		park_box.size = Vector3(8.0, 0.10, 14.0)
+		parking_mi.mesh = park_box
+		parking_mi.material_override = mat_asphalt
+		parking_mi.position = Vector3(18.0, 0.05, -2.0)
+		parcel_root.add_child(parking_mi)
+
+		var car = _build_parked_vehicle_prop()
+		car.position = Vector3(18.0, 0.05, -2.0)
+		car.rotation_degrees.y = 90.0
+		parcel_root.add_child(car)
+
+	if is_instance_valid(props_container):
+		props_container.add_child(parcel_root)
+	else:
+		props_container = Node3D.new()
+		props_container.name = "EnvironmentProps"
+		add_child(props_container)
+		props_container.add_child(parcel_root)
 
 func _build_urban_plaza_foundation(width: float, depth: float, base_y: float = 0.0, top_y: float = 0.04) -> Node3D:
 	var root = StaticBody3D.new()
@@ -982,3 +1205,126 @@ func _build_procedural_streetlight() -> Node3D:
 	root.add_child(lamp_mi)
 
 	return root
+
+func _build_bus_stop_shelter() -> Node3D:
+	var shelter = Node3D.new()
+	shelter.name = "BusStopShelter"
+
+	var mat_frame = StandardMaterial3D.new()
+	mat_frame.albedo_color = Color(0.20, 0.22, 0.25)
+	mat_frame.metallic = 0.85
+	mat_frame.roughness = 0.30
+
+	var mat_glass = StandardMaterial3D.new()
+	mat_glass.albedo_color = Color(0.65, 0.85, 0.95, 0.45)
+	mat_glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat_glass.roughness = 0.05
+
+	# Roof Canopy
+	var roof = MeshInstance3D.new()
+	var roof_box = BoxMesh.new()
+	roof_box.size = Vector3(4.2, 0.12, 2.2)
+	roof.mesh = roof_box
+	roof.material_override = mat_frame
+	roof.position = Vector3(0.0, 2.7, 0.0)
+	shelter.add_child(roof)
+
+	# Rear Glass Panel
+	var rear_glass = MeshInstance3D.new()
+	var rg_box = BoxMesh.new()
+	rg_box.size = Vector3(4.0, 2.5, 0.08)
+	rear_glass.mesh = rg_box
+	rear_glass.material_override = mat_glass
+	rear_glass.position = Vector3(0.0, 1.35, -1.0)
+	shelter.add_child(rear_glass)
+
+	# Side Support Posts
+	for px in [-2.0, 2.0]:
+		var post = MeshInstance3D.new()
+		var p_cyl = CylinderMesh.new()
+		p_cyl.top_radius = 0.08
+		p_cyl.bottom_radius = 0.08
+		p_cyl.height = 2.7
+		post.mesh = p_cyl
+		post.material_override = mat_frame
+		post.position = Vector3(px, 1.35, -1.0)
+		shelter.add_child(post)
+
+	# Integrated Wooden Bench
+	var bench = _build_street_bench()
+	bench.position = Vector3(0.0, 0.0, -0.4)
+	shelter.add_child(bench)
+
+	return shelter
+
+func _build_fire_hydrant() -> Node3D:
+	var hydrant = Node3D.new()
+	hydrant.name = "FireHydrant"
+
+	var mat_hydrant = StandardMaterial3D.new()
+	mat_hydrant.albedo_color = Color(0.88, 0.15, 0.12)
+	mat_hydrant.roughness = 0.45
+	mat_hydrant.metallic = 0.65
+
+	var body = MeshInstance3D.new()
+	var cyl = CylinderMesh.new()
+	cyl.top_radius = 0.18
+	cyl.bottom_radius = 0.22
+	cyl.height = 0.75
+	body.mesh = cyl
+	body.material_override = mat_hydrant
+	body.position = Vector3(0.0, 0.375, 0.0)
+	hydrant.add_child(body)
+
+	var cap = MeshInstance3D.new()
+	var sphere = SphereMesh.new()
+	sphere.radius = 0.20
+	sphere.height = 0.25
+	cap.mesh = sphere
+	cap.material_override = mat_hydrant
+	cap.position = Vector3(0.0, 0.75, 0.0)
+	hydrant.add_child(cap)
+
+	for side in [-1.0, 1.0]:
+		var nozzle = MeshInstance3D.new()
+		var n_cyl = CylinderMesh.new()
+		n_cyl.top_radius = 0.08
+		n_cyl.bottom_radius = 0.08
+		n_cyl.height = 0.20
+		nozzle.mesh = n_cyl
+		nozzle.material_override = mat_hydrant
+		nozzle.rotation_degrees.z = 90.0
+		nozzle.position = Vector3(side * 0.22, 0.48, 0.0)
+		hydrant.add_child(nozzle)
+
+	return hydrant
+
+func _build_trash_bin() -> Node3D:
+	var bin = Node3D.new()
+	bin.name = "StreetTrashBin"
+
+	var mat_bin = StandardMaterial3D.new()
+	mat_bin.albedo_color = Color(0.24, 0.28, 0.32)
+	mat_bin.roughness = 0.55
+	mat_bin.metallic = 0.75
+
+	var body = MeshInstance3D.new()
+	var cyl = CylinderMesh.new()
+	cyl.top_radius = 0.26
+	cyl.bottom_radius = 0.22
+	cyl.height = 0.85
+	body.mesh = cyl
+	body.material_override = mat_bin
+	body.position = Vector3(0.0, 0.425, 0.0)
+	bin.add_child(body)
+
+	var lid = MeshInstance3D.new()
+	var dome = SphereMesh.new()
+	dome.radius = 0.27
+	dome.height = 0.20
+	lid.mesh = dome
+	lid.material_override = mat_bin
+	lid.position = Vector3(0.0, 0.85, 0.0)
+	bin.add_child(lid)
+
+	return bin

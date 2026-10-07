@@ -31,6 +31,7 @@ var results_screen: CanvasLayer = null
 var is_extracting: bool = false
 var extraction_available: bool = false
 var extraction_securing_timer: float = 0.0
+var is_boss_done: bool = false
 const EXTRACTION_SECURE_REQUIRED_TIME: float = 3.0
 
 func _ready() -> void:
@@ -245,6 +246,7 @@ func load_mission(m_idx: int) -> void:
 	is_extracting = false
 	extraction_available = false
 	extraction_securing_timer = 0.0
+	is_boss_done = false
 	if is_instance_valid(hud):
 		hud.has_extraction = false
 
@@ -344,47 +346,49 @@ func _process(delta: float) -> void:
 
 	var target_pos = Vector3(0, 0, -160.0)
 	var target_name = "DESTROY JAMMER"
+	var lz_pos = Vector3(0, 0.05, -195.0)
+	var is_boss_seg = false
+	var act_seg_ref: Node3D = null
+
 	if is_instance_valid(mission_streamer):
 		var act_seg = mission_streamer.get_active_segment()
 		if act_seg:
+			act_seg_ref = act_seg
 			if act_seg.is_boss_segment:
-				var lz_pos = act_seg.global_position + Vector3(0, 0.05, -35.0)
-				target_pos = lz_pos
-				target_name = "EXTRACTION HELIPAD LZ"
+				is_boss_seg = true
+				lz_pos = act_seg.global_position + Vector3(0, 0.05, -35.0)
 
-				# Check if boss/encounter is completed or all hostiles neutralized
-				var is_boss_done = (not is_instance_valid(act_seg.encounter_director)) or act_seg.encounter_director.is_completed
+				# Find boss node if still present
+				var boss_node: Node3D = null
+				for b in get_tree().get_nodes_in_group("bosses"):
+					if is_instance_valid(b) and b is Node3D and b.is_inside_tree() and (b.get("is_alive") == null or b.is_alive):
+						boss_node = b
+						break
+
+				is_boss_done = (boss_node == null) or (act_seg.encounter_director != null and act_seg.encounter_director.is_completed) or get_tree().get_nodes_in_group("enemies").is_empty()
+
 				if not is_boss_done and get_tree().get_nodes_in_group("enemies").is_empty():
 					is_boss_done = true
 					if is_instance_valid(act_seg.encounter_director):
 						act_seg.encounter_director.complete_encounter()
 
-				if is_boss_done and not extraction_available:
-					extraction_available = true
-					hud.has_extraction = true
-					hud.extraction_pos = lz_pos
-					hud.show_context_alert("TARGET ELIMINATED // PROCEED TO EXTRACTION HELIPAD", Color(0.1, 1.0, 0.5))
-					hud.update_objective("REACH EXTRACTION HELIPAD // EVAC INBOUND")
-
-				# Extraction LZ continuous proximity & secure countdown
-				if extraction_available and not is_extracting:
-					var dist_to_lz = p_pos.distance_to(lz_pos)
-					if dist_to_lz <= 8.5:
-						var is_holding_e = Input.is_action_pressed("interact") or Input.is_key_pressed(KEY_E)
-						var rate = 2.5 if is_holding_e else 1.0
-						extraction_securing_timer += delta * rate
-						var remaining = maxf(0.0, EXTRACTION_SECURE_REQUIRED_TIME - extraction_securing_timer)
-						if is_instance_valid(hud.directive_label):
-							if is_holding_e:
-								hud.directive_label.text = "[*] HOLDING [E] TO EXTRACT // %.1fs" % remaining
-								hud.directive_label.modulate = Color(0.1, 1.0, 0.5)
-							else:
-								hud.directive_label.text = "[*] SECURING LZ: %.1fs (HOLD [E] TO ACCELERATE)" % remaining
-								hud.directive_label.modulate = Color(0.2, 0.95, 1.0)
-						if extraction_securing_timer >= EXTRACTION_SECURE_REQUIRED_TIME:
-							_trigger_extraction(act_seg)
+				if is_boss_done:
+					if not extraction_available:
+						extraction_available = true
+						hud.has_extraction = true
+						hud.extraction_pos = lz_pos
+						hud.show_context_alert("COMMAND TARGET ELIMINATED // PROCEED TO EXTRACTION HELIPAD", Color(0.1, 1.0, 0.5))
+						hud.update_objective("REACH EXTRACTION HELIPAD // EVAC INBOUND")
+					target_pos = lz_pos
+					target_name = "EXTRACTION HELIPAD LZ"
+				else:
+					# Boss is active! Target the boss on HUD & compass
+					if is_instance_valid(boss_node):
+						target_pos = boss_node.global_position
+						target_name = boss_node.boss_name if boss_node.get("boss_name") != null else "DESTROY COMMAND TARGET"
 					else:
-						extraction_securing_timer = 0.0
+						target_pos = act_seg.global_position + Vector3(0, 0, -20.0)
+						target_name = "DESTROY COMMAND TARGET"
 			else:
 				target_pos = act_seg.global_position + Vector3(0, 0, -20.0)
 				target_name = act_seg.segment_name
@@ -401,6 +405,45 @@ func _process(delta: float) -> void:
 				threat_positions.append(enemy.global_position)
 
 	hud.update_navigation_state(p_pos, heading_rad, target_pos, target_name, threat_positions)
+
+	# Extraction LZ continuous proximity & secure countdown
+	if is_boss_seg and not is_extracting and act_seg_ref != null:
+		var dist_to_lz = p_pos.distance_to(lz_pos)
+		if dist_to_lz <= 8.5:
+			if extraction_available:
+				# Extraction authorized!
+				var is_holding_e = Input.is_action_pressed("interact") or Input.is_key_pressed(KEY_E)
+				var rate = 2.5 if is_holding_e else 1.0
+				extraction_securing_timer += delta * rate
+				var remaining = maxf(0.0, EXTRACTION_SECURE_REQUIRED_TIME - extraction_securing_timer)
+				if is_instance_valid(hud.directive_label):
+					if is_holding_e:
+						hud.directive_label.text = "[*] HOLDING [E] TO BOARD EVAC // %.1fs" % remaining
+						hud.directive_label.modulate = Color(0.1, 1.0, 0.5)
+					else:
+						hud.directive_label.text = "[*] SECURING LZ: %.1fs (HOLD [E] TO ACCELERATE)" % remaining
+						hud.directive_label.modulate = Color(0.2, 0.95, 1.0)
+				if extraction_securing_timer >= EXTRACTION_SECURE_REQUIRED_TIME:
+					_trigger_extraction(act_seg_ref)
+			else:
+				# Boss or hostiles still active! Offer emergency evac under fire so player never dead-ends
+				var is_holding_e = Input.is_action_pressed("interact") or Input.is_key_pressed(KEY_E)
+				if is_holding_e:
+					extraction_securing_timer += delta * 1.5
+					var remaining = maxf(0.0, 3.5 - extraction_securing_timer)
+					if is_instance_valid(hud.directive_label):
+						hud.directive_label.text = "[!] EMERGENCY EVAC UNDER FIRE: HOLD [E] (%.1fs)" % remaining
+						hud.directive_label.modulate = Color(1.0, 0.45, 0.1)
+					if extraction_securing_timer >= 3.5:
+						extraction_available = true
+						_trigger_extraction(act_seg_ref)
+				else:
+					extraction_securing_timer = 0.0
+					if is_instance_valid(hud.directive_label):
+						hud.directive_label.text = "[!] LZ CONTESTED // HOLD [E] FOR EMERGENCY EVAC OR DEFEAT TARGET"
+						hud.directive_label.modulate = Color(1.0, 0.80, 0.2)
+		else:
+			extraction_securing_timer = 0.0
 
 func _connect_segment_events() -> void:
 	for seg in mission_streamer.segments:
@@ -451,12 +494,8 @@ func _connect_segment_events() -> void:
 func _trigger_extraction(seg: Node3D) -> void:
 	if is_extracting:
 		return
-	var is_boss_done = extraction_available or (not is_instance_valid(seg.encounter_director)) or seg.encounter_director.is_completed or get_tree().get_nodes_in_group("enemies").is_empty()
-	if not is_boss_done:
-		hud.show_context_alert("EXTRACTION LOCKED // NEUTRALIZE HOSTILES FIRST", Color(1.0, 0.25, 0.2))
-		return
 
-	# Lock completion exactly once
+	# Lock completion exactly once - never permit dead-end extraction
 	is_extracting = true
 	extraction_available = true
 	if is_instance_valid(player_node):

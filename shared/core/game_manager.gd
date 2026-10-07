@@ -86,6 +86,135 @@ func handle_exec_cmd(cmd: String) -> void:
 			_handle_kart_cmd(scene, cmd)
 		"strike_vector":
 			_handle_strike_vector_cmd(scene, cmd)
+		"chroma_rush":
+			_handle_chroma_rush_cmd(scene, cmd)
+		"aero_rush":
+			_handle_aero_rush_cmd(scene, cmd)
+
+func _handle_aero_rush_cmd(scene: Node, cmd: String) -> void:
+	print("[AERO CMD] Received cmd: ", cmd, " scene: ", scene.name)
+	if cmd == "quick_play" or cmd == "start":
+		if scene.has_method("quick_play"):
+			scene.quick_play()
+		if "countdown_timer" in scene:
+			scene.countdown_timer = 0.0
+	elif cmd.begins_with("course_"):
+		var c_id = cmd.substr(7)
+		if scene.has_method("start_race"):
+			scene.start_race(c_id)
+		if "countdown_timer" in scene:
+			scene.countdown_timer = 0.0
+	elif cmd == "cam_closeup":
+		var cam = scene.find_child("AeroChaseCamera", true, false)
+		var pv = scene.find_child("PlayerAeroVehicle", true, false)
+		if cam and pv:
+			cam.global_position = pv.global_position + Vector3(2.5, 1.2, 3.2)
+			cam.look_at(pv.global_position + Vector3(0, 0.5, 0), Vector3.UP)
+	elif cmd == "cam_loop":
+		var cam = scene.find_child("AeroChaseCamera", true, false)
+		var pv = scene.find_child("PlayerAeroVehicle", true, false)
+		if cam and pv:
+			cam.global_position = pv.global_position + Vector3(18.0, 24.0, -18.0)
+			cam.look_at(pv.global_position + Vector3(0, 10.0, -30.0), Vector3.UP)
+
+func _handle_chroma_rush_cmd(scene: Node, cmd: String) -> void:
+	print("[CHROMA CMD] Received cmd: ", cmd, " scene: ", scene.name)
+	if cmd == "quick_play" or cmd == "start":
+		if scene.has_method("quick_play"):
+			scene.quick_play()
+		if scene.has_method("_on_briefing_dismissed"):
+			scene._on_briefing_dismissed()
+		if "countdown_timer" in scene:
+			scene.countdown_timer = 0.0
+		if scene.has_method("set_state") and "State" in scene:
+			scene.set_state(scene.State.PLAYING)
+		var pv = scene.find_child("PlayerVehicle", true, false)
+		if pv:
+			pv.controls_enabled = true
+		if scene.has_method("_update_camera"):
+			scene._update_camera(0.016)
+		var cam = scene.find_child("ChaseCamera", true, false)
+		if cam and cam is Camera3D:
+			print("[CHROMA CMD] ChaseCam: current=", cam.current, " pos=", cam.global_position, " fwd=", -cam.global_transform.basis.z)
+		if pv:
+			print("[CHROMA CMD] Player: pos=", pv.global_position, " vis=", pv.visible)
+		var active_cam = scene.get_viewport().get_camera_3d()
+		print("[CHROMA CMD] Viewport active cam: ", (active_cam.name if active_cam else "NONE"), " pos: ", (active_cam.global_position if active_cam else "NONE"))
+	elif cmd == "dismiss_briefing":
+		if scene.has_method("_on_briefing_dismissed"):
+			scene._on_briefing_dismissed()
+	elif cmd == "cam_road":
+		scene.set("camera_override", true)
+		var cam = scene.find_child("ChaseCamera", true, false)
+		var pv = scene.find_child("PlayerVehicle", true, false)
+		if pv:
+			pv.global_position = Vector3(0.0, 0.05, 0.0)
+			pv.velocity = Vector3.ZERO
+		if cam and pv:
+			cam.current = true
+			var p_pos = pv.global_position
+			var p_fwd = -pv.global_transform.basis.z.normalized()
+			p_fwd.y = 0.0
+			if p_fwd.length_squared() < 0.01:
+				p_fwd = Vector3(0, 0, -1)
+			cam.global_position = p_pos - p_fwd * 6.5 + Vector3(0.0, 2.4, 0.0)
+			cam.look_at(p_pos + p_fwd * 8.0 + Vector3(0.0, 1.2, 0.0), Vector3.UP)
+	elif cmd == "cam_skyline":
+		scene.set("camera_override", true)
+		var cam = scene.find_child("ChaseCamera", true, false)
+		var pv = scene.find_child("PlayerVehicle", true, false)
+		if cam:
+			cam.current = true
+			var p_pos = pv.global_position if pv else Vector3(0, 0, 0)
+			cam.global_position = p_pos + Vector3(14.0, 22.0, 24.0)
+			cam.look_at(p_pos + Vector3(0.0, 4.0, -35.0), Vector3.UP)
+	elif cmd == "cam_car_closeup":
+		scene.set("camera_override", true)
+		var cam = scene.find_child("ChaseCamera", true, false)
+		var pv = scene.find_child("PlayerVehicle", true, false)
+		if cam and pv:
+			cam.current = true
+			var p_pos = pv.global_position
+			cam.global_position = p_pos + Vector3(2.8, 1.4, 3.8)
+			cam.look_at(p_pos + Vector3(0.0, 0.5, 0.0), Vector3.UP)
+	elif cmd == "get_pos":
+		var pv = scene.find_child("PlayerVehicle", true, false)
+		if pv:
+			print("[CHROMA POS] pv=", pv.global_position, " spd=", pv.forward_speed, " ground=", pv.is_grounded)
+	elif cmd == "dump_state":
+		var active_cam = scene.get_viewport().get_camera_3d()
+		var pv = scene.find_child("PlayerVehicle", true, false)
+		var wc = scene.find_child("WorldContainer", true, false)
+		var aw = scene.find_child("ActiveWorld", true, false)
+		var crn = scene.find_child("ContinuousRoadNetwork", true, false)
+		print("[CHROMA DUMP] ActiveCam: ", (active_cam.name if active_cam else "NONE"), " pos: ", (active_cam.global_position if active_cam else Vector3.ZERO), " fwd: ", (-active_cam.global_transform.basis.z if active_cam else Vector3.ZERO))
+		print("[CHROMA DUMP] Player: ", (pv.name if pv else "NONE"), " pos: ", (pv.global_position if pv else Vector3.ZERO), " vis: ", (pv.is_visible_in_tree() if pv else false))
+		print("[CHROMA DUMP] WorldContainer: ", (wc != null), " vis: ", (wc.is_visible_in_tree() if wc else false))
+		print("[CHROMA DUMP] ActiveWorld: ", (aw != null), " vis: ", (aw.is_visible_in_tree() if aw else false))
+		var ground = scene.find_child("CityGroundPlane", true, false)
+		if ground:
+			print("[CHROMA DUMP] CityGroundPlane pos: ", ground.global_position, " vis: ", ground.is_visible_in_tree())
+			ground.visible = false
+			print("[CHROMA DUMP] Hid CityGroundPlane for test")
+		if crn:
+			for c in crn.get_children():
+				if c is MeshInstance3D:
+					print("[CHROMA DUMP] Road child mesh: ", c.name, " vis: ", c.is_visible_in_tree(), " aabb: ", c.get_aabb(), " surfs: ", (c.mesh.get_surface_count() if c.mesh else -1))
+		if active_cam and pv:
+			print("[CHROMA DUMP] in_frustum: ", active_cam.is_position_in_frustum(pv.global_position), " unproject: ", active_cam.unproject_position(pv.global_position))
+			print("[CHROMA DUMP] viewport size: ", scene.get_viewport().size)
+		if pv:
+			var meshes: Array[MeshInstance3D] = []
+			_gather_debug_meshes(pv, meshes)
+			print("[CHROMA DUMP] Player meshes count: ", meshes.size())
+			for m in meshes:
+				print("[CHROMA DUMP]   mesh: ", m.name, " vis_in_tree: ", m.is_visible_in_tree(), " aabb: ", m.get_aabb(), " mat: ", (m.material_override.get_class() if m.material_override else "NONE"))
+
+func _gather_debug_meshes(node: Node, result: Array[MeshInstance3D]) -> void:
+	if node is MeshInstance3D:
+		result.append(node)
+	for c in node.get_children():
+		_gather_debug_meshes(c, result)
 
 func _handle_strike_vector_cmd(scene: Node, cmd: String) -> void:
 	var player = scene.get_node_or_null("Player")
@@ -544,6 +673,9 @@ func start_game(game_id: String) -> void:
 		"chroma_rush":
 			scene_path = "res://games/chroma-rush/chroma_rush_main.tscn"
 			music_track = "chroma_rush"
+		"aero_rush":
+			scene_path = "res://games/aero-rush/aero_rush_main.tscn"
+			music_track = "aero_rush"
 		_:
 			push_error("Unknown game ID: " + game_id)
 			return

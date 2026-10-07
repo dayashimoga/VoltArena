@@ -72,6 +72,13 @@ const TestMissionSolvabilityScript = preload("res://games/chroma-rush/tests/test
 const TestChromaModesAndProgressionScript = preload("res://games/chroma-rush/tests/test_chroma_modes_and_progression.gd")
 const TestChromaE2EScript = preload("res://games/chroma-rush/tests/test_chroma_e2e.gd")
 
+# --- AeroRush Test Suites ---
+const TestAeroPhysicsScript = preload("res://games/aero-rush/tests/test_aero_physics_unit.gd")
+const TestAeroStuntScript = preload("res://games/aero-rush/tests/test_aero_stunt_and_combo_unit.gd")
+const TestAeroTracksScript = preload("res://games/aero-rush/tests/test_aero_tracks_and_worlds_unit.gd")
+const TestAeroAIScript = preload("res://games/aero-rush/tests/test_aero_ai_and_modes.gd")
+const TestAeroE2EScript = preload("res://games/aero-rush/tests/test_aero_e2e.gd")
+
 # --- Responsive & Soak ---
 const TestResponsiveUIScript = preload("res://tests/responsive/test_responsive_ui.gd")
 const TestSoakScript = preload("res://tests/performance/test_soak.gd")
@@ -191,6 +198,12 @@ func _init() -> void:
 		{"name": "Mission Solvability Unit", "instance": TestMissionSolvabilityScript.new()},
 		{"name": "Chroma Modes & Progression Unit", "instance": TestChromaModesAndProgressionScript.new()},
 		{"name": "Chroma Rush E2E Scenarios", "instance": TestChromaE2EScript.new()},
+		# AeroRush Suites
+		{"name": "AeroRush Physics & Stunts Unit", "instance": TestAeroPhysicsScript.new()},
+		{"name": "AeroRush Stunts, Combos & Persistence Unit", "instance": TestAeroStuntScript.new()},
+		{"name": "AeroRush Tracks & Worlds Validation Unit", "instance": TestAeroTracksScript.new()},
+		{"name": "AeroRush AI, Ghosts & UI Unit", "instance": TestAeroAIScript.new()},
+		{"name": "AeroRush E2E Gameplay Scenarios", "instance": TestAeroE2EScript.new()},
 		# Legacy Acceptance
 		{"name": "Platform Acceptance (Legacy)", "instance": TestAcceptanceScript.new()},
 	]

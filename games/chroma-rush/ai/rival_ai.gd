@@ -116,14 +116,18 @@ func _update_pursuing(delta: float) -> void:
 		current_state = RivalState.SEARCHING_COLOR
 		return
 
-	var dist = vehicle.global_position.distance_to(target_node.global_position)
+	var tgt_t = target_node.global_transform if target_node.is_inside_tree() else target_node.transform
+	var tgt_pos = target_node.global_position if target_node.is_inside_tree() else target_node.position
+	var veh_pos = vehicle.global_position if vehicle.is_inside_tree() else vehicle.position
+
+	var dist = veh_pos.distance_to(tgt_pos)
 	if dist <= ChromaConstants.MAX_SWAP_DISTANCE:
 		current_state = RivalState.ALIGNING_FOR_SWAP
 	else:
 		# Drive towards target vehicle with slight offset to side
-		var tgt_forward = -target_node.global_transform.basis.z.normalized()
-		var tgt_right = target_node.global_transform.basis.x.normalized()
-		var intercept_pos = target_node.global_position + tgt_forward * 4.0 + tgt_right * 2.5
+		var tgt_forward = -tgt_t.basis.z.normalized()
+		var tgt_right = tgt_t.basis.x.normalized()
+		var intercept_pos = tgt_pos + tgt_forward * 4.0 + tgt_right * 2.5
 		driver.set_target(intercept_pos, vehicle.top_speed)
 
 func _update_aligning(delta: float) -> void:
@@ -132,16 +136,17 @@ func _update_aligning(delta: float) -> void:
 		current_state = RivalState.SEARCHING_COLOR
 		return
 
-	var dist = vehicle.global_position.distance_to(target_node.global_position)
+	var tgt_t = target_node.global_transform if target_node.is_inside_tree() else target_node.transform
+	var tgt_pos = target_node.global_position if target_node.is_inside_tree() else target_node.position
+	var veh_pos = vehicle.global_position if vehicle.is_inside_tree() else vehicle.position
+
+	var dist = veh_pos.distance_to(tgt_pos)
 	if dist > ChromaConstants.MAX_SWAP_DISTANCE * 1.5:
 		# Slipped away, return to pursuit
 		current_state = RivalState.PURSUING_TARGET
 		return
 
 	# Pull alongside target (2.5 meters to the right or left)
-	var tgt_t = target_node.global_transform if target_node.is_inside_tree() else target_node.transform
-	var tgt_pos = target_node.global_position if target_node.is_inside_tree() else target_node.position
-	var veh_pos = vehicle.global_position if vehicle.is_inside_tree() else vehicle.position
 	var tgt_right = tgt_t.basis.x.normalized()
 	var side_offset = 2.4 if (tgt_pos - veh_pos).x < 0 else -2.4
 	var parallel_pos = tgt_pos + tgt_right * side_offset

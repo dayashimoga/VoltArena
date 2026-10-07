@@ -11,13 +11,31 @@ const WildAnimalScript = preload("res://games/wildcircuit/animals/wild_animal.gd
 
 var current_biome: String = "savannah"
 var spawned_animals: Array[Node3D] = []
+var biome_root: Node3D = null
 
 func _ready() -> void:
 	build_all_biomes()
 
+func build_biome(biome_idx: int) -> void:
+	var target = biome_root if is_instance_valid(biome_root) else self
+	var bed = _add_terrain_slab(target, Vector3(0, -1.2, 0), Vector3(600.0, 1.0, 600.0), "savannah_dirt")
+	bed.name = "NaturalTerrainBed"
+	match biome_idx:
+		0:
+			build_savannah(Vector3.ZERO)
+		1:
+			build_rainforest(Vector3(0, 0, -85.0))
+		2:
+			build_alpine_forest(Vector3(-90.0, 12.0, 0))
+		3:
+			build_tropical_coast(Vector3(0, -4.0, 90.0))
+		4:
+			build_wetlands(Vector3(90.0, -2.0, 0))
+
 func build_all_biomes() -> void:
 	# Continuous Base Natural Terrain Bed spanning entire nature reserve (eliminates void horizon)
-	_add_terrain_slab(self, Vector3(0, -1.2, 0), Vector3(600.0, 1.0, 600.0), "savannah_dirt")
+	var bed = _add_terrain_slab(self, Vector3(0, -1.2, 0), Vector3(600.0, 1.0, 600.0), "savannah_dirt")
+	bed.name = "NaturalTerrainBed"
 
 	# 1. Savannah (Center: 0, 0, 0)
 	build_savannah(Vector3(0, 0, 0))

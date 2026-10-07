@@ -164,10 +164,41 @@ func test_chroma_rush_roadway_continuity_and_visual_upgrade() -> void:
 		assert_true(has_glb_tree, "Chroma Rush foliage must use authentic 3D GLB models instead of 7-segment procedural cylinders")
 		tree.free()
 
-	# 2. Target beacon visual upgrade
+	# 2. Target beacon visual upgrade & Stepped Skyline Mesh
 	var cr_main = ChromaRushMainScript.new()
 	cr_main._init_target_beacon()
 	assert_true(cr_main.has_node("BeaconTargetReticle"), "Chroma Rush must have BeaconTargetReticle holographic diamond marker")
+
+	var sky_mesh = city._create_stepped_skyline_mesh()
+	assert_true(sky_mesh != null and sky_mesh is ArrayMesh, "NeonCity must generate stepped architectural skyline ArrayMesh")
+	assert_true(sky_mesh.get_surface_count() > 0, "Stepped skyline ArrayMesh must contain valid geometry surfaces")
+
+	# 3. Urban block parcels: Plinth foundation and continuous pedestrian apron
+	city._build_urban_block_parcel(Vector3(35, 0, 0), Vector3(1, 0, 0), 27.5, Vector3(53, 0, 0), 0.0, 1, 101)
+	var parcel = city.props_container.get_node_or_null("UrbanParcel_1_101")
+	assert_true(parcel != null, "NeonCity must generate UrbanParcel node connecting buildings to road sidewalk")
+	if parcel:
+		assert_true(parcel.has_node("PlinthFoundation"), "UrbanParcel must contain PlinthFoundation")
+		assert_true(parcel.has_node("SidewalkApron"), "UrbanParcel must contain continuous SidewalkApron")
+
+	# 4. Street furniture amenities (Bus Shelters, Fire Hydrants, Trash Bins, Benches)
+	var shelter = city._build_bus_stop_shelter()
+	assert_true(shelter != null and shelter.name == "BusStopShelter", "NeonCity must build BusStopShelter")
+	shelter.free()
+
+	var hydrant = city._build_fire_hydrant()
+	assert_true(hydrant != null and hydrant.name == "FireHydrant", "NeonCity must build FireHydrant")
+	hydrant.free()
+
+	var bin = city._build_trash_bin()
+	assert_true(bin != null and bin.name == "StreetTrashBin", "NeonCity must build StreetTrashBin")
+	bin.free()
+
+	# 5. Clearance check: verify >= 26.0m spline clearance logic
+	var is_clear_far = city._is_clear_of_spline(Vector3(200, 0, 200), 26.0)
+	assert_true(is_clear_far == true, "Points >= 26m from road splines must evaluate as clear")
+	var is_clear_road = city._is_clear_of_spline(first_wp, 26.0)
+	assert_true(is_clear_road == false, "Roadway centerline must fail 26m clearance check to prevent obstacle placement")
 
 	cr_main.free()
 	city.free()
@@ -206,11 +237,20 @@ func test_strike_vector_extraction_and_vitals_restoration() -> void:
 	assert_true(player.current_armor >= 50.0, "Checkpoint restoration must restore armor to at least 50")
 	assert_true(player.is_alive == true, "Checkpoint restoration must revive player with is_alive == true")
 
-	# 4. StrikeVectorMain extraction countdown variables
+	# 4. StrikeVectorMain extraction countdown variables & next mission loop
 	var sv_main = StrikeVectorMainScript.new()
+	sv_main.setup_subsystems()
 	assert_true("extraction_available" in sv_main, "StrikeVectorMain must contain extraction_available property")
 	assert_true("extraction_securing_timer" in sv_main, "StrikeVectorMain must contain extraction_securing_timer property")
+	assert_true("is_extracting" in sv_main, "StrikeVectorMain must track is_extracting state")
+	assert_true(sv_main.is_boss_done == false, "StrikeVectorMain boss state must start incomplete")
 	assert_true(sv_main.EXTRACTION_SECURE_REQUIRED_TIME == 3.0, "StrikeVectorMain extraction hold countdown must be 3.0s")
+	assert_true(sv_main.results_screen != null, "StrikeVectorMain must instantiate results_screen for victory flow")
+
+	# Test Mission 2 transition
+	sv_main.load_mission(2)
+	assert_true(sv_main.mission_streamer != null, "load_mission(2) must create valid MissionStreamer")
+	assert_true(sv_main.mission_streamer.segments.size() >= 5, "Mission 2 (High-Speed Rail) must contain at least 5 segments")
 
 	sv_main.free()
 	cp_mgr.free()

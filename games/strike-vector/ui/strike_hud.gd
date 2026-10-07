@@ -810,22 +810,33 @@ func update_navigation_state(p_pos: Vector3, p_heading_rad: float, obj_pos: Vect
 	if is_instance_valid(objective_dist_label):
 		objective_dist_label.text = "%dm" % int(dist_m)
 	if is_instance_valid(directive_label):
-		# Context-sensitive directive
-		if has_extraction:
-			directive_label.text = "[*] BOARD EXTRACTION SHUTTLE // LZ ACTIVE"
-			directive_label.modulate = Color(0.1, 1.0, 0.5)
-		elif dist_m <= 15.0:
-			directive_label.text = "[!] OBJECTIVE PROXIMITY // SECURE POSITION"
-			directive_label.modulate = Color(1.0, 0.85, 0.2)
-		elif abs(to_obj.x) > 12.0 and to_obj.x > 0:
-			directive_label.text = "[>] TURN RIGHT AT INTERSECTION"
-			directive_label.modulate = Color(0.2, 0.95, 1.0)
-		elif abs(to_obj.x) > 12.0 and to_obj.x < 0:
-			directive_label.text = "[<] TURN LEFT AT INTERSECTION"
-			directive_label.modulate = Color(0.2, 0.95, 1.0)
-		else:
-			directive_label.text = "[^] ADVANCE DOWN ARTERIAL BOULEVARD"
-			directive_label.modulate = Color(0.7, 0.85, 1.0)
+		var cur_text = directive_label.text
+		var is_active_securing = cur_text.begins_with("[*] SECURING") or cur_text.begins_with("[*] HOLDING [E]") or cur_text.begins_with("[!] EMERGENCY EVAC") or cur_text.begins_with("[!] LZ CONTESTED")
+		if not is_active_securing:
+			# Context-sensitive directive
+			if has_extraction:
+				if dist_m <= 8.5:
+					directive_label.text = "[*] BOARD EXTRACTION SHUTTLE // HOLD [E] TO EXTRACT"
+					directive_label.modulate = Color(0.1, 1.0, 0.5)
+				else:
+					directive_label.text = "[*] PROCEED TO EXTRACTION HELIPAD // LZ ACTIVE"
+					directive_label.modulate = Color(0.1, 1.0, 0.5)
+			elif dist_m <= 15.0:
+				if obj_name.find("EXTRACTION") != -1 or obj_name.find("HELIPAD") != -1:
+					directive_label.text = "[!] EXTRACTION HELIPAD // HOLD [E] TO SECURE EVAC"
+					directive_label.modulate = Color(0.1, 1.0, 0.5)
+				else:
+					directive_label.text = "[!] OBJECTIVE PROXIMITY // SECURE POSITION"
+					directive_label.modulate = Color(1.0, 0.85, 0.2)
+			elif abs(to_obj.x) > 12.0 and to_obj.x > 0:
+				directive_label.text = "[>] TURN RIGHT AT INTERSECTION"
+				directive_label.modulate = Color(0.2, 0.95, 1.0)
+			elif abs(to_obj.x) > 12.0 and to_obj.x < 0:
+				directive_label.text = "[<] TURN LEFT AT INTERSECTION"
+				directive_label.modulate = Color(0.2, 0.95, 1.0)
+			else:
+				directive_label.text = "[^] ADVANCE DOWN ARTERIAL BOULEVARD"
+				directive_label.modulate = Color(0.7, 0.85, 1.0)
 
 	# Update Minimap
 	if is_instance_valid(minimap):

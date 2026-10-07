@@ -26,13 +26,12 @@ const GLB_MAP = {
 
 const AUTOMOTIVE_SHADER_CODE = """
 shader_type spatial;
-render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
+render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_lambert, specular_schlick_ggx;
 
 uniform sampler2D albedo_texture : source_color, filter_linear_mipmap;
 uniform vec4 paint_color : source_color = vec4(0.85, 0.06, 0.14, 1.0);
 uniform float metallic_val : hint_range(0.0, 1.0) = 0.85;
 uniform float roughness_val : hint_range(0.0, 1.0) = 0.18;
-uniform float clearcoat_val : hint_range(0.0, 1.0) = 0.90;
 uniform bool is_braking = false;
 uniform bool is_reversing = false;
 
@@ -65,7 +64,6 @@ void fragment() {
 		ALBEDO = vec3(0.06, 0.08, 0.12);
 		ROUGHNESS = 0.04;
 		METALLIC = 0.35;
-		CLEARCOAT = 1.0;
 		SPECULAR = 0.95;
 	} else if (is_trim) {
 		// Matte Carbon Fiber Aero Trim, Splitters & Diffusers
@@ -74,14 +72,12 @@ void fragment() {
 		METALLIC = 0.10;
 		SPECULAR = 0.25;
 	} else {
-		// Deep Multi-Coat Automotive Metallic Paint with Clearcoat
+		// Deep Multi-Coat Automotive Metallic Paint
 		float lum = (tex.r * 0.299 + tex.g * 0.587 + tex.b * 0.114);
 		float factor = clamp(lum / 0.65, 0.85, 1.18);
 		ALBEDO = paint_color.rgb * factor;
 		METALLIC = metallic_val;
 		ROUGHNESS = roughness_val;
-		CLEARCOAT = clearcoat_val;
-		CLEARCOAT_ROUGHNESS = 0.06;
 		SPECULAR = 0.75;
 	}
 }
@@ -90,7 +86,7 @@ void fragment() {
 
 const WHEEL_SHADER_CODE = """
 shader_type spatial;
-render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
+render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_lambert, specular_schlick_ggx;
 
 void fragment() {
 	float r = length(VERTEX.yz);

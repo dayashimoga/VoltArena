@@ -197,12 +197,16 @@ func _physics_process(delta: float) -> void:
 	_update_physics_movement(delta)
 	_update_visual_dynamics(delta)
 	_check_rollover_and_recovery(delta)
+	if is_player and Engine.get_physics_frames() % 30 == 0:
+		print("[PLAYER VEH TELEMETRY] f=", Engine.get_physics_frames(), " pos=", global_position, " vel=", velocity, " spd=", forward_speed, " ground=", is_grounded, " inp=(", steer_input, ",", throttle_input, ",", brake_input, ")")
 
 func _handle_player_input() -> void:
 	if not is_inside_tree():
 		return
 	if not controls_enabled:
-		set_inputs(0.0, 0.0, 0.8, false, false)
+		set_inputs(0.0, 0.0, 0.0, false, false)
+		forward_speed = 0.0
+		velocity = Vector3.ZERO
 		return
 
 	# Manual instant vehicle recovery hotkey
@@ -448,6 +452,7 @@ func _check_rollover_and_recovery(delta: float) -> void:
 		rollover_timer = 0.0
 
 func reset_to_road(target_pos: Variant = null, target_rot_y: Variant = null) -> void:
+	print("[RESET TO ROAD] called! target_pos=", target_pos, " current_pos=", global_position)
 	rollover_timer = 0.0
 	stuck_timer = 0.0
 	forward_speed = 0.0
@@ -483,6 +488,7 @@ func reset_to_road(target_pos: Variant = null, target_rot_y: Variant = null) -> 
 	vehicle_recovered.emit(global_position if is_inside_tree() else position)
 
 func recover_vehicle() -> void:
+	print("[RECOVER VEHICLE] called! pos=", global_position, " up_dot=", (global_transform.basis.y.dot(Vector3.UP) if is_inside_tree() else 1.0))
 	reset_to_road()
 
 

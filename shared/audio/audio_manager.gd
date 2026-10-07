@@ -399,6 +399,28 @@ func create_music_track(track_name: String) -> AudioStreamWAV:
 
 				var mixed: float = kick + b_val + l_val
 				data[i] = clampi(int(mixed * 127.0) + 128, 0, 255)
+		"aero_rush":
+			# High-speed adrenaline stunt soundtrack: galloping 140 BPM kick, dynamic saw bass, soaring lead
+			var aero_bass = [110.0, 110.0, 146.83, 164.81, 130.81, 146.83, 196.00, 164.81]
+			var aero_lead = [440.0, 554.37, 659.25, 880.00, 659.25, 739.99, 880.00, 1108.73]
+			for i in range(num_samples):
+				var t: float = float(i) / float(sample_rate)
+				var kick_t: float = fmod(t * 4.66, 1.0)
+				var kick_env: float = maxf(0.0, 1.0 - kick_t * 3.8)
+				var kick: float = sin(kick_t * lerpf(95.0, 42.0, kick_t) * TAU) * kick_env * 0.40
+
+				var b_step: int = int(t * 9.33) % aero_bass.size()
+				var b_t: float = fmod(t * 9.33, 1.0)
+				var b_env: float = maxf(0.0, 1.0 - b_t * 1.8)
+				var b_val: float = sin(t * aero_bass[b_step] * TAU) * b_env * 0.28
+
+				var l_step: int = int(t * 18.66) % aero_lead.size()
+				var l_t: float = fmod(t * 18.66, 1.0)
+				var l_env: float = maxf(0.0, 1.0 - l_t * 2.5)
+				var l_val: float = sin(t * aero_lead[l_step] * TAU) * l_env * 0.18
+
+				var mixed: float = kick + b_val + l_val
+				data[i] = clampi(int(mixed * 127.0) + 128, 0, 255)
 		_:
 			for i in range(num_samples):
 				data[i] = 128

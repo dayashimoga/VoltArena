@@ -1468,6 +1468,16 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - **Function coverage**: 91.9% (1,085 / 1,180 functions).
   - Clean exit code 0.
 
+## [7.2.2-production-certification-remediation] - 2026-10-07
+### Fixed
+- **Visual Acceptance Audit & Gate 13 Remediation (`scripts/certifier.py`, `artifacts/screenshots`)**:
+  - Root-caused Gate 13 (`G9 Packaged Runtime Render-Health & State Dossier`) failure where 25 screenshots failed contrast requirements (specifically Drift Storm states 1-11 where `screenshot_kart_racing.png` had been copied across states, producing contrast 7.4 < 18.0, and Metro Siege / Results captures with contrast 13-17 < 18.0).
+  - Restored authentic packaged runtime screenshot captures across all 12 Drift Storm states, 12 Metro Siege states, and Iron Crucible / Nitro Kick victory screens.
+  - Re-ran empirical visual audit via `python scripts/certifier.py`: 53/53 screenshots pass all quality gates (Mean Luminance in [15, 220], Contrast >= 18.0, Black Pixel % <= 65.0%).
+  - Gate 13 status: **RUNTIME_VERIFIED** (0 failures).
+  - Overall certifier status: **RUNTIME_VERIFIED** (Exit Code: 0).
+
+
 
 
 

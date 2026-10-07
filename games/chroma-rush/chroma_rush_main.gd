@@ -93,6 +93,17 @@ var cam_smoothed_up: Vector3 = Vector3.UP
 var cam_is_initialized: bool = false
 var cam_trauma: float = 0.0
 
+# Filtered Camera Pipeline & Telemetry
+var cam_filtered_speed: float = 0.0
+var cam_prev_raw_speed: float = 0.0
+var cam_filtered_accel: float = 0.0
+var cam_last_stable_speed: float = 0.0
+var camera_telemetry: Dictionary = {}
+const CAM_SPEED_DEADZONE: float = 1.8 # km/h dead-zone to reject micro-jitter
+const CAM_BASE_FOV: float = 72.0
+const CAM_MAX_FOV: float = 80.0
+const CAM_MAX_FOV_RATE: float = 12.0 # deg/sec maximum rate limit
+
 func _ready() -> void:
 	_init_subsystems()
 	_init_environment()
@@ -235,7 +246,15 @@ func _init_ui() -> void:
 	pause_menu.name = "PauseMenu"
 	pause_menu.resume_requested.connect(resume_game)
 	pause_menu.restart_requested.connect(restart_mission)
+	pause_menu.restart_checkpoint_requested.connect(_on_reset_to_road_requested)
+	pause_menu.restart_event_requested.connect(restart_mission)
+	pause_menu.main_menu_requested.connect(return_to_menu)
 	pause_menu.quit_to_launcher_requested.connect(return_to_menu)
+	pause_menu.quit_to_desktop_requested.connect(func():
+		var tree = get_tree()
+		if tree and OS.get_name() != "Web":
+			tree.quit()
+	)
 	add_child(pause_menu)
 	pause_menu.visible = false
 
@@ -477,7 +496,7 @@ func _update_camera(delta: float) -> void:
 	var raw_fwd = -car_basis.z.normalized()
 	var raw_up = car_basis.y.normalized()
 
-	if not cam_is_initialized or cam_smoothed_target_pos.length_squared() < 0.01 or chase_camera.global_position.distance_squared_to(car_pos) > 150.0:
+	if not cam_is_initialized or chase_camera.global_position.distance_squared_to(car_pos) > 250.0:
 		cam_smoothed_target_pos = car_pos
 		cam_smoothed_forward = raw_fwd
 		cam_smoothed_up = raw_up
@@ -486,14 +505,22 @@ func _update_camera(delta: float) -> void:
 		if chase_camera.is_inside_tree():
 			chase_camera.look_at(car_pos + raw_fwd * 6.0 + Vector3(0.0, 1.2, 0.0), Vector3.UP)
 		cam_is_initialized = true
+		camera_telemetry = {
+			"raw_speed": 0.0,
+			"filtered_speed": 0.0,
+			"raw_acceleration": 0.0,
+			"filtered_acceleration": 0.0,
+			"desired_fov": CAM_BASE_FOV,
+			"actual_fov": chase_camera.fov,
+			"camera_distance": cam_distance,
+			"camera_transform": chase_camera.global_transform
+		}
 		return
 
-	# 1. Physics Interpolation of target tracking: eliminates wheel & chassis oscillation
-	var spd_ratio = clampf(player_vehicle.get_speed_kmh() / 140.0, 0.0, 1.0)
-	var pos_rate = clampf(delta * 14.0, 0.0, 1.0)
-	var rot_rate = clampf(delta * 9.0, 0.0, 1.0)
-
-	cam_smoothed_target_pos = cam_smoothed_target_pos.lerp(car_pos, pos_rate)
+	# 1. Target Tracking with Exponential Smoothing (Frame-Rate Independent)
+	var alpha_pos = 1.0 - exp(-14.0 * delta)
+	var alpha_rot = 1.0 - exp(-9.0 * delta)
+	cam_smoothed_target_pos = cam_smoothed_target_pos.lerp(car_pos, alpha_pos)
 
 	# Filter out high-frequency vertical pitching
 	var planar_fwd = raw_fwd
@@ -503,26 +530,55 @@ func _update_camera(delta: float) -> void:
 	else:
 		planar_fwd = raw_fwd
 
-	cam_smoothed_forward = cam_smoothed_forward.slerp(planar_fwd, rot_rate).normalized()
-	cam_smoothed_up = cam_smoothed_up.slerp(raw_up, rot_rate).normalized()
+	cam_smoothed_forward = cam_smoothed_forward.slerp(planar_fwd, alpha_rot).normalized()
+	cam_smoothed_up = cam_smoothed_up.slerp(raw_up, alpha_rot).normalized()
 
-	# 2. Dynamic Speed FOV and Distance
-	var dyn_dist = cam_distance + spd_ratio * 1.6
-	var target_fov = lerpf(72.0, 88.0, spd_ratio)
-	chase_camera.fov = lerpf(chase_camera.fov, target_fov, delta * 6.0)
+	# 2. Speed & Acceleration Pipeline
+	var raw_speed = player_vehicle.get_speed_kmh()
+	var raw_accel = (raw_speed - cam_prev_raw_speed) / maxf(delta, 0.0001)
+	cam_prev_raw_speed = raw_speed
 
-	# 3. Stable Camera Placement
-	var ideal_pos = cam_smoothed_target_pos - cam_smoothed_forward * dyn_dist + Vector3(0.0, cam_height, 0.0)
-	chase_camera.global_position = chase_camera.global_position.lerp(ideal_pos, clampf(delta * 12.0, 0.0, 1.0))
+	# Low-pass filter for speed
+	var speed_filter_alpha = 1.0 - exp(-12.0 * delta)
+	cam_filtered_speed = lerpf(cam_filtered_speed, raw_speed, speed_filter_alpha)
 
-	# 4. Stable Look-Ahead Target (avoids chassis pitch chatter)
+	# Acceleration filter
+	var accel_filter_alpha = 1.0 - exp(-12.0 * delta)
+	cam_filtered_accel = lerpf(cam_filtered_accel, raw_accel, accel_filter_alpha)
+
+	# Deadzone / Hysteresis
+	if cam_filtered_speed < CAM_SPEED_DEADZONE:
+		cam_last_stable_speed = 0.0
+	elif absf(cam_filtered_speed - cam_last_stable_speed) > CAM_SPEED_DEADZONE:
+		cam_last_stable_speed = cam_filtered_speed
+	var speed_for_fov = cam_last_stable_speed
+
+	# 3. Fixed Bounded FOV with Rate-Limited Interpolation
+	var spd_ratio = clampf(speed_for_fov / 150.0, 0.0, 1.0)
+	var desired_fov = lerpf(CAM_BASE_FOV, CAM_MAX_FOV, spd_ratio)
+
+	# Rate-limit FOV delta to prevent sudden zoom pumping
+	var max_fov_step = CAM_MAX_FOV_RATE * delta
+	var target_fov = clampf(desired_fov, chase_camera.fov - max_fov_step, chase_camera.fov + max_fov_step)
+	chase_camera.fov = target_fov
+
+	# 4. Stable Camera Placement: Fixed Distance (ZERO Dynamic Distance Pumping!)
+	var ideal_pos = cam_smoothed_target_pos - cam_smoothed_forward * cam_distance + Vector3(0.0, cam_height, 0.0)
+	var cam_pos = chase_camera.global_position if chase_camera.is_inside_tree() else chase_camera.position
+	cam_pos = cam_pos.lerp(ideal_pos, 1.0 - exp(-12.0 * delta))
+	if chase_camera.is_inside_tree():
+		chase_camera.global_position = cam_pos
+	else:
+		chase_camera.position = cam_pos
+
+	# 5. Stable Look-Ahead Target (avoids chassis pitch chatter)
 	var look_target = cam_smoothed_target_pos + cam_smoothed_forward * 7.0 + Vector3(0.0, 1.25, 0.0)
 	var up_ref = Vector3.UP if cam_smoothed_up.dot(Vector3.UP) > 0.4 else cam_smoothed_up
 
 	if chase_camera.is_inside_tree():
 		chase_camera.look_at(look_target, up_ref)
 
-	# 5. Polynomial Event Trauma Decay (Zero continuous vibration)
+	# 6. Polynomial Event Trauma Decay (Zero continuous vibration)
 	if cam_trauma > 0.0:
 		cam_trauma = maxf(0.0, cam_trauma - delta * 1.8)
 		var shake = cam_trauma * cam_trauma * 0.04
@@ -533,7 +589,24 @@ func _update_camera(delta: float) -> void:
 		chase_camera.v_offset = 0.0
 
 	if is_instance_valid(camera_spring_arm):
-		camera_spring_arm.global_position = chase_camera.global_position
+		if camera_spring_arm.is_inside_tree():
+			camera_spring_arm.global_position = cam_pos
+		else:
+			camera_spring_arm.position = cam_pos
+
+	# 7. Instrumentation Telemetry Every Frame
+	var cur_cam_pos = chase_camera.global_position if chase_camera.is_inside_tree() else chase_camera.position
+	var cur_cam_transform = chase_camera.global_transform if chase_camera.is_inside_tree() else chase_camera.transform
+	camera_telemetry = {
+		"raw_speed": raw_speed,
+		"filtered_speed": cam_filtered_speed,
+		"raw_acceleration": raw_accel,
+		"filtered_acceleration": cam_filtered_accel,
+		"desired_fov": desired_fov,
+		"actual_fov": chase_camera.fov,
+		"camera_distance": Vector2(cur_cam_pos.x - cam_smoothed_target_pos.x, cur_cam_pos.z - cam_smoothed_target_pos.z).length(),
+		"camera_transform": cur_cam_transform
+	}
 
 func _update_swap_eligibility() -> void:
 	if not is_instance_valid(player_vehicle) or not is_instance_valid(swap_engine) or not is_instance_valid(hud):
@@ -1096,9 +1169,15 @@ func _on_swap_committed(initiator_id: String, target_id: String, initiator_color
 	if node_b and is_instance_valid(node_b) and node_b is ChromaVehicle and node_b != player_vehicle:
 		node_b.set_color(target_color)
 
+	# Deliver HUD confirmation banner
+	if is_instance_valid(hud):
+		var player_new_col = initiator_color if initiator_id == "player" else target_color
+		var player_old_col = target_color if initiator_id == "player" else initiator_color
+		hud.show_swap_success(player_new_col, player_old_col)
+
 	_spawn_swap_vfx(node_a, node_b, initiator_color, target_color)
 
-func _spawn_swap_vfx(node_a: Node3D, node_b: Node3D, col_a: int, col_b: int) -> void:
+func _spawn_swap_vfx(node_a: Node3D, node_b: Node3D, col_a: int, _col_b: int) -> void:
 	if not is_instance_valid(node_a) or not is_instance_valid(node_b):
 		return
 
@@ -1106,22 +1185,20 @@ func _spawn_swap_vfx(node_a: Node3D, node_b: Node3D, col_a: int, col_b: int) -> 
 	if Input.has_method("vibrate_handheld"):
 		Input.vibrate_handheld(100)
 
-	# Camera impulse / FOV shockwave
-	if is_instance_valid(chase_camera):
-		var cam_tw = create_tween()
-		cam_tw.tween_property(chase_camera, "fov", 79.0, 0.08).set_trans(Tween.TRANS_BACK)
-		cam_tw.tween_property(chase_camera, "fov", 72.0, 0.22).set_trans(Tween.TRANS_SINE)
-
-	# Pulse scale animation on vehicle bodies for energetic feedback
-	var tw = create_tween().set_parallel(true)
-	tw.tween_property(node_a, "scale", Vector3(1.08, 1.12, 1.08), 0.08).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(node_b, "scale", Vector3(1.08, 1.12, 1.08), 0.08).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.chain().tween_property(node_a, "scale", Vector3.ONE, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tw.parallel().tween_property(node_b, "scale", Vector3.ONE, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-
 	var p1 = node_a.global_position + Vector3(0, 0.6, 0)
 	var p2 = node_b.global_position + Vector3(0, 0.6, 0)
 	var color_val = ChromaConstants.get_color_value(col_a)
+
+	# Dynamic 3D OmniLight pulse at swap epicenter (no camera FOV disruption)
+	var pulse_light = OmniLight3D.new()
+	pulse_light.light_color = color_val
+	pulse_light.light_energy = 8.5
+	pulse_light.omni_range = 25.0
+	pulse_light.global_position = (p1 + p2) * 0.5 + Vector3(0, 1.2, 0)
+	add_child(pulse_light)
+	var lt_tw = create_tween()
+	lt_tw.tween_property(pulse_light, "light_energy", 0.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	lt_tw.tween_callback(pulse_light.queue_free)
 
 	# 3D Expanding Energy Shockwave Ring
 	var shockwave = MeshInstance3D.new()

@@ -17,6 +17,7 @@ signal boost_updated(current_boost: float, max_boost: float)
 @export var current_boost: float = 100.0
 @export var boost_consumption_rate: float = 33.0
 @export var boost_recharge_rate: float = 8.0
+var mass: float = 1200.0
 
 @export var team_id: int = 0 # 0: Blue Team, 1: Orange Team
 @export var is_player_controlled: bool = true
@@ -49,6 +50,7 @@ func apply_archetype_stats() -> void:
 			jump_impulse = 13.5
 			boost_consumption_rate = 30.0
 			boost_recharge_rate = 10.0
+			mass = 1000.0
 		"muscle_gt", "titan_enforcer", "muscle", "turbo_truck":
 			max_speed = 26.5
 			boost_speed = 40.0
@@ -58,6 +60,7 @@ func apply_archetype_stats() -> void:
 			jump_impulse = 10.5
 			boost_consumption_rate = 35.0
 			boost_recharge_rate = 8.0
+			mass = 1400.0
 		"cyber_ev", "volt_pulse", "phantom", "cyber":
 			max_speed = 29.5
 			boost_speed = 44.0
@@ -67,6 +70,7 @@ func apply_archetype_stats() -> void:
 			jump_impulse = 11.5
 			boost_consumption_rate = 28.0
 			boost_recharge_rate = 15.0
+			mass = 1150.0
 		_: # "sports_coupe" / "apex_spectre" / "speed_demon"
 			max_speed = 28.0
 			boost_speed = 42.0
@@ -76,6 +80,7 @@ func apply_archetype_stats() -> void:
 			jump_impulse = 11.0
 			boost_consumption_rate = 32.0
 			boost_recharge_rate = 9.0
+			mass = 1200.0
 
 func setup_car_visual() -> void:
 	if car_visual and is_instance_valid(car_visual):

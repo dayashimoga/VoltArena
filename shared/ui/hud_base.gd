@@ -11,6 +11,15 @@ var weapon_label: Label
 var score_label: Label
 var timer_label: Label
 var crosshair: Control
+var crosshair_spread: float:
+	get:
+		if crosshair is CrosshairControl:
+			return (crosshair as CrosshairControl).spread
+		return _crosshair_spread
+	set(val):
+		_crosshair_spread = val
+		set_crosshair_spread(val)
+var _crosshair_spread: float = 8.0
 var toast_container: VBoxContainer
 var touch_controls: TouchControls
 
@@ -184,6 +193,7 @@ func check_mobile_controls() -> void:
 		add_child(touch_controls)
 
 func set_crosshair_spread(spread: float) -> void:
+	_crosshair_spread = spread
 	if crosshair is CrosshairControl:
 		(crosshair as CrosshairControl).spread = spread
 		crosshair.queue_redraw()

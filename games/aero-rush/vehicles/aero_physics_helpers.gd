@@ -125,3 +125,37 @@ static func project_velocity_on_plane(velocity: Vector3, plane_normal: Vector3) 
 	if projected.length_squared() > 0.0001:
 		return projected.normalized() * v_len
 	return projected
+
+## Predicts landing surface along trajectory or downward.
+static func predict_landing(space_state: PhysicsDirectSpaceState3D, origin: Vector3, velocity: Vector3, max_dist: float = 20.0) -> Dictionary:
+	if not space_state:
+		return {"found": false}
+
+	var ray_dir = Vector3.DOWN
+	if velocity.length_squared() > 1.0:
+		ray_dir = (velocity.normalized() + Vector3.DOWN * 0.5).normalized()
+
+	var query = PhysicsRayQueryParameters3D.create(origin, origin + ray_dir * max_dist, AeroConstants.LAYER_WORLD)
+	var result = space_state.intersect_ray(query)
+	if result.is_empty():
+		# Try straight down fallback
+		var down_query = PhysicsRayQueryParameters3D.create(origin, origin + Vector3.DOWN * max_dist, AeroConstants.LAYER_WORLD)
+		result = space_state.intersect_ray(down_query)
+		if result.is_empty():
+			return {"found": false}
+
+	var hit_pos = result.get("position", Vector3.ZERO) as Vector3
+	var hit_normal = result.get("normal", Vector3.UP) as Vector3
+	var dist = origin.distance_to(hit_pos)
+
+	return {
+		"found": true,
+		"position": hit_pos,
+		"normal": hit_normal,
+		"distance": dist
+	}
+
+## Calculates horizon stabilization tending toward wheels-down landing.
+static func calculate_horizon_stabilization(current_basis: Basis, target_up: Vector3, weight: float) -> Basis:
+	return align_basis_to_normal(current_basis, target_up, weight)
+

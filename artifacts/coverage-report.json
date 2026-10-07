@@ -1,11 +1,13 @@
 {
-  "overall_coverage_pct": 91.9491525423729,
+  "overall_coverage_pct": 91.4839797639123,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 87.5,
       "tested": 7,
-      "total": 7,
-      "untested": []
+      "total": 8,
+      "untested": [
+        "_unhandled_input"
+      ]
     },
     "res://games/aero-rush/ai/aero_ghost_system.gd": {
       "coverage_pct": 100,
@@ -62,10 +64,11 @@
       "untested": []
     },
     "res://games/aero-rush/tracks/aero_track_validator.gd": {
-      "coverage_pct": 50,
+      "coverage_pct": 33.3333333333333,
       "tested": 1,
-      "total": 2,
+      "total": 3,
       "untested": [
+        "validate_jump_trajectory",
         "validate_before_launch"
       ]
     },
@@ -111,10 +114,13 @@
       ]
     },
     "res://games/aero-rush/vehicles/aero_physics_helpers.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 66.6666666666667,
       "tested": 4,
-      "total": 4,
-      "untested": []
+      "total": 6,
+      "untested": [
+        "predict_landing",
+        "calculate_horizon_stabilization"
+      ]
     },
     "res://games/aero-rush/vehicles/aero_vehicle.gd": {
       "coverage_pct": 100,
@@ -337,10 +343,12 @@
       ]
     },
     "res://games/chroma-rush/ui/chroma_hud.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 95.4545454545455,
       "tested": 21,
-      "total": 21,
-      "untested": []
+      "total": 22,
+      "untested": [
+        "show_swap_success"
+      ]
     },
     "res://games/chroma-rush/ui/chroma_mini_map.gd": {
       "coverage_pct": 66.6666666666667,
@@ -366,10 +374,11 @@
       "untested": []
     },
     "res://games/chroma-rush/vehicles/chroma_vehicle.gd": {
-      "coverage_pct": 92.3076923076923,
+      "coverage_pct": 85.7142857142857,
       "tested": 12,
-      "total": 13,
+      "total": 14,
       "untested": [
+        "get_speed_mps",
         "reset_to_road"
       ]
     },
@@ -1241,6 +1250,6 @@
     }
   },
   "tested_functions": 1085,
-  "timestamp": "2026-10-07T11:12:43",
-  "total_functions": 1180
+  "timestamp": "2026-10-07T14:30:08",
+  "total_functions": 1186
 }

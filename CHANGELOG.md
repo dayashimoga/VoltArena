@@ -1477,13 +1477,30 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Gate 13 status: **RUNTIME_VERIFIED** (0 failures).
   - Overall certifier status: **RUNTIME_VERIFIED** (Exit Code: 0).
 
+## [7.3.0-aerorush-chromarush-remediation] - 2026-10-07
+### Added
+- **AeroRush Stunt Mechanics & Disconnected Track Topologies (`games/aero-rush/`)**:
+  - Implemented 200 Hz ballistic reachability solver in `aero_track_validator.gd` for all 12 handcrafted circuits with gap launches, loops, wall rides, and corkscrews.
+  - Added parallel-transport horizon stabilization (`stunt_stabilization_torque`) and player-triggered stunt trick spins/flips in `aero_physics_helpers.gd`.
+  - Added fair touchdown crash detection ($>18\text{ m/s}$ and $>75^\circ$ tilt) with automated rollover checkpoint recovery.
+  - Complete vehicle visual overhaul in `aero_vehicle_visuals.gd` with active aerodynamic rear wing, carbon splitter, diffuser, disc brakes with red calipers, PBR metallic paint, suspension articulation, and air ribbons.
+  - Megacity track overhaul with proportional highway bents, grandstands, floodlights, billboards, and checkered start line.
+- **Chroma Rush Camera Stability & Urban Overhaul (`games/chroma-rush/`)**:
+  - Eliminated camera zoom pumping in `chroma_rush_main.gd` using constant 7.5m distance, low-pass filtered speed and acceleration ($\alpha = 1 - e^{-12\Delta t}$), 1.8 km/h deadzone, rate-limited bounded FOV [72°, 80°], and fixed origin lock condition.
+  - Added automated camera stability test suite `games/chroma-rush/tests/test_chroma_camera_stability.gd` (20/20 passed).
+  - Replaced prototype box skyline with authored GLB models (`building_d.glb`, `building_comm_c.glb`, `building_comm_e.glb`, `building_garage.glb`), scaled proportionally (3.2–4.4x).
+  - Replaced faceted turquoise dodecahedrons with `tree_detailed.glb` featuring PBR timber bark, botanical leaves, sakura blossoms, and flowering understory bushes.
+  - Upgraded color swap feedback with 3D energy transfer arc, dynamic light pulse, HUD banner, and zero camera FOV jerk.
+- **Universal Pause Menu (`shared/ui/pause_menu.gd`)**:
+  - Implemented universal pause menu with Resume, Restart Checkpoint, Restart Event, Controls modal, Audio sliders, Graphics presets, Accessibility options, and Main Menu / Desktop.
+  - Wired into `chroma_rush_main.gd` and `aero_rush_main.gd`.
 
+### Fixed
+- Fixed missing `mass` attribute in `car_controller.gd` for rocket-car archetypes.
+- Fixed closure scalar value capture and tree safety guards in `test_ui_systems.gd` and `pause_menu.gd`.
+- Fixed missing building paths in `neon_city.gd`.
 
-
-
-
-
-
-
-
-
+### Verified
+- Executed headless test runner `tests/runner.gd` via Godot CI container: **80 suites, 3,045 passed assertions, 0 failed (100% PASS, 91.5% function coverage, exit code 0)**.
+- Standalone packaging: `AeroRush.pck` (98.34 MB), `ChromaRush.pck` (98.48 MB), `AeroRush-Windows-x86_64.zip` (176.34 MB), `ChromaRush-Windows-x86_64.zip` (176.48 MB).
+- Production certifier `scripts/certifier.py`: **Overall Status: RUNTIME_VERIFIED (0 failed gates)**.

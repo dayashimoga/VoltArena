@@ -130,16 +130,30 @@ func _build_start_gantry() -> void:
 		strip.position = Vector3(sign_x * (gate_width * 0.5 - 0.58), gate_height * 0.5, 0)
 		add_child(strip)
 
-	# 5. Checkered Starting Line Deck Ribbon
+	# 5. Checkered Starting Line Deck Ribbon with Procedural Pattern
 	var line_mesh = MeshInstance3D.new()
 	line_mesh.name = "CheckeredStartLine"
 	var quad = BoxMesh.new()
-	quad.size = Vector3(16.0, 0.04, 2.4)
+	quad.size = Vector3(16.0, 0.02, 2.0)
 	line_mesh.mesh = quad
-	var check_mat = StandardMaterial3D.new()
-	check_mat.albedo_color = Color(0.95, 0.95, 0.98)
-	check_mat.roughness = 0.4
-	check_mat.metallic = 0.1
+
+	var check_shader = Shader.new()
+	check_shader.code = """
+shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, cull_back;
+
+void fragment() {
+	vec2 uv_scaled = UV * vec2(16.0, 3.0);
+	vec2 check_grid = floor(uv_scaled);
+	float check = mod(check_grid.x + check_grid.y, 2.0);
+	vec3 col = (check > 0.5) ? vec3(0.96, 0.96, 0.98) : vec3(0.08, 0.09, 0.11);
+	ALBEDO = col;
+	ROUGHNESS = 0.55;
+	METALLIC = 0.08;
+}
+"""
+	var check_mat = ShaderMaterial.new()
+	check_mat.shader = check_shader
 	line_mesh.material_override = check_mat
 	line_mesh.position = Vector3(0, 0.02, 0)
 	add_child(line_mesh)

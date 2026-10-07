@@ -10,29 +10,30 @@
     "UNVERIFIED",
     "FAILED"
   ],
-  "overall_status": "PROVEN",
+  "overall_status": "FAILED",
   "summary": {
     "total_games": 10,
-    "proven_count": 10,
+    "proven_count": 8,
     "partial_count": 0,
     "simulation_proven_count": 1,
     "hardware_required_count": 2,
-    "failed_count": 0,
-    "p0_defect_count": 0,
-    "p1_defect_count": 0
+    "failed_count": 2,
+    "p0_defect_count": 3,
+    "p1_defect_count": 4
   },
   "games": {
     "aero_rush": {
-      "status": "PROVEN",
-      "p0_defects_remaining": [],
+      "status": "FAILED",
+      "p0_defects_remaining": [
+        "DEF-AERO-01: Continuous elevated road without disconnected stunt island topology",
+        "DEF-AERO-02: Airborne vehicle tumbling and lack of arcade stunt control/recovery",
+        "DEF-AERO-03: Prototype blocky kart vehicle mesh instead of high-detail fictional performance car",
+        "DEF-AERO-04: Primitive giant boxes and repetitive towers instead of authored multi-layer world"
+      ],
       "p0_defects_resolved": [
         "Vehicle accelerates naturally from 0.0 KM/H to 136.3 KM/H (37.85 m/s) under real physical player W / move_forward input without mocks or velocity forcing",
         "Input locking root cause eliminated: separated player input polling from programmatic override in aero_vehicle.gd",
-        "Collision hull penetration fixed: adjusted capsule collider to radius 0.48m, height 3.2m, center Y=0.60m, preventing hull from clipping through track collision",
-        "Visual regression fixed: replaced empty dark navy void and giant screen-edge white cylinders with authored dusk Megacity (32m overhead start gantry, 80-220m skyscrapers, stadium floodlights, urban canal basin, 360-degree perimeter skyline, high-contrast asphalt with glowing cyan/magenta guide rails)",
-        "Spline normal tearing eliminated via Bishop Rotation Minimizing Frames (RMF) parallel transport",
-        "Smooth physics-interpolated chase camera with stable look-ahead target and zero high-frequency jitter",
-        "Complete reference circuit gameplay loop: 3-2-1-GO -> Banked Turns -> Jumps -> Loops -> Wall Rides -> Checkpoints -> Victory Results dossier -> Progression"
+        "Collision hull penetration fixed: adjusted capsule collider to radius 0.48m, height 3.2m, center Y=0.60m, preventing hull from clipping through track collision"
       ],
       "automated_evidence": "tests/acceptance/test_packaged_aerorush_e2e.gd (22 passed, 0 failed), games/aero-rush/tests/ (116 passed)",
       "packaged_runtime_evidence": [
@@ -80,11 +81,14 @@
       ]
     },
     "chroma_rush": {
-      "status": "PROVEN",
+      "status": "FAILED",
+      "p0_defects_remaining": [
+        "DEF-CHROMA-01: Rapid repeated camera zoom pumping / FOV oscillation while moving",
+        "DEF-CHROMA-02: Faceted dodecahedron trees, box towers, and prototype toy car visuals",
+        "DEF-CHROMA-03: Lack of punchy audiovisual feedback on atomic color swap"
+      ],
       "p0_defects_resolved": [
-        "Roadway topology smoothed to eliminate sharp vertical steps and non-continuous road slabs",
-        "Camera vibration eliminated via physics-interpolated target position with low-pass filtering",
-        "Skylines enhanced with 6 distinct architectural styles across downtown, residential, industrial, and commercial districts"
+        "Roadway topology smoothed to eliminate sharp vertical steps and non-continuous road slabs"
       ],
       "automated_evidence": "games/chroma-rush/tests/ (199 passed, 0 failed), tests/unit/test_chroma_vehicle_physics.gd",
       "packaged_runtime_evidence": [

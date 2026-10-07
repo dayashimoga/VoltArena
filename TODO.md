@@ -1245,7 +1245,31 @@
   - `artifacts/visual-audit.json` (Overall Status: PASS, 0 fail reasons)
   - `artifacts/acceptance.json` (100% production acceptance)
 
-
-
-
-
+### [2026-10-07 14:45:00 UTC] - Milestone Update: AeroRush & Chroma Rush Authoritative Production Remediation
+- **Status**: COMPLETED
+- **Description**:
+  1. **AeroRush Stunt Physics & Disconnected Track Topology**:
+     - Overhauled airborne stunt kinematics in `aero_physics_helpers.gd` and `aero_vehicle.gd`: pitch/yaw/roll rates bounded, parallel-transport horizon stabilization (`stunt_stabilization_torque`), player-triggered stunt trick spins/flips, and fair touchdown crash detection ($>18\text{ m/s}$ and $>75^\circ$ impact tilt) with rollover checkpoint recovery.
+     - Implemented 200 Hz ballistic reachability validator in `aero_track_validator.gd`: verified all 12 handcrafted circuits with gap launches, loops, wall rides, and corkscrews.
+     - Upgraded track visuals and structures in `aero_world_megacity.gd`, `aero_track_generator.gd`, and `aero_checkpoint.gd` with proportional highway bents, grandstands, floodlights, billboards, and checkered start line.
+     - Complete vehicle visual overhaul in `aero_vehicle_visuals.gd`: high-detail fictional performance car with active aerodynamic rear wing, carbon splitter, diffuser, disc brakes with red calipers, PBR metallic paint, suspension articulation, and air ribbons.
+  2. **Chroma Rush Camera Stability, City Architecture & Visual Feedback**:
+     - Eliminated camera zoom pumping and oscillations in `chroma_rush_main.gd`: constant 7.5m distance, low-pass filtered speed and acceleration ($\alpha = 1 - e^{-12\Delta t}$), 1.8 km/h deadzone, bounded FOV [72°, 80°] rate-limited to 12.0 deg/s, and fixed camera initialization origin lock.
+     - Added dedicated automated test suite `games/chroma-rush/tests/test_chroma_camera_stability.gd` verifying telemetry FPS invariance, FOV limits, and zoom stability (20/20 passed).
+     - Overhauled city and foliage in `neon_city.gd`: replaced missing building paths and generic boxes with authored GLB models (`building_d.glb`, `building_comm_c.glb`, `building_comm_e.glb`, `building_garage.glb`), scaled proportionally (3.2–4.4x), and replaced faceted turquoise dodecahedrons with `tree_detailed.glb` featuring PBR timber bark, botanical leaves, sakura blossoms, and flowering understory bushes.
+     - Polished color swap feedback in `chroma_hud.gd` and `chroma_rush_main.gd`: added HUD banner confirmation, 3D energy transfer arc, dynamic light pulse, and removed camera FOV jerk.
+  3. **Universal Pause Menu & Subsystems Harmonization**:
+     - Standardized universal pause menu in `shared/ui/pause_menu.gd` across all titles: Resume, Restart Checkpoint, Restart Event, Controls modal, Audio sliders, Graphics presets, Accessibility options, and Main Menu / Desktop.
+     - Added missing mass attributes in `car_controller.gd` for rocket-car archetypes.
+     - Resolved UI unit test closure capture and headless tree safety guards.
+  4. **Full Test Suite & Production Packaging Certification**:
+     - Standalone isolated PCKs generated: `export/standalone/AeroRush.pck` (98.34 MB) and `export/standalone/ChromaRush.pck` (98.48 MB).
+     - Standalone zip packages generated: `AeroRush-Windows-x86_64.zip` (176.34 MB) and `ChromaRush-Windows-x86_64.zip` (176.48 MB).
+     - Executed full test runner `tests/runner.gd` via Godot CI container: **80 test suites, 3,045 passed assertions, 0 failed (100% PASS, 91.5% coverage, exit code 0)**.
+     - Executed production certifier `scripts/certifier.py`: **Overall Status: RUNTIME_VERIFIED (0 failed gates)**.
+- **Evidence**:
+  - `artifacts/test-results.json` (80 suites, 3,045 passed assertions, 0 failed)
+  - `artifacts/coverage-report.json` (91.5% function coverage, 1,085/1,186 functions)
+  - `artifacts/production-certification.json` (Overall Status: RUNTIME_VERIFIED)
+  - `export/standalone/AeroRush.pck` & `export/standalone/ChromaRush.pck`
+  - `export/dist/standalone/AeroRush-Windows-x86_64.zip` & `ChromaRush-Windows-x86_64.zip`

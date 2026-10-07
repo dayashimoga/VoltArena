@@ -92,9 +92,9 @@ static func validate_course(course_def: Dictionary) -> Dictionary:
 	}
 
 static func _simulate_kinematic_reachability(waypoints: Array) -> Dictionary:
-	# Simulates vehicle traversal at low (25 m/s) and high (50 m/s) approach speeds
+	# Simulates vehicle traversal across continuous segments and ballistic stunt gaps
 	var current_idx = 0
-	var speed = 30.0
+	var default_speed = 32.0
 
 	while current_idx < waypoints.size() - 1:
 		var p0 = waypoints[current_idx]["pos"] as Vector3
@@ -105,16 +105,36 @@ static func _simulate_kinematic_reachability(waypoints: Array) -> Dictionary:
 		var height_diff = p1.y - p0.y
 
 		if is_gap:
-			# Verify ballistic jump trajectory
-			# Time to cross gap: t = dist / horizontal_speed
-			var h_dist = Vector2(p1.x - p0.x, p1.z - p0.z).length()
-			var t_flight = h_dist / maxf(speed, 20.0)
-			# Drop: y = v_y * t - 0.5 * g * t^2
-			var required_drop = 0.5 * 28.0 * (t_flight * t_flight)
-			if height_diff > 4.0:
-				return {"passed": false, "reason": "Jump gap %d requires climbing uphill (%.1fm)" % [current_idx, height_diff]}
+			# Extract launch direction from incoming segment
+			var p_prev = waypoints[maxi(0, current_idx - 1)]["pos"] as Vector3
+			var seg_fwd = (p0 - p_prev).normalized()
+			if seg_fwd.length_squared() < 0.01:
+				seg_fwd = (p1 - p0).normalized()
+			# Launch ramp pitch elevation: add kicker only if incoming segment is relatively flat
+			var launch_dir = seg_fwd
+			if seg_fwd.y < 0.12:
+				launch_dir = (seg_fwd + Vector3.UP * 0.22).normalized()
+			else:
+				launch_dir = seg_fwd.normalized()
+
+			var landing_w = float(waypoints[current_idx + 1].get("width", 20.0))
+			var landing_norm = Vector3.UP
+			var bank_deg = float(waypoints[current_idx + 1].get("bank_deg", 0.0))
+			if absf(bank_deg) > 1.0:
+				landing_norm = Basis(Vector3.FORWARD, deg_to_rad(bank_deg)) * Vector3.UP
+
+			var min_spd = float(waypoints[current_idx].get("jump_speed_min", 24.0))
+			var tgt_spd = float(waypoints[current_idx].get("jump_speed_target", 34.0))
+			var max_spd = float(waypoints[current_idx].get("jump_speed_max", 48.0))
+
+			var jump_val = validate_jump_trajectory(
+				p0, launch_dir, p1, landing_norm,
+				landing_w, 40.0, min_spd, tgt_spd, max_spd
+			)
+			if not jump_val.get("reachable", false):
+				return {"passed": false, "reason": "Jump gap %d failed trajectory validation: %s" % [current_idx, jump_val.get("reason", "unknown")]}
 		else:
-			# Verify incline is climbable at speed
+			# Verify continuous incline is climbable at speed
 			var slope_angle_deg = rad_to_deg(asin(clampf(height_diff / maxf(dist, 1.0), -1.0, 1.0)))
 			if slope_angle_deg > 75.0:
 				return {"passed": false, "reason": "Slope at waypoint %d too steep (%.1f deg)" % [current_idx, slope_angle_deg]}
@@ -122,6 +142,90 @@ static func _simulate_kinematic_reachability(waypoints: Array) -> Dictionary:
 		current_idx += 1
 
 	return {"passed": true, "reason": "Successfully traversed entire waypoint chain"}
+
+## Automated Ballistic Trajectory Validator:
+## Simulates projectile physics across representative minimum, target, and maximum speeds.
+## Certifies launch velocity, trajectory, landing orientation, landing width, and recovery margins.
+static func validate_jump_trajectory(
+	launch_pos: Vector3,
+	launch_dir: Vector3,
+	landing_pos: Vector3,
+	landing_normal: Vector3,
+	landing_width: float,
+	landing_length: float,
+	min_speed: float = 24.0,
+	target_speed: float = 34.0,
+	max_speed: float = 48.0
+) -> Dictionary:
+	var speeds = [min_speed, target_speed, max_speed]
+	var gravity = Vector3(0, -28.0, 0)
+	var dt = 0.005 # 200 Hz integration step for precision
+	var max_sim_time = 4.0
+
+	for spd in speeds:
+		var pos = launch_pos
+		var vel = launch_dir.normalized() * spd
+		var sim_time = 0.0
+		var landed = false
+		var impact_pos = Vector3.ZERO
+		var impact_vel = Vector3.ZERO
+
+		while sim_time < max_sim_time:
+			vel += gravity * dt
+			vel *= 0.999 # Aerodynamic resistance
+			pos += vel * dt
+			sim_time += dt
+
+			var to_landing = pos - landing_pos
+			var plane_dist = to_landing.dot(landing_normal)
+			if plane_dist <= 0.25 and sim_time > 0.12:
+				landed = true
+				impact_pos = pos
+				impact_vel = vel
+				break
+
+		if not landed:
+			return {
+				"reachable": false,
+				"reason": "Trajectory at speed %.1f m/s failed to reach landing deck within %.1fs." % [spd, max_sim_time]
+			}
+
+		var fwd_landing = (landing_pos - launch_pos).normalized()
+		fwd_landing.y = 0.0
+		if fwd_landing.length_squared() < 0.01:
+			fwd_landing = Vector3.FORWARD
+		else:
+			fwd_landing = fwd_landing.normalized()
+
+		var right_landing = fwd_landing.cross(landing_normal).normalized()
+		var lateral_offset = absf((impact_pos - landing_pos).dot(right_landing))
+		var longitudinal_offset = absf((impact_pos - landing_pos).dot(fwd_landing))
+
+		var max_lateral = landing_width * 0.50
+		if lateral_offset > max_lateral:
+			return {
+				"reachable": false,
+				"reason": "Trajectory at speed %.1f m/s lateral offset %.1fm exceeds deck half-width %.1fm." % [spd, lateral_offset, max_lateral]
+			}
+
+		var fwd_offset = (impact_pos - landing_pos).dot(fwd_landing)
+		var max_undershoot = 8.0 # Flared apron catch margin
+		var max_overshoot = landing_length * 0.85 # Receiver deck runway
+		if fwd_offset < -max_undershoot:
+			return {
+				"reachable": false,
+				"reason": "Trajectory at speed %.1f m/s landed %.1fm short of deck." % [spd, absf(fwd_offset)]
+			}
+		if fwd_offset > max_overshoot:
+			return {
+				"reachable": false,
+				"reason": "Trajectory at speed %.1f m/s overshot deck by %.1fm." % [spd, fwd_offset - max_overshoot]
+			}
+
+	return {
+		"reachable": true,
+		"reason": "Jump trajectory certified across min (%.1fm/s), target (%.1fm/s), and max (%.1fm/s) speeds." % [min_speed, target_speed, max_speed]
+	}
 
 static func validate_before_launch(course_def: Dictionary) -> Dictionary:
 	if course_def.is_empty():

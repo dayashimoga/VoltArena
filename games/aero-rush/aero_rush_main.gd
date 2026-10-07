@@ -32,6 +32,7 @@ const AeroMainMenu = preload("res://games/aero-rush/ui/aero_main_menu.gd")
 const AeroGarage = preload("res://games/aero-rush/ui/aero_garage.gd")
 const AeroCourseSelect = preload("res://games/aero-rush/ui/aero_course_select.gd")
 const AeroResultsScreen = preload("res://games/aero-rush/ui/aero_results_screen.gd")
+const PauseMenuScript = preload("res://shared/ui/pause_menu.gd")
 
 # State Machine
 enum State {
@@ -73,6 +74,7 @@ var main_menu: AeroMainMenu = null
 var garage: AeroGarage = null
 var course_select: AeroCourseSelect = null
 var results_screen: AeroResultsScreen = null
+var pause_menu: PauseMenu = null
 
 # Racing Metrics
 var race_timer: float = 0.0
@@ -174,8 +176,48 @@ func _init_ui() -> void:
 	if not results_screen.is_node_ready():
 		results_screen._ready()
 
+	pause_menu = PauseMenuScript.new()
+	pause_menu.name = "PauseMenu"
+	pause_menu.resume_requested.connect(func():
+		if hud:
+			hud.is_paused = false
+	)
+	pause_menu.restart_checkpoint_requested.connect(func():
+		if is_instance_valid(player_vehicle) and player_vehicle.has_method("recover_to_checkpoint"):
+			player_vehicle.recover_to_checkpoint()
+	)
+	pause_menu.restart_event_requested.connect(restart_race)
+	pause_menu.restart_requested.connect(restart_race)
+	pause_menu.main_menu_requested.connect(func(): set_state(State.MENU))
+	pause_menu.quit_to_launcher_requested.connect(_on_return_to_hub)
+	pause_menu.quit_to_desktop_requested.connect(func():
+		var tree = get_tree()
+		if tree and OS.get_name() != "Web":
+			tree.quit()
+	)
+	canvas.add_child(pause_menu)
+	if not pause_menu.is_node_ready():
+		pause_menu._ready()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if current_state in [State.RACING, State.COUNTDOWN]:
+		var is_pause_key = event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel")
+		if not is_pause_key and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+			is_pause_key = true
+		if not is_pause_key and event is InputEventJoypadButton and event.pressed and (event.button_index == JOY_BUTTON_START or event.button_index == JOY_BUTTON_BACK):
+			is_pause_key = true
+
+		if is_pause_key and is_instance_valid(pause_menu):
+			if pause_menu.visible:
+				pause_menu.hide_pause()
+			else:
+				pause_menu.show_pause()
+			get_viewport().set_input_as_handled()
+
 func set_state(new_state: State) -> void:
 	current_state = new_state
+	if is_instance_valid(pause_menu):
+		pause_menu.hide_pause()
 
 	main_menu.visible = (new_state == State.MENU)
 	garage.visible = (new_state == State.GARAGE)

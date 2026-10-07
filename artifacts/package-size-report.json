@@ -1,34 +1,34 @@
 {
   "standalone_packages": {
     "AeroRush-Linux-x86_64.tar.gz": {
-      "size_mb": 165.46,
-      "size_bytes": 173492462,
-      "sha256": "12bfd770c94692bf99627cf9e71ff971d82b5d14efcca50878ec5240f6827cdb"
+      "size_mb": 170.47,
+      "size_bytes": 178755782,
+      "sha256": "58007ace87029283350c268cd4db4da8c8b536906210bf2db5868dbfe93b170f"
     },
     "AeroRush-Web.zip": {
-      "size_mb": 228.92,
-      "size_bytes": 240037108,
-      "sha256": "ebdf0ddc5eff3b6b644668425d63865429f1ea11894c28e46d249757dd7e567c"
+      "size_mb": 233.94,
+      "size_bytes": 245300939,
+      "sha256": "345e2733e7e19a5ae0784946e06c2775c7ff72563bf4189e8cbbdf5df5f1515e"
     },
     "AeroRush-Windows-x86_64.zip": {
-      "size_mb": 171.32,
-      "size_bytes": 179643401,
-      "sha256": "212b7ce49e9fa1c9f85b579d4a40f0327e753b23a53dc1a70aa600187d0a208a"
+      "size_mb": 176.34,
+      "size_bytes": 184907233,
+      "sha256": "daddc73f68b15f4307fec24ae0c8287ec9e9efb1186ce34c2c92bde1987ada08"
     },
     "ChromaRush-Linux-x86_64.tar.gz": {
-      "size_mb": 165.61,
-      "size_bytes": 173650620,
-      "sha256": "108a1dd1e6f3338bbe337a85a115994540b4100d9a8ef7d1e932c1e9d05e91f6"
+      "size_mb": 170.62,
+      "size_bytes": 178905847,
+      "sha256": "4cc68e696e229f22ad3e407c3eb1ded82034683d7ff847957926240a706ba6a0"
     },
     "ChromaRush-Web.zip": {
-      "size_mb": 229.07,
-      "size_bytes": 240196439,
-      "sha256": "f3d9e3141b09d77b631d0633001dd3e8c23e9c2552bc16e787ac7fe0f9f1e09d"
+      "size_mb": 234.08,
+      "size_bytes": 245450430,
+      "sha256": "b2c1ba8a4c6d05c85bf65c632a5e1a5dea78b6ff685996ccee91e08dddda39b5"
     },
     "ChromaRush-Windows-x86_64.zip": {
-      "size_mb": 171.47,
-      "size_bytes": 179802739,
-      "sha256": "4d6e382d5b4e8c4f97c41e86c5dc6927d9b8ee2a6f61c0963819c5757a298f2a"
+      "size_mb": 176.48,
+      "size_bytes": 185056731,
+      "sha256": "d485bb7d8f3fe4ec36e8753e30867d9ad097d4a6b7f125f75ff4f1c1ca8a6f75"
     },
     "DriftStorm-Linux-x86_64.tar.gz": {
       "size_mb": 165.45,
@@ -174,14 +174,14 @@
     }
   },
   "per_game_assets_kb": {
-    "aero-rush": 217.1,
-    "chroma-rush": 434.9,
-    "kart-racing": 230.0,
+    "aero-rush": 240.3,
+    "chroma-rush": 449.7,
+    "kart-racing": 230.2,
     "strike-vector": 318.7,
     "roboforge-arena": 52.9,
     "wildcircuit": 49.9,
     "skybound-odyssey": 49.3,
-    "rocket-car": 77.6,
+    "rocket-car": 77.7,
     "subway-survival": 61.5,
     "arena-fps": 70.9
   },

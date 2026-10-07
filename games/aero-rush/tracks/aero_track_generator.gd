@@ -428,30 +428,57 @@ static func _catmull_rom_tangent(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vect
 	)
 
 static func _generate_support_pylons(dense_points: Array[Dictionary], parent: Node3D) -> void:
-	var pylon_spacing = 42.0
+	var pylon_spacing = 38.0
 	var dist_accum = 0.0
 
-	var pylon_mat = StandardMaterial3D.new()
-	pylon_mat.albedo_color = Color(0.24, 0.26, 0.30)
-	pylon_mat.metallic = 0.85
-	pylon_mat.roughness = 0.30
+	var concrete_mat = StandardMaterial3D.new()
+	concrete_mat.albedo_color = Color(0.28, 0.30, 0.34)
+	concrete_mat.metallic = 0.35
+	concrete_mat.roughness = 0.75
+
+	var steel_mat = StandardMaterial3D.new()
+	steel_mat.albedo_color = Color(0.16, 0.18, 0.22)
+	steel_mat.metallic = 0.85
+	steel_mat.roughness = 0.30
 
 	for i in range(1, dense_points.size() - 1):
 		var p_prev = dense_points[i - 1]["pos"] as Vector3
 		var p_curr = dense_points[i]["pos"] as Vector3
+		var is_gap = dense_points[i].get("is_jump_gap", false) as bool
 		dist_accum += p_prev.distance_to(p_curr)
+
+		if is_gap:
+			continue
 
 		if dist_accum >= pylon_spacing:
 			dist_accum = 0.0
 			var ground_basin_y = -6.5
 			var col_height = p_curr.y - ground_basin_y
 			if col_height > 2.5:
-				var pylon = MeshInstance3D.new()
-				var cyl = CylinderMesh.new()
-				cyl.top_radius = 1.2
-				cyl.bottom_radius = 1.6
-				cyl.height = col_height
-				pylon.mesh = cyl
-				pylon.material_override = pylon_mat
-				pylon.position = Vector3(p_curr.x, ground_basin_y + col_height * 0.5, p_curr.z)
-				parent.add_child(pylon)
+				var fwd_dir = dense_points[i].get("forward", Vector3.FORWARD) as Vector3
+				var w = float(dense_points[i].get("width", 16.0)) * 0.5
+
+				var bent = Node3D.new()
+				bent.position = Vector3(p_curr.x, ground_basin_y, p_curr.z)
+				parent.add_child(bent)
+
+				var beam = MeshInstance3D.new()
+				var beam_box = BoxMesh.new()
+				beam_box.size = Vector3(w * 2.2, 1.4, 2.6)
+				beam.mesh = beam_box
+				beam.material_override = steel_mat
+				beam.position = Vector3(0, col_height - 0.7, 0)
+
+				var look_target = bent.position + fwd_dir * 10.0
+				if (look_target - bent.position).length_squared() > 0.01:
+					bent.look_at(look_target, Vector3.UP)
+				bent.add_child(beam)
+
+				for col_side in [-1.0, 1.0]:
+					var col = MeshInstance3D.new()
+					var c_box = BoxMesh.new()
+					c_box.size = Vector3(1.6, col_height - 1.4, 2.0)
+					col.mesh = c_box
+					col.material_override = concrete_mat
+					col.position = Vector3(col_side * (w * 0.55), (col_height - 1.4) * 0.5, 0)
+					bent.add_child(col)

@@ -46,38 +46,49 @@ static func _get_course_1_neon_express() -> Dictionary:
 		"silver_time": 85.0,
 		"bronze_time": 105.0,
 		"gold_score": 15000,
-		"desc": "The definitive AeroRush reference circuit: 3-2-1-GO sprint, 35° banked highway turns, 360° vertical loop, 68° skyscraper wall ride, and technical chicanes.",
-		"spawn_pos": Vector3(0, 0.45, 0),
+		"desc": "The definitive AeroRush stunt circuit: Disconnected stunt islands spanning high-speed boulevard launch, 55m aerial gap, 360° vertical loop, drop transfer, 75° skyscraper wall ride, canyon gap, corkscrew, and split routes.",
+		"spawn_pos": Vector3(0, 1.0, 0),
 		"spawn_rot_y": 0.0,
 		"waypoints": [
-			{"pos": Vector3(0, 0, 0), "bank_deg": 0.0, "width": 18.0},
-			{"pos": Vector3(0, 0, -60), "bank_deg": 0.0, "width": 18.0},
-			{"pos": Vector3(0, 0, -120), "bank_deg": 0.0, "width": 18.0},
-			{"pos": Vector3(18, 2, -180), "bank_deg": 18.0, "width": 18.0},
-			{"pos": Vector3(55, 6, -230), "bank_deg": 35.0, "width": 18.0},
-			{"pos": Vector3(110, 8, -250), "bank_deg": 35.0, "width": 18.0},
-			{"pos": Vector3(170, 6, -230), "bank_deg": 16.0, "width": 18.0},
-			{"pos": Vector3(200, 2, -180), "bank_deg": 0.0, "width": 18.0},
-			{"pos": Vector3(200, 3, -130), "bank_deg": 0.0, "width": 17.0},
-			# 360° Vertical Stunt Arc (Smooth 5-point transition)
-			{"pos": Vector3(200, 12, -95), "bank_deg": 0.0, "width": 16.0},
-			{"pos": Vector3(200, 26, -80), "bank_deg": 0.0, "width": 16.0},
-			{"pos": Vector3(200, 30, -65), "bank_deg": 0.0, "width": 16.0},
-			{"pos": Vector3(200, 24, -50), "bank_deg": 0.0, "width": 16.0},
-			{"pos": Vector3(200, 10, -35), "bank_deg": 0.0, "width": 16.0},
-			{"pos": Vector3(200, 2, -15), "bank_deg": 0.0, "width": 17.0},
-			# Skyscraper Wall Ride
-			{"pos": Vector3(195, 3, 40), "bank_deg": 25.0, "width": 17.0},
-			{"pos": Vector3(165, 8, 90), "bank_deg": 68.0, "width": 17.0},
-			{"pos": Vector3(115, 8, 120), "bank_deg": 68.0, "width": 17.0},
-			{"pos": Vector3(60, 4, 110), "bank_deg": 30.0, "width": 17.0},
-			# Technical Chicanes
-			{"pos": Vector3(20, 1, 80), "bank_deg": -12.0, "width": 17.0},
-			{"pos": Vector3(-20, 0, 50), "bank_deg": 12.0, "width": 17.0},
-			{"pos": Vector3(-10, 0, 20), "bank_deg": 0.0, "width": 18.0},
-			{"pos": Vector3(0, 0, 0), "bank_deg": 0.0, "width": 18.0}
+			# === TRACK ISLAND A (Boulevard Launch) ===
+			{"pos": Vector3(0, 1.0, 0), "bank_deg": 0.0, "width": 20.0},
+			{"pos": Vector3(0, 1.0, -45), "bank_deg": 0.0, "width": 20.0},
+			{"pos": Vector3(0, 2.0, -90), "bank_deg": 0.0, "width": 18.0},
+			{"pos": Vector3(0, 6.0, -135), "bank_deg": 0.0, "width": 18.0},
+			{"pos": Vector3(0, 14.0, -170), "bank_deg": 0.0, "width": 18.0, "is_jump_gap": true, "jump_speed_min": 26.0, "jump_speed_target": 36.0, "jump_speed_max": 48.0},
+
+			# === TRACK ISLAND B (Loop Deck) ===
+			{"pos": Vector3(0, 9.0, -195), "bank_deg": 0.0, "width": 24.0},
+			{"pos": Vector3(0, 8.0, -260), "bank_deg": 0.0, "width": 18.0},
+			{"pos": Vector3(0, 10.0, -290), "bank_deg": 0.0, "width": 17.0},
+			# 360° Vertical Loop Arc
+			{"pos": Vector3(0, 22.0, -315), "bank_deg": 0.0, "width": 16.0},
+			{"pos": Vector3(0, 38.0, -330), "bank_deg": 0.0, "width": 16.0},
+			{"pos": Vector3(0, 36.0, -345), "bank_deg": 0.0, "width": 16.0},
+			{"pos": Vector3(0, 20.0, -360), "bank_deg": 0.0, "width": 16.0},
+			{"pos": Vector3(0, 7.0, -380), "bank_deg": 0.0, "width": 17.0},
+			{"pos": Vector3(10, 8.0, -410), "bank_deg": 0.0, "width": 18.0, "is_jump_gap": true, "jump_speed_min": 26.0, "jump_speed_target": 36.0, "jump_speed_max": 48.0},
+
+			# === TRACK ISLAND C (Wall Ride Island) ===
+			{"pos": Vector3(16, 6.0, -422), "bank_deg": 18.0, "width": 24.0},
+			{"pos": Vector3(45, 6.0, -435), "bank_deg": 45.0, "width": 18.0},
+			# 75° Skyscraper Wall Ride
+			{"pos": Vector3(100, 12.0, -400), "bank_deg": 75.0, "width": 18.0},
+			{"pos": Vector3(115, 12.0, -350), "bank_deg": 75.0, "width": 18.0},
+			{"pos": Vector3(105, 8.0, -300), "bank_deg": 38.0, "width": 18.0},
+			{"pos": Vector3(90, 11.0, -260), "bank_deg": 0.0, "width": 18.0, "is_jump_gap": true, "jump_speed_min": 28.0, "jump_speed_target": 38.0, "jump_speed_max": 50.0},
+
+			# === TRACK ISLAND D (Corkscrew & Split Routes) ===
+			{"pos": Vector3(78, 7.0, -240), "bank_deg": 0.0, "width": 24.0},
+			{"pos": Vector3(65, 5.0, -205), "bank_deg": 0.0, "width": 22.0},
+			{"pos": Vector3(55, 4.0, -165), "bank_deg": -22.0, "width": 18.0},
+			{"pos": Vector3(35, 3.0, -125), "bank_deg": 22.0, "width": 18.0},
+			{"pos": Vector3(20, 2.0, -85), "bank_deg": 0.0, "width": 19.0},
+			{"pos": Vector3(10, 1.0, -50), "bank_deg": 0.0, "width": 22.0},
+			{"pos": Vector3(5, 0.5, -25), "bank_deg": 0.0, "width": 20.0},
+			{"pos": Vector3(0, 1.0, 0), "bank_deg": 0.0, "width": 20.0}
 		],
-		"checkpoints": [0, 4, 8, 14, 18, 21, 23],
+		"checkpoints": [0, 4, 5, 12, 13, 18, 19, 23, 26],
 		"hazards": []
 	}
 
@@ -180,9 +191,9 @@ static func _get_course_4_canyon_slingshot() -> Dictionary:
 			{"pos": Vector3(-40, 16, -220), "bank_deg": -30.0, "width": 16.0},
 			{"pos": Vector3(-30, 8, -320), "bank_deg": 0.0, "width": 15.0},
 			# Natural Chasm Mega Jump
-			{"pos": Vector3(10, 14, -400), "bank_deg": 0.0, "width": 16.0, "is_jump_gap": true},
-			{"pos": Vector3(40, 6, -490), "bank_deg": 15.0, "width": 20.0}, # Catch basin
-			{"pos": Vector3(90, 2, -580), "bank_deg": 30.0, "width": 16.0},
+			{"pos": Vector3(10, 18, -390), "bank_deg": 0.0, "width": 18.0, "is_jump_gap": true, "jump_speed_min": 26.0, "jump_speed_target": 36.0, "jump_speed_max": 48.0},
+			{"pos": Vector3(20, 11, -408), "bank_deg": 15.0, "width": 24.0}, # Catch basin
+			{"pos": Vector3(70, 4, -510), "bank_deg": 30.0, "width": 18.0},
 			{"pos": Vector3(160, 0, -620), "bank_deg": 0.0, "width": 16.0},
 			{"pos": Vector3(250, 0, -620), "bank_deg": 0.0, "width": 16.0}
 		],

@@ -732,6 +732,16 @@ func show_swap_rejected(reason: String) -> void:
 		swap_prompt_label.text = "✕ " + msg
 		swap_prompt_label.modulate = Color(1.0, 0.3, 0.3)
 
+func show_swap_success(new_color: int, _old_color: int = -1) -> void:
+	rejection_timer = 2.5
+	if swap_prompt_label:
+		var col_name = ChromaConstants.get_color_name(new_color)
+		var sym = ChromaConstants.get_color_symbol(new_color)
+		var col_val = ChromaConstants.get_color_value(new_color)
+		swap_prompt_label.text = "⚡ ATOMIC SWAP SUCCESSFUL: ACQUIRED %s %s" % [sym, col_name.to_upper()]
+		swap_prompt_label.modulate = col_val.lightened(0.35)
+	show_notification("Atomic Swap: Acquired %s!" % ChromaConstants.get_color_name(new_color))
+
 func toggle_diagnostics() -> void:
 	if diagnostics_panel:
 		diagnostics_panel.visible = not diagnostics_panel.visible

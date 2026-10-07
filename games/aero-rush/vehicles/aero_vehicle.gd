@@ -70,6 +70,7 @@ var in_loop_section: bool = false
 var last_safe_checkpoint_pos: Vector3 = Vector3(0, 1.0, 0)
 var last_safe_checkpoint_basis: Basis = Basis.IDENTITY
 var rollover_timer: float = 0.0
+var stuck_timer: float = 0.0
 var controls_enabled: bool = true
 
 # Visual & Node References
@@ -79,6 +80,8 @@ var wheels: Array[Node3D] = []
 var wheel_raycasts: Array[RayCast3D] = []
 var wheel_roll_rot: float = 0.0
 var suspension_offsets: Array[float] = [0.0, 0.0, 0.0, 0.0]
+var base_wheel_y: Array[float] = [0.32, 0.32, 0.34, 0.34]
+var landing_compression: float = 0.0
 
 func _ready() -> void:
 	collision_layer = AeroConstants.LAYER_PLAYER if is_player else AeroConstants.LAYER_ENEMIES
@@ -310,10 +313,17 @@ func _handle_touchdown() -> void:
 	var boost_refill = landing_eval.get("boost_refill", 0.0)
 	var is_crash = landing_eval.get("is_crash", false)
 
-	if is_crash:
+	# Crash only when impact angle/velocity genuinely warrants it (>18 m/s speed and extreme angle >75 deg)
+	var is_fatal_crash = is_crash and absf(forward_speed) > 18.0 and angle_deg > 75.0
+
+	if is_fatal_crash:
 		emit_signal("vehicle_crashed")
 		recover_to_checkpoint()
 		return
+	elif is_crash:
+		# Rough touchdown: absorb impact with chassis compression and sparks rather than insta-death
+		quality = "rough"
+		bonus = 30
 
 	# Add boost refund on clean / perfect landing
 	if boost_refill > 0.0:
@@ -335,11 +345,16 @@ func _handle_touchdown() -> void:
 		if quality == "perfect":
 			stunt_action_triggered.emit(AeroConstants.StuntType.PERFECT_LANDING, 500, "PERFECT LANDING")
 
-	# Trigger Sparks on touchdown
+	# Trigger Sparks and Dust on touchdown
+	landing_compression = clampf(absf(velocity.y) * 0.04, 0.08, 0.35)
 	var sparks = visual_data.get("sparks_emitter") as GPUParticles3D
 	if sparks:
 		sparks.restart()
 		sparks.emitting = true
+	var dust = visual_data.get("dust_burst") as GPUParticles3D
+	if dust:
+		dust.restart()
+		dust.emitting = true
 
 func _track_airborne_rotations() -> void:
 	var cur_euler = global_rotation
@@ -480,23 +495,64 @@ func _process_ground_movement(delta: float) -> void:
 	velocity = forward_dir * forward_speed
 
 func _process_airborne_movement(delta: float) -> void:
-	# Airborne Aerial Controls:
-	# Pitch (W / S)
-	if throttle_input > 0.0:
-		rotate_object_local(Vector3.RIGHT, air_pitch_speed * throttle_input * delta)
-	elif brake_input > 0.0:
-		rotate_object_local(Vector3.RIGHT, -air_pitch_speed * brake_input * delta)
+	var is_stunt_mode = handbrake_held or is_boost_active or (is_player and Input.is_key_pressed(KEY_SHIFT))
 
-	# Roll or Yaw (A / D)
-	if handbrake_held:
-		# Aerial Barrel Roll
-		rotate_object_local(Vector3.FORWARD, air_roll_speed * steer_input * delta)
+	# 1. Stunt Mode vs Normal Flight
+	if is_stunt_mode:
+		# Player deliberate stunt maneuvers:
+		# Controlled flips (Pitch)
+		if throttle_input > 0.0:
+			rotate_object_local(Vector3.RIGHT, air_pitch_speed * throttle_input * delta)
+		elif brake_input > 0.0:
+			rotate_object_local(Vector3.RIGHT, -air_pitch_speed * brake_input * delta)
+
+		# Controlled rolls / flat spins
+		if absf(steer_input) > 0.1:
+			if handbrake_held:
+				# Aerial Barrel Roll
+				rotate_object_local(Vector3.FORWARD, air_roll_speed * steer_input * delta)
+			else:
+				# Aerial Flat Spin
+				rotate_object_local(Vector3.UP, -air_yaw_speed * steer_input * delta)
 	else:
-		# Aerial Flat Spin (Yaw)
-		rotate_object_local(Vector3.UP, -air_yaw_speed * steer_input * delta)
+		# Normal Jump Mode:
+		# Bounded gentle pitch (aiming nose up/down for landing angle)
+		if throttle_input > 0.0:
+			rotate_object_local(Vector3.RIGHT, (air_pitch_speed * 0.45) * throttle_input * delta)
+		elif brake_input > 0.0:
+			rotate_object_local(Vector3.RIGHT, -(air_pitch_speed * 0.45) * brake_input * delta)
 
-	# Preserve forward velocity momentum in air
-	var drag = 0.992
+		# Bounded gentle yaw / roll banking
+		if absf(steer_input) > 0.1:
+			rotate_object_local(Vector3.UP, -air_yaw_speed * 0.4 * steer_input * delta)
+			rotate_object_local(Vector3.FORWARD, air_roll_speed * 0.25 * steer_input * delta)
+
+		# Natural Horizon Stabilization: Vehicle naturally tends toward wheels-down landing!
+		var cur_basis = global_basis if is_inside_tree() else transform.basis
+		var target_up = Vector3.UP
+		# Smooth angular dampening and upright pull
+		var horizon_weight = clampf(delta * 4.5, 0.0, 1.0)
+		var stabilized_basis = AeroPhysicsHelpers.calculate_horizon_stabilization(cur_basis, target_up, horizon_weight)
+		if is_inside_tree():
+			global_basis = stabilized_basis
+		else:
+			transform.basis = stabilized_basis
+
+	# 2. Landing Alignment Assistance & Prediction
+	if is_inside_tree() and get_world_3d() and get_world_3d().direct_space_state:
+		var space_state = get_world_3d().direct_space_state
+		var prediction = AeroPhysicsHelpers.predict_landing(space_state, global_position, velocity, 18.0)
+		if prediction.get("found", false):
+			var hit_norm = prediction.get("normal", Vector3.UP) as Vector3
+			var hit_dist = prediction.get("distance", 18.0) as float
+			# Progressively assist orientation without visibly snapping
+			if hit_dist < 14.0:
+				var assist_factor = clampf((14.0 - hit_dist) / 14.0, 0.0, 1.0) * delta * 6.5
+				var aligned_basis = AeroPhysicsHelpers.align_basis_to_normal(global_basis, hit_norm, assist_factor)
+				global_basis = aligned_basis
+
+	# 3. Preserve forward momentum with realistic aerodynamic drag
+	var drag = 0.994
 	velocity.x *= drag
 	velocity.z *= drag
 
@@ -510,18 +566,23 @@ func _update_visual_dynamics(delta: float) -> void:
 	if not chassis_node:
 		return
 
-	# 2. Front Wheels Steering Yaw
+	# 2. Front Wheels Steering Yaw & Suspension Travel
 	var target_steer_angle = deg_to_rad(-steer_input * 32.0)
 	if wheels.size() >= 2:
 		wheels[0].rotation.y = lerp_angle(wheels[0].rotation.y, target_steer_angle, delta * 16.0)
 		wheels[1].rotation.y = lerp_angle(wheels[1].rotation.y, target_steer_angle, delta * 16.0)
 
-	for w in wheels:
+	for i in range(wheels.size()):
+		var w = wheels[i]
 		var mesh = w.get_node_or_null("WheelMesh")
 		if mesh:
 			mesh.rotation.x = wheel_roll_rot
+		# Suspension compression translation in local Y
+		var b_y = base_wheel_y[i] if i < base_wheel_y.size() else 0.32
+		var comp = suspension_offsets[i] if i < suspension_offsets.size() else 0.0
+		w.position.y = lerpf(w.position.y, b_y + comp * 0.45, delta * 18.0)
 
-	# 3. Chassis Roll into Corners & Braking Dive
+	# 3. Chassis Roll into Corners, Braking Dive & Landing Spring Compression
 	var target_roll = deg_to_rad(steer_input * clampf(forward_speed / top_speed, 0.0, 1.0) * 8.5)
 	var target_pitch = 0.0
 	if brake_input > 0.0 and forward_speed > 2.0:
@@ -529,10 +590,22 @@ func _update_visual_dynamics(delta: float) -> void:
 	elif throttle_input > 0.0 and forward_speed < top_speed * 0.7:
 		target_pitch = deg_to_rad(-2.8) # Acceleration squat
 
+	landing_compression = lerpf(landing_compression, 0.0, delta * 8.0)
+	chassis_node.position.y = -landing_compression
 	chassis_node.rotation.z = lerp_angle(chassis_node.rotation.z, target_roll, delta * 12.0)
 	chassis_node.rotation.x = lerp_angle(chassis_node.rotation.x, target_pitch, delta * 12.0)
 
-	# 4. Particle Emitter Dynamics
+	# 4. Active Aero Stunt Wing Articulation
+	var active_wing = visual_data.get("active_wing") as Node3D
+	if is_instance_valid(active_wing):
+		var target_wing_pitch = 0.0
+		if brake_input > 0.0 and forward_speed > 5.0:
+			target_wing_pitch = deg_to_rad(-24.0) # Active airbrake deployment
+		elif is_boost_active:
+			target_wing_pitch = deg_to_rad(6.0)   # Low-drag DRS speed trim
+		active_wing.rotation.x = lerp_angle(active_wing.rotation.x, target_wing_pitch, delta * 14.0)
+
+	# 5. Particle Emitter Dynamics
 	var exhausts = visual_data.get("exhaust_emitters", [])
 	for ex in exhausts:
 		if is_instance_valid(ex):
@@ -543,7 +616,13 @@ func _update_visual_dynamics(delta: float) -> void:
 		if is_instance_valid(sm):
 			sm.emitting = is_drifting and is_grounded
 
-	# 5. Shader Uniform Updates (Brake / Reverse Lights)
+	var air_trails = visual_data.get("air_trails", [])
+	var show_trails = (not is_grounded and absf(forward_speed) > 15.0) or (absf(forward_speed) > 38.0) or is_boost_active
+	for tr in air_trails:
+		if is_instance_valid(tr):
+			tr.emitting = show_trails
+
+	# 6. Shader Uniform Updates (Brake / Reverse Lights / Boost Glow)
 	var mat = visual_data.get("body_material") as ShaderMaterial
 	if mat:
 		mat.set_shader_parameter("is_braking", brake_input > 0.0 and forward_speed > 0.5)
@@ -556,21 +635,32 @@ func _check_rollover_and_recovery(delta: float) -> void:
 
 	# 1. Out-of-bounds fall detection: vehicle falls below world or prolonged airborne drop
 	var current_y = global_position.y
-	if current_y < -35.0 or (not is_grounded and airtime_duration > 5.5):
+	if current_y < -35.0 or (not is_grounded and airtime_duration > 6.0):
 		recover_to_checkpoint()
 		return
 
-	# 2. Check if upside down on ground
+	# 2. Check if straying completely outside playable bounds (>95m from last safe checkpoint)
+	if global_position.distance_to(last_safe_checkpoint_pos) > 95.0 and not is_grounded:
+		recover_to_checkpoint()
+		return
+
+	# 3. Check if upside down on ground
 	var up_dot = global_basis.y.dot(Vector3.UP)
 	if is_grounded and up_dot < -0.2:
 		rollover_timer += delta
 		if rollover_timer >= 1.2:
 			recover_to_checkpoint()
 			rollover_timer = 0.0
+	elif is_grounded and absf(forward_speed) < 1.5 and up_dot < 0.4:
+		stuck_timer += delta
+		if stuck_timer >= 1.8:
+			recover_to_checkpoint()
+			stuck_timer = 0.0
 	else:
 		rollover_timer = 0.0
+		stuck_timer = 0.0
 
-	# 3. Record safe checkpoint transform if driving cleanly on flat track
+	# 4. Record safe checkpoint transform if driving cleanly on flat track
 	if is_grounded and up_dot > 0.75 and absf(forward_speed) > 10.0:
 		last_safe_checkpoint_pos = global_position
 		last_safe_checkpoint_basis = global_basis

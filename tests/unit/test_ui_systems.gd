@@ -155,7 +155,41 @@ func test_pause_menu() -> void:
 
 	pm.show_pause()
 	assert_true(pm.visible, "Pause menu must become visible on show_pause")
+	assert_true(pm.btn_resume != null, "Resume button must exist")
+	assert_true(pm.btn_restart_checkpoint != null, "Restart Checkpoint button must exist")
+	assert_true(pm.btn_restart_event != null, "Restart Event button must exist")
+	assert_true(pm.btn_controls != null, "Controls button must exist")
+	assert_true(pm.btn_audio != null, "Audio button must exist")
+	assert_true(pm.btn_graphics != null, "Graphics button must exist")
+	assert_true(pm.btn_accessibility != null, "Accessibility button must exist")
+	assert_true(pm.btn_main_menu != null, "Main Menu button must exist")
 
+	# Test sub-modal navigation
+	pm._show_controls_modal()
+	assert_true(pm._controls_panel.visible, "Controls modal must open")
+	assert_true(not pm.panel.visible, "Main panel must hide while modal is active")
+
+	pm._show_audio_modal()
+	assert_true(pm._audio_panel.visible, "Audio modal must open")
+
+	pm._show_graphics_modal()
+	assert_true(pm._graphics_panel.visible, "Graphics modal must open")
+
+	pm._show_accessibility_modal()
+	assert_true(pm._accessibility_panel.visible, "Accessibility modal must open")
+
+	pm._return_to_main_pause()
+	assert_true(pm.panel.visible, "Returning to main pause must show main panel")
+	assert_true(not pm._has_any_modal_visible(), "All sub-modals must be closed")
+
+	# Test signals
+	var checkpoint_restarted = [false]
+	pm.restart_checkpoint_requested.connect(func(): checkpoint_restarted[0] = true)
+	pm.btn_restart_checkpoint.emit_signal("pressed")
+	assert_true(checkpoint_restarted[0], "Restart checkpoint signal must emit")
+	assert_true(not pm.visible, "Pressing restart checkpoint must hide pause")
+
+	pm.show_pause()
 	pm.hide_pause()
 	assert_true(not pm.visible, "Pause menu must hide on hide_pause")
 
@@ -164,6 +198,9 @@ func test_pause_menu() -> void:
 	ev.keycode = KEY_ESCAPE
 	ev.pressed = true
 	pm._unhandled_input(ev)
+	assert_true(pm.visible, "ESC key must toggle pause menu to visible")
+	pm._unhandled_input(ev)
+	assert_true(not pm.visible, "Second ESC key must resume and hide pause")
 	pm.queue_free()
 
 func test_results_screen() -> void:

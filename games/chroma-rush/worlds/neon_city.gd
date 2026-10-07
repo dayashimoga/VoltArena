@@ -300,10 +300,10 @@ func build_props() -> void:
 		"res://assets/models/environment/building_comm_f.glb"
 	]
 	var residential_paths = [
-		"res://assets/models/environment/building_a.glb",
-		"res://assets/models/environment/building_b.glb",
-		"res://assets/models/environment/building_c.glb",
-		"res://assets/models/environment/building_d.glb"
+		"res://assets/models/environment/building_d.glb",
+		"res://assets/models/environment/building_comm_c.glb",
+		"res://assets/models/environment/building_comm_e.glb",
+		"res://assets/models/environment/building_garage.glb"
 	]
 
 	var n_spline = spline_samples.size()
@@ -464,7 +464,8 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 		var m_idx = (i * 2 + s) % skyscrapers.size()
 		var glb_model = ModelCache.get_model(skyscrapers[m_idx])
 		if glb_model:
-			glb_model.scale = Vector3(8.5, 11.0, 8.5)
+			var sc = 4.4 + float((i + s) % 3) * 0.4
+			glb_model.scale = Vector3(sc, sc, sc)
 			_style_building(glb_model, theme_idx)
 			var b_body = StaticBody3D.new()
 			b_body.name = "Skyscraper%s_%d_%d" % [side_name, i, s]
@@ -472,9 +473,9 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 			b_body.add_child(glb_model)
 			var col = CollisionShape3D.new()
 			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(16.0, 45.0, 16.0)
+			b_shape.size = Vector3(14.0, 42.0, 14.0)
 			col.shape = b_shape
-			col.position = Vector3(0, 22.5, 0)
+			col.position = Vector3(0, 21.0, 0)
 			b_body.add_child(col)
 			b_node = b_body
 	elif (i >= 22 and i <= 31) and pick_type == 1:
@@ -482,7 +483,8 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 		var m_idx = (i * 2 + s) % residentials.size()
 		var glb_model = ModelCache.get_model(residentials[m_idx])
 		if glb_model:
-			glb_model.scale = Vector3(7.0, 7.5, 7.0)
+			var sc = 3.2 + float((i + s) % 3) * 0.3
+			glb_model.scale = Vector3(sc, sc, sc)
 			_style_building(glb_model, theme_idx)
 			var b_body = StaticBody3D.new()
 			b_body.name = "Residential%s_%d_%d" % [side_name, i, s]
@@ -490,9 +492,9 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 			b_body.add_child(glb_model)
 			var col = CollisionShape3D.new()
 			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(14.0, 24.0, 14.0)
+			b_shape.size = Vector3(12.0, 22.0, 12.0)
 			col.shape = b_shape
-			col.position = Vector3(0, 12.0, 0)
+			col.position = Vector3(0, 11.0, 0)
 			b_body.add_child(col)
 			b_node = b_body
 	else:
@@ -500,7 +502,8 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 		var m_idx = (i * 2 + s) % commercials.size()
 		var glb_model = ModelCache.get_model(commercials[m_idx])
 		if glb_model:
-			glb_model.scale = Vector3(7.5, 8.0, 7.5)
+			var sc = 3.6 + float((i + s) % 3) * 0.3
+			glb_model.scale = Vector3(sc, sc, sc)
 			_style_building(glb_model, theme_idx)
 			var b_body = StaticBody3D.new()
 			b_body.name = "Commercial%s_%d_%d" % [side_name, i, s]
@@ -508,15 +511,33 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 			b_body.add_child(glb_model)
 			var col = CollisionShape3D.new()
 			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(14.0, 28.0, 14.0)
+			b_shape.size = Vector3(14.0, 26.0, 14.0)
 			col.shape = b_shape
-			col.position = Vector3(0, 14.0, 0)
+			col.position = Vector3(0, 13.0, 0)
 			b_body.add_child(col)
 			b_node = b_body
 
 	if not b_node:
-		var h = 32.0 + float((i + s) % 5) * 6.0
-		b_node = _build_procedural_commercial_block(h, 16.0, theme_idx)
+		var fallback_path = commercials[0] if commercials.size() > 0 else skyscrapers[0]
+		var fallback_glb = ModelCache.get_model(fallback_path)
+		if fallback_glb:
+			var sc = 3.5
+			fallback_glb.scale = Vector3(sc, sc, sc)
+			_style_building(fallback_glb, theme_idx)
+			var b_body = StaticBody3D.new()
+			b_body.name = "AuthoredFallback%s_%d_%d" % [side_name, i, s]
+			b_body.collision_layer = GameConstants.LAYER_WORLD
+			b_body.add_child(fallback_glb)
+			var col = CollisionShape3D.new()
+			var b_shape = BoxShape3D.new()
+			b_shape.size = Vector3(14.0, 26.0, 14.0)
+			col.shape = b_shape
+			col.position = Vector3(0, 13.0, 0)
+			b_body.add_child(col)
+			b_node = b_body
+		else:
+			var h = 32.0 + float((i + s) % 5) * 6.0
+			b_node = _build_procedural_commercial_block(h, 16.0, theme_idx)
 
 	return b_node
 
@@ -585,7 +606,41 @@ func _build_secondary_city_blocks() -> void:
 		if not _is_clear_of_spline(cfg["pos"], cfg["w"] * 0.5 + 13.5):
 			continue
 
-		var block = _build_procedural_commercial_block(cfg["h"], cfg["w"], cfg["theme"])
+		var is_tall = cfg["h"] > 45.0
+		var model_list = [
+			"res://assets/models/environment/building_skyscraper_a.glb",
+			"res://assets/models/environment/building_skyscraper_b.glb",
+			"res://assets/models/environment/building_skyscraper_c.glb",
+			"res://assets/models/environment/building_skyscraper_d.glb",
+			"res://assets/models/environment/building_skyscraper_e.glb"
+		] if is_tall else [
+			"res://assets/models/environment/building_comm_a.glb",
+			"res://assets/models/environment/building_comm_b.glb",
+			"res://assets/models/environment/building_comm_c.glb",
+			"res://assets/models/environment/building_comm_d.glb",
+			"res://assets/models/environment/building_comm_e.glb",
+			"res://assets/models/environment/building_comm_f.glb"
+		]
+		var m_path = model_list[cfg["theme"] % model_list.size()]
+		var glb = ModelCache.get_model(m_path)
+		var block: Node3D = null
+		if glb:
+			var sc = 4.2 if is_tall else 3.4
+			glb.scale = Vector3(sc, sc, sc)
+			_style_building(glb, cfg["theme"])
+			var b_body = StaticBody3D.new()
+			b_body.name = "SecondaryBlock_%d" % cfg["theme"]
+			b_body.collision_layer = GameConstants.LAYER_WORLD
+			b_body.add_child(glb)
+			var col = CollisionShape3D.new()
+			var b_shape = BoxShape3D.new()
+			b_shape.size = Vector3(cfg["w"], cfg["h"], cfg["w"])
+			col.shape = b_shape
+			col.position = Vector3(0, cfg["h"] * 0.5, 0)
+			b_body.add_child(col)
+			block = b_body
+		else:
+			block = _build_procedural_commercial_block(cfg["h"], cfg["w"], cfg["theme"])
 		block.position = cfg["pos"]
 		props_container.add_child(block)
 
@@ -925,14 +980,14 @@ func _build_realistic_tree(species: String, height: float, seed_val: int) -> Nod
 	root.add_child(soil)
 
 	# 3. Authentic 3D Tree Mesh Asset
-	var tree_path = "res://assets/models/environment/tree_oak.glb"
+	var tree_path = "res://assets/models/environment/tree_detailed.glb"
 	match species:
 		"palm": tree_path = "res://assets/models/environment/tree_palm.glb"
 		"pine": tree_path = "res://assets/models/environment/tree_pine.glb"
 		"birch": tree_path = "res://assets/models/environment/tree_detailed.glb"
 		"cherry": tree_path = "res://assets/models/environment/tree_detailed.glb"
 		"linden": tree_path = "res://assets/models/environment/tree_tall.glb"
-		_: tree_path = "res://assets/models/environment/tree_oak.glb"
+		_: tree_path = "res://assets/models/environment/tree_detailed.glb"
 
 	var tree_model = ModelCache.get_model(tree_path)
 	if tree_model:
@@ -941,9 +996,60 @@ func _build_realistic_tree(species: String, height: float, seed_val: int) -> Nod
 		tree_model.scale = Vector3(sc, sc, sc)
 		tree_model.rotation_degrees.y = float(seed_val * 47 % 360)
 		tree_model.position = Vector3(0, 0.1, 0)
+		_style_tree_materials(tree_model, species)
 		root.add_child(tree_model)
 
+	# 4. Lush flowering shrub bushes around base in planter
+	var mat_bush = StandardMaterial3D.new()
+	mat_bush.albedo_color = Color(0.20, 0.46, 0.18)
+	mat_bush.roughness = 0.85
+	for b_i in range(3):
+		var b_angle = deg_to_rad(float(b_i * 120 + (seed_val * 31 % 60)))
+		var b_rad = 0.75
+		var bush = MeshInstance3D.new()
+		var b_sphere = SphereMesh.new()
+		b_sphere.radius = 0.26
+		b_sphere.height = 0.36
+		bush.mesh = b_sphere
+		bush.material_override = mat_bush
+		bush.position = Vector3(cos(b_angle) * b_rad, 0.22, sin(b_angle) * b_rad)
+		root.add_child(bush)
+
 	return root
+
+func _style_tree_materials(tree_model: Node3D, species: String) -> void:
+	if not tree_model:
+		return
+	var mat_bark = StandardMaterial3D.new()
+	mat_bark.albedo_color = Color(0.24, 0.17, 0.11)
+	mat_bark.roughness = 0.95
+	mat_bark.metallic = 0.02
+
+	var mat_leaves = StandardMaterial3D.new()
+	mat_leaves.roughness = 0.72
+	mat_leaves.metallic = 0.0
+	match species:
+		"cherry":
+			mat_leaves.albedo_color = Color(0.92, 0.48, 0.65)
+		"palm":
+			mat_leaves.albedo_color = Color(0.18, 0.48, 0.16)
+		"pine":
+			mat_leaves.albedo_color = Color(0.10, 0.30, 0.14)
+		_: # oak, birch, linden
+			mat_leaves.albedo_color = Color(0.16, 0.44, 0.18)
+
+	var meshes: Array[MeshInstance3D] = []
+	_gather_meshes(tree_model, meshes)
+	for mi in meshes:
+		if mi.mesh:
+			var sc = mi.mesh.get_surface_count()
+			for s in range(sc):
+				var orig_mat = mi.mesh.surface_get_material(s)
+				var mat_name = orig_mat.resource_name.to_lower() if orig_mat else ""
+				if "bark" in mat_name or "wood" in mat_name or (species != "palm" and s == 1) or (species == "palm" and s == 0):
+					mi.set_surface_override_material(s, mat_bark)
+				else:
+					mi.set_surface_override_material(s, mat_leaves)
 
 func _build_street_bench() -> Node3D:
 	var bench = Node3D.new()

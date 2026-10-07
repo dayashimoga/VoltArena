@@ -52,10 +52,12 @@ var controls_enabled: bool = true
 
 func get_speed_kmh() -> float:
 	if is_inside_tree():
-		var real_v = get_real_velocity()
-		var h_speed = Vector2(real_v.x, real_v.z).length()
-		return h_speed * 3.6
+		var h_speed = Vector2(velocity.x, velocity.z).length()
+		return maxf(h_speed * 3.6, absf(forward_speed) * 3.6)
 	return absf(forward_speed) * 3.6
+
+func get_speed_mps() -> float:
+	return get_speed_kmh() / 3.6
 
 # Grounding & Physics Recovery
 var is_grounded: bool = true

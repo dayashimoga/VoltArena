@@ -71,6 +71,7 @@ const TestChromaWorldsAndIntegrationScript = preload("res://games/chroma-rush/te
 const TestMissionSolvabilityScript = preload("res://games/chroma-rush/tests/test_mission_solvability.gd")
 const TestChromaModesAndProgressionScript = preload("res://games/chroma-rush/tests/test_chroma_modes_and_progression.gd")
 const TestChromaE2EScript = preload("res://games/chroma-rush/tests/test_chroma_e2e.gd")
+const TestChromaCameraStabilityScript = preload("res://games/chroma-rush/tests/test_chroma_camera_stability.gd")
 
 # --- AeroRush Test Suites ---
 const TestAeroPhysicsScript = preload("res://games/aero-rush/tests/test_aero_physics_unit.gd")
@@ -199,6 +200,7 @@ func _initialize() -> void:
 		{"name": "Mission Solvability Unit", "instance": TestMissionSolvabilityScript.new()},
 		{"name": "Chroma Modes & Progression Unit", "instance": TestChromaModesAndProgressionScript.new()},
 		{"name": "Chroma Rush E2E Scenarios", "instance": TestChromaE2EScript.new()},
+		{"name": "Chroma Camera Stability & Telemetry", "instance": TestChromaCameraStabilityScript.new()},
 		# AeroRush Suites
 		{"name": "AeroRush Physics & Stunts Unit", "instance": TestAeroPhysicsScript.new()},
 		{"name": "AeroRush Stunts, Combos & Persistence Unit", "instance": TestAeroStuntScript.new()},

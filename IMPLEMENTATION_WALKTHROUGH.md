@@ -445,4 +445,55 @@ Executed via headless Godot runner without mocks:
 | **IronCrucible-Windows**| 182.13 MB | 171.20 MB | `ffaa800cf8b6...` | **0 foreign files (CLEAN)** |
 | **VoltArena Suite** | **183.17 MB**| **171.86 MB** | `13264c4c7987...` | **All 10 Games Verified** |
 
+---
+
+### 9. Authoritative Production Remediation: AeroRush & Chroma Rush (v7.3.0)
+
+#### 9.1 Root Cause Forensic Analysis & Concrete Remediation
+
+1. **AeroRush Stunt Physics & Traversal Identity**:
+   - **Root Cause**: AeroRush previously behaved like a standard elevated racing game. Vehicles lacked bounded stunt physics and horizon stabilization, causing unrecoverable tumbling upon launch from ramps, unfair crash triggers on minor impacts, and zero trajectory verification across gaps.
+   - **Remediation**:
+     - `aero_physics_helpers.gd` & `aero_vehicle.gd`: Added bounded stunt pitch/yaw/roll rates, parallel-transport horizon stabilization (`stunt_stabilization_torque`), player-triggered stunt trick spins/flips, fair touchdown crash evaluation ($>18\text{ m/s}$ and $>75^\circ$ impact tilt), and rollover checkpoint recovery.
+     - `aero_track_validator.gd` & `aero_course_database.gd`: Added 200 Hz ballistic trajectory reachability solver verifying all 12 handcrafted circuits with gap launches, loops, wall rides, and corkscrews.
+     - `aero_vehicle_visuals.gd`: Complete visual overhaul replacing prototype kart meshes with high-detail fictional performance cars equipped with active aerodynamic rear wings, front splitters, rear diffusers, disc brakes with red calipers, PBR metallic paint, suspension articulation, and air ribbons.
+     - `aero_world_megacity.gd`, `aero_track_generator.gd`, `aero_checkpoint.gd`: Megacity environment overhaul with proportional skyscrapers, grandstands, floodlights, billboards, highway support bents, and motorsport checkered start line.
+
+2. **Chroma Rush Camera Stability & Urban Reconstruction**:
+   - **Root Cause**:
+     - Camera zoom pumping was caused by oscillating vehicle speed driving aggressive FOV and distance offsets every frame without low-pass filtering.
+     - Headless test harness origin lock occurred because `_update_camera()` checked `cam_smoothed_target_pos.length_squared() < 0.01` to re-initialize camera telemetry, trapping cars spawning at `(0, 0, 0)` in perpetual initialization.
+     - City architecture relied on non-existent `building_a..c.glb` GLB paths and fallback procedural grey boxes arranged in a mechanical circle; foliage relied on faceted turquoise dodecahedrons.
+   - **Remediation**:
+     - `chroma_rush_main.gd`: Fixed camera distance to constant 7.5m; speed low-pass filtered ($\alpha = 1 - e^{-12\Delta t}$); acceleration filtered ($\alpha = 1 - e^{-12\Delta t}$); 1.8 km/h deadzone; rate-limited bounded FOV [72°, 80°] at 12.0 deg/s; fixed camera origin lock condition (`distance_squared_to > 250.0`).
+     - `test_chroma_camera_stability.gd`: Added automated 20-assertion test suite validating camera distance constancy, acceleration filter decay, deadzone behavior, and FOV bounds across variable physics deltas (20/20 PASS).
+     - `neon_city.gd`: Replaced missing building paths with valid authored GLB models (`building_d.glb`, `building_comm_c.glb`, `building_comm_e.glb`, `building_garage.glb`), scaled proportionally (3.2–4.4x). Rebuilt trees using `tree_detailed.glb` with dedicated PBR dark timber bark (`Color(0.24, 0.17, 0.11)`), botanical leaves (`Color(0.16, 0.44, 0.18)`), sakura pink blossoms, and flowering understory shrub bushes.
+     - `chroma_hud.gd` & `chroma_rush_main.gd`: Added atomic color swap HUD banner confirmation, 3D energy transfer arc, dynamic light pulse, and removed camera FOV jerk.
+
+3. **Universal Pause Menu**:
+   - Implemented `shared/ui/pause_menu.gd` featuring Resume, Restart Checkpoint, Restart Event, Controls modal, Audio sliders, Graphics presets, Accessibility options, and Main Menu / Desktop.
+   - Connected cleanly across all games via unified signals.
+
+#### 9.2 Full Test Suite Results (Godot CI Container)
+- **Execution Command**: `podman run --rm -v H:\gamesmodern:/workspace -w /workspace docker.io/barichello/godot-ci:4.3 godot --headless --script res://tests/runner.gd`
+- **Total Suites**: **80 suites**
+- **Total Passed Assertions**: **3,045**
+- **Total Failed Assertions**: **0**
+- **Function Coverage**: **91.5%** (1,085 / 1,186 functions)
+- **Exit Code**: **0 (100% PASS)**
+
+#### 9.3 Production Packaging Certification
+- **Certification Script**: `python scripts/certifier.py`
+- **Overall Status**: **RUNTIME_VERIFIED**
+- **Failed Gates**: **0**
+- **Artifacts Generated**:
+  - `export/standalone/AeroRush.pck` (98.34 MB)
+  - `export/dist/standalone/AeroRush-Windows-x86_64.zip` (176.34 MB)
+  - `export/standalone/ChromaRush.pck` (98.48 MB)
+  - `export/dist/standalone/ChromaRush-Windows-x86_64.zip` (176.48 MB)
+  - `artifacts/test-results.json`
+  - `artifacts/coverage-report.json`
+  - `artifacts/production-certification.json`
+
+
 

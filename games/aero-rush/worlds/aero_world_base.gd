@@ -6,6 +6,8 @@ extends Node3D
 ## and instancing of high-fidelity architectural structures and realistic vegetation.
 
 const ModelCache = preload("res://shared/graphics/model_cache.gd")
+const AeroConstants = preload("res://games/aero-rush/core/aero_constants.gd")
+
 
 var sun_light: DirectionalLight3D = null
 var world_env: WorldEnvironment = null
@@ -57,6 +59,19 @@ func create_ground_bed(size: float, mat: Material, elevation: float = -0.5) -> M
 	ground.material_override = mat
 	ground.position = Vector3(0, elevation, 0)
 	add_child(ground)
+
+	var sb = StaticBody3D.new()
+	sb.name = "GroundCollisionBody"
+	sb.collision_layer = AeroConstants.LAYER_WORLD
+	sb.collision_mask = 0
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = Vector3(size, 1.0, size)
+	col.shape = box
+	col.position = Vector3(0, -0.5, 0)
+	sb.add_child(col)
+	ground.add_child(sb)
+
 	return ground
 
 func spawn_tree(tree_model_path: String, pos: Vector3, scale_range: Vector2 = Vector2(0.85, 1.35)) -> Node3D:

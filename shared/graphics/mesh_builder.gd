@@ -2316,6 +2316,7 @@ static func build_skybound_explorer_character() -> Node3D:
 	pelvis.position = Vector3(0, 0.90, 0)
 	root.add_child(pelvis)
 
+
 	_add_box(pelvis, Vector3(0.32, 0.18, 0.24), Vector3(0, 0, 0), mat_leather)
 	# Brass belt & buckle
 	_add_box(pelvis, Vector3(0.34, 0.06, 0.26), Vector3(0, 0.05, 0), mat_brass)
@@ -2471,6 +2472,7 @@ static func build_wildcircuit_ranger_character() -> Node3D:
 	pelvis.name = "Pelvis"
 	pelvis.position = Vector3(0, 0.90, 0)
 	root.add_child(pelvis)
+
 
 	_add_box(pelvis, Vector3(0.34, 0.18, 0.24), Vector3(0, 0, 0), mat_khaki)
 	_add_box(pelvis, Vector3(0.36, 0.05, 0.26), Vector3(0, 0.06, 0), mat_leather)

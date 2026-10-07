@@ -122,3 +122,35 @@ static func _simulate_kinematic_reachability(waypoints: Array) -> Dictionary:
 		current_idx += 1
 
 	return {"passed": true, "reason": "Successfully traversed entire waypoint chain"}
+
+static func validate_before_launch(course_def: Dictionary) -> Dictionary:
+	if course_def.is_empty():
+		return {"valid": false, "reason": "Empty course definition dictionary."}
+
+	var waypoints = course_def.get("waypoints", []) as Array
+	if waypoints.size() < 4:
+		return {"valid": false, "reason": "Course has fewer than 4 waypoints (%d provided)." % waypoints.size()}
+
+	if not course_def.has("spawn_pos"):
+		return {"valid": false, "reason": "Missing spawn_pos coordinate."}
+
+	var checkpoints = course_def.get("checkpoints", []) as Array
+	if checkpoints.size() < 2:
+		return {"valid": false, "reason": "Course requires at least start and finish checkpoints."}
+
+	# Verify drivable surface generation produces valid collision geometry
+	var track_data = AeroTrackGenerator.generate_track(waypoints, 16.0)
+	var sb = track_data.get("static_body") as StaticBody3D
+	var has_col = false
+	if sb:
+		var cs = sb.get_node_or_null("ContinuousConcaveShape") as CollisionShape3D
+		if cs and cs.shape is ConcavePolygonShape3D:
+			has_col = (cs.shape as ConcavePolygonShape3D).get_faces().size() > 0
+
+	if track_data.has("root") and track_data["root"] is Node:
+		track_data["root"].free()
+
+	if not has_col:
+		return {"valid": false, "reason": "Track generation failed to produce non-empty collision hull."}
+
+	return {"valid": true, "reason": "Circuit passed all pre-launch physical and structural gates."}

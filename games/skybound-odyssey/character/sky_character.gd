@@ -279,7 +279,8 @@ func handle_input(delta: float) -> void:
 		var target_vel = move_dir * target_speed
 		velocity.x = move_toward(velocity.x, target_vel.x, acceleration * delta)
 		velocity.z = move_toward(velocity.z, target_vel.z, acceleration * delta)
-		visual_node.rotation.y = lerp_angle(visual_node.rotation.y, atan2(-move_dir.x, -move_dir.z) + PI, delta * 12.0)
+		visual_node.rotation.y = lerp_angle(visual_node.rotation.y, atan2(-move_dir.x, -move_dir.z), delta * 12.0)
+
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, friction * delta)
 		velocity.z = move_toward(velocity.z, 0.0, friction * delta)

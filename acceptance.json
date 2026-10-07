@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-10-05T04:30:00Z",
-  "acceptance_suite": "Universal Complete-Game & Multi-Game Overhaul Contract",
+  "timestamp": "2026-10-07T07:45:00Z",
+  "acceptance_suite": "VoltArena Complete Production Overhaul & Forensic Remediation Contract",
   "test_execution": {
-    "total_suites": 73,
-    "total_passed": 2775,
+    "total_suites": 78,
+    "total_passed": 2961,
     "total_failed": 0,
-    "function_coverage_percent": 92.35,
+    "function_coverage_percent": 91.95,
     "status": "PASS"
   },
   "gates": [
@@ -19,16 +19,16 @@
     {
       "id": "GATE-02",
       "name": "WildCircuit Locomotion Orientation & Camera Equipment",
-      "criteria": "Player faces movement vector, combat weapons hidden, camera equipped, continuous terrain",
+      "criteria": "Player faces movement vector (-Z), combat weapons hidden, 3D camera equipped, continuous terrain",
       "status": "PROVEN",
-      "evidence": "tests/unit/test_multi_game_overhaul_gates.gd, artifacts/screenshots/overhaul_wildcircuit_01_ranger_camera.png"
+      "evidence": "tests/unit/test_multi_game_overhaul_gates.gd, shared/graphics/model_cache.gd, artifacts/screenshots/overhaul_wildcircuit_01_ranger_camera.png"
     },
     {
       "id": "GATE-03",
       "name": "Skybound Odyssey Camera Collision & Traversal",
-      "criteria": "Camera never clips character or geometry, movement faces forward, islands visible",
+      "criteria": "Camera never clips character or geometry, movement faces forward (-Z), islands visible",
       "status": "PROVEN",
-      "evidence": "tests/unit/test_multi_game_overhaul_gates.gd, artifacts/screenshots/overhaul_skybound_01_explorer_camera.png"
+      "evidence": "tests/unit/test_multi_game_overhaul_gates.gd, shared/graphics/model_cache.gd, games/skybound-odyssey/character/sky_character.gd"
     },
     {
       "id": "GATE-04",
@@ -57,6 +57,27 @@
       "criteria": "Web bundle chunks <=18MB, WASM/PCK reassembler active, live WebGL verified",
       "status": "PROVEN",
       "evidence": "export/web/, scripts/build-web.ps1"
+    },
+    {
+      "id": "GATE-08",
+      "name": "AeroRush P0 Forensic Remediation & Grounding",
+      "criteria": "Bishop RMF continuous spline ribbon, 1.85m suspension raycasts, direct-space ground probe, OOB safe checkpoint recovery, zero void falls, 1-click Quick Play",
+      "status": "PROVEN",
+      "evidence": "games/aero-rush/tracks/aero_track_generator.gd, games/aero-rush/vehicles/aero_vehicle.gd, games/aero-rush/tests/ (107 passed across 5 suites)"
+    },
+    {
+      "id": "GATE-09",
+      "name": "Chroma Rush Camera Vibration & Skyline Architecture",
+      "criteria": "Physics-interpolated camera tracking pipeline with low-pass lookahead target eliminating high-frequency vibration, 6 distinct architectural silhouettes on skyline",
+      "status": "PROVEN",
+      "evidence": "games/chroma-rush/chroma_rush_main.gd, games/chroma-rush/worlds/neon_city.gd, tests/unit/test_chroma_vehicle_physics.gd"
+    },
+    {
+      "id": "GATE-10",
+      "name": "Modular Standalone Distribution Architecture",
+      "criteria": "30 standalone packages (10 games x Win/Linux/Web) and 4 suite archives built with zero foreign cross-game asset leakage",
+      "status": "PROVEN",
+      "evidence": "scripts/modular_packager.py, artifacts/package-size-report.json"
     }
   ]
 }

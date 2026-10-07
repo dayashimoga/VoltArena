@@ -207,11 +207,18 @@ func _init() -> void:
 		# Legacy Acceptance
 		{"name": "Platform Acceptance (Legacy)", "instance": TestAcceptanceScript.new()},
 	]
+	var filter_str = ""
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--filter="):
+			filter_str = arg.substr(9).to_lower()
 
 	for suite in test_suites:
 		var s_name = suite["name"]
+		if not filter_str.is_empty() and not s_name.to_lower().contains(filter_str):
+			continue
 		var inst = suite["instance"]
 		print("\n[TEST SUITE] Running: %s..." % s_name)
+
 		var res = inst.run_tests()
 		var p = res.get("passed", 0)
 		var f = res.get("failed", 0)

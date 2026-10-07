@@ -701,61 +701,136 @@ func _build_city_landmarks() -> void:
 		props_container.add_child(clocktower)
 
 func _build_distant_skyline_backdrop() -> void:
-	# GPU MultiMesh dual perimeter rings creating 360° architectural skyline (zero empty space)
-	var tower_count = 128
-	var multimesh = MultiMesh.new()
-	multimesh.transform_format = MultiMesh.TRANSFORM_3D
-	multimesh.use_colors = true
-	multimesh.mesh = _create_stepped_skyline_mesh()
-	multimesh.instance_count = tower_count
+	# Multi-Mesh Hybrid Architectural Skyline: 6 distinct silhouettes across layered urban clusters
+	var meshes = [
+		_create_stepped_skyline_mesh(),
+		_create_spire_landmark_mesh(),
+		_create_angled_blade_mesh(),
+		_create_twin_obelisk_mesh(),
+		_create_hex_tower_mesh(),
+		_create_pylon_gantry_mesh()
+	]
 
-	var mat_distant = StandardMaterial3D.new()
-	mat_distant.albedo_color = Color(0.14, 0.20, 0.28)
-	mat_distant.metallic = 0.85
-	mat_distant.roughness = 0.16
-	mat_distant.emission_enabled = true
-	mat_distant.emission = Color(0.10, 0.18, 0.26)
-	mat_distant.emission_energy_multiplier = 1.35
-	mat_distant.vertex_color_use_as_albedo = true
+	var palette_materials: Array[StandardMaterial3D] = []
+	var theme_colors = [
+		{"albedo": Color(0.12, 0.22, 0.36), "emit": Color(0.10, 0.26, 0.45), "metal": 0.85, "rough": 0.12}, # Sapphire
+		{"albedo": Color(0.26, 0.22, 0.18), "emit": Color(0.32, 0.24, 0.14), "metal": 0.35, "rough": 0.55}, # Amber Bronze
+		{"albedo": Color(0.16, 0.18, 0.22), "emit": Color(0.08, 0.35, 0.42), "metal": 0.65, "rough": 0.25}, # Obsidian Cyan
+		{"albedo": Color(0.22, 0.25, 0.30), "emit": Color(0.18, 0.22, 0.28), "metal": 0.50, "rough": 0.40}  # Chrome Titanium
+	]
 
-	for t in range(tower_count):
-		var ring_idx = t % 2
-		var radius = 480.0 if ring_idx == 0 else 660.0
-		var angle = (float(t) / float(tower_count)) * TAU
-		var dist_var = radius + float(t % 5) * 30.0
-		var tx = cos(angle) * dist_var
-		var tz = sin(angle) * dist_var
-		var scale_y = 0.65 + float((t * 7) % 13) * 0.12
+	for tc in theme_colors:
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = tc["albedo"]
+		mat.metallic = tc["metal"]
+		mat.roughness = tc["rough"]
+		mat.emission_enabled = true
+		mat.emission = tc["emit"]
+		mat.emission_energy_multiplier = 1.4
+		mat.vertex_color_use_as_albedo = true
+		palette_materials.append(mat)
 
-		var xf = Transform3D()
-		xf = xf.scaled(Vector3(1.0 + float(t % 3) * 0.22, scale_y, 1.0 + float((t + 1) % 3) * 0.22))
-		xf.origin = Vector3(tx, 0.0, tz)
-		multimesh.set_instance_transform(t, xf)
+	var towers_per_silhouette = 24
+	for m_idx in range(meshes.size()):
+		var multimesh = MultiMesh.new()
+		multimesh.transform_format = MultiMesh.TRANSFORM_3D
+		multimesh.use_colors = true
+		multimesh.mesh = meshes[m_idx]
+		multimesh.instance_count = towers_per_silhouette
 
-		var shade = 0.75 + float(t % 4) * 0.12
-		var is_amber = (t % 3 == 0)
-		var col = Color(0.24 * shade, 0.20 * shade, 0.12 * shade, 1.0) if is_amber else Color(0.10 * shade, 0.24 * shade, 0.38 * shade, 1.0)
-		multimesh.set_instance_color(t, col)
+		for t in range(towers_per_silhouette):
+			# Clustered urban distribution around perimeter vistas
+			var ring_layer = t % 3
+			var base_radius = 460.0 + float(ring_layer) * 90.0
+			var angle = (float(t * meshes.size() + m_idx) / float(towers_per_silhouette * meshes.size())) * TAU
+			var dist = base_radius + float((t * 11) % 7) * 20.0
+			var tx = cos(angle) * dist
+			var tz = sin(angle) * dist
+			var scale_y = 0.75 + float((t * 5 + m_idx * 3) % 11) * 0.10
 
-	var mm_inst = MultiMeshInstance3D.new()
-	mm_inst.name = "DistantSkylineMultiMesh"
-	mm_inst.multimesh = multimesh
-	mm_inst.material_override = mat_distant
-	props_container.add_child(mm_inst)
+			var xf = Transform3D()
+			xf = xf.scaled(Vector3(1.0 + float(t % 3) * 0.20, scale_y, 1.0 + float((t + 1) % 3) * 0.20))
+			xf.origin = Vector3(tx, 0.0, tz)
+			multimesh.set_instance_transform(t, xf)
+
+			var shade = 0.80 + float(t % 5) * 0.10
+			multimesh.set_instance_color(t, Color(shade, shade, shade, 1.0))
+
+		var mm_inst = MultiMeshInstance3D.new()
+		mm_inst.name = "DistantSkylineMultiMesh_%d" % m_idx
+		mm_inst.multimesh = multimesh
+		mm_inst.material_override = palette_materials[m_idx % palette_materials.size()]
+		props_container.add_child(mm_inst)
 
 static func _create_stepped_skyline_mesh() -> ArrayMesh:
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-
-	# 1. Base Stepped Podium (36 x 24 x 36, center y = 12)
 	_add_box_to_st(st, Vector3(36.0, 24.0, 36.0), Vector3(0.0, 12.0, 0.0))
-	# 2. Main High-Rise Shaft (26 x 60 x 26, center y = 54)
 	_add_box_to_st(st, Vector3(26.0, 60.0, 26.0), Vector3(0.0, 54.0, 0.0))
-	# 3. Setback Penthouse Crown (16 x 26 x 16, center y = 97)
 	_add_box_to_st(st, Vector3(16.0, 26.0, 16.0), Vector3(0.0, 97.0, 0.0))
-	# 4. Rooftop Spire Mast (2.4 x 28 x 2.4, center y = 124)
 	_add_box_to_st(st, Vector3(2.4, 28.0, 2.4), Vector3(0.0, 124.0, 0.0))
+	st.generate_normals()
+	return st.commit()
 
+static func _create_spire_landmark_mesh() -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# Tapered monolithic high-rise with cathedral spire needle
+	_add_box_to_st(st, Vector3(40.0, 32.0, 40.0), Vector3(0.0, 16.0, 0.0))
+	_add_box_to_st(st, Vector3(30.0, 75.0, 30.0), Vector3(0.0, 69.5, 0.0))
+	_add_box_to_st(st, Vector3(18.0, 42.0, 18.0), Vector3(0.0, 128.0, 0.0))
+	_add_box_to_st(st, Vector3(8.0, 24.0, 8.0), Vector3(0.0, 161.0, 0.0))
+	_add_box_to_st(st, Vector3(1.8, 38.0, 1.8), Vector3(0.0, 192.0, 0.0))
+	st.generate_normals()
+	return st.commit()
+
+static func _create_angled_blade_mesh() -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# Slender angular skyscraper with stepped chamfered fin
+	_add_box_to_st(st, Vector3(32.0, 20.0, 48.0), Vector3(0.0, 10.0, 0.0))
+	_add_box_to_st(st, Vector3(22.0, 70.0, 38.0), Vector3(0.0, 55.0, 0.0))
+	_add_box_to_st(st, Vector3(14.0, 50.0, 26.0), Vector3(0.0, 115.0, 0.0))
+	_add_box_to_st(st, Vector3(6.0, 30.0, 14.0), Vector3(0.0, 155.0, 0.0))
+	st.generate_normals()
+	return st.commit()
+
+static func _create_twin_obelisk_mesh() -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# Dual towers with central sky-bridge connector
+	_add_box_to_st(st, Vector3(56.0, 16.0, 32.0), Vector3(0.0, 8.0, 0.0))
+	_add_box_to_st(st, Vector3(20.0, 95.0, 24.0), Vector3(-16.0, 63.5, 0.0))
+	_add_box_to_st(st, Vector3(20.0, 95.0, 24.0), Vector3(16.0, 63.5, 0.0))
+	# Sky-Bridge at 65m
+	_add_box_to_st(st, Vector3(16.0, 8.0, 16.0), Vector3(0.0, 68.0, 0.0))
+	# Sky-Bridge at 95m
+	_add_box_to_st(st, Vector3(16.0, 6.0, 14.0), Vector3(0.0, 98.0, 0.0))
+	st.generate_normals()
+	return st.commit()
+
+static func _create_hex_tower_mesh() -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# Octagonal / stepped faceted commercial tower with crown observation disc
+	_add_box_to_st(st, Vector3(36.0, 28.0, 36.0), Vector3(0.0, 14.0, 0.0))
+	_add_box_to_st(st, Vector3(28.0, 80.0, 28.0), Vector3(0.0, 68.0, 0.0))
+	# Observation disc
+	_add_box_to_st(st, Vector3(38.0, 8.0, 38.0), Vector3(0.0, 112.0, 0.0))
+	_add_box_to_st(st, Vector3(18.0, 18.0, 18.0), Vector3(0.0, 125.0, 0.0))
+	_add_box_to_st(st, Vector3(2.0, 25.0, 2.0), Vector3(0.0, 146.5, 0.0))
+	st.generate_normals()
+	return st.commit()
+
+static func _create_pylon_gantry_mesh() -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# Industrial logistics infrastructure tower with heavy gantries
+	_add_box_to_st(st, Vector3(30.0, 18.0, 30.0), Vector3(0.0, 9.0, 0.0))
+	_add_box_to_st(st, Vector3(14.0, 65.0, 14.0), Vector3(0.0, 50.5, 0.0))
+	_add_box_to_st(st, Vector3(36.0, 6.0, 8.0), Vector3(0.0, 58.0, 0.0))
+	_add_box_to_st(st, Vector3(8.0, 6.0, 36.0), Vector3(0.0, 72.0, 0.0))
+	_add_box_to_st(st, Vector3(4.0, 22.0, 4.0), Vector3(0.0, 94.0, 0.0))
 	st.generate_normals()
 	return st.commit()
 

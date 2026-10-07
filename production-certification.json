@@ -1,7 +1,7 @@
 {
   "project": "VoltArena",
-  "version": "7.0.0",
-  "timestamp_utc": "2026-10-07 05:25:00 UTC",
+  "version": "7.1.0",
+  "timestamp_utc": "2026-10-07 07:45:00 UTC",
   "allowed_statuses_schema": [
     "PROVEN",
     "PARTIAL",
@@ -25,11 +25,13 @@
     "aero_rush": {
       "status": "PROVEN",
       "p0_defects_resolved": [
-        "Eliminated track seam collisions via continuous Catmull-Rom extruded ribbon with ConcavePolygonShape3D",
-        "Eliminated loop fall-off via dynamic surface-normal relative gravity and centrifugal adhesion",
-        "Eliminated geometric placeholder cars via 4 fictional production vehicles with PBR paint, animated alloy wheels, and reactive lights",
-        "Implemented automated course validation for all 12 courses across 4 large handcrafted worlds",
-        "Implemented modular standalone build packaging with zero cross-game asset contamination"
+        "Eliminated spline tearing and floating sky shards via Bishop Frame / Rotation Minimizing Frames (Bishop RMF) parallel transport",
+        "Extruded 1.35m safety guardrails, 0.65m underside slab, and double-sided ConcavePolygonShape3D collision hulls",
+        "Eliminated vehicle void plunge and 0 km/h speedometer via direct-space downward ground surface probing and 1.85m suspension raycasts",
+        "Implemented safe out-of-bounds checkpoint recovery for drops below Y=-35m or continuous airtime > 5.5s",
+        "Decoupled physics-interpolated chase camera with immediate setup snap, target vehicle collision ray exemption, and event-driven trauma shake",
+        "Replaced off-screen clipped menu with responsive CenterContainer glassmorphic hero card featuring 1-click Quick Play (3-2-1-GO)",
+        "Handcrafted reference circuit neon_express with 360-degree loop, wall ride, and automated course validator"
       ],
       "automated_evidence": "games/aero-rush/tests/ (107 passed across 5 suites: physics, stunts, tracks/worlds, AI/UI, E2E)",
       "packaged_runtime_evidence": [
@@ -82,12 +84,13 @@
     "chroma_rush": {
       "status": "PROVEN",
       "p0_defects_resolved": [
+        "Eliminated camera high-frequency vibration via physics-interpolated camera tracking pipeline with low-pass filtered lookahead target",
+        "Replaced 128 identical grey stepped towers with 6 distinct architectural silhouettes (Crown Spire, Blade Skyrise, Stepped Commercial, Twin-Tower, Cylindrical High-Rise, Industrial Pylon) and 4 PBR material palettes",
         "Self-intersecting road loop and curb collision hole removed between waypoints 28-31 and start line",
         "Procedural 7-sided cylinder trees replaced with authentic 3D GLB foliage",
-        "Crude yellow wedge replaced with holographic diamond reticle with orbiting status ring",
-        "Distant skyline MultiMesh upgraded with illuminated window materials"
+        "Crude yellow wedge replaced with holographic diamond reticle with orbiting status ring"
       ],
-      "automated_evidence": "tests/unit/test_multi_game_overhaul_gates.gd (test_chroma_rush_roadway_continuity_and_visual_upgrade)",
+      "automated_evidence": "tests/unit/test_multi_game_overhaul_gates.gd, tests/unit/test_chroma_vehicle_physics.gd, tests/unit/test_chroma_worlds_and_integration.gd",
       "packaged_runtime_evidence": [
         "artifacts/screenshots/overhaul_chroma_01_smooth_road.png",
         "artifacts/screenshots/overhaul_chroma_02_city_skyline.png"

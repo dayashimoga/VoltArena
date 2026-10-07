@@ -19,6 +19,8 @@ const AeroGhostSystem = preload("res://games/aero-rush/ai/aero_ghost_system.gd")
 const AeroStuntDetector = preload("res://games/aero-rush/core/aero_stunt_detector.gd")
 const AeroComboSystem = preload("res://games/aero-rush/core/aero_combo_system.gd")
 const AeroSaveAdapter = preload("res://games/aero-rush/persistence/aero_save_adapter.gd")
+const AeroTrackValidator = preload("res://games/aero-rush/tracks/aero_track_validator.gd")
+
 
 const AeroWorldMegacity = preload("res://games/aero-rush/worlds/aero_world_megacity.gd")
 const AeroWorldCanyon = preload("res://games/aero-rush/worlds/aero_world_canyon.gd")
@@ -190,6 +192,14 @@ func quick_play() -> void:
 func start_race(course_id: String) -> void:
 	selected_course_id = course_id
 	course_def = AeroCourseDatabase.get_course_by_id(course_id)
+
+	# Pre-Launch Circuit Validation Gate
+	var val_result = AeroTrackValidator.validate_before_launch(course_def)
+	if not val_result.get("valid", false):
+		push_warning("Circuit '%s' failed pre-launch validation: %s. Falling back to reference circuit." % [course_id, val_result.get("reason", "")])
+		selected_course_id = "neon_express"
+		course_def = AeroCourseDatabase.get_course_by_id("neon_express")
+
 	total_laps = course_def.get("laps", 2)
 	current_lap = 1
 	next_checkpoint_idx = 0
@@ -205,7 +215,7 @@ func start_race(course_id: String) -> void:
 	# 3. Spawn Hazards
 	_spawn_hazards(course_def)
 
-	# 4. Spawn Player Vehicle & Chase Camera
+	# 4. Spawn Player Vehicle & Chase Camera with Safe Ground Probing
 	_spawn_player_vehicle(course_def)
 
 	# 5. Spawn Rival Racers
@@ -241,7 +251,7 @@ func _spawn_environment(env_type: int) -> void:
 
 func _build_track(c_def: Dictionary) -> void:
 	var waypoints = c_def.get("waypoints", []) as Array
-	var track_data = AeroTrackGenerator.generate_track(waypoints, 15.0)
+	var track_data = AeroTrackGenerator.generate_track(waypoints, 16.0)
 
 	var root_track = track_data.get("root") as Node3D
 	if root_track:
@@ -261,13 +271,14 @@ func _build_track(c_def: Dictionary) -> void:
 			gate.is_finish_line = (i == cp_indices.size() - 1)
 			gate.position = wp["pos"] as Vector3
 
-			# Orient gate along waypoint forward vector
-			var fwd = wp.get("forward", Vector3.FORWARD) as Vector3
-			if fwd.length_squared() > 0.001:
-				gate.look_at(gate.position + fwd, Vector3.UP)
-
 			gate.checkpoint_passed.connect(_on_checkpoint_passed)
 			track_container.add_child(gate)
+
+			# Orient gate along forward direction AFTER adding to scene tree
+			var fwd = wp.get("forward", Vector3.FORWARD) as Vector3
+			if fwd.length_squared() > 0.001 and gate.is_inside_tree():
+				gate.look_at(gate.global_position + fwd, Vector3.UP)
+
 			checkpoints.append(gate)
 
 func _spawn_hazards(c_def: Dictionary) -> void:
@@ -286,23 +297,42 @@ func _spawn_player_vehicle(c_def: Dictionary) -> void:
 	player_vehicle.paint_color = selected_paint_color
 	player_vehicle.controls_enabled = false
 
-	var spawn_pos = c_def.get("spawn_pos", Vector3(0, 1.2, 0)) as Vector3
+	var raw_spawn_pos = c_def.get("spawn_pos", Vector3(0, 0.45, 0)) as Vector3
 	var spawn_rot_y = c_def.get("spawn_rot_y", 0.0) as float
-	player_vehicle.position = spawn_pos
+	var safe_pos = _probe_track_surface_elevation(raw_spawn_pos)
+
+	player_vehicle.position = safe_pos
 	player_vehicle.rotation_degrees.y = spawn_rot_y
 
 	racers_container.add_child(player_vehicle)
 
-	# Setup Camera
+	player_vehicle.last_safe_checkpoint_pos = player_vehicle.global_position if player_vehicle.is_inside_tree() else safe_pos
+	player_vehicle.last_safe_checkpoint_basis = player_vehicle.global_basis if player_vehicle.is_inside_tree() else Basis(Vector3.UP, deg_to_rad(spawn_rot_y))
+
+	# Setup Camera with immediate orientation and target lock
 	chase_camera = AeroChaseCamera.new()
 	chase_camera.name = "AeroChaseCamera"
 	racers_container.add_child(chase_camera)
 	chase_camera.setup_target(player_vehicle)
 
+func _probe_track_surface_elevation(origin_pos: Vector3) -> Vector3:
+	var world3d = get_world_3d()
+	if world3d and world3d.direct_space_state:
+		var space = world3d.direct_space_state
+		var query = PhysicsRayQueryParameters3D.create(
+			origin_pos + Vector3(0, 30.0, 0),
+			origin_pos - Vector3(0, 30.0, 0),
+			AeroConstants.LAYER_WORLD
+		)
+		var hit = space.intersect_ray(query)
+		if not hit.is_empty():
+			return hit["position"] + Vector3(0, 0.45, 0)
+	return origin_pos + Vector3(0, 0.45, 0)
+
 func _spawn_rivals(c_def: Dictionary) -> void:
 	rival_vehicles.clear()
 	var waypoints = c_def.get("waypoints", []) as Array
-	var spawn_pos = c_def.get("spawn_pos", Vector3(0, 1.2, 0)) as Vector3
+	var spawn_pos = c_def.get("spawn_pos", Vector3(0, 0.45, 0)) as Vector3
 	var rival_models = [AeroConstants.VEHICLE_STRYKER, AeroConstants.VEHICLE_DUNE, AeroConstants.VEHICLE_QUANTUM]
 
 	for r in range(2):
@@ -310,10 +340,12 @@ func _spawn_rivals(c_def: Dictionary) -> void:
 		rival.name = "RivalAeroVehicle_%d" % r
 		rival.vehicle_id = rival_models[r % rival_models.size()]
 		rival.is_player = false
-		rival.paint_color = Color(0.9, 0.2, 0.2) if r == 0 else Color(0.2, 0.8, 0.3)
+		rival.paint_color = Color(0.95, 0.22, 0.18) if r == 0 else Color(0.18, 0.85, 0.32)
 
-		var offset_x = -3.5 if r == 0 else 3.5
-		rival.position = spawn_pos + Vector3(offset_x, 0.0, 6.0 + float(r * 4.0))
+		var offset_x = -3.8 if r == 0 else 3.8
+		var r_pos = spawn_pos + Vector3(offset_x, 0.0, 8.0 + float(r * 4.5))
+		var safe_r_pos = _probe_track_surface_elevation(r_pos)
+		rival.position = safe_r_pos
 		racers_container.add_child(rival)
 
 		var ai = AeroRivalAI.new()

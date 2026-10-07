@@ -141,7 +141,7 @@ func _setup_suspension_raycasts() -> void:
 		var ray = RayCast3D.new()
 		ray.name = "WheelRay_%d" % i
 		ray.position = offsets[i]
-		ray.target_position = Vector3(0, -1.25, 0)
+		ray.target_position = Vector3(0, -1.85, 0)
 		ray.collision_mask = AeroConstants.LAYER_WORLD
 		add_child(ray)
 		wheel_raycasts.append(ray)
@@ -531,7 +531,13 @@ func _check_rollover_and_recovery(delta: float) -> void:
 	if not is_inside_tree():
 		return
 
-	# Check if upside down on ground
+	# 1. Out-of-bounds fall detection: vehicle falls below world or prolonged airborne drop
+	var current_y = global_position.y
+	if current_y < -35.0 or (not is_grounded and airtime_duration > 5.5):
+		recover_to_checkpoint()
+		return
+
+	# 2. Check if upside down on ground
 	var up_dot = global_basis.y.dot(Vector3.UP)
 	if is_grounded and up_dot < -0.2:
 		rollover_timer += delta
@@ -541,7 +547,7 @@ func _check_rollover_and_recovery(delta: float) -> void:
 	else:
 		rollover_timer = 0.0
 
-	# Record safe checkpoint transform if driving cleanly on flat track
+	# 3. Record safe checkpoint transform if driving cleanly on flat track
 	if is_grounded and up_dot > 0.75 and absf(forward_speed) > 10.0:
 		last_safe_checkpoint_pos = global_position
 		last_safe_checkpoint_basis = global_basis
@@ -557,9 +563,13 @@ func recover_to_checkpoint() -> void:
 	else:
 		position = last_safe_checkpoint_pos + Vector3(0, 1.2, 0)
 		transform.basis = last_safe_checkpoint_basis
-	velocity = -last_safe_checkpoint_basis.z.normalized() * 12.0 # Give clean rolling launch forward
-	forward_speed = 12.0
+
+
+	var fwd = -last_safe_checkpoint_basis.z.normalized()
+	velocity = fwd * 15.0 # Rolling launch forward along track
+	forward_speed = 15.0
 	is_grounded = true
-	up_direction = Vector3.UP
+	airtime_duration = 0.0
 	rollover_timer = 0.0
-	vehicle_respawned.emit(position if not is_inside_tree() else global_position)
+	up_direction = last_safe_checkpoint_basis.y.normalized()
+	vehicle_respawned.emit(global_position if is_inside_tree() else position)

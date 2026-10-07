@@ -79,7 +79,7 @@ static func get_explorer_character() -> Node3D:
 	var path = "res://assets/models/characters/scout.glb"
 	var model = get_model(path)
 	if not model:
-		return MeshBuilder.build_skybound_explorer_character()
+		model = MeshBuilder.build_skybound_explorer_character()
 	model.scale = Vector3(1.0, 1.0, 1.0)
 	model.rotation_degrees.y = 180.0
 	_clean_character_weapons(model)
@@ -90,7 +90,7 @@ static func get_ranger_character() -> Node3D:
 	var path = "res://assets/models/characters/scout.glb"
 	var model = get_model(path)
 	if not model:
-		return MeshBuilder.build_wildcircuit_ranger_character()
+		model = MeshBuilder.build_wildcircuit_ranger_character()
 	model.scale = Vector3(1.0, 1.0, 1.0)
 	model.rotation_degrees.y = 180.0
 	_clean_character_weapons(model)
@@ -98,10 +98,14 @@ static func get_ranger_character() -> Node3D:
 	_ensure_animation_player(model)
 	return model
 
+
 static func _clean_character_weapons(model: Node3D) -> void:
 	if not model:
 		return
-	var weapon_names = ["1H_Crossbow", "2H_Crossbow", "Knife", "Knife_Offhand", "Throwable"]
+	var weapon_names = [
+		"1H_Crossbow", "2H_Crossbow", "Knife", "Knife_Offhand", "Throwable",
+		"Sword", "Shield", "Staff", "Bow", "Arrow", "Pistol", "Rifle", "Shotgun", "Blade", "Weapon"
+	]
 	for w_name in weapon_names:
 		var node = model.find_child(w_name, true, false)
 		if node:
@@ -109,6 +113,7 @@ static func _clean_character_weapons(model: Node3D) -> void:
 			if node is Node3D:
 				node.scale = Vector3.ZERO
 				node.position = Vector3(0, -100, 0)
+
 
 static func _attach_ranger_camera(model: Node3D) -> void:
 	if not model:

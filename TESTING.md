@@ -49,11 +49,17 @@ tests/runner.gd
 │   ├── TestSkyboundE2E (14 assertions)
 │   ├── TestRoboForgeE2E (2 assertions)
 │   ├── TestWildCircuitE2E (2 assertions)
-│   └── TestStrikeVectorE2E (224 assertions across Missions 1–8)
+│   ├── TestStrikeVectorE2E (224 assertions across Missions 1–8)
+│   └── AeroRush Dedicated Suites (5 Suites, 107 assertions)
+│       ├── test_aero_physics.gd (34 assertions)
+│       ├── test_aero_stunts_progression.gd (33 assertions)
+│       ├── test_aero_tracks_worlds.gd (29 assertions)
+│       ├── test_aero_ai_ui.gd (20 assertions)
+│       └── test_aero_e2e.gd (24 assertions)
 └── Legacy Acceptance Suite (1 Suite, 19 assertions)
     └── TestPlatformAcceptance
 ─────────────────────────────────────────────────────────────
-Total: 72 Suites, 2,743 Assertions (100% Pass, 0 Failures, 92.41% Real Function Coverage: 1,010 / 1,093)
+Total: 78 Suites, 2,961 Assertions (100% Pass, 0 Failures, 91.95% Real Function Coverage)
 ```
 
 ---

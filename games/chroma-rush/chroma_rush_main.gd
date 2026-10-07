@@ -87,6 +87,11 @@ var cam_distance: float = 7.5
 var cam_height: float = 3.2
 var cam_lerp_speed: float = 7.0
 var camera_override: bool = false
+var cam_smoothed_target_pos: Vector3 = Vector3.ZERO
+var cam_smoothed_forward: Vector3 = Vector3.FORWARD
+var cam_smoothed_up: Vector3 = Vector3.UP
+var cam_is_initialized: bool = false
+var cam_trauma: float = 0.0
 
 func _ready() -> void:
 	_init_subsystems()
@@ -466,24 +471,66 @@ func _update_camera(delta: float) -> void:
 		return
 	if not chase_camera.current:
 		chase_camera.make_current()
+
 	var car_pos = player_vehicle.global_position if player_vehicle.is_inside_tree() else player_vehicle.position
-	var car_fwd = -player_vehicle.global_transform.basis.z if player_vehicle.is_inside_tree() else -player_vehicle.transform.basis.z
-	car_fwd.y = 0.0
-	if car_fwd.length_squared() < 0.01:
-		car_fwd = Vector3.FORWARD
-	car_fwd = car_fwd.normalized()
+	var car_basis = player_vehicle.global_transform.basis if player_vehicle.is_inside_tree() else player_vehicle.transform.basis
+	var raw_fwd = -car_basis.z.normalized()
+	var raw_up = car_basis.y.normalized()
 
-	var target_cam_pos = car_pos - car_fwd * cam_distance + Vector3(0.0, cam_height, 0.0)
-	if chase_camera.global_position.distance_squared_to(car_pos) > 100.0 or chase_camera.global_position.length_squared() < 0.1:
-		chase_camera.global_position = target_cam_pos
+	if not cam_is_initialized or cam_smoothed_target_pos.length_squared() < 0.01 or chase_camera.global_position.distance_squared_to(car_pos) > 150.0:
+		cam_smoothed_target_pos = car_pos
+		cam_smoothed_forward = raw_fwd
+		cam_smoothed_up = raw_up
+		var init_pos = car_pos - raw_fwd * cam_distance + Vector3(0.0, cam_height, 0.0)
+		chase_camera.global_position = init_pos
+		if chase_camera.is_inside_tree():
+			chase_camera.look_at(car_pos + raw_fwd * 6.0 + Vector3(0.0, 1.2, 0.0), Vector3.UP)
+		cam_is_initialized = true
+		return
+
+	# 1. Physics Interpolation of target tracking: eliminates wheel & chassis oscillation
+	var spd_ratio = clampf(player_vehicle.get_speed_kmh() / 140.0, 0.0, 1.0)
+	var pos_rate = clampf(delta * 14.0, 0.0, 1.0)
+	var rot_rate = clampf(delta * 9.0, 0.0, 1.0)
+
+	cam_smoothed_target_pos = cam_smoothed_target_pos.lerp(car_pos, pos_rate)
+
+	# Filter out high-frequency vertical pitching
+	var planar_fwd = raw_fwd
+	planar_fwd.y *= 0.35
+	if planar_fwd.length_squared() > 0.01:
+		planar_fwd = planar_fwd.normalized()
 	else:
-		chase_camera.global_position = chase_camera.global_position.lerp(target_cam_pos, clampf(cam_lerp_speed * delta, 0.0, 1.0))
+		planar_fwd = raw_fwd
 
-	var look_target = car_pos + Vector3(0.0, 1.15, 0.0)
+	cam_smoothed_forward = cam_smoothed_forward.slerp(planar_fwd, rot_rate).normalized()
+	cam_smoothed_up = cam_smoothed_up.slerp(raw_up, rot_rate).normalized()
+
+	# 2. Dynamic Speed FOV and Distance
+	var dyn_dist = cam_distance + spd_ratio * 1.6
+	var target_fov = lerpf(72.0, 88.0, spd_ratio)
+	chase_camera.fov = lerpf(chase_camera.fov, target_fov, delta * 6.0)
+
+	# 3. Stable Camera Placement
+	var ideal_pos = cam_smoothed_target_pos - cam_smoothed_forward * dyn_dist + Vector3(0.0, cam_height, 0.0)
+	chase_camera.global_position = chase_camera.global_position.lerp(ideal_pos, clampf(delta * 12.0, 0.0, 1.0))
+
+	# 4. Stable Look-Ahead Target (avoids chassis pitch chatter)
+	var look_target = cam_smoothed_target_pos + cam_smoothed_forward * 7.0 + Vector3(0.0, 1.25, 0.0)
+	var up_ref = Vector3.UP if cam_smoothed_up.dot(Vector3.UP) > 0.4 else cam_smoothed_up
+
 	if chase_camera.is_inside_tree():
-		chase_camera.look_at(look_target, Vector3.UP)
+		chase_camera.look_at(look_target, up_ref)
+
+	# 5. Polynomial Event Trauma Decay (Zero continuous vibration)
+	if cam_trauma > 0.0:
+		cam_trauma = maxf(0.0, cam_trauma - delta * 1.8)
+		var shake = cam_trauma * cam_trauma * 0.04
+		chase_camera.h_offset = randf_range(-shake, shake)
+		chase_camera.v_offset = randf_range(-shake, shake)
 	else:
-		chase_camera.look_at_from_position(chase_camera.position, look_target, Vector3.UP)
+		chase_camera.h_offset = 0.0
+		chase_camera.v_offset = 0.0
 
 	if is_instance_valid(camera_spring_arm):
 		camera_spring_arm.global_position = chase_camera.global_position

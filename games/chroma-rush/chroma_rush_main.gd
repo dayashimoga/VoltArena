@@ -403,7 +403,10 @@ func set_state(new_state: State) -> void:
 	if garage:
 		garage.visible = (new_state == State.GARAGE)
 	if pause_menu:
-		pause_menu.visible = (new_state == State.PAUSED)
+		if new_state == State.PAUSED:
+			pause_menu.show_pause()
+		else:
+			pause_menu.hide_pause()
 	if results_screen:
 		results_screen.visible = (new_state == State.RESULTS)
 	if full_map and new_state != State.PLAYING:
@@ -545,16 +548,10 @@ func _update_camera(delta: float) -> void:
 	var accel_filter_alpha = 1.0 - exp(-12.0 * delta)
 	cam_filtered_accel = lerpf(cam_filtered_accel, raw_accel, accel_filter_alpha)
 
-	# Deadzone / Hysteresis
-	if cam_filtered_speed < CAM_SPEED_DEADZONE:
-		cam_last_stable_speed = 0.0
-	elif absf(cam_filtered_speed - cam_last_stable_speed) > CAM_SPEED_DEADZONE:
-		cam_last_stable_speed = cam_filtered_speed
-	var speed_for_fov = cam_last_stable_speed
-
-	# 3. Fixed Bounded FOV with Rate-Limited Interpolation
-	var spd_ratio = clampf(speed_for_fov / 150.0, 0.0, 1.0)
-	var desired_fov = lerpf(CAM_BASE_FOV, CAM_MAX_FOV, spd_ratio)
+	# Continuous smooth FOV with zero discrete stair-stepping
+	cam_last_stable_speed = cam_filtered_speed
+	var spd_ratio = clampf(cam_filtered_speed / 140.0, 0.0, 1.0)
+	var desired_fov = lerpf(CAM_BASE_FOV, 76.5, spd_ratio)
 
 	# Rate-limit FOV delta to prevent sudden zoom pumping
 	var max_fov_step = CAM_MAX_FOV_RATE * delta

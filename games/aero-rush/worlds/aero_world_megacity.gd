@@ -10,6 +10,51 @@ extends "res://games/aero-rush/worlds/aero_world_base.gd"
 ## - Overhead transit sky-bridges spanning above the circuit
 ## - 360-degree layered perimeter skyline guaranteeing depth and scale cues from every angle.
 
+const URBAN_GROUND_SHADER = """
+shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_lambert;
+
+void fragment() {
+	vec2 world_pos = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xz;
+	vec2 grid80 = fract(world_pos / 80.0);
+	vec2 grid20 = fract(world_pos / 20.0);
+
+	bool is_arterial = (grid80.x < 0.12 || grid80.y < 0.12);
+	bool is_street = (grid20.x < 0.14 || grid20.y < 0.14);
+	bool is_centerline = (abs(grid80.x - 0.06) < 0.008 || abs(grid80.y - 0.06) < 0.008);
+
+	if (is_centerline && is_arterial) {
+		ALBEDO = vec3(1.0, 0.85, 0.2);
+		EMISSION = vec3(1.0, 0.85, 0.2) * 1.5;
+		ROUGHNESS = 0.3;
+		METALLIC = 0.2;
+	} else if (is_arterial) {
+		ALBEDO = vec3(0.08, 0.09, 0.11);
+		ROUGHNESS = 0.55;
+		METALLIC = 0.15;
+	} else if (is_street) {
+		ALBEDO = vec3(0.12, 0.13, 0.15);
+		ROUGHNESS = 0.65;
+		METALLIC = 0.1;
+	} else {
+		vec2 block_uv = floor(world_pos / 20.0);
+		float block_hash = fract(sin(dot(block_uv, vec2(12.9898, 78.233))) * 43758.5453);
+		vec3 block_tone = mix(vec3(0.16, 0.18, 0.21), vec3(0.20, 0.22, 0.26), block_hash);
+		vec2 micro_uv = fract(world_pos / 2.5);
+		bool is_light_node = (block_hash > 0.65 && micro_uv.x < 0.12 && micro_uv.y < 0.12);
+
+		if (is_light_node) {
+			ALBEDO = vec3(0.1, 0.7, 1.0);
+			EMISSION = vec3(0.1, 0.7, 1.0) * 1.2;
+		} else {
+			ALBEDO = block_tone;
+		}
+		ROUGHNESS = 0.75;
+		METALLIC = 0.25;
+	}
+}
+"""
+
 func build_environment() -> void:
 	# 1. Atmospheric Golden Dusk / Cyberpunk Twilight Lighting
 	setup_lighting(
@@ -22,11 +67,11 @@ func build_environment() -> void:
 		0.0012                                   # Fog Density (Clear Visibility + Distance Depth)
 	)
 
-	# 2. Elevated Urban Basin Ground Bed (Track is suspended 6.5m above ground)
-	var ground_mat = StandardMaterial3D.new()
-	ground_mat.albedo_color = Color(0.12, 0.14, 0.16)
-	ground_mat.roughness = 0.85
-	ground_mat.metallic = 0.20
+	# 2. Elevated Urban Basin Ground Bed with Multi-Tier Street Grid Shader
+	var ground_mat = ShaderMaterial.new()
+	var g_shader = Shader.new()
+	g_shader.code = URBAN_GROUND_SHADER
+	ground_mat.shader = g_shader
 	create_ground_bed(1800.0, ground_mat, -6.5)
 
 	# 3. Urban Canal / Reflecting River Basin
@@ -125,18 +170,24 @@ func _build_flanking_skyscrapers() -> void:
 		"res://assets/models/environment/building_comm_f.glb"
 	]
 
-	# Realistic boulevard towers flanking track (proportional scale: 2.2x to 3.4x uniform scale)
+	# Realistic boulevard towers flanking track (proportional scale: 2.5x to 3.8x uniform scale)
 	var tower_coords = [
 		# West side city blocks
 		Vector3(-55.0, -6.5, -70.0), Vector3(-68.0, -6.5, -15.0),
 		Vector3(-58.0, -6.5, 45.0), Vector3(-75.0, -6.5, 110.0),
 		Vector3(-95.0, -6.5, -150.0), Vector3(-110.0, -6.5, -230.0),
 		Vector3(-75.0, -6.5, -310.0), Vector3(-120.0, -6.5, 30.0),
+		Vector3(-60.0, -6.5, -190.0), Vector3(-85.0, -6.5, -270.0),
+		Vector3(-105.0, -6.5, -360.0), Vector3(-65.0, -6.5, -410.0),
+		Vector3(-135.0, -6.5, -90.0), Vector3(-140.0, -6.5, -200.0),
 		# East side city blocks
 		Vector3(55.0, -6.5, -70.0), Vector3(68.0, -6.5, -15.0),
 		Vector3(58.0, -6.5, 45.0), Vector3(75.0, -6.5, 110.0),
 		Vector3(95.0, -6.5, -150.0), Vector3(110.0, -6.5, -230.0),
-		Vector3(75.0, -6.5, -310.0), Vector3(120.0, -6.5, 30.0)
+		Vector3(75.0, -6.5, -310.0), Vector3(120.0, -6.5, 30.0),
+		Vector3(60.0, -6.5, -190.0), Vector3(135.0, -6.5, -270.0),
+		Vector3(145.0, -6.5, -360.0), Vector3(85.0, -6.5, -430.0),
+		Vector3(135.0, -6.5, -90.0), Vector3(150.0, -6.5, -200.0)
 	]
 
 	for i in range(tower_coords.size()):
@@ -151,7 +202,10 @@ func _build_flanking_skyscrapers() -> void:
 		Vector3(-90.0, -6.5, -60.0), Vector3(90.0, -6.5, -60.0),
 		Vector3(-105.0, -6.5, 80.0), Vector3(105.0, -6.5, 80.0),
 		Vector3(-45.0, -6.5, -220.0), Vector3(45.0, -6.5, -220.0),
-		Vector3(-80.0, -6.5, -280.0), Vector3(80.0, -6.5, -280.0)
+		Vector3(-80.0, -6.5, -280.0), Vector3(80.0, -6.5, -280.0),
+		Vector3(-45.0, -6.5, -350.0), Vector3(45.0, -6.5, -350.0),
+		Vector3(-35.0, -6.5, -120.0), Vector3(35.0, -6.5, -120.0),
+		Vector3(-115.0, -6.5, -20.0), Vector3(115.0, -6.5, -20.0)
 	]
 	for j in range(comm_coords.size()):
 		var c_pos = comm_coords[j]

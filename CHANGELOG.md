@@ -1531,3 +1531,28 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **Production Certifier**: `scripts/certifier.py` produced **Overall Status: RUNTIME_VERIFIED (0 failed gates)**.
 - **Packaged Builds**: Re-exported desktop binaries: `export/windows/VoltArena.exe` (188 MB) and `export/linux/VoltArena.x86_64` (170 MB).
 
+## [7.5.0-collision-megacity-camera-overhaul] - 2026-10-08
+### Added
+- **AeroRush Stunt Physics & Ramp Surface Collisions (`games/aero-rush/tracks/`)**:
+  - Implemented dedicated `StaticBody3D` with trimesh collision shapes for all upward launch kickers (`KickerCollisionBody`) and landing catch aprons (`ApronCollisionBody`), eliminating vehicle clipping during ballistic jumps.
+  - Added `BoxShape3D` solid collision barriers to landing aprons (`BarrierCol_L`, `BarrierCol_R`) to reliably catch wide trajectory arrivals.
+  - Disabled duplicate collision layer on internal island helper bodies (`island_sb.collision_layer = 0`), preventing normal fighting and double contact impulses while routing physics cleanly through the continuous concave hull.
+  - Enhanced `_partition_waypoints_into_islands` with automated distance/gap detection and kicker angle parameters.
+- **Megacity Multi-Tier Urban Ground Shader & Architecture (`games/aero-rush/worlds/`)**:
+  - Implemented `URBAN_GROUND_SHADER` in `aero_world_megacity.gd` replacing flat grey void polygon with multi-scale glowing road grid, major arterial avenues with centerlines, secondary streets, and illuminated concrete building foundation pads.
+  - Densely populated midground skyscraper blocks and commercial plazas across the basin ($X \in [-150, 150]$, $Z \in [-430, 120]$).
+  - Verified balanced ACES tonemapper and ambient sky lighting in `aero_world_base.gd`, eliminating pitch-black shadow crush.
+
+### Fixed
+- **Chroma Rush Continuous Camera & Obstacle Trapping (`games/chroma-rush/`)**:
+  - Removed discrete `CAM_SPEED_DEADZONE` stair-stepping in `chroma_rush_main.gd`, transitioning to continuous low-pass filtered speed ratio and rate-limited FOV interpolation (`CAM_MAX_FOV_RATE`) within [72.0°, 76.5°] to guarantee strictly monotonic transitions during acceleration and braking with zero zoom pumping.
+  - Relocated roadside amenities (bus shelters, hydrants, bins, benches, trees) in `neon_city.gd` to safe plaza verges ($\ge 13.5\text{m}$ to $14.5\text{m}$), preventing vehicles from wedging or clipping.
+  - Harmonized pause menu handling across games to call `pause_menu.show_pause()` and `pause_menu.hide_pause()` consistently.
+
+### Verified
+- **Automated Tests**: Executed full test runner `tests/runner.gd` via Podman container: **80 test suites, 3,045 passed assertions, 0 failed (100% pass rate, 91.3% function coverage, exit code 0)**.
+- **Isolated Standalone PCKs**: Exported 10 isolated PCKs (`scripts/export_standalone_pcks.py`) with zero foreign asset leakage.
+- **Modular Release Packaging**: Packaged 30 standalone archives (Windows, Linux, Web) and 4 full-suite distributions (Windows, Linux, Web, Android) with SHA-256 manifests via `scripts/modular_packager.py`.
+- **Production Certification**: Verified `scripts/certifier.py` producing `Overall Status: RUNTIME_VERIFIED (0 failed gates)`.
+
+

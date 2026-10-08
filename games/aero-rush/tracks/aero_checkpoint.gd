@@ -159,21 +159,21 @@ void fragment() {
 	add_child(line_mesh)
 
 func _build_holographic_gate() -> void:
-	# Holographic Checkpoint Arch
+	# Slender Holographic Checkpoint Overhead Arch
 	mesh_arch = MeshInstance3D.new()
 	mesh_arch.name = "HoloArchVisual"
 
 	var arch_box = BoxMesh.new()
-	arch_box.size = Vector3(gate_width, 0.45, 0.45)
+	arch_box.size = Vector3(gate_width, 0.35, 0.35)
 	mesh_arch.mesh = arch_box
 
-	var holo_col = Color(1.0, 0.82, 0.12) if is_finish_line else Color(0.08, 0.88, 1.0)
+	var holo_col = Color(1.0, 0.82, 0.12) if is_finish_line else Color(0.08, 0.85, 1.0)
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(holo_col.r, holo_col.g, holo_col.b, 0.65)
+	mat.albedo_color = Color(holo_col.r, holo_col.g, holo_col.b, 0.55)
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.emission_enabled = true
-	mat.emission = holo_col * 2.2
-	mat.roughness = 0.2
+	mat.emission = holo_col * 1.4
+	mat.roughness = 0.25
 	mesh_arch.material_override = mat
 	mesh_arch.position = Vector3(0, gate_height, 0)
 	add_child(mesh_arch)
@@ -183,8 +183,8 @@ func _build_holographic_gate() -> void:
 		var pylon = MeshInstance3D.new()
 		pylon.name = "HoloPylon_%s" % ("L" if sign_x < 0 else "R")
 		var p_cyl = CylinderMesh.new()
-		p_cyl.top_radius = 0.18
-		p_cyl.bottom_radius = 0.24
+		p_cyl.top_radius = 0.16
+		p_cyl.bottom_radius = 0.22
 		p_cyl.height = gate_height
 		pylon.mesh = p_cyl
 		pylon.material_override = mat
@@ -207,10 +207,10 @@ func _on_body_entered(body: Node3D) -> void:
 func _pulse_visual() -> void:
 	if mesh_arch and mesh_arch.material_override is StandardMaterial3D:
 		var mat = mesh_arch.material_override as StandardMaterial3D
-		mat.emission_energy_multiplier = 4.5
+		mat.emission_energy_multiplier = 2.4
 		var tw = create_tween()
 		if tw:
-			tw.tween_property(mat, "emission_energy_multiplier", 2.2, 0.5)
+			tw.tween_property(mat, "emission_energy_multiplier", 1.4, 0.5)
 
 func get_recovery_transform() -> Transform3D:
 	return global_transform if is_inside_tree() else transform

@@ -1302,3 +1302,33 @@
   - `export/windows/VoltArena.exe` (188 MB)
   - `export/linux/VoltArena.x86_64` (170 MB)
 
+### [2026-10-08 14:25:00 UTC] - Milestone Update: AeroRush Launch Kicker/Landing Apron Trimesh Collisions, High-Tech Megacity Ground Grid Shader & Chroma Rush Continuous Camera Rate-Limiting
+- **Status**: COMPLETED
+- **Description**:
+  1. **AeroRush Physical Surface & Stunt Gap Collision Hardening (`games/aero-rush/tracks/aero_track_generator.gd`)**:
+     - Built dedicated `StaticBody3D` with `create_trimesh_shape()` collision surfaces for all launch kicker ramps (`KickerCollisionBody`), ensuring vehicles physically launch from kickers without falling through ramps.
+     - Built dedicated `StaticBody3D` with `create_trimesh_shape()` collision surfaces for all landing catch aprons (`ApronCollisionBody`) and `BoxShape3D` collisions for flanking catch barriers (`BarrierCol_L`, `BarrierCol_R`).
+     - Disabled duplicate collision layer on internal island helper bodies (`island_sb.collision_layer = 0`), routing all world physics through the unified continuous concave hull to prevent normal fighting and double contact impulses.
+     - Enhanced `_partition_waypoints_into_islands` with automatic gap detection and support for launch kicker angles and landing apron dimensions.
+  2. **AeroRush Megacity Environment & Lighting Overhaul (`games/aero-rush/worlds/aero_world_megacity.gd`)**:
+     - Replaced flat grey void ground plane with multi-tier high-tech procedural `URBAN_GROUND_SHADER`, featuring illuminated 80m major arterial boulevards with glowing centerlines, 20m secondary streets, concrete building plinths, and procedural illuminated plaza nodes.
+     - Densely populated midground skyscraper blocks and commercial centers flanking the circuit across $X \in [-150, 150]$ and $Z \in [-430, 120]$, completely eliminating empty void terrain.
+     - Verified balanced ACES tonemapping and ambient sky lighting in `aero_world_base.gd`, ensuring rich visible surface detail across all vehicle and roadway undersides.
+  3. **Chroma Rush Continuous Camera & Obstacle Clearance (`games/chroma-rush/`)**:
+     - Removed discrete `CAM_SPEED_DEADZONE` stair-stepping in `chroma_rush_main.gd`, transitioning to a continuous smooth speed ratio and rate-limited FOV interpolation (`CAM_MAX_FOV_RATE`) with bounded range [72.0°, 76.5°] to guarantee strictly monotonic acceleration/braking transitions and zero zoom pumping.
+     - Relocated roadside amenities (bus shelters, hydrants, trash bins, benches, trees) in `neon_city.gd` to safe plaza verges ($\ge 13.5\text{m}$ to $14.5\text{m}$), eliminating vehicle wedging and snagging.
+     - Harmonized pause menu handling across both games to consistently call `pause_menu.show_pause()` and `pause_menu.hide_pause()`.
+  4. **Packaging, Test Verification & Certification**:
+     - Ran full automated test runner in Godot CI container: **80 test suites, 3,045 passed assertions, 0 failed (100% pass rate, 91.3% function coverage, exit code 0)**.
+     - Exported all 10 isolated standalone PCKs (`export_standalone_pcks.py`) with zero foreign asset leakage.
+     - Executed `scripts/modular_packager.py`: Produced standalone Windows/Linux/Web packages for all 10 games, full suite packages for Windows/Linux/Web/Android, SHA-256 manifests, and package size audits.
+     - Executed production certifier `scripts/certifier.py`: Verified `Overall Status: RUNTIME_VERIFIED (0 failed gates)`.
+- **Evidence**:
+  - `artifacts/test-results.json` (80 suites, 3,045 passed assertions, 0 failed, 100% pass rate)
+  - `artifacts/coverage-report.json` (91.3% function coverage)
+  - `artifacts/production-certification.json` (Overall Status: RUNTIME_VERIFIED)
+  - `artifacts/artifact-manifest.json` & `artifacts/package-size-report.json`
+  - `export/dist/standalone/` (30 standalone distribution archives)
+  - `export/dist/suite/` (4 full-suite distribution archives)
+
+

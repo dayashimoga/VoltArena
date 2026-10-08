@@ -83,10 +83,10 @@ void fragment() {
 
 const UNDERSIDE_SHADER_CODE = """
 shader_type spatial;
-render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_lambert;
+render_mode blend_mix, depth_draw_opaque, cull_disabled, diffuse_lambert;
 
 void fragment() {
-	// Structural Reinforced Steel / Concrete Deck Underside
+	// Structural Reinforced Steel / Concrete Deck Underside (Double-sided to prevent inverted black sky shards)
 	ALBEDO = vec3(0.18, 0.20, 0.24);
 	ROUGHNESS = 0.75;
 	METALLIC = 0.45;
@@ -317,10 +317,10 @@ static func generate_track(course_data: Variant, default_width: float = 16.0) ->
 		under_inst.mesh = u_mesh
 		island_root.add_child(under_inst)
 
-		# 3. Island-Specific Collision Body (Strictly on this island, NEVER bridging gaps!)
+		# 3. Island-Specific Collision Body (Kept for hierarchy/inspector; master_sb handles unified physics to prevent duplicate contact impulses)
 		var island_sb = StaticBody3D.new()
 		island_sb.name = "IslandCollisionBody"
-		island_sb.collision_layer = AeroConstants.LAYER_WORLD
+		island_sb.collision_layer = 0 # Master body handles active collision layer to prevent normal fighting
 		island_sb.collision_mask = 0
 
 		var col_shape = CollisionShape3D.new()
@@ -416,7 +416,7 @@ static func generate_track(course_data: Variant, default_width: float = 16.0) ->
 		"jump_gaps": jump_gaps
 	}
 
-## Launch Ramp Kicker with smooth upward curvature and emissive directional chevrons
+## Launch Ramp Kicker with smooth upward curvature, emissive directional chevrons, and solid trimesh collision
 static func _build_launch_kicker(last_pt: Dictionary, kicker_angle_deg: float, kicker_len: float, mat: Material) -> Node3D:
 	var kicker = Node3D.new()
 	kicker.name = "LaunchKickerRamp"
@@ -484,9 +484,23 @@ static func _build_launch_kicker(last_pt: Dictionary, kicker_angle_deg: float, k
 	mi.mesh = mesh
 	kicker.add_child(mi)
 
+	# Physical StaticBody3D collision surface for the launch kicker
+	if mesh and mesh.get_surface_count() > 0:
+		var kicker_sb = StaticBody3D.new()
+		kicker_sb.name = "KickerCollisionBody"
+		kicker_sb.collision_layer = AeroConstants.LAYER_WORLD
+		kicker_sb.collision_mask = 0
+		var k_col = CollisionShape3D.new()
+		k_col.name = "KickerShape"
+		var trimesh_s = mesh.create_trimesh_shape()
+		if trimesh_s:
+			k_col.shape = trimesh_s
+			kicker_sb.add_child(k_col)
+			kicker.add_child(kicker_sb)
+
 	return kicker
 
-## Landing Catch Apron with wide entrance and hazard striping
+## Landing Catch Apron with wide entrance, hazard striping, and solid trimesh collision
 static func _build_landing_apron(first_pt: Dictionary, apron_w: float, mat: Material) -> Node3D:
 	var apron = Node3D.new()
 	apron.name = "LandingCatchApron"
@@ -543,7 +557,21 @@ static func _build_landing_apron(first_pt: Dictionary, apron_w: float, mat: Mate
 	mi.mesh = mesh
 	apron.add_child(mi)
 
-	# Catch barriers flanking apron
+	# Physical StaticBody3D collision surface for the landing catch apron
+	if mesh and mesh.get_surface_count() > 0:
+		var apron_sb = StaticBody3D.new()
+		apron_sb.name = "ApronCollisionBody"
+		apron_sb.collision_layer = AeroConstants.LAYER_WORLD
+		apron_sb.collision_mask = 0
+		var a_col = CollisionShape3D.new()
+		a_col.name = "ApronShape"
+		var trimesh_s = mesh.create_trimesh_shape()
+		if trimesh_s:
+			a_col.shape = trimesh_s
+			apron_sb.add_child(a_col)
+			apron.add_child(apron_sb)
+
+	# Catch barriers flanking apron with BoxShape3D collisions
 	var barrier_mat = StandardMaterial3D.new()
 	barrier_mat.albedo_color = Color(1.0, 0.45, 0.1)
 	barrier_mat.metallic = 0.8
@@ -555,8 +583,21 @@ static func _build_landing_apron(first_pt: Dictionary, apron_w: float, mat: Mate
 		var b_mi = MeshInstance3D.new()
 		b_mi.mesh = b_box
 		b_mi.material_override = barrier_mat
-		b_mi.position = pos - fwd * (apron_len * 0.5) + right * (b_side * half_w * 1.1) + norm * 1.1
+		var b_pos = pos - fwd * (apron_len * 0.5) + right * (b_side * half_w * 1.1) + norm * 1.1
+		b_mi.position = b_pos
 		apron.add_child(b_mi)
+
+		var b_sb = StaticBody3D.new()
+		b_sb.name = "BarrierCol_%s" % ("L" if b_side < 0.0 else "R")
+		b_sb.collision_layer = AeroConstants.LAYER_WORLD
+		b_sb.collision_mask = 0
+		b_sb.position = b_pos
+		var b_col = CollisionShape3D.new()
+		var b_shape = BoxShape3D.new()
+		b_shape.size = Vector3(0.6, 2.2, apron_len)
+		b_col.shape = b_shape
+		b_sb.add_child(b_col)
+		apron.add_child(b_sb)
 
 	return apron
 
@@ -601,7 +642,9 @@ static func _partition_waypoints_into_islands(wps: Array) -> Array[Dictionary]:
 				"name": "Stunt Island %d" % (island_counter + 1),
 				"waypoints": current_island_wps.duplicate(),
 				"has_launch_ramp": is_gap,
+				"launch_kicker_angle_deg": float(wp.get("launch_kicker_angle_deg", 18.0)),
 				"has_landing_apron": (island_counter > 0),
+				"landing_apron_width": float(current_island_wps[0].get("width", 18.0)) * 1.35,
 				"support_pillars": true
 			})
 			island_counter += 1

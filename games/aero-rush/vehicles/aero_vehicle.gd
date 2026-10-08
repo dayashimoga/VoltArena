@@ -140,10 +140,10 @@ func _setup_collision_shape() -> void:
 
 func _setup_suspension_raycasts() -> void:
 	var offsets = [
-		Vector3(-0.85, 0.45, -1.25),
-		Vector3(0.85, 0.45, -1.25),
-		Vector3(-0.88, 0.45, 1.25),
-		Vector3(0.88, 0.45, 1.25)
+		Vector3(-0.48, 0.45, -0.75), # Front Left
+		Vector3(0.48, 0.45, -0.75),  # Front Right
+		Vector3(-0.50, 0.45, 1.15),  # Rear Left
+		Vector3(0.50, 0.45, 1.15)    # Rear Right
 	]
 	for i in range(4):
 		var ray = RayCast3D.new()
@@ -631,14 +631,14 @@ func _check_rollover_and_recovery(delta: float) -> void:
 	if not is_inside_tree():
 		return
 
-	# 1. Out-of-bounds fall detection: vehicle falls below world or prolonged airborne drop
+	# 1. Out-of-bounds fall detection: vehicle falls below elevated course or prolonged airborne flight
 	var current_y = global_position.y
-	if current_y < -15.0 or (not is_grounded and airtime_duration > 4.5):
+	if current_y < -2.5 or (not is_grounded and airtime_duration > 3.8):
 		recover_to_checkpoint()
 		return
 
-	# 2. Check if straying completely outside playable bounds (>95m from last safe checkpoint)
-	if global_position.distance_to(last_safe_checkpoint_pos) > 95.0 and not is_grounded:
+	# 2. Check if straying outside playable track corridor (>65m from last safe checkpoint)
+	if global_position.distance_to(last_safe_checkpoint_pos) > 65.0:
 		recover_to_checkpoint()
 		return
 

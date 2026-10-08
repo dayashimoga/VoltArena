@@ -104,36 +104,57 @@ func _build_hud_elements() -> void:
 	checkpoint_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 	top_right.add_child(checkpoint_label)
 
-	# 4. Center Countdown Label
+	# 4. Center Countdown Label (Rock-solid resolution-independent centering)
 	countdown_label = Label.new()
 	countdown_label.name = "CountdownLabel"
-	countdown_label.set_anchors_preset(PRESET_CENTER)
+	countdown_label.anchor_left = 0.5
+	countdown_label.anchor_right = 0.5
+	countdown_label.anchor_top = 0.35
+	countdown_label.anchor_bottom = 0.35
+	countdown_label.offset_left = -250
+	countdown_label.offset_right = 250
+	countdown_label.offset_top = -60
+	countdown_label.offset_bottom = 60
+	countdown_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	countdown_label.grow_vertical = Control.GROW_DIRECTION_BOTH
 	countdown_label.text = ""
 	countdown_label.add_theme_font_size_override("font_size", 64)
 	countdown_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.1))
 	countdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	countdown_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	countdown_label.position = Vector2(-150, -80)
-	countdown_label.size = Vector2(300, 100)
 	add_child(countdown_label)
 
-	# 5. Stunt Toast (Center Screen notification)
+	# 5. Stunt Toast (Resolution-independent center-screen notification; eliminates off-screen clipping)
 	stunt_toast = Label.new()
 	stunt_toast.name = "StuntToast"
-	stunt_toast.set_anchors_preset(PRESET_CENTER)
+	stunt_toast.anchor_left = 0.5
+	stunt_toast.anchor_right = 0.5
+	stunt_toast.anchor_top = 0.55
+	stunt_toast.anchor_bottom = 0.55
+	stunt_toast.offset_left = -300
+	stunt_toast.offset_right = 300
+	stunt_toast.offset_top = -25
+	stunt_toast.offset_bottom = 25
+	stunt_toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	stunt_toast.grow_vertical = Control.GROW_DIRECTION_BOTH
 	stunt_toast.text = ""
-	stunt_toast.add_theme_font_size_override("font_size", 24)
+	stunt_toast.add_theme_font_size_override("font_size", 26)
 	stunt_toast.add_theme_color_override("font_color", Color(0.1, 1.0, 0.7))
 	stunt_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stunt_toast.position = Vector2(-200, 40)
-	stunt_toast.size = Vector2(400, 40)
+	stunt_toast.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	add_child(stunt_toast)
 
 	# 6. Bottom Right: Combo Multiplier Badge
 	combo_badge = PanelContainer.new()
 	combo_badge.name = "ComboBadge"
-	combo_badge.set_anchors_preset(PRESET_BOTTOM_RIGHT)
-	combo_badge.position = Vector2(-240, -110)
+	combo_badge.anchor_left = 1.0
+	combo_badge.anchor_right = 1.0
+	combo_badge.anchor_top = 1.0
+	combo_badge.anchor_bottom = 1.0
+	combo_badge.offset_left = -250
+	combo_badge.offset_right = -20
+	combo_badge.offset_top = -120
+	combo_badge.offset_bottom = -25
 	combo_badge.custom_minimum_size = Vector2(210, 85)
 	add_child(combo_badge)
 
@@ -241,11 +262,12 @@ func set_countdown_text(txt: String) -> void:
 
 func show_stunt_toast(label: String, points: int) -> void:
 	if stunt_toast:
-		stunt_toast.text = "+%d %s" % [points, label]
+		stunt_toast.text = ("+%d %s" % [points, label]) if points > 0 else label
 		stunt_toast.modulate.a = 1.0
 		var tw = create_tween()
-		tw.tween_interval(1.2)
-		tw.tween_property(stunt_toast, "modulate:a", 0.0, 0.4)
+		if tw:
+			tw.tween_interval(1.2)
+			tw.tween_property(stunt_toast, "modulate:a", 0.0, 0.4)
 
 func update_combo(multiplier: int, score: int, time_ratio: float, label: String = "") -> void:
 	if combo_badge:

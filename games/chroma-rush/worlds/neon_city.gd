@@ -367,26 +367,26 @@ func build_props() -> void:
 		var species = _get_district_tree_species(wp_nearest)
 
 		if s_idx % 8 == 0:
-			# Left Tree at offset -12.5m
-			var pos_l = p_curr - right * 12.5
-			if _is_clear_of_spline(pos_l, 9.5):
+			# Left Tree at safe plaza setback -14.5m
+			var pos_l = p_curr - right * 14.5
+			if _is_clear_of_spline(pos_l, 11.5):
 				var tree_l = _build_realistic_tree(species, 6.5 + float(s_idx % 3) * 0.8, s_idx * 17)
 				tree_l.position = pos_l
 				tree_l.position.y = p_curr.y
 				props_container.add_child(tree_l)
 
-			# Right Tree at offset +12.5m
-			var pos_r = p_curr + right * 12.5
-			if _is_clear_of_spline(pos_r, 9.5):
+			# Right Tree at safe plaza setback +14.5m
+			var pos_r = p_curr + right * 14.5
+			if _is_clear_of_spline(pos_r, 11.5):
 				var tree_r = _build_realistic_tree(species, 6.2 + float((s_idx + 1) % 3) * 0.8, s_idx * 23)
 				tree_r.position = pos_r
 				tree_r.position.y = p_curr.y
 				props_container.add_child(tree_r)
 
 		elif s_idx % 16 == 8:
-			# Modern Bus Stop Shelter on pedestrian sidewalk verge at -12.0m
-			var shelter_pos = p_curr - right * 12.0
-			if _is_clear_of_spline(shelter_pos, 9.0):
+			# Modern Bus Stop Shelter on pedestrian sidewalk verge at -14.0m
+			var shelter_pos = p_curr - right * 14.0
+			if _is_clear_of_spline(shelter_pos, 11.0):
 				var shelter = _build_bus_stop_shelter()
 				shelter.position = shelter_pos
 				shelter.position.y = p_curr.y
@@ -394,26 +394,26 @@ func build_props() -> void:
 				props_container.add_child(shelter)
 
 		elif s_idx % 8 == 2:
-			# Modern Fire Hydrant on sidewalk verge at -11.0m
-			var hydrant_pos = p_curr - right * 11.0
-			if _is_clear_of_spline(hydrant_pos, 8.5):
+			# Modern Fire Hydrant on sidewalk verge at -13.5m
+			var hydrant_pos = p_curr - right * 13.5
+			if _is_clear_of_spline(hydrant_pos, 10.5):
 				var hydrant = _build_fire_hydrant()
 				hydrant.position = hydrant_pos
 				hydrant.position.y = p_curr.y
 				props_container.add_child(hydrant)
 
-			# Street Trash Receptacle at +11.0m
-			var bin_pos = p_curr + right * 11.0
-			if _is_clear_of_spline(bin_pos, 8.5):
+			# Street Trash Receptacle at +13.5m
+			var bin_pos = p_curr + right * 13.5
+			if _is_clear_of_spline(bin_pos, 10.5):
 				var bin = _build_trash_bin()
 				bin.position = bin_pos
 				bin.position.y = p_curr.y
 				props_container.add_child(bin)
 
 		elif s_idx % 8 == 4:
-			# Modern street benches safely placed at ±11.2m
-			var bench_pos = p_curr - right * 11.2
-			if _is_clear_of_spline(bench_pos, 8.5):
+			# Modern street benches safely placed at ±13.8m
+			var bench_pos = p_curr - right * 13.8
+			if _is_clear_of_spline(bench_pos, 10.8):
 				var bench = _build_street_bench()
 				bench.position = bench_pos
 				bench.position.y = p_curr.y + 0.10
@@ -938,12 +938,12 @@ func _build_realistic_tree(species: String, height: float, seed_val: int) -> Nod
 	root.name = "RealisticStreetTree_%s_%d" % [species, seed_val]
 	root.collision_layer = GameConstants.LAYER_WORLD
 
-	# Trunk Collider strictly protecting trunk core
+	# Trunk Collider strictly protecting trunk core on the sidewalk plaza
 	var col = CollisionShape3D.new()
 	col.name = "TreeTrunkCollision"
 	var col_shape = CylinderShape3D.new()
 	col_shape.height = height * 0.75
-	col_shape.radius = 0.35
+	col_shape.radius = 0.28
 	col.shape = col_shape
 	col.position = Vector3(0, col_shape.height * 0.5, 0)
 	root.add_child(col)

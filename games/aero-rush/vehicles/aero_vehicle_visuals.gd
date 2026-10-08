@@ -113,6 +113,9 @@ static func build_vehicle_visuals(vehicle_id: String, paint_color: Color = Color
 	if not body_model:
 		body_model = Node3D.new()
 	body_model.name = "BodyModel"
+	# Rotate 180° around Y so model front (hood & headlights at GLB +Z) points to Godot's forward (-Z),
+	# and rear (diffuser & taillights at GLB -Z) faces the chase camera (+Z).
+	body_model.rotation.y = PI
 	chassis_node.add_child(body_model)
 
 	# Clean GLB: Hide any static embedded wheel meshes inside imported model
@@ -128,7 +131,7 @@ static func build_vehicle_visuals(vehicle_id: String, paint_color: Color = Color
 	mat.set_shader_parameter("roughness_val", 0.16)
 	_apply_material_to_meshes(body_model, mat)
 
-	# 3. Add High-Performance Aerodynamic Kit
+	# 3. Add High-Performance Aerodynamic Kit (Properly aligned with chassis)
 	var active_wing = _build_active_aero_wing(chosen_color)
 	chassis_node.add_child(active_wing)
 
@@ -141,7 +144,7 @@ static func build_vehicle_visuals(vehicle_id: String, paint_color: Color = Color
 	var underglow = _build_neon_underglow(chosen_color)
 	chassis_node.add_child(underglow)
 
-	# 4. Create Articulated Wheel Hubs with Brake Discs & Calipers
+	# 4. Create Articulated Wheel Hubs with Brake Discs & Calipers (Snug in wheel arches)
 	var wheel_glb_path = def.get("wheel_glb_path", "res://assets/models/vehicles/car_wheel_racing.glb")
 	var wheel_mat = ShaderMaterial.new()
 	var w_shader = Shader.new()
@@ -149,10 +152,10 @@ static func build_vehicle_visuals(vehicle_id: String, paint_color: Color = Color
 	wheel_mat.shader = w_shader
 
 	var wheel_offsets = [
-		Vector3(-0.76, 0.32, -1.22), # Front Left
-		Vector3(0.76, 0.32, -1.22),  # Front Right
-		Vector3(-0.78, 0.34, 1.22),  # Rear Left
-		Vector3(0.78, 0.34, 1.22)    # Rear Right
+		Vector3(-0.48, 0.30, -0.75), # Front Left
+		Vector3(0.48, 0.30, -0.75),  # Front Right
+		Vector3(-0.50, 0.30, 1.15),  # Rear Left
+		Vector3(0.50, 0.30, 1.15)    # Rear Right
 	]
 
 	var wheels: Array[Node3D] = []
@@ -179,15 +182,15 @@ static func build_vehicle_visuals(vehicle_id: String, paint_color: Color = Color
 		hub.add_child(wheel_mesh)
 		wheels.append(hub)
 
-	# 5. Boost Exhaust Emitters (Dual Tailpipe Thrusters)
-	var exhaust_left = _create_exhaust_particles(Vector3(-0.32, 0.36, 1.95), chosen_color)
-	var exhaust_right = _create_exhaust_particles(Vector3(0.32, 0.36, 1.95), chosen_color)
+	# 5. Boost Exhaust Emitters (Dual Tailpipe Thrusters at rear)
+	var exhaust_left = _create_exhaust_particles(Vector3(-0.25, 0.32, 1.55), chosen_color)
+	var exhaust_right = _create_exhaust_particles(Vector3(0.25, 0.32, 1.55), chosen_color)
 	chassis_node.add_child(exhaust_left)
 	chassis_node.add_child(exhaust_right)
 
-	# 6. Tire Smoke Emitters (Drift & Burnout)
-	var smoke_left = _create_smoke_particles(Vector3(-0.78, 0.08, 1.22))
-	var smoke_right = _create_smoke_particles(Vector3(0.78, 0.08, 1.22))
+	# 6. Tire Smoke Emitters (Drift & Burnout at rear tires)
+	var smoke_left = _create_smoke_particles(Vector3(-0.50, 0.08, 1.15))
+	var smoke_right = _create_smoke_particles(Vector3(0.50, 0.08, 1.15))
 	root.add_child(smoke_left)
 	root.add_child(smoke_right)
 
@@ -196,8 +199,8 @@ static func build_vehicle_visuals(vehicle_id: String, paint_color: Color = Color
 	root.add_child(sparks)
 
 	# 8. High-Speed Wingtip Air Trail Emitters
-	var trail_left = _create_air_trail_particles(Vector3(-0.85, 0.88, 1.80))
-	var trail_right = _create_air_trail_particles(Vector3(0.85, 0.88, 1.80))
+	var trail_left = _create_air_trail_particles(Vector3(-0.72, 0.78, 1.35))
+	var trail_right = _create_air_trail_particles(Vector3(0.72, 0.78, 1.35))
 	chassis_node.add_child(trail_left)
 	chassis_node.add_child(trail_right)
 
@@ -222,8 +225,8 @@ static func build_vehicle_visuals(vehicle_id: String, paint_color: Color = Color
 
 static func _hide_internal_wheels(node: Node) -> void:
 	if "wheel" in node.name.to_lower():
-		if node is VisualInstance3D:
-			(node as VisualInstance3D).visible = false
+		if node is Node3D:
+			(node as Node3D).visible = false
 	for child in node.get_children():
 		_hide_internal_wheels(child)
 
@@ -268,7 +271,7 @@ static func _build_brake_disc(is_right_side: bool) -> Node3D:
 static func _build_active_aero_wing(accent_col: Color) -> Node3D:
 	var wing_root = Node3D.new()
 	wing_root.name = "ActiveAeroWing"
-	wing_root.position = Vector3(0.0, 0.72, 1.65)
+	wing_root.position = Vector3(0.0, 0.68, 1.25)
 
 	# Twin Carbon Aerodynamic Stanchions / Struts
 	var mat_carbon = StandardMaterial3D.new()
@@ -276,23 +279,23 @@ static func _build_active_aero_wing(accent_col: Color) -> Node3D:
 	mat_carbon.metallic = 0.85
 	mat_carbon.roughness = 0.35
 
-	for side in [-0.38, 0.38]:
+	for side in [-0.32, 0.32]:
 		var strut = MeshInstance3D.new()
 		var s_box = BoxMesh.new()
-		s_box.size = Vector3(0.04, 0.28, 0.14)
+		s_box.size = Vector3(0.035, 0.24, 0.12)
 		strut.mesh = s_box
 		strut.material_override = mat_carbon
-		strut.position = Vector3(side, 0.14, 0.0)
-		strut.rotation_degrees.x = 14.0
+		strut.position = Vector3(side, 0.12, 0.0)
+		strut.rotation_degrees.x = 12.0
 		wing_root.add_child(strut)
 
 	# Main Downforce Wing Blade
 	var blade = MeshInstance3D.new()
 	blade.name = "WingBlade"
 	var b_box = BoxMesh.new()
-	b_box.size = Vector3(1.68, 0.04, 0.34)
+	b_box.size = Vector3(1.36, 0.035, 0.28)
 	blade.mesh = b_box
-	blade.position = Vector3(0.0, 0.28, 0.04)
+	blade.position = Vector3(0.0, 0.24, 0.02)
 
 	var blade_mat = StandardMaterial3D.new()
 	blade_mat.albedo_color = Color(0.08, 0.09, 0.11)
@@ -302,12 +305,12 @@ static func _build_active_aero_wing(accent_col: Color) -> Node3D:
 	wing_root.add_child(blade)
 
 	# Sculpted Endplates with Accent Neon Trim
-	for side in [-0.84, 0.84]:
+	for side in [-0.68, 0.68]:
 		var endplate = MeshInstance3D.new()
 		var ep_box = BoxMesh.new()
-		ep_box.size = Vector3(0.03, 0.16, 0.38)
+		ep_box.size = Vector3(0.025, 0.14, 0.32)
 		endplate.mesh = ep_box
-		endplate.position = Vector3(side, 0.28, 0.04)
+		endplate.position = Vector3(side, 0.24, 0.02)
 
 		var ep_mat = StandardMaterial3D.new()
 		ep_mat.albedo_color = accent_col
@@ -332,20 +335,20 @@ static func _build_front_splitter() -> Node3D:
 	# Main lower carbon lip
 	var lip = MeshInstance3D.new()
 	var lip_box = BoxMesh.new()
-	lip_box.size = Vector3(1.62, 0.04, 0.42)
+	lip_box.size = Vector3(1.32, 0.035, 0.32)
 	lip.mesh = lip_box
 	lip.material_override = mat_carbon
-	lip.position = Vector3(0.0, 0.14, -1.88)
+	lip.position = Vector3(0.0, 0.12, -1.45)
 	root.add_child(lip)
 
 	# Carbon Dive-Plane Canards
-	for side in [-0.78, 0.78]:
+	for side in [-0.64, 0.64]:
 		var canard = MeshInstance3D.new()
 		var c_box = BoxMesh.new()
-		c_box.size = Vector3(0.16, 0.03, 0.22)
+		c_box.size = Vector3(0.14, 0.025, 0.18)
 		canard.mesh = c_box
 		canard.material_override = mat_carbon
-		canard.position = Vector3(side, 0.26, -1.75)
+		canard.position = Vector3(side, 0.22, -1.38)
 		canard.rotation_degrees.z = -18.0 if side > 0 else 18.0
 		root.add_child(canard)
 
@@ -363,21 +366,21 @@ static func _build_rear_diffuser() -> Node3D:
 	# Diffuser Under-Tray
 	var tray = MeshInstance3D.new()
 	var t_box = BoxMesh.new()
-	t_box.size = Vector3(1.42, 0.05, 0.45)
+	t_box.size = Vector3(1.18, 0.04, 0.35)
 	tray.mesh = t_box
 	tray.material_override = mat_carbon
-	tray.position = Vector3(0.0, 0.18, 1.86)
+	tray.position = Vector3(0.0, 0.15, 1.35)
 	tray.rotation_degrees.x = -10.0
 	root.add_child(tray)
 
 	# 4 Vertical Aerodynamic Strakes
-	for x_pos in [-0.48, -0.16, 0.16, 0.48]:
+	for x_pos in [-0.40, -0.13, 0.13, 0.40]:
 		var strake = MeshInstance3D.new()
 		var s_box = BoxMesh.new()
-		s_box.size = Vector3(0.02, 0.12, 0.38)
+		s_box.size = Vector3(0.02, 0.10, 0.30)
 		strake.mesh = s_box
 		strake.material_override = mat_carbon
-		strake.position = Vector3(x_pos, 0.18, 1.86)
+		strake.position = Vector3(x_pos, 0.15, 1.35)
 		strake.rotation_degrees.x = -10.0
 		root.add_child(strake)
 
@@ -390,16 +393,16 @@ static func _build_neon_underglow(col: Color) -> Node3D:
 	var u_mat = StandardMaterial3D.new()
 	u_mat.albedo_color = col
 	u_mat.emission_enabled = true
-	u_mat.emission = col * 2.5
+	u_mat.emission = col * 2.0
 	u_mat.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
 
-	for side in [-0.75, 0.75]:
+	for side in [-0.55, 0.55]:
 		var tube = MeshInstance3D.new()
 		var box = BoxMesh.new()
-		box.size = Vector3(0.04, 0.03, 1.85)
+		box.size = Vector3(0.035, 0.025, 1.45)
 		tube.mesh = box
 		tube.material_override = u_mat
-		tube.position = Vector3(side, 0.16, 0.0)
+		tube.position = Vector3(side, 0.14, 0.0)
 		root.add_child(tube)
 
 	return root

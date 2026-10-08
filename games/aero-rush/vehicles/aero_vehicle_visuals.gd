@@ -407,13 +407,17 @@ static func _build_neon_underglow(col: Color) -> Node3D:
 static func _apply_material_to_meshes(node: Node, material: Material) -> void:
 	if node is MeshInstance3D:
 		var orig_mat = node.get_active_material(0)
+		var texture_to_use: Texture2D = null
 		if orig_mat and orig_mat is StandardMaterial3D and orig_mat.albedo_texture:
-			if material is ShaderMaterial:
-				var cloned_mat = material.duplicate() as ShaderMaterial
-				cloned_mat.set_shader_parameter("albedo_texture", orig_mat.albedo_texture)
-				node.material_override = cloned_mat
-			else:
-				node.material_override = material
+			texture_to_use = orig_mat.albedo_texture
+		elif ResourceLoader.exists("res://assets/models/vehicles/Textures/colormap.png"):
+			texture_to_use = load("res://assets/models/vehicles/Textures/colormap.png") as Texture2D
+
+		if material is ShaderMaterial:
+			var cloned_mat = material.duplicate() as ShaderMaterial
+			if texture_to_use:
+				cloned_mat.set_shader_parameter("albedo_texture", texture_to_use)
+			node.material_override = cloned_mat
 		else:
 			node.material_override = material
 	for child in node.get_children():

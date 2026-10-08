@@ -331,8 +331,8 @@ func build_props() -> void:
 			var b_pos = p_curr + right * (side * setback)
 			b_pos.y = p_curr.y
 
-			# Enforce strict geometric clearance across the entire spline network (>= 26.0m on non-local segments prevents any road/curb intrusion)
-			if not _is_clear_of_spline(b_pos, 26.0, s_idx, 6):
+			# Enforce strict geometric clearance across the spline network (>= 15.0m ensures buildings never intrude onto road or sidewalk curb)
+			if not _is_clear_of_spline(b_pos, 15.0, s_idx, 6):
 				continue
 
 			var theme_idx = (s_idx * 3 + int(side > 0) * 2 + wp_nearest) % ARCHITECTURAL_THEMES.size()
@@ -435,9 +435,9 @@ func build_props() -> void:
 		var rot_y = rad_to_deg(atan2(-tangent.x, -tangent.z))
 
 		for side in [-1.0, 1.0]:
-			var lamp_pos = p_curr + right * (side * 10.8) + Vector3(0.0, 0.1, 0.0)
-			# Strictly ensure pole base clears all road splines by >= 8.5m
-			if not _is_clear_of_spline(lamp_pos, 8.5):
+			var lamp_pos = p_curr + right * (side * 13.8) + Vector3(0.0, 0.1, 0.0)
+			# Strictly ensure pole base clears all road splines by >= 11.5m (safely on pedestrian plaza verge)
+			if not _is_clear_of_spline(lamp_pos, 11.5):
 				continue
 
 			var lamp = _build_procedural_streetlight()
@@ -768,10 +768,10 @@ func _build_distant_skyline_backdrop() -> void:
 
 	var palette_materials: Array[StandardMaterial3D] = []
 	var theme_colors = [
-		{"albedo": Color(0.12, 0.22, 0.36), "emit": Color(0.10, 0.26, 0.45), "metal": 0.85, "rough": 0.12}, # Sapphire
-		{"albedo": Color(0.26, 0.22, 0.18), "emit": Color(0.32, 0.24, 0.14), "metal": 0.35, "rough": 0.55}, # Amber Bronze
-		{"albedo": Color(0.16, 0.18, 0.22), "emit": Color(0.08, 0.35, 0.42), "metal": 0.65, "rough": 0.25}, # Obsidian Cyan
-		{"albedo": Color(0.22, 0.25, 0.30), "emit": Color(0.18, 0.22, 0.28), "metal": 0.50, "rough": 0.40}  # Chrome Titanium
+		{"albedo": Color(0.16, 0.24, 0.35), "emit": Color(0.08, 0.16, 0.28), "metal": 0.45, "rough": 0.45}, # Sapphire
+		{"albedo": Color(0.32, 0.28, 0.24), "emit": Color(0.20, 0.16, 0.12), "metal": 0.25, "rough": 0.65}, # Amber Bronze
+		{"albedo": Color(0.18, 0.20, 0.22), "emit": Color(0.06, 0.22, 0.28), "metal": 0.40, "rough": 0.50}, # Obsidian Cyan
+		{"albedo": Color(0.24, 0.26, 0.30), "emit": Color(0.12, 0.14, 0.18), "metal": 0.35, "rough": 0.55}  # Chrome Titanium
 	]
 
 	for tc in theme_colors:
@@ -824,7 +824,6 @@ static func _create_stepped_skyline_mesh() -> ArrayMesh:
 	_add_box_to_st(st, Vector3(26.0, 60.0, 26.0), Vector3(0.0, 54.0, 0.0))
 	_add_box_to_st(st, Vector3(16.0, 26.0, 16.0), Vector3(0.0, 97.0, 0.0))
 	_add_box_to_st(st, Vector3(2.4, 28.0, 2.4), Vector3(0.0, 124.0, 0.0))
-	st.generate_normals()
 	return st.commit()
 
 static func _create_spire_landmark_mesh() -> ArrayMesh:
@@ -836,7 +835,6 @@ static func _create_spire_landmark_mesh() -> ArrayMesh:
 	_add_box_to_st(st, Vector3(18.0, 42.0, 18.0), Vector3(0.0, 128.0, 0.0))
 	_add_box_to_st(st, Vector3(8.0, 24.0, 8.0), Vector3(0.0, 161.0, 0.0))
 	_add_box_to_st(st, Vector3(1.8, 38.0, 1.8), Vector3(0.0, 192.0, 0.0))
-	st.generate_normals()
 	return st.commit()
 
 static func _create_angled_blade_mesh() -> ArrayMesh:
@@ -847,7 +845,6 @@ static func _create_angled_blade_mesh() -> ArrayMesh:
 	_add_box_to_st(st, Vector3(22.0, 70.0, 38.0), Vector3(0.0, 55.0, 0.0))
 	_add_box_to_st(st, Vector3(14.0, 50.0, 26.0), Vector3(0.0, 115.0, 0.0))
 	_add_box_to_st(st, Vector3(6.0, 30.0, 14.0), Vector3(0.0, 155.0, 0.0))
-	st.generate_normals()
 	return st.commit()
 
 static func _create_twin_obelisk_mesh() -> ArrayMesh:
@@ -861,7 +858,6 @@ static func _create_twin_obelisk_mesh() -> ArrayMesh:
 	_add_box_to_st(st, Vector3(16.0, 8.0, 16.0), Vector3(0.0, 68.0, 0.0))
 	# Sky-Bridge at 95m
 	_add_box_to_st(st, Vector3(16.0, 6.0, 14.0), Vector3(0.0, 98.0, 0.0))
-	st.generate_normals()
 	return st.commit()
 
 static func _create_hex_tower_mesh() -> ArrayMesh:
@@ -874,7 +870,6 @@ static func _create_hex_tower_mesh() -> ArrayMesh:
 	_add_box_to_st(st, Vector3(38.0, 8.0, 38.0), Vector3(0.0, 112.0, 0.0))
 	_add_box_to_st(st, Vector3(18.0, 18.0, 18.0), Vector3(0.0, 125.0, 0.0))
 	_add_box_to_st(st, Vector3(2.0, 25.0, 2.0), Vector3(0.0, 146.5, 0.0))
-	st.generate_normals()
 	return st.commit()
 
 static func _create_pylon_gantry_mesh() -> ArrayMesh:
@@ -886,7 +881,6 @@ static func _create_pylon_gantry_mesh() -> ArrayMesh:
 	_add_box_to_st(st, Vector3(36.0, 6.0, 8.0), Vector3(0.0, 58.0, 0.0))
 	_add_box_to_st(st, Vector3(8.0, 6.0, 36.0), Vector3(0.0, 72.0, 0.0))
 	_add_box_to_st(st, Vector3(4.0, 22.0, 4.0), Vector3(0.0, 94.0, 0.0))
-	st.generate_normals()
 	return st.commit()
 
 static func _add_box_to_st(st: SurfaceTool, size: Vector3, center: Vector3) -> void:
@@ -980,14 +974,14 @@ func _build_realistic_tree(species: String, height: float, seed_val: int) -> Nod
 	root.add_child(soil)
 
 	# 3. Authentic 3D Tree Mesh Asset
-	var tree_path = "res://assets/models/environment/tree_detailed.glb"
+	var tree_path = "res://assets/models/environment/tree_oak.glb"
 	match species:
 		"palm": tree_path = "res://assets/models/environment/tree_palm.glb"
 		"pine": tree_path = "res://assets/models/environment/tree_pine.glb"
-		"birch": tree_path = "res://assets/models/environment/tree_detailed.glb"
-		"cherry": tree_path = "res://assets/models/environment/tree_detailed.glb"
+		"birch": tree_path = "res://assets/models/environment/tree_oak.glb"
+		"cherry": tree_path = "res://assets/models/environment/tree_oak.glb"
 		"linden": tree_path = "res://assets/models/environment/tree_tall.glb"
-		_: tree_path = "res://assets/models/environment/tree_detailed.glb"
+		_: tree_path = "res://assets/models/environment/tree_oak.glb"
 
 	var tree_model = ModelCache.get_model(tree_path)
 	if tree_model:
@@ -1333,18 +1327,8 @@ func _build_procedural_commercial_block(height: float, width: float, theme_idx: 
 	return root
 
 func _build_procedural_streetlight() -> Node3D:
-	var root = StaticBody3D.new()
+	var root = Node3D.new()
 	root.name = "StreetLight"
-	root.collision_layer = GameConstants.LAYER_WORLD
-
-	var col = CollisionShape3D.new()
-	col.name = "PostCollision"
-	var col_shape = CylinderShape3D.new()
-	col_shape.height = 6.8
-	col_shape.radius = 0.16
-	col.shape = col_shape
-	col.position = Vector3(0, 3.4, 0)
-	root.add_child(col)
 
 	var mat_pole = StandardMaterial3D.new()
 	mat_pole.albedo_color = Color(0.35, 0.38, 0.42)

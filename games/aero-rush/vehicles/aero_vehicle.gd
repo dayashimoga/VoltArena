@@ -448,7 +448,7 @@ func _process_ground_movement(delta: float) -> void:
 		forward_speed = move_toward(forward_speed, 0.0, 10.0 * delta)
 
 	# 3. Steering & Drifting
-	var steer_sens = steer_speed * (1.0 - clampf(absf(forward_speed) / (top_speed * 1.5), 0.0, 0.55))
+	var steer_sens = steer_speed / (1.0 + (absf(forward_speed) / top_speed) * 0.75)
 
 	if handbrake_held and absf(steer_input) > 0.15 and forward_speed > 12.0:
 		# Drift Active
@@ -527,32 +527,30 @@ func _process_airborne_movement(delta: float) -> void:
 			rotate_object_local(Vector3.UP, -air_yaw_speed * 0.4 * steer_input * delta)
 			rotate_object_local(Vector3.FORWARD, air_roll_speed * 0.25 * steer_input * delta)
 
-		# Natural Horizon Stabilization: Vehicle naturally tends toward wheels-down landing!
+		# Natural Horizon & Trajectory Flight Stabilization: Vehicle naturally tends toward wheels-down landing!
 		var cur_basis = global_basis if is_inside_tree() else transform.basis
-		var target_up = Vector3.UP
-		# Smooth angular dampening and upright pull
-		var horizon_weight = clampf(delta * 4.5, 0.0, 1.0)
-		var stabilized_basis = AeroPhysicsHelpers.calculate_horizon_stabilization(cur_basis, target_up, horizon_weight)
+		var horizon_weight = clampf(delta * 5.5, 0.0, 1.0)
+		var stabilized_basis = AeroPhysicsHelpers.calculate_flight_stabilization(cur_basis, velocity, horizon_weight)
 		if is_inside_tree():
 			global_basis = stabilized_basis
 		else:
 			transform.basis = stabilized_basis
 
-	# 2. Landing Alignment Assistance & Prediction
+	# 2. Multi-Point Landing Alignment Assistance & Prediction
 	if is_inside_tree() and get_world_3d() and get_world_3d().direct_space_state:
 		var space_state = get_world_3d().direct_space_state
-		var prediction = AeroPhysicsHelpers.predict_landing(space_state, global_position, velocity, 18.0)
+		var prediction = AeroPhysicsHelpers.predict_landing(space_state, global_position, velocity, 28.0)
 		if prediction.get("found", false):
 			var hit_norm = prediction.get("normal", Vector3.UP) as Vector3
-			var hit_dist = prediction.get("distance", 18.0) as float
-			# Progressively assist orientation without visibly snapping
-			if hit_dist < 14.0:
-				var assist_factor = clampf((14.0 - hit_dist) / 14.0, 0.0, 1.0) * delta * 6.5
+			var hit_dist = prediction.get("distance", 28.0) as float
+			# Progressively assist orientation toward landing deck without snapping
+			if hit_dist < 20.0:
+				var assist_factor = clampf((20.0 - hit_dist) / 20.0, 0.0, 1.0) * delta * 7.5
 				var aligned_basis = AeroPhysicsHelpers.align_basis_to_normal(global_basis, hit_norm, assist_factor)
 				global_basis = aligned_basis
 
 	# 3. Preserve forward momentum with realistic aerodynamic drag
-	var drag = 0.994
+	var drag = 0.995
 	velocity.x *= drag
 	velocity.z *= drag
 
@@ -635,7 +633,7 @@ func _check_rollover_and_recovery(delta: float) -> void:
 
 	# 1. Out-of-bounds fall detection: vehicle falls below world or prolonged airborne drop
 	var current_y = global_position.y
-	if current_y < -35.0 or (not is_grounded and airtime_duration > 6.0):
+	if current_y < -15.0 or (not is_grounded and airtime_duration > 4.5):
 		recover_to_checkpoint()
 		return
 

@@ -126,36 +126,53 @@ static func project_velocity_on_plane(velocity: Vector3, plane_normal: Vector3) 
 		return projected.normalized() * v_len
 	return projected
 
-## Predicts landing surface along trajectory or downward.
-static func predict_landing(space_state: PhysicsDirectSpaceState3D, origin: Vector3, velocity: Vector3, max_dist: float = 20.0) -> Dictionary:
+## Predicts landing surface along trajectory or downward using multi-point cone queries.
+static func predict_landing(space_state: PhysicsDirectSpaceState3D, origin: Vector3, velocity: Vector3, max_dist: float = 28.0) -> Dictionary:
 	if not space_state:
 		return {"found": false}
 
-	var ray_dir = Vector3.DOWN
-	if velocity.length_squared() > 1.0:
-		ray_dir = (velocity.normalized() + Vector3.DOWN * 0.5).normalized()
+	var ray_dirs = [
+		Vector3.DOWN,
+		(velocity.normalized() + Vector3.DOWN * 0.6).normalized() if velocity.length_squared() > 1.0 else Vector3.DOWN,
+		(velocity.normalized() + Vector3.DOWN * 0.3 + Vector3.LEFT * 0.15).normalized() if velocity.length_squared() > 1.0 else Vector3.DOWN,
+		(velocity.normalized() + Vector3.DOWN * 0.3 + Vector3.RIGHT * 0.15).normalized() if velocity.length_squared() > 1.0 else Vector3.DOWN
+	]
 
-	var query = PhysicsRayQueryParameters3D.create(origin, origin + ray_dir * max_dist, AeroConstants.LAYER_WORLD)
-	var result = space_state.intersect_ray(query)
-	if result.is_empty():
-		# Try straight down fallback
-		var down_query = PhysicsRayQueryParameters3D.create(origin, origin + Vector3.DOWN * max_dist, AeroConstants.LAYER_WORLD)
-		result = space_state.intersect_ray(down_query)
-		if result.is_empty():
-			return {"found": false}
+	for ray_dir in ray_dirs:
+		var query = PhysicsRayQueryParameters3D.create(origin, origin + ray_dir * max_dist, AeroConstants.LAYER_WORLD)
+		var result = space_state.intersect_ray(query)
+		if not result.is_empty():
+			var hit_pos = result.get("position", Vector3.ZERO) as Vector3
+			var hit_normal = result.get("normal", Vector3.UP) as Vector3
+			var dist = origin.distance_to(hit_pos)
+			return {
+				"found": true,
+				"position": hit_pos,
+				"normal": hit_normal,
+				"distance": dist
+			}
 
-	var hit_pos = result.get("position", Vector3.ZERO) as Vector3
-	var hit_normal = result.get("normal", Vector3.UP) as Vector3
-	var dist = origin.distance_to(hit_pos)
+	return {"found": false}
 
-	return {
-		"found": true,
-		"position": hit_pos,
-		"normal": hit_normal,
-		"distance": dist
-	}
-
-## Calculates horizon stabilization tending toward wheels-down landing.
+## Calculates horizon and aerodynamic flight stabilization tending toward wheels-down landing.
 static func calculate_horizon_stabilization(current_basis: Basis, target_up: Vector3, weight: float) -> Basis:
 	return align_basis_to_normal(current_basis, target_up, weight)
+
+## Enhanced 3D flight stabilization preserving forward momentum and attitude.
+static func calculate_flight_stabilization(current_basis: Basis, velocity: Vector3, weight: float) -> Basis:
+	var target_up = Vector3.UP
+	var base_aligned = align_basis_to_normal(current_basis, target_up, weight)
+
+	if velocity.length_squared() > 64.0:
+		var flight_fwd = velocity.normalized()
+		var cur_fwd = -base_aligned.z.normalized()
+		var blend_fwd = cur_fwd.slerp(flight_fwd, clampf(weight * 0.35, 0.0, 0.45)).normalized()
+		var cur_right = base_aligned.x.normalized()
+		var new_up = blend_fwd.cross(cur_right).normalized()
+		if new_up.dot(Vector3.UP) > 0.1:
+			var new_z = -blend_fwd
+			var new_x = new_up.cross(new_z).normalized()
+			return Basis(new_x, new_up, new_z).orthonormalized()
+
+	return base_aligned
 

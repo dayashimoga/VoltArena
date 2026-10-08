@@ -49,6 +49,89 @@ static func _get_course_1_neon_express() -> Dictionary:
 		"desc": "The definitive AeroRush stunt circuit: Disconnected stunt islands spanning high-speed boulevard launch, 55m aerial gap, 360° vertical loop, drop transfer, 75° skyscraper wall ride, canyon gap, corkscrew, and split routes.",
 		"spawn_pos": Vector3(0, 1.0, 0),
 		"spawn_rot_y": 0.0,
+		"islands": [
+			{
+				"id": "island_1_boulevard_launch",
+				"name": "Boulevard Launch & Ramp A",
+				"waypoints": [
+					{"pos": Vector3(0, 1.0, 0), "bank_deg": 0.0, "width": 20.0},
+					{"pos": Vector3(0, 1.0, -45), "bank_deg": 0.0, "width": 20.0},
+					{"pos": Vector3(0, 2.0, -90), "bank_deg": 0.0, "width": 18.0},
+					{"pos": Vector3(0, 6.0, -135), "bank_deg": 0.0, "width": 18.0},
+					{"pos": Vector3(0, 14.0, -170), "bank_deg": 0.0, "width": 18.0, "is_jump_gap": true, "jump_speed_min": 26.0, "jump_speed_target": 36.0, "jump_speed_max": 48.0}
+				],
+				"has_launch_ramp": true,
+				"launch_kicker_angle_deg": 18.0,
+				"speed_boost_pads": [1, 3],
+				"support_pillars": true
+			},
+			{
+				"id": "island_2_loop_deck",
+				"name": "Landing Apron B & 360° Loop Deck",
+				"waypoints": [
+					{"pos": Vector3(0, 9.0, -195), "bank_deg": 0.0, "width": 24.0},
+					{"pos": Vector3(0, 8.0, -260), "bank_deg": 0.0, "width": 18.0},
+					{"pos": Vector3(0, 10.0, -290), "bank_deg": 0.0, "width": 17.0},
+					{"pos": Vector3(0, 22.0, -315), "bank_deg": 0.0, "width": 16.0},
+					{"pos": Vector3(0, 38.0, -330), "bank_deg": 0.0, "width": 16.0},
+					{"pos": Vector3(0, 36.0, -345), "bank_deg": 0.0, "width": 16.0},
+					{"pos": Vector3(0, 20.0, -360), "bank_deg": 0.0, "width": 16.0},
+					{"pos": Vector3(0, 7.0, -380), "bank_deg": 0.0, "width": 17.0},
+					{"pos": Vector3(10, 8.0, -410), "bank_deg": 0.0, "width": 18.0, "is_jump_gap": true, "jump_speed_min": 26.0, "jump_speed_target": 36.0, "jump_speed_max": 48.0}
+				],
+				"has_landing_apron": true,
+				"landing_apron_width": 26.0,
+				"has_launch_ramp": true,
+				"launch_kicker_angle_deg": 16.0,
+				"support_pillars": true
+			},
+			{
+				"id": "island_3_wallride_island",
+				"name": "Rooftop Platform C & 75° Wall Ride",
+				"waypoints": [
+					{"pos": Vector3(16, 6.0, -422), "bank_deg": 18.0, "width": 24.0},
+					{"pos": Vector3(45, 6.0, -435), "bank_deg": 45.0, "width": 18.0},
+					{"pos": Vector3(100, 12.0, -400), "bank_deg": 75.0, "width": 18.0},
+					{"pos": Vector3(115, 12.0, -350), "bank_deg": 75.0, "width": 18.0},
+					{"pos": Vector3(105, 8.0, -300), "bank_deg": 38.0, "width": 18.0},
+					{"pos": Vector3(90, 11.0, -260), "bank_deg": 0.0, "width": 18.0, "is_jump_gap": true, "jump_speed_min": 28.0, "jump_speed_target": 38.0, "jump_speed_max": 50.0}
+				],
+				"has_landing_apron": true,
+				"landing_apron_width": 26.0,
+				"has_launch_ramp": true,
+				"launch_kicker_angle_deg": 18.0,
+				"support_pillars": true
+			},
+			{
+				"id": "island_4_split_stunt_island",
+				"name": "Split Route Stunt Platform D & Final Mega Jump",
+				"waypoints": [
+					{"pos": Vector3(78, 7.0, -240), "bank_deg": 0.0, "width": 24.0},
+					{"pos": Vector3(65, 5.0, -205), "bank_deg": 0.0, "width": 22.0},
+					{"pos": Vector3(55, 4.0, -165), "bank_deg": -22.0, "width": 18.0},
+					{"pos": Vector3(35, 3.0, -125), "bank_deg": 22.0, "width": 18.0},
+					{"pos": Vector3(20, 2.0, -85), "bank_deg": 0.0, "width": 19.0},
+					{"pos": Vector3(10, 8.0, -50), "bank_deg": 0.0, "width": 20.0, "is_jump_gap": true, "jump_speed_min": 28.0, "jump_speed_target": 38.0, "jump_speed_max": 50.0}
+				],
+				"has_landing_apron": true,
+				"landing_apron_width": 26.0,
+				"has_launch_ramp": true,
+				"launch_kicker_angle_deg": 22.0,
+				"speed_boost_pads": [3],
+				"support_pillars": true
+			},
+			{
+				"id": "island_5_finish_stadium",
+				"name": "Grand Stadium Finish Platform",
+				"waypoints": [
+					{"pos": Vector3(5, 1.5, -25), "bank_deg": 0.0, "width": 24.0},
+					{"pos": Vector3(0, 1.0, 0), "bank_deg": 0.0, "width": 22.0}
+				],
+				"has_landing_apron": true,
+				"landing_apron_width": 28.0,
+				"support_pillars": true
+			}
+		],
 		"waypoints": [
 			# === TRACK ISLAND A (Boulevard Launch) ===
 			{"pos": Vector3(0, 1.0, 0), "bank_deg": 0.0, "width": 20.0},
@@ -78,17 +161,19 @@ static func _get_course_1_neon_express() -> Dictionary:
 			{"pos": Vector3(105, 8.0, -300), "bank_deg": 38.0, "width": 18.0},
 			{"pos": Vector3(90, 11.0, -260), "bank_deg": 0.0, "width": 18.0, "is_jump_gap": true, "jump_speed_min": 28.0, "jump_speed_target": 38.0, "jump_speed_max": 50.0},
 
-			# === TRACK ISLAND D (Corkscrew & Split Routes) ===
+			# === TRACK ISLAND D (Split Routes & Mega Jump) ===
 			{"pos": Vector3(78, 7.0, -240), "bank_deg": 0.0, "width": 24.0},
 			{"pos": Vector3(65, 5.0, -205), "bank_deg": 0.0, "width": 22.0},
 			{"pos": Vector3(55, 4.0, -165), "bank_deg": -22.0, "width": 18.0},
 			{"pos": Vector3(35, 3.0, -125), "bank_deg": 22.0, "width": 18.0},
 			{"pos": Vector3(20, 2.0, -85), "bank_deg": 0.0, "width": 19.0},
-			{"pos": Vector3(10, 1.0, -50), "bank_deg": 0.0, "width": 22.0},
-			{"pos": Vector3(5, 0.5, -25), "bank_deg": 0.0, "width": 20.0},
-			{"pos": Vector3(0, 1.0, 0), "bank_deg": 0.0, "width": 20.0}
+			{"pos": Vector3(10, 8.0, -50), "bank_deg": 0.0, "width": 20.0, "is_jump_gap": true, "jump_speed_min": 28.0, "jump_speed_target": 38.0, "jump_speed_max": 50.0},
+
+			# === TRACK ISLAND E (Finish Stadium) ===
+			{"pos": Vector3(5, 1.5, -25), "bank_deg": 0.0, "width": 24.0},
+			{"pos": Vector3(0, 1.0, 0), "bank_deg": 0.0, "width": 22.0}
 		],
-		"checkpoints": [0, 4, 5, 12, 13, 18, 19, 23, 26],
+		"checkpoints": [0, 4, 5, 13, 14, 19, 20, 25, 27],
 		"hazards": []
 	}
 

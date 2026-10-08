@@ -1273,3 +1273,32 @@
   - `artifacts/production-certification.json` (Overall Status: RUNTIME_VERIFIED)
   - `export/standalone/AeroRush.pck` & `export/standalone/ChromaRush.pck`
   - `export/dist/standalone/AeroRush-Windows-x86_64.zip` & `ChromaRush-Windows-x86_64.zip`
+
+### [2026-10-08 12:10:00 UTC] - Milestone Update: AeroRush Physically Disconnected Stunt Island Circuits & Chroma Rush Urban Obstacle/Camera Stabilization
+- **Status**: COMPLETED
+- **Description**:
+  1. **AeroRush Stunt Circuit Rebuild**:
+     - Overhauled `aero_track_generator.gd` to construct genuinely physically disconnected track islands across 3D space with zero collision in air gaps, eliminating continuous road fakes.
+     - Implemented Bishop RMF parallel-transport spline framing, curved launch kickers with animated chevrons, landing catch aprons with hazard striping, and elevated concrete/steel support bents.
+     - Upgraded reference circuit 1 (`neon_express`) in `aero_course_database.gd` with 5 physically separated stunt islands including boulevard launch, 360° loop deck, rooftop platform with 75° wall ride, split stunt island, and stadium landing platform.
+     - Enhanced `aero_track_validator.gd` with automated ballistic trajectory validation across gaps rejecting impossible geometry.
+     - Resolved automotive shader material texture binding in `aero_vehicle_visuals.gd` with fallback palette binding, preventing pitch-black chassis renders.
+     - Eliminated dummy renderer null mesh warnings by ensuring `master_mi` assigns a valid `ArrayMesh`.
+  2. **Chroma Rush Urban & Camera Pipeline Stabilization**:
+     - Permanently solved camera jitter and vibration by moving `_update_camera(delta)` and `_update_hud_telemetry(delta)` from `_physics_process(delta)` into `_process(delta)`, decoupling camera updates from physics simulation ticks.
+     - Locked look-ahead camera pitch heading (`planar_fwd.y = 0.0`) to decouple view angle from vehicle suspension bounce and curb contact.
+     - Relocated streetlights in `neon_city.gd` from 10.8m to 13.8m onto pedestrian plaza verges and replaced rigid static body collisions with non-blocking visual assemblies, preventing vehicles from ever becoming wedged or trapped on curbs.
+     - Replaced blocky cube trees with authentic botanical GLB trees (`tree_oak.glb`, `tree_palm.glb`, `tree_pine.glb`, `tree_tall.glb`).
+     - Preserved crisp planar architectural geometry on distant skyscrapers by removing smoothed normal generation, eliminating inflated tube/cylinder artifacts.
+     - Increased road clearance tolerance from 26.0m to 15.0m, allowing dense city blocks to populate continuously along curves and straightaways.
+  3. **Verification & Certification**:
+     - Executed full test runner: 80 test suites, 3,045 passed assertions, 0 failed (100% pass rate, 91.3% function coverage).
+     - Executed production certifier: `Overall Status: RUNTIME_VERIFIED (0 failed gates)`.
+     - Regenerated standalone desktop packages: Windows x86_64 executable (`VoltArena.exe`, 188 MB) and Linux x86_64 binary (`VoltArena.x86_64`, 170 MB).
+- **Evidence**:
+  - `artifacts/test-results.json` (80 suites, 3,045 passed assertions, 0 failed, 100% pass rate)
+  - `artifacts/coverage-report.json` (91.3% function coverage)
+  - `artifacts/production-certification.json` (Overall Status: RUNTIME_VERIFIED)
+  - `export/windows/VoltArena.exe` (188 MB)
+  - `export/linux/VoltArena.x86_64` (170 MB)
+

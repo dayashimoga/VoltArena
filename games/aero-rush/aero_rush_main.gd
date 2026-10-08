@@ -313,7 +313,7 @@ func _spawn_environment(env_type: int) -> void:
 
 func _build_track(c_def: Dictionary) -> void:
 	var waypoints = c_def.get("waypoints", []) as Array
-	var track_data = AeroTrackGenerator.generate_track(waypoints, 16.0)
+	var track_data = AeroTrackGenerator.generate_track(c_def if c_def.has("islands") else waypoints, 16.0)
 
 	var root_track = track_data.get("root") as Node3D
 	if root_track:

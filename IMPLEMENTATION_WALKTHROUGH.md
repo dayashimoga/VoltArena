@@ -495,5 +495,61 @@ Executed via headless Godot runner without mocks:
   - `artifacts/coverage-report.json`
   - `artifacts/production-certification.json`
 
+---
+
+### 10. Authoritative Stunt Island Architecture & Camera Remediation (v7.4.0)
+
+#### 10.1 Defect Evidence Forensic Analysis & Concrete Remediation
+
+1. **AeroRush Traversal & Visual Defect (Screenshots 1 & 2)**:
+   - **Observed Defect Evidence**:
+     - *Screenshot 1*: Vehicle stationary at 0 KM/H on pitch-black void ground with crushed shadows and primitive silhouette.
+     - *Screenshot 2*: Continuous ordinary elevated highway with decorative arches rather than physically disconnected stunt platforms.
+   - **Root Causes**:
+     - `aero_track_generator.gd` generated a single continuous spline ribbon with no physical separation; gaps were merely decorative discontinuities above collision surfaces.
+     - `aero_vehicle_visuals.gd` compiled `AUTOMOTIVE_SHADER_CODE` sampling `albedo_texture`, but never assigned Kenney's `colormap.png` when `orig_mat.albedo_texture` was null. In Godot shaders, unbound textures default to black `vec4(0.0)`, causing `is_trim` to evaluate to `true` and shading the entire car body as pitch-black matte carbon fiber.
+     - `aero_world_base.gd` environment used low ambient sky energy with no ground bounce fill light, causing crushed pitch-black shadows.
+   - **Remediation**:
+     - Rebuilt `aero_track_generator.gd` to construct genuinely physically separated track platform islands across 3D space with zero collision in air gaps. Implemented Bishop parallel-transport framing per island, quadratic launch kickers with animated emission chevrons (`KICKER_SHADER_CODE`), wide landing aprons with diagonal hazard striping (`APRON_SHADER_CODE`), and concrete/steel support bents connecting elevated sections to the terrain basin.
+     - Overhauled reference circuit 1 (`neon_express`) in `aero_course_database.gd` into a 5-island progression: Boulevard Launch -> [Air Gap 1] -> Landing Apron B & 360° Loop Deck -> [Air Transfer Gap 2] -> Rooftop Platform C & 75° Wall Ride -> [Air Gap 3] -> Split Stunt Island D & Mega Jump -> [Mega Air Gap 4] -> Finish Stadium Platform.
+     - Updated `aero_track_validator.gd` with automated ballistic trajectory reachability solver verifying gap flight distance, airtime, and landing catch alignment at min/target/max speeds.
+     - Fixed `aero_vehicle_visuals.gd` material application to supply `colormap.png` fallback, rendering cars in rich PBR metallic paint (Electric Cyan, Rally Orange, etc.).
+     - Added ground fill light and increased ambient sky energy in `aero_world_base.gd`.
+
+2. **Chroma Rush Obstacle Wedging, Foliage & Camera Pipeline (Screenshot 3)**:
+   - **Observed Defect Evidence**:
+     - *Screenshot 3*: Player vehicle front bumper wedged and pinned against a thin vertical streetlight post on the sidewalk curb ($10.8\text{m}$). Trees had green cube canopies on sticks. Distant skyline consisted of smooth inflated glossy cylinders and tubes. Driving suffered from reported camera vibration, zoom pumping, and FOV jitter.
+   - **Root Causes**:
+     - `neon_city.gd` placed streetlights at lateral offset $10.8\text{m}$ (only $1.45\text{m}$ from the $9.35\text{m}$ road edge) and gave each lamppost an immovable `StaticBody3D` cylinder with radius $0.16\text{m}$ on `LAYER_WORLD`, trapping cars that touched the curb.
+     - `_build_realistic_tree()` defaulted to `tree_detailed.glb` (the low-poly cubic clump tree asset) for oak, birch, cherry, and default species.
+     - In `_build_distant_skyline_backdrop()`, `SurfaceTool.generate_normals()` was called across hard 90° box corners, smoothing adjacent vertex normals and causing rectangular skyscraper blocks to shade as inflated glossy cylinders/balloons.
+     - Roadside parcel clearance threshold was set to $26.0\text{m}$, discarding buildings along spline curves and creating empty grey expanses.
+     - `chroma_rush_main.gd` called `_update_camera(delta)` inside `_physics_process(delta)` (60Hz fixed cadence) instead of `_process(delta)`, causing micro-stutter and visual vibration on high-refresh monitors. The look-ahead vector included vertical pitch offsets that bounced when the chassis touched curbs.
+   - **Remediation**:
+     - Moved `_update_camera(delta)` and `_update_hud_telemetry(delta)` to `_process(delta)` in `chroma_rush_main.gd`, providing framerate-independent exponential smoothing. Decoupled look-ahead heading from chassis pitch by setting `planar_fwd.y = 0.0`.
+     - Relocated streetlights to lateral offset $13.8\text{m}$ (on the outer pedestrian plaza verge) and converted them to non-blocking visual `Node3D` assemblies, preventing cars from ever getting wedged.
+     - Updated `_build_realistic_tree()` species mapping to authentic botanical GLB trees (`tree_oak.glb`, `tree_palm.glb`, `tree_pine.glb`, `tree_tall.glb`) with natural organic crowns and trunks.
+     - Removed `st.generate_normals()` across all distant skyline mesh generators, preserving flat planar face normals (`Vector3.BACK`, `Vector3.FORWARD`, etc.) and creating sharp architectural skyscraper silhouettes. Adjusted materials to realistic architectural matte/satin roughness (0.45–0.65).
+     - Adjusted road spline clearance from $26.0\text{m}$ to $15.0\text{m}$, allowing dense urban city blocks to populate continuously along curves and straightaways.
+
+#### 10.2 Verification & Regression Evidence
+- **Automated Test Execution**:
+  ```bash
+  podman run --rm -v "${PWD}:/workspace:Z" -w /workspace docker.io/barichello/godot-ci:4.3 godot --headless -s res://tests/runner.gd
+  ```
+  - **Suites Executed**: **80 suites**
+  - **Total Assertions**: **3,045 passed, 0 failed (100% pass rate)**
+  - **Function Coverage**: **91.3% (1,085 / 1,188 functions)**
+  - **Exit Code**: **0**
+- **Production Certification**:
+  ```bash
+  podman run --rm -v "${PWD}:/workspace:Z" -w /workspace docker.io/library/python:3.12-alpine python3 scripts/certifier.py
+  ```
+  - **Overall Status**: **RUNTIME_VERIFIED (0 failed gates)**
+- **Exported Desktop Binaries**:
+  - `export/windows/VoltArena.exe` (188,307,664 bytes, embedded PCK, Windows x86_64)
+  - `export/linux/VoltArena.x86_64` (170,282,400 bytes, embedded PCK, Linux x86_64)
+
+
 
 

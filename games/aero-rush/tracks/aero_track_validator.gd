@@ -53,7 +53,7 @@ static func validate_course(course_def: Dictionary) -> Dictionary:
 	checks["checkpoints_ok"] = cp_ok
 
 	# 3. Procedural Track Geometry & Collision Body Verification
-	var track_data = AeroTrackGenerator.generate_track(waypoints, 14.0)
+	var track_data = AeroTrackGenerator.generate_track(course_def if course_def.has("islands") else waypoints, 14.0)
 	var sb = track_data.get("static_body") as StaticBody3D
 	var mesh_inst = track_data.get("mesh_instance") as MeshInstance3D
 	var collision_ok = false
@@ -243,7 +243,7 @@ static func validate_before_launch(course_def: Dictionary) -> Dictionary:
 		return {"valid": false, "reason": "Course requires at least start and finish checkpoints."}
 
 	# Verify drivable surface generation produces valid collision geometry
-	var track_data = AeroTrackGenerator.generate_track(waypoints, 16.0)
+	var track_data = AeroTrackGenerator.generate_track(course_def if course_def.has("islands") else waypoints, 16.0)
 	var sb = track_data.get("static_body") as StaticBody3D
 	var has_col = false
 	if sb:

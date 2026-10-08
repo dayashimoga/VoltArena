@@ -435,20 +435,21 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event is InputEventKey and event.pressed and event.keycode == KEY_R:
 			_on_reset_to_road_requested()
 
-func _physics_process(delta: float) -> void:
-	if current_state == State.BRIEFING:
-		if camera_override:
-			return
-		# Cinematic establishing camera orbit shot around player vehicle and skyline
-		if is_instance_valid(player_vehicle) and is_instance_valid(chase_camera):
+func _process(delta: float) -> void:
+	if current_state == State.PLAYING or current_state == State.COUNTDOWN:
+		if is_instance_valid(player_vehicle):
+			_update_camera(delta)
+			_update_hud_telemetry(delta)
+	elif current_state == State.BRIEFING:
+		if not camera_override and is_instance_valid(player_vehicle) and is_instance_valid(chase_camera):
 			var car_pos = player_vehicle.global_position if player_vehicle.is_inside_tree() else player_vehicle.position
 			var orbit_angle = Time.get_ticks_msec() * 0.0004
 			var orbit_offset = Vector3(sin(orbit_angle) * 11.0, 3.8, cos(orbit_angle) * 11.0)
 			chase_camera.global_position = car_pos + orbit_offset
 			chase_camera.look_at(car_pos + Vector3(0.0, 1.2, 0.0), Vector3.UP)
 
-	elif current_state == State.COUNTDOWN:
-		_update_camera(delta)
+func _physics_process(delta: float) -> void:
+	if current_state == State.COUNTDOWN:
 		countdown_timer -= delta
 		if countdown_timer > 2.0:
 			countdown_label.text = "3"
@@ -479,9 +480,7 @@ func _physics_process(delta: float) -> void:
 		for rival in rival_agents:
 			rival.update(delta)
 		if is_instance_valid(player_vehicle):
-			_update_camera(delta)
 			_update_swap_eligibility()
-			_update_hud_telemetry(delta)
 
 func _update_camera(delta: float) -> void:
 	if camera_override:
@@ -522,10 +521,10 @@ func _update_camera(delta: float) -> void:
 	var alpha_rot = 1.0 - exp(-9.0 * delta)
 	cam_smoothed_target_pos = cam_smoothed_target_pos.lerp(car_pos, alpha_pos)
 
-	# Filter out high-frequency vertical pitching
+	# Filter out high-frequency vertical pitching - decouple completely from chassis pitch chatter
 	var planar_fwd = raw_fwd
-	planar_fwd.y *= 0.35
-	if planar_fwd.length_squared() > 0.01:
+	planar_fwd.y = 0.0
+	if planar_fwd.length_squared() > 0.001:
 		planar_fwd = planar_fwd.normalized()
 	else:
 		planar_fwd = raw_fwd

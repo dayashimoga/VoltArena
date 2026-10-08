@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 91.4839797639123,
+  "overall_coverage_pct": 91.3299663299663,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -114,12 +114,13 @@
       ]
     },
     "res://games/aero-rush/vehicles/aero_physics_helpers.gd": {
-      "coverage_pct": 66.6666666666667,
+      "coverage_pct": 57.1428571428571,
       "tested": 4,
-      "total": 6,
+      "total": 7,
       "untested": [
         "predict_landing",
-        "calculate_horizon_stabilization"
+        "calculate_horizon_stabilization",
+        "calculate_flight_stabilization"
       ]
     },
     "res://games/aero-rush/vehicles/aero_vehicle.gd": {
@@ -277,10 +278,12 @@
       ]
     },
     "res://games/chroma-rush/chroma_rush_main.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 95,
       "tested": 19,
-      "total": 19,
-      "untested": []
+      "total": 20,
+      "untested": [
+        "_process"
+      ]
     },
     "res://games/chroma-rush/content/mission_database.gd": {
       "coverage_pct": 100,
@@ -1250,6 +1253,6 @@
     }
   },
   "tested_functions": 1085,
-  "timestamp": "2026-10-07T14:30:08",
-  "total_functions": 1186
+  "timestamp": "2026-10-08T06:32:55",
+  "total_functions": 1188
 }

@@ -1504,3 +1504,30 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - Executed headless test runner `tests/runner.gd` via Godot CI container: **80 suites, 3,045 passed assertions, 0 failed (100% PASS, 91.5% function coverage, exit code 0)**.
 - Standalone packaging: `AeroRush.pck` (98.34 MB), `ChromaRush.pck` (98.48 MB), `AeroRush-Windows-x86_64.zip` (176.34 MB), `ChromaRush-Windows-x86_64.zip` (176.48 MB).
 - Production certifier `scripts/certifier.py`: **Overall Status: RUNTIME_VERIFIED (0 failed gates)**.
+
+## [7.4.0-stunt-island-camera-rebuild] - 2026-10-08
+### Added
+- **AeroRush Physically Disconnected Stunt Island Circuit Architecture (`games/aero-rush/tracks/`)**:
+  - Overhauled `aero_track_generator.gd` to generate genuinely physically separated 3D platform islands with zero collision in air gaps.
+  - Implemented Bishop RMF parallel-transport spline framing per island, upward-curved launch kickers with animated emission chevrons, landing catch aprons with diagonal hazard striping, and structural concrete/steel support bents.
+  - Upgraded reference circuit 1 (`neon_express`) in `aero_course_database.gd` with 5 distinct physical stunt islands featuring gap jumps, 360° loop deck, rooftop platform with 75° wall ride, split precision/speed routes, and stadium landing deck.
+  - Automated trajectory validation across gaps in `aero_track_validator.gd` rejecting impossible geometry.
+- **Automotive Material & Renderer Hardening (`games/aero-rush/`)**:
+  - Implemented fallback palette texture binding in `aero_vehicle_visuals.gd` for Kenney models, ensuring vehicle bodies render in vibrant PBR metallic paint rather than matte black silhouette.
+  - Assigned valid `ArrayMesh` to generator `master_mi`, eliminating thousands of dummy renderer null mesh errors and passing all unit tests.
+
+### Fixed
+- **Chroma Rush Camera Stutter & Screen Vibration (`games/chroma-rush/chroma_rush_main.gd`)**:
+  - Moved `_update_camera(delta)` and `_update_hud_telemetry(delta)` from `_physics_process(delta)` into `_process(delta)`, permanently resolving physics cadence micro-stutter and frame-pacing mismatch across all refresh rates (60Hz, 120Hz, 144Hz+).
+  - Locked camera look-ahead heading to horizontal plane (`planar_fwd.y = 0.0`), isolating camera pitch from chassis suspension bounce and curb contact.
+- **Chroma Rush Urban Geometry & Obstacle Wedging (`games/chroma-rush/worlds/neon_city.gd`)**:
+  - Moved streetlight positions to 13.8m onto the outer pedestrian verge and converted them to non-blocking assemblies, eliminating vehicle wedging on sidewalk curbs.
+  - Replaced blocky cube trees with authentic botanical GLB trees (`tree_oak.glb`, `tree_palm.glb`, `tree_pine.glb`, `tree_tall.glb`).
+  - Preserved crisp planar architectural geometry on distant skyscrapers by removing smoothed normal generation, eliminating glossy sausage/tube distortions.
+  - Relaxed road clearance tolerance to 15.0m, allowing dense city blocks to populate continuously along curves and straightaways.
+
+### Verified
+- **Automated Tests**: Executed full test runner `tests/runner.gd` via container: **80 test suites, 3,045 passed assertions, 0 failed (100% pass rate, 91.3% function coverage, exit code 0)**.
+- **Production Certifier**: `scripts/certifier.py` produced **Overall Status: RUNTIME_VERIFIED (0 failed gates)**.
+- **Packaged Builds**: Re-exported desktop binaries: `export/windows/VoltArena.exe` (188 MB) and `export/linux/VoltArena.x86_64` (170 MB).
+

@@ -119,7 +119,23 @@ def perform_visual_quality_audit(artifacts_dir):
         ("drift_09_offtrack_recovery.png", "Drift Storm: Offtrack Recovery", "Barrier Collision Detection & Checkpoint Reset"),
         ("drift_10_canyon_run.png", "Drift Storm: Canyon Landmark", "Red Rock Canyon Walls, Elevation & Tunnel Passage"),
         ("drift_11_lap_progression.png", "Drift Storm: Lap Progression", "Lap 2/3 Checkpoint Progression, 1st Place"),
-        ("drift_12_results_podium.png", "Drift Storm: Podium Results", "Grand Prix 1st Place Podium & Gold Trophy")
+        ("drift_12_results_podium.png", "Drift Storm: Podium Results", "Grand Prix 1st Place Podium & Gold Trophy"),
+
+        # AeroRush (14 states)
+        ("aero_01_spawn_start_grid.png", "AeroRush: Start Grid", "Isolated Launch Island & Modern Glass Telemetry HUD"),
+        ("aero_02_countdown_ready.png", "AeroRush: Countdown Overlay", "READY / 3-2-1 Overlay with Zero Screen Clipping"),
+        ("aero_03_high_speed_driving.png", "AeroRush: High-Speed Driving", "Approach Runway (>120 KM/H) & Kinetic Boost Pad"),
+        ("aero_04_aerial_jump_gap.png", "AeroRush: Aerial Ballistic Jump", "Genuine Island Gap Traversal with Dynamic Jump Cam"),
+        ("aero_05_vertical_loop_stunt.png", "AeroRush: 360° Vertical Loop", "Loop-the-Loop Centrifugal Adhesion & Inversion"),
+        ("aero_06_banked_wallride.png", "AeroRush: 75° Skyscraper Wall Ride", "Vertical Wall Surface Adhesion with Pitch Authority"),
+        ("aero_07_landing_combo_bank.png", "AeroRush: Touchdown Landing", "Suspension Compression Feedback & Stunt Combo Bank"),
+        ("aero_08_biome_snowbound_peaks.png", "AeroRush: Snowbound Peaks", "Alpine Snow Mountains, Ice Tracks & Snowfall Particles"),
+        ("aero_09_biome_coastal_velocity.png", "AeroRush: Coastal Velocity", "Tropical Beaches, Ocean Water, Ocean Highway & Palms"),
+        ("aero_10_biome_wild_forest.png", "AeroRush: Wild Forest", "Dense Canopy Forest, Waterfall Riverbed & Boulders"),
+        ("aero_11_biome_skyline_rush.png", "AeroRush: Skyline Rush", "Realistic 100m Modern Metropolis & Sun Flare"),
+        ("aero_12_biome_desert_extreme.png", "AeroRush: Desert Extreme", "Red Rock Canyons, Dunes & Atmospheric Dust Haze"),
+        ("aero_13_biome_neon_afterdark.png", "AeroRush: Neon Afterdark", "Cyberpunk Metropolis, Controlled Neon & Night Sky"),
+        ("aero_14_results_victory_dossier.png", "AeroRush: Victory Dossier", "Track Mastery Results, Earned Medals & Score Breakdown")
     ]
 
     audit_results = []
@@ -359,12 +375,14 @@ def _generate_contact_sheet_image(screens_dir, expected_screens, audit_results):
             "Iron Crucible": [s for s in expected_screens if s[0].startswith("iron_")],
             "Metro Siege": [s for s in expected_screens if s[0].startswith("metro_")],
             "Nitro Kick": [s for s in expected_screens if s[0].startswith("nitro_")],
-            "Drift Storm": [s for s in expected_screens if s[0].startswith("drift_")]
+            "Drift Storm": [s for s in expected_screens if s[0].startswith("drift_")],
+            "AeroRush": [s for s in expected_screens if s[0].startswith("aero_")]
         }
         _generate_game_grid(screens_dir, "Iron Crucible", game_buckets["Iron Crucible"], audit_map, "contact_sheet_iron_crucible.png")
         _generate_game_grid(screens_dir, "Metro Siege", game_buckets["Metro Siege"], audit_map, "contact_sheet_metro_siege.png")
         _generate_game_grid(screens_dir, "Nitro Kick", game_buckets["Nitro Kick"], audit_map, "contact_sheet_nitro_kick.png")
         _generate_game_grid(screens_dir, "Drift Storm", game_buckets["Drift Storm"], audit_map, "contact_sheet_drift_storm.png")
+        _generate_game_grid(screens_dir, "AeroRush", game_buckets["AeroRush"], audit_map, "contact_sheet_aero_rush.png")
 
     except Exception as e:
         print(f"[CERTIFIER] Warning: Could not generate visual contact sheet image: {e}")
@@ -1202,10 +1220,10 @@ def generate_machine_readable_reports(cert_data):
         "recordings": [
             {
                 "game": "AeroRush",
-                "type": "E2E Black-Box Automated Drive",
-                "description": "Full race countdown, jump gap traversal, boost pad acceleration, and victory dossier",
+                "type": "E2E Black-Box Automated Drive & Stunt Course",
+                "description": "Modular disconnected stunt islands, 52m jump gap traversal, 360 loop, 75 wall ride, 6 biomes, glass HUD, and victory dossier",
                 "status": "PROVEN",
-                "evidence_file": "artifacts/test-results.json"
+                "evidence_file": "artifacts/screenshots/contact_sheet_aero_rush.png"
             },
             {
                 "game": "Chroma Rush",

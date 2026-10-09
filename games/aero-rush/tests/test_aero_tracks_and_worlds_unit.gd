@@ -15,6 +15,9 @@ const AeroWorldMegacity = preload("res://games/aero-rush/worlds/aero_world_megac
 const AeroWorldCanyon = preload("res://games/aero-rush/worlds/aero_world_canyon.gd")
 const AeroWorldCoastal = preload("res://games/aero-rush/worlds/aero_world_coastal.gd")
 const AeroWorldSky = preload("res://games/aero-rush/worlds/aero_world_sky.gd")
+const AeroWorldSnow = preload("res://games/aero-rush/worlds/aero_world_snow.gd")
+const AeroWorldForest = preload("res://games/aero-rush/worlds/aero_world_forest.gd")
+const AeroWorldSkyline = preload("res://games/aero-rush/worlds/aero_world_skyline.gd")
 
 var passed: int = 0
 var failed: int = 0
@@ -25,7 +28,7 @@ func run_tests() -> Dictionary:
 	test_track_spline_mesh_and_collision_hull()
 	test_checkpoint_gate_functionality()
 	test_moving_hazard_kinematics()
-	test_all_four_environments_instantiation()
+	test_all_six_environments_instantiation()
 	return {"passed": passed, "failed": failed}
 
 func assert_true(cond: bool, msg: String) -> void:
@@ -101,21 +104,21 @@ func test_moving_hazard_kinematics() -> void:
 
 	hazard.free()
 
-func test_all_four_environments_instantiation() -> void:
-	# 1. Megacity
+func test_all_six_environments_instantiation() -> void:
+	# 1. Megacity / Neon Afterdark
 	var city = AeroWorldMegacity.new()
 	city.build_environment()
 	assert_true(city.sun_light != null, "Megacity must have directional sun light")
 	assert_true(city.world_env != null, "Megacity must have WorldEnvironment")
 	city.free()
 
-	# 2. Canyon
+	# 2. Canyon / Desert Extreme
 	var canyon = AeroWorldCanyon.new()
 	canyon.build_environment()
 	assert_true(canyon.sun_light != null, "Canyon must have directional sun light")
 	canyon.free()
 
-	# 3. Coastal
+	# 3. Coastal / Coastal Velocity
 	var coastal = AeroWorldCoastal.new()
 	coastal.build_environment()
 	assert_true(coastal.sun_light != null, "Coastal must have directional sun light")
@@ -126,6 +129,27 @@ func test_all_four_environments_instantiation() -> void:
 	sky.build_environment()
 	assert_true(sky.sun_light != null, "Sky circuit must have directional sun light")
 	sky.free()
+
+	# 5. Snowbound Peaks
+	var snow = AeroWorldSnow.new()
+	snow.build_environment()
+	assert_true(snow.sun_light != null, "Snowbound peaks must have directional sun light")
+	assert_true(snow.world_env != null, "Snowbound peaks must have WorldEnvironment")
+	snow.free()
+
+	# 6. Wild Forest
+	var forest = AeroWorldForest.new()
+	forest.build_environment()
+	assert_true(forest.sun_light != null, "Wild forest must have directional sun light")
+	assert_true(forest.world_env != null, "Wild forest must have WorldEnvironment")
+	forest.free()
+
+	# 7. Skyline Rush
+	var skyline = AeroWorldSkyline.new()
+	skyline.build_environment()
+	assert_true(skyline.sun_light != null, "Skyline rush must have directional sun light")
+	assert_true(skyline.world_env != null, "Skyline rush must have WorldEnvironment")
+	skyline.free()
 
 func get_coverage_entries() -> Array:
 	return [

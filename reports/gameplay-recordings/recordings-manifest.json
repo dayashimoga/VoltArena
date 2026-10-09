@@ -1,12 +1,12 @@
 {
-  "timestamp_utc": "2026-10-09 11:15:00 UTC",
+  "timestamp_utc": "2026-10-09 13:40:12 UTC",
   "recordings": [
     {
       "game": "AeroRush",
-      "type": "E2E Black-Box Automated Drive",
-      "description": "Full race countdown, jump gap traversal, boost pad acceleration, and victory dossier",
+      "type": "E2E Black-Box Automated Drive & Stunt Course",
+      "description": "Modular disconnected stunt islands, 52m jump gap traversal, 360 loop, 75 wall ride, 6 biomes, glass HUD, and victory dossier",
       "status": "PROVEN",
-      "evidence_file": "artifacts/test-results.json"
+      "evidence_file": "artifacts/screenshots/contact_sheet_aero_rush.png"
     },
     {
       "game": "Chroma Rush",

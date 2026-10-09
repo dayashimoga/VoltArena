@@ -1,7 +1,7 @@
 {
   "project": "VoltArena",
   "version": "5.0.0",
-  "timestamp_utc": "2026-10-09 11:15:00 UTC",
+  "timestamp_utc": "2026-10-09 13:40:12 UTC",
   "overall_status": "RUNTIME_VERIFIED",
   "runtime_verified_count": 8,
   "implemented_count": 3,
@@ -12,14 +12,14 @@
     {
       "gate": "Unit & E2E Tests",
       "requirement": "100% assertion pass rate, 0 failures",
-      "measured": "3045 passed, 0 failed",
+      "measured": "3051 passed, 0 failed",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/test-results.json"
     },
     {
       "gate": "Function Coverage",
       "requirement": ">90.0% function coverage",
-      "measured": "91.3% (1085/1189 functions)",
+      "measured": "90.6% (1085/1198 functions)",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/coverage-report.json"
     },
@@ -89,7 +89,7 @@
     {
       "gate": "G9 Packaged Runtime Render-Health & State Dossier",
       "requirement": "49/49 packaged runtime screenshots >=1280x720, Render-Health (Lum>=15, Contrast>=18, Black%<=65%), Contact Sheets generated",
-      "measured": "53/53 passed (Avg Lum=83.1, Avg Contrast=56.5, Max Black%=22.3%)",
+      "measured": "67/67 passed (Avg Lum=97.6, Avg Contrast=59.1, Max Black%=27.1%)",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/screenshots/visual_contact_sheet.png"
     },

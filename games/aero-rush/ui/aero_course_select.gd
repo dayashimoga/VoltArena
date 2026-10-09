@@ -136,11 +136,14 @@ func _refresh_display() -> void:
 	name_label.text = c.get("name", "").to_upper()
 	desc_label.text = c.get("desc", "")
 
-	var env_name = "MEGACITY"
+	var env_name = "NEON AFTERDARK"
 	match c.get("environment", 0):
-		AeroConstants.EnvironmentType.MOUNTAIN_CANYON: env_name = "MOUNTAIN CANYON"
-		AeroConstants.EnvironmentType.TROPICAL_COASTAL: env_name = "TROPICAL COASTAL"
-		AeroConstants.EnvironmentType.SKY_CIRCUIT: env_name = "SKY CIRCUIT"
+		AeroConstants.EnvironmentType.SNOWBOUND_PEAKS: env_name = "SNOWBOUND PEAKS"
+		AeroConstants.EnvironmentType.COASTAL_VELOCITY, AeroConstants.EnvironmentType.TROPICAL_COASTAL: env_name = "COASTAL VELOCITY"
+		AeroConstants.EnvironmentType.WILD_FOREST: env_name = "WILD FOREST"
+		AeroConstants.EnvironmentType.SKYLINE_RUSH, AeroConstants.EnvironmentType.SKY_CIRCUIT: env_name = "SKYLINE RUSH"
+		AeroConstants.EnvironmentType.DESERT_EXTREME, AeroConstants.EnvironmentType.MOUNTAIN_CANYON: env_name = "DESERT EXTREME"
+		AeroConstants.EnvironmentType.NEON_AFTERDARK, AeroConstants.EnvironmentType.NEON_MEGACITY: env_name = "NEON AFTERDARK"
 
 	var mode_name = "CIRCUIT"
 	match c.get("mode", 0):

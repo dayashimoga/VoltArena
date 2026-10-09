@@ -1,14 +1,14 @@
 # VoltArena — User Guide & Platform Manual
 
 ## 1. Welcome to VoltArena
-**VoltArena** is a unified 3D gaming arcade featuring eight distinct titles accessible through an interactive cyberpunk launcher.
+**VoltArena** is a unified 3D gaming arcade featuring ten distinct titles accessible through an interactive cyberpunk launcher.
 
 ---
 
 ## 2. Navigating the Launcher
 
 Upon launching VoltArena, you are greeted by the 3D Holographic Menu:
-* **Game Carousel**: The 9 games are displayed as interactive holographic cards:
+* **Game Carousel**: The 10 games are displayed as interactive holographic cards:
   1. **Iron Crucible** (Tactical Arena FPS)
   2. **Metro Siege** (Subway Survival FPS)
   3. **Nitro Kick** (Rocket-Car Football)
@@ -18,6 +18,7 @@ Upon launching VoltArena, you are greeted by the 3D Holographic Menu:
   7. **WildCircuit** (Wildlife Safari & Photography Traversal)
   8. **Strike Vector** (Forward-Moving Run-and-Gun Shooter)
   9. **Chroma Rush** (High-Speed Pursuit & Color Chase)
+  10. **AeroRush: Impossible Circuit** (High-Speed Modular Stunt Driving)
 * **Launching a Game**: Click on any game card or press the corresponding **PLAY** button. The game assets will instantly load without scene hitches.
 * **Global Settings**: Click the **SETTINGS** button in the upper-right corner to configure graphics quality presets (Low, Medium, High, Ultra), audio volume sliders (Master, Music, SFX), and mouse sensitivity.
 
@@ -44,8 +45,13 @@ Each game features an immediate pre-match onboarding sequence and high-contrast 
 * **Ammunition & Boost (Bottom-Right)**:
   * **FPS & Run-and-Gun**: Shows active weapon name, fire mode (`[AUTO]`, `[BURST]`, `[CHARGE]`), current clip rounds, reserve ammo pool (e.g. `30 / 150`), and grenade counter (`FRAG: 3`).
   * **Vehicular Games**: Shows current nitrous boost reserves ($0-100\%$).
+* **AeroRush Glass Telemetry HUD**:
+  * **Digital Speedometer**: Displays real-time speed in km/h with an animated colored bar and boost gauge.
+  * **Next Stunt Card (Top-Center)**: Displays upcoming stunt type (Launch Ramp, Wall Ride, Loop, Moving Platform) and live distance countdown in meters.
+  * **Course Progress (Top-Right)**: Displays current segment index and total platform count (e.g. `COURSE: 4 / 12`).
+  * **Stunt Combo Meter (Bottom-Left)**: Displays active stunt multiplier ($x1.0 - x5.0$) and stunt score tally based on airtime, rotations, and clean landing bonuses.
 * **Notification Toasts (Center / Top-Left)**:
-  * Displays dynamic messages such as `"WAVE 1 STARTED"`, `"CHECKPOINT REACHED"`, `"ROUTE CLEAR // ADVANCE"`, and `"CRITICAL DAMAGE // RESTORING"`.
+  * Displays dynamic messages such as `"WAVE 1 STARTED"`, `"CHECKPOINT REACHED"`, `"CLEAN LANDING!"`, `"PERFECT LOOP!"`, and `"CRITICAL DAMAGE // RESTORING"`.
 
 ---
 
@@ -109,6 +115,17 @@ When a match concludes (time runs out, all waves survived, race finished, or goa
 * **Checkpoint Delivery**: Once carrying the mission target color, follow the 3D navigational beacon and radar directly to the corresponding colored 24m overhead highway gantry.
 * **Vehicle Fleet**: Choose from 6 distinct automotive archetypes: *Apex Striker* (Hypercar), *Vortex Drift* (Sports Coupe), *Titan Vanguard* (Armored SUV), *Pulse Cyber* (EV), *Dune Nomad* (Offroader), and *Quantum Phantom* (Exotic). All feature clearcoat PBR paint, projector LED headlights, reactive brake ($4.8\times$) and reverse lights, smoked glass, and detailed alloy wheels.
 * **Reset Recovery**: If you spin out or collide with obstacles, press `[R]` to immediately reset your vehicle smoothly to the nearest safe road pose.
+
+### 6.7 AeroRush: Impossible Circuit
+* **Modular Island Stunts**: The course is built of physically separated platform islands. Traversal requires hitting launch kickers at target speed and executing ballistic leaps across wide aerial voids.
+* **Launch Kicker Speed Management**: Maintain full throttle (`W` or `Up`) and trigger boost (`Shift`) across launch kickers to attain the required launch velocity ($40-75\text{ m/s}$).
+* **Mid-Air Gyro Control**: In flight, use `W/S` for pitch tilt, `Q/E` for roll adjustment, and `A/D` for yaw alignment to orient your wheels parallel to incoming landing aprons.
+* **Flared Landing Aprons**: Aim for the widened throat of landing aprons. Landing flush with all 4 wheels triggers a **CLEAN LANDING** combo multiplier bonus.
+* **360° Loops & 75° Wall-Rides**: Maintain momentum entering vertical loops to counteract downward gravity; do not brake while inverted. On wall-rides, lean gently into the banking angle to stay centered.
+* **Kinetic Moving Platforms**: Anticipate the oscillation period of moving platforms (`AnimatableBody3D`). Time your jump so the platform is centered upon touchdown.
+* **Multi-View Camera (`C`)**: Press `C` to cycle between standard Third-Person Chase, low-angle Hood/Bumper View, and Cinematic Orbit showcase.
+* **Quick Recovery (`R`)**: If you miss a jump and drop off a platform, the automatic kill plane restores your car to the previous checkpoint with $2.5\text{s}$ safe grace. You can also manually tap `R` at any time to recover instantly.
+* **12 Championship Circuits across 6 Biomes**: Tackle diverse environments including *Snowbound Peaks*, *Coastal Velocity*, *Wild Forest*, *Skyline Rush*, *Desert Extreme*, and *Neon Afterdark*.
 
 ---
 

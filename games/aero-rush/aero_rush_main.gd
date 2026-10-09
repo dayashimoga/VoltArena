@@ -26,6 +26,9 @@ const AeroWorldMegacity = preload("res://games/aero-rush/worlds/aero_world_megac
 const AeroWorldCanyon = preload("res://games/aero-rush/worlds/aero_world_canyon.gd")
 const AeroWorldCoastal = preload("res://games/aero-rush/worlds/aero_world_coastal.gd")
 const AeroWorldSky = preload("res://games/aero-rush/worlds/aero_world_sky.gd")
+const AeroWorldSnow = preload("res://games/aero-rush/worlds/aero_world_snow.gd")
+const AeroWorldForest = preload("res://games/aero-rush/worlds/aero_world_forest.gd")
+const AeroWorldSkyline = preload("res://games/aero-rush/worlds/aero_world_skyline.gd")
 
 const AeroHUD = preload("res://games/aero-rush/ui/aero_hud.gd")
 const AeroMainMenu = preload("res://games/aero-rush/ui/aero_main_menu.gd")
@@ -201,6 +204,18 @@ func _init_ui() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if current_state in [State.RACING, State.COUNTDOWN]:
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.keycode == KEY_V or event.keycode == KEY_C:
+				if is_instance_valid(chase_camera) and chase_camera.has_method("cycle_view_mode"):
+					chase_camera.cycle_view_mode()
+					get_viewport().set_input_as_handled()
+					return
+		if event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_X:
+			if is_instance_valid(chase_camera) and chase_camera.has_method("cycle_view_mode"):
+				chase_camera.cycle_view_mode()
+				get_viewport().set_input_as_handled()
+				return
+
 		var is_pause_key = event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel")
 		if not is_pause_key and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 			is_pause_key = true
@@ -290,6 +305,19 @@ func start_race(course_id: String) -> void:
 	# 7. Start Audio
 	_play_course_music(course_def.get("environment", AeroConstants.EnvironmentType.NEON_MEGACITY))
 
+	# 8. Initialize HUD Course Telemetry
+	var all_courses = AeroCourseDatabase.get_all_courses()
+	var course_num = 1
+	for idx in range(all_courses.size()):
+		if all_courses[idx].get("id", "") == selected_course_id:
+			course_num = idx + 1
+			break
+	if hud and is_instance_valid(hud):
+		hud.update_course(course_num, all_courses.size())
+		hud.update_lap(current_lap, total_laps)
+		hud.update_checkpoint(1, checkpoints.size())
+		hud.update_next_stunt("LAUNCH KICKER", 150.0)
+
 	# Transition to Countdown
 	set_state(State.COUNTDOWN)
 
@@ -298,12 +326,18 @@ func restart_race() -> void:
 
 func _spawn_environment(env_type: int) -> void:
 	match env_type:
-		AeroConstants.EnvironmentType.MOUNTAIN_CANYON:
+		AeroConstants.EnvironmentType.MOUNTAIN_CANYON, AeroConstants.EnvironmentType.DESERT_EXTREME:
 			active_world = AeroWorldCanyon.new()
 		AeroConstants.EnvironmentType.TROPICAL_COASTAL:
 			active_world = AeroWorldCoastal.new()
 		AeroConstants.EnvironmentType.SKY_CIRCUIT:
 			active_world = AeroWorldSky.new()
+		AeroConstants.EnvironmentType.SNOWBOUND_PEAKS:
+			active_world = AeroWorldSnow.new()
+		AeroConstants.EnvironmentType.WILD_FOREST:
+			active_world = AeroWorldForest.new()
+		AeroConstants.EnvironmentType.SKYLINE_RUSH:
+			active_world = AeroWorldSkyline.new()
 		_:
 			active_world = AeroWorldMegacity.new()
 
@@ -460,6 +494,22 @@ func _process_racing(delta: float) -> void:
 		hud.update_time(race_timer)
 		hud.update_lap(current_lap, total_laps)
 		hud.update_checkpoint(next_checkpoint_idx + 1, checkpoints.size())
+
+		# Dynamic Next Stunt / Checkpoint Telemetry
+		var stunt_name = "MEGA JUMP"
+		var stunt_dist = 180.0
+		if checkpoints.size() > 0 and next_checkpoint_idx < checkpoints.size():
+			var target_cp = checkpoints[next_checkpoint_idx]
+			if is_instance_valid(target_cp):
+				stunt_dist = player_vehicle.global_position.distance_to(target_cp.global_position)
+				if target_cp.is_finish_line:
+					stunt_name = "FINISH PLATFORM"
+				elif next_checkpoint_idx % 2 == 1:
+					stunt_name = "LAUNCH KICKER"
+				else:
+					stunt_name = "AERIAL LANDING"
+		hud.update_next_stunt(stunt_name, stunt_dist)
+
 		ghost_system.record_frame(player_vehicle, delta, race_timer)
 
 	ghost_system.update_playback(delta)

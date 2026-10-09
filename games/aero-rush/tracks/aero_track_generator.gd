@@ -9,6 +9,7 @@ extends RefCounted
 ## speed boost pads, and structural concrete/steel support bents connecting to the ground basin.
 
 const AeroConstants = preload("res://games/aero-rush/core/aero_constants.gd")
+const AeroMovingPlatform = preload("res://games/aero-rush/tracks/aero_moving_platform.gd")
 
 const TRACK_SHADER_CODE = """
 shader_type spatial;
@@ -305,7 +306,7 @@ static func generate_track(course_data: Variant, default_width: float = 16.0) ->
 
 		total_course_length += island_length
 		all_dense_points.append_array(dense)
-		all_col_faces.append_array(island_col_faces)
+		var is_moving = island_def.get("is_moving_platform", false)
 
 		surf_tool.generate_normals()
 		surf_tool.generate_tangents()
@@ -316,7 +317,6 @@ static func generate_track(course_data: Variant, default_width: float = 16.0) ->
 		var deck_inst = MeshInstance3D.new()
 		deck_inst.name = "DeckMesh"
 		deck_inst.mesh = deck_mesh
-		island_root.add_child(deck_inst)
 
 		under_tool.generate_normals()
 		var u_mesh = under_tool.commit()
@@ -326,21 +326,46 @@ static func generate_track(course_data: Variant, default_width: float = 16.0) ->
 		var under_inst = MeshInstance3D.new()
 		under_inst.name = "UndersideMesh"
 		under_inst.mesh = u_mesh
-		island_root.add_child(under_inst)
 
-		# 3. Island-Specific Collision Body (Kept for hierarchy/inspector; master_sb handles unified physics to prevent duplicate contact impulses)
-		var island_sb = StaticBody3D.new()
-		island_sb.name = "IslandCollisionBody"
-		island_sb.collision_layer = 0 # Master body handles active collision layer to prevent normal fighting
-		island_sb.collision_mask = 0
+		if is_moving:
+			# Kinetic platform with active AnimatableBody3D physics
+			var moving_body = AeroMovingPlatform.new()
+			moving_body.name = "MovingPlatformBody"
+			moving_body.movement_axis = island_def.get("movement_axis", Vector3(1.0, 0.0, 0.0))
+			moving_body.movement_distance = float(island_def.get("movement_distance", 24.0))
+			moving_body.movement_speed = float(island_def.get("movement_speed", 1.2))
+			moving_body.is_rotating = island_def.get("is_rotating", false)
+			moving_body.rotation_axis = island_def.get("rotation_axis", Vector3(0.0, 1.0, 0.0))
+			moving_body.rotation_speed_deg = float(island_def.get("rotation_speed_deg", 18.0))
+			island_root.add_child(moving_body)
 
-		var col_shape = CollisionShape3D.new()
-		col_shape.name = "IslandShape"
-		var concave_poly = ConcavePolygonShape3D.new()
-		concave_poly.set_faces(island_col_faces)
-		col_shape.shape = concave_poly
-		island_sb.add_child(col_shape)
-		island_root.add_child(island_sb)
+			moving_body.add_child(deck_inst)
+			moving_body.add_child(under_inst)
+
+			var m_col_shape = CollisionShape3D.new()
+			m_col_shape.name = "MovingIslandShape"
+			var m_concave = ConcavePolygonShape3D.new()
+			m_concave.set_faces(island_col_faces)
+			m_col_shape.shape = m_concave
+			moving_body.add_child(m_col_shape)
+		else:
+			all_col_faces.append_array(island_col_faces)
+			island_root.add_child(deck_inst)
+			island_root.add_child(under_inst)
+
+			# Island-Specific Collision Body (Hierarchy representation; master_sb handles unified physics)
+			var island_sb = StaticBody3D.new()
+			island_sb.name = "IslandCollisionBody"
+			island_sb.collision_layer = 0
+			island_sb.collision_mask = 0
+
+			var col_shape = CollisionShape3D.new()
+			col_shape.name = "IslandShape"
+			var concave_poly = ConcavePolygonShape3D.new()
+			concave_poly.set_faces(island_col_faces)
+			col_shape.shape = concave_poly
+			island_sb.add_child(col_shape)
+			island_root.add_child(island_sb)
 
 		# 4. Optional Launch Ramp Kicker at Island Exit
 		if island_def.get("has_launch_ramp", false) or (idx < islands_spec.size() - 1 and island_def.get("is_gap_exit", true)):
@@ -905,7 +930,15 @@ static func _generate_support_pylons(dense_points: Array[Dictionary], parent: No
 
 				var look_target = bent.position + fwd_dir * 10.0
 				if (look_target - bent.position).length_squared() > 0.01:
-					bent.look_at(look_target, Vector3.UP)
+					if bent.is_inside_tree():
+						bent.look_at(look_target, Vector3.UP)
+					else:
+						var fwd_n = fwd_dir.normalized()
+						var up_n = Vector3.UP
+						var z_ax = -fwd_n
+						var x_ax = up_n.cross(z_ax).normalized()
+						var y_ax = z_ax.cross(x_ax).normalized()
+						bent.transform.basis = Basis(x_ax, y_ax, z_ax)
 				bent.add_child(beam)
 
 				for col_side in [-1.0, 1.0]:

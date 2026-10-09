@@ -140,6 +140,10 @@ func _setup_collision_shape() -> void:
 	add_child(col)
 
 func _setup_suspension_raycasts() -> void:
+	for r in wheel_raycasts:
+		if is_instance_valid(r) and r.get_parent() == self:
+			r.queue_free()
+	wheel_raycasts.clear()
 	var offsets = [
 		Vector3(-0.48, 0.45, -0.75), # Front Left
 		Vector3(0.48, 0.45, -0.75),  # Front Right
@@ -273,9 +277,11 @@ func _update_grounding_and_suspension(delta: float) -> void:
 			var dist = ray.global_position.distance_to(ray.get_collision_point())
 			# Compression travel
 			var comp = clampf(1.0 - dist, 0.0, 0.40)
-			suspension_offsets[i] = lerpf(suspension_offsets[i], comp, delta * suspension_stiffness)
+			if i < suspension_offsets.size():
+				suspension_offsets[i] = lerpf(suspension_offsets[i], comp, delta * suspension_stiffness)
 		else:
-			suspension_offsets[i] = lerpf(suspension_offsets[i], 0.0, delta * 6.0)
+			if i < suspension_offsets.size():
+				suspension_offsets[i] = lerpf(suspension_offsets[i], 0.0, delta * 6.0)
 
 	var was_grounded = is_grounded
 	is_grounded = contact_count >= 1 or is_on_floor() or (not is_inside_tree() and is_grounded)

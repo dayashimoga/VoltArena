@@ -107,4 +107,33 @@
 * **Cause**: In Godot 4.3 headless mode, newly created `class_name` scripts are not immediately registered in `.godot/global_script_class_cache.cfg` unless an editor scan occurs.
 * **Resolution**: Include explicit `const ... = preload(...)` references in consumer scripts and test harnesses to guarantee hermetic headless compilation without depending on cache scans.
 
+---
+
+## 6. AeroRush Physics, Ballistic Simulation & Environment Gotchas
+
+### Gotcha: Premature Landing Impact on Launch Ascent
+* **Cause**: In `aero_track_validator.gd`, when a vehicle launched upwards from a kicker ramp, `plane_dist <= 0.25` triggered immediately as the vehicle crossed the landing height plane while ascending (`vel.dot(landing_normal) > 0`), reporting an artificial undershoot of 27m–50m.
+* **Resolution**: Required `vel.dot(landing_normal) < -0.1` and `sim_time > 0.15s` in the numerical trajectory solver so touchdown is only detected during descending ballistic trajectory.
+
+### Gotcha: Banked Surface Normal Misalignment on Diagonal Tracks
+* **Cause**: `landing_norm` was rotated around world `Vector3.FORWARD` rather than the track's horizontal direction `fwd_landing_dir`. On diagonal tracks with 45°–50° banking, this tilted the normal vector into the travel axis, causing 14m–22m false lateral offsets.
+* **Resolution**: Rotated around `fwd_landing_dir`, reducing calculated lateral offset to $<0.5\text{m}$.
+
+### Gotcha: Rogue Sky Moons & Glowing Spheres in Skybox (`input_file_0.png`)
+* **Cause**: Perimeter skyscrapers in `aero_world_megacity.gd` spawned rooftop beacon spheres at local $Y = 45\text{m}$ under $5.5\times$ scaling, projecting floating glowing spheres 247m into the sky without towers, creating the illusion of multiple duplicate moons.
+* **Resolution**: Removed rogue beacon spheres and balanced skyscraper proportions to realistic 75m–130m heights with clean directional sun lighting.
+
+### Gotcha: Severe Angle Waypoint Bends ($>85^\circ$)
+* **Cause**: In `red_rock_roller`, Segment 10 to 11 had a sharp bend of $102.3^\circ$, causing extruded track ribbons to self-intersect and create insurmountable collision walls.
+* **Resolution**: Smoothed intermediate waypoints `(-42, 3, 5)` and `(-25, 0, -15)`, keeping all consecutive bend angles strictly $<82^\circ$.
+
+### Gotcha: Infinite Respawn Tumble Loops
+* **Cause**: Vehicles falling off high stunt platforms took too long to hit arbitrary world floors, or respawned with residual angular momentum inside obstacles.
+* **Resolution**: Implemented dynamic kill-plane at $Y < \text{nearest\_track\_Y} - 30\text{m}$, 6.2s tumble timeout, zeroed linear/angular velocity on checkpoint restore, and added $2.5\text{s}$ safe grace cooldown.
+
+### Gotcha: Coordinate Clipping on Countdown and Stunt Notifications (`input_file_2.png`)
+* **Cause**: Countdown toasts used raw top-left fixed pixel coordinates that clipped off-screen on non-standard aspect ratios.
+* **Resolution**: Standardized HUD notification banner on centered `Control` with proportional anchoring and dynamic text wrapping.
+
+
 

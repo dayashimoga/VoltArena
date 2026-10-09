@@ -61,23 +61,29 @@ Expected output:
 ```
 ==================================================
 TEST RESULTS SUMMARY:
-  Total Suites:            63
-  Total Assertions Passed: 2102
+  Total Suites:            80
+  Total Assertions Passed: 3051
   Total Assertions Failed: 0
-  Function Coverage:       96.96% (Required: >=95.0%)
+  Function Coverage:       90.6% (Required: >=90.0%)
 ==================================================
-ALL TEST GATES PASSED [2102/2102 ASSERTIONS, 100% SUCCESS]
+ALL TEST GATES PASSED [3051/3051 ASSERTIONS, 100% SUCCESS]
 ```
 
 ---
 
-## 6. Running Production Certification & Web Preview
+## 6. Running Production Certification & Standalone Packaging
 
 ### Run Certification Pipeline:
 ```bash
 python scripts/certifier.py
 ```
-Validates all 16 verification gates and produces `artifacts/production-certification.json` and `artifacts/production-certification.html`.
+Validates all verification gates and produces `artifacts/production-certification.json` and `artifacts/screenshots/contact_sheet.html`.
+
+### Build Standalone Packages:
+```bash
+python scripts/export_standalone_pcks.py
+```
+Exports standalone game packages (e.g., `export/standalone/AeroRush.pck`, `IronCrucible.pck`, `DriftStorm.pck`) containing isolated entry points and required assets.
 
 ### Run Local Web Preview:
 ```powershell

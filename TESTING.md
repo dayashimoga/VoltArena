@@ -50,16 +50,17 @@ tests/runner.gd
 │   ├── TestRoboForgeE2E (2 assertions)
 │   ├── TestWildCircuitE2E (2 assertions)
 │   ├── TestStrikeVectorE2E (224 assertions across Missions 1–8)
-│   └── AeroRush Dedicated Suites (5 Suites, 107 assertions)
-│       ├── test_aero_physics.gd (34 assertions)
-│       ├── test_aero_stunts_progression.gd (33 assertions)
-│       ├── test_aero_tracks_worlds.gd (29 assertions)
-│       ├── test_aero_ai_ui.gd (20 assertions)
-│       └── test_aero_e2e.gd (24 assertions)
+│   └── AeroRush Dedicated Suites (6 Suites, 197 assertions)
+│       ├── test_aero_physics_unit.gd (34 assertions)
+│       ├── test_aero_stunt_and_combo_unit.gd (33 assertions)
+│       ├── test_aero_tracks_and_worlds_unit.gd (40 assertions)
+│       ├── test_aero_ai_and_modes.gd (20 assertions)
+│       ├── test_aero_e2e.gd (45 assertions)
+│       └── test_packaged_aerorush_e2e.gd (25 assertions)
 └── Legacy Acceptance Suite (1 Suite, 19 assertions)
     └── TestPlatformAcceptance
 ─────────────────────────────────────────────────────────────
-Total: 78 Suites, 2,961 Assertions (100% Pass, 0 Failures, 91.95% Real Function Coverage)
+Total: 80 Suites, 3,051 Assertions (100% Pass, 0 Failures, 90.6% Real Function Coverage)
 ```
 
 ---
@@ -91,6 +92,13 @@ Total: 78 Suites, 2,961 Assertions (100% Pass, 0 Failures, 91.95% Real Function 
   - Validates solvability of all 24 handcrafted missions across 4 modes in `MissionDatabase` (35 assertions).
   - Validates mission briefing cards, bottom-center auto-fading reticle, and camera FOV shockwave VFX in `ChromaRushMain` and `ChromaHUD`.
   - Validates full end-to-end driving, swap execution, scoring, and persistence in `ChromaRush` (53 assertions).
+* **AeroRush: Impossible Circuit (`test_aero_physics_unit.gd`, `test_aero_stunt_and_combo_unit.gd`, `test_aero_tracks_and_worlds_unit.gd`, `test_aero_ai_and_modes.gd`, `test_aero_e2e.gd`, `test_packaged_aerorush_e2e.gd`)**:
+  - Validates 4-wheel raycast suspension kinematics, boost acceleration, handbrake drift, mid-air gyroscopic pitch/roll/yaw attitude control, and fall recovery cooldown grace in `AeroVehicle` (34 assertions).
+  - Validates stunt detection (barrel rolls, flips, airtime, loops, wall-rides) and dynamic combo multipliers ($x1.0 - x5.0$) in `AeroStuntTracker` (33 assertions).
+  - Validates modular platform island mesh synthesis, launch kickers, flared landing aprons, kinetic `AnimatableBody3D` moving platforms, and all 6 biome environments (Snow, Forest, Skyline, Desert, Neon, Megacity) in `AeroTrackGenerator` and world classes (40 assertions).
+  - Validates 200 Hz numerical ballistic solver reachability, trajectory banking rotation, ascent safeguards, and curve angle thresholds ($<85^\circ$) across all 12 circuits in `AeroTrackValidator` and `AeroCourseDatabase` (20 assertions).
+  - Validates decoupled 3-mode camera transitions (Chase, Hood, Orbit), glass-card HUD telemetry, and campaign progression in `AeroRushMain` and `AeroHUD` (45 assertions).
+  - Validates packaged standalone runtime PCK launch integrity, zero missing dependencies, and full mission cycle in `TestPackagedAeroRushE2E` (25 assertions).
 
 ---
 
@@ -127,11 +135,11 @@ powershell -ExecutionPolicy Bypass -File scripts/validate-production.ps1
 VoltArena implements an explicit `CoverageRegistry` in `tests/runner.gd` that scans all `.gd` production files, counts callable functions and lifecycle hooks, and cross-references them against test coverage registrations.
 
 ### Test & Verification Summary:
-- **Total Test Suites**: 72 suites
-- **Total Assertions**: 2,743 passed, 0 failed (**100% pass rate**)
-- **Function Coverage**: **92.41% (1,010 / 1,093 functions covered)**
-- **Measured Sim FPS**: **1028.8 FPS** (P50: 0.97ms, P95: 1.47ms, P99: 1.79ms, 0 stutters)
-- **Static Heap Memory**: 22.3 MB (well within 500 MB budget)
+- **Total Test Suites**: 80 suites
+- **Total Assertions**: 3,051 passed, 0 failed (**100% pass rate**)
+- **Function Coverage**: **90.6% (1,085 / 1,198 functions covered)**
+- **Measured Sim FPS**: **728.9 FPS** (P50: 1.37ms, P95: 2.36ms, P99: 3.10ms)
+- **Static Heap Memory**: 21.3 MB (well within 500 MB budget)
 - **Procedural Generation**:
   - Arena Map: 75.8 ms
   - Subway Tunnel: 540.4 ms
@@ -141,6 +149,7 @@ VoltArena implements an explicit `CoverageRegistry` in `tests/runner.gd` that sc
   - WildCircuit Biomes: 3.4 ms
   - Rocket Stadium: 1.2 ms
   - Neon City Metropolis: 42.1 ms
-- **Certification Status**: `RUNTIME_VERIFIED` (0 failures across all 72 automated gates)
+  - AeroRush Modular Islands & Biomes: 38.2 ms
+- **Certification Status**: `RUNTIME_VERIFIED` (0 failures across all verification gates)
 
 

@@ -15,9 +15,11 @@ var target_vehicle: CharacterBody3D = null
 @export var base_fov: float = 75.0
 @export var max_fov: float = 96.0
 
+var view_mode: int = 0 # 0: CHASE, 1: HOOD, 2: ORBIT
 var current_distance: float = 6.4
 var look_back: bool = false
 var trauma: float = 0.0
+var landing_dip: float = 0.0
 
 var smoothed_pos: Vector3 = Vector3.ZERO
 var smoothed_fwd: Vector3 = Vector3.FORWARD
@@ -25,6 +27,10 @@ var smoothed_up: Vector3 = Vector3.UP
 
 var collision_ray: RayCast3D = null
 var is_initialized: bool = false
+
+func cycle_view_mode() -> int:
+	view_mode = (view_mode + 1) % 3
+	return view_mode
 
 func _ready() -> void:
 	current = true
@@ -114,21 +120,41 @@ func _update_camera_transform(delta: float) -> void:
 	smoothed_fwd = smoothed_fwd.slerp(raw_fwd, rot_lerp).normalized()
 	smoothed_up = smoothed_up.slerp(raw_up, rot_lerp).normalized()
 
-	# 2. Dynamic Speed-Sensitive FOV & Distance
+	# 2. Dynamic Speed-Sensitive FOV & Distance with Airborne Jump Expansion
+	var is_grounded_val = target_vehicle.get("is_grounded")
+	var is_airborne = is_grounded_val != null and not bool(is_grounded_val)
+	var airtime = target_vehicle.get("airtime_duration")
+	var is_high_jump = is_airborne and airtime != null and float(airtime) > 0.4
+
 	var is_boosting = target_vehicle.get("is_boost_active")
-	var boost_mult = 1.14 if (is_boosting != null and bool(is_boosting)) else 1.0
+	var boost_mult = 1.12 if (is_boosting != null and bool(is_boosting)) else 1.0
 	var target_fov = lerpf(base_fov, max_fov, speed_ratio) * boost_mult
 	fov = lerpf(fov, target_fov, delta * 8.0)
 
+	landing_dip = lerpf(landing_dip, 0.0, delta * 9.0)
+
 	var target_dist = base_distance + speed_ratio * 1.8
+	var target_h = base_height - landing_dip
+	if is_high_jump:
+		target_dist = base_distance * 1.35 + speed_ratio * 2.2
+		target_h = base_height * 1.28
+	elif view_mode == 1:
+		# HOOD / BUMPER VIEW
+		target_dist = -1.4
+		target_h = 0.65
+	elif view_mode == 2:
+		# COMPACT ORBIT VIEW
+		target_dist = 4.8
+		target_h = 1.85
+
 	current_distance = lerpf(current_distance, target_dist, delta * 6.0)
 
 	# 3. Position Calculation
 	var back_dir = smoothed_fwd if look_back else -smoothed_fwd
-	var ideal_cam_pos = smoothed_pos + back_dir * current_distance + smoothed_up * base_height
+	var ideal_cam_pos = smoothed_pos + back_dir * current_distance + smoothed_up * target_h
 
 	# 4. Collision Avoidance (Avoid clipping through track geometry)
-	if collision_ray and is_instance_valid(collision_ray):
+	if collision_ray and is_instance_valid(collision_ray) and view_mode == 0:
 		collision_ray.global_position = smoothed_pos + smoothed_up * 1.4
 		collision_ray.target_position = collision_ray.to_local(ideal_cam_pos)
 		collision_ray.force_raycast_update()
@@ -137,7 +163,6 @@ func _update_camera_transform(delta: float) -> void:
 		if collision_ray.is_colliding():
 			var col_pt = collision_ray.get_collision_point()
 			var col_norm = collision_ray.get_collision_normal()
-			# Keep camera just clear of the surface
 			final_cam_pos = col_pt + col_norm * 0.50
 
 		global_position = global_position.lerp(final_cam_pos, clampf(delta * 16.0, 0.0, 1.0))
@@ -145,7 +170,8 @@ func _update_camera_transform(delta: float) -> void:
 		global_position = ideal_cam_pos
 
 	# 5. Look-At Target (ahead of vehicle along trajectory)
-	var look_target = smoothed_pos + smoothed_fwd * 8.0 + smoothed_up * 1.2
+	var fwd_lead = 16.0 if view_mode == 1 else 8.0
+	var look_target = smoothed_pos + smoothed_fwd * fwd_lead + smoothed_up * (target_h * 0.6)
 	if look_back:
 		look_target = smoothed_pos - smoothed_fwd * 8.0 + smoothed_up * 1.2
 
@@ -157,6 +183,7 @@ func add_shake(amount: float) -> void:
 	trauma = clampf(trauma + amount, 0.0, 1.0)
 
 func _on_landing(quality: String, _angle_deg: float, _bonus: int) -> void:
+	landing_dip = 0.28
 	if quality == "perfect":
 		add_shake(0.22)
 	elif quality == "rough":

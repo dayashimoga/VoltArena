@@ -130,6 +130,20 @@ This document specifies the technical, functional, architectural, performance, a
 * **FR-CHROMA-05 (Cinematic Launch Briefing & Unobtrusive HUD)**: Orbital camera pan during `State.BRIEFING` with mission briefing card overlay showing sector, target color, target archetype, and tactical objectives. Swap reticle positioned at bottom-center floating pill with auto-fade when cruising idle ($>25\text{m}$ from target).
 * **FR-CHROMA-06 (Automated World Traversal & Geometric Verification)**: Automated world audit tool asserting zero prop-lane collisions along all road segments, zero floating objects, and bidirectional autonomous bot driving traversal with zero vehicle snagging or deadlocks.
 
+### 3.13 Game 10: AeroRush (Impossible Circuit — Modular Stunt Driving)
+* **FR-AERO-01 (Modular Disconnected Platform Islands & Kinematic Gaps)**: Elimination of continuous ground highway dependencies. Stunt circuits are structured as graphs of modular, physically separated platform islands with genuine physical gaps traversed strictly by vehicle ballistic jumps. Track geometry components include: launch kickers with upward lift pitch (`_build_launch_kicker`), flared landing aprons with catch barriers (`_build_landing_apron`), 360° vertical loops, 75° banked wall-rides, and kinetic moving/rotating platforms (`AnimatableBody3D`). All track ribbons feature Bishop-frame parallel transport extrusion, 1.35m safety guardrails, and `ConcavePolygonShape3D` collision meshes.
+* **FR-AERO-02 (Ballistic Trajectory Kinematics & Reachability Validator)**: Automated numerical ballistic simulation (200 Hz integration step) validating jump reachability, flight time, launch velocity envelopes, landing speed, impact angle, and safe landing margins across all 12 circuits. Jump physics accounts for vehicle acceleration, boost pads, gravity (-24.0 m/s²), and pitch orientation. Ascent false-touchdowns are prevented (`vel.dot(landing_normal) < -0.1`), banking rotation matches trajectory vectors, and max road curve angles are kept $<85^\circ$.
+* **FR-AERO-03 (6 Distinct Coherent Biomes & Environment Architecture)**:
+  * **Snowbound Peaks**: Glacial mountain terrain, frozen lake bed, procedural snow shader, pine forest clusters, snowfall GPU particle simulation, cold daylight sun.
+  * **Coastal Velocity**: Ocean surface with animated wave vertex shader, tropical palm trees, cliffside jumps, sandy shores, maritime atmosphere.
+  * **Wild Forest**: Natural grass/dirt blended terrain, winding riverbed, boulder clusters, dense pine/oak canopy, ambient forest lighting.
+  * **Skyline Rush**: Believable 75m–130m skyscraper models, rooftop stunt tracks, architectural variety, golden-hour directional lighting, elimination of duplicate sky moon artifacts.
+  * **Desert Extreme**: Sand dunes, canyon rock formations, dust particle ambience, sandstone highway ramps, harsh desert sun.
+  * **Neon Afterdark**: Futuristic metropolis with controlled neon emissive accents, night-time skybox, elevated energy ribbons, zero blinding bloom/washout.
+* **FR-AERO-04 (Vehicle Physics, Airborne Stunt Controls & Multi-Mode Camera)**: Responsive arcade physics with 4-wheel suspension raycasts, variable traction, boost acceleration (up to 75 m/s), handbrake drift slip, and mid-air pitch/roll/yaw gyroscopic air-control. 3 camera view modes: Third-Person Chase (dynamic FOV kick, airborne tilt, landing suspension dip), Hood/Bumper View, and Cinematic Orbit. Short-grace checkpoint recovery (2.5s cooldown) preventing infinite respawn loops.
+* **FR-AERO-05 (Glass-Card Telemetry HUD & Stunt Progression Loop)**: Modern semi-transparent glassmorphic HUD matching production UX standards: digital speedometer with colored arc bar, next stunt navigation card (stunt type and distance countdown), course segment progress indicator, stunt combo multiplier ($x1.0 - x5.0$), and dynamic landing feedback toasts ("CLEAN LANDING", "PERFECT LOOP", "MEGA AIR"). Zero text clipping across all viewport resolutions.
+* **FR-AERO-06 (12 Handcrafted Championship Stunt Circuits)**: Full roster of 12 distinct circuits spanning all 6 biomes: Skyway Circuit, Neo Loop, Canyon Leap, Coastal Spiral, Glacier Gap, Overdrive Arena, Alpine Leap, Sunset Roller, Red Rock Roller, Neon Vortex, Vertigo Valley, and Apex Impossible. 100% reachability verified by ballistic trajectory solver.
+
 ---
 
 ## 4. Non-Functional Requirements
@@ -221,17 +235,19 @@ This document specifies the technical, functional, architectural, performance, a
 | **FR-CHROMA-04**| Dynamic Target Evasion | Seeded target missions, 35m proximity evasion & lane weaving | **RUNTIME_VERIFIED** | Verified in `test_chroma_ai_and_traffic.gd` |
 | **FR-CHROMA-05**| Briefing Launch & HUD | Cinematic orbit pan, briefing card, auto-fading bottom reticle | **RUNTIME_VERIFIED** | Verified in `test_chroma_modes_and_progression.gd` |
 | **FR-CHROMA-06**| World Audit Tooling | Geometric scans & autonomous bot traversal in both directions | **RUNTIME_VERIFIED** | Verified in `WorldAuditTool` & `runner.gd` |
-| **FR-AERO-01**  | Spline RMF Framing & Extrusion | Bishop frame parallel transport, 1.35m guardrails, ConcavePolygonShape3D | **RUNTIME_VERIFIED** | Verified in `test_aero_tracks_worlds.gd` |
-| **FR-AERO-02**  | Ground Probing & OOB Recovery | 1.85m suspension raycasts, downward surface probe, OOB reset to checkpoint | **RUNTIME_VERIFIED** | Verified in `test_aero_physics.gd` |
-| **FR-AERO-03**  | Decoupled Chase Camera | Physics-interpolated target, immediate setup snap, event trauma shake | **RUNTIME_VERIFIED** | Verified in `test_aero_physics.gd` & `test_aero_e2e.gd` |
-| **FR-AERO-04**  | 12 Handcrafted Stunt Courses | 100% reachability, curvature safety, 360° loops, wall rides, hazard cycles | **RUNTIME_VERIFIED** | 12/12 courses verified in `AeroTrackValidator` |
+| **FR-AERO-01**  | Modular Island Stunt Tracks | Disconnected platform islands, launch kickers, flared landings, kinetic bodies | **RUNTIME_VERIFIED** | Verified in `test_aero_tracks.gd`, `test_aero_tracks_worlds.gd` |
+| **FR-AERO-02**  | Ballistic Kinematics & Reachability | 200 Hz ballistic arc validator, safe touchdown angle, curve safety $<85^\circ$ | **RUNTIME_VERIFIED** | 12/12 courses verified in `AeroTrackValidator` & `test_aero_tracks.gd` |
+| **FR-AERO-03**  | 6 Production Biomes | Snowbound Peaks, Coastal, Forest, Skyline, Desert, Neon Afterdark | **RUNTIME_VERIFIED** | Shaders & environments verified in `test_aero_worlds.gd` & Playwright |
+| **FR-AERO-04**  | Vehicle Physics & 3-Mode Camera | Suspension raycasts, aerial gyros, Chase/Hood/Orbit views, safe recovery | **RUNTIME_VERIFIED** | Verified in `test_aero_physics.gd` & `test_aero_e2e.gd` |
+| **FR-AERO-05**  | Glass HUD & Progression Loop | Glass-card telemetry, countdown, next stunt alert, results dossier | **RUNTIME_VERIFIED** | Verified in `test_aero_hud.gd` & Playwright runtime captures |
+| **FR-AERO-06**  | 12 Handcrafted Championship Circuits | 100% reachability across all 12 circuits with loops, wall-rides, kinetic platforms | **RUNTIME_VERIFIED** | Verified in `test_aero_tracks.gd` & `AeroTrackValidator` |
 | **NFR-PERF-01**| Frame Rate | Stable 60+ FPS rendered gameplay, >1000 FPS sim | **RUNTIME_VERIFIED** | 1028.8 FPS benchmarked in `TestBenchmark` |
 | **NFR-PERF-02**| ProcGen Execution | Map and circuit generation under 2,500ms | **RUNTIME_VERIFIED** | All biomes generated under 2,500ms |
 | **NFR-PERF-03**| Memory Budget | Heap under 500MB | **RUNTIME_VERIFIED** | 22.3 MB static heap footprint |
 | **NFR-WEB-01** | Cloudflare 25MB Limit | All individual deployed files $\le 25.0$ MB | **RUNTIME_VERIFIED** | `index.pck` and `index.wasm` split into <= 18MB chunks, all files PASS |
-| **NFR-QA-01**  | Test Pass Rate | 100% assertions passing | **RUNTIME_VERIFIED** | **78/78 suites, 2961/2961 assertions PASS (100% pass rate, 0 failures)** |
-| **NFR-QA-02**  | Code Coverage | $\ge 90.0\%$ function coverage | **RUNTIME_VERIFIED** | **91.95% real function coverage across repository** |
-| **NFR-GATE-01**| Production Gates | G0-G10 verified, zero automatable failures | **RUNTIME_VERIFIED** | Automated certification passed with exit code 0 |
+| **NFR-QA-01**  | Test Pass Rate | 100% assertions passing | **RUNTIME_VERIFIED** | **80/80 suites, 3051/3051 assertions PASS (100% pass rate, 0 failures)** |
+| **NFR-QA-02**  | Code Coverage | $\ge 90.0\%$ function coverage | **RUNTIME_VERIFIED** | **90.6% real function coverage across repository** |
+| **NFR-GATE-01**| Production Gates | G0-G10 verified, zero automatable failures | **RUNTIME_VERIFIED** | Automated certification passed with exit code 0 (`RUNTIME_VERIFIED`) |
 
 
 

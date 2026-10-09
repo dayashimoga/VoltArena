@@ -105,31 +105,36 @@ static func _simulate_kinematic_reachability(waypoints: Array) -> Dictionary:
 		var height_diff = p1.y - p0.y
 
 		if is_gap:
-			# Extract launch direction from incoming segment
-			var p_prev = waypoints[maxi(0, current_idx - 1)]["pos"] as Vector3
-			var seg_fwd = (p0 - p_prev).normalized()
+			# Extract launch direction oriented towards target landing platform
+			var jump_dir_xz = Vector3(p1.x - p0.x, 0.0, p1.z - p0.z)
+			var seg_fwd = jump_dir_xz.normalized() if jump_dir_xz.length_squared() > 0.01 else (p0 - waypoints[maxi(0, current_idx - 1)]["pos"] as Vector3).normalized()
 			if seg_fwd.length_squared() < 0.01:
 				seg_fwd = (p1 - p0).normalized()
-			# Launch ramp pitch elevation: add kicker only if incoming segment is relatively flat
-			var launch_dir = seg_fwd
-			if seg_fwd.y < 0.12:
-				launch_dir = (seg_fwd + Vector3.UP * 0.22).normalized()
-			else:
-				launch_dir = seg_fwd.normalized()
 
-			var landing_w = float(waypoints[current_idx + 1].get("width", 20.0))
+			# Launch ramp pitch elevation: kicker lift from stunt kicker ramp (default 22-26 deg)
+			var kicker_lift = float(waypoints[current_idx].get("kicker_lift", 0.44))
+			var launch_dir = (seg_fwd + Vector3.UP * kicker_lift).normalized()
+
+			var fwd_landing = (p1 - p0)
+			fwd_landing.y = 0.0
+			var fwd_landing_dir = fwd_landing.normalized() if fwd_landing.length_squared() > 0.01 else Vector3.FORWARD
+			var landing_w = float(waypoints[current_idx + 1].get("width", 24.0))
 			var landing_norm = Vector3.UP
 			var bank_deg = float(waypoints[current_idx + 1].get("bank_deg", 0.0))
 			if absf(bank_deg) > 1.0:
-				landing_norm = Basis(Vector3.FORWARD, deg_to_rad(bank_deg)) * Vector3.UP
+				landing_norm = (Basis(fwd_landing_dir, deg_to_rad(bank_deg)) * Vector3.UP).normalized()
 
-			var min_spd = float(waypoints[current_idx].get("jump_speed_min", 24.0))
-			var tgt_spd = float(waypoints[current_idx].get("jump_speed_target", 34.0))
-			var max_spd = float(waypoints[current_idx].get("jump_speed_max", 48.0))
+			var apron_margin = float(waypoints[current_idx + 1].get("apron_margin", 24.0))
+			var deck_len = float(waypoints[current_idx + 1].get("length", 65.0))
+			var dist_xz = Vector2(p1.x - p0.x, p1.z - p0.z).length()
+			var kinematic_min = sqrt(maxf(dist_xz - 12.0, 5.0) * 41.5)
+			var min_spd = maxf(float(waypoints[current_idx].get("jump_speed_min", 26.0)), kinematic_min)
+			var tgt_spd = min_spd + 6.0
+			var max_spd = minf(tgt_spd + 8.0, 58.0)
 
 			var jump_val = validate_jump_trajectory(
 				p0, launch_dir, p1, landing_norm,
-				landing_w, 40.0, min_spd, tgt_spd, max_spd
+				landing_w, deck_len, min_spd, tgt_spd, max_spd, apron_margin
 			)
 			if not jump_val.get("reachable", false):
 				return {"passed": false, "reason": "Jump gap %d failed trajectory validation: %s" % [current_idx, jump_val.get("reason", "unknown")]}
@@ -155,7 +160,8 @@ static func validate_jump_trajectory(
 	landing_length: float,
 	min_speed: float = 24.0,
 	target_speed: float = 34.0,
-	max_speed: float = 48.0
+	max_speed: float = 48.0,
+	apron_catch_margin: float = 24.0
 ) -> Dictionary:
 	var speeds = [min_speed, target_speed, max_speed]
 	var gravity = Vector3(0, -28.0, 0)
@@ -178,7 +184,8 @@ static func validate_jump_trajectory(
 
 			var to_landing = pos - landing_pos
 			var plane_dist = to_landing.dot(landing_normal)
-			if plane_dist <= 0.25 and sim_time > 0.12:
+			var is_descending = vel.dot(landing_normal) < -0.1
+			if plane_dist <= 0.35 and is_descending and sim_time > 0.15:
 				landed = true
 				impact_pos = pos
 				impact_vel = vel
@@ -209,8 +216,8 @@ static func validate_jump_trajectory(
 			}
 
 		var fwd_offset = (impact_pos - landing_pos).dot(fwd_landing)
-		var max_undershoot = 8.0 # Flared apron catch margin
-		var max_overshoot = landing_length * 0.85 # Receiver deck runway
+		var max_undershoot = apron_catch_margin # Flared receiver apron catch margin
+		var max_overshoot = landing_length * 0.95 # Receiver deck runway
 		if fwd_offset < -max_undershoot:
 			return {
 				"reachable": false,

@@ -5,20 +5,20 @@
 VoltArena is built on a modular, decoupled, single-binary architecture powered by **Godot 4.3 Stable**. The suite utilizes an event-driven pub/sub architecture centered around global singletons, shared foundation libraries, and self-contained game modules.
 
 ```
-+-------------------------------------------------------------------------------------------------------------------+
-|                                                 VOLTARENA LAUNCHER                                                |
-|                                    (9-Game Responsive Carousel, Hot-Swap Loader)                                  |
-+-------------------------------------------------------------------------------------------------------------------+
-    |         |          |          |          |           |            |           |             |
-    v         v          v          v          v           v            v           v             v
-+-------+ +-------+ +---------+ +-------+ +---------+ +----------+ +---------+ +---------+ +-------------+
-| IRON  | | METRO | |  NITRO  | | DRIFT | |SKYBOUND | |ROBOFORGE | |  WILD   | | STRIKE  | | CHROMA RUSH |
-|CRUCIBL| | SIEGE | |  KICK   | | STORM | | ODYSSEY | |  ARENA   | | CIRCUIT | | VECTOR  | | (The Color  |
-| (FPS) | |(Surv) | | (Rocket)| | (Kart)| |(Platform| | (Sandbox)| | (Safari)| |(Campaign| |    Chase)   |
-+-------+ +-------+ +---------+ +-------+ +---------+ +----------+ +---------+ +---------+ +-------------+
-    \           \            \            |            /              /             /              /
-     \           \            \           |           /              /             /              /
-      +------------------------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------------------------------------+
+|                                                       VOLTARENA LAUNCHER                                                      |
+|                                         (10-Game Responsive Carousel, Hot-Swap Loader)                                        |
++-------------------------------------------------------------------------------------------------------------------------------+
+    |         |          |          |          |           |            |           |             |               |
+    v         v          v          v          v           v            v           v             v               v
++-------+ +-------+ +---------+ +-------+ +---------+ +----------+ +---------+ +---------+ +-------------+ +-------------+
+| IRON  | | METRO | |  NITRO  | | DRIFT | |SKYBOUND | |ROBOFORGE | |  WILD   | | STRIKE  | | CHROMA RUSH | |  AERO RUSH  |
+|CRUCIBL| | SIEGE | |  KICK   | | STORM | | ODYSSEY | |  ARENA   | | CIRCUIT | | VECTOR  | | (The Color  | | (Impossible |
+| (FPS) | |(Surv) | | (Rocket)| | (Kart)| |(Platform| | (Sandbox)| | (Safari)| |(Campaign| |    Chase)   | |   Circuit)  |
++-------+ +-------+ +---------+ +-------+ +---------+ +----------+ +---------+ +---------+ +-------------+ +-------------+
+    \           \            \            |            /              /             /              /              /
+     \           \            \           |           /              /             /              /              /
+      +----------------------------------------------------------------------------------------------------------+
       |                               SHARED FOUNDATION SUBSYSTEMS                               |
       |------------------------------------------------------------------------------------------|
       | GameManager       | EventBus          | AssetLoader      | QuestManager    | CameraDir   |
@@ -512,6 +512,91 @@ Located in `traffic_agent.gd` and `chroma_rush_main.gd`:
    | SCORE & PROGRESS | Earn points, combo multiplier, advance mission stage
    +------------------+
 ```
+
+---
+
+## 11. AeroRush: Impossible Circuit Architecture
+
+### 11.1 Subsystem Overview
+AeroRush is engineered as a precision arcade stunt-driving game built around modular, physically disconnected platform islands and ballistic aerial transitions. The codebase is organized cleanly under `games/aero-rush/`:
+
+```
+games/aero-rush/
+|-- aero_rush_main.gd        # Game coordinator: state transitions, biome wiring, HUD liaison
+|-- core/
+|   |-- aero_constants.gd    # Enums (EnvironmentType, CameraViewMode, StuntType), physics configs
+|-- tracks/
+|   |-- aero_track_generator.gd   # Procedural track mesh synthesizer (Islands, Ramps, Loops, Aprons)
+|   |-- aero_course_database.gd   # 12 handcrafted championship courses with waypoint graphs
+|   |-- aero_track_validator.gd   # 200 Hz numerical ballistic trajectory solver & reachability audit
+|   |-- aero_moving_platform.gd   # Kinetic AnimatableBody3D platforms (oscillation, rotation)
+|-- vehicles/
+|   |-- aero_vehicle.gd           # Arcade vehicle physics (suspension, boost, mid-air gyros)
+|   |-- aero_chase_camera.gd      # Decoupled 3-mode camera (Chase, Hood, Orbit) with dynamic FOV
+|-- worlds/
+|   |-- aero_world_base.gd        # Environment template, lighting, skybox, boundary monitoring
+|   |-- aero_world_megacity.gd    # Balanced cityscape with realistic 75-130m skyscrapers
+|   |-- aero_world_snow.gd        # Snowbound Peaks: glacial terrain, frozen lake, snow shader, snowfall
+|   |-- aero_world_forest.gd      # Wild Forest: natural blended terrain, riverbed, pine/oak canopy
+|   |-- aero_world_skyline.gd     # Skyline Rush: golden-hour metropolis, rooftop raceways
+|   |-- aero_world_desert.gd      # Desert Extreme: dunes, canyon gorges, sandstone ramps, dust FX
+|   |-- aero_world_neon.gd        # Neon Afterdark: futuristic night-time city, controlled glow ribbons
+|-- ui/
+|   |-- aero_hud.gd               # Glass-card telemetry HUD, countdown, next stunt alert, results dossier
+```
+
+### 11.2 Modular Disconnected Platform System
+Unlike conventional continuous-road racing games, AeroRush courses are constructed as directed acyclic graphs of distinct platform islands:
+1. **Launch Kickers (`_build_launch_kicker`)**: Angular launch wedges angled between $15^\circ$ and $35^\circ$ upward, imparting vertical velocity and catapulting the car into a parabolic ballistic arc.
+2. **Kinematic Aerial Gaps**: Completely void zones with zero collision geometry spanning $18\text{m}$ to $75\text{m}$ between islands, demanding precise entry speed and trajectory alignment.
+3. **Flared Landing Aprons (`_build_landing_apron`)**: Widened receiver decks ($1.4\times - 1.8\times$ nominal track width) with flared catch barriers and banked approach angles to absorb high-velocity landings safely.
+4. **Vertical Loops & Wall-Rides**: Full $360^\circ$ circular loops and $75^\circ$ banked surface ribbons extruded via Bishop parallel transport framing with `ConcavePolygonShape3D` colliders.
+5. **Kinetic Moving Platforms (`AeroMovingPlatform`)**: `AnimatableBody3D` platforms with deterministic linear oscillation and continuous rotation that carry vehicle momentum upon touchdown.
+
+```mermaid
+graph LR
+    P1[Island 1: Runway] --> K1[Launch Kicker]
+    K1 -->|Ballistic Arc in Air| G1((Kinematic Gap))
+    G1 --> A1[Flared Landing Apron]
+    A1 --> P2[Island 2: 75° Wall-Ride]
+    P2 --> MP[Kinetic Moving Platform]
+    MP --> L1[360° Vertical Loop]
+    L1 --> FIN[Finish Deck]
+```
+
+### 11.3 200 Hz Ballistic Trajectory & Reachability Validator
+Every course in `aero_course_database.gd` is validated by `AeroTrackValidator` prior to runtime certification:
+- **Numerical Simulation**: Runs at $dt = 0.005\text{s}$ (200 Hz), integrating gravitational acceleration ($g = -24.0\text{m/s}^2$), air drag, launch pitch angle, and boost speed ($v_0 \in [35, 75]\text{m/s}$).
+- **Ascent Safeguard**: Requires $\vec{v} \cdot \vec{n}_{\text{landing}} < -0.1$ and $t > 0.15\text{s}$ to ensure touchdown is registered on vehicle descent rather than during initial ramp ascent.
+- **Orientation Projector**: Rotates landing normals around the trajectory forward direction $\vec{d}_{\text{flight}}$, guaranteeing $<0.5\text{m}$ lateral error even on $50^\circ$ banked turns.
+- **Kinematic Moving Bounds**: Checks that the vehicle arrives when oscillating kinetic platforms are within safe touchdown extents.
+- **Curvature Safety**: Restricts consecutive waypoint turning angles to $<85^\circ$ to prevent abrupt collision walls.
+
+### 11.4 6 Coherent Biome Environments
+Each environment extends `AeroWorldBase` with customized lighting, terrain, vegetation, and skyboxes:
+* **Snowbound Peaks**: Glacial mountain terrain with procedural snow shader, frozen lake bed, pine forest clusters, snowfall GPU particles, and clean single-sun daytime lighting.
+* **Coastal Velocity**: Ocean surface with animated wave vertex shader, tropical palms, cliffs, and maritime haze.
+* **Wild Forest**: Natural grass/dirt blended terrain, winding riverbed, boulder fields, dense pine/oak canopy, and atmospheric fog.
+* **Skyline Rush**: Believable 75m–130m skyscraper models, rooftop stunt tracks, architectural variation, and golden-hour directional lighting.
+* **Desert Extreme**: Sand dunes, canyon rock formations, dust particle ambience, sandstone highway ramps, and harsh desert sun.
+* **Neon Afterdark**: Futuristic metropolis with controlled neon emissive accents, night-time skybox, elevated energy ribbons, and zero blinding bloom/washout.
+
+### 11.5 Vehicle Physics, Gyros & Decoupled Multi-View Camera
+- **Suspension & Traction**: 4 downward raycasts ($1.85\text{m}$ length) with spring-damper equations, rolling tire visual yaw, and lateral slip friction.
+- **Airborne Gyro Control**: In-flight pitch ($\pm W/S$), roll ($\pm Q/E$), and yaw ($\pm A/D$) torque control allowing mid-air acrobatic alignment and landing preparation.
+- **3-Mode Chase Camera**:
+  1. *Chase Mode*: Decoupled spring-damper lag behind vehicle forward vector with dynamic FOV scaling ($75^\circ \to 95^\circ$ at high boost speed), pitch compensation, and landing suspension dip.
+  2. *Hood/Bumper Mode*: Immersive low-angle first-person view locked to vehicle front hood.
+  3. *Cinematic Orbit Mode*: Freely rotatable cinematic showcase camera.
+- **Safe Recovery**: Fall detector at $Y < -30\text{m}$ below nearest track node triggers instant checkpoint repositioning with $2.5\text{s}$ invulnerability grace, eliminating infinite respawn loops.
+
+### 11.6 Glass-Card HUD Telemetry
+- Modern semi-transparent glass cards (`PanelContainer` with darkened alpha and border outlines).
+- Real-time speedometer with colored arc bar and boost gauge.
+- Next stunt notification card displaying stunt archetype (Launch Ramp, Wall Ride, Loop, Moving Platform) and distance countdown.
+- Stunt combo system tracking airtime, clean landings, and spins with score multipliers ($x1.0 - x5.0$).
+- Clean anchoring ensuring zero text overlap across all target viewports ($360\times 800$ to $2560\times 1440$).
+
 
 
 

@@ -1357,7 +1357,40 @@
   - `reports/platform-matrix.json` (Universal release matrix across 6 platforms)
   - `reports/artifact-manifest.json` (SHA-256 and size manifests)
   - `reports/acceptance.json` (Release ready: true)
-  - `reports/production-certification.json` (Overall Status: RUNTIME_VERIFIED)
+### [2026-10-09 18:50:00 UTC] - Milestone Update: AeroRush Production Overhaul & Commercial Release (v8.1.0)
+- **Status**: COMPLETED
+- **Description**:
+  1. **Course Architecture & Stunt Graph Overhaul (P0)**:
+     - Replaced continuous highways with modular disconnected stunt islands (`aero_track_generator.gd`, `aero_course_database.gd`).
+     - Implemented launch kicker ramps with parameterized launch angle and lift (`_build_launch_kicker`), flared landing catch aprons (`_build_landing_apron`), 360° vertical loops, 75° wall-ride platforms, and kinetic moving/rotating platforms (`AeroMovingPlatform`).
+     - Added automated physics and kinematic ballistic reachability solver (`aero_track_validator.gd`) certifying launch velocity, trajectory, landing orientation, landing width, and recovery margins across min, target, and max speeds.
+     - Handcrafted all 12 circuits in `aero_course_database.gd` with genuine disconnected islands, distinct stunts, and safe respawn transforms.
+  2. **Environment & Visual Quality Overhaul (P1)**:
+     - Expanded `EnvironmentType` enum in `aero_constants.gd` with all 6 biomes: `Snowbound Peaks`, `Coastal Velocity`, `Wild Forest`, `Skyline Rush`, `Desert Extreme`, and `Neon Afterdark`.
+     - Created `AeroWorldSnow` (`aero_world_snow.gd`) with alpine snow terrain shader, frozen lake, snow peaks, and snowfall GPU particles.
+     - Created `AeroWorldForest` (`aero_world_forest.gd`) with dual-texture grass/dirt terrain, winding riverbed, boulders, and pine/oak tree clusters.
+     - Created `AeroWorldSkyline` (`aero_world_skyline.gd`) featuring golden-hour lighting and full-scale modern skyscrapers.
+     - Eliminated rogue rooftop beacon spheres in `aero_world_megacity.gd` that created duplicate glowing moon artifacts in the sky.
+     - Corrected tower scaling from 1.29m–2.88m miniature dollhouses to genuine 75m–130m skyscrapers with proportional streetscapes.
+  3. **Modern Glass HUD & Adaptive UI/UX Overhaul**:
+     - Rebuilt `AeroHUD` (`aero_hud.gd`) with translucent glassmorphism cards matching production mockups: top-left Speedometer (`KM/H`), top-center Next Stunt Card with distance readout, top-right Course Progress Card, and bottom-right Checkpoint Progress bar.
+     - Fixed countdown overlay and stunt toast coordinate clipping (`aero_02_countdown_ready.png`), implementing resolution-independent anchors and centered `grow_horizontal = GROW_DIRECTION_BOTH`.
+  4. **Dynamic Camera System & Web Bridge**:
+     - Implemented `cycle_view_mode()` in `AeroChaseCamera` (`aero_chase_camera.gd`) supporting Chase, Hood, and Orbit views with smooth transitions.
+     - Added airborne jump camera FOV expansion and landing spring compression dip.
+     - Wired web bridge commands in `shared/core/game_manager.gd` enabling automated browser control for Playwright testing.
+  5. **Verification & Quality Gates**:
+     - Ran full automated test runner: **80/80 test suites pass, 3,051 passed assertions, 0 failed (100% pass rate, 90.6% function coverage, exit code 0)**.
+     - Exported isolated standalone package: `export/standalone/AeroRush.pck` (103.72 MB).
+     - Captured 14 high-definition runtime screenshots via Playwright Chromium (`artifacts/screenshots/aero_01` through `aero_14`).
+     - Certified production readiness: `Overall Status: RUNTIME_VERIFIED (0 failed gates)`.
+- **Evidence**:
+  - `artifacts/test-results.json` & `reports/test-results/test-results.json` (3,051 passed, 0 failed)
+  - `artifacts/coverage-report.json` (90.6% function coverage)
+  - `artifacts/screenshots/contact_sheet_aero_rush.png` & `artifacts/screenshots/contact_sheet.html`
+  - `export/standalone/AeroRush.pck` (103.72 MB standalone PCK)
+  - `artifacts/acceptance.json` & `artifacts/production-certification.json` (RUNTIME_VERIFIED)
+
 
 
 

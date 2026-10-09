@@ -116,6 +116,9 @@ func _handle_aero_rush_cmd(scene: Node, cmd: String) -> void:
 		if cam and pv:
 			cam.global_position = pv.global_position + Vector3(18.0, 24.0, -18.0)
 			cam.look_at(pv.global_position + Vector3(0, 10.0, -30.0), Vector3.UP)
+	elif cmd == "results":
+		if scene.has_method("_finish_race"):
+			scene._finish_race(true)
 
 func _handle_chroma_rush_cmd(scene: Node, cmd: String) -> void:
 	print("[CHROMA CMD] Received cmd: ", cmd, " scene: ", scene.name)

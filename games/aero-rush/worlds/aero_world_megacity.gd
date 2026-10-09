@@ -193,8 +193,8 @@ func _build_flanking_skyscrapers() -> void:
 	for i in range(tower_coords.size()):
 		var pos = tower_coords[i]
 		var model = skyscraper_models[i % skyscraper_models.size()]
-		var uniform_scale = randf_range(2.6, 3.8)
-		# Proportional scaling preserves window, door, and floor proportions
+		var uniform_scale = randf_range(26.0, 45.0)
+		# Proportional scaling produces authentic 75m - 130m skyscraper heights
 		spawn_building(model, pos, float((i * 90) % 360), Vector3(uniform_scale, uniform_scale, uniform_scale))
 
 	# Secondary Commercial Plazas and Mid-Tier Complexes
@@ -210,7 +210,7 @@ func _build_flanking_skyscrapers() -> void:
 	for j in range(comm_coords.size()):
 		var c_pos = comm_coords[j]
 		var c_model = comm_models[j % comm_models.size()]
-		var c_scale = randf_range(2.2, 3.2)
+		var c_scale = randf_range(16.0, 26.0)
 		spawn_building(c_model, c_pos, float((j * 90) % 360), Vector3(c_scale, c_scale, c_scale))
 
 func _build_overhead_skybridges() -> void:
@@ -281,21 +281,6 @@ func _build_perimeter_skyline() -> void:
 		var x = cos(angle) * (radius + randf_range(-30.0, 45.0))
 		var z = sin(angle) * (radius + randf_range(-30.0, 45.0))
 		var model = skyscraper_models[i % skyscraper_models.size()]
-		var scale_val = randf_range(4.5, 6.5)
+		var scale_val = randf_range(35.0, 58.0)
 
-		var bld = spawn_building(model, Vector3(x, -6.5, z), float((i * 47) % 360), Vector3(scale_val, scale_val, scale_val))
-		if bld:
-			# Rooftop Aviation Beacon Light
-			var beacon = MeshInstance3D.new()
-			var b_sphere = SphereMesh.new()
-			b_sphere.radius = 1.4
-			b_sphere.height = 2.8
-			beacon.mesh = b_sphere
-			var b_mat = StandardMaterial3D.new()
-			var b_col = Color(1.0, 0.20, 0.15) if (i % 2 == 0) else Color(0.05, 0.85, 1.0)
-			b_mat.albedo_color = b_col
-			b_mat.emission_enabled = true
-			b_mat.emission = b_col * 3.5
-			beacon.material_override = b_mat
-			beacon.position = Vector3(0, 45.0, 0)
-			bld.add_child(beacon)
+		spawn_building(model, Vector3(x, -6.5, z), float((i * 47) % 360), Vector3(scale_val, scale_val, scale_val))

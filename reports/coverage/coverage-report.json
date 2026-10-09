@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 91.2531539108494,
+  "overall_coverage_pct": 90.567612687813,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -57,6 +57,15 @@
       "total": 2,
       "untested": []
     },
+    "res://games/aero-rush/tracks/aero_moving_platform.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 2,
+      "untested": [
+        "_ready",
+        "_physics_process"
+      ]
+    },
     "res://games/aero-rush/tracks/aero_track_generator.gd": {
       "coverage_pct": 100,
       "tested": 1,
@@ -85,10 +94,14 @@
       "untested": []
     },
     "res://games/aero-rush/ui/aero_hud.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 78.5714285714286,
       "tested": 11,
-      "total": 11,
-      "untested": []
+      "total": 14,
+      "untested": [
+        "update_course",
+        "update_course_progression",
+        "update_next_stunt"
+      ]
     },
     "res://games/aero-rush/ui/aero_main_menu.gd": {
       "coverage_pct": 100,
@@ -105,8 +118,9 @@
     "res://games/aero-rush/vehicles/aero_chase_camera.gd": {
       "coverage_pct": 0,
       "tested": 0,
-      "total": 4,
+      "total": 5,
       "untested": [
+        "cycle_view_mode",
         "_ready",
         "setup_target",
         "_physics_process",
@@ -167,6 +181,14 @@
         "build_environment"
       ]
     },
+    "res://games/aero-rush/worlds/aero_world_forest.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 1,
+      "untested": [
+        "build_environment"
+      ]
+    },
     "res://games/aero-rush/worlds/aero_world_megacity.gd": {
       "coverage_pct": 0,
       "tested": 0,
@@ -176,6 +198,22 @@
       ]
     },
     "res://games/aero-rush/worlds/aero_world_sky.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 1,
+      "untested": [
+        "build_environment"
+      ]
+    },
+    "res://games/aero-rush/worlds/aero_world_skyline.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 1,
+      "untested": [
+        "build_environment"
+      ]
+    },
+    "res://games/aero-rush/worlds/aero_world_snow.gd": {
       "coverage_pct": 0,
       "tested": 0,
       "total": 1,
@@ -1255,6 +1293,6 @@
     }
   },
   "tested_functions": 1085,
-  "timestamp": "2026-10-09T10:11:59",
-  "total_functions": 1189
+  "timestamp": "2026-10-09T13:37:40",
+  "total_functions": 1198
 }

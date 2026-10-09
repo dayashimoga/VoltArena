@@ -26,12 +26,33 @@ enum GameMode {
 	HAZARD_RUN          # Navigate dense kinetic obstacle fields
 }
 
-# --- Environments ---
+# --- Environments (6 Distinct Biomes + Backward Compatible Aliases) ---
 enum EnvironmentType {
-	NEON_MEGACITY,      # Neo-Cascade high-rise urban speedway
-	MOUNTAIN_CANYON,    # Red Rock Ridge gorges, natural arches, chasm jumps
-	TROPICAL_COASTAL,   # Azure Coast seaside boardwalks, sea arch ramps
-	SKY_CIRCUIT         # Strato Pylon cloud-level platforms & magnetic loops
+	NEON_MEGACITY = 0,      # Legacy Neon Megacity (maps to Neon Afterdark)
+	MOUNTAIN_CANYON = 1,    # Legacy Canyon (maps to Desert Extreme)
+	TROPICAL_COASTAL = 2,   # Legacy Coastal (maps to Coastal Velocity)
+	SKY_CIRCUIT = 3,         # Legacy Sky Circuit (Stratosphere Pylons)
+	SNOWBOUND_PEAKS = 4,    # Snowbound Peaks: Alpine snow mountains, ice tracks, frozen lakes, snowfall
+	WILD_FOREST = 5,        # Wild Forest: Realistic dense forests, waterfalls, rocks, rivers, greenery
+	SKYLINE_RUSH = 6,       # Skyline Rush: Believable modern metropolis, rooftop routes, skyscrapers
+	DESERT_EXTREME = 7,     # Desert Extreme: Red rock canyons, dunes, rock arches, dust effects
+	NEON_AFTERDARK = 8,     # Neon Afterdark: Cyberpunk futuristic night, controlled neon, night tracks
+	COASTAL_VELOCITY = 9    # Coastal Velocity: Beaches, tropical vegetation, oceans, cliffs
+}
+
+# Aliases for 6 Biome System
+const BIOME_SNOWBOUND_PEAKS: int = EnvironmentType.SNOWBOUND_PEAKS
+const BIOME_COASTAL_VELOCITY: int = EnvironmentType.TROPICAL_COASTAL
+const BIOME_WILD_FOREST: int = EnvironmentType.WILD_FOREST
+const BIOME_SKYLINE_RUSH: int = EnvironmentType.SKYLINE_RUSH
+const BIOME_DESERT_EXTREME: int = EnvironmentType.MOUNTAIN_CANYON
+const BIOME_NEON_AFTERDARK: int = EnvironmentType.NEON_MEGACITY
+
+# --- Camera View Modes ---
+enum CameraViewMode {
+	CHASE,      # Dynamic 3rd person chase camera with airtime zoom & landing spring
+	HOOD,       # 1st person front hood / bumper camera
+	ORBIT       # Smooth orbiting exterior camera
 }
 
 # --- Stunt Types ---

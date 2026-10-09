@@ -48,6 +48,8 @@ func setup_target(p_vehicle: CharacterBody3D) -> void:
 		target_vehicle.landing_performed.connect(_on_landing)
 	if target_vehicle.has_signal("vehicle_crashed") and not target_vehicle.vehicle_crashed.is_connected(_on_crashed):
 		target_vehicle.vehicle_crashed.connect(_on_crashed)
+	if target_vehicle.has_signal("vehicle_respawned") and not target_vehicle.vehicle_respawned.is_connected(_on_vehicle_respawned):
+		target_vehicle.vehicle_respawned.connect(_on_vehicle_respawned)
 
 	# Instant snap on initial setup
 	var v_pos = target_vehicle.global_position if target_vehicle.is_inside_tree() else target_vehicle.position
@@ -68,6 +70,21 @@ func setup_target(p_vehicle: CharacterBody3D) -> void:
 
 func _on_crashed() -> void:
 	add_shake(0.85)
+
+func _on_vehicle_respawned(_respawn_pos: Vector3) -> void:
+	if not target_vehicle:
+		return
+	var v_pos = target_vehicle.global_position if target_vehicle.is_inside_tree() else target_vehicle.position
+	var v_basis = target_vehicle.global_basis if target_vehicle.is_inside_tree() else target_vehicle.transform.basis
+	smoothed_pos = v_pos
+	smoothed_fwd = -v_basis.z.normalized()
+	smoothed_up = v_basis.y.normalized()
+	var ideal_pos = v_pos - smoothed_fwd * base_distance + smoothed_up * base_height
+	if is_inside_tree():
+		global_position = ideal_pos
+		look_at(v_pos + smoothed_fwd * 8.0 + smoothed_up * 1.2, smoothed_up)
+	else:
+		position = ideal_pos
 
 func _physics_process(delta: float) -> void:
 	if not is_inside_tree() or not target_vehicle or not is_instance_valid(target_vehicle):

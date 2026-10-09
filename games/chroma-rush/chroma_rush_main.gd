@@ -1117,6 +1117,7 @@ func _on_reset_to_road_requested() -> void:
 		player_vehicle.reset_to_road(safe_tf.origin, safe_tf.basis.get_euler().y)
 	else:
 		player_vehicle.reset_to_road()
+	cam_is_initialized = false
 	var am = GameConstants.get_autoload(self, "AudioManager")
 	if am and am.has_method("play_sfx"):
 		am.play_sfx("ui_click")

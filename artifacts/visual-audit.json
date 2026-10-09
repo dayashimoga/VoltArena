@@ -1,6 +1,6 @@
 {
   "overall_status": "PASS",
-  "timestamp_utc": "2026-10-08 08:52:04 UTC",
+  "timestamp_utc": "2026-10-09 10:21:51 UTC",
   "gates": {
     "min_resolution": "1280x720",
     "luminance_range": "[15.0, 220.0]",

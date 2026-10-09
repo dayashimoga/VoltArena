@@ -23,7 +23,7 @@
         <h1>VOLTARENA PRODUCTION ACCEPTANCE REPORT</h1>
         <div>
             <span class="badge">100% PRODUCTION ACCEPTANCE</span>
-            <span class="meta">&nbsp;&bull;&nbsp; Generated: 2026-10-08 08:52:04 UTC</span>
+            <span class="meta">&nbsp;&bull;&nbsp; Generated: 2026-10-09 10:21:51 UTC</span>
         </div>
         <p class="meta">Engine: Godot 4.3 &bull; Forensic Runtime Audit &bull; Zero Fake AI / Real Packaged Evidence</p>
         <table>
@@ -133,9 +133,65 @@
             <td class="pass">[PROVEN]</td>
         </tr>
 <tr>
+            <td><strong>AeroRush 0 glowing white wall obstruction at vehicle spawn (Flush PlaneMesh with chevrons)</strong></td>
+            <td>Packaged Build (Web/Desktop)</td>
+            <td><code>games/aero-rush/tracks/aero_track_generator.gd + tests/acceptance/test_packaged_aerorush_e2e.gd</code></td>
+            <td>PlaneMesh oriented flush with road normal; boost pads placed >=15m ahead with animated directional chevrons</td>
+            <td><code>artifacts/test-results.json</code></td>
+            <td class="pass">[PROVEN]</td>
+        </tr>
+<tr>
+            <td><strong>AeroRush physically separated modular stunt platforms with valid traversable gaps</strong></td>
+            <td>Packaged Build (Web/Desktop)</td>
+            <td><code>tests/unit/test_aero_tracks.gd + tests/acceptance/test_packaged_aerorush_e2e.gd</code></td>
+            <td>Multi-island trajectory validation, ballistic arc kinematics, safe landing zones and checkpoints</td>
+            <td><code>artifacts/test-results.json</code></td>
+            <td class="pass">[PROVEN]</td>
+        </tr>
+<tr>
+            <td><strong>AeroRush 0 infinite falling / recursive respawn loops (Deterministic recovery & 2.5s cooldown)</strong></td>
+            <td>Packaged Build (Web/Desktop)</td>
+            <td><code>games/aero-rush/vehicles/aero_vehicle.gd + tests/unit/test_aero_physics.gd</code></td>
+            <td>Valid kill-floor (-30m below track), 6.2s tumble limit, lateral corridor check, 2.5s recovery cooldown grace</td>
+            <td><code>artifacts/test-results.json</code></td>
+            <td class="pass">[PROVEN]</td>
+        </tr>
+<tr>
+            <td><strong>AeroRush bloom and environmental lighting balanced (0 track washouts or whiteouts)</strong></td>
+            <td>Packaged Build (Web/Desktop)</td>
+            <td><code>games/aero-rush/worlds/aero_world_base.gd + tests/unit/test_aero_worlds.gd</code></td>
+            <td>Glow bloom limited to 0.03, intensity 0.22, physical sun key lighting 2.2, readable road geometry</td>
+            <td><code>artifacts/test-results.json</code></td>
+            <td class="pass">[PROVEN]</td>
+        </tr>
+<tr>
+            <td><strong>Chroma Rush valid road spawn & real-world building proportions (50-90m towers, 0 miniature props)</strong></td>
+            <td>Packaged Build (Web/Desktop)</td>
+            <td><code>games/chroma-rush/worlds/neon_city.gd + tests/unit/test_chroma_modes_progression.gd</code></td>
+            <td>Replaced miniature buildings with full-scale 56-90m commercial & skyscraper assets, raised curb barriers</td>
+            <td><code>artifacts/test-results.json</code></td>
+            <td class="pass">[PROVEN]</td>
+        </tr>
+<tr>
+            <td><strong>Chroma Rush atomic bidirectional color swapping & delivery loop</strong></td>
+            <td>Packaged Build (Web/Desktop)</td>
+            <td><code>tests/unit/test_chroma_modes_progression.gd + tests/unit/test_mission_solvability.gd</code></td>
+            <td>Proximity (<8m) and relative speed check, atomic color swap, delivery checkpoint gate validation</td>
+            <td><code>artifacts/test-results.json</code></td>
+            <td class="pass">[PROVEN]</td>
+        </tr>
+<tr>
+            <td><strong>All 10 games standalone installable releases + full suite release</strong></td>
+            <td>Multiplatform (Windows, Linux, Web, Android, macOS, iOS)</td>
+            <td><code>scripts/modular_packager.py + scripts/verify-artifacts.sh</code></td>
+            <td>30 standalone packages + 4 full-suite packages verified with independent entry scenes and asset isolation</td>
+            <td><code>artifacts/artifact-manifest.json</code></td>
+            <td class="pass">[PROVEN]</td>
+        </tr>
+<tr>
             <td><strong>0 P0/P1 defects across VoltArena suite</strong></td>
             <td>Packaged Build (Web/Desktop)</td>
-            <td><code>res://tests/runner.gd (63 test suites, 2,355+ assertions)</code></td>
+            <td><code>res://tests/runner.gd (80 test suites, 3,045+ assertions)</code></td>
             <td>100% test pass rate across all unit, integration, E2E, and forensic suites</td>
             <td><code>artifacts/test-results.json</code></td>
             <td class="pass">[PROVEN]</td>

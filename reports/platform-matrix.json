@@ -1,0 +1,324 @@
+{
+  "timestamp_utc": "2026-10-09 10:21:51 UTC",
+  "suite": {
+    "title": "VoltArena Full Suite",
+    "platforms": {
+      "Windows x64": {
+        "status": "PROVEN",
+        "artifact": "export/dist/suite/VoltArena-Full-Windows-x86_64.zip"
+      },
+      "Linux x64": {
+        "status": "PROVEN",
+        "artifact": "export/dist/suite/VoltArena-Full-Linux-x86_64.tar.gz"
+      },
+      "Web": {
+        "status": "PROVEN",
+        "artifact": "export/dist/suite/VoltArena-Full-Web.zip"
+      },
+      "Android": {
+        "status": "PROVEN",
+        "artifact": "export/dist/suite/VoltArena-Full-Android.apk"
+      },
+      "macOS": {
+        "status": "HARDWARE_REQUIRED",
+        "notes": "Configured in export_presets.cfg; requires Apple Developer ID notarization runner"
+      },
+      "iOS": {
+        "status": "HARDWARE_REQUIRED",
+        "notes": "Configured in export_presets.cfg; requires macOS Xcode signing runner"
+      }
+    }
+  },
+  "standalone_games": {
+    "AeroRush": {
+      "game_id": "aero-rush",
+      "platforms": {
+        "Windows x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/AeroRush-Windows-x86_64.zip"
+        },
+        "Linux x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/AeroRush-Linux-x86_64.tar.gz"
+        },
+        "Web": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/AeroRush-Web.zip"
+        },
+        "macOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Apple Developer ID"
+        },
+        "Android": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Android SDK keystore signing"
+        },
+        "iOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires macOS Xcode signing runner"
+        }
+      }
+    },
+    "ChromaRush": {
+      "game_id": "chroma-rush",
+      "platforms": {
+        "Windows x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/ChromaRush-Windows-x86_64.zip"
+        },
+        "Linux x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/ChromaRush-Linux-x86_64.tar.gz"
+        },
+        "Web": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/ChromaRush-Web.zip"
+        },
+        "macOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Apple Developer ID"
+        },
+        "Android": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Android SDK keystore signing"
+        },
+        "iOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires macOS Xcode signing runner"
+        }
+      }
+    },
+    "DriftStorm": {
+      "game_id": "kart-racing",
+      "platforms": {
+        "Windows x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/DriftStorm-Windows-x86_64.zip"
+        },
+        "Linux x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/DriftStorm-Linux-x86_64.tar.gz"
+        },
+        "Web": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/DriftStorm-Web.zip"
+        },
+        "macOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Apple Developer ID"
+        },
+        "Android": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Android SDK keystore signing"
+        },
+        "iOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires macOS Xcode signing runner"
+        }
+      }
+    },
+    "StrikeVector": {
+      "game_id": "strike-vector",
+      "platforms": {
+        "Windows x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/StrikeVector-Windows-x86_64.zip"
+        },
+        "Linux x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/StrikeVector-Linux-x86_64.tar.gz"
+        },
+        "Web": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/StrikeVector-Web.zip"
+        },
+        "macOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Apple Developer ID"
+        },
+        "Android": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Android SDK keystore signing"
+        },
+        "iOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires macOS Xcode signing runner"
+        }
+      }
+    },
+    "RoboForgeArena": {
+      "game_id": "roboforge-arena",
+      "platforms": {
+        "Windows x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/RoboForgeArena-Windows-x86_64.zip"
+        },
+        "Linux x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/RoboForgeArena-Linux-x86_64.tar.gz"
+        },
+        "Web": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/RoboForgeArena-Web.zip"
+        },
+        "macOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Apple Developer ID"
+        },
+        "Android": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Android SDK keystore signing"
+        },
+        "iOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires macOS Xcode signing runner"
+        }
+      }
+    },
+    "WildCircuit": {
+      "game_id": "wildcircuit",
+      "platforms": {
+        "Windows x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/WildCircuit-Windows-x86_64.zip"
+        },
+        "Linux x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/WildCircuit-Linux-x86_64.tar.gz"
+        },
+        "Web": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/WildCircuit-Web.zip"
+        },
+        "macOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Apple Developer ID"
+        },
+        "Android": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Android SDK keystore signing"
+        },
+        "iOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires macOS Xcode signing runner"
+        }
+      }
+    },
+    "SkyboundOdyssey": {
+      "game_id": "skybound-odyssey",
+      "platforms": {
+        "Windows x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/SkyboundOdyssey-Windows-x86_64.zip"
+        },
+        "Linux x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/SkyboundOdyssey-Linux-x86_64.tar.gz"
+        },
+        "Web": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/SkyboundOdyssey-Web.zip"
+        },
+        "macOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Apple Developer ID"
+        },
+        "Android": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Android SDK keystore signing"
+        },
+        "iOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires macOS Xcode signing runner"
+        }
+      }
+    },
+    "NitroKick": {
+      "game_id": "rocket-car",
+      "platforms": {
+        "Windows x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/NitroKick-Windows-x86_64.zip"
+        },
+        "Linux x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/NitroKick-Linux-x86_64.tar.gz"
+        },
+        "Web": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/NitroKick-Web.zip"
+        },
+        "macOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Apple Developer ID"
+        },
+        "Android": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Android SDK keystore signing"
+        },
+        "iOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires macOS Xcode signing runner"
+        }
+      }
+    },
+    "MetroSiege": {
+      "game_id": "subway-survival",
+      "platforms": {
+        "Windows x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/MetroSiege-Windows-x86_64.zip"
+        },
+        "Linux x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/MetroSiege-Linux-x86_64.tar.gz"
+        },
+        "Web": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/MetroSiege-Web.zip"
+        },
+        "macOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Apple Developer ID"
+        },
+        "Android": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Android SDK keystore signing"
+        },
+        "iOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires macOS Xcode signing runner"
+        }
+      }
+    },
+    "IronCrucible": {
+      "game_id": "arena-fps",
+      "platforms": {
+        "Windows x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/IronCrucible-Windows-x86_64.zip"
+        },
+        "Linux x64": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/IronCrucible-Linux-x86_64.tar.gz"
+        },
+        "Web": {
+          "status": "PROVEN",
+          "artifact": "export/dist/standalone/IronCrucible-Web.zip"
+        },
+        "macOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Apple Developer ID"
+        },
+        "Android": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires Android SDK keystore signing"
+        },
+        "iOS": {
+          "status": "HARDWARE_REQUIRED",
+          "notes": "Configured in export_presets.cfg; requires macOS Xcode signing runner"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,527 @@
+{
+  "manifest_version": "3.0.0",
+  "packages": {
+    "AeroRush-Linux-x86_64.tar.gz": {
+      "size_mb": 175.09,
+      "size_bytes": 183593331,
+      "sha256": "b81dab137132b0629c69cf08cc0440beefa16b2635e3427d43244e486705d30e",
+      "archive_members": [],
+      "foreign_resources": 0
+    },
+    "AeroRush-Web.zip": {
+      "size_mb": 233.95,
+      "size_bytes": 245313121,
+      "sha256": "810a3e529668ad131bed296dbc271b55b03ba496e661387fae91f664251d0692",
+      "archive_members": [
+        "index.apple-touch-icon.png",
+        "index.apple-touch-icon.png.import",
+        "index.audio.worklet.js",
+        "index.html",
+        "index.icon.png",
+        "index.icon.png.import",
+        "index.js",
+        "index.pck",
+        "index.pck.part00",
+        "index.pck.part01",
+        "index.pck.part02",
+        "index.pck.part03",
+        "index.pck.part04",
+        "index.pck.part05",
+        "index.png",
+        "index.png.import",
+        "index.wasm",
+        "index.wasm.part00",
+        "index.wasm.part01",
+        "_headers",
+        "AeroRush.pck"
+      ],
+      "foreign_resources": 0
+    },
+    "AeroRush-Windows-x86_64.zip": {
+      "size_mb": 180.95,
+      "size_bytes": 189743713,
+      "sha256": "d93743a282992dd8350d72168e18700fdb607865b00ba2065fc17e3960f3d5b0",
+      "archive_members": [
+        "AeroRush.exe",
+        "AeroRush.pck",
+        "standalone_manifest.json"
+      ],
+      "foreign_resources": 0
+    },
+    "ChromaRush-Linux-x86_64.tar.gz": {
+      "size_mb": 175.22,
+      "size_bytes": 183728965,
+      "sha256": "05b8981749df160b1f1361372f3a6394734df493f9944f400407711e081a1115",
+      "archive_members": [],
+      "foreign_resources": 0
+    },
+    "ChromaRush-Web.zip": {
+      "size_mb": 234.08,
+      "size_bytes": 245447165,
+      "sha256": "d67dc74b4c0c76ebff2212c8e497c4a20c22faccba61f5a1bbb0b2792c8364c9",
+      "archive_members": [
+        "index.apple-touch-icon.png",
+        "index.apple-touch-icon.png.import",
+        "index.audio.worklet.js",
+        "index.html",
+        "index.icon.png",
+        "index.icon.png.import",
+        "index.js",
+        "index.pck",
+        "index.pck.part00",
+        "index.pck.part01",
+        "index.pck.part02",
+        "index.pck.part03",
+        "index.pck.part04",
+        "index.pck.part05",
+        "index.png",
+        "index.png.import",
+        "index.wasm",
+        "index.wasm.part00",
+        "index.wasm.part01",
+        "_headers",
+        "ChromaRush.pck"
+      ],
+      "foreign_resources": 0
+    },
+    "ChromaRush-Windows-x86_64.zip": {
+      "size_mb": 181.08,
+      "size_bytes": 189877766,
+      "sha256": "ed166a70de72ca62a80c33b999d9a3aa1c1a3927b81762cc2a6d62f7c9dab81b",
+      "archive_members": [
+        "ChromaRush.exe",
+        "ChromaRush.pck",
+        "standalone_manifest.json"
+      ],
+      "foreign_resources": 0
+    },
+    "DriftStorm-Linux-x86_64.tar.gz": {
+      "size_mb": 175.06,
+      "size_bytes": 183560867,
+      "sha256": "f882d53076fd620dc7b51d1c095f8acf34dfbc27f1d11f01a872815f2377fdaa",
+      "archive_members": [],
+      "foreign_resources": 0
+    },
+    "DriftStorm-Web.zip": {
+      "size_mb": 233.92,
+      "size_bytes": 245280662,
+      "sha256": "510c903fe248f67029df5ac850a2b96171c841003084ea3ae202353173948632",
+      "archive_members": [
+        "index.apple-touch-icon.png",
+        "index.apple-touch-icon.png.import",
+        "index.audio.worklet.js",
+        "index.html",
+        "index.icon.png",
+        "index.icon.png.import",
+        "index.js",
+        "index.pck",
+        "index.pck.part00",
+        "index.pck.part01",
+        "index.pck.part02",
+        "index.pck.part03",
+        "index.pck.part04",
+        "index.pck.part05",
+        "index.png",
+        "index.png.import",
+        "index.wasm",
+        "index.wasm.part00",
+        "index.wasm.part01",
+        "_headers",
+        "DriftStorm.pck"
+      ],
+      "foreign_resources": 0
+    },
+    "DriftStorm-Windows-x86_64.zip": {
+      "size_mb": 180.92,
+      "size_bytes": 189711263,
+      "sha256": "a0436aaeab69f51cd19838ed5d29895871f369e0d292cdee931365947e6f7d9a",
+      "archive_members": [
+        "DriftStorm.exe",
+        "DriftStorm.pck",
+        "standalone_manifest.json"
+      ],
+      "foreign_resources": 0
+    },
+    "IronCrucible-Linux-x86_64.tar.gz": {
+      "size_mb": 174.96,
+      "size_bytes": 183458692,
+      "sha256": "f5134684bed4a280269363bcdb52ab45ca06e5b370fe56dc14ace3adbe8b8e08",
+      "archive_members": [],
+      "foreign_resources": 0
+    },
+    "IronCrucible-Web.zip": {
+      "size_mb": 233.82,
+      "size_bytes": 245179025,
+      "sha256": "04488f0e88a402baffae76f672a4b2efdfacd4dbd11f1a510499787572d35d3e",
+      "archive_members": [
+        "index.apple-touch-icon.png",
+        "index.apple-touch-icon.png.import",
+        "index.audio.worklet.js",
+        "index.html",
+        "index.icon.png",
+        "index.icon.png.import",
+        "index.js",
+        "index.pck",
+        "index.pck.part00",
+        "index.pck.part01",
+        "index.pck.part02",
+        "index.pck.part03",
+        "index.pck.part04",
+        "index.pck.part05",
+        "index.png",
+        "index.png.import",
+        "index.wasm",
+        "index.wasm.part00",
+        "index.wasm.part01",
+        "_headers",
+        "IronCrucible.pck"
+      ],
+      "foreign_resources": 0
+    },
+    "IronCrucible-Windows-x86_64.zip": {
+      "size_mb": 180.83,
+      "size_bytes": 189609630,
+      "sha256": "e1dee97f08b5277a07dabda06786042a9705805a7ba6a4dc78c0b6051d5ba0d7",
+      "archive_members": [
+        "IronCrucible.exe",
+        "IronCrucible.pck",
+        "standalone_manifest.json"
+      ],
+      "foreign_resources": 0
+    },
+    "MetroSiege-Linux-x86_64.tar.gz": {
+      "size_mb": 174.95,
+      "size_bytes": 183448076,
+      "sha256": "c6fabeb781e7ec57888829d401dec71d3d248d782075ee64db97452af1941b50",
+      "archive_members": [],
+      "foreign_resources": 0
+    },
+    "MetroSiege-Web.zip": {
+      "size_mb": 233.81,
+      "size_bytes": 245168296,
+      "sha256": "d026527c6af24e7e1639d25ac6a9f582905525fbf437910bed0929cdb1e5a968",
+      "archive_members": [
+        "index.apple-touch-icon.png",
+        "index.apple-touch-icon.png.import",
+        "index.audio.worklet.js",
+        "index.html",
+        "index.icon.png",
+        "index.icon.png.import",
+        "index.js",
+        "index.pck",
+        "index.pck.part00",
+        "index.pck.part01",
+        "index.pck.part02",
+        "index.pck.part03",
+        "index.pck.part04",
+        "index.pck.part05",
+        "index.png",
+        "index.png.import",
+        "index.wasm",
+        "index.wasm.part00",
+        "index.wasm.part01",
+        "_headers",
+        "MetroSiege.pck"
+      ],
+      "foreign_resources": 0
+    },
+    "MetroSiege-Windows-x86_64.zip": {
+      "size_mb": 180.82,
+      "size_bytes": 189598899,
+      "sha256": "ce9bdbb26b0100476128890ad0d2dfe22b44d4c81eb3c4522e540b90dde9078c",
+      "archive_members": [
+        "MetroSiege.exe",
+        "MetroSiege.pck",
+        "standalone_manifest.json"
+      ],
+      "foreign_resources": 0
+    },
+    "NitroKick-Linux-x86_64.tar.gz": {
+      "size_mb": 174.96,
+      "size_bytes": 183454991,
+      "sha256": "3afb2449d5ccedecffd163d8903511ef02d52298ef8949d5694ebe08c09742b0",
+      "archive_members": [],
+      "foreign_resources": 0
+    },
+    "NitroKick-Web.zip": {
+      "size_mb": 233.82,
+      "size_bytes": 245175873,
+      "sha256": "42a79252b52d645c2447e66f3b2838ae4ff9275766b5236582d70950336b29cc",
+      "archive_members": [
+        "index.apple-touch-icon.png",
+        "index.apple-touch-icon.png.import",
+        "index.audio.worklet.js",
+        "index.html",
+        "index.icon.png",
+        "index.icon.png.import",
+        "index.js",
+        "index.pck",
+        "index.pck.part00",
+        "index.pck.part01",
+        "index.pck.part02",
+        "index.pck.part03",
+        "index.pck.part04",
+        "index.pck.part05",
+        "index.png",
+        "index.png.import",
+        "index.wasm",
+        "index.wasm.part00",
+        "index.wasm.part01",
+        "_headers",
+        "NitroKick.pck"
+      ],
+      "foreign_resources": 0
+    },
+    "NitroKick-Windows-x86_64.zip": {
+      "size_mb": 180.82,
+      "size_bytes": 189606472,
+      "sha256": "b94705c3fa4d03d078759c2682229a334f33fbd821425e91c399e33305463828",
+      "archive_members": [
+        "NitroKick.exe",
+        "NitroKick.pck",
+        "standalone_manifest.json"
+      ],
+      "foreign_resources": 0
+    },
+    "RoboForgeArena-Linux-x86_64.tar.gz": {
+      "size_mb": 174.94,
+      "size_bytes": 183436473,
+      "sha256": "414579b7a4d783a2dbec7966910a3ff7f52a8f5372fb76c032c64e2320e5f109",
+      "archive_members": [],
+      "foreign_resources": 0
+    },
+    "RoboForgeArena-Web.zip": {
+      "size_mb": 233.8,
+      "size_bytes": 245157370,
+      "sha256": "cc8cdaa41313aaa6749a13c475ba03387ed0215cf4ce2eb143b1adc4259b64fa",
+      "archive_members": [
+        "index.apple-touch-icon.png",
+        "index.apple-touch-icon.png.import",
+        "index.audio.worklet.js",
+        "index.html",
+        "index.icon.png",
+        "index.icon.png.import",
+        "index.js",
+        "index.pck",
+        "index.pck.part00",
+        "index.pck.part01",
+        "index.pck.part02",
+        "index.pck.part03",
+        "index.pck.part04",
+        "index.pck.part05",
+        "index.png",
+        "index.png.import",
+        "index.wasm",
+        "index.wasm.part00",
+        "index.wasm.part01",
+        "_headers",
+        "RoboForgeArena.pck"
+      ],
+      "foreign_resources": 0
+    },
+    "RoboForgeArena-Windows-x86_64.zip": {
+      "size_mb": 180.81,
+      "size_bytes": 189587983,
+      "sha256": "b24988c38d3fc5fc39479f8568da1165df264844a505059029e7fd995dd9e1d2",
+      "archive_members": [
+        "RoboForgeArena.exe",
+        "RoboForgeArena.pck",
+        "standalone_manifest.json"
+      ],
+      "foreign_resources": 0
+    },
+    "SkyboundOdyssey-Linux-x86_64.tar.gz": {
+      "size_mb": 174.94,
+      "size_bytes": 183432656,
+      "sha256": "a289a7e6610f665985e749afcdf0749a17c5a9f7617e43c5b686c2ca2ba46908",
+      "archive_members": [],
+      "foreign_resources": 0
+    },
+    "SkyboundOdyssey-Web.zip": {
+      "size_mb": 233.8,
+      "size_bytes": 245153343,
+      "sha256": "7f24dc7dde1aaeec936e61715ccb683153afd14bd69c858e647455cb4a100395",
+      "archive_members": [
+        "index.apple-touch-icon.png",
+        "index.apple-touch-icon.png.import",
+        "index.audio.worklet.js",
+        "index.html",
+        "index.icon.png",
+        "index.icon.png.import",
+        "index.js",
+        "index.pck",
+        "index.pck.part00",
+        "index.pck.part01",
+        "index.pck.part02",
+        "index.pck.part03",
+        "index.pck.part04",
+        "index.pck.part05",
+        "index.png",
+        "index.png.import",
+        "index.wasm",
+        "index.wasm.part00",
+        "index.wasm.part01",
+        "_headers",
+        "SkyboundOdyssey.pck"
+      ],
+      "foreign_resources": 0
+    },
+    "SkyboundOdyssey-Windows-x86_64.zip": {
+      "size_mb": 180.8,
+      "size_bytes": 189583956,
+      "sha256": "029870cd0ad9310889e60ec2091fa5a2314db614dcc634cfeb7c34efb6b7d408",
+      "archive_members": [
+        "SkyboundOdyssey.exe",
+        "SkyboundOdyssey.pck",
+        "standalone_manifest.json"
+      ],
+      "foreign_resources": 0
+    },
+    "StrikeVector-Linux-x86_64.tar.gz": {
+      "size_mb": 175.13,
+      "size_bytes": 183634593,
+      "sha256": "47c67591488428c408c0c58be7201a288664bb9d74b2b5d26272ed84af48f696",
+      "archive_members": [],
+      "foreign_resources": 0
+    },
+    "StrikeVector-Web.zip": {
+      "size_mb": 233.99,
+      "size_bytes": 245355268,
+      "sha256": "a18d823abc1f1298a0a89492853994329f6e6568a10ac1f0e237a433d6da1d5d",
+      "archive_members": [
+        "index.apple-touch-icon.png",
+        "index.apple-touch-icon.png.import",
+        "index.audio.worklet.js",
+        "index.html",
+        "index.icon.png",
+        "index.icon.png.import",
+        "index.js",
+        "index.pck",
+        "index.pck.part00",
+        "index.pck.part01",
+        "index.pck.part02",
+        "index.pck.part03",
+        "index.pck.part04",
+        "index.pck.part05",
+        "index.png",
+        "index.png.import",
+        "index.wasm",
+        "index.wasm.part00",
+        "index.wasm.part01",
+        "_headers",
+        "StrikeVector.pck"
+      ],
+      "foreign_resources": 0
+    },
+    "StrikeVector-Windows-x86_64.zip": {
+      "size_mb": 180.99,
+      "size_bytes": 189785871,
+      "sha256": "4c2baf38fa209ec5745dd3ae6773a1823e4f00ddfbeecf0b5f9275aa1627b88e",
+      "archive_members": [
+        "StrikeVector.exe",
+        "StrikeVector.pck",
+        "standalone_manifest.json"
+      ],
+      "foreign_resources": 0
+    },
+    "WildCircuit-Linux-x86_64.tar.gz": {
+      "size_mb": 174.94,
+      "size_bytes": 183434977,
+      "sha256": "4e893aa35fc51aadde721a53031abc233f1ee2322f46b6d029c8047723059f43",
+      "archive_members": [],
+      "foreign_resources": 0
+    },
+    "WildCircuit-Web.zip": {
+      "size_mb": 233.8,
+      "size_bytes": 245155745,
+      "sha256": "6657445bf243a28d961196c0070e1be28f597a409d86dcf92010a3496788417f",
+      "archive_members": [
+        "index.apple-touch-icon.png",
+        "index.apple-touch-icon.png.import",
+        "index.audio.worklet.js",
+        "index.html",
+        "index.icon.png",
+        "index.icon.png.import",
+        "index.js",
+        "index.pck",
+        "index.pck.part00",
+        "index.pck.part01",
+        "index.pck.part02",
+        "index.pck.part03",
+        "index.pck.part04",
+        "index.pck.part05",
+        "index.png",
+        "index.png.import",
+        "index.wasm",
+        "index.wasm.part00",
+        "index.wasm.part01",
+        "_headers",
+        "WildCircuit.pck"
+      ],
+      "foreign_resources": 0
+    },
+    "WildCircuit-Windows-x86_64.zip": {
+      "size_mb": 180.8,
+      "size_bytes": 189586342,
+      "sha256": "4ea5fc1532965917c247f78f07c16128940fc211bb73f335cf8a1c2191b0ee6a",
+      "archive_members": [
+        "WildCircuit.exe",
+        "WildCircuit.pck",
+        "standalone_manifest.json"
+      ],
+      "foreign_resources": 0
+    },
+    "VoltArena-Full-Android.apk": {
+      "size_mb": 108.73,
+      "size_bytes": 114016668,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "archive_members": [],
+      "is_full_suite": true
+    },
+    "VoltArena-Full-Linux-x86_64.tar.gz": {
+      "size_mb": 99.52,
+      "size_bytes": 104351832,
+      "sha256": "e1646e9cf1db689e70fdcc19df73e6e156d28909f42328b8bf1750369fd47e1f",
+      "archive_members": [],
+      "is_full_suite": true
+    },
+    "VoltArena-Full-Web.zip": {
+      "size_mb": 158.36,
+      "size_bytes": 166055491,
+      "sha256": "4333d12671160dbd349f35da5013522a0416357a668d51c81c31715bc331807c",
+      "archive_members": [
+        "index.apple-touch-icon.png",
+        "index.apple-touch-icon.png.import",
+        "index.audio.worklet.js",
+        "index.html",
+        "index.icon.png",
+        "index.icon.png.import",
+        "index.js",
+        "index.pck",
+        "index.pck.part00",
+        "index.pck.part01",
+        "index.pck.part02",
+        "index.pck.part03",
+        "index.pck.part04",
+        "index.pck.part05",
+        "index.png",
+        "index.png.import",
+        "index.wasm",
+        "index.wasm.part00",
+        "index.wasm.part01",
+        "_headers"
+      ],
+      "is_full_suite": true
+    },
+    "VoltArena-Full-Windows-x86_64.zip": {
+      "size_mb": 105.37,
+      "size_bytes": 110486050,
+      "sha256": "c3aba533393407b16f214b773e9a70163e6a027059e144a3d1a16a792ca1a87e",
+      "archive_members": [
+        "VoltArena.exe",
+        "suite_manifest.json"
+      ],
+      "is_full_suite": true
+    }
+  }
+}

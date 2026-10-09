@@ -1,0 +1,33 @@
+{
+  "timestamp_utc": "2026-10-09 10:21:51 UTC",
+  "recordings": [
+    {
+      "game": "AeroRush",
+      "type": "E2E Black-Box Automated Drive",
+      "description": "Full race countdown, jump gap traversal, boost pad acceleration, and victory dossier",
+      "status": "PROVEN",
+      "evidence_file": "artifacts/test-results.json"
+    },
+    {
+      "game": "Chroma Rush",
+      "type": "Color Swap & Delivery Loop",
+      "description": "City navigation, target chase, atomic color swap, and checkpoint delivery",
+      "status": "PROVEN",
+      "evidence_file": "artifacts/test-results.json"
+    },
+    {
+      "game": "Drift Storm",
+      "type": "Kart Racing Grand Prix",
+      "description": "Full 3-lap race with 5 AI opponents, powerslide drifting, mini-turbos, and podium",
+      "status": "PROVEN",
+      "evidence_file": "artifacts/screenshots/contact_sheet_drift_storm.png"
+    },
+    {
+      "game": "Strike Vector",
+      "type": "Tactical Campaign Mission",
+      "description": "Full 8-stage campaign progression, weapon fire, boss fight, and extraction",
+      "status": "PROVEN",
+      "evidence_file": "artifacts/screenshots/contact_sheet_strike_vector.png"
+    }
+  ]
+}

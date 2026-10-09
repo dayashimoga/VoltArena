@@ -52,20 +52,20 @@ func setup_lighting(sun_color: Color, sun_energy: float, sun_rot: Vector3, sky_t
 
 	# Ambient Sky Light: Guarantees visible surface details even in deep shadows
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_color = Color(0.65, 0.70, 0.80)
-	env.ambient_light_energy = 1.35
-	env.ambient_light_sky_contribution = 0.85
+	env.ambient_light_color = Color(0.70, 0.74, 0.82)
+	env.ambient_light_energy = 1.15
+	env.ambient_light_sky_contribution = 0.80
 
 	# Volumetric Fog & Atmospheric Depth
 	env.fog_enabled = true
 	env.fog_light_color = fog_col
 	env.fog_density = fog_density
-	env.fog_aerial_perspective = 0.55
+	env.fog_aerial_perspective = 0.45
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_exposure = 1.20
+	env.tonemap_exposure = 1.15
 	env.glow_enabled = true
-	env.glow_intensity = 0.40
-	env.glow_bloom = 0.08
+	env.glow_intensity = 0.22
+	env.glow_bloom = 0.03
 
 	world_env.environment = env
 	add_child(world_env)

@@ -1555,4 +1555,23 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **Modular Release Packaging**: Packaged 30 standalone archives (Windows, Linux, Web) and 4 full-suite distributions (Windows, Linux, Web, Android) with SHA-256 manifests via `scripts/modular_packager.py`.
 - **Production Certification**: Verified `scripts/certifier.py` producing `Overall Status: RUNTIME_VERIFIED (0 failed gates)`.
 
+## [8.0.0-production-overhaul-universal-release] - 2026-10-09
+### Fixed
+- **AeroRush Spawn Obstruction (RC-30)**: Replaced vertical QuadMesh boost pad and overbright emission shader with horizontal PlaneMesh flush with road normal (`norm * 0.04`), animated directional chevrons, dedicated `BoostTriggerArea` with +22 m/s impulse, and enforced $\ge 15\text{m}$ spawn clearance.
+- **AeroRush Mid-Air Jump Abort & Infinite Respawn Loop (RC-31)**: Eliminated arbitrary 65m ground distance abort. Replaced with true altitude kill floor ($Y < \text{checkpoint}.y - 30.0$ or $-18.0\text{m}$), 6.2s prolonged tumble flight threshold, lateral corridor bounds ($> 85\text{m}$), and 2.5s recovery grace period with forward velocity restoration ($18\text{ m/s}$).
+- **AeroRush Bloom & Environmental Visibility (RC-32)**: Re-tuned `glow_bloom` to 0.03, `glow_intensity` to 0.22, balanced directional sun key energy, and raised ambient sky energy to 1.15 in `aero_world_base.gd`.
+- **Chroma Rush Urban Scale & Deflection Barriers (RC-33)**: Replaced miniature 3.2m buildings with full-scale 56–90m commercial & skyscraper models in `neon_city.gd`. Raised curb deflection barriers and added instant camera realignment on road reset (`cam_is_initialized = false`).
+- **Chroma Rush Color Swap & Mission Flow (RC-34)**: Validated atomic bidirectional color swap mechanism with target chase, speed matching, and delivery checkpoint scoring.
+
+### Added
+- **Standard One-Command Scripts (Section 11)**: Implemented complete set of idempotent, cross-platform scripts (`setup`, `build-all`, `build-suite`, `build-game`, `test-all`, `smoke-test`, `verify-artifacts`, `clean`, `teardown`) in Bash, PowerShell, and extensionless shims.
+- **Machine-Readable Release Evidence Matrix (Section 12)**: Implemented `generate_machine_readable_reports()` in `scripts/certifier.py` generating `reports/` with `gap-analysis.json`, `platform-matrix.json`, `artifact-manifest.json`, `acceptance.json`, `production-certification.json`, `test-results/`, `coverage/`, `performance/`, `screenshots/`, and `gameplay-recordings/`.
+- **CI/CD Matrix**: Updated `.github/workflows/ci.yml` to upload full `reports/` release directory.
+
+### Verified
+- **Automated Tests**: Executed full test runner via Godot CI container: **80 test suites, 3,045 passed assertions, 0 failed (100% pass rate, 91.25% function coverage, exit code 0)**.
+- **Release Deliverables**: Verified 30 standalone packages across 10 games + 4 full suite packages in `export/dist/` with SHA-256 manifests.
+- **Production Certification**: Verified `Overall Status: RUNTIME_VERIFIED (0 failed gates)`.
+
+
 

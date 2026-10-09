@@ -48,7 +48,8 @@ enum StuntType {
 	WALL_RIDE,
 	LOOP_CLEARED,
 	NEAR_MISS,
-	PERFECT_LANDING
+	PERFECT_LANDING,
+	BOOST_PAD
 }
 
 # --- Medals ---

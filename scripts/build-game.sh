@@ -3,16 +3,18 @@
 set -euo pipefail
 
 if [ $# -lt 1 ]; then
-    echo "Usage: $0 <game_name>"
+    echo "Usage: $0 <game_name> [platform]"
     exit 1
 fi
 
 GAME_NAME="$1"
+PLATFORM="${2:-all}"
 
 echo "=================================================="
-echo "       VOLTARENA: BUILD STANDALONE GAME: $GAME_NAME"
+echo "       VOLTARENA: BUILD STANDALONE GAME: $GAME_NAME ($PLATFORM)"
 echo "=================================================="
 
-podman run --rm -v "${PWD}:/workspace:Z" -w /workspace docker.io/library/python:3.12-alpine python3 scripts/modular_packager.py "$GAME_NAME"
+podman run --rm -v "${PWD}:/workspace:Z" -w /workspace docker.io/library/python:3.12-alpine python3 scripts/modular_packager.py "$GAME_NAME" "$PLATFORM"
 
 echo "Standalone package for $GAME_NAME created in export/dist/standalone/."
+

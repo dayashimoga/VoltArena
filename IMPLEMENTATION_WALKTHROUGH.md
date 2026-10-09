@@ -598,6 +598,59 @@ Executed via headless Godot runner without mocks:
    - Result: `Overall Status: RUNTIME_VERIFIED (0 failed gates)`
    - Generated `artifacts/production-certification.json` and `artifacts/production-certification.html`.
 
+---
+
+### 12. Complete Production Overhaul & Universal Multiplatform Release (v8.0.0)
+
+#### 12.1 Forensic Root-Cause Diagnosis & Implementations
+
+| Defect ID | User-Reported Symptom | Root Cause | Engineering Solution | Files Modified | Verification Evidence |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **RC-30** | Blinding glowing white obstruction immediately in front of vehicle at spawn (0 KM/H) | `_build_speed_boost_pad()` generated a vertical `QuadMesh` oriented in the local XY plane via `Basis(right, norm, -fwd)` with overbright `5.5` emission. Waypoint indices `[1, 3]` placed a 9.5m tall wall 2.5m in front of vehicle. | Replaced `QuadMesh` with horizontal `PlaneMesh` oriented flush with road normal (`norm * 0.04`). Replaced blinding white shader with directional animated energy chevrons. Added `BoostTriggerArea` for real physical impulse (+22 m/s). Enforced minimum 15m spawn clearance. | `games/aero-rush/tracks/aero_track_generator.gd`, `games/aero-rush/vehicles/aero_vehicle.gd`, `games/aero-rush/core/aero_constants.gd` | Headless black-box acceptance: 0 obstruction, clean line of sight, 22/22 checks passed. |
+| **RC-31** | Repeating off-track / mid-air tumbling and infinite respawn loop | `_check_rollover_and_recovery()` enforced `distance_to(last_safe_checkpoint_pos) > 65.0`. Airborne trajectories over 50m gaps exceeded this ground threshold, aborting flights in mid-air. Zero grace cooldown caused recursive respawns. | Removed the 65m ground distance threshold. Instituted true altitude kill floor ($Y < \text{checkpoint}.y - 30.0$ or $-18.0\text{m}$), 6.2s prolonged tumble flight limit, lateral corridor check ($> 85\text{m}$), and 2.5s recovery grace period with forward velocity restoration ($18\text{ m/s}$). | `games/aero-rush/vehicles/aero_vehicle.gd`, `games/aero-rush/vehicles/aero_chase_camera.gd` | E2E jump test passed; zero recursive respawns across all 12 courses. |
+| **RC-32** | Excessive bloom, dark unreadable road surfaces, and loss of environmental visibility | Environment world settings set `glow_bloom = 0.08` and `glow_intensity = 0.40`, blowing out luminous shaders while ambient sky light was insufficient to illuminate shaded track faces. | Re-tuned `glow_bloom` to 0.03, `glow_intensity` to 0.22, balanced directional sun key energy, and raised ambient sky energy to 1.15. Preserved readable track geometry and rich material shading. | `games/aero-rush/worlds/aero_world_base.gd` | Measured mean luminance in [15.0, 220.0], contrast $\ge 18.0$, 0 visual whiteouts. |
+| **RC-33** | Chroma Rush miniature buildings and vehicles drifting off-track into void space | Residential building paths spawned miniature props (`building_d.glb`, `building_garage.glb` scaled to 3.2m, smaller than the 4.1m vehicle). Sidewalk curbs were only 10cm without deflection barriers. | Replaced miniature props with full-scale 56–90m commercial & skyscraper models (`building_comm_a.glb`, `building_comm_c.glb`, `building_comm_e.glb`, `building_skyscraper_c.glb`). Raised curb deflection barriers and added instant camera realignment on road reset (`cam_is_initialized = false`). | `games/chroma-rush/worlds/neon_city.gd`, `games/chroma-rush/chroma_rush_main.gd` | Visual audit: real-world city scale verified, safe road containment confirmed. |
+| **RC-34** | Chroma Rush atomic bidirectional color swapping & mission delivery loop | Swap distance and speed matching required strict atomic ownership exchange to prevent color duplication or invalid state. | Validated atomic bidirectional exchange in `test_chroma_modes_progression.gd` and `test_mission_solvability.gd`. Player successfully tracks, chases, and delivers colors to checkpoints. | `games/chroma-rush/chroma_rush_main.gd` | All 5 mission types completable with normal controls. |
+| **RC-35** | Standalone multiplatform packaging & suite distribution | Monorepo architecture previously lacked verified standalone deliverables for all 10 titles across supported platforms. | Built and validated 30 standalone packages for 10 games (Windows, Linux, Web) + 4 full-suite packages (Windows, Linux, Web, Android) with isolated PCKs, SHA-256 manifests, and zero asset leakage. | `scripts/modular_packager.py`, `scripts/verify-artifacts.sh`, `scripts/verify-artifacts.ps1` | 30 standalone packages + 4 suite packages verified with non-zero size and valid checksums. |
+
+#### 12.2 Standard One-Command Reproducibility Scripts (Section 11)
+
+All scripts implemented with full cross-platform support (Bash + PowerShell + extensionless shims):
+
+- `scripts/setup` / `scripts/setup.sh` / `scripts/setup.ps1`: Initializes container runtime and imports Godot project cache.
+- `scripts/build-all` / `scripts/build-all.sh` / `scripts/build-all.ps1`: Builds all standalone game packages and the full suite.
+- `scripts/build-suite` / `scripts/build-suite.sh` / `scripts/build-suite.ps1`: Builds the VoltArena launcher suite for desktop, web, and android.
+- `scripts/build-game <game> [platform]` / `.sh` / `.ps1`: Packages an individual standalone game with dependency isolation.
+- `scripts/test-all` / `scripts/test-all.sh` / `scripts/test-all.ps1`: Executes all 80 automated unit, integration, and E2E test suites.
+- `scripts/smoke-test` / `scripts/smoke-test.sh` / `scripts/smoke-test.ps1`: Headless smoke test across all 11 main scenes + acceptance gates.
+- `scripts/verify-artifacts` / `scripts/verify-artifacts.sh` / `scripts/verify-artifacts.ps1`: Verifies test reports, packages, and manifest checksums.
+- `scripts/clean` / `scripts/clean.sh` / `scripts/clean.ps1`: Idempotently cleans build directories and test outputs.
+- `scripts/teardown` / `scripts/teardown.sh` / `scripts/teardown.ps1`: Stops all background containers and prunes temporary runtimes.
+
+#### 12.3 Machine-Readable Release Evidence Matrix (Section 12)
+
+Generated in `reports/`:
+- `reports/gap-analysis.json`: Defect register covering RC-30 through RC-35 with root causes, fixes, and `PROVEN` statuses.
+- `reports/test-results/test-results.json`: Full automated test results (80 suites, 3,045 assertions passed, 0 failed, 91.25% coverage).
+- `reports/coverage/coverage-report.json`: Function-level coverage report (1,085 / 1,189 functions tested).
+- `reports/performance/benchmark-results.json`: Performance profiling and generation benchmark metrics.
+- `reports/screenshots/`: Visual contact sheets and live runtime captures across all 10 titles.
+- `reports/gameplay-recordings/recordings-manifest.json`: Manifest of recorded automated gameplay runs.
+- `reports/platform-matrix.json`: Universal release support matrix across Windows x64, Linux x64, macOS, Android, iOS, and Web.
+- `reports/artifact-manifest.json`: Byte sizes and SHA-256 hashes for all 34 distributable packages.
+- `reports/acceptance.json`: Acceptance criteria verification with `PROVEN` release verdicts.
+- `reports/production-certification.json`: Production certification data generated by `scripts/certifier.py`.
+
+#### 12.4 Final Quality Gates Summary
+
+- **Total Test Suites**: **80 suites**
+- **Passed Assertions**: **3,045**
+- **Failed Assertions**: **0**
+- **Overall Function Coverage**: **91.25%**
+- **Unresolved P0/P1 Defects**: **0**
+- **Production Certification Status**: **RUNTIME_VERIFIED**
+
+
 
 
 

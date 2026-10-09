@@ -564,7 +564,7 @@ jobs:
           fi
       - name: Run certifier
         run: python3 scripts/certifier.py
-      - name: Upload certification
+      - name: Upload certification and reports
         uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
@@ -572,6 +572,7 @@ jobs:
           path: |
             artifacts/production-certification.json
             artifacts/production-certification.html
+            reports/
           retention-days: 7
 
   # ============================================

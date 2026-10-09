@@ -300,10 +300,10 @@ func build_props() -> void:
 		"res://assets/models/environment/building_comm_f.glb"
 	]
 	var residential_paths = [
-		"res://assets/models/environment/building_d.glb",
+		"res://assets/models/environment/building_comm_a.glb",
 		"res://assets/models/environment/building_comm_c.glb",
 		"res://assets/models/environment/building_comm_e.glb",
-		"res://assets/models/environment/building_garage.glb"
+		"res://assets/models/environment/building_skyscraper_c.glb"
 	]
 
 	var n_spline = spline_samples.size()
@@ -464,7 +464,7 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 		var m_idx = (i * 2 + s) % skyscrapers.size()
 		var glb_model = ModelCache.get_model(skyscrapers[m_idx])
 		if glb_model:
-			var sc = 4.4 + float((i + s) % 3) * 0.4
+			var sc = 5.8 + float((i + s) % 3) * 0.5
 			glb_model.scale = Vector3(sc, sc, sc)
 			_style_building(glb_model, theme_idx)
 			var b_body = StaticBody3D.new()
@@ -473,9 +473,9 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 			b_body.add_child(glb_model)
 			var col = CollisionShape3D.new()
 			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(14.0, 42.0, 14.0)
+			b_shape.size = Vector3(18.0, 56.0, 18.0)
 			col.shape = b_shape
-			col.position = Vector3(0, 21.0, 0)
+			col.position = Vector3(0, 28.0, 0)
 			b_body.add_child(col)
 			b_node = b_body
 	elif (i >= 22 and i <= 31) and pick_type == 1:
@@ -483,7 +483,7 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 		var m_idx = (i * 2 + s) % residentials.size()
 		var glb_model = ModelCache.get_model(residentials[m_idx])
 		if glb_model:
-			var sc = 3.2 + float((i + s) % 3) * 0.3
+			var sc = 5.2 + float((i + s) % 3) * 0.4
 			glb_model.scale = Vector3(sc, sc, sc)
 			_style_building(glb_model, theme_idx)
 			var b_body = StaticBody3D.new()
@@ -492,9 +492,9 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 			b_body.add_child(glb_model)
 			var col = CollisionShape3D.new()
 			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(12.0, 22.0, 12.0)
+			b_shape.size = Vector3(16.0, 36.0, 16.0)
 			col.shape = b_shape
-			col.position = Vector3(0, 11.0, 0)
+			col.position = Vector3(0, 18.0, 0)
 			b_body.add_child(col)
 			b_node = b_body
 	else:
@@ -502,7 +502,7 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 		var m_idx = (i * 2 + s) % commercials.size()
 		var glb_model = ModelCache.get_model(commercials[m_idx])
 		if glb_model:
-			var sc = 3.6 + float((i + s) % 3) * 0.3
+			var sc = 5.2 + float((i + s) % 3) * 0.4
 			glb_model.scale = Vector3(sc, sc, sc)
 			_style_building(glb_model, theme_idx)
 			var b_body = StaticBody3D.new()
@@ -511,9 +511,9 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 			b_body.add_child(glb_model)
 			var col = CollisionShape3D.new()
 			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(14.0, 26.0, 14.0)
+			b_shape.size = Vector3(16.0, 36.0, 16.0)
 			col.shape = b_shape
-			col.position = Vector3(0, 13.0, 0)
+			col.position = Vector3(0, 18.0, 0)
 			b_body.add_child(col)
 			b_node = b_body
 
@@ -521,7 +521,7 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 		var fallback_path = commercials[0] if commercials.size() > 0 else skyscrapers[0]
 		var fallback_glb = ModelCache.get_model(fallback_path)
 		if fallback_glb:
-			var sc = 3.5
+			var sc = 5.2
 			fallback_glb.scale = Vector3(sc, sc, sc)
 			_style_building(fallback_glb, theme_idx)
 			var b_body = StaticBody3D.new()
@@ -530,14 +530,14 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 			b_body.add_child(fallback_glb)
 			var col = CollisionShape3D.new()
 			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(14.0, 26.0, 14.0)
+			b_shape.size = Vector3(16.0, 36.0, 16.0)
 			col.shape = b_shape
-			col.position = Vector3(0, 13.0, 0)
+			col.position = Vector3(0, 18.0, 0)
 			b_body.add_child(col)
 			b_node = b_body
 		else:
-			var h = 32.0 + float((i + s) % 5) * 6.0
-			b_node = _build_procedural_commercial_block(h, 16.0, theme_idx)
+			var h = 42.0 + float((i + s) % 5) * 6.0
+			b_node = _build_procedural_commercial_block(h, 20.0, theme_idx)
 
 	return b_node
 
@@ -625,7 +625,7 @@ func _build_secondary_city_blocks() -> void:
 		var glb = ModelCache.get_model(m_path)
 		var block: Node3D = null
 		if glb:
-			var sc = 4.2 if is_tall else 3.4
+			var sc = 5.8 if is_tall else 4.8
 			glb.scale = Vector3(sc, sc, sc)
 			_style_building(glb, cfg["theme"])
 			var b_body = StaticBody3D.new()

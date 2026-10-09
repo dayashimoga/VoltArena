@@ -71,6 +71,7 @@ var last_safe_checkpoint_pos: Vector3 = Vector3(0, 1.0, 0)
 var last_safe_checkpoint_basis: Basis = Basis.IDENTITY
 var rollover_timer: float = 0.0
 var stuck_timer: float = 0.0
+var recovery_cooldown: float = 0.0
 var controls_enabled: bool = true
 
 # Visual & Node References
@@ -627,22 +628,45 @@ func _update_visual_dynamics(delta: float) -> void:
 		mat.set_shader_parameter("is_reversing", forward_speed < -0.5)
 		mat.set_shader_parameter("is_boosting", is_boost_active)
 
+func apply_boost_pad_impulse(bonus_speed: float = 22.0) -> void:
+	forward_speed = maxf(forward_speed + bonus_speed, top_speed + 14.0)
+	boost_gauge = minf(max_boost_gauge, boost_gauge + 0.45)
+	boost_amount_changed.emit(boost_gauge, max_boost_gauge)
+	stunt_action_triggered.emit(AeroConstants.StuntType.BOOST_PAD, 150, "TURBO BOOST PAD")
+
 func _check_rollover_and_recovery(delta: float) -> void:
 	if not is_inside_tree():
 		return
 
-	# 1. Out-of-bounds fall detection: vehicle falls below elevated course or prolonged airborne flight
+	if recovery_cooldown > 0.0:
+		recovery_cooldown -= delta
+		return
+
+	# 1. Out-of-bounds fall detection: vehicle falls well below track altitude
 	var current_y = global_position.y
-	if current_y < -2.5 or (not is_grounded and airtime_duration > 3.8):
+	var fall_kill_y = minf(last_safe_checkpoint_pos.y - 30.0, -18.0)
+	if current_y < fall_kill_y:
 		recover_to_checkpoint()
 		return
 
-	# 2. Check if straying outside playable track corridor (>65m from last safe checkpoint)
-	if global_position.distance_to(last_safe_checkpoint_pos) > 65.0:
+	# 2. Prolonged uncontrolled tumbling airborne flight
+	if not is_grounded and airtime_duration > 6.2:
 		recover_to_checkpoint()
 		return
 
-	# 3. Check if upside down on ground
+	# 3. Lateral corridor deviation check (perpendicular distance from track forward axis)
+	var fwd_dir = -last_safe_checkpoint_basis.z.normalized()
+	fwd_dir.y = 0.0
+	if fwd_dir.length_squared() > 0.01:
+		fwd_dir = fwd_dir.normalized()
+		var diff = global_position - last_safe_checkpoint_pos
+		diff.y = 0.0
+		var lateral = diff - fwd_dir * diff.dot(fwd_dir)
+		if lateral.length() > 85.0:
+			recover_to_checkpoint()
+			return
+
+	# 4. Check if vehicle is upside down on ground
 	var up_dot = global_basis.y.dot(Vector3.UP)
 	if is_grounded and up_dot < -0.2:
 		rollover_timer += delta
@@ -651,14 +675,14 @@ func _check_rollover_and_recovery(delta: float) -> void:
 			rollover_timer = 0.0
 	elif is_grounded and absf(forward_speed) < 1.5 and up_dot < 0.4:
 		stuck_timer += delta
-		if stuck_timer >= 1.8:
+		if stuck_timer >= 2.0:
 			recover_to_checkpoint()
 			stuck_timer = 0.0
 	else:
 		rollover_timer = 0.0
 		stuck_timer = 0.0
 
-	# 4. Record safe checkpoint transform if driving cleanly on flat track
+	# 5. Record safe checkpoint transform if driving cleanly on flat track
 	if is_grounded and up_dot > 0.75 and absf(forward_speed) > 10.0:
 		last_safe_checkpoint_pos = global_position
 		last_safe_checkpoint_basis = global_basis
@@ -668,19 +692,24 @@ func update_checkpoint(pos: Vector3, b: Basis) -> void:
 	last_safe_checkpoint_basis = b
 
 func recover_to_checkpoint() -> void:
+	recovery_cooldown = 2.5 # Grace period preventing infinite or recursive respawns
+	var spawn_pos = last_safe_checkpoint_pos + Vector3(0, 1.2, 0)
 	if is_inside_tree():
-		global_position = last_safe_checkpoint_pos + Vector3(0, 1.2, 0)
+		global_position = spawn_pos
 		global_basis = last_safe_checkpoint_basis
 	else:
-		position = last_safe_checkpoint_pos + Vector3(0, 1.2, 0)
+		position = spawn_pos
 		transform.basis = last_safe_checkpoint_basis
 
-
 	var fwd = -last_safe_checkpoint_basis.z.normalized()
-	velocity = fwd * 15.0 # Rolling launch forward along track
-	forward_speed = 15.0
+	forward_speed = 18.0
+	velocity = fwd * 18.0
 	is_grounded = true
 	airtime_duration = 0.0
 	rollover_timer = 0.0
+	stuck_timer = 0.0
+	total_air_yaw = 0.0
+	total_air_pitch = 0.0
+	total_air_roll = 0.0
 	up_direction = last_safe_checkpoint_basis.y.normalized()
-	vehicle_respawned.emit(global_position if is_inside_tree() else position)
+	vehicle_respawned.emit(spawn_pos)

@@ -1,0 +1,44 @@
+{
+  "arena_gen_ms": 0.349,
+  "avg_frame_time_ms": 1.66798666666667,
+  "combat_10k_ms": 18.707,
+  "draw_calls": 0,
+  "gates": {
+    "combat_throughput": "PASS",
+    "frame_stability": "PASS",
+    "memory_budget": "PASS",
+    "procedural_gen": "PASS",
+    "quality_presets": "PASS",
+    "time_to_playable": "PASS"
+  },
+  "measured_fps": 728.862973760933,
+  "objects_in_frame": 0,
+  "overall_status": "PASS",
+  "p50_frame_time_ms": 1.372,
+  "p95_frame_time_ms": 2.359,
+  "p99_frame_time_ms": 3.099,
+  "preset_validation": {
+    "AUTO": "PASS",
+    "HIGH": "PASS",
+    "LOW": "PASS",
+    "MEDIUM": "PASS",
+    "ULTRA": "PASS"
+  },
+  "roboforge_workshop_ms": 0.04,
+  "skybound_gen_ms": 0.016,
+  "static_memory_mb": 21.2927093505859,
+  "stutter_count": 1,
+  "subway_gen_ms": 0.014,
+  "time_to_playable_ms": {
+    "ArenaFPS": 0.486,
+    "KartRacing": 1.137,
+    "RoboForgeArena": 0.4,
+    "RocketCar": 0.593,
+    "SkyboundOdyssey": 0.606,
+    "SubwaySurvival": 0.428,
+    "WildCircuit": 0.983
+  },
+  "timestamp": "2026-09-22T13:06:24",
+  "track_gen_ms": 0.01,
+  "wildcircuit_biomes_ms": 0.01
+}

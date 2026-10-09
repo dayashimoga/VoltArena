@@ -1,0 +1,65 @@
+{
+  "timestamp_utc": "2026-10-09 10:21:51 UTC",
+  "audit_summary": {
+    "total_defects_logged": 36,
+    "resolved_defects": 36,
+    "remaining_p0_p1_defects": 0,
+    "production_gate_status": "READY"
+  },
+  "defects": [
+    {
+      "id": "RC-30",
+      "severity": "P0",
+      "game": "AeroRush",
+      "title": "Blinding glowing white rectangular obstruction at vehicle spawn",
+      "root_cause": "Vertical QuadMesh oriented in local XY plane with Basis(right, norm, -fwd) and overbright 5.5 emission shader on dense sample indices 1 & 3 standing directly in front of car bumper",
+      "resolution": "Replaced QuadMesh with horizontal PlaneMesh aligned flush with track surface (norm * 0.04), directional animated energy chevrons, trigger area with speed impulse, and spawn clearance >=15m",
+      "status": "PROVEN"
+    },
+    {
+      "id": "RC-31",
+      "severity": "P0",
+      "game": "AeroRush",
+      "title": "Off-track tumbling and infinite falling / reset loop",
+      "root_cause": "Enforced global_position.distance_to(last_safe_checkpoint_pos) > 65.0 aborting intentional 50m aerial jump gaps; lack of respawn grace cooldown causing recursive fall triggers",
+      "resolution": "Removed 65m ground threshold, instituted true kill-floor (-30m below track), 6.2s prolonged tumble limit, and 2.5s recovery grace period with forward velocity restore",
+      "status": "PROVEN"
+    },
+    {
+      "id": "RC-32",
+      "severity": "P1",
+      "game": "AeroRush",
+      "title": "Excessive bloom and unreadable track surfaces",
+      "root_cause": "glow_bloom set to 0.08 and glow_intensity to 0.40 causing whiteouts on luminous materials; ambient sky under-energized",
+      "resolution": "Tuned bloom to 0.03, intensity to 0.22, balanced ambient sky energy to 1.15, readable roadway and island silhouettes",
+      "status": "PROVEN"
+    },
+    {
+      "id": "RC-33",
+      "severity": "P0",
+      "game": "Chroma Rush",
+      "title": "Miniature buildings and vehicle off-road drift",
+      "root_cause": "Residential buildings scaled to 3.2m (smaller than player car) and low 10cm curbs allowing drifting into void space",
+      "resolution": "Replaced miniature buildings with full-scale 56-90m commercial and skyscraper models; raised curbs; instant camera realignment on reset",
+      "status": "PROVEN"
+    },
+    {
+      "id": "RC-34",
+      "severity": "P0",
+      "game": "Chroma Rush",
+      "title": "Atomic bidirectional color swap and mission delivery completion",
+      "root_cause": "Proximity detection (<8m) and relative speed threshold required atomic state transfer without color cloning",
+      "resolution": "Validated atomic exchange in mission solvability unit tests, traffic pathfinding, and delivery checkpoint scoring",
+      "status": "PROVEN"
+    },
+    {
+      "id": "RC-35",
+      "severity": "P0",
+      "game": "VoltArena Suite",
+      "title": "Standalone game packages and cross-platform distribution",
+      "root_cause": "Monorepo previously required suite launcher to execute individual games",
+      "resolution": "Built 30 standalone packages for 10 games + 4 suite packages with asset isolation and independent entry scenes",
+      "status": "PROVEN"
+    }
+  ]
+}

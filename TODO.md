@@ -1331,4 +1331,33 @@
   - `export/dist/standalone/` (30 standalone distribution archives)
   - `export/dist/suite/` (4 full-suite distribution archives)
 
+### [2026-10-09 15:50:00 UTC] - Milestone Update: AeroRush & Chroma Rush Production Overhaul, Standard Scripts & Multiplatform Release Matrix (v8.0.0)
+- **Status**: COMPLETED
+- **Description**:
+  1. **AeroRush Stunt Physics & Visual Obstruction Remediation**:
+     - Fixed spawn obstruction (RC-30): Replaced vertical QuadMesh boost pad with horizontal PlaneMesh aligned flush with track normal (`norm * 0.04`), animated directional chevrons, dedicated `BoostTriggerArea` with +22 m/s impulse, and enforced $\ge 15\text{m}$ spawn clearance.
+     - Fixed mid-air jump abort & falling loop (RC-31): Removed arbitrary 65m ground distance abort. Replaced with true altitude kill floor ($Y < \text{checkpoint}.y - 30.0$ or $-18.0\text{m}$), 6.2s prolonged tumble flight threshold, lateral corridor bounds ($> 85\text{m}$), and 2.5s recovery grace period with forward velocity restoration ($18\text{ m/s}$).
+     - Fixed bloom & dark surfaces (RC-32): Re-tuned `glow_bloom` to 0.03, `glow_intensity` to 0.22, balanced directional sun key energy, and raised ambient sky energy to 1.15 in `aero_world_base.gd`.
+  2. **Chroma Rush Urban Scale & Deflection Barriers**:
+     - Replaced miniature 3.2m buildings with full-scale 56–90m commercial & skyscraper models in `neon_city.gd`.
+     - Raised curb deflection barriers and added instant camera realignment on road reset (`cam_is_initialized = false`).
+     - Validated atomic bidirectional color swap mechanism with target chase, speed matching, and delivery checkpoint scoring.
+  3. **Standard One-Command Scripts (Section 11)**:
+     - Implemented `setup`, `build-all`, `build-suite`, `build-game`, `test-all`, `smoke-test`, `verify-artifacts`, `clean`, `teardown` across Bash, PowerShell, and extensionless shims.
+  4. **Machine-Readable Release Evidence Matrix (Section 12)**:
+     - Implemented `generate_machine_readable_reports()` in `scripts/certifier.py` generating `reports/` with `gap-analysis.json`, `platform-matrix.json`, `artifact-manifest.json`, `acceptance.json`, `production-certification.json`, `test-results/`, `coverage/`, `performance/`, `screenshots/`, and `gameplay-recordings/`.
+  5. **Verification & Quality Gates**:
+     - Ran full automated test runner: **80 test suites, 3,045 passed assertions, 0 failed (100% pass rate, 91.25% function coverage, exit code 0)**.
+     - Verified all 30 standalone packages for 10 games + 4 full-suite packages with non-zero size and valid checksums.
+     - Certified production readiness: `Overall Status: RUNTIME_VERIFIED (0 failed gates)`.
+- **Evidence**:
+  - `artifacts/test-results.json` & `reports/test-results/test-results.json` (3,045 passed, 0 failed)
+  - `artifacts/coverage-report.json` & `reports/coverage/coverage-report.json` (91.25% function coverage)
+  - `reports/gap-analysis.json` (36/36 defects resolved, 0 remaining P0/P1)
+  - `reports/platform-matrix.json` (Universal release matrix across 6 platforms)
+  - `reports/artifact-manifest.json` (SHA-256 and size manifests)
+  - `reports/acceptance.json` (Release ready: true)
+  - `reports/production-certification.json` (Overall Status: RUNTIME_VERIFIED)
+
+
 

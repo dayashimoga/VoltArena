@@ -141,12 +141,23 @@ shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_lambert;
 
 void fragment() {
-	float pulse = 0.5 + 0.5 * sin(TIME * 6.0 - UV.y * 12.0);
-	vec3 pad_col = mix(vec3(0.05, 0.95, 1.0), vec3(1.0, 0.95, 0.2), pulse);
-	ALBEDO = pad_col;
-	EMISSION = pad_col * (3.5 + pulse * 2.0);
-	ROUGHNESS = 0.15;
-	METALLIC = 0.70;
+	// High-tech animated directional energy chevrons pointing along driving direction
+	vec2 uv_anim = vec2(UV.x, fract(UV.y * 3.0 - TIME * 3.5));
+	float chevron = abs(uv_anim.x - 0.5) * 2.0;
+	float arrow = step(chevron, 1.0 - uv_anim.y * 0.8) * step(0.15, uv_anim.y);
+
+	float pulse = 0.5 + 0.5 * sin(TIME * 5.0 - UV.y * 10.0);
+	vec3 base_col = vec3(0.04, 0.08, 0.16);
+	vec3 neon_cyan = vec3(0.08, 0.85, 1.0);
+	vec3 neon_gold = vec3(1.0, 0.82, 0.15);
+	vec3 energy_col = mix(neon_cyan, neon_gold, pulse);
+
+	vec3 col = mix(base_col, energy_col, arrow * 0.9 + 0.1);
+	ALBEDO = col;
+	// Controlled emission: crisp and luminous without blinding bloom blowout
+	EMISSION = energy_col * (arrow * (1.6 + pulse * 0.6) + 0.25);
+	ROUGHNESS = 0.25;
+	METALLIC = 0.60;
 }
 """
 
@@ -374,7 +385,15 @@ static func generate_track(course_data: Variant, default_width: float = 16.0) ->
 		# 7. Speed Boost Pads
 		var boost_indices = island_def.get("speed_boost_pads", []) as Array
 		for b_idx in boost_indices:
-			var s_i = mini(int(b_idx), dense.size() - 1)
+			var s_i: int
+			if i_wps.size() > 1 and int(b_idx) < i_wps.size():
+				s_i = int(round(float(b_idx) / float(i_wps.size() - 1) * float(dense.size() - 1)))
+			else:
+				s_i = mini(int(b_idx), dense.size() - 1)
+			s_i = clampi(s_i, 0, dense.size() - 1)
+			# Never place a boost pad on the starting grid (keep at least 15m / 6 samples clear of spawn)
+			if idx == 0 and s_i < 6:
+				s_i = mini(6, dense.size() - 1)
 			if s_i >= 0 and s_i < dense.size():
 				var b_node = _build_speed_boost_pad(dense[s_i], boost_mat)
 				island_root.add_child(b_node)
@@ -605,21 +624,42 @@ static func _build_landing_apron(first_pt: Dictionary, apron_w: float, mat: Mate
 static func _build_speed_boost_pad(pt: Dictionary, mat: Material) -> Node3D:
 	var pad = Node3D.new()
 	pad.name = "SpeedBoostPad"
-	pad.position = pt["pos"] + pt["normal"] * 0.06
+	pad.position = pt["pos"] + pt["normal"] * 0.04
 
-	var fwd: Vector3 = pt["forward"]
-	var right: Vector3 = pt["right"]
-	var norm: Vector3 = pt["normal"]
+	var fwd: Vector3 = (pt["forward"] as Vector3).normalized()
+	var right: Vector3 = (pt["right"] as Vector3).normalized()
+	var norm: Vector3 = (pt["normal"] as Vector3).normalized()
 
-	var mesh = QuadMesh.new()
-	mesh.size = Vector2(7.5, 9.5)
+	# PlaneMesh lies in XZ plane with normal +Y
+	var mesh = PlaneMesh.new()
+	mesh.size = Vector2(6.5, 8.5)
 	var mi = MeshInstance3D.new()
 	mi.mesh = mesh
 	mi.material_override = mat
 
-	# Orient flush on track facing forward
+	# Orient flush on track deck facing along driving forward
+	# Local X is across track (right), local Y is normal (up from road), local Z is -fwd
 	mi.transform.basis = Basis(right, norm, -fwd)
 	pad.add_child(mi)
+
+	# Active Trigger Area for vehicle turbo propulsion
+	var area = Area3D.new()
+	area.name = "BoostTriggerArea"
+	area.collision_layer = 0
+	area.collision_mask = AeroConstants.LAYER_PLAYER | AeroConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var b_shape = BoxShape3D.new()
+	b_shape.size = Vector3(6.5, 1.4, 8.5)
+	col.shape = b_shape
+	col.position = Vector3(0, 0.7, 0)
+	area.add_child(col)
+	area.transform.basis = Basis(right, norm, -fwd)
+
+	area.body_entered.connect(func(body: Node3D):
+		if body.has_method("apply_boost_pad_impulse"):
+			body.apply_boost_pad_impulse(22.0)
+	)
+	pad.add_child(area)
 
 	return pad
 

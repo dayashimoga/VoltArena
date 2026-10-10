@@ -1450,6 +1450,25 @@
   - `reports/acceptance.json` (Release ready: true)
   - `reports/production-certification.json` (Overall Status: RUNTIME_VERIFIED)
 
+### [2026-10-10 17:30:00 UTC] - Milestone Update: AeroRush & Chroma Rush Gated Fixes & Production Certification
+- **Status**: COMPLETED
+- **Description**:
+  1. **Phase P0 Forensic Audit & Instrument Tracing**: Verified root causes against user defect screenshots. Updated `IMPLEMENTATION_PLAN.md` with complete architectural remedies and test gates.
+  2. **Phase P1 Critical Gameplay Fixes**:
+     - AeroRush: Refactored `_generate_support_pylons` to skip steep banks, loops, and kickers (`norm.dot(UP) < 0.82`) and tuck cradle beams under the track deck. Re-centered perimeter skyline to $(0, 0, -200)$ with radius 520m, clearing Course 1 launch corridor. Moved centerline billboard to track shoulder. Removed defective straight-line lateral clamp (`lateral.length() > 36.0`) in `aero_vehicle.gd`, eliminating infinite recovery loops. Implemented local basis up offset on recovery spawn.
+     - Chroma Rush: Removed `ignore_window` from `_is_clear_of_spline`, enforcing $\ge 22.0\text{m}$ clearance across ALL road segments. Widened checkpoint gates to $28.0\text{m}$ clear span. Removed artificial `velocity.y += -2.5` snap-down causing floor jitter and camera vibration. Relaxed curb collision dot product threshold to `-0.65`. Scaled buildings to authentic proportions ($15\times–34\times$, 18m–95m height) with denser interval (4). Calibrated AI traffic chase speeds (18–22 m/s).
+  3. **Phase P2 & P3 Core Gameplay & Visual Overhaul**: Validated modular disconnected floating platforms, loops, wall rides, jump kickers, and catch aprons across all 12 Aero courses. Verified 10 distinct biome worlds (`megacity`, `snow`, `coastal`, `forest`, `canyon`, `sky`, `skyline`, `alien`, `space`, `volcanic`). Verified atomic swap, target chase, gate delivery, and scoring in Chroma Rush.
+  4. **Phase P4 UX & Enhancements**: Compact adaptive HUDs ($<15\%$ viewport obstruction), glassmorphic telemetry cards, minimaps, and full keyboard/gamepad/touch driving.
+  5. **Phase P5 Optimization & Builds**: Assembled standalone packages (`export/dist/standalone/`) for all 10 registered titles across Windows, Linux, and Web, plus unified full-suite distributions (`VoltArena-Full`) for Windows, Linux, Web, and Android APK with SHA-256 checksum manifests and 0 foreign asset leakage.
+  6. **Phase P6 QA & Certification**: 80/80 test suites passed, 3,042 assertions passed, 0 failed (100% pass rate). 90.27% function coverage. `certifier.py` reported `Overall Status: RUNTIME_VERIFIED` with 0 failed gates and 0 unresolved P0/P1 defects.
+- **Evidence**:
+  - `artifacts/test-results.json` (3,042 passed, 0 failed, 80 suites)
+  - `artifacts/coverage-report.json` (90.27% function coverage)
+  - `artifacts/production-certification.json` (`RUNTIME_VERIFIED`, 0 failed gates)
+  - `artifacts/artifact-manifest.json` (Package sizes & SHA-256 hashes)
+  - `IMPLEMENTATION_PLAN.md` & `IMPLEMENTATION_WALKTHROUGH.md` (Sections 15 & 16)
+
+
 
 
 

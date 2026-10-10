@@ -213,15 +213,15 @@ func generate_waypoints() -> void:
 
 	# Dynamic traffic spawners distributed across all 6 districts
 	traffic_spawn_data = [
-		{"waypoint_idx": 2, "color": ChromaConstants.ChromaColor.COBALT, "speed": 22.0},
-		{"waypoint_idx": 5, "color": ChromaConstants.ChromaColor.SOLAR, "speed": 20.0},
-		{"waypoint_idx": 8, "color": ChromaConstants.ChromaColor.EMERALD, "speed": 24.0},
-		{"waypoint_idx": 12, "color": ChromaConstants.ChromaColor.MAGENTA, "speed": 26.0},
-		{"waypoint_idx": 15, "color": ChromaConstants.ChromaColor.CYAN, "speed": 22.0},
-		{"waypoint_idx": 18, "color": ChromaConstants.ChromaColor.CRIMSON, "speed": 25.0},
-		{"waypoint_idx": 22, "color": ChromaConstants.ChromaColor.SOLAR, "speed": 21.0},
-		{"waypoint_idx": 25, "color": ChromaConstants.ChromaColor.COBALT, "speed": 23.0},
-		{"waypoint_idx": 29, "color": ChromaConstants.ChromaColor.EMERALD, "speed": 19.0}
+		{"waypoint_idx": 2, "color": ChromaConstants.ChromaColor.COBALT, "speed": 18.0},
+		{"waypoint_idx": 5, "color": ChromaConstants.ChromaColor.SOLAR, "speed": 19.0},
+		{"waypoint_idx": 8, "color": ChromaConstants.ChromaColor.EMERALD, "speed": 20.0},
+		{"waypoint_idx": 12, "color": ChromaConstants.ChromaColor.MAGENTA, "speed": 21.0},
+		{"waypoint_idx": 15, "color": ChromaConstants.ChromaColor.CYAN, "speed": 20.0},
+		{"waypoint_idx": 18, "color": ChromaConstants.ChromaColor.CRIMSON, "speed": 22.0},
+		{"waypoint_idx": 22, "color": ChromaConstants.ChromaColor.SOLAR, "speed": 19.0},
+		{"waypoint_idx": 25, "color": ChromaConstants.ChromaColor.COBALT, "speed": 20.0},
+		{"waypoint_idx": 29, "color": ChromaConstants.ChromaColor.EMERALD, "speed": 18.0}
 	]
 
 func setup_ground_plane() -> void:
@@ -257,7 +257,7 @@ func build_road_mesh() -> void:
 
 func build_checkpoints() -> void:
 	checkpoints.clear()
-	# 6 Checkpoint gates positioned on straight segments with tangent alignment and 24m clear span
+	# 6 Checkpoint gates positioned on straight segments with tangent alignment and 28m clear span
 	var gate_defs = [
 		{"id": "gate_1", "wp_a": 1, "wp_b": 2, "color": ChromaConstants.ChromaColor.CRIMSON},  # North Blvd straight (Downtown)
 		{"id": "gate_2", "wp_a": 4, "wp_b": 5, "color": ChromaConstants.ChromaColor.COBALT},   # East Executive Parkway (Commercial)
@@ -271,7 +271,7 @@ func build_checkpoints() -> void:
 		var gate = CheckpointGate.new()
 		gate.gate_id = g["id"]
 		gate.target_color = g["color"]
-		gate.gate_width = 24.0 # 24m clear-span places support columns at ±12m (4.5m outside road edge)
+		gate.gate_width = 28.0 # 28m clear-span places support columns at ±14m (outside road edge + curb)
 
 		var p_a = waypoints[g["wp_a"]]
 		var p_b = waypoints[g["wp_b"]]
@@ -345,7 +345,7 @@ func build_props() -> void:
 		return
 
 	# 1. Primary Street-Facing City Blocks flanking both sides of the boulevard
-	var building_interval = 8
+	var building_interval = 4
 	for s_idx in range(0, n_spline, building_interval):
 		var p_curr = spline_samples[s_idx]
 		var p_next = spline_samples[(s_idx + 1) % n_spline]
@@ -361,11 +361,11 @@ func build_props() -> void:
 
 		# Build buildings on BOTH sides to form an authentic dense metropolitan streetwall
 		for side in [-1.0, 1.0]:
-			var setback = 25.0 + float((s_idx) % 3) * 2.0
+			var setback = 28.0 + float((s_idx) % 3) * 2.0
 			var b_pos = p_curr + right * (side * setback)
 			b_pos.y = p_curr.y
 
-			if not _is_clear_of_spline(b_pos, 16.0, s_idx, 6):
+			if not _is_clear_of_spline(b_pos, 22.0):
 				continue
 
 			var theme_idx = (s_idx * 3 + wp_nearest + (1 if side > 0 else 0)) % ARCHITECTURAL_THEMES.size()
@@ -440,11 +440,11 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 
 	# District-specific architectural selection
 	if (i <= 5 or (i >= 17 and i <= 21)) and pick_type != 2:
-		# CBD & Neon Strip: High-Rise Skyscraper Glass Towers
+		# CBD & Neon Strip: High-Rise Skyscraper Glass Towers (60m-95m height)
 		var m_idx = (i * 2 + s) % skyscrapers.size()
 		var glb_model = ModelCache.get_model(skyscrapers[m_idx])
 		if glb_model:
-			var sc = 5.8 + float((i + s) % 3) * 0.5
+			var sc = 22.0 + float((i + s) % 4) * 3.0
 			glb_model.scale = Vector3(sc, sc, sc)
 			_style_building(glb_model, theme_idx)
 			var b_body = StaticBody3D.new()
@@ -453,17 +453,17 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 			b_body.add_child(glb_model)
 			var col = CollisionShape3D.new()
 			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(18.0, 56.0, 18.0)
+			b_shape.size = Vector3(24.0, sc * 2.8, 24.0)
 			col.shape = b_shape
-			col.position = Vector3(0, 28.0, 0)
+			col.position = Vector3(0, sc * 1.4, 0)
 			b_body.add_child(col)
 			b_node = b_body
 	elif (i >= 22 and i <= 31) and pick_type == 1:
-		# Marina & Old Town: Mid-Rise Classical / Residential Masonry
+		# Marina & Old Town: Mid-Rise Classical / Residential Masonry (18m-30m height)
 		var m_idx = (i * 2 + s) % residentials.size()
 		var glb_model = ModelCache.get_model(residentials[m_idx])
 		if glb_model:
-			var sc = 5.2 + float((i + s) % 3) * 0.4
+			var sc = 15.0 + float((i + s) % 3) * 1.5
 			glb_model.scale = Vector3(sc, sc, sc)
 			_style_building(glb_model, theme_idx)
 			var b_body = StaticBody3D.new()
@@ -472,17 +472,17 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 			b_body.add_child(glb_model)
 			var col = CollisionShape3D.new()
 			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(16.0, 36.0, 16.0)
+			b_shape.size = Vector3(18.0, sc * 1.1, 18.0)
 			col.shape = b_shape
-			col.position = Vector3(0, 18.0, 0)
+			col.position = Vector3(0, sc * 0.55, 0)
 			b_body.add_child(col)
 			b_node = b_body
 	else:
-		# Commercial Promenade & Mixed-Use Districts
+		# Commercial Promenade & Mixed-Use Districts (24m-38m height)
 		var m_idx = (i * 2 + s) % commercials.size()
 		var glb_model = ModelCache.get_model(commercials[m_idx])
 		if glb_model:
-			var sc = 5.2 + float((i + s) % 3) * 0.4
+			var sc = 16.0 + float((i + s) % 3) * 2.0
 			glb_model.scale = Vector3(sc, sc, sc)
 			_style_building(glb_model, theme_idx)
 			var b_body = StaticBody3D.new()
@@ -491,9 +491,9 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 			b_body.add_child(glb_model)
 			var col = CollisionShape3D.new()
 			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(16.0, 36.0, 16.0)
+			b_shape.size = Vector3(20.0, sc * 1.4, 20.0)
 			col.shape = b_shape
-			col.position = Vector3(0, 18.0, 0)
+			col.position = Vector3(0, sc * 0.7, 0)
 			b_body.add_child(col)
 			b_node = b_body
 
@@ -501,7 +501,7 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 		var fallback_path = commercials[0] if commercials.size() > 0 else skyscrapers[0]
 		var fallback_glb = ModelCache.get_model(fallback_path)
 		if fallback_glb:
-			var sc = 5.2
+			var sc = 16.0
 			fallback_glb.scale = Vector3(sc, sc, sc)
 			_style_building(fallback_glb, theme_idx)
 			var b_body = StaticBody3D.new()
@@ -510,14 +510,14 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 			b_body.add_child(fallback_glb)
 			var col = CollisionShape3D.new()
 			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(16.0, 36.0, 16.0)
+			b_shape.size = Vector3(20.0, sc * 1.4, 20.0)
 			col.shape = b_shape
-			col.position = Vector3(0, 18.0, 0)
+			col.position = Vector3(0, sc * 0.7, 0)
 			b_body.add_child(col)
 			b_node = b_body
 		else:
-			var h = 42.0 + float((i + s) % 5) * 6.0
-			b_node = _build_procedural_commercial_block(h, 20.0, theme_idx)
+			var h = 48.0 + float((i + s) % 5) * 6.0
+			b_node = _build_procedural_commercial_block(h, 22.0, theme_idx)
 
 	return b_node
 

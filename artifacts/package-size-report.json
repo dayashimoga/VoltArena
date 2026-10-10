@@ -1,154 +1,154 @@
 {
   "standalone_packages": {
     "AeroRush-Linux-x86_64.tar.gz": {
-      "size_mb": 175.09,
-      "size_bytes": 183593331,
-      "sha256": "b81dab137132b0629c69cf08cc0440beefa16b2635e3427d43244e486705d30e"
+      "size_mb": 180.34,
+      "size_bytes": 189096266,
+      "sha256": "dfe27be97887ab45925cd77128660e5d09c1671e53339027cc77ad120651a7f5"
     },
     "AeroRush-Web.zip": {
-      "size_mb": 233.95,
-      "size_bytes": 245313121,
-      "sha256": "810a3e529668ad131bed296dbc271b55b03ba496e661387fae91f664251d0692"
+      "size_mb": 288.37,
+      "size_bytes": 302382871,
+      "sha256": "5e9d985027663e1f7e7f096735e711a77200a2e97b6020446508a53b04a23447"
     },
     "AeroRush-Windows-x86_64.zip": {
-      "size_mb": 180.95,
-      "size_bytes": 189743713,
-      "sha256": "d93743a282992dd8350d72168e18700fdb607865b00ba2065fc17e3960f3d5b0"
+      "size_mb": 186.2,
+      "size_bytes": 195248229,
+      "sha256": "9c255bac18576493e1334451db481fab78233ce4c3784744ed5976ec8c3dc6cc"
     },
     "ChromaRush-Linux-x86_64.tar.gz": {
       "size_mb": 175.22,
       "size_bytes": 183728965,
-      "sha256": "05b8981749df160b1f1361372f3a6394734df493f9944f400407711e081a1115"
+      "sha256": "3ae33eee31604fc6f14448f4cde5dac1ef3849717329bae575e4f215cb68233c"
     },
     "ChromaRush-Web.zip": {
-      "size_mb": 234.08,
-      "size_bytes": 245447165,
-      "sha256": "d67dc74b4c0c76ebff2212c8e497c4a20c22faccba61f5a1bbb0b2792c8364c9"
+      "size_mb": 283.25,
+      "size_bytes": 297012399,
+      "sha256": "f4f1522fcfb5a8a94fac4b27b92ba55d36f5f30a54118d854158de695bf49d3e"
     },
     "ChromaRush-Windows-x86_64.zip": {
       "size_mb": 181.08,
       "size_bytes": 189877766,
-      "sha256": "ed166a70de72ca62a80c33b999d9a3aa1c1a3927b81762cc2a6d62f7c9dab81b"
+      "sha256": "17e7297e136cc47bac7af76b5ad7829b0372c7be8e7cc580b15135eaa3b9d497"
     },
     "DriftStorm-Linux-x86_64.tar.gz": {
       "size_mb": 175.06,
       "size_bytes": 183560867,
-      "sha256": "f882d53076fd620dc7b51d1c095f8acf34dfbc27f1d11f01a872815f2377fdaa"
+      "sha256": "5755ccf75b609a4fd3888a945db60dfe57c5efaf1536545dc14d948a9c53ae34"
     },
     "DriftStorm-Web.zip": {
-      "size_mb": 233.92,
-      "size_bytes": 245280662,
-      "sha256": "510c903fe248f67029df5ac850a2b96171c841003084ea3ae202353173948632"
+      "size_mb": 283.09,
+      "size_bytes": 296845896,
+      "sha256": "d8f4ff3b37287d446ccbd26ef7cf905218e73ab434a9d5d81c8ffeff2654a40d"
     },
     "DriftStorm-Windows-x86_64.zip": {
       "size_mb": 180.92,
-      "size_bytes": 189711263,
-      "sha256": "a0436aaeab69f51cd19838ed5d29895871f369e0d292cdee931365947e6f7d9a"
+      "size_bytes": 189711262,
+      "sha256": "a9c05a7b5a4b024a4475e5e09f005d75af9ec02f7b29b5ff276bf7ac39994f6c"
     },
     "IronCrucible-Linux-x86_64.tar.gz": {
       "size_mb": 174.96,
       "size_bytes": 183458692,
-      "sha256": "f5134684bed4a280269363bcdb52ab45ca06e5b370fe56dc14ace3adbe8b8e08"
+      "sha256": "f3d4db4499500b11d412ac5e9b0145a9c05f584318a937c3a0bbb87b13a6503a"
     },
     "IronCrucible-Web.zip": {
-      "size_mb": 233.82,
-      "size_bytes": 245179025,
-      "sha256": "04488f0e88a402baffae76f672a4b2efdfacd4dbd11f1a510499787572d35d3e"
+      "size_mb": 283.0,
+      "size_bytes": 296744259,
+      "sha256": "992bbbb0223f1a55db6ea0bf9ac50a0687691bb81655139e3902ad6abadba504"
     },
     "IronCrucible-Windows-x86_64.zip": {
       "size_mb": 180.83,
-      "size_bytes": 189609630,
-      "sha256": "e1dee97f08b5277a07dabda06786042a9705805a7ba6a4dc78c0b6051d5ba0d7"
+      "size_bytes": 189609629,
+      "sha256": "5ab441be7416a96d2ec303a8f6275549312956517ec27c3d213860eab88fa70f"
     },
     "MetroSiege-Linux-x86_64.tar.gz": {
       "size_mb": 174.95,
       "size_bytes": 183448076,
-      "sha256": "c6fabeb781e7ec57888829d401dec71d3d248d782075ee64db97452af1941b50"
+      "sha256": "5c59ad18e03a17005d410e9399de765644f56266fcb5ad1c00d3c7c27881cea0"
     },
     "MetroSiege-Web.zip": {
-      "size_mb": 233.81,
-      "size_bytes": 245168296,
-      "sha256": "d026527c6af24e7e1639d25ac6a9f582905525fbf437910bed0929cdb1e5a968"
+      "size_mb": 282.99,
+      "size_bytes": 296733530,
+      "sha256": "983d82d58e3b1d365aa2801f88e53319296e481667416119868de1054caf0902"
     },
     "MetroSiege-Windows-x86_64.zip": {
       "size_mb": 180.82,
-      "size_bytes": 189598899,
-      "sha256": "ce9bdbb26b0100476128890ad0d2dfe22b44d4c81eb3c4522e540b90dde9078c"
+      "size_bytes": 189598897,
+      "sha256": "145ca656f78820fdc0cb78084aac8a53960bc29e0b60bdfdc4ec117b2b4fb8e4"
     },
     "NitroKick-Linux-x86_64.tar.gz": {
       "size_mb": 174.96,
       "size_bytes": 183454991,
-      "sha256": "3afb2449d5ccedecffd163d8903511ef02d52298ef8949d5694ebe08c09742b0"
+      "sha256": "d652eefbfb9446eb0792b7905d97af37a51886e6e5fd229553d8f62d6ee222e9"
     },
     "NitroKick-Web.zip": {
-      "size_mb": 233.82,
-      "size_bytes": 245175873,
-      "sha256": "42a79252b52d645c2447e66f3b2838ae4ff9275766b5236582d70950336b29cc"
+      "size_mb": 282.99,
+      "size_bytes": 296741107,
+      "sha256": "fd1fa81b0e331d8d4815a85b761c1b43759fdbfad60b185c6b02a57714011f75"
     },
     "NitroKick-Windows-x86_64.zip": {
       "size_mb": 180.82,
-      "size_bytes": 189606472,
-      "sha256": "b94705c3fa4d03d078759c2682229a334f33fbd821425e91c399e33305463828"
+      "size_bytes": 189606471,
+      "sha256": "58fdf775f4520a622bb40d8048d5eabe24707393958322cd4b912ff7e0339539"
     },
     "RoboForgeArena-Linux-x86_64.tar.gz": {
       "size_mb": 174.94,
       "size_bytes": 183436473,
-      "sha256": "414579b7a4d783a2dbec7966910a3ff7f52a8f5372fb76c032c64e2320e5f109"
+      "sha256": "aa36c170dcd910ecd546edcb929dd14c644d190bf62bb27e08104feac4b72655"
     },
     "RoboForgeArena-Web.zip": {
-      "size_mb": 233.8,
-      "size_bytes": 245157370,
-      "sha256": "cc8cdaa41313aaa6749a13c475ba03387ed0215cf4ce2eb143b1adc4259b64fa"
+      "size_mb": 282.98,
+      "size_bytes": 296722604,
+      "sha256": "e89b5e172e3b3fdc4a1ce0bc5825679d436dd05dd1e381faec621cd4a2b7898c"
     },
     "RoboForgeArena-Windows-x86_64.zip": {
       "size_mb": 180.81,
       "size_bytes": 189587983,
-      "sha256": "b24988c38d3fc5fc39479f8568da1165df264844a505059029e7fd995dd9e1d2"
+      "sha256": "8a25da7f9c0b1aa273df25b2dcad3b5f028cfca669002b5e6f6caf541aa8630f"
     },
     "SkyboundOdyssey-Linux-x86_64.tar.gz": {
       "size_mb": 174.94,
       "size_bytes": 183432656,
-      "sha256": "a289a7e6610f665985e749afcdf0749a17c5a9f7617e43c5b686c2ca2ba46908"
+      "sha256": "527ec9eaa5e2ce895e9efb37eb31d703ce2031117512043068926cd467be4da7"
     },
     "SkyboundOdyssey-Web.zip": {
-      "size_mb": 233.8,
-      "size_bytes": 245153343,
-      "sha256": "7f24dc7dde1aaeec936e61715ccb683153afd14bd69c858e647455cb4a100395"
+      "size_mb": 282.97,
+      "size_bytes": 296718577,
+      "sha256": "d4eb3984d21d25f6c24e6e71461eb139e52f0756d9e0d58b5fcf91aa416e0954"
     },
     "SkyboundOdyssey-Windows-x86_64.zip": {
       "size_mb": 180.8,
-      "size_bytes": 189583956,
-      "sha256": "029870cd0ad9310889e60ec2091fa5a2314db614dcc634cfeb7c34efb6b7d408"
+      "size_bytes": 189583955,
+      "sha256": "b34b99d314dc9a4393b3e652e606ba04827d0f9e431507264f2d438d6ea59c9d"
     },
     "StrikeVector-Linux-x86_64.tar.gz": {
       "size_mb": 175.13,
       "size_bytes": 183634593,
-      "sha256": "47c67591488428c408c0c58be7201a288664bb9d74b2b5d26272ed84af48f696"
+      "sha256": "0383d65303eda2b80becaf7d31b927e7758d734ea5003d0cf7e645089b9c38c3"
     },
     "StrikeVector-Web.zip": {
-      "size_mb": 233.99,
-      "size_bytes": 245355268,
-      "sha256": "a18d823abc1f1298a0a89492853994329f6e6568a10ac1f0e237a433d6da1d5d"
+      "size_mb": 283.17,
+      "size_bytes": 296920502,
+      "sha256": "dd882eae393c0f7b46e35fa0d4ccc08deae1a007101e82b7a16e1bae5de20909"
     },
     "StrikeVector-Windows-x86_64.zip": {
       "size_mb": 180.99,
       "size_bytes": 189785871,
-      "sha256": "4c2baf38fa209ec5745dd3ae6773a1823e4f00ddfbeecf0b5f9275aa1627b88e"
+      "sha256": "279be3e2f8fd9971dbb86ec69665ce60e8670b0fbfdc7a0602c2ee1151982126"
     },
     "WildCircuit-Linux-x86_64.tar.gz": {
       "size_mb": 174.94,
       "size_bytes": 183434977,
-      "sha256": "4e893aa35fc51aadde721a53031abc233f1ee2322f46b6d029c8047723059f43"
+      "sha256": "38c290163c2983c17c3a58da798f587489afc3d13e3eb71a130032a8d109645c"
     },
     "WildCircuit-Web.zip": {
-      "size_mb": 233.8,
-      "size_bytes": 245155745,
-      "sha256": "6657445bf243a28d961196c0070e1be28f597a409d86dcf92010a3496788417f"
+      "size_mb": 282.98,
+      "size_bytes": 296720979,
+      "sha256": "baccc9edede32a1ccd62450e7c22e0e6e4865511a52694839f137865dd21e82c"
     },
     "WildCircuit-Windows-x86_64.zip": {
       "size_mb": 180.8,
       "size_bytes": 189586342,
-      "sha256": "4ea5fc1532965917c247f78f07c16128940fc211bb73f335cf8a1c2191b0ee6a"
+      "sha256": "b09a24c3779440148435f7976873c5bf00edf6e48eb56d898d03debfbf51a55f"
     }
   },
   "suite_packages": {
@@ -160,22 +160,22 @@
     "VoltArena-Full-Linux-x86_64.tar.gz": {
       "size_mb": 99.52,
       "size_bytes": 104351832,
-      "sha256": "e1646e9cf1db689e70fdcc19df73e6e156d28909f42328b8bf1750369fd47e1f"
+      "sha256": "5b4b5ea0f3f3b32741dac19b57af359da85494a1c063675a9546ad41ebe5b092"
     },
     "VoltArena-Full-Web.zip": {
-      "size_mb": 158.36,
-      "size_bytes": 166055491,
-      "sha256": "4333d12671160dbd349f35da5013522a0416357a668d51c81c31715bc331807c"
+      "size_mb": 207.54,
+      "size_bytes": 217620725,
+      "sha256": "064c4de2c153c787c0db57ddff0f74b3b1389855471deaaeef45ac6fb1a58528"
     },
     "VoltArena-Full-Windows-x86_64.zip": {
       "size_mb": 105.37,
       "size_bytes": 110486050,
-      "sha256": "c3aba533393407b16f214b773e9a70163e6a027059e144a3d1a16a792ca1a87e"
+      "sha256": "6a1d7a24b24313c56ad72a05fca291185033d85b987371411d3cd8d074eb7bed"
     }
   },
   "per_game_assets_kb": {
-    "aero-rush": 261.2,
-    "chroma-rush": 449.3,
+    "aero-rush": 326.7,
+    "chroma-rush": 449.7,
     "kart-racing": 230.2,
     "strike-vector": 318.7,
     "roboforge-arena": 52.9,

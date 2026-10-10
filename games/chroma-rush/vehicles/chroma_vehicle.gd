@@ -340,8 +340,7 @@ func _update_physics_movement(delta: float) -> void:
 		# Project forward driving direction onto ground plane to follow ramps and slopes
 		var slope_forward = (forward_dir - ground_normal * forward_dir.dot(ground_normal)).normalized()
 		var ground_drive_vel = slope_forward * forward_speed
-		var snap_down = -2.5
-		velocity = Vector3(ground_drive_vel.x, ground_drive_vel.y + snap_down, ground_drive_vel.z)
+		velocity = ground_drive_vel
 	else:
 		# Mid-air ballistics
 		var h_vel = Vector3(forward_dir.x, 0.0, forward_dir.z).normalized() * forward_speed
@@ -359,10 +358,10 @@ func _update_physics_movement(delta: float) -> void:
 				var slide_col = get_slide_collision(i)
 				var normal = slide_col.get_normal()
 				if absf(normal.y) < 0.4:
-					# This is a vertical wall / barrier / building collision
-					if normal.dot(fwd) < -0.35 and forward_speed > 0.0:
+					# This is a vertical wall / barrier / building collision (head-on dot < -0.65)
+					if normal.dot(fwd) < -0.65 and forward_speed > 0.0:
 						forward_speed = maxf(0.0, real_fwd_speed)
-					elif normal.dot(fwd) > 0.35 and forward_speed < 0.0:
+					elif normal.dot(fwd) > 0.65 and forward_speed < 0.0:
 						forward_speed = minf(0.0, real_fwd_speed)
 
 				var collider = slide_col.get_collider()

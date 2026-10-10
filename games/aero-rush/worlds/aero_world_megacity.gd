@@ -138,11 +138,11 @@ func _build_stadium_starting_sector() -> void:
 	for fl_pos in fl_positions:
 		spawn_building(floodlight_path, fl_pos, 0.0, Vector3(2.4, 2.4, 2.4))
 
-	# High-Speed Racing Billboards on the start and approach corners
+	# High-Speed Racing Billboards on the start and approach corners (outside track shoulders)
 	var bb_positions = [
 		{"pos": Vector3(-26.0, 3.5, 110.0), "rot": 35.0},
 		{"pos": Vector3(26.0, 3.5, 110.0), "rot": -35.0},
-		{"pos": Vector3(0.0, 8.5, -95.0), "rot": 180.0}
+		{"pos": Vector3(26.0, 8.5, -95.0), "rot": -25.0}
 	]
 	for b in bb_positions:
 		spawn_building(billboard_path, b["pos"], b["rot"], Vector3(2.0, 2.0, 2.0))
@@ -266,6 +266,7 @@ func _build_street_amenities() -> void:
 
 func _build_perimeter_skyline() -> void:
 	# 360-degree monumental skyline silhouette instanced from real skyscraper models
+	# Positioned with generous radius (520m) centered on circuit core (Z = -200m) to guarantee zero track penetration
 	var skyscraper_models = [
 		"res://assets/models/environment/building_skyscraper_a.glb",
 		"res://assets/models/environment/building_skyscraper_b.glb",
@@ -273,13 +274,14 @@ func _build_perimeter_skyline() -> void:
 		"res://assets/models/environment/building_skyscraper_d.glb",
 		"res://assets/models/environment/building_skyscraper_e.glb"
 	]
-	var tower_count = 20
-	var radius = 340.0
+	var tower_count = 24
+	var radius = 520.0
+	var center_z = -200.0
 
 	for i in range(tower_count):
 		var angle = (float(i) / float(tower_count)) * TAU
-		var x = cos(angle) * (radius + randf_range(-30.0, 45.0))
-		var z = sin(angle) * (radius + randf_range(-30.0, 45.0))
+		var x = cos(angle) * (radius + randf_range(-25.0, 40.0))
+		var z = center_z + sin(angle) * (radius + randf_range(-25.0, 40.0))
 		var model = skyscraper_models[i % skyscraper_models.size()]
 		var scale_val = randf_range(35.0, 58.0)
 

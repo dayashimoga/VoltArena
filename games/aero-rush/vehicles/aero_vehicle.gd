@@ -411,6 +411,12 @@ func _process_movement(delta: float) -> void:
 	if not velocity.is_finite():
 		velocity = Vector3.ZERO
 
+	# Dynamic floor orientation on steep walls and inverted loops
+	if is_grounded and ground_normal.dot(Vector3.UP) < 0.70:
+		up_direction = ground_normal
+	else:
+		up_direction = Vector3.UP
+
 	# Execute Physics Move
 	if is_inside_tree() and get_world_3d() and get_world_3d().space.is_valid():
 		move_and_slide()
@@ -648,35 +654,21 @@ func _check_rollover_and_recovery(delta: float) -> void:
 		recovery_cooldown -= delta
 		return
 
-	# 1. Out-of-bounds fall detection: vehicle falls well below track altitude
+	# 1. Out-of-bounds fall detection: vehicle falls in mid-air well below track altitude
 	var current_y = global_position.y
-	# If track checkpoint is elevated (y >= -1.0), falling to ground (y <= -4.5) is OUT OF BOUNDS
-	var is_below_track = (current_y < last_safe_checkpoint_pos.y - 7.5)
-	var is_on_ground_basin = (last_safe_checkpoint_pos.y >= -1.0 and current_y <= -4.5)
-	var is_absolute_pit = (current_y < -22.0)
-
-	if is_below_track or is_on_ground_basin or is_absolute_pit:
-		recover_to_checkpoint()
-		return
-
-	# 2. Prolonged uncontrolled tumbling airborne flight
-	if not is_grounded and airtime_duration > 6.2:
-		recover_to_checkpoint()
-		return
-
-	# 3. Lateral corridor deviation check (perpendicular distance from track forward axis)
-	var fwd_dir = -last_safe_checkpoint_basis.z.normalized()
-	fwd_dir.y = 0.0
-	if fwd_dir.length_squared() > 0.01:
-		fwd_dir = fwd_dir.normalized()
-		var diff = global_position - last_safe_checkpoint_pos
-		diff.y = 0.0
-		var lateral = diff - fwd_dir * diff.dot(fwd_dir)
-		if lateral.length() > 36.0:
+	if not is_grounded:
+		var is_below_track = (current_y < last_safe_checkpoint_pos.y - 14.0)
+		var is_absolute_pit = (current_y < -25.0)
+		if is_below_track or is_absolute_pit:
 			recover_to_checkpoint()
 			return
 
-	# 4. Check if vehicle is upside down on ground
+	# 2. Prolonged uncontrolled tumbling airborne flight (falling for >6.5s)
+	if not is_grounded and airtime_duration > 6.5 and velocity.y < -12.0:
+		recover_to_checkpoint()
+		return
+
+	# 3. Check if vehicle is upside down on ground
 	var up_dot = global_basis.y.dot(Vector3.UP)
 	if is_grounded and up_dot < -0.2:
 		rollover_timer += delta
@@ -701,7 +693,8 @@ func update_checkpoint(pos: Vector3, b: Basis) -> void:
 
 func recover_to_checkpoint() -> void:
 	recovery_cooldown = 2.0 # Grace period preventing infinite or recursive respawns
-	var spawn_pos = last_safe_checkpoint_pos + Vector3(0, 1.2, 0)
+	var up_vec = last_safe_checkpoint_basis.y.normalized() if last_safe_checkpoint_basis != Basis.IDENTITY else Vector3.UP
+	var spawn_pos = last_safe_checkpoint_pos + up_vec * 1.2
 	if is_inside_tree():
 		global_position = spawn_pos
 		global_basis = last_safe_checkpoint_basis
@@ -718,5 +711,5 @@ func recover_to_checkpoint() -> void:
 	total_air_yaw = 0.0
 	total_air_pitch = 0.0
 	total_air_roll = 0.0
-	up_direction = last_safe_checkpoint_basis.y.normalized()
+	up_direction = Vector3.UP
 	vehicle_respawned.emit(spawn_pos)

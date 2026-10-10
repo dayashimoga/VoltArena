@@ -888,10 +888,10 @@ static func _catmull_rom_tangent(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vect
 	)
 
 static func _generate_support_pylons(dense_points: Array[Dictionary], parent: Node3D) -> void:
-	if dense_points.size() < 4:
+	if dense_points.size() < 6:
 		return
 
-	var pylon_spacing = 38.0
+	var pylon_spacing = 52.0
 	var dist_accum = 0.0
 
 	var concrete_mat = StandardMaterial3D.new()
@@ -904,48 +904,59 @@ static func _generate_support_pylons(dense_points: Array[Dictionary], parent: No
 	steel_mat.metallic = 0.85
 	steel_mat.roughness = 0.30
 
-	for i in range(1, dense_points.size() - 1):
+	for i in range(2, dense_points.size() - 2):
 		var p_prev = dense_points[i - 1]["pos"] as Vector3
 		var p_curr = dense_points[i]["pos"] as Vector3
+		var norm = (dense_points[i].get("normal", Vector3.UP) as Vector3).normalized()
+		var fwd_dir = (dense_points[i].get("forward", Vector3.FORWARD) as Vector3).normalized()
+		var w = float(dense_points[i].get("width", 16.0)) * 0.5
 		dist_accum += p_prev.distance_to(p_curr)
 
 		if dist_accum >= pylon_spacing:
 			dist_accum = 0.0
+			# Strictly omit pylons on wall-rides, inverted loops, steep banking, and kickers.
+			# High-stunt zones are suspended magnetic platforms and must remain 100% collision-free.
+			if norm.dot(Vector3.UP) < 0.82:
+				continue
+
 			var ground_basin_y = -6.5
-			var col_height = p_curr.y - ground_basin_y
-			if col_height > 2.5:
-				var fwd_dir = dense_points[i].get("forward", Vector3.FORWARD) as Vector3
-				var w = float(dense_points[i].get("width", 16.0)) * 0.5
+			# Underside of road bed: 1.2m below driving deck surface along surface normal
+			var deck_under_pos = p_curr - norm * 1.2
+			var col_height = deck_under_pos.y - ground_basin_y
 
-				var bent = Node3D.new()
-				bent.position = Vector3(p_curr.x, ground_basin_y, p_curr.z)
-				parent.add_child(bent)
+			# Only instantiate pylons if elevated between 2.5m and 45.0m above ground basin
+			if col_height < 2.5 or col_height > 45.0:
+				continue
 
-				var beam = MeshInstance3D.new()
-				var beam_box = BoxMesh.new()
-				beam_box.size = Vector3(w * 2.2, 1.4, 2.6)
-				beam.mesh = beam_box
-				beam.material_override = steel_mat
-				beam.position = Vector3(0, col_height - 0.7, 0)
+			var bent = Node3D.new()
+			bent.position = Vector3(p_curr.x, ground_basin_y, p_curr.z)
+			parent.add_child(bent)
 
-				var look_target = bent.position + fwd_dir * 10.0
-				if (look_target - bent.position).length_squared() > 0.01:
-					if bent.is_inside_tree():
-						bent.look_at(look_target, Vector3.UP)
-					else:
-						var fwd_n = fwd_dir.normalized()
-						var up_n = Vector3.UP
-						var z_ax = -fwd_n
-						var x_ax = up_n.cross(z_ax).normalized()
-						var y_ax = z_ax.cross(x_ax).normalized()
-						bent.transform.basis = Basis(x_ax, y_ax, z_ax)
-				bent.add_child(beam)
+			# Horizontal steel cradle beam hugging the deck underside (below track surface)
+			var beam = MeshInstance3D.new()
+			var beam_box = BoxMesh.new()
+			beam_box.size = Vector3(w * 1.85, 1.1, 2.2)
+			beam.mesh = beam_box
+			beam.material_override = steel_mat
+			beam.position = Vector3(0, col_height - 0.55, 0)
 
-				for col_side in [-1.0, 1.0]:
-					var col = MeshInstance3D.new()
-					var c_box = BoxMesh.new()
-					c_box.size = Vector3(1.6, col_height - 1.4, 2.0)
+			var fwd_h = Vector3(fwd_dir.x, 0, fwd_dir.z).normalized()
+			if fwd_h.length_squared() > 0.01:
+				var z_ax = -fwd_h
+				var x_ax = Vector3.UP.cross(z_ax).normalized()
+				var y_ax = z_ax.cross(x_ax).normalized()
+				bent.transform.basis = Basis(x_ax, y_ax, z_ax)
+			bent.add_child(beam)
+
+			# Concrete support columns descending to the ground basin
+			for col_side in [-1.0, 1.0]:
+				var col = MeshInstance3D.new()
+				var c_box = BoxMesh.new()
+				var col_len = col_height - 1.1
+				if col_len > 0.5:
+					c_box.size = Vector3(1.4, col_len, 1.8)
 					col.mesh = c_box
 					col.material_override = concrete_mat
-					col.position = Vector3(col_side * (w * 0.55), (col_height - 1.4) * 0.5, 0)
+					col.position = Vector3(col_side * (w * 0.58), col_len * 0.5, 0)
 					bent.add_child(col)
+

@@ -1646,6 +1646,26 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Production certifier (`scripts/certifier.py`): Overall Status: `RUNTIME_VERIFIED`, 0 failed gates.
   - Empirical runtime screenshots: 67 high-definition screenshots generated and validated with 100% render-health compliance.
 
+## [8.4.0-gated-physics-visual-certification] - 2026-10-10
+### Fixed
+- **AeroRush Track Clearance & Support Pylons**:
+  - Refactored `_generate_support_pylons` in `aero_track_generator.gd` to skip support columns on banked curves, wall rides, vertical loops, and kickers (`norm.dot(UP) < 0.82`), and tuck support cradle beams directly beneath the driving deck at `p_curr - norm * 1.2` (resolving Screenshot 1).
+  - Re-centered `_build_perimeter_skyline` in `aero_world_megacity.gd` around course center `(0, 0, -200)` and expanded radius to $520.0\text{m}$, eliminating the skyscraper obstruction at $Z = -340\text{m}$ (resolving Screenshot 2).
+  - Relocated centerline billboard at $Z = -95$ to track shoulder at $X = +26.0$.
+  - Removed defective straight-line lateral clamp in `aero_vehicle.gd:668-677` that triggered infinite checkpoint resets on valid turns; added local basis up offset on recovery spawn and dynamic surface normal orientation on loops and wall rides (resolving Screenshot 3).
+- **Chroma Rush Road Clearance & Vehicle Physics**:
+  - Removed `ignore_window` from `_is_clear_of_spline` in `neon_city.gd`, enforcing full geometric road clearance ($\ge 22.0\text{m}$) across all road segments to prevent buildings intersecting road corridors (resolving Screenshot 5).
+  - Widened checkpoint gate span to $28.0\text{m}$ (`gate_width = 28.0`), keeping support columns safely at $\pm 14.0\text{m}$ outside the roadway and sidewalk corridor.
+  - Removed artificial `velocity.y += -2.5` snap-down injection in `chroma_vehicle.gd`, eliminating 60Hz CharacterBody3D floor jitter and chase camera oscillation.
+  - Adjusted curb glancing collision normal dot threshold to `-0.65` so glancing brushes don't halt vehicle speed.
+  - Scaled building models to realistic metropolitan heights ($15\times–34\times$, 18m–95m tall) and reduced placement interval to 4 for a dense urban streetwall (resolving Screenshot 4).
+  - Tuned AI traffic speeds to 18–22 m/s (~65–79 km/h) so mission targets are realistically catchable.
+### Verified
+- **Automated Test Suite**: 80/80 suites passed, 3,042 assertions passed, 0 failed (100% pass rate, exit code 0). Function coverage: 90.27%.
+- **Standalone Packages**: All 10 registered titles packaged independently with SHA-256 hashes, zero foreign asset leakage, and full standalone distribution.
+- **Production Certification**: `certifier.py` reports `FAILED: 0`, `Overall Status: RUNTIME_VERIFIED`.
+
+
 
 
 

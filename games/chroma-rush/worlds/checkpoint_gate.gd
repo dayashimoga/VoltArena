@@ -15,7 +15,7 @@ signal checkpoint_entered(body: Node3D)
 
 @export var gate_id: String = "gate_1"
 @export var target_color: int = ChromaConstants.ChromaColor.CRIMSON
-@export var gate_width: float = 24.0 # Generous 24m clear-span clears 15m roadway + curbs + sidewalks with 4.5m safety margin
+@export var gate_width: float = 28.0 # Generous 28m clear-span places stanchions safely outside roadway and sidewalks
 @export var gate_height: float = 6.8 # 6.8m vertical clearance gives generous clearance for all vehicle classes
 
 var pillar_left: MeshInstance3D

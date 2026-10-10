@@ -1,177 +1,151 @@
-# IMPLEMENTATION PLAN: VOLTARENA AERORUSH PRODUCTION OVERHAUL
+# VOLTARENA — MASTER PRODUCTION IMPLEMENTATION PLAN
+## Dual Game Overhaul: AeroRush & Chroma Rush (v9.0.0)
 
-**Role**: Principal Game Architect, Senior Godot Engineer, Physics/Vehicle Simulation Engineer, Technical Artist, Level Designer, Gameplay Designer, UI/UX Director, Performance Engineer, QA Lead & Release Engineer  
-**Repository**: `dayashimoga/VoltArena` (`games/aero-rush`)  
-**Engine & Target**: Godot 4.3 Stable (Desktop Windows/Linux/macOS, Web, Mobile)  
+**Roles**: Principal Godot Game Architect, Gameplay/Physics Engineer, Technical Artist, 3D Environment Designer, UI/UX Lead, QA & DevOps Engineer  
+**Repository**: `dayashimoga/VoltArena` (`games/aero-rush`, `games/chroma-rush`)  
+**Engine & Target**: Godot 4.3 Stable (Windows x86_64, Linux x86_64, macOS, WebGL/WASM Cloudflare Pages, Android ARM64)  
 **Date**: October 2026  
-**Status**: ACTIVE EXECUTION PLAN (IN PROGRESS)
+**Status**: ACTIVE EXECUTION PLAN (PHASE P0 AUDIT COMPLETE)
 
 ---
 
 ## 1. Executive Summary & Forensic Defect Analysis
 
-AeroRush is VoltArena's premier 3D arcade stunt-driving game. Forensic inspection of actual packaged builds, gameplay logs, and user-supplied screenshots reveals deep architectural defects that prevent AeroRush from functioning as a true commercial-grade arcade stunt game:
+A deep forensic inspection of the repository, scenes, scripts, collision geometries, camera controllers, and the user's latest 5 in-game screenshots reveals critical root causes that must be architecturally fixed in both **AeroRush** and **Chroma Rush**:
 
-### Defect Evidence & Forensic Audit
+### 1.1 Chroma Rush Defect Forensics (Screenshots 1 & 2)
 
-1. **Defect 1: Continuous Highway Dependency & Absence of Genuine Gaps (`input_file_3.png` Gap Concept)**:
-   - *Observation*: Tracks largely consist of continuous elevated highways. Only Course 1 had an experimental island partition; Courses 2–12 used single continuous Catmull-Rom ribbons without genuine physical gaps.
-   - *Root Cause (RC-34)*: `aero_course_database.gd` defined courses 2–12 without `islands` definitions. `aero_track_generator.gd` generated continuous collision and meshes. The core gameplay loop lacked genuine platform-to-platform ballistic jumps where the vehicle must traverse empty airspace without invisible bridges.
-   - *Required Solution*: Modular stunt platform graph with explicit islands: Launch Platforms, Upward Kicker Ramps, Genuine Ballistic Gaps (no collision/mesh in air), Wide Catch Landing Aprons with hazard stripes, 360° Vertical Loops, Banked/Wall-Ride Sections, Moving/Rotating Platforms, Precision Jumps, and Grand Finish Stadium Platforms.
+1. **Defect CR-1: Off-Road Trapped Spawns & Corrupted Reset Point (`input_file_0.png`)**:
+   - *Observation*: In Screenshot 1, the player car is sitting at 0 km/h on a flat concrete plaza/sidewalk facing a building wall, completely off the road. The road is isolated to the left behind a curb.
+   - *Root Cause (RC-CR01)*: In `neon_city.gd`, `_build_urban_block_parcel()` places `SidewalkApron` (`BoxMesh 26m x 0.14m x 18m`) at local $Z = -18.0\text{m}$ rotated $-90^\circ$, causing an overlapping 14cm slab that covers the roadway from $X = -18.5\text{m}$ to $X = -0.5\text{m}$. Furthermore, in `chroma_vehicle.gd:375`, `last_valid_track_pos` is updated whenever `is_grounded` is true and $Y\text{-up} > 0.7$. When a player veers or spawns off-road onto a flat plaza, `is_grounded` remains true, overwriting `last_valid_track_pos` with the off-road plaza coordinates. Consequently, pressing `[R]` (Reset to Road) resets the car *right back onto the sidewalk trap*, making recovery impossible.
+   - *Architectural Resolution*:
+     1. In `chroma_vehicle.gd`, decouple recovery from raw ground collision: `last_valid_track_pos` must only record positions within the drivable road corridor ($\text{dist\_to\_spline} \le \text{road\_width} \times 0.5$).
+     2. Hardcode `recover_vehicle()` and `reset_to_road()` to query `world.get_nearest_safe_road_transform()` on the authoritative spline centerline with proper forward tangent alignment, with an absolute fallback to `waypoints[0]`.
+     3. Remove overlapping `SidewalkApron` geometry and strictly set back all building parcels so they terminate outside the $15\text{m}$ road clearance envelope ($\ge 11.5\text{m}$ from road centerline).
 
-2. **Defect 2: Floating Sky Beacons & Repetitive Miniature Architecture (`input_file_0.png`, `input_file_1.png`)**:
-   - *Observation*: The sky contains an arc of 6–7 glowing orbs floating in mid-air looking like duplicate moons. The ground basin is populated by miniature low-poly dollhouse buildings with tiny doors and windows scattered on an empty flat plane below an enormous highway on giant pillars.
-   - *Root Cause (RC-35)*: In `aero_world_megacity.gd` lines 288–301, perimeter skyline buildings were spawned with `beacon.position = Vector3(0, 45.0, 0)` under a building scale of 5.5x, causing beacons to float isolated 247m in the sky with no visible structure attached. Ground buildings used low-poly house models (`building_a.glb`) scaled down to 2.5m–3.5m, looking absurdly tiny under a 16m-wide highway.
-   - *Required Solution*: Eliminate rogue floating beacons completely. Enforce sky composition with exactly ONE coherent sun (and ONE moon for night). Replace miniature dollhouse buildings with proportional skyscrapers (50m–140m), commercial plazas, grandstands, and realistic trees.
+2. **Defect CR-2: Streetlight & Tree Obstacles in Driving Corridors (`input_file_1.png`)**:
+   - *Observation*: In Screenshot 2, the car is driving along a sidewalk directly into a streetlight post and a tree.
+   - *Root Cause (RC-CR02)*: Road curbs in `world_base.gd` are only 10cm high and beveled, allowing vehicles to drift off-road effortlessly. Additionally, `_is_clear_of_spline` had `ignore_window = 6`, ignoring clearance checks against the adjacent road segment. Props were placed at $\pm 13.8\text{m}$ where roadway branches or curves brought them into travel envelopes.
+   - *Architectural Resolution*:
+     1. Implement solid barrier verges and 35cm upright curbs along high-speed corridors.
+     2. Fix `_is_clear_of_spline` to verify clearance against ALL spline segments without ignoring nearby samples.
+     3. Ensure a minimum lateral clearance of $\ge 12.0\text{m}$ for trees and $\ge 10.5\text{m}$ for light poles from the road centerline.
 
-3. **Defect 3: Missing Biomes & Environmental Monotony**:
-   - *Observation*: Only 4 generic environments were implemented, and they lacked visual identity, terrain variety, and weather effects.
-   - *Root Cause (RC-36)*: `AeroConstants.EnvironmentType` only had 4 types. Missing the 6 required distinct biomes specified in the prompt:
-     1. **Snowbound Peaks**: Snow mountains, alpine forests, frozen lakes, icy cliffs, snowfall, suspended mountain tracks.
-     2. **Coastal Velocity**: Beaches, tropical vegetation, oceans, cliffs, resorts, coastal bridges, sea spray.
-     3. **Wild Forest**: Dense realistic forests, mountains, waterfalls, rocks, rivers, greenery, natural terrain.
-     4. **Skyline Rush**: Believable modern cities, varied architecture, rooftop routes, skyscrapers, roads, urban landmarks.
-     5. **Desert Extreme**: Canyons, dunes, rock formations, desert highways, dust effects, cliff jumps.
-     6. **Neon Afterdark**: Detailed futuristic urban environments with controlled neon illumination and night-time stunt tracks.
-   - *Required Solution*: Implement full procedural/PBR world generators for all 6 biomes with tailored terrain shaders, lighting, sky, vegetation, architecture, audio, and weather particles.
+---
 
-4. **Defect 4: UI Clipping & Outdated Telemetry (`input_file_2.png`, `input_file_4.png`)**:
-   - *Observation*: `input_file_2.png` shows yellow text `RUSH!` cropped and overlapping `0 KM/H` at the top left of the screen. The telemetry display was basic and lacked modern game UI aesthetics.
-   - *Root Cause (RC-37)*: In `aero_hud.gd`, countdown and toast labels had inappropriate anchor offsets displacing text into negative viewport space.
-   - *Required Solution*: Full UI redesign matching the modern glass card HUD in `input_file_4.png`:
-     - Top-Left: Speedometer (`182 KM/H`) + Nitro gauge.
-     - Top-Center: Next Stunt / Jump (`NEXT: MEGA JUMP 240 m ahead`).
-     - Top-Right: Course / Lap (`COURSE 4 / 12`).
-     - Bottom-Left: Stunt Combo (`STUNT COMBO x3.5 · 1,250`).
-     - Bottom-Right: Checkpoint progress bar (`NEXT CHECKPOINT 66% progress`).
-     - Forward navigation chevrons guiding the player to the next platform.
+### 1.2 AeroRush Defect Forensics (Screenshots 3, 4, 5)
 
-5. **Defect 5: Airborne Physics Authority, Wall Rides, Loops & Landing Assistance**:
-   - *Observation*: Vehicle air controls needed tight arcade responsiveness without tumbling, flipping backwards, or getting trapped in reset loops. Wall rides and loops needed explicit centrifugal downforce.
-   - *Root Cause (RC-38)*: Lack of multi-point predictive landing alignment and centrifugal downforce rules.
-   - *Required Solution*: Dedicated Stunt Mode (Shift/handbrake) for deliberate flips, spins, and rolls; automatic horizon stabilization bias in normal flight; predictive multi-point raycast landing guidance; centrifugal downforce for loops and wall rides; safe one-shot checkpoint recovery.
+1. **Defect AR-1: HUD Telemetry Coordinate Overlap (`input_file_2.png`, `input_file_3.png`, `input_file_4.png`)**:
+   - *Observation*: In Screenshots 3, 4, and 5, "KICKER ahead" and "LANDING ahead" (cyan) are rendered directly on top of "SPEED 0 km/h" (white) in the top-left corner.
+   - *Root Cause (RC-AR01)*: In `aero_hud.gd`, `next_stunt_card` was assigned `anchor_left = 0.5, anchor_right = 0.5`, but because `set_anchors_and_offsets_preset(PRESET_TOP_WIDE)` or a centered container layout was omitted, its position collapsed to $(0, 20)$ during dynamic scene initialization, directly colliding with `speed_card` at $(24, 20)$.
+   - *Architectural Resolution*: Re-architect the HUD root using a standard responsive container hierarchy:
+     - Wrap top cards in an `HBoxContainer` anchored across the top (`PRESET_TOP_WIDE`) with margins, placing `SpeedCard` on the left, `NextStuntCard` in a center-aligned container, and `CourseCard` on the right.
+     - Enforce `grow_horizontal = GROW_DIRECTION_BOTH` on `next_stunt_card` so it remains perfectly centered at all aspect ratios and resolutions.
+
+2. **Defect AR-2: Giant Cartoon Orange/Green Buildings & Track Encroachment (`input_file_2.png`, `input_file_3.png`)**:
+   - *Observation*: In Screenshot 3, the track is flanked by giant orange and green structures with massive cartoon windows and doors. In Screenshot 4, the vehicle is wedged directly against the wall of one of these buildings next to a ramp.
+   - *Root Cause (RC-AR02)*: In `aero_world_megacity.gd` and `aero_world_skyline.gd`, `_build_flanking_skyscrapers()` spawned `building_comm_a.glb` (a 1.29m tall miniature 2-story shop with a modeled door and small windows) scaled by $16\times–26\times$ at $X = \pm 35\text{m}$. At $26\times$ scale, this toy shop expands to 25m wide with a 25m tall front door, looking like an absurd cartoon dollhouse right next to the roadway, and penetrating track collision envelopes on curved sections.
+   - *Architectural Resolution*:
+     1. Discontinue using miniature commercial shop models (`building_comm_*.glb`, `building_a.glb`) as giant towers.
+     2. Use authentic architectural skyscraper models (`building_skyscraper_a.glb` through `building_skyscraper_e.glb`) or procedural textured towers with believable floor-to-ceiling heights ($3.5\text{m}$ per floor).
+     3. Enforce a minimum setback of $\ge 45\text{m}$ from the nearest track ribbon sample, completely eliminating track encroachment and car trapping.
+
+3. **Defect AR-3: Car Falling to Ground Plane Without Out-of-Bounds Recovery (`input_file_3.png`, `input_file_4.png`)**:
+   - *Observation*: In Screenshots 4 and 5, the vehicle is driving on the ground basin below elevated tracks, surrounded by pillars and trapped against building foundations.
+   - *Root Cause (RC-AR03)*: The kill plane was placed at fixed $Y < -30\text{m}$ regardless of track height, and elevated tracks sit at $Y \in [10, 35]\text{m}$, while the ground plane sits at $Y = -6.5\text{m}$. When a vehicle misses a jump, it falls only 16 meters, lands on the ground plane, and continues driving indefinitely under the tracks without triggering a checkpoint reset.
+   - *Architectural Resolution*:
+     1. Implement a dynamic out-of-bounds detector: if the vehicle drops more than $8.0\text{m}$ below the current track segment elevation OR leaves the track lateral corridor by $> 22\text{m}$, immediately trigger recovery.
+     2. Zero vehicle linear and angular velocities and restore transform to the last safe checkpoint deck with $2.5\text{s}$ safe grace.
 
 ---
 
 ## 2. Requirements & Gap Matrix
 
-| Requirement ID | Description | Current State | Target State | Priority |
-| :--- | :--- | :--- | :--- | :--- |
-| **REQ-TRK-01** | Modular disconnected stunt platform graph | Partial (only Course 1) | All 12 courses with explicit platform islands, ballistic air gaps, kicker ramps, catch aprons, loops, wall rides, and finish stadiums | **P0** |
-| **REQ-TRK-02** | Flagship stunt course with multiple stunt types | Basic prototype | Flagship Course 1 ("Neon Stunt Odyssey") with genuine 50m gaps, 360° vertical loop, 75° wall ride, moving platform, and precision jumps | **P0** |
-| **REQ-TRK-03** | Automated trajectory & reachability validator | Basic kinematic simulation | Full ballistic solver validating $v_{min}, v_{target}, v_{max}$, flight duration, apron width, and safe recovery | **P0** |
-| **REQ-PHY-01** | Arcade vehicle physics & suspension | Working baseline | Refined grounded suspension, weight transfer, drift mini-turbos, and nitro boost | **P0** |
-| **REQ-PHY-02** | Airborne trick authority & horizon stabilization | Basic rotation | Dual-mode flight: Stunt Mode (flips/spins/rolls) + Normal Mode (horizon stabilization & landing deck alignment) | **P0** |
-| **REQ-PHY-03** | Centrifugal loop & wall-ride adhesion | Basic normal lerp | Explicit centrifugal normal downforce maintaining contact on loops and 75° wall rides | **P0** |
-| **REQ-PHY-04** | Predictive landing assistance & shock feedback | Basic raycast | Multi-point forward-looking landing prediction smoothly guiding chassis without visual snapping | **P0** |
-| **REQ-PHY-05** | Checkpoint recovery & out-of-bounds guard | 65m jump abort fixed | Reliable transform restoration, velocity reset to 18 m/s, 2.5s cooldown, zero infinite respawn loops | **P0** |
-| **REQ-ENV-01** | Eliminate sky beacons & multiple moons | Buggy beacons in sky | Exactly 1 coherent sun/moon, 0 floating spheres in sky, balanced ACES tonemapper | **P1** |
-| **REQ-ENV-02** | 6 Distinct Selectable Biomes | Only 4 partial worlds | Snowbound Peaks, Coastal Velocity, Wild Forest, Skyline Rush, Desert Extreme, Neon Afterdark | **P1** |
-| **REQ-ENV-03** | Believable architectural & foliage scale | Miniature buildings | Real-scale 50m–140m skyscrapers, commercial plazas, grandstands, organic tree clusters | **P1** |
-| **REQ-UI-01** | Modern Glass Card HUD (`input_file_4.png`) | Raw text labels | Speed card, Next Stunt card, Course card, Combo card, Checkpoint progress card, 3D chevron | **P1** |
-| **REQ-UI-02** | Eliminate text clipping ('RUSH!') | Cut off at top-left | Resolution-independent containers, centered countdowns, safe margins | **P1** |
-| **REQ-CAM-01** | Multi-mode camera & jump cinematic | Basic chase camera | Chase, Jump Airtime, Landing Spring, Hood/Cockpit, and Orbit view modes with collision avoidance | **P1** |
-| **REQ-GMP-01** | Career, Modes & Progression | Basic Quick Play | 12 courses, 3 tiers, Career, Time Attack with Ghost, Stunt Challenge, Medals, Vehicle Unlocks | **P2** |
-| **REQ-AUD-01** | Comprehensive Sound Design | Engine hum only | Engine RPM modulation, boost whoosh, tire screech, air rush, landing thud, stunt fanfare | **P2** |
-| **REQ-TST-01** | Automated Test Suite (100% Pass) | 80 suites pass | Extended AeroRush test suites verifying all 6 biomes, 12 courses, physics, gaps, and UI | **P3** |
-| **REQ-REL-01** | Standalone & Suite Packaging & Evidence | Windows/Linux/Web | Real runtime screenshot capture (`capture_aero_rush_evidence.py`), contact sheet, certification | **P3** |
+| ID | Title | Current State | Target State | Priority |
+| :--- | :--- | :--- | :--- | :---: |
+| **GAP-CR-01** | Chroma Rush Safe Road Spawning | Spawns on pedestrian sidewalk in some missions | Spawns strictly in center of road lane facing tangent | **P0** |
+| **GAP-CR-02** | Chroma Rush Valid Road Recovery | `last_valid_track_pos` saved on sidewalk | Recovery strictly queries authoritative road centerline | **P0** |
+| **GAP-CR-03** | Chroma Rush Driving Obstacles | Streetlights/trees at $\pm 13.8\text{m}$ intrude on turns | Strict clearance $\ge 12\text{m}$; raised curbs & barriers | **P1** |
+| **GAP-CR-04** | Chroma Rush Camera Stability | Minor zoom steps during speed spikes | Smooth filtered camera pipeline with deadband | **P1** |
+| **GAP-CR-05** | Chroma Rush Mission Solvability | 24 missions defined | 100% solvable with reachable targets & gates | **P2** |
+| **GAP-AR-01** | AeroRush HUD Telemetry Overlap | "KICKER ahead" overlaps "0 km/h" in top-left | Responsive Top-Center Stunt Card via HBox layout | **P0** |
+| **GAP-AR-02** | AeroRush Building Scale & Intrusion | 24x scaled toy shops flank and penetrate track | Authentic skyscraper assets with $\ge 45\text{m}$ setback | **P1** |
+| **GAP-AR-03** | AeroRush Dynamic OOB Kill-Plane | Fixed $Y < -30\text{m}$ allows driving on ground | Track-relative drop detector ($>8\text{m}$ below deck) | **P0** |
+| **GAP-AR-04** | AeroRush Modular Disconnected Graph | 12 circuits with loops, wall-rides, kinetic platforms | 100% verified jump reachability & landing safety | **P0** |
+| **GAP-SYS-01**| Monorepo Test Pass Rate | 80 suites pass | 100% pass rate, 0 failures, $\ge 90\%$ coverage | **P0** |
+| **GAP-SYS-02**| Cross-Platform Standalone Packages | Standalone PCKs exported | Verified standalone PCKs for all 10 games | **P2** |
 
 ---
 
-## 3. Architecture & Affected Files
+## 3. Phased Implementation Roadmap
 
-```text
-                        AERORUSH ARCHITECTURE
-                                  |
-      +---------------------------+---------------------------+
-      |                           |                           |
-  TRACK & STUNT               VEHICLE & CAMERA            ENVIRONMENT & WORLDS
-- aero_course_database.gd   - aero_vehicle.gd           - aero_world_base.gd
-- aero_track_generator.gd   - aero_physics_helpers.gd   - aero_world_snow.gd (NEW)
-- aero_track_validator.gd   - aero_chase_camera.gd      - aero_world_coastal.gd
-- aero_moving_platform.gd   - aero_vehicle_visuals.gd   - aero_world_forest.gd (NEW)
-- aero_checkpoint.gd                                    - aero_world_skyline.gd (NEW)
-                                                        - aero_world_desert.gd (NEW)
-                                                        - aero_world_neon.gd (NEW)
-      |                           |                           |
-      +---------------------------+---------------------------+
-                                  |
-                             UI & HUD
-                         - aero_hud.gd (Redesign to input_file_4.png)
-                         - aero_course_select.gd (6 Biomes)
-                         - aero_garage.gd
-                         - aero_results_screen.gd
-                         - aero_rush_main.gd
-```
+### Phase P0: Forensic Audit & Defect Baseline (COMPLETED)
+- Inspect user screenshots 1–5; identify exact coordinate and scene origins of all 5 defects.
+- Audit `neon_city.gd`, `world_base.gd`, `chroma_vehicle.gd`, `aero_hud.gd`, `aero_world_megacity.gd`.
 
-### Detailed Affected Files:
-1. `games/aero-rush/core/aero_constants.gd` — Add 6 biome enums, camera modes, stunt definitions.
-2. `games/aero-rush/tracks/aero_course_database.gd` — Handcraft all 12 courses with modular disconnected stunt islands, launch kickers, gaps, landing aprons, loops, wall-rides, and moving platforms.
-3. `games/aero-rush/tracks/aero_track_generator.gd` — Support moving/rotating kinetic platform islands, multi-tier landing aprons, and launch kickers.
-4. `games/aero-rush/tracks/aero_track_validator.gd` — Ballistic reachability solver and course graph integrity checks.
-5. `games/aero-rush/worlds/aero_world_base.gd` — Shared PBR lighting, sun/moon composition, atmospheric fog, terrain generation.
-6. `games/aero-rush/worlds/aero_world_megacity.gd` / `aero_world_neon.gd` — Remove floating beacons, add coherent moon, cyber street grid, realistic towers.
-7. `games/aero-rush/worlds/aero_world_snow.gd` (NEW) — Snow mountains, alpine forests, frozen lakes, snowfall particle weather.
-8. `games/aero-rush/worlds/aero_world_coastal.gd` — Tropical ocean, beaches, palm groves, seaside cliffs, resort architecture.
-9. `games/aero-rush/worlds/aero_world_forest.gd` (NEW) — Dense temperate forest, giant trees, waterfalls, rivers, natural boulders.
-10. `games/aero-rush/worlds/aero_world_skyline.gd` (NEW) — Modern day/sunset metropolis, proportional skyscrapers, commercial plazas.
-11. `games/aero-rush/worlds/aero_world_desert.gd` (NEW) — Sandstone mesas, dunes, chasm jumps, dust weather.
-12. `games/aero-rush/vehicles/aero_vehicle.gd` — Flight stabilization, predictive landing assistance, loop/wall downforce, stunt controls, recovery.
-13. `games/aero-rush/vehicles/aero_chase_camera.gd` — Multi-mode chase/jump/landing/hood/orbit camera with collision avoidance.
-14. `games/aero-rush/ui/aero_hud.gd` — Full modern card redesign matching `input_file_4.png`, fix clipping, add navigation cues.
-15. `games/aero-rush/ui/aero_course_select.gd` — 6 biome selector tabs, 12 courses, difficulty tiers, medal rewards.
-16. `games/aero-rush/aero_rush_main.gd` — Coordinate 6 biomes, camera view toggle, moving platform updates, HUD integration.
-17. `games/aero-rush/tests/` — Comprehensive test suites verifying all systems.
-18. `scripts/capture_aero_rush_evidence.py` — Real runtime screenshot capture tool.
-19. `BUILD.md` — New build and standalone export guide.
+### Phase P1: Critical Stability & Recovery Hardening
+- **Chroma Rush**:
+  - Fix `chroma_vehicle.gd`: `last_valid_track_pos` only updates when within road corridor.
+  - Fix `reset_to_road()` to always fetch spline centerline from `active_world`.
+  - Fix `neon_city.gd`: remove overlapping `SidewalkApron`, enforce $\ge 12\text{m}$ prop clearance.
+  - Implement 35cm upright curbs to prevent accidental off-roading.
+- **AeroRush**:
+  - Fix `aero_hud.gd`: top-center layout using `HBoxContainer` / `PRESET_TOP_WIDE` with `GROW_DIRECTION_BOTH`.
+  - Fix `aero_vehicle.gd`: dynamic track-relative OOB kill-plane ($Y < \text{current\_deck\_Y} - 8.0\text{m}$).
+  - Remove intrusive commercial shop models in `aero_world_megacity.gd` and `aero_world_skyline.gd`; enforce $\ge 45\text{m}$ skyscraper setback.
 
----
+### Phase P2: Core Gameplay & Mechanics
+- **AeroRush**:
+  - Verify all 12 circuits in `aero_course_database.gd` with 200 Hz ballistic validator.
+  - Validate 360° loops, 75° wall-rides, and kinetic `AeroMovingPlatform` synchronization.
+- **Chroma Rush**:
+  - Complete find target $\to$ match speed $\to$ atomic bidirectional swap $\to$ deliver $\to$ reward loop.
+  - Validate all 24 missions across 4 modes (Color Hunt, Chroma Sprint, Puzzle Drive, Rival Battle).
 
-## 4. Implementation Phases & Sequence
+### Phase P3: Visual & World Overhaul
+- **AeroRush**:
+  - Ensure all 6 biomes (Snow, Coastal, Forest, Skyline, Desert, Neon) exhibit authentic terrain, lighting, and vegetation.
+  - Ensure zero miniature buildings, zero floating beacon spheres, and single-sun skybox composition.
+- **Chroma Rush**:
+  - Enhance urban skyline with diverse districts, realistic street furniture, and PBR clearcoat vehicles.
 
-- **Phase 1 (P0: Track & Course Graph Architecture)**:
-  - Implement modular platform island graph with genuine ballistic gaps in `aero_track_generator.gd` and `aero_course_database.gd`.
-  - Build Flagship Course 1 ("Neon Stunt Odyssey") featuring launch ramps, 52m gap, 360° vertical loop, drop transfer, 75° wall ride, moving platform, and finish platform.
-  - Upgrade `aero_track_validator.gd` with projectile reachability solver.
+### Phase P4: UX, Camera & Controls
+- Verify responsive HUD layouts across viewports from $360\times 800$ to $2560\times 1440$.
+- Verify camera view modes (Chase, Hood, Orbit in AeroRush; filtered chase cam in Chroma Rush).
 
-- **Phase 2 (P0: Vehicle Simulation & Flight Control)**:
-  - Implement dual-mode airborne controls in `aero_vehicle.gd`: Stunt Mode (Pitch/Roll/Yaw) and Normal Mode (Horizon stabilization).
-  - Implement predictive landing guidance raycasts in `aero_physics_helpers.gd`.
-  - Implement centrifugal adhesion for vertical loops and wall rides.
-  - Implement safe one-shot checkpoint recovery with transform restoration and 2.5s cooldown.
-  - Upgrade `AeroChaseCamera` with dynamic jump distance, landing compression, and view mode switching.
+### Phase P5: Engagement, Modes & Progression
+- Ensure career saves, unlockable vehicle rosters, medals, and high scores persist via `SaveManager`.
 
-- **Phase 3 (P1: Complete Environment & 6 Biomes)**:
-  - Fix sky composition in `aero_world_base.gd`: exactly 1 sun, 0 rogue floating beacons.
-  - Implement all 6 biomes: Snowbound Peaks, Coastal Velocity, Wild Forest, Skyline Rush, Desert Extreme, Neon Afterdark.
-  - Scale architecture and vegetation to realistic proportions.
+### Phase P6: Optimization & Profiling
+- Validate GPU instancing, draw call budgets, memory usage ($< 500\text{MB}$), and 60+ FPS performance.
 
-- **Phase 4 (P1: UI/UX Redesign)**:
-  - Complete redesign of `aero_hud.gd` matching `input_file_4.png`: Speed Card, Next Stunt Card, Course Card, Stunt Combo Card, Checkpoint Progress Card.
-  - Fix countdown text clipping.
-  - Add 3D navigation chevron pointing to next landing platform.
-  - Update `aero_course_select.gd` with 6 biome tabs and tier previews.
+### Phase P7: Cross-Platform Packaging & Distribution
+- Verify standalone PCK exports for all 10 titles (`export/standalone/`).
+- Verify Cloudflare-compliant chunked Web export (`export/web/`).
 
-- **Phase 5 (P2: Gameplay, Audio & Progression)**:
-  - Expand career progression across all 12 courses and 3 tiers.
-  - Add procedural engine audio modulation, boost audio, landing audio, and stunt audio.
+### Phase P8: QA & Automated Test Suite
+- Execute all 80+ test suites via Podman CI container; require 100% pass rate.
+- Run Playwright Chromium visual audit capturing high-definition gameplay evidence.
 
-- **Phase 6 (P3: Automated Testing, Packaging & Release Certification)**:
-  - Run full test suite via Godot CI container; ensure 100% pass rate.
-  - Run `scripts/capture_aero_rush_evidence.py` to capture real runtime screenshots.
-  - Package standalone `AeroRush.pck` and full suite distribution.
-  - Run `certifier.py` to update `acceptance.json` and `production-certification.json`.
-  - Update `IMPLEMENTATION_WALKTHROUGH.md`, `CHANGELOG.md`, `TODO.md`.
+### Phase P9: Documentation, Certification & Final Sign-Off
+- Update `IMPLEMENTATION_WALKTHROUGH.md`, `CHANGELOG.md`, `TODO.md`.
+- Run `scripts/certifier.py` to produce `acceptance.json` and `production-certification.json`.
 
 ---
 
-## 5. Acceptance Criteria
+## 4. Measurable Acceptance Criteria
 
-1. **Disconnected Stunt Platform Graph**: Flagship course and all 12 courses consist of genuinely physically disconnected platform islands with verified ballistic air gaps (no collision in mid-air).
-2. **Flagship Course**: Complete flagship course traversing launch ramps, 52m jump, 360° loop, 75° wall ride, moving platform, and finish stadium platform using actual vehicle physics.
-3. **Environment & Visual Coherence**: Zero rogue floating beacons or duplicate moon spheres. Exactly 1 sun/moon. 6 distinct biomes with authentic terrain, vegetation, architecture, and weather.
-4. **Vehicle Control & Physics**: Responsive steering, drift mini-turbos, nitro boost; Stunt Mode allows flips/rolls/spins; Normal flight aligns wheels-down; predictive landing assistance; centrifugal loop adhesion.
-5. **No Trapping / Safe Recovery**: No clipping through platforms, zero infinite respawn loops, safe transform restoration at 18 m/s.
-6. **Modern HUD (`input_file_4.png`)**: Speed card, Next Stunt card, Course card, Combo card, Checkpoint progress card with progress bar, and 3D navigation chevron. Zero text clipping.
-7. **Regression-Free Monorepo**: All 80+ test suites across all 10 VoltArena titles pass with 100% success rate.
-8. **Real Packaged Evidence**: Packaged runtime screenshots captured and verified across spawn, driving, jumps, loops, wall-rides, and all 6 biomes.
+1. **Chroma Rush Safe Spawning & Recovery**:
+   - Spawns strictly in road lane facing direction of travel across all 24 missions.
+   - Pressing `[R]` instantly restores vehicle to the center of the nearest drivable road segment.
+   - Driving along road curves has zero tree or light-post collisions.
+2. **AeroRush HUD Resolution & Anchoring**:
+   - "NEXT: STUNT" card is centered at the top; zero overlap with "SPEED" or "0 km/h".
+3. **AeroRush Environmental Scale & Clearance**:
+   - Zero miniature toy shops scaled to giant proportions; zero buildings within $45\text{m}$ of track centerline.
+   - Falling off elevated platforms immediately triggers checkpoint recovery within $1.5\text{s}$, preventing driving on the ground basin.
+4. **Monorepo Integrity**:
+   - All 80 test suites pass with 100% success rate, $\ge 90\%$ function coverage.
+   - Zero regressions across the other 8 VoltArena games or universal launcher.
+5. **Packaged Verification**:
+   - Standalone PCKs and chunked web builds launch and function independently.

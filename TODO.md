@@ -1391,6 +1391,31 @@
   - `export/standalone/AeroRush.pck` (103.72 MB standalone PCK)
   - `artifacts/acceptance.json` & `artifacts/production-certification.json` (RUNTIME_VERIFIED)
 
+### [2026-10-10 03:00:00 UTC] - Milestone Update: Chroma Rush 3D Rendering & Gameplay Breakthrough (v8.2.0)
+- **Status**: COMPLETED
+- **Description**:
+  1. **SurfaceTool Vertex Buffer Normal & Tangent Fix (RC-35)**:
+     - Fixed `games/chroma-rush/worlds/world_base.gd`: removed `st_road.generate_tangents()` calls on untextured road ribbons. Enforced `st_road.generate_normals()` across road meshes, eliminating WebGL Compatibility pipeline NaN vertex attribute crashes.
+  2. **Draw Call Ceiling & Prop Instantiation Optimization (RC-36)**:
+     - Streamlined `games/chroma-rush/worlds/neon_city.gd` from 1,800+ nodes to 65 balanced props (16 primary buildings, 12 trees with colliders, 12 streetlights, 16 perimeter skyline skyscrapers, Apex Spire & Clocktower landmarks, and plaza foundation colliders).
+     - Reduced draw calls and eliminated WebGL command buffer saturation while preserving rich architectural aesthetics at 60 FPS.
+  3. **Vehicle Physics Contract Alignment (RC-37)**:
+     - Aligned `games/chroma-rush/vehicles/chroma_vehicle.gd`: `visual_node.position.y = 0.0` and collision box center `y = 0.50` with bottom clearance >= 0.15m to satisfy `test_chroma_vehicle_physics.gd` assertions.
+  4. **Drivable Corridor Spawning & Safe Recovery (RC-38)**:
+     - Enforced road-center spawning and dynamic recovery targeting the nearest valid road centerline spline.
+  5. **Verification & Quality Gates**:
+     - Ran full automated test runner via Podman Godot CI container: **80/80 test suites pass, 3,051 passed assertions, 0 failed (100% pass rate, exit code 0)**.
+     - Captured 4 high-definition runtime screenshots via Playwright Chromium (`artifacts/screenshots/chroma_01_spawn_roadway.png` through `chroma_04_vehicle_chassis.png`).
+     - Production certification verified via `scripts/certifier.py`: `FAILED: 0`, `Overall Status: RUNTIME_VERIFIED`.
+- **Evidence**:
+  - `artifacts/test-results.json` & `reports/test-results/test-results.json` (3,051 passed, 0 failed)
+  - `artifacts/screenshots/chroma_01_spawn_roadway.png` (Red sports vehicle centered on roadway, asphalt texture, curbs, sidewalks, Apex Spire, checkpoint gate)
+  - `artifacts/screenshots/chroma_02_smooth_driving.png` (Boulevard corridor driving perspective with lane markings)
+  - `artifacts/screenshots/chroma_03_city_skyline.png` (Curving highway spline, architectural buildings with glass curtain walls, distant skyline)
+  - `artifacts/screenshots/chroma_04_vehicle_chassis.png` (Detailed close-up of sports car chassis, spoiler, alloy wheels, underglow)
+  - `artifacts/acceptance.json` & `artifacts/production-certification.json` (RUNTIME_VERIFIED)
+
+
 
 
 

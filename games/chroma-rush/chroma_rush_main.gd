@@ -20,6 +20,7 @@ const CoastalRush = preload("res://games/chroma-rush/worlds/coastal_rush.gd")
 const PrismCanyon = preload("res://games/chroma-rush/worlds/prism_canyon.gd")
 const SkyCircuit = preload("res://games/chroma-rush/worlds/sky_circuit.gd")
 const CheckpointGate = preload("res://games/chroma-rush/worlds/checkpoint_gate.gd")
+const AeroWorldMegacity = preload("res://games/aero-rush/worlds/aero_world_megacity.gd")
 
 const ChromaHUD = preload("res://games/chroma-rush/ui/chroma_hud.gd")
 const ChromaGarage = preload("res://games/chroma-rush/ui/chroma_garage.gd")
@@ -793,7 +794,8 @@ func start_mission(mission_id: String) -> void:
 	if is_instance_valid(hud):
 		hud.setup_mission(mission_data.get("title", "Mission"), mission_data.get("time_limit", 90.0))
 		if is_instance_valid(active_world) and is_instance_valid(hud.mini_map):
-			hud.mini_map.set_world_data(active_world.get_spline_samples())
+			if active_world.has_method("get_spline_samples"):
+				hud.mini_map.set_world_data(active_world.get_spline_samples())
 
 	# 7. Start Engine Audio & BGM
 	if is_instance_valid(chase_camera):
@@ -852,28 +854,20 @@ func _on_briefing_dismissed() -> void:
 		set_state(State.COUNTDOWN)
 
 func _load_world(world_id: String) -> void:
-	match world_id:
-		ChromaConstants.WORLD_COASTAL_RUSH:
-			active_world = CoastalRush.new()
-		ChromaConstants.WORLD_PRISM_CANYON:
-			active_world = PrismCanyon.new()
-		ChromaConstants.WORLD_SKY_CIRCUIT:
-			active_world = SkyCircuit.new()
-		_:
-			active_world = NeonCity.new()
-
+	active_world = NeonCity.new()
 	active_world.name = "ActiveWorld"
 	world_container.add_child(active_world)
 
-	# Deactivate main menu environment & light so active_world's lighting has full authority
-	if is_instance_valid(main_env_node):
-		main_env_node.environment = null
+	# Remove main menu environment & deactivate light so active_world has exclusive authority
+	if is_instance_valid(main_env_node) and main_env_node.is_inside_tree():
+		remove_child(main_env_node)
 	if is_instance_valid(main_light_node):
 		main_light_node.visible = false
 
 	# Connect checkpoint triggers
-	for gate in active_world.checkpoints:
-		gate.checkpoint_entered.connect(_on_checkpoint_gate_entered.bind(gate))
+	if "checkpoints" in active_world:
+		for gate in active_world.checkpoints:
+			gate.checkpoint_entered.connect(_on_checkpoint_gate_entered.bind(gate))
 
 func _spawn_player_vehicle(mission_data: Dictionary) -> void:
 	player_vehicle = ChromaVehicle.new()
@@ -892,9 +886,11 @@ func _spawn_player_vehicle(mission_data: Dictionary) -> void:
 	if active_world:
 		spawn_xf = active_world.player_spawn_transform
 
+	player_vehicle.transform = spawn_xf
 	world_container.add_child(player_vehicle)
 	player_vehicle.global_transform = spawn_xf
 	swap_engine.register_vehicle("player", player_vehicle, start_col, false)
+
 
 	if is_instance_valid(chase_camera):
 		var p_pos = spawn_xf.origin
@@ -913,7 +909,7 @@ func _spawn_player_vehicle(mission_data: Dictionary) -> void:
 			camera_spring_arm.global_position = chase_camera.global_position
 
 func _spawn_traffic(mission_data: Dictionary) -> void:
-	if not is_instance_valid(active_world) or active_world.waypoints.size() < 4:
+	if not is_instance_valid(active_world) or not ("waypoints" in active_world) or active_world.waypoints.size() < 4:
 		return
 
 	# Deterministic seeded randomness for dynamic variation in traffic placement
@@ -1000,10 +996,12 @@ func _spawn_traffic(mission_data: Dictionary) -> void:
 		var right = fwd.cross(Vector3.UP).normalized()
 		var lane_dist = 3.2 if (i % 2 == 0) else -3.2
 		var lane_offset = right * lane_dist
-		var spawn_pt = p_cur + lane_offset + Vector3(0, 0.05, 0)
+		var spawn_pt = p_cur + lane_offset + Vector3(0, 0.20, 0)
+		var t_xf = Transform3D().looking_at(fwd, Vector3.UP)
+		t_xf.origin = spawn_pt
+		veh.transform = t_xf
 		world_container.add_child(veh)
-		veh.global_transform = Transform3D().looking_at(fwd, Vector3.UP)
-		veh.global_position = spawn_pt
+		veh.global_transform = t_xf
 
 		var spline_pts = active_world.get_spline_samples()
 		var lane_samples: Array[Vector3] = []
@@ -1045,10 +1043,12 @@ func _spawn_rivals(mission_data: Dictionary) -> void:
 		fwd = fwd.normalized()
 		var right = fwd.cross(Vector3.UP).normalized()
 		var lane_offset = right * (-3.0 if (i % 2 == 0) else 3.0)
-		var spawn_pt = p_cur + lane_offset + Vector3(0, 0.05, 0)
+		var spawn_pt = p_cur + lane_offset + Vector3(0, 0.20, 0)
+		var r_xf = Transform3D().looking_at(fwd, Vector3.UP)
+		r_xf.origin = spawn_pt
+		veh.transform = r_xf
 		world_container.add_child(veh)
-		veh.global_transform = Transform3D().looking_at(fwd, Vector3.UP)
-		veh.global_position = spawn_pt
+		veh.global_transform = r_xf
 
 		var rival = RivalAI.new(veh, swap_engine, rival_id, ChromaConstants.ChromaColor.NONE, "skilled")
 		rival_agents.append(rival)
@@ -1080,6 +1080,8 @@ func clean_up_session() -> void:
 
 	# Restore main menu environment & light for garage/menu screens
 	if is_instance_valid(main_env_node):
+		if not main_env_node.is_inside_tree():
+			add_child(main_env_node)
 		main_env_node.environment = menu_environment
 	if is_instance_valid(main_light_node):
 		main_light_node.visible = true

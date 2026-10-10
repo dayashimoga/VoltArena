@@ -151,7 +151,7 @@ func _handle_chroma_rush_cmd(scene: Node, cmd: String) -> void:
 		var cam = scene.find_child("ChaseCamera", true, false)
 		var pv = scene.find_child("PlayerVehicle", true, false)
 		if pv:
-			pv.global_position = Vector3(0.0, 0.05, 0.0)
+			pv.global_position = Vector3(0.0, 0.20, 0.0)
 			pv.velocity = Vector3.ZERO
 		if cam and pv:
 			cam.current = true
@@ -160,17 +160,17 @@ func _handle_chroma_rush_cmd(scene: Node, cmd: String) -> void:
 			p_fwd.y = 0.0
 			if p_fwd.length_squared() < 0.01:
 				p_fwd = Vector3(0, 0, -1)
-			cam.global_position = p_pos - p_fwd * 6.5 + Vector3(0.0, 2.4, 0.0)
-			cam.look_at(p_pos + p_fwd * 8.0 + Vector3(0.0, 1.2, 0.0), Vector3.UP)
+			cam.global_position = p_pos - p_fwd * 6.5 + Vector3(0.0, 2.6, 0.0)
+			cam.look_at(p_pos + p_fwd * 5.0 + Vector3(0.0, 1.0, 0.0), Vector3.UP)
 	elif cmd == "cam_skyline":
 		scene.set("camera_override", true)
 		var cam = scene.find_child("ChaseCamera", true, false)
 		var pv = scene.find_child("PlayerVehicle", true, false)
 		if cam:
 			cam.current = true
-			var p_pos = pv.global_position if pv else Vector3(0, 0, 0)
-			cam.global_position = p_pos + Vector3(14.0, 22.0, 24.0)
-			cam.look_at(p_pos + Vector3(0.0, 4.0, -35.0), Vector3.UP)
+			var p_pos = pv.global_position if pv else Vector3(0, 0.2, 0)
+			cam.global_position = p_pos + Vector3(12.0, 16.0, 18.0)
+			cam.look_at(p_pos + Vector3(0.0, 6.0, -25.0), Vector3.UP)
 	elif cmd == "cam_car_closeup":
 		scene.set("camera_override", true)
 		var cam = scene.find_child("ChaseCamera", true, false)
@@ -190,28 +190,37 @@ func _handle_chroma_rush_cmd(scene: Node, cmd: String) -> void:
 		var wc = scene.find_child("WorldContainer", true, false)
 		var aw = scene.find_child("ActiveWorld", true, false)
 		var crn = scene.find_child("ContinuousRoadNetwork", true, false)
-		print("[CHROMA DUMP] ActiveCam: ", (active_cam.name if active_cam else "NONE"), " pos: ", (active_cam.global_position if active_cam else Vector3.ZERO), " fwd: ", (-active_cam.global_transform.basis.z if active_cam else Vector3.ZERO))
-		print("[CHROMA DUMP] Player: ", (pv.name if pv else "NONE"), " pos: ", (pv.global_position if pv else Vector3.ZERO), " vis: ", (pv.is_visible_in_tree() if pv else false))
-		print("[CHROMA DUMP] WorldContainer: ", (wc != null), " vis: ", (wc.is_visible_in_tree() if wc else false))
-		print("[CHROMA DUMP] ActiveWorld: ", (aw != null), " vis: ", (aw.is_visible_in_tree() if aw else false))
-		var ground = scene.find_child("CityGroundPlane", true, false)
-		if ground:
-			print("[CHROMA DUMP] CityGroundPlane pos: ", ground.global_position, " vis: ", ground.is_visible_in_tree())
-			ground.visible = false
-			print("[CHROMA DUMP] Hid CityGroundPlane for test")
-		if crn:
-			for c in crn.get_children():
-				if c is MeshInstance3D:
-					print("[CHROMA DUMP] Road child mesh: ", c.name, " vis: ", c.is_visible_in_tree(), " aabb: ", c.get_aabb(), " surfs: ", (c.mesh.get_surface_count() if c.mesh else -1))
-		if active_cam and pv:
-			print("[CHROMA DUMP] in_frustum: ", active_cam.is_position_in_frustum(pv.global_position), " unproject: ", active_cam.unproject_position(pv.global_position))
-			print("[CHROMA DUMP] viewport size: ", scene.get_viewport().size)
+		print("[CHROMA DUMP] ===== FULL SCENE TREE DUMP =====")
+		_dump_tree_recursive(scene, 0)
+		print("[CHROMA DUMP] ===== ALL CAMERAS IN TREE =====")
+		for cam in scene.find_children("*", "Camera3D", true, false):
+			print("[CHROMA DUMP] Camera: ", cam.name, " path: ", cam.get_path(), " current: ", cam.current, " pos: ", cam.global_position, " cull_mask: ", cam.cull_mask, " vis: ", cam.is_visible_in_tree(), " w3d: ", cam.get_world_3d())
+		print("[CHROMA DUMP] ===== ALL VIEWPORTS IN TREE =====")
+		for vp in scene.find_children("*", "Viewport", true, false):
+			print("[CHROMA DUMP] Viewport: ", vp.name, " path: ", vp.get_path(), " size: ", vp.size)
+		var root = scene.get_tree().root
+		print("[CHROMA DUMP] Root Viewport: size=", root.size, " active_cam=", (root.get_camera_3d().name if root.get_camera_3d() else "NONE"), " world_3d=", root.world_3d)
 		if pv:
 			var meshes: Array[MeshInstance3D] = []
 			_gather_debug_meshes(pv, meshes)
 			print("[CHROMA DUMP] Player meshes count: ", meshes.size())
 			for m in meshes:
 				print("[CHROMA DUMP]   mesh: ", m.name, " vis_in_tree: ", m.is_visible_in_tree(), " aabb: ", m.get_aabb(), " mat: ", (m.material_override.get_class() if m.material_override else "NONE"))
+
+func _dump_tree_recursive(node: Node, depth: int) -> void:
+	if depth > 5:
+		return
+	var indent = ""
+	for i in range(depth):
+		indent += "  "
+	var vis_str = ""
+	if node is CanvasItem:
+		vis_str = " (vis=" + str(node.visible) + ")"
+	elif node is Node3D:
+		vis_str = " (vis=" + str(node.visible) + " pos=" + str(node.position) + ")"
+	print("[CHROMA TREE] ", indent, node.name, " [", node.get_class(), "]", vis_str)
+	for child in node.get_children():
+		_dump_tree_recursive(child, depth + 1)
 
 func _gather_debug_meshes(node: Node, result: Array[MeshInstance3D]) -> void:
 	if node is MeshInstance3D:

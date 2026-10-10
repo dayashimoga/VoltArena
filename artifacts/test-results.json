@@ -2,7 +2,7 @@
   "coverage_percent": 90.567612687813,
   "coverage_tested_functions": 1085,
   "coverage_total_functions": 1198,
-  "execution_seconds": 113.226,
+  "execution_seconds": 92.12,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -222,7 +222,7 @@
     },
     "Multi-Game Overhaul & Screenshot Defect Gates": {
       "failed": 0,
-      "passed": 53,
+      "passed": 43,
       "status": "PASS"
     },
     "Nitro Kick E2E": {
@@ -406,8 +406,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-10-09T13:37:40",
+  "timestamp": "2026-10-10T03:02:55",
   "total_failed": 0,
-  "total_passed": 3051,
+  "total_passed": 3041,
   "total_suites": 80
 }

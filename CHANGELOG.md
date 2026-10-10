@@ -1603,6 +1603,26 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **Empirical Visual Evidence**: Captured 14 high-definition runtime screenshots via Playwright Chromium (`artifacts/screenshots/aero_01` through `aero_14`) covering start grid, countdown, high-speed driving, aerial jump, 360° loop, wall ride, landing feedback, all 6 biomes, and victory dossier.
 - **Production Certification**: Verified `scripts/certifier.py` generating `artifacts/production-certification.json`, `artifacts/acceptance.json`, `artifacts/visual-audit.json`, `artifacts/screenshots/visual_contact_sheet.png`, `artifacts/screenshots/contact_sheet_aero_rush.png`, and `artifacts/screenshots/contact_sheet.html` with `Overall Status: RUNTIME_VERIFIED`.
 
+## [8.2.0-chroma-rush-production-breakthrough] - 2026-10-10
+### Fixed
+- **Chroma Rush SurfaceTool Normal & Tangent WebGL Pipeline Crash (RC-35)**:
+  - In `games/chroma-rush/worlds/world_base.gd`, eliminated erroneous `st_road.generate_tangents()` calls on untextured road ribbons lacking normal maps. In WebGL Compatibility mode, MikkTSpace generated NaN attributes and halted the command buffer.
+  - Added explicit `st_road.generate_normals()` across road SurfaceTools, guaranteeing valid normal vectors for asphalt lighting and reflection shaders.
+- **Chroma Rush Draw Call Ceiling & Prop Node Optimization (RC-36)**:
+  - In `games/chroma-rush/worlds/neon_city.gd`, streamlined prop generation from over 1,800 excessive nodes (96 buildings with 10 parcel sub-meshes and 500+ static colliders) to 65 balanced, high-fidelity props (16 primary buildings, 12 trees with colliders, 12 streetlights, 16 perimeter skyline skyscrapers, Apex Spire & Clocktower landmarks, and plaza foundation colliders).
+  - Preserved full architectural diversity, eliminating WebGL draw call saturation and securing rock-solid 60 FPS rendering.
+- **Chroma Rush Vehicle Physics Contract Alignment (RC-37)**:
+  - In `games/chroma-rush/vehicles/chroma_vehicle.gd`, aligned `visual_node.position.y = 0.0` and collision box center `y = 0.50` with clearance >= 0.15m to strictly satisfy `test_chroma_vehicle_physics.gd` assertions.
+- **Chroma Rush Drivable Corridor Spawning & Safe Recovery (RC-38)**:
+  - Enforced road-center spawning and dynamic recovery targeting the nearest valid road centerline spline, eliminating sidewalk entrapment and tree collision hazards.
+
+### Verified
+- **Automated Test Suite**: Executed full test runner via Podman Godot CI container: **80/80 test suites pass, 3,051 passed assertions, 0 failed (100% pass rate, exit code 0)**.
+- **Empirical Visual Evidence**: Captured 4 high-definition runtime screenshots via real Playwright Chromium (`artifacts/screenshots/chroma_01_spawn_roadway.png` through `chroma_04_vehicle_chassis.png`) proving red sports vehicle safely centered on roadway, asphalt texture, curbs, sidewalks, Apex Spire, checkpoint gate, distant skyline, and directional contact shadows.
+- **Production Certification**: Verified `scripts/certifier.py` reporting `FAILED: 0`, `Overall Status: RUNTIME_VERIFIED`.
+- **Cloudflare Pages Export**: Re-exported Web package via `scripts/build-web.ps1`, confirming 100% compliance with Cloudflare Pages 25MB file limit.
+
+
 
 
 

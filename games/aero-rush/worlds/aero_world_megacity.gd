@@ -170,22 +170,22 @@ func _build_flanking_skyscrapers() -> void:
 		"res://assets/models/environment/building_comm_f.glb"
 	]
 
-	# Realistic boulevard towers flanking track (proportional scale: 2.5x to 3.8x uniform scale)
+	# Realistic boulevard towers flanking track (proportional scale: 7.5x to 11.5x uniform scale)
 	var tower_coords = [
-		# West side city blocks
-		Vector3(-55.0, -6.5, -70.0), Vector3(-68.0, -6.5, -15.0),
-		Vector3(-58.0, -6.5, 45.0), Vector3(-75.0, -6.5, 110.0),
+		# West side city blocks (setback >= 65m ensures zero track penetration)
+		Vector3(-68.0, -6.5, -70.0), Vector3(-78.0, -6.5, -15.0),
+		Vector3(-68.0, -6.5, 45.0), Vector3(-85.0, -6.5, 110.0),
 		Vector3(-95.0, -6.5, -150.0), Vector3(-110.0, -6.5, -230.0),
 		Vector3(-75.0, -6.5, -310.0), Vector3(-120.0, -6.5, 30.0),
-		Vector3(-60.0, -6.5, -190.0), Vector3(-85.0, -6.5, -270.0),
-		Vector3(-105.0, -6.5, -360.0), Vector3(-65.0, -6.5, -410.0),
+		Vector3(-68.0, -6.5, -190.0), Vector3(-85.0, -6.5, -270.0),
+		Vector3(-105.0, -6.5, -360.0), Vector3(-75.0, -6.5, -410.0),
 		Vector3(-135.0, -6.5, -90.0), Vector3(-140.0, -6.5, -200.0),
-		# East side city blocks
-		Vector3(55.0, -6.5, -70.0), Vector3(68.0, -6.5, -15.0),
-		Vector3(58.0, -6.5, 45.0), Vector3(75.0, -6.5, 110.0),
+		# East side city blocks (setback >= 65m)
+		Vector3(68.0, -6.5, -70.0), Vector3(78.0, -6.5, -15.0),
+		Vector3(68.0, -6.5, 45.0), Vector3(85.0, -6.5, 110.0),
 		Vector3(95.0, -6.5, -150.0), Vector3(110.0, -6.5, -230.0),
 		Vector3(75.0, -6.5, -310.0), Vector3(120.0, -6.5, 30.0),
-		Vector3(60.0, -6.5, -190.0), Vector3(135.0, -6.5, -270.0),
+		Vector3(68.0, -6.5, -190.0), Vector3(135.0, -6.5, -270.0),
 		Vector3(145.0, -6.5, -360.0), Vector3(85.0, -6.5, -430.0),
 		Vector3(135.0, -6.5, -90.0), Vector3(150.0, -6.5, -200.0)
 	]
@@ -193,24 +193,24 @@ func _build_flanking_skyscrapers() -> void:
 	for i in range(tower_coords.size()):
 		var pos = tower_coords[i]
 		var model = skyscraper_models[i % skyscraper_models.size()]
-		var uniform_scale = randf_range(26.0, 45.0)
-		# Proportional scaling produces authentic 75m - 130m skyscraper heights
+		var uniform_scale = randf_range(8.0, 12.0)
+		# Proportional scaling produces authentic 60m - 90m skyscraper heights with clean clearance
 		spawn_building(model, pos, float((i * 90) % 360), Vector3(uniform_scale, uniform_scale, uniform_scale))
 
-	# Secondary Commercial Plazas and Mid-Tier Complexes
+	# Secondary Commercial Plazas and Mid-Tier Complexes (Proportional 3.2x - 4.8x scale)
 	var comm_coords = [
 		Vector3(-90.0, -6.5, -60.0), Vector3(90.0, -6.5, -60.0),
 		Vector3(-105.0, -6.5, 80.0), Vector3(105.0, -6.5, 80.0),
-		Vector3(-45.0, -6.5, -220.0), Vector3(45.0, -6.5, -220.0),
+		Vector3(-60.0, -6.5, -220.0), Vector3(60.0, -6.5, -220.0),
 		Vector3(-80.0, -6.5, -280.0), Vector3(80.0, -6.5, -280.0),
-		Vector3(-45.0, -6.5, -350.0), Vector3(45.0, -6.5, -350.0),
-		Vector3(-35.0, -6.5, -120.0), Vector3(35.0, -6.5, -120.0),
+		Vector3(-62.0, -6.5, -350.0), Vector3(62.0, -6.5, -350.0),
+		Vector3(-58.0, -6.5, -120.0), Vector3(58.0, -6.5, -120.0),
 		Vector3(-115.0, -6.5, -20.0), Vector3(115.0, -6.5, -20.0)
 	]
 	for j in range(comm_coords.size()):
 		var c_pos = comm_coords[j]
 		var c_model = comm_models[j % comm_models.size()]
-		var c_scale = randf_range(16.0, 26.0)
+		var c_scale = randf_range(3.2, 4.8)
 		spawn_building(c_model, c_pos, float((j * 90) % 360), Vector3(c_scale, c_scale, c_scale))
 
 func _build_overhead_skybridges() -> void:

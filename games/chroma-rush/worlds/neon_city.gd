@@ -32,11 +32,17 @@ uniform float window_roughness : hint_range(0.0, 1.0) = 0.08;
 void fragment() {
 	vec4 tex = texture(albedo_texture, UV);
 
-	bool is_window = (tex.r < 0.14 && tex.g < 0.14 && tex.b < 0.14);
+	bool is_window = (tex.a > 0.5 && tex.r < 0.18 && tex.g < 0.18 && tex.b < 0.18 && length(tex.rgb) > 0.04);
 	bool is_teal_base = (tex.g > 0.48 && tex.r < 0.42);
 	bool is_orange_band = (tex.r > 0.88 && tex.g < 0.66 && tex.b < 0.45);
 
-	if (is_window) {
+	if (tex.a < 0.1 || length(tex.rgb) < 0.04) {
+		// Missing texture fallback: use vibrant primary wall color directly
+		ALBEDO = color_wall_primary.rgb;
+		METALLIC = wall_metallic;
+		ROUGHNESS = wall_roughness;
+	} else if (is_window) {
+
 		ALBEDO = color_window.rgb;
 		METALLIC = window_metallic;
 		ROUGHNESS = window_roughness;
@@ -62,12 +68,12 @@ void fragment() {
 const ARCHITECTURAL_THEMES = [
 	# 0. Modern Sapphire Glass Tower (Reflective deep blue curtain wall)
 	{
-		"wall_primary": Color(0.12, 0.22, 0.36),
-		"wall_secondary": Color(0.68, 0.72, 0.76),
-		"window": Color(0.06, 0.14, 0.26),
-		"trim": Color(0.85, 0.88, 0.92),
-		"wall_metallic": 0.85,
-		"wall_roughness": 0.10,
+		"wall_primary": Color(0.28, 0.50, 0.75),
+		"wall_secondary": Color(0.78, 0.82, 0.86),
+		"window": Color(0.12, 0.28, 0.48),
+		"trim": Color(0.90, 0.93, 0.96),
+		"wall_metallic": 0.65,
+		"wall_roughness": 0.20,
 		"window_metallic": 0.90,
 		"window_roughness": 0.05,
 		"window_clearcoat": 1.0,
@@ -75,25 +81,25 @@ const ARCHITECTURAL_THEMES = [
 	},
 	# 1. Warm Limestone & Dark Bronze Executive Center
 	{
-		"wall_primary": Color(0.82, 0.78, 0.72),
-		"wall_secondary": Color(0.28, 0.26, 0.24),
-		"window": Color(0.14, 0.13, 0.11),
-		"trim": Color(0.42, 0.34, 0.24),
+		"wall_primary": Color(0.88, 0.85, 0.80),
+		"wall_secondary": Color(0.35, 0.32, 0.28),
+		"window": Color(0.20, 0.18, 0.16),
+		"trim": Color(0.55, 0.45, 0.32),
 		"wall_metallic": 0.02,
-		"wall_roughness": 0.88,
+		"wall_roughness": 0.85,
 		"window_metallic": 0.75,
 		"window_roughness": 0.12,
 		"window_clearcoat": 0.8,
 		"name": "limestone_bronze"
 	},
-	# 2. Obsidian Tech Tower (Matte charcoal composite with cyan polarized glazing)
+	# 2. Obsidian Tech Tower (Sleek slate composite with vibrant cyan trim)
 	{
-		"wall_primary": Color(0.18, 0.20, 0.22),
-		"wall_secondary": Color(0.12, 0.13, 0.14),
-		"window": Color(0.10, 0.32, 0.40),
-		"trim": Color(0.24, 0.55, 0.65),
-		"wall_metallic": 0.45,
-		"wall_roughness": 0.42,
+		"wall_primary": Color(0.35, 0.38, 0.42),
+		"wall_secondary": Color(0.22, 0.24, 0.26),
+		"window": Color(0.15, 0.45, 0.55),
+		"trim": Color(0.20, 0.85, 0.95),
+		"wall_metallic": 0.40,
+		"wall_roughness": 0.45,
 		"window_metallic": 0.88,
 		"window_roughness": 0.08,
 		"window_clearcoat": 0.9,
@@ -101,12 +107,12 @@ const ARCHITECTURAL_THEMES = [
 	},
 	# 3. Emerald Eco-Terrace Tower (Crisp Scandinavian White Stone & Cedar Wood)
 	{
-		"wall_primary": Color(0.92, 0.93, 0.92),
-		"wall_secondary": Color(0.48, 0.32, 0.20),
-		"window": Color(0.12, 0.24, 0.16),
-		"trim": Color(0.22, 0.45, 0.28),
+		"wall_primary": Color(0.94, 0.95, 0.94),
+		"wall_secondary": Color(0.55, 0.38, 0.24),
+		"window": Color(0.15, 0.35, 0.22),
+		"trim": Color(0.28, 0.60, 0.36),
 		"wall_metallic": 0.05,
-		"wall_roughness": 0.75,
+		"wall_roughness": 0.72,
 		"window_metallic": 0.65,
 		"window_roughness": 0.15,
 		"window_clearcoat": 0.7,
@@ -114,31 +120,32 @@ const ARCHITECTURAL_THEMES = [
 	},
 	# 4. Terracotta & Patina Copper Metro Tower
 	{
-		"wall_primary": Color(0.68, 0.34, 0.22),
-		"wall_secondary": Color(0.32, 0.20, 0.14),
-		"window": Color(0.16, 0.15, 0.12),
-		"trim": Color(0.35, 0.52, 0.44),
+		"wall_primary": Color(0.75, 0.42, 0.28),
+		"wall_secondary": Color(0.38, 0.24, 0.18),
+		"window": Color(0.22, 0.20, 0.16),
+		"trim": Color(0.40, 0.65, 0.55),
 		"wall_metallic": 0.15,
-		"wall_roughness": 0.92,
+		"wall_roughness": 0.88,
 		"window_metallic": 0.60,
 		"window_roughness": 0.18,
 		"window_clearcoat": 0.6,
 		"name": "terracotta_copper"
 	},
-	# 5. Titanium Modernist High-Rise (Brushed aerospace metal & smoked glass)
+	# 5. Titanium Modernist High-Rise (Brushed aerospace metal & glass)
 	{
-		"wall_primary": Color(0.62, 0.65, 0.68),
-		"wall_secondary": Color(0.25, 0.28, 0.32),
-		"window": Color(0.07, 0.08, 0.10),
-		"trim": Color(0.80, 0.84, 0.88),
+		"wall_primary": Color(0.75, 0.78, 0.82),
+		"wall_secondary": Color(0.32, 0.36, 0.40),
+		"window": Color(0.12, 0.15, 0.20),
+		"trim": Color(0.90, 0.93, 0.96),
 		"wall_metallic": 0.85,
-		"wall_roughness": 0.32,
+		"wall_roughness": 0.30,
 		"window_metallic": 0.80,
 		"window_roughness": 0.10,
 		"window_clearcoat": 0.85,
 		"name": "titanium_modernist"
 	}
 ]
+
 
 static var _cached_building_shader: Shader = null
 
@@ -202,7 +209,7 @@ func generate_waypoints() -> void:
 	var p1 = waypoints[1]
 	var fwd = (p1 - p0).normalized()
 	player_spawn_transform = Transform3D().looking_at(fwd, Vector3.UP)
-	player_spawn_transform.origin = p0 + Vector3(0.0, 0.05, 0.0)
+	player_spawn_transform.origin = p0 + Vector3(0.0, 0.20, 0.0)
 
 	# Dynamic traffic spawners distributed across all 6 districts
 	traffic_spawn_data = [
@@ -254,16 +261,16 @@ func build_checkpoints() -> void:
 		gates_container.add_child(gate)
 		checkpoints.append(gate)
 
-func _is_clear_of_spline(pt: Vector3, min_clearance: float, ignore_s_idx: int = -1, ignore_window: int = 6) -> bool:
+func _is_clear_of_spline(pt: Vector3, min_clearance: float, ignore_s_idx: int = -1, ignore_window: int = 0) -> bool:
 	var pt_2d = Vector2(pt.x, pt.z)
 	var pts_to_check = spline_samples if not spline_samples.is_empty() else waypoints
 	var n_s = pts_to_check.size()
 	if n_s < 2:
 		return true
 	for i in range(n_s):
-		if ignore_s_idx >= 0 and not spline_samples.is_empty():
-			var diff = abs(i - ignore_s_idx)
-			var cyclic_diff = min(diff, n_s - diff)
+		if ignore_s_idx >= 0 and ignore_window > 0:
+			var diff = absi(i - ignore_s_idx)
+			var cyclic_diff = mini(diff, n_s - diff)
 			if cyclic_diff <= ignore_window:
 				continue
 		var s1 = pts_to_check[i]
@@ -310,8 +317,8 @@ func build_props() -> void:
 	if n_spline < 10:
 		return
 
-	# 1. Primary Street-Facing City Blocks (Positioned at safe setback >= 24.5m with complete block parcels)
-	var building_interval = 4 # every ~24m along spline for dense, continuous urban fabric
+	# 1. Primary Street-Facing City Blocks (Optimized intervals, 16 iconic buildings flanking boulevard)
+	var building_interval = 12
 	for s_idx in range(0, n_spline, building_interval):
 		var p_curr = spline_samples[s_idx]
 		var p_next = spline_samples[(s_idx + 1) % n_spline]
@@ -325,34 +332,31 @@ func build_props() -> void:
 		var rot_y = rad_to_deg(atan2(-tangent.x, -tangent.z))
 
 		var wp_nearest = get_nearest_waypoint_index(p_curr)
+		var side = -1.0 if ((s_idx / building_interval) % 2 == 0) else 1.0
+		var setback = 28.0 + float((s_idx) % 3) * 2.0
+		var b_pos = p_curr + right * (side * setback)
+		b_pos.y = p_curr.y
 
-		for side in [-1.0, 1.0]:
-			var setback = 27.5 + float((s_idx + int(side > 0)) % 3) * 3.0
-			var b_pos = p_curr + right * (side * setback)
-			b_pos.y = p_curr.y
+		if not _is_clear_of_spline(b_pos, 16.0, s_idx, 6):
+			continue
 
-			# Enforce strict geometric clearance across the spline network (>= 15.0m ensures buildings never intrude onto road or sidewalk curb)
-			if not _is_clear_of_spline(b_pos, 15.0, s_idx, 6):
-				continue
-
-			var theme_idx = (s_idx * 3 + int(side > 0) * 2 + wp_nearest) % ARCHITECTURAL_THEMES.size()
-			var side_str = "Left" if side < 0 else "Right"
-			var b_node = _create_district_building(wp_nearest, s_idx, skyscraper_paths, commercial_paths, residential_paths, theme_idx, side_str)
+		var theme_idx = (s_idx * 3 + wp_nearest) % ARCHITECTURAL_THEMES.size()
+		var side_str = "Left" if side < 0 else "Right"
+		var b_node = _create_district_building(wp_nearest, s_idx, skyscraper_paths, commercial_paths, residential_paths, theme_idx, side_str)
+		if b_node:
 			b_node.position = b_pos
 			b_node.rotation_degrees.y = rot_y + (90.0 if side < 0 else -90.0)
 			props_container.add_child(b_node)
 
-			# Contiguous urban block parcel connecting road sidewalk to building with esplanade, plinth, verge & parking
-			_build_urban_block_parcel(p_curr, right * side, setback, b_pos, b_node.rotation_degrees.y, wp_nearest, s_idx)
+		var plaza = _build_urban_plaza_foundation_node(b_pos, rot_y)
+		props_container.add_child(plaza)
 
-	# 2. Organic Branching Trees & Street Amenities (Positioned at lateral offset ±12.5m on verge/plaza)
-	var tree_interval = 4 # every ~24m along spline
+	# 2. Organic Branching Trees along sidewalks
+	var tree_interval = 16
 	for s_idx in range(0, n_spline, tree_interval):
 		var p_curr = spline_samples[s_idx]
-		# Only plant trees on ground level roads (avoid skyway elevated sections y > 2.0)
 		if p_curr.y > 2.0:
 			continue
-
 		var p_next = spline_samples[(s_idx + 1) % n_spline]
 		var p_prev = spline_samples[(s_idx - 1 + n_spline) % n_spline]
 		var tangent = (p_next - p_prev).normalized()
@@ -361,68 +365,20 @@ func build_props() -> void:
 			tangent = Vector3.FORWARD
 		tangent = tangent.normalized()
 		var right = tangent.cross(Vector3.UP).normalized()
-		var rot_y = rad_to_deg(atan2(-tangent.x, -tangent.z))
 
 		var wp_nearest = get_nearest_waypoint_index(p_curr)
 		var species = _get_district_tree_species(wp_nearest)
+		var t_side = 1.0 if ((s_idx / tree_interval) % 2 == 0) else -1.0
+		var pos_t = p_curr + right * (t_side * 15.0)
+		if _is_clear_of_spline(pos_t, 12.0):
+			var tree = _build_realistic_tree(species, 6.0, s_idx * 17)
+			tree.position = pos_t
+			tree.position.y = p_curr.y
+			props_container.add_child(tree)
 
-		if s_idx % 8 == 0:
-			# Left Tree at safe plaza setback -14.5m
-			var pos_l = p_curr - right * 14.5
-			if _is_clear_of_spline(pos_l, 11.5):
-				var tree_l = _build_realistic_tree(species, 6.5 + float(s_idx % 3) * 0.8, s_idx * 17)
-				tree_l.position = pos_l
-				tree_l.position.y = p_curr.y
-				props_container.add_child(tree_l)
-
-			# Right Tree at safe plaza setback +14.5m
-			var pos_r = p_curr + right * 14.5
-			if _is_clear_of_spline(pos_r, 11.5):
-				var tree_r = _build_realistic_tree(species, 6.2 + float((s_idx + 1) % 3) * 0.8, s_idx * 23)
-				tree_r.position = pos_r
-				tree_r.position.y = p_curr.y
-				props_container.add_child(tree_r)
-
-		elif s_idx % 16 == 8:
-			# Modern Bus Stop Shelter on pedestrian sidewalk verge at -14.0m
-			var shelter_pos = p_curr - right * 14.0
-			if _is_clear_of_spline(shelter_pos, 11.0):
-				var shelter = _build_bus_stop_shelter()
-				shelter.position = shelter_pos
-				shelter.position.y = p_curr.y
-				shelter.rotation_degrees.y = rot_y + 90.0
-				props_container.add_child(shelter)
-
-		elif s_idx % 8 == 2:
-			# Modern Fire Hydrant on sidewalk verge at -13.5m
-			var hydrant_pos = p_curr - right * 13.5
-			if _is_clear_of_spline(hydrant_pos, 10.5):
-				var hydrant = _build_fire_hydrant()
-				hydrant.position = hydrant_pos
-				hydrant.position.y = p_curr.y
-				props_container.add_child(hydrant)
-
-			# Street Trash Receptacle at +13.5m
-			var bin_pos = p_curr + right * 13.5
-			if _is_clear_of_spline(bin_pos, 10.5):
-				var bin = _build_trash_bin()
-				bin.position = bin_pos
-				bin.position.y = p_curr.y
-				props_container.add_child(bin)
-
-		elif s_idx % 8 == 4:
-			# Modern street benches safely placed at ±13.8m
-			var bench_pos = p_curr - right * 13.8
-			if _is_clear_of_spline(bench_pos, 10.8):
-				var bench = _build_street_bench()
-				bench.position = bench_pos
-				bench.position.y = p_curr.y + 0.10
-				bench.rotation_degrees.y = rot_y + 90.0
-				props_container.add_child(bench)
-
-	# 3. Modern Street Light Posts (Positioned via Spline Frenet frame at strictly ±10.8m with arm extending inward)
-	var lamp_interval = 5 # every ~30m along spline
-	for s_idx in range(0, n_spline, lamp_interval):
+	# 3. Modern Street Light Posts
+	var lamp_interval = 16
+	for s_idx in range(8, n_spline, lamp_interval):
 		var p_curr = spline_samples[s_idx]
 		var p_next = spline_samples[(s_idx + 1) % n_spline]
 		var p_prev = spline_samples[(s_idx - 1 + n_spline) % n_spline]
@@ -434,24 +390,18 @@ func build_props() -> void:
 		var right = tangent.cross(Vector3.UP).normalized()
 		var rot_y = rad_to_deg(atan2(-tangent.x, -tangent.z))
 
-		for side in [-1.0, 1.0]:
-			var lamp_pos = p_curr + right * (side * 13.8) + Vector3(0.0, 0.1, 0.0)
-			# Strictly ensure pole base clears all road splines by >= 11.5m (safely on pedestrian plaza verge)
-			if not _is_clear_of_spline(lamp_pos, 11.5):
-				continue
-
+		var l_side = -1.0 if ((s_idx / lamp_interval) % 2 == 0) else 1.0
+		var lamp_pos = p_curr + right * (l_side * 13.5)
+		if _is_clear_of_spline(lamp_pos, 11.5):
 			var lamp = _build_procedural_streetlight()
 			lamp.position = lamp_pos
-			lamp.rotation_degrees.y = rot_y + (90.0 if side > 0 else -90.0)
+			lamp.rotation_degrees.y = rot_y + (90.0 if l_side > 0 else -90.0)
 			props_container.add_child(lamp)
 
-	# 4. Deep Secondary City Blocks & Courtyards
-	_build_secondary_city_blocks()
-
-	# 5. Iconic Navigation Landmarks
+	# 4. Iconic Navigation Landmarks
 	_build_city_landmarks()
 
-	# 6. 360-Degree Distant City Skyline Ring (MultiMesh GPU Instanced)
+	# 5. 360-Degree Distant City Skyline Ring
 	_build_distant_skyline_backdrop()
 
 func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: Array, residentials: Array, theme_idx: int, side_name: String) -> Node3D:
@@ -756,167 +706,31 @@ func _build_city_landmarks() -> void:
 		props_container.add_child(clocktower)
 
 func _build_distant_skyline_backdrop() -> void:
-	# Multi-Mesh Hybrid Architectural Skyline: 6 distinct silhouettes across layered urban clusters
-	var meshes = [
-		_create_stepped_skyline_mesh(),
-		_create_spire_landmark_mesh(),
-		_create_angled_blade_mesh(),
-		_create_twin_obelisk_mesh(),
-		_create_hex_tower_mesh(),
-		_create_pylon_gantry_mesh()
+	# 360-degree monumental skyline silhouette instanced from real skyscraper models
+	var skyscraper_models = [
+		"res://assets/models/environment/building_skyscraper_a.glb",
+		"res://assets/models/environment/building_skyscraper_b.glb",
+		"res://assets/models/environment/building_skyscraper_c.glb",
+		"res://assets/models/environment/building_skyscraper_d.glb",
+		"res://assets/models/environment/building_skyscraper_e.glb"
 	]
+	var tower_count = 24
+	var radius = 460.0
 
-	var palette_materials: Array[StandardMaterial3D] = []
-	var theme_colors = [
-		{"albedo": Color(0.16, 0.24, 0.35), "emit": Color(0.08, 0.16, 0.28), "metal": 0.45, "rough": 0.45}, # Sapphire
-		{"albedo": Color(0.32, 0.28, 0.24), "emit": Color(0.20, 0.16, 0.12), "metal": 0.25, "rough": 0.65}, # Amber Bronze
-		{"albedo": Color(0.18, 0.20, 0.22), "emit": Color(0.06, 0.22, 0.28), "metal": 0.40, "rough": 0.50}, # Obsidian Cyan
-		{"albedo": Color(0.24, 0.26, 0.30), "emit": Color(0.12, 0.14, 0.18), "metal": 0.35, "rough": 0.55}  # Chrome Titanium
-	]
-
-	for tc in theme_colors:
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = tc["albedo"]
-		mat.metallic = tc["metal"]
-		mat.roughness = tc["rough"]
-		mat.emission_enabled = true
-		mat.emission = tc["emit"]
-		mat.emission_energy_multiplier = 1.4
-		mat.vertex_color_use_as_albedo = true
-		palette_materials.append(mat)
-
-	var towers_per_silhouette = 24
-	for m_idx in range(meshes.size()):
-		var multimesh = MultiMesh.new()
-		multimesh.transform_format = MultiMesh.TRANSFORM_3D
-		multimesh.use_colors = true
-		multimesh.mesh = meshes[m_idx]
-		multimesh.instance_count = towers_per_silhouette
-
-		for t in range(towers_per_silhouette):
-			# Clustered urban distribution around perimeter vistas
-			var ring_layer = t % 3
-			var base_radius = 460.0 + float(ring_layer) * 90.0
-			var angle = (float(t * meshes.size() + m_idx) / float(towers_per_silhouette * meshes.size())) * TAU
-			var dist = base_radius + float((t * 11) % 7) * 20.0
-			var tx = cos(angle) * dist
-			var tz = sin(angle) * dist
-			var scale_y = 0.75 + float((t * 5 + m_idx * 3) % 11) * 0.10
-
-			var xf = Transform3D()
-			xf = xf.scaled(Vector3(1.0 + float(t % 3) * 0.20, scale_y, 1.0 + float((t + 1) % 3) * 0.20))
-			xf.origin = Vector3(tx, 0.0, tz)
-			multimesh.set_instance_transform(t, xf)
-
-			var shade = 0.80 + float(t % 5) * 0.10
-			multimesh.set_instance_color(t, Color(shade, shade, shade, 1.0))
-
-		var mm_inst = MultiMeshInstance3D.new()
-		mm_inst.name = "DistantSkylineMultiMesh_%d" % m_idx
-		mm_inst.multimesh = multimesh
-		mm_inst.material_override = palette_materials[m_idx % palette_materials.size()]
-		props_container.add_child(mm_inst)
-
-static func _create_stepped_skyline_mesh() -> ArrayMesh:
-	var st = SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	_add_box_to_st(st, Vector3(36.0, 24.0, 36.0), Vector3(0.0, 12.0, 0.0))
-	_add_box_to_st(st, Vector3(26.0, 60.0, 26.0), Vector3(0.0, 54.0, 0.0))
-	_add_box_to_st(st, Vector3(16.0, 26.0, 16.0), Vector3(0.0, 97.0, 0.0))
-	_add_box_to_st(st, Vector3(2.4, 28.0, 2.4), Vector3(0.0, 124.0, 0.0))
-	return st.commit()
-
-static func _create_spire_landmark_mesh() -> ArrayMesh:
-	var st = SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	# Tapered monolithic high-rise with cathedral spire needle
-	_add_box_to_st(st, Vector3(40.0, 32.0, 40.0), Vector3(0.0, 16.0, 0.0))
-	_add_box_to_st(st, Vector3(30.0, 75.0, 30.0), Vector3(0.0, 69.5, 0.0))
-	_add_box_to_st(st, Vector3(18.0, 42.0, 18.0), Vector3(0.0, 128.0, 0.0))
-	_add_box_to_st(st, Vector3(8.0, 24.0, 8.0), Vector3(0.0, 161.0, 0.0))
-	_add_box_to_st(st, Vector3(1.8, 38.0, 1.8), Vector3(0.0, 192.0, 0.0))
-	return st.commit()
-
-static func _create_angled_blade_mesh() -> ArrayMesh:
-	var st = SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	# Slender angular skyscraper with stepped chamfered fin
-	_add_box_to_st(st, Vector3(32.0, 20.0, 48.0), Vector3(0.0, 10.0, 0.0))
-	_add_box_to_st(st, Vector3(22.0, 70.0, 38.0), Vector3(0.0, 55.0, 0.0))
-	_add_box_to_st(st, Vector3(14.0, 50.0, 26.0), Vector3(0.0, 115.0, 0.0))
-	_add_box_to_st(st, Vector3(6.0, 30.0, 14.0), Vector3(0.0, 155.0, 0.0))
-	return st.commit()
-
-static func _create_twin_obelisk_mesh() -> ArrayMesh:
-	var st = SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	# Dual towers with central sky-bridge connector
-	_add_box_to_st(st, Vector3(56.0, 16.0, 32.0), Vector3(0.0, 8.0, 0.0))
-	_add_box_to_st(st, Vector3(20.0, 95.0, 24.0), Vector3(-16.0, 63.5, 0.0))
-	_add_box_to_st(st, Vector3(20.0, 95.0, 24.0), Vector3(16.0, 63.5, 0.0))
-	# Sky-Bridge at 65m
-	_add_box_to_st(st, Vector3(16.0, 8.0, 16.0), Vector3(0.0, 68.0, 0.0))
-	# Sky-Bridge at 95m
-	_add_box_to_st(st, Vector3(16.0, 6.0, 14.0), Vector3(0.0, 98.0, 0.0))
-	return st.commit()
-
-static func _create_hex_tower_mesh() -> ArrayMesh:
-	var st = SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	# Octagonal / stepped faceted commercial tower with crown observation disc
-	_add_box_to_st(st, Vector3(36.0, 28.0, 36.0), Vector3(0.0, 14.0, 0.0))
-	_add_box_to_st(st, Vector3(28.0, 80.0, 28.0), Vector3(0.0, 68.0, 0.0))
-	# Observation disc
-	_add_box_to_st(st, Vector3(38.0, 8.0, 38.0), Vector3(0.0, 112.0, 0.0))
-	_add_box_to_st(st, Vector3(18.0, 18.0, 18.0), Vector3(0.0, 125.0, 0.0))
-	_add_box_to_st(st, Vector3(2.0, 25.0, 2.0), Vector3(0.0, 146.5, 0.0))
-	return st.commit()
-
-static func _create_pylon_gantry_mesh() -> ArrayMesh:
-	var st = SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	# Industrial logistics infrastructure tower with heavy gantries
-	_add_box_to_st(st, Vector3(30.0, 18.0, 30.0), Vector3(0.0, 9.0, 0.0))
-	_add_box_to_st(st, Vector3(14.0, 65.0, 14.0), Vector3(0.0, 50.5, 0.0))
-	_add_box_to_st(st, Vector3(36.0, 6.0, 8.0), Vector3(0.0, 58.0, 0.0))
-	_add_box_to_st(st, Vector3(8.0, 6.0, 36.0), Vector3(0.0, 72.0, 0.0))
-	_add_box_to_st(st, Vector3(4.0, 22.0, 4.0), Vector3(0.0, 94.0, 0.0))
-	return st.commit()
-
-static func _add_box_to_st(st: SurfaceTool, size: Vector3, center: Vector3) -> void:
-	var h = size * 0.5
-	var v0 = center + Vector3(-h.x, -h.y, -h.z)
-	var v1 = center + Vector3( h.x, -h.y, -h.z)
-	var v2 = center + Vector3( h.x,  h.y, -h.z)
-	var v3 = center + Vector3(-h.x,  h.y, -h.z)
-	var v4 = center + Vector3(-h.x, -h.y,  h.z)
-	var v5 = center + Vector3( h.x, -h.y,  h.z)
-	var v6 = center + Vector3( h.x,  h.y,  h.z)
-	var v7 = center + Vector3(-h.x,  h.y,  h.z)
-
-	_add_quad_to_st(st, v0, v1, v2, v3, Vector3.BACK)
-	_add_quad_to_st(st, v5, v4, v7, v6, Vector3.FORWARD)
-	_add_quad_to_st(st, v4, v0, v3, v7, Vector3.LEFT)
-	_add_quad_to_st(st, v1, v5, v6, v2, Vector3.RIGHT)
-	_add_quad_to_st(st, v3, v2, v6, v7, Vector3.UP)
-	_add_quad_to_st(st, v4, v5, v1, v0, Vector3.DOWN)
-
-static func _add_quad_to_st(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, normal: Vector3) -> void:
-	st.set_normal(normal)
-	st.set_uv(Vector2(0, 0))
-	st.add_vertex(a)
-	st.set_uv(Vector2(1, 0))
-	st.add_vertex(b)
-	st.set_uv(Vector2(1, 1))
-	st.add_vertex(c)
-
-	st.set_normal(normal)
-	st.set_uv(Vector2(0, 0))
-	st.add_vertex(a)
-	st.set_uv(Vector2(1, 1))
-	st.add_vertex(c)
-	st.set_uv(Vector2(0, 1))
-	st.add_vertex(d)
+	for i in range(tower_count):
+		var angle = (float(i) / float(tower_count)) * TAU
+		var m_path = skyscraper_models[i % skyscraper_models.size()]
+		var dist = radius + float((i * 13) % 7) * 25.0
+		var pos = Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
+		var sc = 6.0 + float(i % 3) * 1.2
+		var rot_y = float((i * 45) % 360)
+		var b_glb = ModelCache.get_model(m_path)
+		if b_glb:
+			b_glb.scale = Vector3(sc, sc * 1.5, sc)
+			b_glb.position = pos
+			b_glb.rotation_degrees.y = rot_y
+			_style_building(b_glb, i % ARCHITECTURAL_THEMES.size())
+			props_container.add_child(b_glb)
 
 func _get_district_tree_species(wp_idx: int) -> String:
 	match wp_idx:
@@ -1089,37 +903,69 @@ func _build_parked_vehicle_prop() -> Node3D:
 	root.add_child(body_mi)
 	return root
 
+static var _cached_colormap_tex: Texture2D = null
+static var _cached_theme_materials: Dictionary = {}
+
+static func _get_theme_material(theme_idx: int) -> StandardMaterial3D:
+	var idx = theme_idx % ARCHITECTURAL_THEMES.size()
+	if _cached_theme_materials.has(idx):
+		return _cached_theme_materials[idx]
+	if not _cached_colormap_tex:
+		_cached_colormap_tex = load("res://assets/models/environment/Textures/colormap.png")
+	var theme = ARCHITECTURAL_THEMES[idx]
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = theme["wall_primary"]
+	mat.metallic = theme["wall_metallic"]
+	mat.roughness = theme["wall_roughness"]
+	if _cached_colormap_tex:
+		mat.albedo_texture = _cached_colormap_tex
+	_cached_theme_materials[idx] = mat
+	return mat
+
 func _style_building(building: Node3D, theme_idx: int) -> void:
 	if not building:
 		return
-	var theme = ARCHITECTURAL_THEMES[theme_idx % ARCHITECTURAL_THEMES.size()]
-	var shader = _get_architectural_shader()
-	var colormap_tex = load("res://assets/models/environment/Textures/colormap.png")
-
+	var mat = _get_theme_material(theme_idx)
 	var meshes: Array[MeshInstance3D] = []
 	_gather_meshes(building, meshes)
-
 	for mi in meshes:
-		var mat = ShaderMaterial.new()
-		mat.shader = shader
-		if colormap_tex:
-			mat.set_shader_parameter("albedo_texture", colormap_tex)
-		mat.set_shader_parameter("color_wall_primary", theme["wall_primary"])
-		mat.set_shader_parameter("color_wall_secondary", theme["wall_secondary"])
-		mat.set_shader_parameter("color_window", theme["window"])
-		mat.set_shader_parameter("color_trim", theme["trim"])
-		mat.set_shader_parameter("wall_metallic", theme["wall_metallic"])
-		mat.set_shader_parameter("wall_roughness", theme["wall_roughness"])
-		mat.set_shader_parameter("window_metallic", theme["window_metallic"])
-		mat.set_shader_parameter("window_roughness", theme["window_roughness"])
-		mat.set_shader_parameter("window_clearcoat", theme["window_clearcoat"])
 		mi.material_override = mat
+
 
 func _gather_meshes(node: Node, result: Array[MeshInstance3D]) -> void:
 	if node is MeshInstance3D:
 		result.append(node)
 	for child in node.get_children():
 		_gather_meshes(child, result)
+
+func _build_urban_plaza_foundation_node(b_pos: Vector3, b_rot_y: float) -> Node3D:
+	if not mat_sidewalk:
+		_init_materials()
+	var plaza = StaticBody3D.new()
+	plaza.name = "UrbanPlazaFoundation"
+	plaza.collision_layer = GameConstants.LAYER_WORLD
+	plaza.position = b_pos
+	plaza.rotation_degrees.y = b_rot_y
+
+	var plinth = MeshInstance3D.new()
+	plinth.name = "PlinthFoundation"
+	var plinth_box = BoxMesh.new()
+	plinth_box.size = Vector3(30.0, 0.22, 30.0)
+	plinth.mesh = plinth_box
+	var mat_plinth = StandardMaterial3D.new()
+	mat_plinth.albedo_color = Color(0.24, 0.26, 0.28)
+	mat_plinth.roughness = 0.82
+	plinth.material_override = mat_plinth
+	plinth.position = Vector3(0.0, 0.11, 0.0)
+	plaza.add_child(plinth)
+
+	var col = CollisionShape3D.new()
+	var col_box = BoxShape3D.new()
+	col_box.size = Vector3(30.0, 0.4, 30.0)
+	col.shape = col_box
+	col.position = Vector3(0.0, 0.0, 0.0)
+	plaza.add_child(col)
+	return plaza
 
 func _build_urban_block_parcel(p_curr: Vector3, right_dir: Vector3, setback: float, b_pos: Vector3, b_rot_y: float, wp_idx: int, seed_val: int) -> void:
 	if not mat_sidewalk or not mat_asphalt:
@@ -1142,29 +988,31 @@ func _build_urban_block_parcel(p_curr: Vector3, right_dir: Vector3, setback: flo
 	plinth.position = Vector3(0.0, 0.11, 0.0)
 	parcel_root.add_child(plinth)
 
-	# 2. Continuous Pedestrian Apron connecting road sidewalk to building front
-	var apron = MeshInstance3D.new()
-	apron.name = "SidewalkApron"
-	var apron_box = BoxMesh.new()
-	apron_box.size = Vector3(26.0, 0.14, 18.0)
-	apron.mesh = apron_box
-	apron.material_override = mat_sidewalk
-	apron.position = Vector3(0.0, 0.07, -18.0)
-	parcel_root.add_child(apron)
+	# 2. Pedestrian Plaza Promenade connecting building frontage to road sidewalk without crossing road edge
+	# Setback is 27.5m, plinth front is at 12.5m, road sidewalk outer edge is at 9.5m.
+	# Promenade size 5.0m centered at Z = -14.0m sits safely from 11.5m to 16.5m from road centerline.
+	var promenade = MeshInstance3D.new()
+	promenade.name = "SidewalkApron"
+	var prom_box = BoxMesh.new()
+	prom_box.size = Vector3(26.0, 0.12, 5.0)
+	promenade.mesh = prom_box
+	promenade.material_override = mat_sidewalk
+	promenade.position = Vector3(0.0, 0.06, -14.0)
+	parcel_root.add_child(promenade)
 
 	# 3. Manicured Green Verge & Landscaping along frontage
 	var verge_mi = MeshInstance3D.new()
 	var verge_box = BoxMesh.new()
-	verge_box.size = Vector3(24.0, 0.16, 2.8)
+	verge_box.size = Vector3(24.0, 0.16, 2.4)
 	verge_mi.mesh = verge_box
 	var mat_grass = StandardMaterial3D.new()
 	mat_grass.albedo_color = Color(0.18, 0.36, 0.16)
 	mat_grass.roughness = 0.95
 	verge_mi.material_override = mat_grass
-	verge_mi.position = Vector3(0.0, 0.08, -11.0)
+	verge_mi.position = Vector3(0.0, 0.08, -10.5)
 	parcel_root.add_child(verge_mi)
 
-	# 4. Modern Decorative Bollards along sidewalk curb
+	# 4. Modern Decorative Bollards along pedestrian promenade outer boundary (Z = -13.5, 14m from road centerline)
 	for bx in [-9.0, -4.5, 0.0, 4.5, 9.0]:
 		var bollard_mi = MeshInstance3D.new()
 		var b_cyl = CylinderMesh.new()
@@ -1177,7 +1025,7 @@ func _build_urban_block_parcel(p_curr: Vector3, right_dir: Vector3, setback: flo
 		mat_bollard.metallic = 0.88
 		mat_bollard.roughness = 0.22
 		bollard_mi.material_override = mat_bollard
-		bollard_mi.position = Vector3(bx, 0.35, -26.0)
+		bollard_mi.position = Vector3(bx, 0.35, -13.5)
 		parcel_root.add_child(bollard_mi)
 
 	# 5. Side Parking Stall with Parked Vehicle (alternate blocks)

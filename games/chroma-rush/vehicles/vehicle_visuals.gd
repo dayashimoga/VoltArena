@@ -38,23 +38,30 @@ uniform bool is_reversing = false;
 void fragment() {
 	vec4 tex = texture(albedo_texture, UV);
 
-	bool is_trim = (tex.r < 0.28 && tex.g < 0.28 && tex.b < 0.28);
-	bool is_glass = (tex.b > 0.65 && tex.g > 0.45 && tex.r < 0.55);
-	bool is_headlight = (tex.r > 0.88 && tex.g > 0.88 && tex.b > 0.88);
+	bool is_trim = (tex.a > 0.5 && tex.r < 0.22 && tex.g < 0.22 && tex.b < 0.22 && length(tex.rgb) > 0.05);
+	bool is_glass = (tex.b > 0.60 && tex.g > 0.40 && tex.r < 0.55);
+	bool is_headlight = (tex.r > 0.85 && tex.g > 0.85 && tex.b > 0.85);
 	bool is_taillight = (tex.r > 0.65 && tex.g < 0.22 && tex.b < 0.22);
 
-	if (is_headlight) {
+	if (tex.a < 0.1 || length(tex.rgb) < 0.04) {
+		// WebGL / Missing texture fallback: if untextured or dark black placeholder, use vibrant paint_color directly
+		ALBEDO = paint_color.rgb;
+		METALLIC = metallic_val;
+		ROUGHNESS = roughness_val;
+		SPECULAR = 0.80;
+	} else if (is_headlight) {
+
 		// Projector LED Headlamps
 		ALBEDO = vec3(0.96, 0.98, 1.0);
-		EMISSION = vec3(1.0, 0.98, 0.94) * 3.5;
+		EMISSION = vec3(1.0, 0.98, 0.94) * 3.8;
 		METALLIC = 0.70;
 		ROUGHNESS = 0.06;
 		SPECULAR = 0.90;
 	} else if (is_taillight) {
 		// Reactive Rear Taillamps and Brake Lights
-		ALBEDO = is_reversing ? vec3(0.95, 0.95, 0.92) : vec3(0.92, 0.04, 0.06);
-		float brake_mult = is_reversing ? 3.8 : (is_braking ? 4.8 : 1.2);
-		vec3 emit_col = is_reversing ? vec3(1.0, 0.98, 0.90) : vec3(1.0, 0.02, 0.04);
+		ALBEDO = is_reversing ? vec3(0.95, 0.95, 0.92) : vec3(0.94, 0.05, 0.08);
+		float brake_mult = is_reversing ? 3.8 : (is_braking ? 4.8 : 1.5);
+		vec3 emit_col = is_reversing ? vec3(1.0, 0.98, 0.90) : vec3(1.0, 0.04, 0.06);
 		EMISSION = emit_col * brake_mult;
 		METALLIC = 0.35;
 		ROUGHNESS = 0.12;
@@ -67,21 +74,22 @@ void fragment() {
 		SPECULAR = 0.95;
 	} else if (is_trim) {
 		// Matte Carbon Fiber Aero Trim, Splitters & Diffusers
-		ALBEDO = vec3(0.08, 0.08, 0.09);
-		ROUGHNESS = 0.85;
+		ALBEDO = vec3(0.10, 0.10, 0.12);
+		ROUGHNESS = 0.82;
 		METALLIC = 0.10;
 		SPECULAR = 0.25;
 	} else {
 		// Deep Multi-Coat Automotive Metallic Paint
 		float lum = (tex.r * 0.299 + tex.g * 0.587 + tex.b * 0.114);
-		float factor = clamp(lum / 0.65, 0.85, 1.18);
+		float factor = clamp(lum / 0.65, 0.90, 1.20);
 		ALBEDO = paint_color.rgb * factor;
 		METALLIC = metallic_val;
 		ROUGHNESS = roughness_val;
-		SPECULAR = 0.75;
+		SPECULAR = 0.80;
 	}
 }
 """
+
 
 
 const WHEEL_SHADER_CODE = """
@@ -149,10 +157,13 @@ static func _build_ground_contact_shadow() -> MeshInstance3D:
 	mi.mesh = quad
 	mi.rotation_degrees.x = -90.0
 	mi.position = Vector3(0, 0.012, 0)
-	var mat = ShaderMaterial.new()
-	mat.shader = get_contact_shadow_shader()
+	var mat = StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(0.015, 0.015, 0.02, 0.65)
 	mi.material_override = mat
 	return mi
+
 
 
 static func build_vehicle_visual(vehicle_id: String, base_color: int = ChromaConstants.ChromaColor.CRIMSON, paint_finish: String = "metallic") -> Node3D:
@@ -274,10 +285,18 @@ static func update_vehicle_lights(vehicle_visual: Node3D, is_braking: bool, is_r
 	var model_root = vehicle_visual.get_node_or_null("ModelRoot")
 	if model_root:
 		for child in model_root.get_children():
-			if child is MeshInstance3D and child.material_override is ShaderMaterial:
-				var sm = child.material_override as ShaderMaterial
-				sm.set_shader_parameter("is_braking", is_braking)
-				sm.set_shader_parameter("is_reversing", is_reversing)
+			if child is MeshInstance3D:
+				if child.material_override is ShaderMaterial:
+					var sm = child.material_override as ShaderMaterial
+					sm.set_shader_parameter("is_braking", is_braking)
+					sm.set_shader_parameter("is_reversing", is_reversing)
+				elif child.material_override is StandardMaterial3D:
+					var sm = child.material_override as StandardMaterial3D
+					if is_braking:
+						sm.emission_enabled = true
+						sm.emission = Color(1.0, 0.1, 0.1) * 2.0
+					else:
+						sm.emission_enabled = false
 
 static func _create_wheel_alias(root: Node3D, alias_name: String, target_node: Node3D) -> void:
 	if not target_node:
@@ -322,38 +341,34 @@ static func apply_gameplay_color(vehicle_visual: Node3D, color_id: int, finish: 
 			roughness_v = 0.22
 			clearcoat_v = 0.80
 
-	# Apply shader material across ModelRoot meshes
+	# Apply robust PBR material across ModelRoot meshes recursively
 	var model_root = vehicle_visual.get_node_or_null("ModelRoot")
 	if model_root:
 		var colormap_tex = load("res://assets/models/vehicles/Textures/colormap.png")
-		var wheel_shader = get_wheel_shader()
-		for child in model_root.get_children():
-			if child is MeshInstance3D:
-				var mi = child as MeshInstance3D
-				var is_wheel = "wheel" in child.name.to_lower()
-				if is_wheel:
-					# Apply dedicated realistic rubber tire & alloy rim shader
-					var w_mat = mi.material_override
-					if not (w_mat is ShaderMaterial):
-						w_mat = ShaderMaterial.new()
-						w_mat.shader = wheel_shader
-						mi.material_override = w_mat
-				else:
-					# Exterior automotive body panels (body, spoiler, etc.)
-					var mat = mi.material_override
-					if not (mat is ShaderMaterial):
-						mat = ShaderMaterial.new()
-						mat.shader = shader
-						if colormap_tex:
-							mat.set_shader_parameter("albedo_texture", colormap_tex)
-						mi.material_override = mat
-
-					mat.set_shader_parameter("paint_color", col)
-					mat.set_shader_parameter("metallic_val", metallic_v)
-					mat.set_shader_parameter("roughness_val", roughness_v)
-					mat.set_shader_parameter("clearcoat_val", clearcoat_v)
-					child.set_meta("is_body_paint", true)
-					child.add_to_group("body_paint_meshes")
+		var meshes: Array[MeshInstance3D] = []
+		_gather_all_meshes(model_root, meshes)
+		for mi in meshes:
+			var is_wheel = "wheel" in mi.name.to_lower()
+			if is_wheel:
+				# Apply dedicated realistic rubber tire & alloy rim material
+				var w_mat = StandardMaterial3D.new()
+				w_mat.albedo_color = Color(0.12, 0.12, 0.14)
+				w_mat.roughness = 0.88
+				w_mat.metallic = 0.20
+				mi.material_override = w_mat
+			else:
+				# Exterior automotive body panels (body, spoiler, etc.)
+				var mat = StandardMaterial3D.new()
+				mat.albedo_color = col
+				mat.metallic = metallic_v
+				mat.roughness = roughness_v
+				mat.clearcoat_enabled = true
+				mat.clearcoat = clearcoat_v
+				if colormap_tex:
+					mat.albedo_texture = colormap_tex
+				mi.material_override = mat
+				mi.set_meta("is_body_paint", true)
+				mi.add_to_group("body_paint_meshes")
 
 
 	# Update fallback procedural meshes if present
@@ -364,16 +379,16 @@ static func apply_gameplay_color(vehicle_visual: Node3D, color_id: int, finish: 
 			if child is MeshInstance3D and child.has_meta("is_body_paint"):
 				child.material_override = mat_paint
 
-	# Update subtle accent lines
+	# Update radiant gameplay neon accent lines and underglow
 	var panels = vehicle_visual.get_node_or_null("GameplayColorPanels")
 	if panels:
 		var mat_accent = StandardMaterial3D.new()
 		mat_accent.albedo_color = col
 		mat_accent.emission_enabled = true
 		mat_accent.emission = col
-		mat_accent.emission_energy_multiplier = 1.1
-		mat_accent.roughness = 0.20
-		mat_accent.metallic = 0.70
+		mat_accent.emission_energy_multiplier = 2.8
+		mat_accent.roughness = 0.15
+		mat_accent.metallic = 0.80
 
 		for child in panels.get_children():
 			if child is MeshInstance3D:
@@ -384,6 +399,13 @@ static func apply_gameplay_color(vehicle_visual: Node3D, color_id: int, finish: 
 	if symbol_node:
 		symbol_node.text = ChromaConstants.get_color_symbol(color_id)
 		symbol_node.modulate = col.lightened(0.25)
+
+static func _gather_all_meshes(node: Node, result: Array[MeshInstance3D]) -> void:
+	if node is MeshInstance3D:
+		result.append(node)
+	for child in node.get_children():
+		_gather_all_meshes(child, result)
+
 
 static func _build_accent_panels(parent: Node3D) -> void:
 	# Subtle side skirt neon underglow / accent slit

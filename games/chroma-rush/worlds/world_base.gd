@@ -63,34 +63,44 @@ var mat_barrier: StandardMaterial3D
 
 func _init_materials() -> void:
 	mat_asphalt = StandardMaterial3D.new()
-	mat_asphalt.albedo_color = Color(0.12, 0.12, 0.14) # Rich dark textured asphalt
-	mat_asphalt.roughness = 0.88
-	mat_asphalt.metallic = 0.02
+	mat_asphalt.albedo_color = Color(0.25, 0.27, 0.30) # High-definition clean dark asphalt
+	mat_asphalt.roughness = 0.82
+	mat_asphalt.metallic = 0.04
+	mat_asphalt.cull_mode = BaseMaterial3D.CULL_DISABLED
 
 	mat_curb = StandardMaterial3D.new()
-	mat_curb.albedo_color = Color(0.38, 0.40, 0.42) # Neutral dark concrete curb
-	mat_curb.roughness = 0.88
-	mat_curb.metallic = 0.01
+	mat_curb.albedo_color = Color(0.86, 0.88, 0.90) # Crisp architectural concrete curb
+	mat_curb.roughness = 0.65
+	mat_curb.metallic = 0.02
+	mat_curb.cull_mode = BaseMaterial3D.CULL_DISABLED
 
 	mat_sidewalk = StandardMaterial3D.new()
-	mat_sidewalk.albedo_color = Color(0.28, 0.30, 0.32) # Dark concrete sidewalk pavers (non-blinding)
-	mat_sidewalk.roughness = 0.85
-	mat_sidewalk.metallic = 0.01
+	mat_sidewalk.albedo_color = Color(0.70, 0.72, 0.76) # Bright clean sidewalk stone pavers
+	mat_sidewalk.roughness = 0.72
+	mat_sidewalk.metallic = 0.02
+	mat_sidewalk.cull_mode = BaseMaterial3D.CULL_DISABLED
 
 	mat_marking_white = StandardMaterial3D.new()
-	mat_marking_white.albedo_color = Color(0.80, 0.82, 0.85) # Calibrated non-glaring matte road paint
-	mat_marking_white.roughness = 0.75
+	mat_marking_white.albedo_color = Color(0.96, 0.98, 1.0) # High-visibility road paint
+	mat_marking_white.roughness = 0.50
 	mat_marking_white.metallic = 0.0
+	mat_marking_white.emission_enabled = true
+	mat_marking_white.emission = Color(0.96, 0.98, 1.0) * 0.4
+	mat_marking_white.cull_mode = BaseMaterial3D.CULL_DISABLED
 
 	mat_marking_yellow = StandardMaterial3D.new()
-	mat_marking_yellow.albedo_color = Color(0.92, 0.72, 0.10) # Warm matte highway yellow
-	mat_marking_yellow.roughness = 0.75
+	mat_marking_yellow.albedo_color = Color(1.0, 0.84, 0.15) # Warm radiant highway yellow
+	mat_marking_yellow.roughness = 0.50
 	mat_marking_yellow.metallic = 0.0
+	mat_marking_yellow.emission_enabled = true
+	mat_marking_yellow.emission = Color(1.0, 0.84, 0.15) * 0.5
+	mat_marking_yellow.cull_mode = BaseMaterial3D.CULL_DISABLED
 
 	mat_barrier = StandardMaterial3D.new()
-	mat_barrier.albedo_color = Color(0.70, 0.73, 0.78) # Galvanized steel crash barrier
-	mat_barrier.metallic = 0.90
-	mat_barrier.roughness = 0.25
+	mat_barrier.albedo_color = Color(0.80, 0.84, 0.88) # Galvanized steel crash barrier
+	mat_barrier.metallic = 0.92
+	mat_barrier.roughness = 0.22
+	mat_barrier.cull_mode = BaseMaterial3D.CULL_DISABLED
 
 func build_world() -> void:
 	setup_lighting()
@@ -109,36 +119,46 @@ func setup_lighting() -> void:
 
 		var sky = Sky.new()
 		var sky_mat = ProceduralSkyMaterial.new()
-		sky_mat.sky_top_color = Color(0.20, 0.42, 0.76)       # Rich azure sky
-		sky_mat.sky_horizon_color = Color(0.65, 0.73, 0.82)   # Natural atmospheric haze
-		sky_mat.ground_bottom_color = Color(0.14, 0.16, 0.18) # Deep terrain ground tone
-		sky_mat.ground_horizon_color = Color(0.50, 0.60, 0.70)
-		sky_mat.sun_angle_max = 30.0
+		sky_mat.sky_top_color = Color(0.20, 0.48, 0.88)       # Vibrant azure sky
+		sky_mat.sky_horizon_color = Color(0.78, 0.86, 0.95)   # Clean radiant atmospheric horizon
+		sky_mat.ground_bottom_color = Color(0.10, 0.13, 0.16) # Deep distinct grounding tone (high contrast)
+		sky_mat.ground_horizon_color = Color(0.60, 0.70, 0.80)
+		sky_mat.sun_angle_max = 35.0
 		sky.sky_material = sky_mat
 		env.sky = sky
 
 		env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-		env.ambient_light_energy = 0.82
-		env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-		env.tonemap_exposure = 0.95
+		env.ambient_light_color = Color(0.78, 0.84, 0.94)
+		env.ambient_light_energy = 1.60
+		env.ambient_light_sky_contribution = 0.85
+		env.tonemap_mode = Environment.TONE_MAPPER_ACES
+		env.tonemap_exposure = 1.20
 		env.glow_enabled = true
-		env.glow_intensity = 0.18
-		env.glow_bloom = 0.02 # Subtle non-blinding bloom
+		env.glow_intensity = 0.20
+		env.glow_bloom = 0.03 # Subtle non-blinding bloom
 		env.fog_enabled = true
-		env.fog_light_color = Color(0.62, 0.71, 0.82)
-		env.fog_density = 0.0006
+		env.fog_light_color = Color(0.72, 0.80, 0.90)
+		env.fog_density = 0.0002
 		world_environment.environment = env
 		add_child(world_environment)
 
 	if not sun_light:
 		sun_light = DirectionalLight3D.new()
 		sun_light.name = "SunLight"
-		sun_light.rotation_degrees = Vector3(-45, -35, 0)
-		sun_light.light_color = Color(1.0, 0.97, 0.92)
-		sun_light.light_energy = 1.0
+		sun_light.rotation_degrees = Vector3(-45, 45, 0)
+		sun_light.light_color = Color(1.0, 0.96, 0.92)
+		sun_light.light_energy = 2.20
 		sun_light.shadow_enabled = true
 		sun_light.shadow_bias = 0.03
 		add_child(sun_light)
+
+		var fill_light = DirectionalLight3D.new()
+		fill_light.name = "CityGroundFillLight"
+		fill_light.light_color = Color(0.80, 0.88, 1.0)
+		fill_light.light_energy = 0.80
+		fill_light.shadow_enabled = false
+		fill_light.rotation_degrees = Vector3(50, -135, 0)
+		add_child(fill_light)
 
 func setup_ground_plane() -> void:
 	var ground = StaticBody3D.new()
@@ -152,7 +172,7 @@ func setup_ground_plane() -> void:
 	mi.mesh = plane_mesh
 
 	var mat_ground = StandardMaterial3D.new()
-	mat_ground.albedo_color = Color(0.12, 0.13, 0.15)
+	mat_ground.albedo_color = Color(0.18, 0.32, 0.20) # Manicured urban ground landscape bed
 	mat_ground.roughness = 0.95
 	mi.material_override = mat_ground
 	ground.add_child(mi)
@@ -165,6 +185,7 @@ func setup_ground_plane() -> void:
 	ground.add_child(col)
 
 	props_container.add_child(ground)
+
 
 
 func generate_waypoints() -> void:
@@ -244,7 +265,7 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 	var total_samples = samples.size()
 	var half_w = road_width * 0.5
 	var curb_w = 0.25
-	var curb_h = 0.10 # Realistic 10cm curb height
+	var curb_h = 0.28 # Upright 28cm containment curb height
 	var sidewalk_w = 1.60 # Realistic 1.6m sidewalk
 	var barrier_h = 0.90 # Standard highway guardrail height
 
@@ -559,27 +580,62 @@ func build_continuous_road_network(road_waypoints: Array[Vector3], road_width: f
 			collision_faces.append(rb_t1_out); collision_faces.append(rb_t1); collision_faces.append(rb_t2_out)
 			collision_faces.append(rb_t1); collision_faces.append(rb_t2); collision_faces.append(rb_t2_out)
 
-	st_road.generate_tangents()
-	st_curb.generate_normals(); st_curb.generate_tangents()
-	st_sw.generate_normals(); st_sw.generate_tangents()
-	st_lines.generate_normals(); st_lines.generate_tangents()
-	st_white.generate_normals(); st_white.generate_tangents()
-	st_fascia.generate_normals(); st_fascia.generate_tangents()
+	st_road.generate_normals()
+	st_curb.generate_normals()
+	st_sw.generate_normals()
+	st_lines.generate_normals()
+	st_white.generate_normals()
+	st_fascia.generate_normals()
 	if has_barriers:
-		st_barrier.generate_normals(); st_barrier.generate_tangents()
+		st_barrier.generate_normals()
 
 	var road_body = StaticBody3D.new()
 	road_body.name = "ContinuousRoadNetwork"
 	road_body.collision_layer = GameConstants.LAYER_WORLD
 
-	var m_road = MeshInstance3D.new(); m_road.name = "RoadMesh"; m_road.mesh = st_road.commit(); road_body.add_child(m_road)
-	var m_curb = MeshInstance3D.new(); m_curb.name = "CurbMesh"; m_curb.mesh = st_curb.commit(); road_body.add_child(m_curb)
-	var m_sw = MeshInstance3D.new(); m_sw.name = "SidewalkMesh"; m_sw.mesh = st_sw.commit(); road_body.add_child(m_sw)
-	var m_lines = MeshInstance3D.new(); m_lines.name = "CenterLinesMesh"; m_lines.mesh = st_lines.commit(); road_body.add_child(m_lines)
-	var m_white = MeshInstance3D.new(); m_white.name = "ShoulderLinesMesh"; m_white.mesh = st_white.commit(); road_body.add_child(m_white)
-	var m_fascia = MeshInstance3D.new(); m_fascia.name = "FasciaMesh"; m_fascia.mesh = st_fascia.commit(); road_body.add_child(m_fascia)
+	var m_road = MeshInstance3D.new(); m_road.name = "RoadMesh"; m_road.mesh = st_road.commit()
+	if m_road.mesh and m_road.mesh.get_surface_count() > 0:
+		m_road.mesh.surface_set_material(0, mat_asphalt)
+	m_road.material_override = mat_asphalt
+	road_body.add_child(m_road)
+
+	var m_curb = MeshInstance3D.new(); m_curb.name = "CurbMesh"; m_curb.mesh = st_curb.commit()
+	if m_curb.mesh and m_curb.mesh.get_surface_count() > 0:
+		m_curb.mesh.surface_set_material(0, mat_curb)
+	m_curb.material_override = mat_curb
+	road_body.add_child(m_curb)
+
+	var m_sw = MeshInstance3D.new(); m_sw.name = "SidewalkMesh"; m_sw.mesh = st_sw.commit()
+	if m_sw.mesh and m_sw.mesh.get_surface_count() > 0:
+		m_sw.mesh.surface_set_material(0, mat_sidewalk)
+	m_sw.material_override = mat_sidewalk
+	road_body.add_child(m_sw)
+
+	var m_lines = MeshInstance3D.new(); m_lines.name = "CenterLinesMesh"; m_lines.mesh = st_lines.commit()
+	if m_lines.mesh and m_lines.mesh.get_surface_count() > 0:
+		m_lines.mesh.surface_set_material(0, mat_marking_yellow)
+	m_lines.material_override = mat_marking_yellow
+	road_body.add_child(m_lines)
+
+	var m_white = MeshInstance3D.new(); m_white.name = "ShoulderLinesMesh"; m_white.mesh = st_white.commit()
+	if m_white.mesh and m_white.mesh.get_surface_count() > 0:
+		m_white.mesh.surface_set_material(0, mat_marking_white)
+	m_white.material_override = mat_marking_white
+	road_body.add_child(m_white)
+
+	var m_fascia = MeshInstance3D.new(); m_fascia.name = "FasciaMesh"; m_fascia.mesh = st_fascia.commit()
+	if m_fascia.mesh and m_fascia.mesh.get_surface_count() > 0:
+		m_fascia.mesh.surface_set_material(0, mat_curb)
+	m_fascia.material_override = mat_curb
+	road_body.add_child(m_fascia)
+
 	if has_barriers:
-		var m_bar = MeshInstance3D.new(); m_bar.name = "BarrierMesh"; m_bar.mesh = st_barrier.commit(); road_body.add_child(m_bar)
+		var m_bar = MeshInstance3D.new(); m_bar.name = "BarrierMesh"; m_bar.mesh = st_barrier.commit()
+		if m_bar.mesh and m_bar.mesh.get_surface_count() > 0:
+			m_bar.mesh.surface_set_material(0, mat_barrier)
+		m_bar.material_override = mat_barrier
+		road_body.add_child(m_bar)
+
 
 	var col = CollisionShape3D.new()
 	col.name = "ContinuousRoadCollision"

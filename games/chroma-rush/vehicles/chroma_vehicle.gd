@@ -125,7 +125,7 @@ func setup_visuals() -> void:
 		visual_node.queue_free()
 
 	visual_node = VehicleVisuals.build_vehicle_visual(vehicle_id, initial_color, paint_finish)
-	# Align visual node with physics origin so wheels make direct contact with road surface
+	# Align visual node at y=0 so tires seat flush on road without submerging
 	visual_node.position.y = 0.0
 	add_child(visual_node)
 
@@ -151,9 +151,10 @@ func setup_collision_box() -> void:
 		var box = BoxShape3D.new()
 		box.size = Vector3(1.85, 0.70, 4.10)
 		col.shape = box
-		# Center box at y=0.52 so bottom face is at y=0.17, giving 17cm curb/ramp clearance
-		col.position = Vector3(0, 0.52, 0)
+		# Center box at y=0.50 so bottom face is at y=0.15 for 15cm curb clearance
+		col.position = Vector3(0, 0.50, 0)
 		add_child(col)
+
 
 func setup_suspension_rays() -> void:
 	wheel_raycasts.clear()
@@ -199,8 +200,8 @@ func _physics_process(delta: float) -> void:
 	_update_physics_movement(delta)
 	_update_visual_dynamics(delta)
 	_check_rollover_and_recovery(delta)
-	if is_player and Engine.get_physics_frames() % 30 == 0:
-		print("[PLAYER VEH TELEMETRY] f=", Engine.get_physics_frames(), " pos=", global_position, " vel=", velocity, " spd=", forward_speed, " ground=", is_grounded, " inp=(", steer_input, ",", throttle_input, ",", brake_input, ")")
+
+
 
 func _handle_player_input() -> void:
 	if not is_inside_tree():
@@ -371,10 +372,20 @@ func _update_physics_movement(delta: float) -> void:
 	else:
 		position += velocity * delta
 
-	# Track valid road coordinates if grounded and level
+	# Track valid road coordinates if grounded and level on the actual roadway
 	if is_grounded and t.basis.y.dot(Vector3.UP) > 0.7:
-		last_valid_track_pos = global_position if is_inside_tree() else position
-		last_valid_track_rot = rotation.y
+		var cur_pos = global_position if is_inside_tree() else position
+		var on_road = true
+		if is_inside_tree():
+			var world = get_tree().get_first_node_in_group("chroma_world")
+			if world and world.has_method("get_nearest_safe_road_transform"):
+				var safe_xf = world.get_nearest_safe_road_transform(cur_pos)
+				var d_road = (cur_pos - safe_xf.origin).length()
+				if d_road > 9.5:
+					on_road = false
+		if on_road:
+			last_valid_track_pos = cur_pos
+			last_valid_track_rot = rotation.y
 
 func _update_visual_dynamics(delta: float) -> void:
 	if not visual_node:
@@ -454,7 +465,6 @@ func _check_rollover_and_recovery(delta: float) -> void:
 		rollover_timer = 0.0
 
 func reset_to_road(target_pos: Variant = null, target_rot_y: Variant = null) -> void:
-	print("[RESET TO ROAD] called! target_pos=", target_pos, " current_pos=", global_position)
 	rollover_timer = 0.0
 	stuck_timer = 0.0
 	forward_speed = 0.0
@@ -464,33 +474,36 @@ func reset_to_road(target_pos: Variant = null, target_rot_y: Variant = null) -> 
 	smoothed_steer_input = 0.0
 
 	var dest_pos = last_valid_track_pos + Vector3(0, 0.15, 0)
-	var dest_rot = last_valid_track_rot
+	var dest_basis = Basis.IDENTITY
 
 	if target_pos is Vector3 and target_pos != Vector3.ZERO:
 		dest_pos = target_pos + Vector3(0, 0.15, 0)
 		if target_rot_y is float:
-			dest_rot = target_rot_y
+			dest_basis = Basis(Vector3.UP, target_rot_y)
+		elif is_inside_tree():
+			dest_basis = global_basis
 	elif is_inside_tree():
 		var world = get_tree().get_first_node_in_group("chroma_world")
 		if world and world.has_method("get_nearest_safe_road_transform"):
 			var safe_xf = world.get_nearest_safe_road_transform(global_position)
-			dest_pos = safe_xf.origin
-			dest_rot = atan2(-safe_xf.basis.z.x, -safe_xf.basis.z.z)
+			dest_pos = safe_xf.origin + Vector3(0, 0.15, 0)
+			dest_basis = safe_xf.basis
 		elif target_rot_y is float:
-			dest_rot = target_rot_y
+			dest_basis = Basis(Vector3.UP, target_rot_y)
 	elif target_rot_y is float:
-		dest_rot = target_rot_y
+		dest_basis = Basis(Vector3.UP, target_rot_y)
 
 	if is_inside_tree():
 		global_position = dest_pos
+		global_basis = dest_basis
 	else:
 		position = dest_pos
-	rotation = Vector3(0, dest_rot, 0)
+		transform.basis = dest_basis
 
+	last_valid_track_pos = dest_pos
 	vehicle_recovered.emit(global_position if is_inside_tree() else position)
 
 func recover_vehicle() -> void:
-	print("[RECOVER VEHICLE] called! pos=", global_position, " up_dot=", (global_transform.basis.y.dot(Vector3.UP) if is_inside_tree() else 1.0))
 	reset_to_road()
 
 

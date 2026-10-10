@@ -650,8 +650,12 @@ func _check_rollover_and_recovery(delta: float) -> void:
 
 	# 1. Out-of-bounds fall detection: vehicle falls well below track altitude
 	var current_y = global_position.y
-	var fall_kill_y = minf(last_safe_checkpoint_pos.y - 30.0, -18.0)
-	if current_y < fall_kill_y:
+	# If track checkpoint is elevated (y >= -1.0), falling to ground (y <= -4.5) is OUT OF BOUNDS
+	var is_below_track = (current_y < last_safe_checkpoint_pos.y - 7.5)
+	var is_on_ground_basin = (last_safe_checkpoint_pos.y >= -1.0 and current_y <= -4.5)
+	var is_absolute_pit = (current_y < -22.0)
+
+	if is_below_track or is_on_ground_basin or is_absolute_pit:
 		recover_to_checkpoint()
 		return
 
@@ -668,7 +672,7 @@ func _check_rollover_and_recovery(delta: float) -> void:
 		var diff = global_position - last_safe_checkpoint_pos
 		diff.y = 0.0
 		var lateral = diff - fwd_dir * diff.dot(fwd_dir)
-		if lateral.length() > 85.0:
+		if lateral.length() > 36.0:
 			recover_to_checkpoint()
 			return
 
@@ -689,16 +693,18 @@ func _check_rollover_and_recovery(delta: float) -> void:
 		stuck_timer = 0.0
 
 	# 5. Record safe checkpoint transform if driving cleanly on flat track
+	# STRICT GUARD: Never record a position on the ground plane when track is elevated
 	if is_grounded and up_dot > 0.75 and absf(forward_speed) > 10.0:
-		last_safe_checkpoint_pos = global_position
-		last_safe_checkpoint_basis = global_basis
+		if absf(global_position.y - last_safe_checkpoint_pos.y) < 4.0:
+			last_safe_checkpoint_pos = global_position
+			last_safe_checkpoint_basis = global_basis
 
 func update_checkpoint(pos: Vector3, b: Basis) -> void:
 	last_safe_checkpoint_pos = pos
 	last_safe_checkpoint_basis = b
 
 func recover_to_checkpoint() -> void:
-	recovery_cooldown = 2.5 # Grace period preventing infinite or recursive respawns
+	recovery_cooldown = 2.0 # Grace period preventing infinite or recursive respawns
 	var spawn_pos = last_safe_checkpoint_pos + Vector3(0, 1.2, 0)
 	if is_inside_tree():
 		global_position = spawn_pos

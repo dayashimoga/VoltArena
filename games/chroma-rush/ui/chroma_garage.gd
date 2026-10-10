@@ -43,9 +43,15 @@ func _ready() -> void:
 
 func open_garage() -> void:
 	visible = true
+	if is_instance_valid(vehicle_display_root):
+		vehicle_display_root.visible = true
+		for c in vehicle_display_root.get_children():
+			if c is DirectionalLight3D:
+				c.visible = true
 	if is_instance_valid(garage_cam):
 		garage_cam.make_current()
 	refresh_display()
+
 
 func setup_ui_layout() -> void:
 	anchor_right = 1.0
@@ -151,6 +157,9 @@ func setup_ui_layout() -> void:
 			garage_cam.current = false
 		if is_instance_valid(vehicle_display_root):
 			vehicle_display_root.visible = false
+			for c in vehicle_display_root.get_children():
+				if c is DirectionalLight3D:
+					c.visible = false
 		visible = false
 		back_to_menu_requested.emit()
 		garage_closed.emit()
@@ -163,16 +172,20 @@ func setup_3d_turntable() -> void:
 	vehicle_display_root.visible = false
 	add_child(vehicle_display_root)
 
-	# Studio 3-point lighting
+	# Studio 3-point lighting (active only when garage is open)
 	var key_light = DirectionalLight3D.new()
+	key_light.name = "GarageKeyLight"
 	key_light.rotation_degrees = Vector3(-45, -30, 0)
 	key_light.light_energy = 1.3
+	key_light.visible = false
 	vehicle_display_root.add_child(key_light)
 
 	var fill_light = DirectionalLight3D.new()
+	fill_light.name = "GarageFillLight"
 	fill_light.rotation_degrees = Vector3(-20, 150, 0)
 	fill_light.light_color = Color(0.2, 0.6, 1.0)
 	fill_light.light_energy = 0.6
+	fill_light.visible = false
 	vehicle_display_root.add_child(fill_light)
 
 	garage_cam = Camera3D.new()
@@ -181,6 +194,7 @@ func setup_3d_turntable() -> void:
 	garage_cam.position = Vector3(2.5, 1.8, 5.0)
 	vehicle_display_root.add_child(garage_cam)
 	garage_cam.look_at(Vector3(0.5, 0.6, 0), Vector3.UP)
+
 
 func _process(delta: float) -> void:
 	if current_preview_vehicle and is_instance_valid(current_preview_vehicle):

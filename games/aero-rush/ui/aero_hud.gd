@@ -82,14 +82,26 @@ func _make_glass_style(corner_radius: int = 14) -> StyleBoxFlat:
 
 func _build_hud_elements() -> void:
 	# ==============================================================================
-	# 1. TOP-LEFT: SPEED CARD (SPEED 182 km/h)
+	# UNIFIED TOP TELEMETRY BAR (PRESET_TOP_WIDE)
+	# Mathematically eliminates overlap between SpeedCard, NextStuntCard, and CourseCard
 	# ==============================================================================
+	var top_bar = HBoxContainer.new()
+	top_bar.name = "TopTelemetryBar"
+	top_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	top_bar.offset_left = 24.0
+	top_bar.offset_top = 18.0
+	top_bar.offset_right = -24.0
+	top_bar.offset_bottom = 98.0
+	top_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(top_bar)
+
+	# 1. TOP-LEFT: SPEED CARD (SPEED 182 km/h)
 	speed_card = PanelContainer.new()
 	speed_card.name = "SpeedCard"
 	speed_card.add_theme_stylebox_override("panel", _make_glass_style())
-	speed_card.position = Vector2(24, 20)
-	speed_card.custom_minimum_size = Vector2(170, 75)
-	add_child(speed_card)
+	speed_card.custom_minimum_size = Vector2(175, 75)
+	speed_card.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	top_bar.add_child(speed_card)
 
 	var speed_vbox = VBoxContainer.new()
 	speed_vbox.add_theme_constant_override("separation", 2)
@@ -122,22 +134,20 @@ func _build_hud_elements() -> void:
 	speed_bar.visible = false
 	add_child(speed_bar)
 
-	# ==============================================================================
+	# Spacer Left
+	var spacer_left = Control.new()
+	spacer_left.name = "SpacerLeft"
+	spacer_left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spacer_left.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_bar.add_child(spacer_left)
+
 	# 2. TOP-CENTER: NEXT STUNT / JUMP CARD (NEXT: MEGA JUMP 240 m ahead)
-	# ==============================================================================
 	next_stunt_card = PanelContainer.new()
 	next_stunt_card.name = "NextStuntCard"
 	next_stunt_card.add_theme_stylebox_override("panel", _make_glass_style())
-	next_stunt_card.anchor_left = 0.5
-	next_stunt_card.anchor_right = 0.5
-	next_stunt_card.anchor_top = 0.0
-	next_stunt_card.anchor_bottom = 0.0
-	next_stunt_card.offset_left = -140
-	next_stunt_card.offset_right = 140
-	next_stunt_card.offset_top = 20
-	next_stunt_card.offset_bottom = 85
-	next_stunt_card.custom_minimum_size = Vector2(280, 65)
-	add_child(next_stunt_card)
+	next_stunt_card.custom_minimum_size = Vector2(280, 68)
+	next_stunt_card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	top_bar.add_child(next_stunt_card)
 
 	var stunt_vbox = VBoxContainer.new()
 	stunt_vbox.add_theme_constant_override("separation", 2)
@@ -159,22 +169,20 @@ func _build_hud_elements() -> void:
 	next_stunt_dist_label.add_theme_color_override("font_color", Color(0.32, 0.82, 1.0))
 	stunt_vbox.add_child(next_stunt_dist_label)
 
-	# ==============================================================================
+	# Spacer Right
+	var spacer_right = Control.new()
+	spacer_right.name = "SpacerRight"
+	spacer_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spacer_right.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_bar.add_child(spacer_right)
+
 	# 3. TOP-RIGHT: COURSE CARD (COURSE 4 / 12)
-	# ==============================================================================
 	course_card = PanelContainer.new()
 	course_card.name = "CourseCard"
 	course_card.add_theme_stylebox_override("panel", _make_glass_style())
-	course_card.anchor_left = 1.0
-	course_card.anchor_right = 1.0
-	course_card.anchor_top = 0.0
-	course_card.anchor_bottom = 0.0
-	course_card.offset_left = -210
-	course_card.offset_right = -24
-	course_card.offset_top = 20
-	course_card.offset_bottom = 95
-	course_card.custom_minimum_size = Vector2(180, 75)
-	add_child(course_card)
+	course_card.custom_minimum_size = Vector2(185, 75)
+	course_card.size_flags_horizontal = Control.SIZE_SHRINK_END
+	top_bar.add_child(course_card)
 
 	var course_vbox = VBoxContainer.new()
 	course_vbox.add_theme_constant_override("separation", 2)

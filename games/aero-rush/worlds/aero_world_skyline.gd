@@ -78,7 +78,7 @@ func _build_modern_skyscrapers() -> void:
 
 	for i in range(coords.size()):
 		var m = models[i % models.size()]
-		var scale_u = randf_range(28.0, 46.0)
+		var scale_u = randf_range(8.0, 12.0)
 		spawn_building(m, coords[i], float((i * 90) % 360), Vector3(scale_u, scale_u, scale_u))
 
 func _build_city_plazas() -> void:
@@ -88,13 +88,13 @@ func _build_city_plazas() -> void:
 		"res://assets/models/environment/building_comm_c.glb"
 	]
 	var comm_coords = [
-		Vector3(-45.0, -5.0, -130.0), Vector3(45.0, -5.0, -130.0),
-		Vector3(-50.0, -5.0, -290.0), Vector3(50.0, -5.0, -290.0),
-		Vector3(-55.0, -5.0, 90.0), Vector3(55.0, -5.0, 90.0)
+		Vector3(-55.0, -5.0, -130.0), Vector3(55.0, -5.0, -130.0),
+		Vector3(-60.0, -5.0, -290.0), Vector3(60.0, -5.0, -290.0),
+		Vector3(-58.0, -5.0, 90.0), Vector3(58.0, -5.0, 90.0)
 	]
 	for j in range(comm_coords.size()):
 		var c_m = comm_models[j % comm_models.size()]
-		var c_s = randf_range(16.0, 24.0)
+		var c_s = randf_range(3.2, 4.8)
 		spawn_building(c_m, comm_coords[j], float((j * 90) % 360), Vector3(c_s, c_s, c_s))
 
 	# Plaza trees

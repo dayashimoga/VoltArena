@@ -214,8 +214,8 @@ func _build_flanking_skyscrapers() -> void:
 		spawn_building(c_model, c_pos, float((j * 90) % 360), Vector3(c_scale, c_scale, c_scale))
 
 func _build_overhead_skybridges() -> void:
-	# Skybridges crossing the circuit at altitude between skyscraper clusters
-	var bridge_z_coords = [-130.0, 70.0, -280.0]
+	# Skybridges crossing at high altitude (Y = 62m) between skyscraper rooftops well clear of track envelopes
+	var bridge_z_coords = [-10.0, 85.0, -260.0]
 	for z in bridge_z_coords:
 		var bridge = MeshInstance3D.new()
 		bridge.name = "TransMetropolitanSkybridge_Z%d" % int(z)
@@ -228,7 +228,7 @@ func _build_overhead_skybridges() -> void:
 		b_mat.metallic = 0.85
 		b_mat.roughness = 0.30
 		bridge.material_override = b_mat
-		bridge.position = Vector3(0.0, 24.0, z)
+		bridge.position = Vector3(0.0, 62.0, z)
 		add_child(bridge)
 
 		# Neon Transit Window Stripe across Skybridge
@@ -239,9 +239,9 @@ func _build_overhead_skybridges() -> void:
 		var win_mat = StandardMaterial3D.new()
 		win_mat.albedo_color = Color(0.08, 0.90, 1.0)
 		win_mat.emission_enabled = true
-		win_mat.emission = Color(0.08, 0.90, 1.0) * 2.8
+		win_mat.emission = Color(0.08, 0.90, 1.0) * 1.8
 		win.material_override = win_mat
-		win.position = Vector3(0.0, 24.0, z)
+		win.position = Vector3(0.0, 62.0, z)
 		add_child(win)
 
 func _build_street_amenities() -> void:

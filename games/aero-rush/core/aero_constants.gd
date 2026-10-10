@@ -37,16 +37,22 @@ enum EnvironmentType {
 	SKYLINE_RUSH = 6,       # Skyline Rush: Believable modern metropolis, rooftop routes, skyscrapers
 	DESERT_EXTREME = 7,     # Desert Extreme: Red rock canyons, dunes, rock arches, dust effects
 	NEON_AFTERDARK = 8,     # Neon Afterdark: Cyberpunk futuristic night, controlled neon, night tracks
-	COASTAL_VELOCITY = 9    # Coastal Velocity: Beaches, tropical vegetation, oceans, cliffs
+	COASTAL_VELOCITY = 9,   # Coastal Velocity: Beaches, tropical vegetation, oceans, cliffs
+	ALIEN_PLANET = 10,      # Alien Planet: Bioluminescent flora, exotic purple atmosphere, crystalline geology
+	ORBITAL_SPACE = 11,     # Orbital Space: Cosmic void, starfield sky, earth horizon, orbital array stations
+	VOLCANIC_UNDERWORLD = 12 # Volcanic Underworld: Molten magma seas, obsidian crags, volcanic ash, thermal glow
 }
 
-# Aliases for 6 Biome System
+# Aliases for 10 Theme System
 const BIOME_SNOWBOUND_PEAKS: int = EnvironmentType.SNOWBOUND_PEAKS
 const BIOME_COASTAL_VELOCITY: int = EnvironmentType.TROPICAL_COASTAL
 const BIOME_WILD_FOREST: int = EnvironmentType.WILD_FOREST
 const BIOME_SKYLINE_RUSH: int = EnvironmentType.SKYLINE_RUSH
 const BIOME_DESERT_EXTREME: int = EnvironmentType.MOUNTAIN_CANYON
 const BIOME_NEON_AFTERDARK: int = EnvironmentType.NEON_MEGACITY
+const BIOME_ALIEN_PLANET: int = EnvironmentType.ALIEN_PLANET
+const BIOME_ORBITAL_SPACE: int = EnvironmentType.ORBITAL_SPACE
+const BIOME_VOLCANIC_UNDERWORLD: int = EnvironmentType.VOLCANIC_UNDERWORLD
 
 # --- Camera View Modes ---
 enum CameraViewMode {

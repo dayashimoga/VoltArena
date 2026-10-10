@@ -224,6 +224,33 @@ func generate_waypoints() -> void:
 		{"waypoint_idx": 29, "color": ChromaConstants.ChromaColor.EMERALD, "speed": 19.0}
 	]
 
+func setup_ground_plane() -> void:
+	var ground = StaticBody3D.new()
+	ground.name = "CityGroundPlane"
+	ground.collision_layer = GameConstants.LAYER_WORLD
+	ground.position = Vector3(0, -0.35, 0)
+
+	var mi = MeshInstance3D.new()
+	var plane_mesh = PlaneMesh.new()
+	plane_mesh.size = Vector2(3200, 3200)
+	mi.mesh = plane_mesh
+
+	var mat_ground = StandardMaterial3D.new()
+	mat_ground.albedo_color = Color(0.18, 0.20, 0.23) # Deep dark metropolitan asphalt/slate urban bed
+	mat_ground.roughness = 0.90
+	mat_ground.metallic = 0.05
+	mi.material_override = mat_ground
+	ground.add_child(mi)
+
+	var col = CollisionShape3D.new()
+	var shape = BoxShape3D.new()
+	shape.size = Vector3(3200, 1.0, 3200)
+	col.shape = shape
+	col.position = Vector3(0, -0.5, 0)
+	ground.add_child(col)
+
+	props_container.add_child(ground)
+
 func build_road_mesh() -> void:
 	var road_w = 15.0
 	build_continuous_road_network(waypoints, road_w)
@@ -307,18 +334,18 @@ func build_props() -> void:
 		"res://assets/models/environment/building_comm_f.glb"
 	]
 	var residential_paths = [
-		"res://assets/models/environment/building_comm_a.glb",
-		"res://assets/models/environment/building_comm_c.glb",
-		"res://assets/models/environment/building_comm_e.glb",
-		"res://assets/models/environment/building_skyscraper_c.glb"
+		"res://assets/models/environment/building_a.glb",
+		"res://assets/models/environment/building_b.glb",
+		"res://assets/models/environment/building_c.glb",
+		"res://assets/models/environment/building_d.glb"
 	]
 
 	var n_spline = spline_samples.size()
 	if n_spline < 10:
 		return
 
-	# 1. Primary Street-Facing City Blocks (Optimized intervals, 16 iconic buildings flanking boulevard)
-	var building_interval = 12
+	# 1. Primary Street-Facing City Blocks flanking both sides of the boulevard
+	var building_interval = 8
 	for s_idx in range(0, n_spline, building_interval):
 		var p_curr = spline_samples[s_idx]
 		var p_next = spline_samples[(s_idx + 1) % n_spline]
@@ -330,29 +357,29 @@ func build_props() -> void:
 		tangent = tangent.normalized()
 		var right = tangent.cross(Vector3.UP).normalized()
 		var rot_y = rad_to_deg(atan2(-tangent.x, -tangent.z))
-
 		var wp_nearest = get_nearest_waypoint_index(p_curr)
-		var side = -1.0 if ((s_idx / building_interval) % 2 == 0) else 1.0
-		var setback = 28.0 + float((s_idx) % 3) * 2.0
-		var b_pos = p_curr + right * (side * setback)
-		b_pos.y = p_curr.y
 
-		if not _is_clear_of_spline(b_pos, 16.0, s_idx, 6):
-			continue
+		# Build buildings on BOTH sides to form an authentic dense metropolitan streetwall
+		for side in [-1.0, 1.0]:
+			var setback = 25.0 + float((s_idx) % 3) * 2.0
+			var b_pos = p_curr + right * (side * setback)
+			b_pos.y = p_curr.y
 
-		var theme_idx = (s_idx * 3 + wp_nearest) % ARCHITECTURAL_THEMES.size()
-		var side_str = "Left" if side < 0 else "Right"
-		var b_node = _create_district_building(wp_nearest, s_idx, skyscraper_paths, commercial_paths, residential_paths, theme_idx, side_str)
-		if b_node:
-			b_node.position = b_pos
-			b_node.rotation_degrees.y = rot_y + (90.0 if side < 0 else -90.0)
-			props_container.add_child(b_node)
+			if not _is_clear_of_spline(b_pos, 16.0, s_idx, 6):
+				continue
 
-		var plaza = _build_urban_plaza_foundation_node(b_pos, rot_y)
-		props_container.add_child(plaza)
+			var theme_idx = (s_idx * 3 + wp_nearest + (1 if side > 0 else 0)) % ARCHITECTURAL_THEMES.size()
+			var side_str = "Left" if side < 0 else "Right"
+			var b_node = _create_district_building(wp_nearest, s_idx, skyscraper_paths, commercial_paths, residential_paths, theme_idx, side_str)
+			if b_node:
+				b_node.position = b_pos
+				b_node.rotation_degrees.y = rot_y + (90.0 if side < 0 else -90.0)
+				props_container.add_child(b_node)
 
-	# 2. Organic Branching Trees along sidewalks
-	var tree_interval = 16
+			_build_urban_block_parcel(p_curr, right * side, setback, b_pos, rot_y + (90.0 if side < 0 else -90.0), wp_nearest, s_idx + (100 if side > 0 else 0))
+
+	# 2. Dense mature street trees along both sidewalk verges
+	var tree_interval = 8
 	for s_idx in range(0, n_spline, tree_interval):
 		var p_curr = spline_samples[s_idx]
 		if p_curr.y > 2.0:
@@ -368,17 +395,17 @@ func build_props() -> void:
 
 		var wp_nearest = get_nearest_waypoint_index(p_curr)
 		var species = _get_district_tree_species(wp_nearest)
-		var t_side = 1.0 if ((s_idx / tree_interval) % 2 == 0) else -1.0
-		var pos_t = p_curr + right * (t_side * 15.0)
-		if _is_clear_of_spline(pos_t, 12.0):
-			var tree = _build_realistic_tree(species, 6.0, s_idx * 17)
-			tree.position = pos_t
-			tree.position.y = p_curr.y
-			props_container.add_child(tree)
+		for t_side in [-1.0, 1.0]:
+			var pos_t = p_curr + right * (t_side * 9.2)
+			if _is_clear_of_spline(pos_t, 8.0):
+				var tree = _build_realistic_tree(species, 9.0, s_idx * 17 + (50 if t_side > 0 else 0))
+				tree.position = pos_t
+				tree.position.y = p_curr.y
+				props_container.add_child(tree)
 
-	# 3. Modern Street Light Posts
-	var lamp_interval = 16
-	for s_idx in range(8, n_spline, lamp_interval):
+	# 3. Modern Street Light Posts along curbs
+	var lamp_interval = 12
+	for s_idx in range(4, n_spline, lamp_interval):
 		var p_curr = spline_samples[s_idx]
 		var p_next = spline_samples[(s_idx + 1) % n_spline]
 		var p_prev = spline_samples[(s_idx - 1 + n_spline) % n_spline]
@@ -390,18 +417,21 @@ func build_props() -> void:
 		var right = tangent.cross(Vector3.UP).normalized()
 		var rot_y = rad_to_deg(atan2(-tangent.x, -tangent.z))
 
-		var l_side = -1.0 if ((s_idx / lamp_interval) % 2 == 0) else 1.0
-		var lamp_pos = p_curr + right * (l_side * 13.5)
-		if _is_clear_of_spline(lamp_pos, 11.5):
-			var lamp = _build_procedural_streetlight()
-			lamp.position = lamp_pos
-			lamp.rotation_degrees.y = rot_y + (90.0 if l_side > 0 else -90.0)
-			props_container.add_child(lamp)
+		for l_side in [-1.0, 1.0]:
+			var lamp_pos = p_curr + right * (l_side * 8.6)
+			if _is_clear_of_spline(lamp_pos, 7.8):
+				var lamp = _build_procedural_streetlight()
+				lamp.position = lamp_pos
+				lamp.rotation_degrees.y = rot_y + (90.0 if l_side > 0 else -90.0)
+				props_container.add_child(lamp)
 
-	# 4. Iconic Navigation Landmarks
+	# 4. Secondary City Blocks & District Interior Hubs (Fill inner plazas, vistas, parking)
+	_build_secondary_city_blocks()
+
+	# 5. Iconic Navigation Landmarks
 	_build_city_landmarks()
 
-	# 5. 360-Degree Distant City Skyline Ring
+	# 6. 360-Degree Distant City Skyline Ring (Towering high-rises on horizon)
 	_build_distant_skyline_backdrop()
 
 func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: Array, residentials: Array, theme_idx: int, side_name: String) -> Node3D:
@@ -714,19 +744,19 @@ func _build_distant_skyline_backdrop() -> void:
 		"res://assets/models/environment/building_skyscraper_d.glb",
 		"res://assets/models/environment/building_skyscraper_e.glb"
 	]
-	var tower_count = 24
-	var radius = 460.0
+	var tower_count = 32
+	var radius = 450.0
 
 	for i in range(tower_count):
 		var angle = (float(i) / float(tower_count)) * TAU
 		var m_path = skyscraper_models[i % skyscraper_models.size()]
-		var dist = radius + float((i * 13) % 7) * 25.0
+		var dist = radius + float((i * 13) % 7) * 20.0
 		var pos = Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
-		var sc = 6.0 + float(i % 3) * 1.2
+		var sc = 22.0 + float(i % 5) * 4.0
 		var rot_y = float((i * 45) % 360)
 		var b_glb = ModelCache.get_model(m_path)
 		if b_glb:
-			b_glb.scale = Vector3(sc, sc * 1.5, sc)
+			b_glb.scale = Vector3(sc, sc * 1.6, sc)
 			b_glb.position = pos
 			b_glb.rotation_degrees.y = rot_y
 			_style_building(b_glb, i % ARCHITECTURAL_THEMES.size())
@@ -756,8 +786,8 @@ func _build_realistic_tree(species: String, height: float, seed_val: int) -> Nod
 	var col = CollisionShape3D.new()
 	col.name = "TreeTrunkCollision"
 	var col_shape = CylinderShape3D.new()
-	col_shape.height = height * 0.75
-	col_shape.radius = 0.28
+	col_shape.height = height * 0.85
+	col_shape.radius = 0.35
 	col.shape = col_shape
 	col.position = Vector3(0, col_shape.height * 0.5, 0)
 	root.add_child(col)
@@ -765,42 +795,42 @@ func _build_realistic_tree(species: String, height: float, seed_val: int) -> Nod
 	# 1. Circular Stone Planter Curb on Sidewalk Verge
 	var planter = MeshInstance3D.new()
 	var p_cyl = CylinderMesh.new()
-	p_cyl.top_radius = 1.25
-	p_cyl.bottom_radius = 1.30
-	p_cyl.height = 0.18
+	p_cyl.top_radius = 1.35
+	p_cyl.bottom_radius = 1.40
+	p_cyl.height = 0.20
 	planter.mesh = p_cyl
 	planter.material_override = mat_curb
-	planter.position = Vector3(0, 0.09, 0)
+	planter.position = Vector3(0, 0.10, 0)
 	root.add_child(planter)
 
 	# 2. Rich Dark Loamy Soil
 	var soil = MeshInstance3D.new()
 	var s_cyl = CylinderMesh.new()
-	s_cyl.top_radius = 1.15
-	s_cyl.bottom_radius = 1.15
-	s_cyl.height = 0.20
+	s_cyl.top_radius = 1.25
+	s_cyl.bottom_radius = 1.25
+	s_cyl.height = 0.22
 	soil.mesh = s_cyl
 	var mat_soil = StandardMaterial3D.new()
 	mat_soil.albedo_color = Color(0.14, 0.11, 0.09)
 	mat_soil.roughness = 0.98
 	soil.material_override = mat_soil
-	soil.position = Vector3(0, 0.10, 0)
+	soil.position = Vector3(0, 0.11, 0)
 	root.add_child(soil)
 
-	# 3. Authentic 3D Tree Mesh Asset
+	# 3. Authentic 3D Tree Mesh Asset (all 6 distinct species)
 	var tree_path = "res://assets/models/environment/tree_oak.glb"
 	match species:
 		"palm": tree_path = "res://assets/models/environment/tree_palm.glb"
 		"pine": tree_path = "res://assets/models/environment/tree_pine.glb"
-		"birch": tree_path = "res://assets/models/environment/tree_oak.glb"
-		"cherry": tree_path = "res://assets/models/environment/tree_oak.glb"
+		"birch": tree_path = "res://assets/models/environment/tree_detailed.glb"
+		"cherry": tree_path = "res://assets/models/environment/tree_fat.glb"
 		"linden": tree_path = "res://assets/models/environment/tree_tall.glb"
 		_: tree_path = "res://assets/models/environment/tree_oak.glb"
 
 	var tree_model = ModelCache.get_model(tree_path)
 	if tree_model:
 		tree_model.name = "AuthoredTree"
-		var sc = height * 0.28
+		var sc = height * 0.65
 		tree_model.scale = Vector3(sc, sc, sc)
 		tree_model.rotation_degrees.y = float(seed_val * 47 % 360)
 		tree_model.position = Vector3(0, 0.1, 0)
@@ -1042,6 +1072,23 @@ func _build_urban_block_parcel(p_curr: Vector3, right_dir: Vector3, setback: flo
 		car.position = Vector3(18.0, 0.05, -2.0)
 		car.rotation_degrees.y = 90.0
 		parcel_root.add_child(car)
+
+	# 6. Street Furniture on pedestrian plaza
+	if seed_val % 3 == 0:
+		var bench = _build_street_bench()
+		bench.position = Vector3(-6.0, 0.12, -14.0)
+		parcel_root.add_child(bench)
+		var trash = _build_trash_bin()
+		trash.position = Vector3(-8.0, 0.12, -14.0)
+		parcel_root.add_child(trash)
+	elif seed_val % 3 == 1:
+		var shelter = _build_bus_stop_shelter()
+		shelter.position = Vector3(0.0, 0.12, -14.0)
+		parcel_root.add_child(shelter)
+	else:
+		var hydrant = _build_fire_hydrant()
+		hydrant.position = Vector3(7.0, 0.12, -14.0)
+		parcel_root.add_child(hydrant)
 
 	if is_instance_valid(props_container):
 		props_container.add_child(parcel_root)

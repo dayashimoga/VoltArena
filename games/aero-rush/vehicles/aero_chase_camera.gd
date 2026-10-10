@@ -120,24 +120,25 @@ func _update_camera_transform(delta: float) -> void:
 	smoothed_fwd = smoothed_fwd.slerp(raw_fwd, rot_lerp).normalized()
 	smoothed_up = smoothed_up.slerp(raw_up, rot_lerp).normalized()
 
-	# 2. Dynamic Speed-Sensitive FOV & Distance with Airborne Jump Expansion
+	# 2. Dynamic Speed-Sensitive FOV & Distance with Rate-Limiting
 	var is_grounded_val = target_vehicle.get("is_grounded")
 	var is_airborne = is_grounded_val != null and not bool(is_grounded_val)
 	var airtime = target_vehicle.get("airtime_duration")
-	var is_high_jump = is_airborne and airtime != null and float(airtime) > 0.4
+	var is_high_jump = is_airborne and airtime != null and float(airtime) > 0.5
 
 	var is_boosting = target_vehicle.get("is_boost_active")
-	var boost_mult = 1.12 if (is_boosting != null and bool(is_boosting)) else 1.0
+	var boost_mult = 1.08 if (is_boosting != null and bool(is_boosting)) else 1.0
 	var target_fov = lerpf(base_fov, max_fov, speed_ratio) * boost_mult
-	fov = lerpf(fov, target_fov, delta * 8.0)
+	var max_fov_step = 4.0 * delta
+	fov = move_toward(fov, target_fov, max_fov_step)
 
 	landing_dip = lerpf(landing_dip, 0.0, delta * 9.0)
 
-	var target_dist = base_distance + speed_ratio * 1.8
+	var target_dist = base_distance + speed_ratio * 0.8
 	var target_h = base_height - landing_dip
 	if is_high_jump:
-		target_dist = base_distance * 1.35 + speed_ratio * 2.2
-		target_h = base_height * 1.28
+		target_dist = base_distance * 1.15 + speed_ratio * 0.9
+		target_h = base_height * 1.18
 	elif view_mode == 1:
 		# HOOD / BUMPER VIEW
 		target_dist = -1.4
@@ -147,7 +148,7 @@ func _update_camera_transform(delta: float) -> void:
 		target_dist = 4.8
 		target_h = 1.85
 
-	current_distance = lerpf(current_distance, target_dist, delta * 6.0)
+	current_distance = lerpf(current_distance, target_dist, 1.0 - exp(-4.0 * delta))
 
 	# 3. Position Calculation
 	var back_dir = smoothed_fwd if look_back else -smoothed_fwd
@@ -163,9 +164,9 @@ func _update_camera_transform(delta: float) -> void:
 		if collision_ray.is_colliding():
 			var col_pt = collision_ray.get_collision_point()
 			var col_norm = collision_ray.get_collision_normal()
-			final_cam_pos = col_pt + col_norm * 0.50
+			final_cam_pos = col_pt + col_norm * 0.85
 
-		global_position = global_position.lerp(final_cam_pos, clampf(delta * 16.0, 0.0, 1.0))
+		global_position = global_position.lerp(final_cam_pos, clampf(delta * 14.0, 0.0, 1.0))
 	else:
 		global_position = ideal_cam_pos
 

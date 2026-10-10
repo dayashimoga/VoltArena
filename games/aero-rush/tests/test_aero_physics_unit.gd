@@ -126,7 +126,7 @@ func test_checkpoint_recovery_transform() -> void:
 
 	veh.recover_to_checkpoint()
 	assert_true(veh.position.distance_to(safe_pos + Vector3(0, 1.2, 0)) < 0.1, "Recovery must place car at checkpoint height")
-	assert_true(veh.forward_speed > 0.0, "Recovery must provide rolling forward velocity")
+	assert_true(veh.forward_speed == 0.0, "Recovery must place car at rest with zero unintended acceleration")
 
 	veh.free()
 

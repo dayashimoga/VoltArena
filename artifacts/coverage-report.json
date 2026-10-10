@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 90.567612687813,
+  "overall_coverage_pct": 90.2662229617304,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -159,6 +159,14 @@
         "build_vehicle_visuals"
       ]
     },
+    "res://games/aero-rush/worlds/aero_world_alien.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 1,
+      "untested": [
+        "build_environment"
+      ]
+    },
     "res://games/aero-rush/worlds/aero_world_base.gd": {
       "coverage_pct": 100,
       "tested": 4,
@@ -214,6 +222,22 @@
       ]
     },
     "res://games/aero-rush/worlds/aero_world_snow.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 1,
+      "untested": [
+        "build_environment"
+      ]
+    },
+    "res://games/aero-rush/worlds/aero_world_space.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 1,
+      "untested": [
+        "build_environment"
+      ]
+    },
+    "res://games/aero-rush/worlds/aero_world_volcanic.gd": {
       "coverage_pct": 0,
       "tested": 0,
       "total": 1,
@@ -458,11 +482,12 @@
       ]
     },
     "res://games/chroma-rush/worlds/neon_city.gd": {
-      "coverage_pct": 80,
+      "coverage_pct": 66.6666666666667,
       "tested": 4,
-      "total": 5,
+      "total": 6,
       "untested": [
-        "_init"
+        "_init",
+        "setup_ground_plane"
       ]
     },
     "res://games/chroma-rush/worlds/prism_canyon.gd": {
@@ -1293,6 +1318,6 @@
     }
   },
   "tested_functions": 1085,
-  "timestamp": "2026-10-10T03:02:55",
-  "total_functions": 1198
+  "timestamp": "2026-10-10T10:35:59",
+  "total_functions": 1202
 }

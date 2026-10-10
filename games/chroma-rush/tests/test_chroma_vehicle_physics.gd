@@ -18,6 +18,7 @@ func run_tests() -> Dictionary:
 	test_all_six_vehicles_catalog_stats()
 	test_vehicle_instantiation_and_visuals()
 	test_acceleration_and_top_speed()
+	test_0_to_60_kmh_acceleration_gate()
 	test_braking_and_reverse()
 	test_steering_and_cornering()
 	test_drift_mechanic_and_boost()
@@ -94,12 +95,28 @@ func test_acceleration_and_top_speed() -> void:
 	v._ready()
 
 	v.set_inputs(0.0, 1.0, 0.0, false, false) # Full throttle
-	for i in range(30):
+	for i in range(60):
 		v._update_physics_movement(0.1)
 
 	assert_true(v.forward_speed > 15.0, "Vehicle must accelerate forward under throttle")
 	assert_true(v.forward_speed <= v.top_speed + 0.1, "Vehicle forward speed must cap at top speed")
 
+	v.free()
+
+func test_0_to_60_kmh_acceleration_gate() -> void:
+	var v = ChromaVehicle.new()
+	v.vehicle_id = ChromaConstants.VEHICLE_APEX
+	v._ready()
+	v.set_inputs(0.0, 1.0, 0.0, false, false)
+
+	var target_mps = 60.0 / 3.6
+	var delta = 0.016
+	var elapsed = 0.0
+	while elapsed < 15.0 and v.forward_speed < target_mps:
+		v._update_physics_movement(delta)
+		elapsed += delta
+
+	assert_true(elapsed >= 4.0 and elapsed <= 8.0, "Apex Striker 0-60 km/h must be between 4.0 and 8.0s (measured: %.2fs)" % elapsed)
 	v.free()
 
 func test_braking_and_reverse() -> void:

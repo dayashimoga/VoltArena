@@ -80,97 +80,123 @@ func setup_hud_layout() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
 
-	# --- TOP BAR: OBJECTIVE BADGES ---
-	var top_bar = HBoxContainer.new()
-	top_bar.name = "TopBar"
-	top_bar.anchor_right = 1.0
-	top_bar.offset_top = 16
-	top_bar.offset_left = 24
-	top_bar.offset_right = -24
-	top_bar.offset_bottom = 70
-	top_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(top_bar)
+	# --- TOP LEFT: MINI MAP RADAR (Compact glassmorphic widget) ---
+	mini_map = ChromaMiniMap.new()
+	mini_map.name = "MiniMap"
+	mini_map.custom_minimum_size = Vector2(136, 136)
+	mini_map.offset_left = 18
+	mini_map.offset_top = 16
+	mini_map.map_expand_requested.connect(func(): map_expand_requested.emit())
+	root.add_child(mini_map)
 
-	# Left: Current Color
-	current_color_badge = _create_badge("CURRENT COLOR", ChromaConstants.ChromaColor.CRIMSON)
-	top_bar.add_child(current_color_badge)
-	current_color_label = current_color_badge.get_node("VBox/ColorLabel") as Label
+	# --- TOP RIGHT: STATS PANEL (Compact glassmorphism capsule) ---
+	var stats_panel = PanelContainer.new()
+	stats_panel.name = "StatsPanel"
+	stats_panel.anchor_left = 1.0
+	stats_panel.anchor_right = 1.0
+	stats_panel.offset_left = -230
+	stats_panel.offset_top = 16
+	stats_panel.offset_right = -18
+	stats_panel.offset_bottom = 76
+	var s_style = StyleBoxFlat.new()
+	s_style.bg_color = Color(0.04, 0.06, 0.10, 0.65)
+	s_style.border_color = Color(0.18, 0.65, 0.95, 0.40)
+	s_style.set_border_width_all(1)
+	s_style.set_corner_radius_all(10)
+	s_style.content_margin_left = 12
+	s_style.content_margin_right = 12
+	s_style.content_margin_top = 6
+	s_style.content_margin_bottom = 6
+	stats_panel.add_theme_stylebox_override("panel", s_style)
+	root.add_child(stats_panel)
 
-	var spacer1 = Control.new()
-	spacer1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	spacer1.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	top_bar.add_child(spacer1)
-
-	# Center: Target Objective Color
-	target_color_badge = _create_badge("TARGET COLOR", ChromaConstants.ChromaColor.EMERALD)
-	top_bar.add_child(target_color_badge)
-	target_color_label = target_color_badge.get_node("VBox/ColorLabel") as Label
-
-	var spacer2 = Control.new()
-	spacer2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	spacer2.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	top_bar.add_child(spacer2)
-
-	# Right: Stats Panel
 	var stats_box = VBoxContainer.new()
-	stats_box.alignment = BoxContainer.ALIGNMENT_END
+	stats_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	stats_box.add_theme_constant_override("separation", 2)
+	stats_panel.add_child(stats_box)
+
+	var top_stats_hb = HBoxContainer.new()
+	stats_box.add_child(top_stats_hb)
 
 	score_label = Label.new()
 	score_label.text = "SCORE: 0"
-	score_label.add_theme_font_size_override("font_size", 20)
-	stats_box.add_child(score_label)
+	score_label.add_theme_font_size_override("font_size", 16)
+	score_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_stats_hb.add_child(score_label)
 
 	combo_label = Label.new()
-	combo_label.text = "COMBO: x1.0"
+	combo_label.text = "x1.0"
+	combo_label.add_theme_font_size_override("font_size", 16)
 	combo_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
-	stats_box.add_child(combo_label)
+	top_stats_hb.add_child(combo_label)
 
 	timer_label = Label.new()
 	timer_label.text = "TIME: 90.0s"
+	timer_label.add_theme_font_size_override("font_size", 13)
+	timer_label.add_theme_color_override("font_color", Color(0.8, 0.9, 1.0))
 	stats_box.add_child(timer_label)
 
 	swaps_left_label = Label.new()
 	swaps_left_label.text = ""
+	swaps_left_label.add_theme_font_size_override("font_size", 11)
 	stats_box.add_child(swaps_left_label)
 
-	top_bar.add_child(stats_box)
+	# --- TOP CENTER: UNIFIED OBJECTIVE STATUS PILL (Eliminates separate oversized blocking banners) ---
+	var objective_pill = PanelContainer.new()
+	objective_pill.name = "ObjectivePill"
+	objective_pill.anchor_left = 0.5
+	objective_pill.anchor_right = 0.5
+	objective_pill.offset_left = -290
+	objective_pill.offset_top = 16
+	objective_pill.offset_right = 290
+	objective_pill.offset_bottom = 58
+	var pill_style = StyleBoxFlat.new()
+	pill_style.bg_color = Color(0.04, 0.06, 0.10, 0.72)
+	pill_style.border_color = Color(0.18, 0.75, 1.0, 0.50)
+	pill_style.set_border_width_all(1)
+	pill_style.set_corner_radius_all(20)
+	pill_style.content_margin_left = 16
+	pill_style.content_margin_right = 16
+	pill_style.content_margin_top = 4
+	pill_style.content_margin_bottom = 4
+	objective_pill.add_theme_stylebox_override("panel", pill_style)
+	root.add_child(objective_pill)
 
-	# --- TOP LEFT: MINI MAP RADAR ---
-	mini_map = ChromaMiniMap.new()
-	mini_map.name = "MiniMap"
-	mini_map.offset_left = 24
-	mini_map.offset_top = 96
-	mini_map.map_expand_requested.connect(func(): map_expand_requested.emit())
-	root.add_child(mini_map)
+	var pill_hb = HBoxContainer.new()
+	pill_hb.alignment = BoxContainer.ALIGNMENT_CENTER
+	pill_hb.add_theme_constant_override("separation", 10)
+	objective_pill.add_child(pill_hb)
 
-	# --- TOP CENTER: OBJECTIVE GUIDANCE BANNER ---
-	var guidance_box = PanelContainer.new()
-	guidance_box.name = "GuidanceBanner"
-	guidance_box.anchor_left = 0.5
-	guidance_box.anchor_right = 0.5
-	guidance_box.offset_left = -260
-	guidance_box.offset_top = 76
-	guidance_box.offset_right = 260
-	guidance_box.offset_bottom = 104
-	var g_style = StyleBoxFlat.new()
-	g_style.bg_color = Color(0.06, 0.09, 0.16, 0.82)
-	g_style.border_color = Color(0.15, 0.65, 0.95, 0.5)
-	g_style.set_border_width_all(1)
-	g_style.set_corner_radius_all(6)
-	guidance_box.add_theme_stylebox_override("panel", g_style)
-	root.add_child(guidance_box)
+	# Current Color Badge inside pill
+	current_color_badge = _create_badge("CURRENT", ChromaConstants.ChromaColor.CRIMSON)
+	pill_hb.add_child(current_color_badge)
+	current_color_label = current_color_badge.get_node("VBox/ColorLabel") as Label
 
+	var arrow_lbl = Label.new()
+	arrow_lbl.text = "➔"
+	arrow_lbl.add_theme_font_size_override("font_size", 14)
+	arrow_lbl.add_theme_color_override("font_color", Color(0.3, 0.8, 1.0, 0.7))
+	pill_hb.add_child(arrow_lbl)
+
+	# Target Color Badge inside pill
+	target_color_badge = _create_badge("TARGET", ChromaConstants.ChromaColor.EMERALD)
+	pill_hb.add_child(target_color_badge)
+	target_color_label = target_color_badge.get_node("VBox/ColorLabel") as Label
+
+	var vsep = VSeparator.new()
+	pill_hb.add_child(vsep)
+
+	# Guidance message inside pill (compact single line, replaces giant floating banner)
 	guidance_lbl = Label.new()
 	guidance_lbl.name = "GuidanceLabel"
-	guidance_lbl.text = "LOCATE & SWAP TO TARGET COLOR"
-	guidance_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	guidance_lbl.text = "LOCATE & SWAP TO TARGET"
+	guidance_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	guidance_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	guidance_lbl.add_theme_font_size_override("font_size", 12)
 	guidance_lbl.add_theme_color_override("font_color", Color(0.85, 0.92, 1.0))
-	guidance_box.add_child(guidance_lbl)
+	pill_hb.add_child(guidance_lbl)
 
-	# --- LOWER CENTER: SWAP LOCK RETICLE (UNOBTRUSIVE FLOATING STATUS PILL) ---
-	# Positioned near bottom so forward driving line-of-sight and vehicle remain completely clear
+	# --- LOWER CENTER: SWAP LOCK RETICLE (UNOBTRUSIVE CONTEXTUAL FLOATING PILL) ---
 	reticle_container = PanelContainer.new()
 	reticle_container.name = "SwapReticle"
 	reticle_container.anchor_left = 0.5
@@ -439,22 +465,24 @@ func hide_mission_briefing() -> void:
 
 func _create_badge(title: String, col_id: int) -> PanelContainer:
 	var pc = PanelContainer.new()
-	pc.custom_minimum_size = Vector2(160, 50)
+	var empty_sb = StyleBoxEmpty.new()
+	pc.add_theme_stylebox_override("panel", empty_sb)
 
 	var vbox = VBoxContainer.new()
 	vbox.name = "VBox"
+	vbox.add_theme_constant_override("separation", 0)
 	pc.add_child(vbox)
 
 	var t_lbl = Label.new()
 	t_lbl.text = title
-	t_lbl.add_theme_font_size_override("font_size", 11)
-	t_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
+	t_lbl.add_theme_font_size_override("font_size", 9)
+	t_lbl.add_theme_color_override("font_color", Color(0.65, 0.75, 0.85))
 	vbox.add_child(t_lbl)
 
 	var c_lbl = Label.new()
 	c_lbl.name = "ColorLabel"
 	c_lbl.text = ChromaConstants.format_color_label(col_id)
-	c_lbl.add_theme_font_size_override("font_size", 16)
+	c_lbl.add_theme_font_size_override("font_size", 13)
 	c_lbl.add_theme_color_override("font_color", ChromaConstants.get_color_value(col_id))
 	vbox.add_child(c_lbl)
 
@@ -481,11 +509,11 @@ func _process(delta: float) -> void:
 	if rejection_timer > 0.0:
 		rejection_timer -= delta
 
-	# Contextual reticle auto-fade: when in proximity/aligning, full opacity (1.0).
-	# When idle/cruising without a target nearby, gracefully fade to subtle 0.35 so driving view remains clear
+	# Contextual reticle auto-fade: when in active alignment/proximity or alert, full opacity (1.0).
+	# When idle/cruising without a target nearby, completely invisible (0.0) so driving view is 100% unobstructed.
 	if is_instance_valid(reticle_container):
-		var target_alpha = 1.0 if (is_reticle_active or rejection_timer > 0.0) else 0.35
-		reticle_container.modulate.a = move_toward(reticle_container.modulate.a, target_alpha, delta * 3.0)
+		var target_alpha = 1.0 if (is_reticle_active or rejection_timer > 0.0) else 0.0
+		reticle_container.modulate.a = move_toward(reticle_container.modulate.a, target_alpha, delta * 4.0)
 
 	if player_vehicle and is_instance_valid(player_vehicle):
 		var kph = int(player_vehicle.speed_kph)
@@ -556,6 +584,7 @@ func _update_swap_reticle() -> void:
 			eval_reason = check.get("reason", "")
 
 	if tgt_id != "":
+		is_reticle_active = true
 		var progress = swap_engine.get_alignment_progress("player", tgt_id)
 		alignment_progress_bar.value = progress
 
@@ -591,6 +620,7 @@ func _update_swap_reticle() -> void:
 			swap_prompt_label.text = "PULL ALONGSIDE [%s] (<8m) TO SWAP" % color_label
 			swap_prompt_label.modulate = Color(0.85, 0.85, 0.85)
 	else:
+		is_reticle_active = false
 		alignment_progress_bar.value = 0.0
 		if mission_director and is_instance_valid(mission_director):
 			var req_col = mission_director.get_current_target_color()

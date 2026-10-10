@@ -291,30 +291,34 @@ func _update_physics_movement(delta: float) -> void:
 	if boost_time_left > 0.0:
 		boost_time_left = maxf(0.0, boost_time_left - delta)
 
-	# Longitudinal Acceleration & Braking
+	# Longitudinal Acceleration & Braking with calibrated progressive torque power curve
 	if throttle_input > 0.0:
-		var accel_rate = acceleration * (1.3 if boost_time_left > 0.0 else 1.0)
-		forward_speed = move_toward(forward_speed, active_max_speed, accel_rate * delta)
+		var current_spd = maxf(0.0, forward_speed)
+		var spd_ratio = clampf(current_spd / maxf(top_speed, 1.0), 0.0, 1.0)
+		# Progressive torque curve: highest torque off the line, tapering smoothly
+		var torque_factor = lerpf(1.30, 0.50, pow(spd_ratio, 0.8))
+		var accel_rate = acceleration * torque_factor * (1.25 if boost_time_left > 0.0 else 1.0)
+		forward_speed = move_toward(forward_speed, active_max_speed * throttle_input, accel_rate * delta)
 	elif brake_input > 0.0:
 		if forward_speed > 0.5:
 			# Braking
 			forward_speed = move_toward(forward_speed, 0.0, brake_force * delta)
 		else:
 			# Reverse (capped at 12 m/s)
-			forward_speed = move_toward(forward_speed, -12.0, acceleration * 0.6 * delta)
+			forward_speed = move_toward(forward_speed, -12.0 * brake_input, brake_force * 0.45 * delta)
 	else:
 		# Rolling friction drag
-		forward_speed = move_toward(forward_speed, 0.0, 6.0 * delta)
+		forward_speed = move_toward(forward_speed, 0.0, 5.5 * delta)
 
-	# Progressive Steering & Speed-Sensitive Cornering Limits
+	# Progressive Steering & Speed-Sensitive Cornering (P95 response <= 100ms)
 	var deadzone = 0.05
 	var target_steer = steer_input if absf(steer_input) > deadzone else 0.0
-	var steer_rate = 9.0 if absf(target_steer) > absf(smoothed_steer_input) else 14.0
+	var steer_rate = 18.0 if absf(target_steer) > absf(smoothed_steer_input) else 24.0
 	smoothed_steer_input = move_toward(smoothed_steer_input, target_steer, steer_rate * delta)
 
 	if is_grounded:
 		var speed_ratio = clampf(absf(forward_speed) / maxf(top_speed, 1.0), 0.0, 1.0)
-		var speed_damp = 1.0 / (1.0 + maxf(0.0, (get_speed_kmh() - 40.0) / 70.0))
+		var speed_damp = 1.0 / (1.0 + maxf(0.0, (get_speed_kmh() - 35.0) / 65.0))
 		var effective_steer_speed = steer_speed * speed_damp
 
 		if is_drifting:
@@ -324,7 +328,8 @@ func _update_physics_movement(delta: float) -> void:
 			drift_charge = minf(drift_charge + delta * 0.9, 3.0)
 		else:
 			# Standard responsive arcade cornering with progressive smoothed steering
-			var yaw = -smoothed_steer_input * effective_steer_speed * delta * (1.0 if forward_speed >= 0.0 else -1.0) * minf(absf(forward_speed) / 3.5, 1.0)
+			var steer_engagement = clampf(absf(forward_speed) / 2.5, 0.0, 1.0)
+			var yaw = -smoothed_steer_input * effective_steer_speed * delta * (1.0 if forward_speed >= 0.0 else -1.0) * steer_engagement
 			rotate_y(yaw)
 
 	# Compose 3D velocity
@@ -372,7 +377,7 @@ func _update_physics_movement(delta: float) -> void:
 	else:
 		position += velocity * delta
 
-	# Track valid road coordinates if grounded and level on the actual roadway
+	# Track valid road coordinates if grounded and strictly within road corridor (<= 6.5m from road centerline)
 	if is_grounded and t.basis.y.dot(Vector3.UP) > 0.7:
 		var cur_pos = global_position if is_inside_tree() else position
 		var on_road = true
@@ -381,7 +386,7 @@ func _update_physics_movement(delta: float) -> void:
 			if world and world.has_method("get_nearest_safe_road_transform"):
 				var safe_xf = world.get_nearest_safe_road_transform(cur_pos)
 				var d_road = (cur_pos - safe_xf.origin).length()
-				if d_road > 9.5:
+				if d_road > 6.5:
 					on_road = false
 		if on_road:
 			last_valid_track_pos = cur_pos

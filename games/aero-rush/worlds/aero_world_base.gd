@@ -62,10 +62,10 @@ func setup_lighting(sun_color: Color, sun_energy: float, sun_rot: Vector3, sky_t
 	env.fog_density = fog_density
 	env.fog_aerial_perspective = 0.45
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_exposure = 1.15
+	env.tonemap_exposure = 1.0
 	env.glow_enabled = true
-	env.glow_intensity = 0.22
-	env.glow_bloom = 0.03
+	env.glow_intensity = 0.12
+	env.glow_bloom = 0.01
 
 	world_env.environment = env
 	add_child(world_env)

@@ -184,7 +184,7 @@ func test_scenario_5_checkpoint_progression_and_recovery() -> void:
 	# Test safe recovery
 	var prev_pos = aero.player_vehicle.global_position
 	aero.player_vehicle.recover_to_checkpoint()
-	assert_true(aero.player_vehicle.forward_speed > 0.0, "Recovery must provide forward impulse")
+	assert_true(aero.player_vehicle.forward_speed == 0.0, "Recovery must place car at rest with zero unintended acceleration")
 
 	aero.clean_up_session()
 	aero.queue_free()

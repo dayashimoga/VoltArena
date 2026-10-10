@@ -692,12 +692,8 @@ func _check_rollover_and_recovery(delta: float) -> void:
 		rollover_timer = 0.0
 		stuck_timer = 0.0
 
-	# 5. Record safe checkpoint transform if driving cleanly on flat track
-	# STRICT GUARD: Never record a position on the ground plane when track is elevated
-	if is_grounded and up_dot > 0.75 and absf(forward_speed) > 10.0:
-		if absf(global_position.y - last_safe_checkpoint_pos.y) < 4.0:
-			last_safe_checkpoint_pos = global_position
-			last_safe_checkpoint_basis = global_basis
+	# Checkpoints are ONLY recorded by authoritative AeroCheckpoint volumes or verified landing decks,
+	# NEVER dynamically on the track lip or jump edge to eliminate recurring loops.
 
 func update_checkpoint(pos: Vector3, b: Basis) -> void:
 	last_safe_checkpoint_pos = pos
@@ -713,9 +709,8 @@ func recover_to_checkpoint() -> void:
 		position = spawn_pos
 		transform.basis = last_safe_checkpoint_basis
 
-	var fwd = -last_safe_checkpoint_basis.z.normalized()
-	forward_speed = 18.0
-	velocity = fwd * 18.0
+	forward_speed = 0.0
+	velocity = Vector3.ZERO
 	is_grounded = true
 	airtime_duration = 0.0
 	rollover_timer = 0.0

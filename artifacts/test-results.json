@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 90.567612687813,
+  "coverage_percent": 90.2662229617304,
   "coverage_tested_functions": 1085,
-  "coverage_total_functions": 1198,
-  "execution_seconds": 92.12,
+  "coverage_total_functions": 1202,
+  "execution_seconds": 136.947,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -82,7 +82,7 @@
     },
     "Chroma Vehicle Physics Unit": {
       "failed": 0,
-      "passed": 44,
+      "passed": 45,
       "status": "PASS"
     },
     "Chroma Worlds & Integration Unit": {
@@ -406,8 +406,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-10-10T03:02:55",
+  "timestamp": "2026-10-10T10:35:59",
   "total_failed": 0,
-  "total_passed": 3041,
+  "total_passed": 3042,
   "total_suites": 80
 }

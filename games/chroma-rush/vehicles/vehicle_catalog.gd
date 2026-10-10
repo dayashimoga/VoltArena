@@ -13,7 +13,7 @@ static func get_vehicle_definition(vehicle_id: String) -> Dictionary:
 				"name": "Vortex Drift",
 				"tagline": "Precision Drift Tuner",
 				"top_speed": 34.0,       # m/s (~122 km/h)
-				"acceleration": 26.0,    # m/s²
+				"acceleration": 3.0,     # m/s² (0-60 km/h: ~5.38 s)
 				"steer_speed": 3.8,      # rad/s
 				"brake_force": 34.0,     # m/s²
 				"drift_factor": 5.2,     # lateral yaw multiplier during drift
@@ -29,7 +29,7 @@ static func get_vehicle_definition(vehicle_id: String) -> Dictionary:
 				"name": "Titan Vanguard",
 				"tagline": "Heavy Armored Interceptor",
 				"top_speed": 31.0,       # m/s (~111 km/h)
-				"acceleration": 32.0,    # m/s²
+				"acceleration": 2.4,     # m/s² (0-60 km/h: ~6.86 s)
 				"steer_speed": 2.8,      # rad/s
 				"brake_force": 42.0,     # m/s²
 				"drift_factor": 3.2,
@@ -45,7 +45,7 @@ static func get_vehicle_definition(vehicle_id: String) -> Dictionary:
 				"name": "Pulse Cyber",
 				"tagline": "Instant Electric Sprinter",
 				"top_speed": 36.0,       # m/s (~130 km/h)
-				"acceleration": 34.0,    # m/s²
+				"acceleration": 3.8,     # m/s² (0-60 km/h: ~4.19 s)
 				"steer_speed": 3.6,      # rad/s
 				"brake_force": 38.0,     # m/s²
 				"drift_factor": 4.0,
@@ -61,7 +61,7 @@ static func get_vehicle_definition(vehicle_id: String) -> Dictionary:
 				"name": "Dune Nomad",
 				"tagline": "All-Terrain Trophy Cruiser",
 				"top_speed": 32.0,       # m/s (~115 km/h)
-				"acceleration": 27.0,    # m/s²
+				"acceleration": 2.7,     # m/s² (0-60 km/h: ~6.06 s)
 				"steer_speed": 3.2,      # rad/s
 				"brake_force": 32.0,     # m/s²
 				"drift_factor": 3.8,
@@ -77,7 +77,7 @@ static func get_vehicle_definition(vehicle_id: String) -> Dictionary:
 				"name": "Quantum Phantom",
 				"tagline": "Experimental Lev-Chassis",
 				"top_speed": 40.0,       # m/s (~144 km/h)
-				"acceleration": 30.0,    # m/s²
+				"acceleration": 3.9,     # m/s² (0-60 km/h: ~4.05 s)
 				"steer_speed": 4.0,      # rad/s
 				"brake_force": 40.0,     # m/s²
 				"drift_factor": 4.6,
@@ -93,7 +93,7 @@ static func get_vehicle_definition(vehicle_id: String) -> Dictionary:
 				"name": "Apex Striker",
 				"tagline": "Hyper-Aerodynamic Interceptor",
 				"top_speed": 38.0,       # m/s (~137 km/h)
-				"acceleration": 28.0,    # m/s²
+				"acceleration": 3.2,     # m/s² (0-60 km/h: ~4.93 s)
 				"steer_speed": 3.4,      # rad/s
 				"brake_force": 36.0,     # m/s²
 				"drift_factor": 4.2,

@@ -29,6 +29,9 @@ const AeroWorldSky = preload("res://games/aero-rush/worlds/aero_world_sky.gd")
 const AeroWorldSnow = preload("res://games/aero-rush/worlds/aero_world_snow.gd")
 const AeroWorldForest = preload("res://games/aero-rush/worlds/aero_world_forest.gd")
 const AeroWorldSkyline = preload("res://games/aero-rush/worlds/aero_world_skyline.gd")
+const AeroWorldAlien = preload("res://games/aero-rush/worlds/aero_world_alien.gd")
+const AeroWorldSpace = preload("res://games/aero-rush/worlds/aero_world_space.gd")
+const AeroWorldVolcanic = preload("res://games/aero-rush/worlds/aero_world_volcanic.gd")
 
 const AeroHUD = preload("res://games/aero-rush/ui/aero_hud.gd")
 const AeroMainMenu = preload("res://games/aero-rush/ui/aero_main_menu.gd")
@@ -338,6 +341,12 @@ func _spawn_environment(env_type: int) -> void:
 			active_world = AeroWorldForest.new()
 		AeroConstants.EnvironmentType.SKYLINE_RUSH:
 			active_world = AeroWorldSkyline.new()
+		AeroConstants.EnvironmentType.ALIEN_PLANET:
+			active_world = AeroWorldAlien.new()
+		AeroConstants.EnvironmentType.ORBITAL_SPACE:
+			active_world = AeroWorldSpace.new()
+		AeroConstants.EnvironmentType.VOLCANIC_UNDERWORLD:
+			active_world = AeroWorldVolcanic.new()
 		_:
 			active_world = AeroWorldMegacity.new()
 

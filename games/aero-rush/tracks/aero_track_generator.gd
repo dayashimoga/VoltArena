@@ -33,13 +33,13 @@ void fragment() {
 	if (is_border_left) {
 		// Glowing Cyan Left Guide Rail
 		ALBEDO = neon_left_color.rgb;
-		EMISSION = neon_left_color.rgb * 4.2;
+		EMISSION = neon_left_color.rgb * 1.8;
 		ROUGHNESS = 0.08;
 		METALLIC = 0.75;
 	} else if (is_border_right) {
 		// Glowing Magenta Right Guide Rail
 		ALBEDO = neon_right_color.rgb;
-		EMISSION = neon_right_color.rgb * 4.2;
+		EMISSION = neon_right_color.rgb * 1.8;
 		ROUGHNESS = 0.08;
 		METALLIC = 0.75;
 	} else if (is_barrier_face) {
@@ -52,7 +52,7 @@ void fragment() {
 		float stripe = mod(UV.y * 6.0, 2.0);
 		vec3 c_col = (stripe < 1.0) ? curb_color.rgb : vec3(0.96, 0.96, 0.98);
 		ALBEDO = c_col;
-		EMISSION = (stripe < 1.0) ? curb_color.rgb * 1.2 : vec3(0.35);
+		EMISSION = (stripe < 1.0) ? curb_color.rgb * 0.9 : vec3(0.20);
 		ROUGHNESS = 0.32;
 		METALLIC = 0.15;
 	} else if (is_center_line) {
@@ -60,7 +60,7 @@ void fragment() {
 		float dash = mod(UV.y * 5.0, 2.0);
 		if (dash < 1.0) {
 			ALBEDO = vec3(1.0, 0.92, 0.15);
-			EMISSION = vec3(1.0, 0.92, 0.15) * 2.5;
+			EMISSION = vec3(1.0, 0.92, 0.15) * 1.2;
 		} else {
 			ALBEDO = asphalt_color.rgb;
 		}
@@ -108,7 +108,7 @@ void fragment() {
 
 	if (is_chevron) {
 		ALBEDO = chevron_color.rgb;
-		EMISSION = chevron_color.rgb * 4.5;
+		EMISSION = chevron_color.rgb * 1.8;
 		ROUGHNESS = 0.10;
 		METALLIC = 0.80;
 	} else {
@@ -128,7 +128,7 @@ void fragment() {
 	float stripe = mod((UV.x + UV.y * 2.0) * 8.0, 2.0);
 	if (stripe < 1.0) {
 		ALBEDO = vec3(1.0, 0.85, 0.05);
-		EMISSION = vec3(1.0, 0.85, 0.05) * 1.5;
+		EMISSION = vec3(1.0, 0.85, 0.05) * 1.0;
 	} else {
 		ALBEDO = vec3(0.10, 0.11, 0.13);
 	}

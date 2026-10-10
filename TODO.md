@@ -1468,9 +1468,19 @@
   - `artifacts/artifact-manifest.json` (Package sizes & SHA-256 hashes)
   - `IMPLEMENTATION_PLAN.md` & `IMPLEMENTATION_WALKTHROUGH.md` (Sections 15 & 16)
 
-
-
-
-
-
+### [2026-10-10 18:45:00 UTC] - Milestone Update: Architectural PBR Shaders, Vehicle Contact Shadows & Sightline Clearances (v8.5.0)
+- **Status**: COMPLETED
+- **Description**:
+  1. **DEF-CR-08 Architectural PBR Surface Materials**: Replaced destructive `material_override` standard material with procedural `ShaderMaterial` (`ARCHITECTURAL_SHADER_CODE`) in `games/chroma-rush/worlds/neon_city.gd`. Retains native glTF UV texture detail while selectively shading reflective glass curtain walls (specular 0.88, roughness 0.08, metallic 0.85), dark architectural plinths, and metallic spandrel trim. Implemented authentic New York palettes (Madison Avenue Limestone, Midtown Sapphire Glass, Tribeca Red Brick, Financial District Slate & Patina Copper, Park Avenue Marble). Added outer 360° stepped skyscraper silhouette ArrayMesh ($r = 580\text{m}$).
+  2. **DEF-CR-09 Vehicle Contact Shadow & Automotive Clearcoat**: Replaced unshaded black quad with procedural `CONTACT_SHADOW_SHADER_CODE` radial ambient occlusion contact shadow (`vehicle_visuals.gd`). Connected `AUTOMOTIVE_SHADER_CODE` in `apply_gameplay_color()` with smoked glass canopy (specular 0.95), projector LED headlights, reactive brake and reverse lights, carbon fiber trim, and metallic clearcoat paint. Connected `WHEEL_SHADER_CODE` for precision alloy rims and vulcanized rubber tires.
+  3. **DEF-CR-10 Downtown Central Plaza Sightline Protection**: Enforced open plaza clearance envelope across $Z \in [-155, -225]$ and $X \in [-45, 15]$ on the outside turn curve, eliminating `CommercialLeft_2_12` from obstructing the straightaway line of sight 50m past Checkpoint Gate 1. Increased building setback from 28m to 32–36m and minimum road spline clearance from 22m to 28m.
+  4. **Regression & Monorepo Verification**:
+     - Automated test runner: 80 suites, 3,052 passed assertions, 0 failed (100% pass rate, 90.3% function coverage).
+     - Production certifier: Overall Status: `RUNTIME_VERIFIED`, 0 failed gates, 0 unresolved P0/P1 defects.
+- **Evidence**:
+  - `artifacts/test-results.json` (3,052 passed, 0 failed, 80 suites)
+  - `artifacts/coverage-report.json` (90.3% function coverage)
+  - `artifacts/production-certification.json` (`RUNTIME_VERIFIED`, 0 failed gates)
+  - `IMPLEMENTATION_PLAN.md` & `IMPLEMENTATION_WALKTHROUGH.md` (Section 17)
+  - `CHANGELOG.md` (Release 8.5.0)
 

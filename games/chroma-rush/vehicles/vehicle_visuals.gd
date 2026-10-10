@@ -153,15 +153,13 @@ static func _build_ground_contact_shadow() -> MeshInstance3D:
 	var mi = MeshInstance3D.new()
 	mi.name = "GroundContactShadow"
 	var quad = QuadMesh.new()
-	quad.size = Vector2(2.1, 4.3)
+	quad.size = Vector2(2.5, 4.6)
 	mi.mesh = quad
 	mi.rotation_degrees.x = -90.0
 	mi.position = Vector3(0, 0.012, 0)
-	var mat = StandardMaterial3D.new()
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Color(0.015, 0.015, 0.02, 0.65)
-	mi.material_override = mat
+	var sm = ShaderMaterial.new()
+	sm.shader = get_contact_shadow_shader()
+	mi.material_override = sm
 	return mi
 
 
@@ -351,22 +349,19 @@ static func apply_gameplay_color(vehicle_visual: Node3D, color_id: int, finish: 
 			var is_wheel = "wheel" in mi.name.to_lower()
 			if is_wheel:
 				# Apply dedicated realistic rubber tire & alloy rim material
-				var w_mat = StandardMaterial3D.new()
-				w_mat.albedo_color = Color(0.12, 0.12, 0.14)
-				w_mat.roughness = 0.88
-				w_mat.metallic = 0.20
-				mi.material_override = w_mat
+				var wm = ShaderMaterial.new()
+				wm.shader = get_wheel_shader()
+				mi.material_override = wm
 			else:
-				# Exterior automotive body panels (body, spoiler, etc.)
-				var mat = StandardMaterial3D.new()
-				mat.albedo_color = col
-				mat.metallic = metallic_v
-				mat.roughness = roughness_v
-				mat.clearcoat_enabled = true
-				mat.clearcoat = clearcoat_v
+				# Exterior automotive body panels with PBR metallic paint, smoked canopy glass, LED headlights & taillights
+				var sm = ShaderMaterial.new()
+				sm.shader = get_paint_shader()
+				sm.set_shader_parameter("paint_color", col)
+				sm.set_shader_parameter("metallic_val", metallic_v)
+				sm.set_shader_parameter("roughness_val", roughness_v)
 				if colormap_tex:
-					mat.albedo_texture = colormap_tex
-				mi.material_override = mat
+					sm.set_shader_parameter("albedo_texture", colormap_tex)
+				mi.material_override = sm
 				mi.set_meta("is_body_paint", true)
 				mi.add_to_group("body_paint_meshes")
 

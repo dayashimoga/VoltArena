@@ -32,115 +32,122 @@ uniform float window_roughness : hint_range(0.0, 1.0) = 0.08;
 void fragment() {
 	vec4 tex = texture(albedo_texture, UV);
 
-	bool is_window = (tex.a > 0.5 && tex.r < 0.18 && tex.g < 0.18 && tex.b < 0.18 && length(tex.rgb) > 0.04);
-	bool is_teal_base = (tex.g > 0.48 && tex.r < 0.42);
-	bool is_orange_band = (tex.r > 0.88 && tex.g < 0.66 && tex.b < 0.45);
+	bool is_window = (tex.a > 0.5 && tex.r < 0.20 && tex.g < 0.20 && tex.b < 0.20 && length(tex.rgb) > 0.03);
+	bool is_teal_base = (tex.g > 0.45 && tex.r < 0.42);
+	bool is_orange_band = (tex.r > 0.82 && tex.g < 0.68 && tex.b < 0.48);
 
 	if (tex.a < 0.1 || length(tex.rgb) < 0.04) {
-		// Missing texture fallback: use vibrant primary wall color directly
+		// Missing texture fallback: use primary wall tone
 		ALBEDO = color_wall_primary.rgb;
 		METALLIC = wall_metallic;
 		ROUGHNESS = wall_roughness;
 	} else if (is_window) {
-
+		// High-fidelity reflective glass curtain wall with crisp specular response
 		ALBEDO = color_window.rgb;
 		METALLIC = window_metallic;
 		ROUGHNESS = window_roughness;
-		SPECULAR = 0.7;
+		SPECULAR = 0.88;
 	} else if (is_teal_base) {
+		// Dark ground-floor architectural granite plinth
 		ALBEDO = color_wall_secondary.rgb;
-		METALLIC = 0.20;
+		METALLIC = 0.25;
 		ROUGHNESS = 0.65;
+		SPECULAR = 0.40;
 	} else if (is_orange_band) {
+		// Architectural metal / stone trim and spandrel cornice
 		ALBEDO = color_trim.rgb;
-		METALLIC = 0.50;
-		ROUGHNESS = 0.35;
+		METALLIC = 0.60;
+		ROUGHNESS = 0.30;
+		SPECULAR = 0.60;
 	} else {
+		// Masonry / stone wall panels: blend texture details with rich architectural stone palette
 		float lum = (tex.r * 0.299 + tex.g * 0.587 + tex.b * 0.114);
-		float factor = clamp(lum / 0.82, 0.88, 1.15);
-		ALBEDO = color_wall_primary.rgb * factor;
+		float factor = clamp(lum / 0.75, 0.82, 1.18);
+		vec3 stone_mix = mix(tex.rgb * 0.85, color_wall_primary.rgb * factor, 0.50);
+		ALBEDO = stone_mix;
 		METALLIC = wall_metallic;
 		ROUGHNESS = wall_roughness;
+		SPECULAR = 0.30;
 	}
 }
 """
 
 const ARCHITECTURAL_THEMES = [
-	# 0. Modern Sapphire Glass Tower (Reflective deep blue curtain wall)
+	# 0. Modern Sapphire & Slate Glass Tower (Reflective deep blue/slate curtain wall)
 	{
-		"wall_primary": Color(0.28, 0.50, 0.75),
-		"wall_secondary": Color(0.78, 0.82, 0.86),
-		"window": Color(0.12, 0.28, 0.48),
-		"trim": Color(0.90, 0.93, 0.96),
-		"wall_metallic": 0.65,
-		"wall_roughness": 0.20,
+		"wall_primary": Color(0.24, 0.32, 0.42),
+		"wall_secondary": Color(0.18, 0.20, 0.22),
+		"window": Color(0.10, 0.20, 0.32),
+		"trim": Color(0.70, 0.74, 0.78),
+		"wall_metallic": 0.35,
+		"wall_roughness": 0.40,
 		"window_metallic": 0.90,
 		"window_roughness": 0.05,
 		"window_clearcoat": 1.0,
 		"name": "sapphire_glass"
 	},
-	# 1. Warm Limestone & Dark Bronze Executive Center
+	# 1. Warm Madison Avenue Limestone & Bronze Executive Center
 	{
-		"wall_primary": Color(0.88, 0.85, 0.80),
-		"wall_secondary": Color(0.35, 0.32, 0.28),
-		"window": Color(0.20, 0.18, 0.16),
-		"trim": Color(0.55, 0.45, 0.32),
+		"wall_primary": Color(0.82, 0.78, 0.72),
+		"wall_secondary": Color(0.28, 0.25, 0.22),
+		"window": Color(0.14, 0.15, 0.18),
+		"trim": Color(0.48, 0.40, 0.30),
 		"wall_metallic": 0.02,
 		"wall_roughness": 0.85,
-		"window_metallic": 0.75,
-		"window_roughness": 0.12,
+		"window_metallic": 0.80,
+		"window_roughness": 0.10,
 		"window_clearcoat": 0.8,
 		"name": "limestone_bronze"
 	},
-	# 2. Obsidian Tech Tower (Sleek slate composite with vibrant cyan trim)
+	# 2. Tribeca Aged Red Brick & Cast Iron
 	{
-		"wall_primary": Color(0.35, 0.38, 0.42),
-		"wall_secondary": Color(0.22, 0.24, 0.26),
-		"window": Color(0.15, 0.45, 0.55),
-		"trim": Color(0.20, 0.85, 0.95),
-		"wall_metallic": 0.40,
-		"wall_roughness": 0.45,
-		"window_metallic": 0.88,
-		"window_roughness": 0.08,
-		"window_clearcoat": 0.9,
-		"name": "obsidian_tech"
-	},
-	# 3. Emerald Eco-Terrace Tower (Crisp Scandinavian White Stone & Cedar Wood)
-	{
-		"wall_primary": Color(0.94, 0.95, 0.94),
-		"wall_secondary": Color(0.55, 0.38, 0.24),
-		"window": Color(0.15, 0.35, 0.22),
-		"trim": Color(0.28, 0.60, 0.36),
+		"wall_primary": Color(0.58, 0.30, 0.22),
+		"wall_secondary": Color(0.20, 0.20, 0.22),
+		"window": Color(0.12, 0.14, 0.16),
+		"trim": Color(0.72, 0.68, 0.62),
 		"wall_metallic": 0.05,
-		"wall_roughness": 0.72,
-		"window_metallic": 0.65,
-		"window_roughness": 0.15,
+		"wall_roughness": 0.90,
+		"window_metallic": 0.75,
+		"window_roughness": 0.12,
+		"window_clearcoat": 0.5,
+		"name": "red_brick_castiron"
+	},
+	# 3. Scandinavian White Marble & Cedar Composite
+	{
+		"wall_primary": Color(0.88, 0.88, 0.86),
+		"wall_secondary": Color(0.42, 0.32, 0.22),
+		"window": Color(0.12, 0.22, 0.18),
+		"trim": Color(0.65, 0.58, 0.48),
+		"wall_metallic": 0.08,
+		"wall_roughness": 0.75,
+		"window_metallic": 0.85,
+		"window_roughness": 0.08,
 		"window_clearcoat": 0.7,
-		"name": "eco_terrace"
+		"name": "eco_marble_wood"
 	},
-	# 4. Terracotta & Patina Copper Metro Tower
+	# 4. Financial District Slate Composite & Patina Copper
 	{
-		"wall_primary": Color(0.75, 0.42, 0.28),
-		"wall_secondary": Color(0.38, 0.24, 0.18),
-		"window": Color(0.22, 0.20, 0.16),
-		"trim": Color(0.40, 0.65, 0.55),
-		"wall_metallic": 0.15,
-		"wall_roughness": 0.88,
-		"window_metallic": 0.60,
-		"window_roughness": 0.18,
+		"wall_primary": Color(0.32, 0.34, 0.38),
+		"wall_secondary": Color(0.22, 0.24, 0.26),
+		"window": Color(0.10, 0.22, 0.26),
+		"trim": Color(0.35, 0.60, 0.52),
+		"wall_metallic": 0.20,
+		"wall_roughness": 0.60,
+		"window_metallic": 0.85,
+		"window_roughness": 0.08,
 		"window_clearcoat": 0.6,
-		"name": "terracotta_copper"
+		"name": "slate_patina"
 	},
-	# 5. Titanium Modernist High-Rise (Brushed aerospace metal & glass)
+	# 5. Titanium Modernist High-Rise (Brushed aerospace metal & dark smoked glass)
 	{
-		"wall_primary": Color(0.75, 0.78, 0.82),
-		"wall_secondary": Color(0.32, 0.36, 0.40),
-		"window": Color(0.12, 0.15, 0.20),
-		"trim": Color(0.90, 0.93, 0.96),
+		"wall_primary": Color(0.65, 0.68, 0.72),
+		"wall_secondary": Color(0.26, 0.28, 0.32),
+		"window": Color(0.10, 0.12, 0.16),
+		"trim": Color(0.88, 0.90, 0.94),
 		"wall_metallic": 0.85,
 		"wall_roughness": 0.30,
-		"window_metallic": 0.80,
-		"window_roughness": 0.10,
+		"window_metallic": 0.88,
+		"window_roughness": 0.06,
 		"window_clearcoat": 0.85,
 		"name": "titanium_modernist"
 	}
@@ -361,11 +368,16 @@ func build_props() -> void:
 
 		# Build buildings on BOTH sides to form an authentic dense metropolitan streetwall
 		for side in [-1.0, 1.0]:
-			var setback = 28.0 + float((s_idx) % 3) * 2.0
+			var setback = 32.0 + float((s_idx) % 3) * 2.0
 			var b_pos = p_curr + right * (side * setback)
 			b_pos.y = p_curr.y
 
-			if not _is_clear_of_spline(b_pos, 22.0):
+			if not _is_clear_of_spline(b_pos, 28.0):
+				continue
+
+			# Downtown Central Plaza sightline protection (Turn apex between WP 1 and WP 3)
+			# Keeps the entire outside curve of North Financial Avenue open for an expansive, clear grand plaza vista
+			if b_pos.z < -155.0 and b_pos.z > -225.0 and b_pos.x < 15.0 and b_pos.x > -45.0:
 				continue
 
 			var theme_idx = (s_idx * 3 + wp_nearest + (1 if side > 0 else 0)) % ARCHITECTURAL_THEMES.size()
@@ -375,8 +387,7 @@ func build_props() -> void:
 				b_node.position = b_pos
 				b_node.rotation_degrees.y = rot_y + (90.0 if side < 0 else -90.0)
 				props_container.add_child(b_node)
-
-			_build_urban_block_parcel(p_curr, right * side, setback, b_pos, rot_y + (90.0 if side < 0 else -90.0), wp_nearest, s_idx + (100 if side > 0 else 0))
+				_build_urban_block_parcel(p_curr, right * side, setback, b_pos, rot_y + (90.0 if side < 0 else -90.0), wp_nearest, s_idx + (100 if side > 0 else 0))
 
 	# 2. Dense mature street trees along both sidewalk verges
 	var tree_interval = 8
@@ -736,7 +747,7 @@ func _build_city_landmarks() -> void:
 		props_container.add_child(clocktower)
 
 func _build_distant_skyline_backdrop() -> void:
-	# 360-degree monumental skyline silhouette instanced from real skyscraper models
+	# 1. 360-degree monumental skyline silhouette instanced from real skyscraper models
 	var skyscraper_models = [
 		"res://assets/models/environment/building_skyscraper_a.glb",
 		"res://assets/models/environment/building_skyscraper_b.glb",
@@ -761,6 +772,78 @@ func _build_distant_skyline_backdrop() -> void:
 			b_glb.rotation_degrees.y = rot_y
 			_style_building(b_glb, i % ARCHITECTURAL_THEMES.size())
 			props_container.add_child(b_glb)
+
+	# 2. Stepped architectural skyline ArrayMesh backdrop on outer perimeter
+	var sky_mesh = _create_stepped_skyline_mesh()
+	if sky_mesh:
+		var mi = MeshInstance3D.new()
+		mi.name = "DistantSteppedSkylineMesh"
+		mi.mesh = sky_mesh
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.18, 0.22, 0.28)
+		mat.metallic = 0.65
+		mat.roughness = 0.40
+		mi.material_override = mat
+		props_container.add_child(mi)
+
+func _create_stepped_skyline_mesh() -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+
+	var radius = 580.0
+	var count = 36
+	for i in range(count):
+		var angle = (float(i) / float(count)) * TAU
+		var fwd = Vector3(cos(angle), 0, sin(angle))
+		var base_pos = fwd * radius
+
+		var tower_w = 28.0 + float((i * 7) % 5) * 8.0
+		var tower_h = 110.0 + float((i * 11) % 7) * 35.0
+		var tower_d = 28.0 + float((i * 5) % 4) * 6.0
+
+		# Tier 1 (Main shaft)
+		_append_box_to_surfacetool(st, base_pos + Vector3(0, tower_h * 0.5, 0), Vector3(tower_w, tower_h, tower_d), angle)
+		# Tier 2 (Stepped crown)
+		var crown_h = tower_h * 0.28
+		var crown_w = tower_w * 0.65
+		_append_box_to_surfacetool(st, base_pos + Vector3(0, tower_h + crown_h * 0.5, 0), Vector3(crown_w, crown_h, crown_w), angle)
+		# Tier 3 (Spire)
+		if i % 3 == 0:
+			var spire_h = tower_h * 0.22
+			_append_box_to_surfacetool(st, base_pos + Vector3(0, tower_h + crown_h + spire_h * 0.5, 0), Vector3(2.5, spire_h, 2.5), angle)
+
+	st.generate_normals()
+	return st.commit()
+
+static func _append_box_to_surfacetool(st: SurfaceTool, center: Vector3, size: Vector3, rot_y: float) -> void:
+	var hw = size.x * 0.5
+	var hh = size.y * 0.5
+	var hd = size.z * 0.5
+	var cos_a = cos(rot_y)
+	var sin_a = sin(rot_y)
+
+	var local_pts = [
+		Vector3(-hw, -hh, -hd), Vector3(hw, -hh, -hd), Vector3(hw, hh, -hd), Vector3(-hw, hh, -hd),
+		Vector3(-hw, -hh, hd), Vector3(hw, -hh, hd), Vector3(hw, hh, hd), Vector3(-hw, hh, hd)
+	]
+	var world_pts: Array[Vector3] = []
+	for p in local_pts:
+		var rx = p.x * cos_a - p.z * sin_a
+		var rz = p.x * sin_a + p.z * cos_a
+		world_pts.append(center + Vector3(rx, p.y, rz))
+
+	var faces = [
+		[0, 2, 1], [0, 3, 2],
+		[5, 6, 4], [4, 6, 7],
+		[4, 3, 0], [4, 7, 3],
+		[1, 2, 5], [5, 2, 6],
+		[3, 7, 2], [2, 7, 6],
+		[0, 1, 4], [4, 1, 5]
+	]
+	for f in faces:
+		st.add_vertex(world_pts[f[0]])
+		st.add_vertex(world_pts[f[1]])
+		st.add_vertex(world_pts[f[2]])
 
 func _get_district_tree_species(wp_idx: int) -> String:
 	match wp_idx:
@@ -936,19 +1019,25 @@ func _build_parked_vehicle_prop() -> Node3D:
 static var _cached_colormap_tex: Texture2D = null
 static var _cached_theme_materials: Dictionary = {}
 
-static func _get_theme_material(theme_idx: int) -> StandardMaterial3D:
+static func _get_theme_material(theme_idx: int) -> ShaderMaterial:
 	var idx = theme_idx % ARCHITECTURAL_THEMES.size()
 	if _cached_theme_materials.has(idx):
 		return _cached_theme_materials[idx]
 	if not _cached_colormap_tex:
 		_cached_colormap_tex = load("res://assets/models/environment/Textures/colormap.png")
 	var theme = ARCHITECTURAL_THEMES[idx]
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = theme["wall_primary"]
-	mat.metallic = theme["wall_metallic"]
-	mat.roughness = theme["wall_roughness"]
+	var mat = ShaderMaterial.new()
+	mat.shader = _get_architectural_shader()
+	mat.set_shader_parameter("color_wall_primary", theme["wall_primary"])
+	mat.set_shader_parameter("color_wall_secondary", theme["wall_secondary"])
+	mat.set_shader_parameter("color_window", theme["window"])
+	mat.set_shader_parameter("color_trim", theme["trim"])
+	mat.set_shader_parameter("wall_metallic", theme["wall_metallic"])
+	mat.set_shader_parameter("wall_roughness", theme["wall_roughness"])
+	mat.set_shader_parameter("window_metallic", theme["window_metallic"])
+	mat.set_shader_parameter("window_roughness", theme["window_roughness"])
 	if _cached_colormap_tex:
-		mat.albedo_texture = _cached_colormap_tex
+		mat.set_shader_parameter("albedo_texture", _cached_colormap_tex)
 	_cached_theme_materials[idx] = mat
 	return mat
 

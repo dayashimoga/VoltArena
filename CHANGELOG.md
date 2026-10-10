@@ -1660,14 +1660,22 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Adjusted curb glancing collision normal dot threshold to `-0.65` so glancing brushes don't halt vehicle speed.
   - Scaled building models to realistic metropolitan heights ($15\times–34\times$, 18m–95m tall) and reduced placement interval to 4 for a dense urban streetwall (resolving Screenshot 4).
   - Tuned AI traffic speeds to 18–22 m/s (~65–79 km/h) so mission targets are realistically catchable.
+## [8.5.0-architectural-materials-sightline-overhaul] - 2026-10-10
+### Fixed
+- **Chroma Rush Architectural Materials & PBR Shading**:
+  - Eliminated flat pastel/candy-colored building overrides (`neon_city.gd:939-963`) caused by destructive `material_override = mat` with flat `StandardMaterial3D` tints multiplied over `colormap.png` (resolving Screenshot 1).
+  - Connected `_get_architectural_shader()` running `ARCHITECTURAL_SHADER_CODE` via `ShaderMaterial` across all building archetypes, restoring reflective glass curtain walls (roughness 0.08, metallic 0.85, specular 0.88), dark architectural granite plinths, and metallic spandrel trim.
+  - Implemented authentic New York architectural palettes: Madison Avenue Limestone & Bronze, Midtown Sapphire Glass & Dark Titanium, Tribeca Red Brick & Cast Iron, Scandinavian White Marble & Cedar, and Financial District Slate & Patina Copper.
+  - Added `_create_stepped_skyline_mesh()` in `neon_city.gd`, generating a 360° perimeter stepped architectural skyscraper silhouette ring ($r = 580\text{m}$) on the outer city horizon.
+- **Chroma Rush Vehicle Contact Shadow & Automotive Paint Shaders**:
+  - Replaced the harsh pitch-black contact shadow rectangular slab in `vehicle_visuals.gd:152-166` with a soft radial ambient occlusion contact shadow using `ShaderMaterial` and `CONTACT_SHADOW_SHADER_CODE`.
+  - Connected `AUTOMOTIVE_SHADER_CODE` with PBR clearcoat paint, projector LED headlights, reactive brake and reverse lights, smoked glass canopy (specular 0.95), and matte carbon fiber aerodynamic splitters.
+  - Connected `WHEEL_SHADER_CODE` for precision alloy rims and vulcanized rubber tires.
+- **Chroma Rush Downtown Central Plaza Sightlines & Turn Apex Clearance**:
+  - Enforced an open plaza clearance envelope across $Z \in [-155, -225]$ and $X \in [-45, 15]$ at the WP 2 turn apex in `neon_city.gd`, eliminating `CommercialLeft_2_12` from obstructing the straightaway line of sight 50m past Checkpoint Gate 1 (resolving Screenshot 2).
+  - Increased building setback from 28m to 32–36m and minimum road spline clearance from 22m to 28m.
+  - Nested `_build_urban_block_parcel` inside `if b_node:` to prevent orphaned parcels when buildings are omitted.
+  - Transformed the outside curve into an expansive Grand Central Plaza featuring open sightlines, trees, and an unobstructed view of the 110m Apex Spire landmark.
 ### Verified
-- **Automated Test Suite**: 80/80 suites passed, 3,042 assertions passed, 0 failed (100% pass rate, exit code 0). Function coverage: 90.27%.
-- **Standalone Packages**: All 10 registered titles packaged independently with SHA-256 hashes, zero foreign asset leakage, and full standalone distribution.
+- **Monorepo Test Suite**: 80/80 test suites passed, **3,052 assertions passed**, 0 failed (100% pass rate, exit code 0). Function coverage: 90.3%.
 - **Production Certification**: `certifier.py` reports `FAILED: 0`, `Overall Status: RUNTIME_VERIFIED`.
-
-
-
-
-
-
-

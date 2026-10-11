@@ -109,6 +109,7 @@ func build_world() -> void:
 	build_road_mesh()
 	build_checkpoints()
 	build_props()
+	prune_props_in_road_corridor(7.0)
 
 func setup_lighting() -> void:
 	if not world_environment:
@@ -819,5 +820,47 @@ func get_nearest_safe_road_transform(pos: Vector3) -> Transform3D:
 	var xf = Transform3D().looking_at(best_fwd, Vector3.UP)
 	xf.origin = best_point + Vector3(0, 0.20, 0)
 	return xf
+
+## Validates clearance from road spline. Returns true if position is at least min_clearance away from all spline samples.
+func is_clear_of_spline(pos: Vector3, min_clearance: float = 7.0) -> bool:
+	var samples = spline_samples if spline_samples.size() > 4 else waypoints
+	var n_s = samples.size()
+	for i in range(n_s):
+		var p1 = samples[i]
+		var p2 = samples[(i + 1) % n_s]
+		var seg = p2 - p1
+		var seg_len_sq = seg.length_squared()
+		var proj_t = 0.0
+		if seg_len_sq > 0.001:
+			proj_t = clampf((pos - p1).dot(seg) / seg_len_sq, 0.0, 1.0)
+		var closest = p1 + seg * proj_t
+		var d_horizontal = Vector2(pos.x - closest.x, pos.z - closest.z).length()
+		var d_vert = absf(pos.y - closest.y)
+		if d_horizontal < min_clearance and d_vert < 12.0:
+			return false
+	return true
+
+## Automatically scans and prunes any props in props_container that penetrate the driveable road lane envelope (< 7.0m)
+func prune_props_in_road_corridor(min_clearance: float = 7.0) -> int:
+	if not props_container:
+		return 0
+	var pruned_count = 0
+	var to_prune: Array[Node] = []
+	for child in props_container.get_children():
+		if child is Node3D:
+			# Exempt foundational ground planes, water/ocean, cloud decks, skyline silhouettes, and structural arches/gantries/piers
+			var cn = child.name
+			if ("Ground" in cn or "Ocean" in cn or "Water" in cn or "Cloud" in cn
+				or "Skyline" in cn or "Distant" in cn or "Bridge" in cn or "Pylon" in cn
+				or "Pier" in cn or "Arch" in cn or "Gantry" in cn):
+				continue
+			if not is_clear_of_spline(child.position, min_clearance):
+				to_prune.append(child)
+	for p in to_prune:
+		print("[ChromaWorldBase] Pruned road-obstructing prop: %s at %s" % [p.name, str(p.position)])
+		p.queue_free()
+		pruned_count += 1
+	return pruned_count
+
 
 

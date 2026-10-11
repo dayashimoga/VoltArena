@@ -18,6 +18,9 @@ const AeroWorldSky = preload("res://games/aero-rush/worlds/aero_world_sky.gd")
 const AeroWorldSnow = preload("res://games/aero-rush/worlds/aero_world_snow.gd")
 const AeroWorldForest = preload("res://games/aero-rush/worlds/aero_world_forest.gd")
 const AeroWorldSkyline = preload("res://games/aero-rush/worlds/aero_world_skyline.gd")
+const AeroWorldAlien = preload("res://games/aero-rush/worlds/aero_world_alien.gd")
+const AeroWorldSpace = preload("res://games/aero-rush/worlds/aero_world_space.gd")
+const AeroWorldVolcanic = preload("res://games/aero-rush/worlds/aero_world_volcanic.gd")
 
 var passed: int = 0
 var failed: int = 0
@@ -29,6 +32,7 @@ func run_tests() -> Dictionary:
 	test_checkpoint_gate_functionality()
 	test_moving_hazard_kinematics()
 	test_all_six_environments_instantiation()
+	test_corridor_scenery_pruning_gate()
 	return {"passed": passed, "failed": failed}
 
 func assert_true(cond: bool, msg: String) -> void:
@@ -151,6 +155,48 @@ func test_all_six_environments_instantiation() -> void:
 	assert_true(skyline.world_env != null, "Skyline rush must have WorldEnvironment")
 	skyline.free()
 
+	# 8. Alien Planet (Xenon Prime)
+	var alien = AeroWorldAlien.new()
+	alien.build_environment()
+	assert_true(alien.sun_light != null, "Alien planet must have directional sun light")
+	assert_true(alien.world_env != null, "Alien planet must have WorldEnvironment")
+	alien.free()
+
+	# 9. Orbital Space (Orbital Zenith)
+	var space = AeroWorldSpace.new()
+	space.build_environment()
+	assert_true(space.sun_light != null, "Orbital space must have directional sun light")
+	assert_true(space.world_env != null, "Orbital space must have WorldEnvironment")
+	space.free()
+
+	# 10. Volcanic Underworld (Molten Caldera)
+	var volcanic = AeroWorldVolcanic.new()
+	volcanic.build_environment()
+	assert_true(volcanic.sun_light != null, "Volcanic world must have directional sun light")
+	assert_true(volcanic.world_env != null, "Volcanic world must have WorldEnvironment")
+	volcanic.free()
+
+func test_corridor_scenery_pruning_gate() -> void:
+	var world = AeroWorldMegacity.new()
+	world.build_environment()
+
+	var course = AeroCourseDatabase.get_course_by_id("neon_express")
+	assert_true(not course.is_empty(), "Neon Express course must exist")
+
+	# Add an intentionally obstructing prop directly on the track
+	var bad_prop = Node3D.new()
+	bad_prop.name = "IntrudingTowerProp"
+	bad_prop.position = Vector3(0, 2.0, -90) # Waypoint 2 of Course 1
+	world.add_child(bad_prop)
+
+	assert_true(world.is_point_in_corridor(bad_prop.position, course), "Test position must be detected inside corridor")
+
+	var pruned = world.prune_scenery_in_corridor(course)
+	assert_true(pruned >= 1, "Must prune at least the intruding prop from the corridor")
+	assert_true(not bad_prop.is_inside_tree() or bad_prop.is_queued_for_deletion(), "Intruding prop must be queued for deletion")
+
+	world.free()
+
 func get_coverage_entries() -> Array:
 	return [
 		["res://games/aero-rush/tracks/aero_course_database.gd", [
@@ -178,6 +224,7 @@ func get_coverage_entries() -> Array:
 			"_on_near_miss_entered", "_physics_process"
 		]],
 		["res://games/aero-rush/worlds/aero_world_base.gd", [
-			"setup_lighting", "create_ground_bed", "spawn_tree", "spawn_building"
+			"setup_lighting", "create_ground_bed", "spawn_tree", "spawn_building",
+			"get_course_polyline", "is_point_in_corridor", "prune_scenery_in_corridor"
 		]]
 	]

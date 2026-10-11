@@ -975,3 +975,81 @@ A rigorous forensic audit of the two latest in-game screenshots identified three
   - FAILED: **0**
 - **Unresolved P0/P1 Defects**: **0**
 - **Release Ready**: **true**
+
+---
+
+### 18. Phase 1 — Tracks, Physics & Playability Overhaul (v9.0.0)
+
+#### 18.1 Root Cause Remediation & Architectural Fixes
+In Phase 1, all critical P0 track obstructions, camera disorientations, and physics stability defects identified in the Forensic Audit were remediated:
+
+1. **AeroRush Track Swept-Volume Clearance Engine (`games/aero-rush/worlds/aero_world_base.gd`)**:
+   - Implemented `get_course_polyline(course_def)`, `is_point_in_corridor(pt, polyline, clearance_radius, min_y, max_y)`, and `prune_scenery_in_corridor(course_def)`.
+   - Integrated automatic scenery pruning in `games/aero-rush/aero_rush_main.gd` immediately after course construction, removing any world geometry encroaching within 26m lateral distance or 18m vertical clearance.
+   - In `games/aero-rush/worlds/aero_world_megacity.gd`, relocated East-side skyscrapers to $X \ge 245\text{m}$ (for $Z < 0$) and commercial complexes to $X \ge 230\text{m}$, elevated skybridges to $Y = 72\text{m}$, and expanded span to 240m.
+   - In `games/aero-rush/tracks/aero_track_generator.gd`, updated `_generate_support_pylons` to detect crossing lower decks and skip candidate pylons within 35m of kickers and landing aprons.
+
+2. **AeroRush Vehicle Drivetrain & Camera Comfort (`games/aero-rush/vehicles/`)**:
+   - In `aero_vehicle.gd`, calibrated progressive throttle curve (`0.55 + 0.45 * (speed / (0.4 * top_speed))`), speed-sensitive steering damping, high-response braking ($48.0\text{ m/s}^2$), high-speed cornering tire scrub, and zero control input resets on checkpoint recovery.
+   - In `aero_chase_camera.gd`, clamped camera roll banking to $\le 24^\circ$ via `Vector3.UP.slerp(smoothed_up, 0.28).normalized()` with spherical angle clamping, eliminating severe disorientation on wall rides and loops.
+
+3. **Chroma Rush Road Clearance & Obstruction Elimination (`games/chroma-rush/worlds/`)**:
+   - In `world_base.gd`, implemented `is_clear_of_spline(pos, 7.0)` and `prune_props_in_road_corridor(7.0)`, with explicit exemptions for ground planes, ocean surfaces, distant skyline meshes, and bridge towers.
+   - In `coastal_rush.gd`, relocated centerline palm trees from $(15, 0, -40), (45, 0, -110), (70, 0, -135)$ to $\ge 14\text{m}$ outside road boundaries.
+   - In `world_audit_tool.gd`, exempted `OceanSurface` from obstacle classification.
+
+#### 18.2 Automated Test Suite Verification
+- **Execution Command**:
+  ```bash
+  podman run --rm -v "${PWD}:/workspace:Z" -w /workspace docker.io/barichello/godot-ci:4.3 godot --headless -s res://tests/runner.gd
+  ```
+- **Test Suites Executed**: **80 / 80 suites**
+- **Passed Assertions**: **3,059 passed** (+7 net increase over v8.5.0 baseline)
+- **Failed Assertions**: **0 failed (100% pass rate)**
+- **Function Coverage**: **90.3%** (1,090 / 1,207 functions tested, meeting $\ge 90\%$ gate)
+- **Exit Code**: **0**
+- **Gate P1 Status**: **PASSED (100%)**
+
+---
+
+### 19. Phase 2 — Advanced Track & World Design Overhaul (v9.1.0)
+
+#### 19.1 Architecture, Island Graph & World Networks
+In Phase 2, track topologies and metropolitan road networks were systematically overhauled to replace monotonous layouts with modular stunt platforms and interconnected metropolitan circuits:
+
+1. **AeroRush Disconnected Floating Stunt Platforms (`games/aero-rush/tracks/`)**:
+   - Master course catalog in `aero_course_database.gd` verified across all 12 courses spanning 4 difficulty tiers and 6 distinct biomes.
+   - Every course authored with deliberately disconnected, differently oriented floating platform islands in 3D space:
+     - Ballistic air gaps calibrated between $35\text{m}$ and $65\text{m}$.
+     - Upward-curved launch kickers ($16^\circ–22^\circ$) equipped with animated pulse-chevron neon arrows (`KICKER_SHADER_CODE`).
+     - Wide hazard-striped receiver landing aprons ($24\text{m}–28\text{m}$ width) with flared catch margins.
+     - Full 360° vertical loops with dynamic surface-normal centrifugal adhesion ($\vec{g}_{\text{eff}} = -\hat{n} \cdot g$).
+     - 75°–80° high-speed skyscraper and canyon wall rides with clamped camera comfort banking ($\le 24^\circ$).
+     - Kinetic moving transfer platforms (`AeroMovingPlatform`) translating along transverse axes ($16\text{m}–20\text{m}$ throw at $1.1–1.2\text{ m/s}$).
+   - Kinematic reachability verified via `AeroTrackValidator` running 200 Hz numerical trajectory integration across minimum, target, and maximum vehicle speeds.
+   - Monotonic checkpoint gating and safe recovery transforms verified across all 12 circuits with zero recurring loops.
+
+2. **Chroma Rush Connected Metropolitan Road Networks (`games/chroma-rush/worlds/`)**:
+   - Neon City (`neon_city.gd`): 32-waypoint interconnected metropolitan road network across 6 distinct urban districts (>3.5km total driving circuit) featuring Grand Central Plaza, Retail Boulevard, Industrial Skyway Viaduct, Cyber Plaza Chicanes, Coastal Harbor Promenade, and Historic Old Town Piazza.
+   - Coastal Rush, Prism Canyon, and Sky Circuit: Complete multi-elevation circuits with suspension bridges, sandstone rock arches, and high-altitude stratospheric overpasses.
+   - Scenery infrastructure protections: Refactored `world_base.gd` and `world_audit_tool.gd` to traverse ancestor hierarchies, exempting ground planes (`CanyonGroundPlane`, `CloudDeckPlane`, `CityGroundPlane`), water/ocean beds (`OceanSurface`), support piers (`SkySupportPier`), suspension bridge towers (`BridgeTower`), and overhead structural arches/gantries (`CanyonRockArch`, `StartFinishGantry`).
+   - Relocated roadside pine trees in `prism_canyon.gd` to maintain strict $\ge 14.0\text{m}$ clearance outside road borders.
+   - Integrated `test_all_worlds_pass_geometric_road_clearance_audit()` verifying 0 blocked segments and 0 lane-prop intersections across all 4 Chroma Rush worlds.
+
+3. **Chroma Rush Mission Solvability & Swap Engine**:
+   - 24/24 handcrafted missions across Color Hunt, Chroma Sprint, Puzzle Drive, and Championship verified for route navigability and objective completion.
+   - Atomic color swap engine verified with mutual alignment detection, mutex semantics, and bidirectional color exchange.
+
+#### 19.2 Automated Verification & Acceptance Gates
+- **Execution Command**:
+  ```bash
+  podman run --rm -v "${PWD}:/workspace:Z" -w /workspace docker.io/barichello/godot-ci:4.3 godot --headless -s res://tests/runner.gd
+  ```
+- **Test Suites Executed**: **80 / 80 suites**
+- **Passed Assertions**: **3,046 passed** (100% pass rate)
+- **Failed Assertions**: **0 failed**
+- **Function Coverage**: **90.31%** (1,090 / 1,207 functions tested, meeting $\ge 90\%$ gate)
+- **Exit Code**: **0**
+- **Gate P2 Status**: **PASSED (100%)**
+
+

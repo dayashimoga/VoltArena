@@ -176,8 +176,22 @@ func _update_camera_transform(delta: float) -> void:
 	if look_back:
 		look_target = smoothed_pos - smoothed_fwd * 8.0 + smoothed_up * 1.2
 
-	# In inverted loops, stabilize up reference
-	var up_ref = smoothed_up if absf(smoothed_fwd.y) < 0.85 else Vector3.UP
+	# Dynamic Up-Reference Clamping (DEF-AR-12):
+	# Decouple violent wall-ride tilts and prevent extreme disorienting camera roll.
+	# Natural banking tilt is clamped to <= 24 degrees on banked curves and wall-rides.
+	var up_ref = Vector3.UP
+	var is_in_vertical_loop = smoothed_up.dot(Vector3.UP) < -0.3 and absf(smoothed_fwd.y) > 0.4
+	if is_in_vertical_loop:
+		# In inverted loop sections, allow the camera to follow the car's inverted roof
+		up_ref = smoothed_up
+	else:
+		# Blend gentle banking up-vector (clamped to <= 24 degrees from world UP)
+		var banked_up = Vector3.UP.slerp(smoothed_up, 0.28).normalized()
+		var bank_angle = acos(clampf(banked_up.dot(Vector3.UP), -1.0, 1.0))
+		if bank_angle > deg_to_rad(24.0):
+			var clamp_factor = deg_to_rad(24.0) / maxf(bank_angle, 0.001)
+			banked_up = Vector3.UP.slerp(banked_up, clamp_factor).normalized()
+		up_ref = banked_up
 	look_at(look_target, up_ref)
 
 func add_shake(amount: float) -> void:

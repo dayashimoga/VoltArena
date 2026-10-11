@@ -1679,3 +1679,38 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 ### Verified
 - **Monorepo Test Suite**: 80/80 test suites passed, **3,052 assertions passed**, 0 failed (100% pass rate, exit code 0). Function coverage: 90.3%.
 - **Production Certification**: `certifier.py` reports `FAILED: 0`, `Overall Status: RUNTIME_VERIFIED`.
+
+## [9.0.0-phase1-tracks-physics-playability] - 2026-10-11
+### Fixed & Overhauled
+- **AeroRush Scenery Swept-Volume Clearance & Support Pylons**:
+  - Implemented `get_course_polyline`, `is_point_in_corridor`, and `prune_scenery_in_corridor` in `aero_world_base.gd`, automatically validating and culling world geometry within 26m lateral and 18m vertical envelopes along the active course.
+  - Relocated East-side skyscrapers in `aero_world_megacity.gd` to $X \ge 245\text{m}$ (for $Z < 0$) and commercial complexes to $X \ge 230\text{m}$; raised skybridges to $Y = 72\text{m}$ with a 240m clearance span, clearing the Island 3 wall-ride trajectory.
+  - Refined `_generate_support_pylons` in `aero_track_generator.gd` to detect crossing lower decks and skip candidate pylons within 35m of kickers and landing aprons.
+- **AeroRush Vehicle Drivetrain & Chase Camera**:
+  - Calibrated progressive throttle curve (`0.55 + 0.45 * (speed / (0.4 * top_speed))`), speed-sensitive steering damping, high-response braking ($48.0\text{ m/s}^2$), cornering tire scrub, and zero control input resets on checkpoint recovery in `aero_vehicle.gd`.
+  - Clamped camera roll banking in `aero_chase_camera.gd` to $\le 24^\circ$ using spherical angle clamping, eliminating severe disorientation on wall rides and loops.
+- **Chroma Rush Road Clearance & Obstacle Removal**:
+  - Implemented `is_clear_of_spline(pos, 7.0)` and `prune_props_in_road_corridor(7.0)` in `world_base.gd` with explicit exemptions for ground beds, ocean surfaces, distant skylines, and bridge towers.
+  - Relocated palm trees from the road centerline in `coastal_rush.gd` at $(15, 0, -40), (45, 0, -110), (70, 0, -135)$ to $\ge 14\text{m}$ outside road boundaries.
+  - Exempted `OceanSurface` from obstacle classification in `world_audit_tool.gd`.
+### Verified
+- **Monorepo Test Suite**: 80/80 test suites passed, **3,059 assertions passed** (+7 net increase), 0 failed (100% pass rate, exit code 0). Function coverage: 90.3%.
+- **Gate P1 Acceptance**: Zero unintended track/road obstructions, zero recurring checkpoint loops, smooth stable controls, and successful complete gameplay routes.
+
+## [9.1.0-phase2-advanced-track-world-design] - 2026-10-11
+### Added & Overhauled
+- **AeroRush Disconnected Floating Stunt Platforms**:
+  - Replaced continuous layouts across all 12 courses with modular, differently oriented floating platform islands in 3D space (`aero_course_database.gd`).
+  - Implemented and certified 35–65m ballistic jump gaps with launch kickers, pulse-chevron glow materials (`KICKER_SHADER_CODE`), and 24–28m flared landing catch aprons (`APRON_SHADER_CODE`).
+  - Added full 360° vertical loops with surface-normal relative gravity adhesion, 75°–80° wall rides, and kinetic moving platforms (`AeroMovingPlatform`).
+  - Verified 100% course reachability via 200 Hz ballistic numerical integration in `AeroTrackValidator`.
+- **Chroma Rush Connected Metropolitan Road Networks**:
+  - Implemented 32-point interconnected road network across 6 distinct urban districts in `neon_city.gd` (>3.5km circuit) with safe building setbacks ($\ge 28–34\text{m}$) and open turn apex sightlines.
+  - Refactored `world_base.gd` and `world_audit_tool.gd` to traverse ancestor hierarchies, exempting ground planes (`CanyonGroundPlane`, `CloudDeckPlane`, `CityGroundPlane`), ocean beds (`OceanSurface`), support piers (`SkySupportPier`), suspension bridge towers (`BridgeTower`), and overhead structural arches/gantries (`CanyonRockArch`, `StartFinishGantry`).
+  - Relocated roadside pine trees in `prism_canyon.gd` to $\ge 14.0\text{m}$ outside the driving envelope.
+  - Added `test_all_worlds_pass_geometric_road_clearance_audit()` in `test_chroma_worlds_and_integration.gd`, verifying 0 blocked segments and 0 lane-prop intersections across all 4 worlds.
+### Verified
+- **Monorepo Test Suite**: 80/80 test suites passed, **3,046 assertions passed**, 0 failed (100% pass rate, exit code 0). Function coverage: 90.31%.
+- **Gate P2 Acceptance**: All reference courses and missions completable through actual vehicle traversal; generated routes pass geometry, reachability, and gameplay validation.
+
+

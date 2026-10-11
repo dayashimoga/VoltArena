@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 90.2662229617304,
+  "overall_coverage_pct": 90.3065451532726,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -169,8 +169,8 @@
     },
     "res://games/aero-rush/worlds/aero_world_base.gd": {
       "coverage_pct": 100,
-      "tested": 4,
-      "total": 4,
+      "tested": 7,
+      "total": 7,
       "untested": []
     },
     "res://games/aero-rush/worlds/aero_world_canyon.gd": {
@@ -509,9 +509,9 @@
       ]
     },
     "res://games/chroma-rush/worlds/world_base.gd": {
-      "coverage_pct": 47.6190476190476,
-      "tested": 10,
-      "total": 21,
+      "coverage_pct": 52.1739130434783,
+      "tested": 12,
+      "total": 23,
       "untested": [
         "setup_ground_plane",
         "generate_waypoints",
@@ -1317,7 +1317,7 @@
       "untested": []
     }
   },
-  "tested_functions": 1085,
-  "timestamp": "2026-10-10T13:31:36",
-  "total_functions": 1202
+  "tested_functions": 1090,
+  "timestamp": "2026-10-11T10:40:37",
+  "total_functions": 1207
 }

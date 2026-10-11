@@ -180,14 +180,14 @@ func _build_flanking_skyscrapers() -> void:
 		Vector3(-68.0, -6.5, -190.0), Vector3(-85.0, -6.5, -270.0),
 		Vector3(-105.0, -6.5, -360.0), Vector3(-75.0, -6.5, -410.0),
 		Vector3(-135.0, -6.5, -90.0), Vector3(-140.0, -6.5, -200.0),
-		# East side city blocks (setback >= 65m)
-		Vector3(68.0, -6.5, -70.0), Vector3(78.0, -6.5, -15.0),
-		Vector3(68.0, -6.5, 45.0), Vector3(85.0, -6.5, 110.0),
-		Vector3(95.0, -6.5, -150.0), Vector3(110.0, -6.5, -230.0),
-		Vector3(75.0, -6.5, -310.0), Vector3(120.0, -6.5, 30.0),
-		Vector3(68.0, -6.5, -190.0), Vector3(135.0, -6.5, -270.0),
-		Vector3(145.0, -6.5, -360.0), Vector3(85.0, -6.5, -430.0),
-		Vector3(135.0, -6.5, -90.0), Vector3(150.0, -6.5, -200.0)
+		# East side city blocks (setback >= 240m for Z < 0 ensures zero track envelope penetration)
+		Vector3(245.0, -6.5, -70.0), Vector3(115.0, -6.5, -15.0),
+		Vector3(95.0, -6.5, 45.0), Vector3(115.0, -6.5, 110.0),
+		Vector3(255.0, -6.5, -150.0), Vector3(265.0, -6.5, -230.0),
+		Vector3(245.0, -6.5, -310.0), Vector3(135.0, -6.5, 30.0),
+		Vector3(250.0, -6.5, -190.0), Vector3(260.0, -6.5, -270.0),
+		Vector3(255.0, -6.5, -360.0), Vector3(240.0, -6.5, -430.0),
+		Vector3(265.0, -6.5, -90.0), Vector3(275.0, -6.5, -200.0)
 	]
 
 	for i in range(tower_coords.size()):
@@ -199,12 +199,12 @@ func _build_flanking_skyscrapers() -> void:
 
 	# Secondary Commercial Plazas and Mid-Tier Complexes (Proportional 3.2x - 4.8x scale)
 	var comm_coords = [
-		Vector3(-90.0, -6.5, -60.0), Vector3(90.0, -6.5, -60.0),
+		Vector3(-90.0, -6.5, -60.0), Vector3(230.0, -6.5, -60.0),
 		Vector3(-105.0, -6.5, 80.0), Vector3(105.0, -6.5, 80.0),
-		Vector3(-60.0, -6.5, -220.0), Vector3(60.0, -6.5, -220.0),
-		Vector3(-80.0, -6.5, -280.0), Vector3(80.0, -6.5, -280.0),
-		Vector3(-62.0, -6.5, -350.0), Vector3(62.0, -6.5, -350.0),
-		Vector3(-58.0, -6.5, -120.0), Vector3(58.0, -6.5, -120.0),
+		Vector3(-60.0, -6.5, -220.0), Vector3(240.0, -6.5, -220.0),
+		Vector3(-80.0, -6.5, -280.0), Vector3(235.0, -6.5, -280.0),
+		Vector3(-62.0, -6.5, -350.0), Vector3(245.0, -6.5, -350.0),
+		Vector3(-58.0, -6.5, -120.0), Vector3(230.0, -6.5, -120.0),
 		Vector3(-115.0, -6.5, -20.0), Vector3(115.0, -6.5, -20.0)
 	]
 	for j in range(comm_coords.size()):
@@ -214,13 +214,13 @@ func _build_flanking_skyscrapers() -> void:
 		spawn_building(c_model, c_pos, float((j * 90) % 360), Vector3(c_scale, c_scale, c_scale))
 
 func _build_overhead_skybridges() -> void:
-	# Skybridges crossing at high altitude (Y = 62m) between skyscraper rooftops well clear of track envelopes
-	var bridge_z_coords = [-10.0, 85.0, -260.0]
+	# Skybridges crossing at high altitude (Y = 72m, W = 240m) between skyscraper rooftops well clear of track envelopes
+	var bridge_z_coords = [-10.0, 110.0, -500.0]
 	for z in bridge_z_coords:
 		var bridge = MeshInstance3D.new()
 		bridge.name = "TransMetropolitanSkybridge_Z%d" % int(z)
 		var b_mesh = BoxMesh.new()
-		b_mesh.size = Vector3(140.0, 4.5, 8.0)
+		b_mesh.size = Vector3(240.0, 5.0, 8.0)
 		bridge.mesh = b_mesh
 
 		var b_mat = StandardMaterial3D.new()
@@ -228,20 +228,20 @@ func _build_overhead_skybridges() -> void:
 		b_mat.metallic = 0.85
 		b_mat.roughness = 0.30
 		bridge.material_override = b_mat
-		bridge.position = Vector3(0.0, 62.0, z)
+		bridge.position = Vector3(0.0, 72.0, z)
 		add_child(bridge)
 
 		# Neon Transit Window Stripe across Skybridge
 		var win = MeshInstance3D.new()
 		var w_mesh = BoxMesh.new()
-		w_mesh.size = Vector3(140.0, 1.2, 8.2)
+		w_mesh.size = Vector3(240.0, 1.4, 8.2)
 		win.mesh = w_mesh
 		var win_mat = StandardMaterial3D.new()
 		win_mat.albedo_color = Color(0.08, 0.90, 1.0)
 		win_mat.emission_enabled = true
 		win_mat.emission = Color(0.08, 0.90, 1.0) * 1.8
 		win.material_override = win_mat
-		win.position = Vector3(0.0, 62.0, z)
+		win.position = Vector3(0.0, 72.0, z)
 		add_child(win)
 
 func _build_street_amenities() -> void:

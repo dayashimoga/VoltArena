@@ -919,7 +919,37 @@ static func _generate_support_pylons(dense_points: Array[Dictionary], parent: No
 			if norm.dot(Vector3.UP) < 0.82:
 				continue
 
+			# Jump Gap & Flight Path Clearance: Omit pylons within 35m of kickers and landing aprons
+			var near_jump_zone = false
+			for other_idx in range(dense_points.size()):
+				if dense_points[other_idx].get("is_jump_gap", false) or dense_points[other_idx].get("is_landing_apron", false):
+					var p_jump = dense_points[other_idx]["pos"] as Vector3
+					if p_curr.distance_to(p_jump) < 35.0:
+						near_jump_zone = true
+						break
+			if near_jump_zone:
+				continue
+
+			# Crossing Track Deck Conflict Clearance: Skip pylon if lower deck crosses underneath
 			var ground_basin_y = -6.5
+			var crossing_conflict = false
+			for other_idx in range(dense_points.size()):
+				if abs(other_idx - i) < 12:
+					continue
+				var p_other = dense_points[other_idx]["pos"] as Vector3
+				var h_dist = Vector2(p_other.x - p_curr.x, p_other.z - p_curr.z).length()
+				if h_dist < w + 5.0:
+					# Lower track deck passing beneath candidate pylon
+					if p_other.y < p_curr.y - 1.5 and p_other.y > ground_basin_y + 1.0:
+						crossing_conflict = true
+						break
+					# Close upper deck overlap
+					if p_other.y > p_curr.y and p_other.y < p_curr.y + 12.0:
+						crossing_conflict = true
+						break
+			if crossing_conflict:
+				continue
+
 			# Underside of road bed: 1.2m below driving deck surface along surface normal
 			var deck_under_pos = p_curr - norm * 1.2
 			var col_height = deck_under_pos.y - ground_basin_y

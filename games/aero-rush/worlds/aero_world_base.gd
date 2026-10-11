@@ -114,3 +114,81 @@ func spawn_building(model_path: String, pos: Vector3, rot_y: float = 0.0, scale_
 	bld.scale = scale_mult
 	add_child(bld)
 	return bld
+
+## Extracts all course waypoints and island jump gaps into a unified trajectory list
+func get_course_polyline(course_def: Dictionary) -> Array[Dictionary]:
+	var points: Array[Dictionary] = []
+	if course_def.has("islands"):
+		var islands = course_def.get("islands", []) as Array
+		for idx in range(islands.size()):
+			var isl = islands[idx] as Dictionary
+			var wps = isl.get("waypoints", []) as Array
+			for wp in wps:
+				points.append(wp)
+			# If there is a next island, link last waypoint of current to first waypoint of next
+			if idx + 1 < islands.size():
+				var next_isl = islands[idx + 1] as Dictionary
+				var next_wps = next_isl.get("waypoints", []) as Array
+				if not wps.is_empty() and not next_wps.is_empty():
+					var last_wp = wps[-1] as Dictionary
+					var first_next_wp = next_wps[0] as Dictionary
+					# Add ballistic flight midpoint for jump gap
+					var mid_pos = (last_wp.get("pos", Vector3.ZERO) + first_next_wp.get("pos", Vector3.ZERO)) * 0.5 + Vector3(0, 16.0, 0)
+					points.append({"pos": mid_pos, "width": 30.0, "is_jump_arc": true})
+	elif course_def.has("waypoints"):
+		var wps = course_def.get("waypoints", []) as Array
+		for wp in wps:
+			points.append(wp)
+	return points
+
+## Authoritative swept-volume test: checks if a 3D position is within the track driving or camera corridor
+func is_point_in_corridor(pos: Vector3, course_def: Dictionary, min_horizontal: float = 28.0, min_vert_down: float = 6.0, min_vert_up: float = 38.0) -> bool:
+	var pts = get_course_polyline(course_def)
+	if pts.size() < 2:
+		return false
+
+	for i in range(pts.size() - 1):
+		var p1 = pts[i].get("pos", Vector3.ZERO) as Vector3
+		var p2 = pts[i + 1].get("pos", Vector3.ZERO) as Vector3
+		var w = maxf(float(pts[i].get("width", 18.0)), float(pts[i + 1].get("width", 18.0)))
+		var req_h_dist = min_horizontal + (w * 0.5)
+
+		var seg = p2 - p1
+		var seg_len_sq = seg.length_squared()
+		var t = 0.0
+		if seg_len_sq > 0.001:
+			t = clampf((pos - p1).dot(seg) / seg_len_sq, 0.0, 1.0)
+		var closest = p1 + seg * t
+
+		var h_dist = Vector2(pos.x - closest.x, pos.z - closest.z).length()
+		var y_diff = pos.y - closest.y
+
+		if h_dist < req_h_dist and y_diff >= -min_vert_down and y_diff <= min_vert_up:
+			return true
+	return false
+
+## Swept-volume scenery pruning engine: automatically removes any world props, buildings, or trees
+## that intersect the vehicle driving envelope, camera clearance, or ballistic jump arcs.
+func prune_scenery_in_corridor(course_def: Dictionary) -> int:
+	var pruned_count: int = 0
+	var nodes_to_check: Array[Node] = []
+	for child in get_children():
+		nodes_to_check.append(child)
+
+	for node in nodes_to_check:
+		if node is DirectionalLight3D or node is WorldEnvironment:
+			continue
+		if node.name.begins_with("ContinuousTerrain") or node.name.begins_with("GroundCollision"):
+			continue
+
+		var check_pos = Vector3.ZERO
+		if node is Node3D:
+			check_pos = (node as Node3D).position
+
+		if is_point_in_corridor(check_pos, course_def):
+			print("[AeroWorldBase] Pruned corridor-obstructing scenery: %s at %s" % [node.name, str(check_pos)])
+			node.queue_free()
+			pruned_count += 1
+
+	return pruned_count
+

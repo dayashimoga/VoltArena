@@ -1,7 +1,7 @@
 {
   "project": "VoltArena",
   "version": "5.0.0",
-  "timestamp_utc": "2026-10-10 13:32:24 UTC",
+  "timestamp_utc": "2026-10-11 10:41:28 UTC",
   "overall_status": "RUNTIME_VERIFIED",
   "runtime_verified_count": 8,
   "implemented_count": 3,
@@ -19,7 +19,7 @@
     {
       "gate": "Function Coverage",
       "requirement": ">90.0% function coverage",
-      "measured": "90.3% (1085/1202 functions)",
+      "measured": "90.3% (1090/1207 functions)",
       "status": "RUNTIME_VERIFIED",
       "evidence": "artifacts/coverage-report.json"
     },

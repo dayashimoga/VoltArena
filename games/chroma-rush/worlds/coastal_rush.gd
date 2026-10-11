@@ -173,11 +173,11 @@ func build_props() -> void:
 		bld.rotation_degrees = Vector3(0, spot["rot"], 0)
 		props_container.add_child(bld)
 
-	# Palm trees along the promenade and coastal road
+	# Palm trees along the promenade and coastal road (strictly setback >= 14m outside driveable envelope)
 	var palm_positions = [
-		Vector3(15, 0, -40), Vector3(45, 0, -110), Vector3(70, 0, -135),
-		Vector3(160, 6, 120), Vector3(125, 4, 118), Vector3(90, 3, 112),
-		Vector3(40, 1, 90), Vector3(-10, 0, 65), Vector3(-45, 0, 25)
+		Vector3(30, 0, -40), Vector3(68, 0, -110), Vector3(88, 0, -135),
+		Vector3(160, 6, 125), Vector3(125, 4, 126), Vector3(90, 3, 122),
+		Vector3(40, 1, 105), Vector3(-12, 0, 82), Vector3(-65, 0, 25)
 	]
 	for pos in palm_positions:
 		var palm = _build_palm_tree()

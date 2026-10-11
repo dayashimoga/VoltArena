@@ -292,6 +292,10 @@ func start_race(course_id: String) -> void:
 	# 2. Build Track
 	_build_track(course_def)
 
+	# Corridor Clearance Scenery Pruning Gate (DEF-AR-11)
+	if active_world and active_world.has_method("prune_scenery_in_corridor"):
+		active_world.prune_scenery_in_corridor(course_def)
+
 	# 3. Spawn Hazards
 	_spawn_hazards(course_def)
 

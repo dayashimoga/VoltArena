@@ -30,8 +30,10 @@ func run_tests() -> Dictionary:
 	test_continuous_road_mesh_and_collision()
 	test_neon_city_street_tree_and_plaza_colliders()
 	test_coastal_rush_bridge_pylon_clearance()
+	test_coastal_rush_zero_road_obstructions()
 	test_road_deck_thickness_and_safe_road_transform()
 	test_world_audit_tool_neon_city()
+	test_all_worlds_pass_geometric_road_clearance_audit()
 	test_autonomous_bot_circuit_traversal()
 
 	return {"passed": passed, "failed": failed}
@@ -216,6 +218,17 @@ func test_coastal_rush_bridge_pylon_clearance() -> void:
 	assert_true(found_pylons, "Suspension bridge towers must be constructed in Coastal Rush")
 	coast.free()
 
+func test_coastal_rush_zero_road_obstructions() -> void:
+	var coast = CoastalRush.new()
+	coast._ready()
+
+	var audit = WorldAuditTool.audit_world(coast, 7.0, 20.0)
+	assert_true(audit["road_continuity_valid"], "Coastal road continuity must be valid")
+	assert_eq(audit["lane_prop_intersections"].size(), 0, "Coastal road must have 0 props inside road envelope")
+	assert_true(audit["overall_passed"], "Coastal Rush passes road clearance audit")
+
+	coast.free()
+
 func test_road_deck_thickness_and_safe_road_transform() -> void:
 	var city = NeonCity.new()
 	city._ready()
@@ -246,6 +259,21 @@ func test_world_audit_tool_neon_city() -> void:
 
 	city.free()
 
+func test_all_worlds_pass_geometric_road_clearance_audit() -> void:
+	var worlds = [
+		{"name": "Prism Canyon", "inst": PrismCanyon.new()},
+		{"name": "Sky Circuit", "inst": SkyCircuit.new()}
+	]
+	for entry in worlds:
+		var w = entry["inst"] as Node3D
+		w._ready()
+		var audit = WorldAuditTool.audit_world(w, 7.0, 20.0)
+		assert_true(audit["road_continuity_valid"], "%s road continuity must be valid" % entry["name"])
+		assert_eq(audit["blocked_segments"].size(), 0, "%s must have 0 blocked segments" % entry["name"])
+		assert_eq(audit["lane_prop_intersections"].size(), 0, "%s must have 0 props inside road envelope" % entry["name"])
+		assert_true(audit["overall_passed"], "%s passes geometric road clearance audit" % entry["name"])
+		w.free()
+
 func test_autonomous_bot_circuit_traversal() -> void:
 	var city = NeonCity.new()
 	city._ready()
@@ -273,7 +301,8 @@ func get_coverage_entries() -> Array:
 		["res://games/chroma-rush/worlds/world_base.gd", [
 			"_ready", "build_world", "setup_lighting", "build_continuous_road_network",
 			"get_nearest_waypoint_index", "get_waypoint", "get_total_waypoints",
-			"get_checkpoint", "get_checkpoint_by_id", "add_road_segment"
+			"get_checkpoint", "get_checkpoint_by_id", "add_road_segment",
+			"is_clear_of_spline", "prune_props_in_road_corridor"
 		]],
 		["res://games/chroma-rush/worlds/neon_city.gd", [
 			"generate_waypoints", "build_road_mesh", "build_checkpoints", "build_props"

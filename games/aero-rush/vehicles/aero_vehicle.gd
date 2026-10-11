@@ -448,7 +448,10 @@ func _process_ground_movement(delta: float) -> void:
 			# Braking from reverse
 			forward_speed = move_toward(forward_speed, 0.0, brake_force * delta)
 		else:
-			forward_speed = move_toward(forward_speed, current_top * throttle_input, current_accel * delta)
+			# Progressive throttle curve: gentle ramp-in from rest for smooth launch
+			var throttle_curve = 0.55 + 0.45 * clampf(absf(forward_speed) / (current_top * 0.40), 0.0, 1.0)
+			var effective_accel = current_accel * throttle_curve
+			forward_speed = move_toward(forward_speed, current_top * throttle_input, effective_accel * delta)
 	elif brake_input > 0.0:
 		if forward_speed > 0.5:
 			# Braking
@@ -461,7 +464,8 @@ func _process_ground_movement(delta: float) -> void:
 		forward_speed = move_toward(forward_speed, 0.0, 10.0 * delta)
 
 	# 3. Steering & Drifting
-	var steer_sens = steer_speed / (1.0 + (absf(forward_speed) / top_speed) * 0.75)
+	var speed_ratio = absf(forward_speed) / maxf(top_speed, 1.0)
+	var steer_sens = steer_speed / (1.0 + speed_ratio * 1.15)
 
 	if handbrake_held and absf(steer_input) > 0.15 and forward_speed > 12.0:
 		# Drift Active
@@ -481,10 +485,12 @@ func _process_ground_movement(delta: float) -> void:
 				boost_amount_changed.emit(boost_gauge, max_boost_gauge)
 			is_drifting = false
 			drift_charge = 0.0
-		# Standard grip steering
+		# Standard grip steering with tire scrub on hard high-speed cornering
 		if absf(forward_speed) > 0.5:
 			var steer_dir = signf(forward_speed)
 			rotate_object_local(Vector3.UP, -steer_input * steer_sens * steer_dir * delta)
+			if absf(steer_input) > 0.6 and speed_ratio > 0.75:
+				forward_speed = move_toward(forward_speed, current_top * 0.88, 7.5 * delta)
 
 	# 4. Surface Normal Alignment (Allows driving through loops and banked turns)
 	if is_inside_tree():
@@ -704,6 +710,11 @@ func recover_to_checkpoint() -> void:
 
 	forward_speed = 0.0
 	velocity = Vector3.ZERO
+	throttle_input = 0.0
+	brake_input = 0.0
+	steer_input = 0.0
+	handbrake_held = false
+	boost_requested = false
 	is_grounded = true
 	airtime_duration = 0.0
 	rollover_timer = 0.0

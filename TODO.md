@@ -1484,3 +1484,48 @@
   - `IMPLEMENTATION_PLAN.md` & `IMPLEMENTATION_WALKTHROUGH.md` (Section 17)
   - `CHANGELOG.md` (Release 8.5.0)
 
+### [2026-10-11 10:15:00 UTC] - Milestone Update: Phase 1 Tracks, Physics & Playability (P0) Complete
+- **Status**: COMPLETED
+- **Description**:
+  1. **AeroRush Scenery Swept-Volume Clearance & Pylon Filtering**:
+     - Integrated `prune_scenery_in_corridor(course_def)` in `aero_world_base.gd` and `aero_rush_main.gd` to cull any world scenery encroaching within 26m lateral and 18m vertical envelopes.
+     - Relocated East-side skyscrapers in `aero_world_megacity.gd` to $X \ge 245\text{m}$ (for $Z < 0$) and commercial complexes to $X \ge 230\text{m}$; elevated skybridges to $Y = 72\text{m}$ with a 240m clearance span, clearing the Island 3 wall-ride trajectory.
+     - Updated `_generate_support_pylons` in `aero_track_generator.gd` to detect crossing lower decks and skip candidate pylons within 35m of kickers and landing aprons.
+  2. **AeroRush Drivetrain Tuning & Camera Comfort**:
+     - Implemented progressive throttle curve (`0.55 + 0.45 * (speed / (0.4 * top_speed))`), speed-sensitive steering damping, high-response braking ($48.0\text{ m/s}^2$), cornering tire scrub, and zero control input resets on checkpoint recovery in `aero_vehicle.gd`.
+     - Clamped camera roll banking in `aero_chase_camera.gd` to $\le 24^\circ$ using spherical angle clamping, eliminating disorienting tilts on wall rides and loops.
+  3. **Chroma Rush Road Clearance & Obstacle Removal**:
+     - Implemented `is_clear_of_spline(pos, 7.0)` and `prune_props_in_road_corridor(7.0)` in `world_base.gd` with explicit exemptions for ground beds, ocean surfaces, distant skylines, and bridge towers.
+     - Relocated palm trees from the road centerline in `coastal_rush.gd` at $(15, 0, -40), (45, 0, -110), (70, 0, -135)$ to $\ge 14\text{m}$ outside road boundaries.
+     - Exempted `OceanSurface` from obstacle classification in `world_audit_tool.gd`.
+  4. **Regression & Monorepo Verification**:
+     - Automated test runner: 80 suites, 3,059 passed assertions, 0 failed (100% pass rate, 90.3% function coverage).
+     - Phase 1 Gate Status: PASSED (Zero track/road obstructions, zero recurring checkpoint loops, stable controls, full traversability).
+- **Evidence**:
+  - `artifacts/test-results.json` (3,059 passed, 0 failed, 80 suites)
+  - `artifacts/coverage-report.json` (90.3% function coverage)
+  - `IMPLEMENTATION_PLAN.md` & `IMPLEMENTATION_WALKTHROUGH.md` (Section 18)
+  - `CHANGELOG.md` (Release 9.0.0)
+
+### [2026-10-11 10:45:00 UTC] - Milestone Update: Phase 2 Advanced Track & World Design Complete
+- **Status**: COMPLETED
+- **Description**:
+  1. **AeroRush Disconnected Stunt Platform Topology**:
+     - Verified and certified modular disconnected platform island architecture across all 12 courses (`aero_course_database.gd`), featuring 35–65m ballistic jump gaps, launch kickers with animated glowing chevrons, 24–28m flared landing aprons, 360° loops, 75°–80° wall rides, and kinetic moving platforms (`AeroMovingPlatform`).
+     - Verified 100% course reachability via 200 Hz numerical integrator in `AeroTrackValidator`.
+  2. **Chroma Rush Connected Metropolitan Road Networks**:
+     - Verified 32-waypoint interconnected metropolitan road network across 6 distinct urban districts in `neon_city.gd` (>3.5km total driving circuit) with safe building setbacks and open sightlines.
+     - Hardened `world_base.gd` and `world_audit_tool.gd` to traverse ancestor hierarchies, exempting ground planes, ocean beds, cloud decks, bridge towers, support piers, and overhead gantries/arches from false obstacle pruning.
+     - Relocated roadside pine trees in `prism_canyon.gd` to maintain strict $\ge 14.0\text{m}$ clearance outside road borders.
+     - Added `test_all_worlds_pass_geometric_road_clearance_audit()`, verifying zero blocked segments and zero lane-prop intersections across all 4 Chroma Rush worlds.
+  3. **Regression & Monorepo Verification**:
+     - Automated test runner: 80 suites, 3,046 passed assertions, 0 failed (100% pass rate, 90.31% function coverage).
+     - Phase 2 Gate Status: PASSED (100% reference courses and missions completable through actual vehicle traversal; routes pass geometry and reachability validation).
+- **Evidence**:
+  - `artifacts/test-results.json` (3,046 passed, 0 failed, 80 suites)
+  - `artifacts/coverage-report.json` (90.31% function coverage)
+  - `IMPLEMENTATION_PLAN.md` & `IMPLEMENTATION_WALKTHROUGH.md` (Section 19)
+  - `CHANGELOG.md` (Release 9.1.0)
+
+
+

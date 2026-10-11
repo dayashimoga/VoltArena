@@ -186,8 +186,8 @@ func build_props() -> void:
 	# Pine trees along the canyon ridges and shoulders
 	var pine_positions = [
 		Vector3(40, 0, -40), Vector3(90, 2, -100), Vector3(130, 4, -130),
-		Vector3(200, 6, -90), Vector3(240, 8, -30), Vector3(210, 5, 20),
-		Vector3(130, 0, 30), Vector3(50, -2, 10), Vector3(-30, 2, -30)
+		Vector3(200, 6, -90), Vector3(226, 8, -30), Vector3(188, 5, 20),
+		Vector3(130, 0, 30), Vector3(50, -2, 10), Vector3(-15, 2, -48)
 	]
 	for pos in pine_positions:
 		var pine = _build_pine_tree()

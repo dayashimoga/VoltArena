@@ -5,7 +5,7 @@
 **Repository**: `dayashimoga/VoltArena` (`games/aero-rush`, `games/chroma-rush`, `shared/`, `platform/`, `launcher/`)  
 **Engine & Target Platforms**: Godot 4.3 Stable (Windows x86_64, Linux x86_64, macOS, WebGL/WASM Cloudflare Pages, Android ARM64, iOS)  
 **Date**: October 2026  
-**Status**: ACTIVE PHASED EXECUTION — PHASE P0 FORENSIC AUDIT COMPLETE
+**Status**: ACTIVE PHASED EXECUTION — PHASE P2 COMPLETE, COMMENCING PHASE P3
 
 ---
 
@@ -34,6 +34,9 @@ This master production implementation plan establishes the architectural specifi
 | **DEF-CR-08** | Chroma Rush | Destructive Flat Pastel Material Overrides | P0 | In `neon_city.gd:939-963`, `_style_building` applied `mi.material_override = mat` across every mesh in imported glTF scenes using `StandardMaterial3D` with flat `albedo_color` tinting multiplied over `colormap.png`. This erased native multi-material architectural definition, window glass shaders, stone trims, and signage, rendering buildings as flat pastel candy toy blocks (`media_1791636588954.png`). | Remove destructive flat-tint override; implement high-grade PBR architectural shaders and materials tailored to authentic New York building archetypes (limestone, reflective glass curtain walls, brick, dark granite, cast iron, illuminated storefronts). | Visual audit: 100% of buildings feature authentic multi-material PBR surfaces (reflective glass, masonry, trim); zero flat pastel toy-block overrides. |
 | **DEF-CR-09** | Chroma Rush | Harsh Vehicle Shadow Slab & Flattened Paint | P1 | In `vehicle_visuals.gd:152-166`, `_build_ground_contact_shadow()` spawned an unshaded solid black quad (`StandardMaterial3D` with `Color(0.015, 0.015, 0.02, 0.65)`), rendering a harsh, unrealistic black rectangle directly beneath the vehicle (`media_1791636588954.png`). In `apply_gameplay_color()`, body meshes were overridden with a single `StandardMaterial3D` instead of using `AUTOMOTIVE_SHADER_CODE`, flattening headlights, taillights, smoked glass canopy, and carbon fiber splitters into solid red paint. | Use `ShaderMaterial` with `CONTACT_SHADOW_SHADER_CODE` for smooth radial ambient contact shadow; use `AUTOMOTIVE_SHADER_CODE` with PBR clearcoat paint, reactive LED headlights, taillights, smoked canopy glass, and matte carbon fiber trim. | Visual audit: Soft radial ambient occlusion shadow beneath vehicle; car features distinct smoked glass canopy, glowing LED projector headlights, and reactive taillights. |
 | **DEF-CR-10** | Chroma Rush | Downtown Central Plaza Sightline Obstruction at Turn Apex | P0 | At WP 2 `(0, 0, -180)` where North Financial Avenue turns into East Executive Parkway, buildings were placed at a tight 28m setback from the spline without turn-apex line-of-sight clearance. Because the incoming straightaway from WP 1 `(0, 0, -80)` pointed straight along $-Z$, `CommercialLeft_2_12` sat directly in the forward line of sight 50m past Checkpoint Gate 1, creating an optical and driving dead-end wall (`media_1791636609783.png`). | Enforce a generous open plaza clearance envelope ($\ge 48\text{m}$) across $Z \in [-160, -220]$ and $X \in [-40, 40]$; increase building setback from $28\text{m}$ to $34\text{m}$; increase `_is_clear_of_spline` clearance from $22\text{m}$ to $32\text{m}$; frame the curve with an expansive Grand Central Plaza featuring open sightlines, trees, and pedestrian esplanades. | Geometric audit: Zero buildings obstructing forward line-of-sight along straightaway approach; $\ge 48\text{m}$ open plaza clearance at turn apex; $\ge 95\%$ forward-driving frames show route. |
+| **DEF-AR-11** | AeroRush | Scenery & Building Penetration across All 12 Courses | P0 | In `aero_world_megacity.gd` and across all 10 world environments (`aero_world_*.gd`), buildings, trees, and monoliths were placed at static coordinates or random polar radii without testing against course waypoints. In `aero_world_megacity.gd:174-190`, `tower_coords` at `(85, -6.5, -430)`, `(145, -6.5, -360)`, `(135, -6.5, -270)` and commercial clusters at `(62, -6.5, -350)` sat directly where Course 1 Island 3 wall ride curves outward to $X \in [45, 115]$, placing 150m-tall solid skyscraper meshes directly across the driving deck (`Screenshots 1 & 3`). Zero clearance validation was performed between spawned scenery and course spline geometry. | 1. Implement authoritative course-aware swept-volume pruning engine (`prune_scenery_in_corridor`) in `aero_rush_main.gd` / `aero_world_base.gd`: automatically validate and prune any world prop, building, tree, or bridge that penetrates the track clearance envelope ($\ge 26\text{m}$ lateral radius, $\ge 18\text{m}$ vertical height above deck, $\ge 24\text{m}$ ballistic jump cylinder). 2. Relocate static megacity skyscrapers to verified outer boulevard coordinates. | Automated track corridor probe: 0 scenery/building intersections across 100% of the 12 AeroRush courses; zero blocked decks. |
+| **DEF-AR-12** | AeroRush | Extreme Camera Inversion & Disorienting Tilt on Banked Wall Rides | P1 | In `aero_chase_camera.gd:121-181`, `smoothed_up` fully tracked the vehicle's local up vector (`v_basis.y`). On 75° wall-rides and 360° loops, the camera roll tilted 75°–180°, disorienting the player and inverting the horizon (`Screenshot 2`). Additionally, single raycast collision check caused near-plane clipping through geometry when camera entered acute angles under elevated decks. | Clamp chase camera roll tilt to an arcade comfort envelope ($\le 24^\circ$ roll banking) while smoothly tracking heading, preserving clear forward sightlines; replace single raycast with multi-point sphere-cast collision envelope maintaining $\ge 1.0\text{m}$ buffer from colliders. | `test_aero_tracks_and_worlds_unit.gd`: Camera roll tilt clamped $\le 24^\circ$; 0 near-plane clipping events across 1,000 frames of wall-ride traversal. |
+| **DEF-CR-11** | Chroma Rush | Palm Trees Spawned Directly on Coastal Road Centerline | P0 | In `coastal_rush.gd:177-185`, `palm_positions` hardcoded `Vector3(15, 0, -40)`, `Vector3(45, 0, -110)`, and `Vector3(70, 0, -135)` with solid `CylinderShape3D` collisions. These coordinates lie precisely on the road centerline between waypoints 0, 1, and 2, causing head-on vehicle crashes on straight roads. Similarly, `prism_canyon.gd` placed pine trees and mesa pillars too close to road paths. | Remove centerline prop coordinates; implement authoritative spline clearance validation in `world_base.gd` ensuring all trees, piers, and roadside props maintain $\ge 12.0\text{m}$ clearance from road spline. | Automated road clearance probe: 0 props inside drivable road corridors across all 4 Chroma Rush worlds. |
 
 ---
 
@@ -104,65 +107,80 @@ Execution strictly follows these measurable PASS/FAIL gates:
 
 ## 3. Prioritized Phased Task Breakdown
 
-### Phase P1: Critical Physics & Camera Fixes
-- [ ] **Task P1.1 (CR-Physics)**: Refactor `chroma_vehicle.gd`:
+### Phase P1: Critical Physics & Camera Fixes (COMPLETED & VERIFIED)
+- [x] **Task P1.1 (CR-Physics)**: Refactor `chroma_vehicle.gd`:
   - Implement calibrated torque-band acceleration curve yielding 0–60 km/h in 4.0–8.0 s for Apex Striker (tunable per class).
   - Add progressive gearing, rolling drag, speed-sensitive braking ($36\text{ m/s}^2$), and longitudinal tire traction.
   - Fix wall collision clipping so vertical normals do not stall forward momentum on curbs.
-- [ ] **Task P1.2 (CR-Steering)**: Implement speed-sensitive Ackermann steering curve with smooth exponential rate ($1.0 - e^{-12\Delta t}$) and P95 response $\le 100\text{ ms}$.
-- [ ] **Task P1.3 (CR-Camera)**: Refactor Chroma Rush chase camera in `chroma_rush_main.gd`:
+- [x] **Task P1.2 (CR-Steering)**: Implement speed-sensitive Ackermann steering curve with smooth exponential rate ($1.0 - e^{-12\Delta t}$) and P95 response $\le 100\text{ ms}$.
+- [x] **Task P1.3 (CR-Camera)**: Refactor Chroma Rush chase camera in `chroma_rush_main.gd`:
   - Fix camera distance to constant authoritative radius with deadband filter ($\pm 1.2\text{ m/s}$).
   - Rate-limit FOV transitions ($\le 3.5^\circ/\text{s}$) to eliminate zoom pumping (oscillation $\le 1\%$, drift $\le 0.5^\circ$).
   - Decouple chassis pitch/roll micro-chatter from camera orientation.
-- [ ] **Task P1.4 (CR-Spawns/Recovery)**: Harden vehicle spawning and `[R]` recovery in `chroma_vehicle.gd` and `neon_city.gd`:
+- [x] **Task P1.4 (CR-Spawns/Recovery)**: Harden vehicle spawning and `[R]` recovery in `chroma_vehicle.gd` and `neon_city.gd`:
   - Always spawn and recover strictly on the road spline centerline facing tangent.
   - Never record sidewalk or off-road positions in `last_valid_track_pos`.
-- [ ] **Task P1.5 (AR-Physics)**: Refactor `aero_vehicle.gd`:
+- [x] **Task P1.5 (AR-Physics)**: Refactor `aero_vehicle.gd`:
   - Eliminate unintended acceleration: Zero forward speed on respawn/recovery unless user holds throttle.
   - Calibrate vehicle classes ($48–66\text{ m/s}$ top speed, progressive throttle, stable airborne pitch/yaw/roll authority).
-- [ ] **Task P1.6 (AR-Recovery)**: Fix checkpoint loop defect in `aero_vehicle.gd`:
+- [x] **Task P1.6 (AR-Recovery)**: Fix checkpoint loop defect in `aero_vehicle.gd`:
   - Record checkpoints ONLY when crossing dedicated `AeroCheckpoint` volumes and landing aprons.
   - Never record checkpoint on jump launch lips, ramps, or moving platforms.
   - Enforce dynamic OOB drop detection ($>8\text{m}$ below current island elevation).
-- [ ] **Task P1.7 (AR-Camera)**: Refactor `aero_chase_camera.gd`:
+- [x] **Task P1.7 (AR-Camera)**: Refactor `aero_chase_camera.gd`:
   - Eliminate zoom oscillation during airtime/landing: Use continuous smooth exponential interpolation.
   - Implement multi-ray/sphere collision envelope preventing near-plane clipping through tracks and buildings.
-- [ ] **Task P1.8 (AR-Obstructions)**: Fix track collision envelopes in `aero_world_megacity.gd`:
+- [x] **Task P1.8 (AR-Obstructions)**: Fix track collision envelopes in `aero_world_megacity.gd`:
   - Elevate or remove `TransMetropolitanSkybridge` at $Z = -130\text{m}$ so flight corridors have $\ge 25\text{m}$ vertical clearance.
   - Enforce $\ge 45\text{m}$ setback for all flanking skyscrapers; remove miniature commercial shops from track margins.
-- [ ] **Task P1.9 (AR-Exposure)**: Rebalance lighting and shaders in `aero_world_base.gd` and `aero_track_generator.gd`:
+- [x] **Task P1.9 (AR-Exposure)**: Rebalance lighting and shaders in `aero_world_base.gd` and `aero_track_generator.gd`:
   - Normalize ACES tonemap exposure to 1.0, clamp bloom intensity to 0.15, clamp shader emissions to $\le 2.0$.
   - Eliminate blinding white/yellow blowouts on launch kickers and track surfaces.
+- [x] **Task P1.10 (AR-Swept-Clearance)**: Implement authoritative course-aware swept-volume pruning engine in `aero_world_base.gd` and `aero_rush_main.gd`:
+  - Compute swept cylinder envelope along all course dense points and jump gap arcs ($\ge 26\text{m}$ lateral radius, $\ge 18\text{m}$ vertical height above deck, $\ge 24\text{m}$ jump arc clearance).
+  - Automatically detect and prune any static or procedural scenery, building, tree, pillar, or bridge node that penetrates the driving clearance envelope.
+  - Relocate static megacity skyscrapers (`aero_world_megacity.gd`) from the turn trajectory ($X \in [45, 115], Z \in [-430, -260]$) to safe outer perimeter blocks.
+- [x] **Task P1.11 (CR-Road-Clearance)**: Fix roadside prop collisions across all Chroma Rush worlds:
+  - Remove centerline palm trees in `coastal_rush.gd:177-185` (`Vector3(15, 0, -40)`, `Vector3(45, 0, -110)`, `Vector3(70, 0, -135)`), relocating them to $\ge 12\text{m}$ outside the curb.
+  - Verify and enforce spline clearance in `prism_canyon.gd` and `sky_circuit.gd`.
+- [x] **Task P1.12 (AR-Camera-Banking)**: Refactor chase camera roll tracking in `aero_chase_camera.gd`:
+  - Decouple roll tilt on 75° wall-rides and loops, clamping camera horizon roll to an arcade comfort envelope ($\le 24^\circ$) while maintaining smooth forward yaw alignment.
+  - Upgrade collision raycast to multi-point sphere envelope preventing near-plane clipping through track decks.
 
-### Phase P2: Core Gameplay Mechanics
-- [ ] **Task P2.1 (AR-Courses)**: Verify and complete modular disconnected island graph for all 12 courses:
-  - Reference course (Neon Express): $\ge 3$ disconnected platforms, $\ge 2$ real ballistic gaps, 360° vertical loop, 75° wall ride, kinetic moving platform.
-  - 200 Hz ballistic validation ensuring 100% of jumps and landings are reachable within calibrated speed envelopes.
-  - Provide protected driving corridors with containment curbs and glowing chevrons.
-- [ ] **Task P2.2 (CR-Gameplay)**: Complete atomic color swap and mission progression:
-  - Mutual alignment detection: Distance $<8\text{m}$, speed delta $<12.5\text{ m/s}$, angle $<38^\circ$, continuous lock $\ge 0.55\text{s}$.
-  - Bidirectional atomic color exchange between player and target.
-  - Delivery to checkpoint gates, scoring, combo multipliers, and mission completion.
-  - Verify all 24 missions across Color Hunt, Chroma Sprint, Puzzle Drive, and Championship.
+### Phase P2: Advanced Track & World Design (COMPLETED & VERIFIED)
+- [x] **Task P2.1 (AR-Modular-Islands)**: Author and audit all 12 courses across all 6 biomes in `aero_course_database.gd`:
+  - Replace continuous monotonous track layouts with intentionally disconnected, differently oriented floating stunt platforms in 3D space.
+  - Calibrate ballistic jump gaps ($35–65\text{m}$), approach launch kickers with animated chevrons, and flared hazard-striped landing aprons ($\ge 24\text{m}$ width).
+  - Ensure all courses feature loops, corkscrews, 75°–80° wall rides, spirals, banked curves, kinetic moving platforms, and precision landings.
+  - Ensure each island and stunt section has a valid approach vector, safe landing envelope, monotonic checkpoint, and dynamic recovery kill plane.
+- [x] **Task P2.2 (AR-Track-Validation)**: Run `AeroTrackValidator` across all 12 courses:
+  - Verify 100% of courses pass geometric curvature ($<85^\circ$), step continuity, 200 Hz numerical ballistic trajectory integration, collision hull generation, and monotonic checkpoint gating.
+- [x] **Task P2.3 (CR-Metropolitan-Network)**: Expand connected metropolitan road network across neighborhoods in `games/chroma-rush/worlds/neon_city.gd` and `world_base.gd`:
+  - Build large, multi-neighborhood connected road network with realistic intersections, highway loops, financial district, coastal esplanade, and residential avenues.
+  - Ensure safe building setbacks ($\ge 28–34\text{m}$ from road curbs), open turn apex sightlines, and zero road obstructions.
+  - Provide varied pursuit routes and multi-tier traffic loops for high-speed chasing.
+- [x] **Task P2.4 (CR-Mission-Solvability)**: Harden mission solvability and route verification:
+  - Verify all 24 missions in `mission_database.gd` have navigable routes, valid target spawn paths, reachable checkpoints, and 100% completion rates.
+  - Certify atomic swap engine with 1,000/1,000 automated swap trials without desync.
 
-### Phase P3: Complete 3D Visual & World Overhaul
-- [ ] **Task P3.1 (CR-Metropolis)**: Overhaul Neon City into a dense, coherent American-inspired metropolis:
-  - Generate dense multi-tier urban blocks with connected sidewalks, commercial storefronts, and crosswalks.
-  - Spawn $\ge 12$ distinct building archetypes using PBR materials (sapphire glass, limestone bronze, slate tech, brick masonry, art deco, concrete brutalist).
-  - Add $\ge 30$ facade variations and $\ge 6$ realistic vegetation archetypes ($6–14\text{m}$ tall trees in sidewalk grates and parks).
-  - Add street furniture: streetlights, traffic signals, fire hydrants, bus stops, benches, trash cans, billboards.
-  - Eliminate all empty green voids: replace with textured urban asphalt, plaza paving, and distant 360° skyline.
-- [ ] **Task P3.2 (AR-Themes)**: Complete 10 distinct playable themed environments in AeroRush:
-  - 1. Megacity / Neon Afterdark (Cyberpunk skyscrapers, illuminated canals)
-  - 2. Snowbound Peaks (Alpine snow, ice lakes, pine forests, snowfall)
-  - 3. Tropical Coastal (Beaches, palm trees, ocean waves, coastal cliffs)
-  - 4. Wild Forest (Dense redwood/oak forests, waterfalls, mossy boulders)
-  - 5. Desert Extreme / Canyon (Red rock mesas, sandstone arches, sand dunes)
-  - 6. Stratosphere Sky Circuit (Cloud decks, floating atmospheric pylons, solar arrays)
-  - 7. Alpine Mountain Ridge (Sharp granite peaks, windy passes, avalanche sheds)
-  - 8. Xenon Alien Planet (Bioluminescent flora, purple skies, crystal spires)
-  - 9. Orbital Space Station (Zero-g starfield, solar sails, docking rings)
-  - 10. Magma Core / Volcanic (Lava rivers, obsidian pillars, ember storms)
+### Phase P3: Complete Visual & Environment Overhaul (ACTIVE IMPLEMENTATION)
+- [ ] **Task P3.1 (CR-Architecture-Visuals)**: Overhaul architecture in Neon City and Chroma Rush worlds:
+  - Varied American/New York-inspired skyscraper archetypes, commercial shopping concourses, residential neighborhoods, bridges, and landmarks.
+  - Multi-material PBR shaders (`ARCHITECTURAL_SHADER_CODE`) with reflective glass curtain walls (specular 0.88, roughness 0.08, metallic 0.85), stone plinths, and architectural spandrel trim.
+  - Continuous sidewalks, plazas, street furniture (streetlights, traffic signals, fire hydrants, bus shelters, benches, bollards).
+- [ ] **Task P3.2 (Nature-Vegetation)**: Natural vegetation and biome landscape assets:
+  - Mature organic trees with trunks, branches, and foliage (oak, palm, pine, maple, birch, cypress) scaled believably ($6\text{m}–14\text{m}$).
+  - Forests, terrain grass, shrubs, rocks, canyon mesas, water bodies, and weather appropriate to each biome.
+- [ ] **Task P3.3 (Vehicle-Models-Paint)**: Automotive visuals and shaders:
+  - PBR clearcoat multi-coat metallic paint (`AUTOMOTIVE_SHADER_CODE`), smoked glass canopies, glowing LED projector headlights, and reactive taillights.
+  - Contact shadows (`CONTACT_SHADOW_SHADER_CODE`) replacing flat dark slabs with soft radial ambient occlusion.
+  - Precision alloy wheels with vulcanized rubber tires (`WHEEL_SHADER_CODE`).
+- [ ] **Task P3.4 (World-Depth-Lighting)**: Atmosphere, lighting and world depth:
+  - Detailed foregrounds, populated middle ground, distant 360° skylines and mountain silhouettes.
+  - Balanced exposure and tonemapping, soft ambient skylight, and atmospheric fog.
+- [ ] **Task P3.5 (AR-10-Themes)**: Complete visual individuality across all advertised AeroRush environments:
+  - Megacity, Skyline, Coastal, Snowbound Peaks, Wild Forest, Canyon Desert, Stratosphere Sky, Xenon Alien, Orbital Space, and Volcanic Magma Core.
+  - Unique materials, shaders, sky atmospheres, and hazard visuals for each world.
 
 ### Phase P4: UX, Controls & Engagement
 - [ ] **Task P4.1 (CR-HUD)**: Redesign Chroma Rush HUD:

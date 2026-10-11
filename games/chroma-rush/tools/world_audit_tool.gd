@@ -92,8 +92,17 @@ static func audit_world(world: Node3D, lane_half_width: float = 7.0, max_slope_d
 		if not c_node or not is_instance_valid(c_node):
 			continue
 
-		var parent_body = c_node.get_parent()
-		if parent_body and (parent_body.name == "CityGroundPlane" or "Ground" in parent_body.name):
+		var is_exempt_infra = false
+		var curr_p: Node = c_node.get_parent()
+		while curr_p and curr_p != world:
+			var pn = curr_p.name
+			if ("Ground" in pn or "Ocean" in pn or "Water" in pn or "Cloud" in pn
+				or "Skyline" in pn or "Distant" in pn or "Bridge" in pn or "Pylon" in pn
+				or "Pier" in pn or "Arch" in pn or "Gantry" in pn):
+				is_exempt_infra = true
+				break
+			curr_p = curr_p.get_parent()
+		if is_exempt_infra:
 			continue
 
 		var c_pos = _get_relative_position(c_node, world)

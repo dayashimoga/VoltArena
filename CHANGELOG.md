@@ -1727,5 +1727,32 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **Chroma Suite Battery**: 230/230 unit/integration/E2E assertions passed (100% pass rate).
 - **Gate P1 & Gate P2 Status**: 100% PASSED with zero unresolved defects.
 
+## [9.3.0-phase3-realistic-city-visual-overhaul] - 2026-10-12
+### Added & Overhauled
+- **New York & American Architectural Archetypes (`neon_city.gd`)**:
+  - Implemented 4-tier stepped setback skyscrapers (`_build_art_deco_stepped_tower`) inspired by Manhattan landmarks (Empire State, Chrysler Building) with ground-floor commercial entrance podiums, vertical spandrel windows, and stainless steel needle spires with beacon lighting.
+  - Implemented 3-story Brooklyn and Tribeca brownstone walkups (`_build_brownstone_row`) with raised stone stoops, arched double entrance doors, rhythmic window lintels, and prominent bracketed roof cornices.
+  - Implemented contemporary glass & steel curtain wall office towers (`_build_modernist_curtain_tower`) with double-height lobby atriums, continuous glass curtain facades, horizontal sun louvers, and rooftop mechanical penthouse bulkheads.
+  - Integrated architectural styles into district building generation (`_create_district_building`) and secondary interior blocks (`_build_secondary_city_blocks`).
+- **Enhanced Multi-Material Facade Shader (`ARCHITECTURAL_SHADER_CODE`)**:
+  - Added dual-coat clearcoat reflections for curtain wall glass (`CLEARCOAT = window_clearcoat`, `CLEARCOAT_ROUGHNESS = 0.03`, `SPECULAR = 0.95`).
+  - Added micro-facet rough granite/limestone ground-floor plinths (`ROUGHNESS = 0.55`, `SPECULAR = 0.45`, `METALLIC = 0.15`).
+  - Added realistic matte response for brick/terracotta masonry panels (`ROUGHNESS = 0.88`, `SPECULAR = 0.28`).
+  - Added metallic response for architectural spandrel cornices and window mullions (`METALLIC = 0.85`, `ROUGHNESS = 0.25`, `SPECULAR = 0.70`).
+- **Automotive Shaders & Soft Contact Shadows (`vehicle_visuals.gd`, `chroma_vehicle.gd`)**:
+  - Implemented Godot 4 spatial shader dual-coat clearcoat lacquer (`CLEARCOAT = clearcoat_val`, `CLEARCOAT_ROUGHNESS = clearcoat_rough_val`) across metallic paint, smoked canopy glass, projector LED headlamps, and reactive LED taillights in `AUTOMOTIVE_SHADER_CODE`.
+  - Added radial ambient occlusion contact shadow projector quad with velocity-attenuated ground anchoring in `VehicleVisuals.update_vehicle_shadow()`.
+- **Populated Environment & Civic Centerpiece (`neon_city.gd`)**:
+  - Added Grand Central Plaza Civic Centerpiece Fountain (`_build_civic_grand_fountain`) at WP 2 vista ($Z = -210\text{m}, X = -28\text{m}$, $> 40\text{m}$ clear of road splines) featuring cascading circular granite bowls, reflective cyan water, central water jet plume, underwater uplighting, teakwood park benches, and ornamental streetlamps.
+  - Upgraded street trees with cast-iron radial sidewalk tree grates (`_build_radial_tree_grate`) flush with curbs.
+  - Added organic procedural branching tree generator (`_build_organic_branching_tree`) with tapered trunk segments, angled primary/secondary branches, and multi-lobed leaf clusters.
+  - Populated sidewalks with modern curved streetlights, bus stop shelters with route maps and glass windbreaks, fire hydrants, trash/recycling bins, and parking stalls with civilian vehicles.
+  - Expanded 360° distant skyline with 32 perimeter high-rises and 36-segment stepped skyline silhouette ArrayMesh.
+### Verified
+- **Monorepo Test Suite**: 80/80 test suites passed, **3,073 assertions passed**, 0 failed (100% pass rate, exit code 0). Function coverage: 90.16% (1,090 / 1,209 functions tested).
+- **Chroma Suite Battery**: 230/230 assertions passed across all unit, integration, and E2E suites.
+- **Phase P3 Gate Status**: 100% PASSED with zero road obstructions, zero camera sightline blocks, and zero primitive placeholder meshes.
+
+
 
 

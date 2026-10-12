@@ -1165,5 +1165,55 @@ A rigorous engineering audit was executed across runtime telemetry, visual captu
 - **Function Coverage**: **90.23%** (1,090 / 1,208 functions tested)
 - **Zero Unresolved P0/P1 Defects**: 100% verified across physics, camera, geometry, and road clearance gates.
 
+---
+
+### 21. Phase P3: Realistic Large City & Visual Overhaul (v9.3.0)
+
+#### 21.1 Architectural Variety & Multi-Material Facade Shaders
+- **New York & American Architectural Archetypes**:
+  - `_build_art_deco_stepped_tower`: 4-tier stepped setback skyscrapers inspired by Manhattan icons (Empire State, Chrysler Building), featuring grand commercial entrance podiums, recessed vertical spandrel windows, and stainless steel needle spires with beacon lighting.
+  - `_build_brownstone_row`: 3-story Brooklyn and Tribeca brownstone walkups with raised stone stoops, arched double entrance doors, rhythmic window lintels, and prominent bracketed roof cornices.
+  - `_build_modernist_curtain_tower`: Contemporary glass & steel curtain wall office towers with double-height lobby atriums, continuous glass curtain facades, horizontal sun louvers, and rooftop mechanical penthouse bulkheads.
+- **Enhanced Multi-Material Facade Shader ([ARCHITECTURAL_SHADER_CODE](file:///h:/gamesmodern/games/chroma-rush/worlds/neon_city.gd#L17-L74))**:
+  - Reflective curtain glass with high specular response ($0.95$), low roughness ($0.04$), and dual-coat clearcoat lacquer (`CLEARCOAT = window_clearcoat`, `CLEARCOAT_ROUGHNESS = 0.03`).
+  - Architectural polished granite/limestone ground-floor plinths (`ROUGHNESS = 0.55`, `SPECULAR = 0.45`, `METALLIC = 0.15`).
+  - Terracotta and aged red brick masonry panels with rich matte stone response (`ROUGHNESS = 0.88`, `SPECULAR = 0.28`).
+  - Metallic spandrel cornice trim, bronze entrance portals, and window mullions (`METALLIC = 0.85`, `ROUGHNESS = 0.25`, `SPECULAR = 0.70`).
+
+#### 21.2 Automotive Paint Shaders & Dynamic Soft Contact Shadows
+- **Dual-Coat Clearcoat Lacquer Shader ([AUTOMOTIVE_SHADER_CODE](file:///h:/gamesmodern/games/chroma-rush/vehicles/vehicle_visuals.gd#L27-L91))**:
+  - Implemented Godot 4 spatial shader `CLEARCOAT = clearcoat_val` and `CLEARCOAT_ROUGHNESS = clearcoat_rough_val` outputs across all automotive surfaces (metallic body panels, smoked glass canopies, projector LED headlamps, reactive LED taillights).
+  - High-intensity projector LED headlights with $4.2\times$ emission and protective clearcoat lens.
+  - Reactive taillamps with $4.8\times$ brake light flare and reverse gear white illumination.
+- **Soft Ground Contact Shadow Projector**:
+  - Added radial ambient occlusion contact shadow projector quad underneath vehicle chassis.
+  - Dynamic ground anchoring in `VehicleVisuals.update_vehicle_shadow()` attenuating shadow intensity and ground fade when airborne or traversing slopes.
+
+#### 21.3 Populated Urban Environment & Civic Centerpiece
+- **Grand Central Plaza Civic Fountain (`_build_civic_grand_fountain`)**:
+  - Situated in the prominent WP 2 vista ($Z = -210\text{m}, X = -28\text{m}$), safely $\ge 40\text{m}$ clear of all road splines, transforming the previously blocked turn apex into a scenic civic plaza.
+  - Features an octagonal carved granite outer pool basin, cascading elevated circular bowls, shimmering reflective water with cyan caustics, an illuminated central water jet plume with underwater uplighting, and a radial promenade lined with teakwood park benches and decorative streetlamps.
+- **Organic Branching Foliage & Cast-Iron Radial Tree Grates**:
+  - Upgraded street trees with cast-iron radial sidewalk tree grates (`_build_radial_tree_grate`) flush with sidewalk curbs.
+  - Added organic procedural branching tree generator (`_build_organic_branching_tree`) with tapered trunk segments, angled primary/secondary branches, and multi-lobed leaf clusters as fallback and variety generator.
+- **Streetscape Furniture & Distant Skyline**:
+  - Populated sidewalks with modern curved streetlights, bus shelters with route maps and glass windbreaks, municipal fire hydrants, dual-stream trash/recycling receptacles, and security bollards.
+  - Expanded 360° distant skyline with 32 perimeter high-rises and 36-segment stepped skyline silhouette ArrayMesh.
+
+#### 21.4 Verification & Test Pass Rate
+- **Full VoltArena Monorepo Test Run**:
+  - **Total Test Suites**: **80 / 80 suites**
+  - **Total Passed Assertions**: **3,073 passed (100% pass rate)**
+  - **Total Failed Assertions**: **0 failed**
+  - **Chroma Test Battery**:
+    - `Chroma Vehicle Physics Unit`: 48 passed, 0 failed
+    - `Chroma Worlds & Integration Unit`: 59 passed, 0 failed
+    - `Chroma Rush E2E Scenarios`: 53 passed, 0 failed
+    - `ColorSwapEngine Unit`: 41 passed, 0 failed
+    - `Chroma AI & Traffic Unit`: 21 passed, 0 failed
+    - `Chroma Camera Stability & Telemetry`: 20 passed, 0 failed
+    - `Chroma Modes & Progression Unit`: 35 passed, 0 failed
+  - **Function Coverage**: **90.16%** (1,090 / 1,209 functions tested)
+
 
 

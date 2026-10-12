@@ -444,6 +444,12 @@ func _update_visual_dynamics(delta: float) -> void:
 	var is_rev = (forward_speed < -0.1 and brake_input > 0.05)
 	VehicleVisuals.update_vehicle_lights(visual_node, is_b, is_rev)
 
+	# Dynamic contact shadow attenuation
+	var h_ground = 0.0
+	if not is_grounded and is_inside_tree():
+		h_ground = maxf(0.0, global_position.y - last_valid_track_pos.y)
+	VehicleVisuals.update_vehicle_shadow(visual_node, is_grounded, h_ground)
+
 func _check_rollover_and_recovery(delta: float) -> void:
 	var t = global_transform if is_inside_tree() else transform
 	var pos = global_position if is_inside_tree() else position

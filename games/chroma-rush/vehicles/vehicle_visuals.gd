@@ -32,6 +32,8 @@ uniform sampler2D albedo_texture : source_color, filter_linear_mipmap;
 uniform vec4 paint_color : source_color = vec4(0.85, 0.06, 0.14, 1.0);
 uniform float metallic_val : hint_range(0.0, 1.0) = 0.85;
 uniform float roughness_val : hint_range(0.0, 1.0) = 0.18;
+uniform float clearcoat_val : hint_range(0.0, 1.0) = 0.85;
+uniform float clearcoat_rough_val : hint_range(0.0, 1.0) = 0.08;
 uniform bool is_braking = false;
 uniform bool is_reversing = false;
 
@@ -48,15 +50,18 @@ void fragment() {
 		ALBEDO = paint_color.rgb;
 		METALLIC = metallic_val;
 		ROUGHNESS = roughness_val;
-		SPECULAR = 0.80;
+		SPECULAR = 0.85;
+		CLEARCOAT = clearcoat_val;
+		CLEARCOAT_ROUGHNESS = clearcoat_rough_val;
 	} else if (is_headlight) {
-
-		// Projector LED Headlamps
+		// Projector LED Headlamps with high emission and transparent lens clearcoat
 		ALBEDO = vec3(0.96, 0.98, 1.0);
-		EMISSION = vec3(1.0, 0.98, 0.94) * 3.8;
+		EMISSION = vec3(1.0, 0.98, 0.94) * 4.2;
 		METALLIC = 0.70;
-		ROUGHNESS = 0.06;
-		SPECULAR = 0.90;
+		ROUGHNESS = 0.04;
+		SPECULAR = 0.95;
+		CLEARCOAT = 0.95;
+		CLEARCOAT_ROUGHNESS = 0.04;
 	} else if (is_taillight) {
 		// Reactive Rear Taillamps and Brake Lights
 		ALBEDO = is_reversing ? vec3(0.95, 0.95, 0.92) : vec3(0.94, 0.05, 0.08);
@@ -64,28 +69,36 @@ void fragment() {
 		vec3 emit_col = is_reversing ? vec3(1.0, 0.98, 0.90) : vec3(1.0, 0.04, 0.06);
 		EMISSION = emit_col * brake_mult;
 		METALLIC = 0.35;
-		ROUGHNESS = 0.12;
-		SPECULAR = 0.75;
+		ROUGHNESS = 0.08;
+		SPECULAR = 0.85;
+		CLEARCOAT = 0.85;
+		CLEARCOAT_ROUGHNESS = 0.08;
 	} else if (is_glass) {
-		// Reflective Deep Smoked Glass Canopy
+		// Reflective Deep Smoked Glass Canopy with high specular clearcoat
 		ALBEDO = vec3(0.06, 0.08, 0.12);
-		ROUGHNESS = 0.04;
-		METALLIC = 0.35;
-		SPECULAR = 0.95;
+		ROUGHNESS = 0.03;
+		METALLIC = 0.40;
+		SPECULAR = 0.98;
+		CLEARCOAT = 1.0;
+		CLEARCOAT_ROUGHNESS = 0.02;
 	} else if (is_trim) {
 		// Matte Carbon Fiber Aero Trim, Splitters & Diffusers
 		ALBEDO = vec3(0.10, 0.10, 0.12);
 		ROUGHNESS = 0.82;
 		METALLIC = 0.10;
 		SPECULAR = 0.25;
+		CLEARCOAT = 0.0;
+		CLEARCOAT_ROUGHNESS = 0.80;
 	} else {
-		// Deep Multi-Coat Automotive Metallic Paint
+		// Deep Multi-Coat Automotive Metallic Paint with dynamic clearcoat lacquer
 		float lum = (tex.r * 0.299 + tex.g * 0.587 + tex.b * 0.114);
 		float factor = clamp(lum / 0.65, 0.90, 1.20);
 		ALBEDO = paint_color.rgb * factor;
 		METALLIC = metallic_val;
 		ROUGHNESS = roughness_val;
-		SPECULAR = 0.80;
+		SPECULAR = 0.85;
+		CLEARCOAT = clearcoat_val;
+		CLEARCOAT_ROUGHNESS = clearcoat_rough_val;
 	}
 }
 """
@@ -118,10 +131,13 @@ const CONTACT_SHADOW_SHADER_CODE = """
 shader_type spatial;
 render_mode blend_mix, depth_draw_never, cull_disabled, unshaded;
 
+uniform float shadow_alpha : hint_range(0.0, 1.0) = 0.78;
+uniform float ground_fade : hint_range(0.0, 1.0) = 1.0;
+
 void fragment() {
 	vec2 p = (UV - vec2(0.5)) * 2.0;
 	float d = length(max(abs(p) - vec2(0.32, 0.46), vec2(0.0)));
-	float alpha = smoothstep(0.68, 0.0, d) * 0.76;
+	float alpha = smoothstep(0.68, 0.0, d) * shadow_alpha * ground_fade;
 	ALBEDO = vec3(0.015, 0.015, 0.02);
 	ALPHA = alpha;
 }
@@ -161,6 +177,20 @@ static func _build_ground_contact_shadow() -> MeshInstance3D:
 	sm.shader = get_contact_shadow_shader()
 	mi.material_override = sm
 	return mi
+
+static func update_vehicle_shadow(vehicle_visual: Node3D, is_grounded: bool, height_above_ground: float) -> void:
+	if not is_instance_valid(vehicle_visual):
+		return
+	var shadow = vehicle_visual.get_node_or_null("GroundContactShadow") as MeshInstance3D
+	if not shadow:
+		return
+	var fade = 1.0
+	if not is_grounded:
+		fade = clampf(1.0 - (height_above_ground / 2.5), 0.1, 1.0)
+	if shadow.material_override is ShaderMaterial:
+		var sm = shadow.material_override as ShaderMaterial
+		sm.set_shader_parameter("ground_fade", fade)
+
 
 
 
@@ -359,6 +389,8 @@ static func apply_gameplay_color(vehicle_visual: Node3D, color_id: int, finish: 
 				sm.set_shader_parameter("paint_color", col)
 				sm.set_shader_parameter("metallic_val", metallic_v)
 				sm.set_shader_parameter("roughness_val", roughness_v)
+				sm.set_shader_parameter("clearcoat_val", clearcoat_v)
+				sm.set_shader_parameter("clearcoat_rough_val", 0.80 if finish.to_lower() == "matte" else 0.06)
 				if colormap_tex:
 					sm.set_shader_parameter("albedo_texture", colormap_tex)
 				mi.material_override = sm

@@ -1559,6 +1559,32 @@
   - `IMPLEMENTATION_WALKTHROUGH.md` (Section 20)
   - `CHANGELOG.md` (Release 9.2.0)
 
+### [2026-10-12 10:30:00 UTC] - Milestone Update: Phase P3 Realistic Large City & Visual Overhaul Complete
+- **Status**: COMPLETED
+- **Description**:
+  1. **New York & American Architectural Archetypes & Facade Shaders**:
+     - Implemented `_build_art_deco_stepped_tower` (4-tier stepped setback skyscrapers with needle spires and beacons), `_build_brownstone_row` (3-story Brooklyn/Tribeca brownstones with raised stoops and bracketed cornices), and `_build_modernist_curtain_tower` (glass & steel curtain towers with double-height atriums) in `neon_city.gd`.
+     - Enhanced `ARCHITECTURAL_SHADER_CODE` with multi-material discrimination: dual-coat clearcoat curtain wall glass (`CLEARCOAT = window_clearcoat`, `ROUGHNESS = 0.04`, `SPECULAR = 0.95`), micro-facet granite/limestone plinths (`ROUGHNESS = 0.55`), matte masonry brick panels (`ROUGHNESS = 0.88`), and metallic spandrel cornices (`METALLIC = 0.85`, `ROUGHNESS = 0.25`).
+  2. **Automotive Shaders & Soft Contact Shadows**:
+     - Upgraded `AUTOMOTIVE_SHADER_CODE` in `vehicle_visuals.gd` with Godot 4 spatial shader dual-coat clearcoat lacquer (`CLEARCOAT = clearcoat_val`, `CLEARCOAT_ROUGHNESS = clearcoat_rough_val`) across all finishes (metallic, gloss, pearlescent, matte).
+     - Added projector LED headlights with $4.2\times$ emission and reactive LED brake/reverse lighting.
+     - Implemented soft ambient occlusion ground contact shadow projector with dynamic velocity-attenuated ground anchoring in `VehicleVisuals.update_vehicle_shadow()` and `chroma_vehicle.gd`.
+  3. **Populated Environment & Civic Centerpiece**:
+     - Implemented Grand Central Plaza Civic Centerpiece Fountain (`_build_civic_grand_fountain`) at WP 2 vista ($Z = -210\text{m}, X = -28\text{m}$, $> 40\text{m}$ clear of road splines) featuring cascading circular granite bowls, reflective cyan water, central water jet plume, underwater uplighting, teakwood park benches, and ornamental streetlamps.
+     - Upgraded street trees with cast-iron radial sidewalk tree grates (`_build_radial_tree_grate`) and added organic procedural branching tree generator (`_build_organic_branching_tree`) with natural tapered trunk segments, angled primary/secondary branches, and multi-lobed leaf clusters.
+     - Populated sidewalks with modern curved streetlights, bus shelters with route maps and glass windbreaks, fire hydrants, trash/recycling receptacles, and security bollards.
+     - Expanded 360° distant skyline with 32 perimeter high-rises and 36-segment stepped skyline silhouette ArrayMesh.
+  4. **Monorepo Regression Verification**:
+     - Automated test runner: 80 suites, 3,073 passed assertions, 0 failed (100% pass rate, exit code 0). Function coverage: 90.16% (1,090 / 1,209 functions tested).
+     - Chroma suite battery: 230/230 unit/integration/E2E assertions passed (100% pass rate).
+     - Phase P3 Gate Status: PASSED (100% visual and architectural overhaul complete with zero road obstructions and zero primitive placeholder meshes).
+- **Evidence**:
+  - `artifacts/test-results.json` (3,073 passed, 0 failed, 80 suites)
+  - `artifacts/coverage-report.json` (90.16% function coverage)
+  - `IMPLEMENTATION_WALKTHROUGH.md` (Section 21)
+  - `CHANGELOG.md` (Release 9.3.0)
+
+
 
 
 

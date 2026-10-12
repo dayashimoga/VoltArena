@@ -185,19 +185,32 @@ func test_neon_city_street_tree_and_plaza_colliders() -> void:
 	# Verify street trees possess solid StaticBody3D with CylinderShape3D colliders (DEF-01)
 	var found_tree_collider = false
 	var found_plaza_collider = false
+	var found_fountain = false
+	var found_tree_grate = false
+	var found_american_architecture = false
+
 	for child in city.props_container.get_children():
 		if child is StaticBody3D:
 			if child.name.find("Tree") != -1:
 				for sc in child.get_children():
 					if sc is CollisionShape3D and sc.shape is CylinderShape3D:
 						found_tree_collider = true
+					if sc.name == "CastIronTreeGrate":
+						found_tree_grate = true
 			elif child.name.find("Plaza") != -1:
 				for sc in child.get_children():
 					if sc is CollisionShape3D and sc.shape is BoxShape3D:
 						found_plaza_collider = true
+			elif child.name.find("CivicGrandFountain") != -1:
+				found_fountain = true
+			elif child.name.find("ArtDeco") != -1 or child.name.find("Brownstone") != -1 or child.name.find("Modernist") != -1:
+				found_american_architecture = true
 
 	assert_true(found_tree_collider, "Street trees must have solid StaticBody3D colliders to prevent driving through trunks")
 	assert_true(found_plaza_collider, "Urban plaza foundation must have solid ground-anchored box collider")
+	assert_true(found_fountain, "Grand Central Plaza civic fountain must exist in props container")
+	assert_true(found_tree_grate, "Street trees must feature cast-iron radial sidewalk tree grates")
+	assert_true(found_american_architecture, "City must populate authentic Art Deco, Modernist, or Brownstone architecture")
 
 	city.free()
 

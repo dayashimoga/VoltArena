@@ -28,6 +28,7 @@ uniform float wall_metallic : hint_range(0.0, 1.0) = 0.05;
 uniform float wall_roughness : hint_range(0.0, 1.0) = 0.82;
 uniform float window_metallic : hint_range(0.0, 1.0) = 0.85;
 uniform float window_roughness : hint_range(0.0, 1.0) = 0.08;
+uniform float window_clearcoat : hint_range(0.0, 1.0) = 0.95;
 
 void fragment() {
 	vec4 tex = texture(albedo_texture, UV);
@@ -42,23 +43,25 @@ void fragment() {
 		METALLIC = wall_metallic;
 		ROUGHNESS = wall_roughness;
 	} else if (is_window) {
-		// High-fidelity reflective glass curtain wall with crisp specular response
+		// High-fidelity reflective glass curtain wall with crisp specular response and clearcoat lacquer
 		ALBEDO = color_window.rgb;
 		METALLIC = window_metallic;
 		ROUGHNESS = window_roughness;
-		SPECULAR = 0.88;
+		SPECULAR = 0.95;
+		CLEARCOAT = window_clearcoat;
+		CLEARCOAT_ROUGHNESS = 0.03;
 	} else if (is_teal_base) {
-		// Dark ground-floor architectural granite plinth
+		// Ground-floor architectural polished granite plinth
 		ALBEDO = color_wall_secondary.rgb;
-		METALLIC = 0.25;
-		ROUGHNESS = 0.65;
-		SPECULAR = 0.40;
+		METALLIC = 0.15;
+		ROUGHNESS = 0.55;
+		SPECULAR = 0.45;
 	} else if (is_orange_band) {
-		// Architectural metal / stone trim and spandrel cornice
+		// Architectural metal / bronze / copper trim, window mullions and spandrel cornice
 		ALBEDO = color_trim.rgb;
-		METALLIC = 0.60;
-		ROUGHNESS = 0.30;
-		SPECULAR = 0.60;
+		METALLIC = 0.85;
+		ROUGHNESS = 0.25;
+		SPECULAR = 0.70;
 	} else {
 		// Masonry / stone wall panels: blend texture details with rich architectural stone palette
 		float lum = (tex.r * 0.299 + tex.g * 0.587 + tex.b * 0.114);
@@ -67,7 +70,7 @@ void fragment() {
 		ALBEDO = stone_mix;
 		METALLIC = wall_metallic;
 		ROUGHNESS = wall_roughness;
-		SPECULAR = 0.30;
+		SPECULAR = 0.28;
 	}
 }
 """
@@ -481,84 +484,88 @@ func _create_district_building(i: int, s: int, skyscrapers: Array, commercials: 
 
 	# District-specific architectural selection
 	if (i <= 5 or (i >= 17 and i <= 21)) and pick_type != 2:
-		# CBD & Neon Strip: High-Rise Skyscraper Glass Towers (60m-95m height)
-		var m_idx = (i * 2 + s) % skyscrapers.size()
-		var glb_model = ModelCache.get_model(skyscrapers[m_idx])
-		if glb_model:
-			var sc = 22.0 + float((i + s) % 4) * 3.0
-			glb_model.scale = Vector3(sc, sc, sc)
-			_style_building(glb_model, theme_idx)
-			var b_body = StaticBody3D.new()
-			b_body.name = "Skyscraper%s_%d_%d" % [side_name, i, s]
-			b_body.collision_layer = GameConstants.LAYER_WORLD
-			b_body.add_child(glb_model)
-			var col = CollisionShape3D.new()
-			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(24.0, sc * 2.8, 24.0)
-			col.shape = b_shape
-			col.position = Vector3(0, sc * 1.4, 0)
-			b_body.add_child(col)
-			b_node = b_body
+		# CBD & Neon Strip: Blend GLB Skyscrapers with Stepped Art Deco Towers and Modernist Curtain Towers
+		if (i + s) % 4 == 0:
+			var deco_h = 70.0 + float((i + s) % 4) * 6.0
+			b_node = _build_art_deco_stepped_tower(deco_h, 24.0, theme_idx)
+			b_node.name = "ArtDecoTower%s_%d_%d" % [side_name, i, s]
+		elif (i + s) % 4 == 1:
+			var mod_h = 58.0 + float((i + s) % 3) * 5.0
+			b_node = _build_modernist_curtain_tower(mod_h, 22.0, theme_idx)
+			b_node.name = "ModernistTower%s_%d_%d" % [side_name, i, s]
+		else:
+			var m_idx = (i * 2 + s) % skyscrapers.size()
+			var glb_model = ModelCache.get_model(skyscrapers[m_idx])
+			if glb_model:
+				var sc = 22.0 + float((i + s) % 4) * 3.0
+				glb_model.scale = Vector3(sc, sc, sc)
+				_style_building(glb_model, theme_idx)
+				var b_body = StaticBody3D.new()
+				b_body.name = "Skyscraper%s_%d_%d" % [side_name, i, s]
+				b_body.collision_layer = GameConstants.LAYER_WORLD
+				b_body.add_child(glb_model)
+				var col = CollisionShape3D.new()
+				var b_shape = BoxShape3D.new()
+				b_shape.size = Vector3(24.0, sc * 2.8, 24.0)
+				col.shape = b_shape
+				col.position = Vector3(0, sc * 1.4, 0)
+				b_body.add_child(col)
+				b_node = b_body
 	elif (i >= 22 and i <= 31) and pick_type == 1:
-		# Marina & Old Town: Mid-Rise Classical / Residential Masonry (18m-30m height)
-		var m_idx = (i * 2 + s) % residentials.size()
-		var glb_model = ModelCache.get_model(residentials[m_idx])
-		if glb_model:
-			var sc = 15.0 + float((i + s) % 3) * 1.5
-			glb_model.scale = Vector3(sc, sc, sc)
-			_style_building(glb_model, theme_idx)
-			var b_body = StaticBody3D.new()
-			b_body.name = "Residential%s_%d_%d" % [side_name, i, s]
-			b_body.collision_layer = GameConstants.LAYER_WORLD
-			b_body.add_child(glb_model)
-			var col = CollisionShape3D.new()
-			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(18.0, sc * 1.1, 18.0)
-			col.shape = b_shape
-			col.position = Vector3(0, sc * 0.55, 0)
-			b_body.add_child(col)
-			b_node = b_body
+		# Marina & Old Town: Mid-Rise Classical Brownstones & Residential Masonry (18m-30m height)
+		if (i + s) % 3 == 0:
+			b_node = _build_brownstone_row(22.0, 18.0, theme_idx)
+			b_node.name = "BrownstoneRow%s_%d_%d" % [side_name, i, s]
+		else:
+			var m_idx = (i * 2 + s) % residentials.size()
+			var glb_model = ModelCache.get_model(residentials[m_idx])
+			if glb_model:
+				var sc = 15.0 + float((i + s) % 3) * 1.5
+				glb_model.scale = Vector3(sc, sc, sc)
+				_style_building(glb_model, theme_idx)
+				var b_body = StaticBody3D.new()
+				b_body.name = "Residential%s_%d_%d" % [side_name, i, s]
+				b_body.collision_layer = GameConstants.LAYER_WORLD
+				b_body.add_child(glb_model)
+				var col = CollisionShape3D.new()
+				var b_shape = BoxShape3D.new()
+				b_shape.size = Vector3(18.0, sc * 1.1, 18.0)
+				col.shape = b_shape
+				col.position = Vector3(0, sc * 0.55, 0)
+				b_body.add_child(col)
+				b_node = b_body
 	else:
 		# Commercial Promenade & Mixed-Use Districts (24m-38m height)
-		var m_idx = (i * 2 + s) % commercials.size()
-		var glb_model = ModelCache.get_model(commercials[m_idx])
-		if glb_model:
-			var sc = 16.0 + float((i + s) % 3) * 2.0
-			glb_model.scale = Vector3(sc, sc, sc)
-			_style_building(glb_model, theme_idx)
-			var b_body = StaticBody3D.new()
-			b_body.name = "Commercial%s_%d_%d" % [side_name, i, s]
-			b_body.collision_layer = GameConstants.LAYER_WORLD
-			b_body.add_child(glb_model)
-			var col = CollisionShape3D.new()
-			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(20.0, sc * 1.4, 20.0)
-			col.shape = b_shape
-			col.position = Vector3(0, sc * 0.7, 0)
-			b_body.add_child(col)
-			b_node = b_body
+		if (i + s) % 5 == 0:
+			var mod_h = 36.0 + float((i + s) % 3) * 4.0
+			b_node = _build_modernist_curtain_tower(mod_h, 20.0, theme_idx)
+			b_node.name = "ModernistRetail%s_%d_%d" % [side_name, i, s]
+		else:
+			var m_idx = (i * 2 + s) % commercials.size()
+			var glb_model = ModelCache.get_model(commercials[m_idx])
+			if glb_model:
+				var sc = 16.0 + float((i + s) % 3) * 2.0
+				glb_model.scale = Vector3(sc, sc, sc)
+				_style_building(glb_model, theme_idx)
+				var b_body = StaticBody3D.new()
+				b_body.name = "Commercial%s_%d_%d" % [side_name, i, s]
+				b_body.collision_layer = GameConstants.LAYER_WORLD
+				b_body.add_child(glb_model)
+				var col = CollisionShape3D.new()
+				var b_shape = BoxShape3D.new()
+				b_shape.size = Vector3(20.0, sc * 1.4, 20.0)
+				col.shape = b_shape
+				col.position = Vector3(0, sc * 0.7, 0)
+				b_body.add_child(col)
+				b_node = b_body
 
 	if not b_node:
-		var fallback_path = commercials[0] if commercials.size() > 0 else skyscrapers[0]
-		var fallback_glb = ModelCache.get_model(fallback_path)
-		if fallback_glb:
-			var sc = 16.0
-			fallback_glb.scale = Vector3(sc, sc, sc)
-			_style_building(fallback_glb, theme_idx)
-			var b_body = StaticBody3D.new()
-			b_body.name = "AuthoredFallback%s_%d_%d" % [side_name, i, s]
-			b_body.collision_layer = GameConstants.LAYER_WORLD
-			b_body.add_child(fallback_glb)
-			var col = CollisionShape3D.new()
-			var b_shape = BoxShape3D.new()
-			b_shape.size = Vector3(20.0, sc * 1.4, 20.0)
-			col.shape = b_shape
-			col.position = Vector3(0, sc * 0.7, 0)
-			b_body.add_child(col)
-			b_node = b_body
+		if i <= 5 or (i >= 17 and i <= 21):
+			b_node = _build_art_deco_stepped_tower(68.0, 22.0, theme_idx)
+		elif i >= 22 and i <= 31:
+			b_node = _build_brownstone_row(20.0, 18.0, theme_idx)
 		else:
-			var h = 48.0 + float((i + s) % 5) * 6.0
-			b_node = _build_procedural_commercial_block(h, 22.0, theme_idx)
+			b_node = _build_modernist_curtain_tower(38.0, 20.0, theme_idx)
 
 	return b_node
 
@@ -665,7 +672,12 @@ func _build_secondary_city_blocks() -> void:
 			b_body.add_child(col)
 			block = b_body
 		else:
-			block = _build_procedural_commercial_block(cfg["h"], cfg["w"], cfg["theme"])
+			if is_tall:
+				block = _build_art_deco_stepped_tower(cfg["h"], cfg["w"], cfg["theme"])
+			elif cfg["theme"] == 2 or cfg["theme"] == 4:
+				block = _build_brownstone_row(cfg["w"], cfg["w"], cfg["theme"])
+			else:
+				block = _build_modernist_curtain_tower(cfg["h"], cfg["w"], cfg["theme"])
 		block.position = cfg["pos"]
 		props_container.add_child(block)
 
@@ -779,6 +791,13 @@ func _build_city_landmarks() -> void:
 
 		clocktower.position = ct_pos
 		props_container.add_child(clocktower)
+
+	# 3. Grand Central Plaza Civic Centerpiece & Fountain (WP 2 Vista)
+	var fountain_pos = Vector3(-28.0, 0.0, -210.0)
+	if _is_clear_of_spline(fountain_pos, 20.0):
+		var fountain = _build_civic_grand_fountain(12.0)
+		fountain.position = fountain_pos
+		props_container.add_child(fountain)
 
 func _build_distant_skyline_backdrop() -> void:
 	# 1. 360-degree monumental skyline silhouette instanced from real skyscraper models
@@ -953,6 +972,14 @@ func _build_realistic_tree(species: String, height: float, seed_val: int) -> Nod
 		tree_model.position = Vector3(0, 0.1, 0)
 		_style_tree_materials(tree_model, species)
 		root.add_child(tree_model)
+	else:
+		var procedural_tree = _build_organic_branching_tree(species, height, seed_val)
+		procedural_tree.position = Vector3(0, 0.1, 0)
+		root.add_child(procedural_tree)
+
+	# 4. Cast-Iron Radial Sidewalk Tree Grate flush with curb
+	var grate = _build_radial_tree_grate()
+	root.add_child(grate)
 
 	# 4. Lush flowering shrub bushes around base in planter
 	var mat_bush = StandardMaterial3D.new()
@@ -996,15 +1023,11 @@ func _style_tree_materials(tree_model: Node3D, species: String) -> void:
 	var meshes: Array[MeshInstance3D] = []
 	_gather_meshes(tree_model, meshes)
 	for mi in meshes:
-		if mi.mesh:
-			var sc = mi.mesh.get_surface_count()
-			for s in range(sc):
-				var orig_mat = mi.mesh.surface_get_material(s)
-				var mat_name = orig_mat.resource_name.to_lower() if orig_mat else ""
-				if "bark" in mat_name or "wood" in mat_name or (species != "palm" and s == 1) or (species == "palm" and s == 0):
-					mi.set_surface_override_material(s, mat_bark)
-				else:
-					mi.set_surface_override_material(s, mat_leaves)
+		var n_low = mi.name.to_lower()
+		if "bark" in n_low or "wood" in n_low or "trunk" in n_low or "stem" in n_low:
+			mi.material_override = mat_bark
+		else:
+			mi.material_override = mat_leaves
 
 func _build_street_bench() -> Node3D:
 	var bench = Node3D.new()
@@ -1070,6 +1093,7 @@ static func _get_theme_material(theme_idx: int) -> ShaderMaterial:
 	mat.set_shader_parameter("wall_roughness", theme["wall_roughness"])
 	mat.set_shader_parameter("window_metallic", theme["window_metallic"])
 	mat.set_shader_parameter("window_roughness", theme["window_roughness"])
+	mat.set_shader_parameter("window_clearcoat", theme.get("window_clearcoat", 0.95))
 	if _cached_colormap_tex:
 		mat.set_shader_parameter("albedo_texture", _cached_colormap_tex)
 	_cached_theme_materials[idx] = mat
@@ -1341,6 +1365,462 @@ func _build_procedural_commercial_block(height: float, width: float, theme_idx: 
 	mast_mi.material_override = mat_mast
 	mast_mi.position = Vector3(0, roof_y + 3.2 + 3.75, 0)
 	root.add_child(mast_mi)
+
+	return root
+
+func _build_art_deco_stepped_tower(height: float, width: float, theme_idx: int = 0) -> Node3D:
+	var root = StaticBody3D.new()
+	root.name = "ArtDecoSteppedTower"
+	root.collision_layer = GameConstants.LAYER_WORLD
+
+	var mat_wall = _get_theme_material(theme_idx)
+
+	var col = CollisionShape3D.new()
+	var col_box = BoxShape3D.new()
+	col_box.size = Vector3(width, height + 8.0, width)
+	col.shape = col_box
+	col.position = Vector3(0, (height + 8.0) * 0.5, 0)
+	root.add_child(col)
+
+	# Tier 1: Grand Commercial Podium (10m height)
+	var t1 = MeshInstance3D.new()
+	var b1 = BoxMesh.new()
+	b1.size = Vector3(width, 10.0, width)
+	t1.mesh = b1
+	t1.material_override = mat_wall
+	t1.position = Vector3(0, 5.0, 0)
+	root.add_child(t1)
+
+	# Tier 2: Lower Stepped Shaft (45% height)
+	var h2 = height * 0.45
+	var w2 = width * 0.85
+	var t2 = MeshInstance3D.new()
+	var b2 = BoxMesh.new()
+	b2.size = Vector3(w2, h2, w2)
+	t2.mesh = b2
+	t2.material_override = mat_wall
+	t2.position = Vector3(0, 10.0 + h2 * 0.5, 0)
+	root.add_child(t2)
+
+	# Tier 3: Upper Stepped Shaft (30% height)
+	var h3 = height * 0.30
+	var w3 = width * 0.65
+	var t3 = MeshInstance3D.new()
+	var b3 = BoxMesh.new()
+	b3.size = Vector3(w3, h3, w3)
+	t3.mesh = b3
+	t3.material_override = mat_wall
+	t3.position = Vector3(0, 10.0 + h2 + h3 * 0.5, 0)
+	root.add_child(t3)
+
+	# Tier 4: Stepped Crown (15% height)
+	var h4 = height * 0.15
+	var w4 = width * 0.45
+	var t4 = MeshInstance3D.new()
+	var b4 = BoxMesh.new()
+	b4.size = Vector3(w4, h4, w4)
+	t4.mesh = b4
+	t4.material_override = mat_wall
+	t4.position = Vector3(0, 10.0 + h2 + h3 + h4 * 0.5, 0)
+	root.add_child(t4)
+
+	# Stainless steel needle spire with beacon
+	var spire_y = 10.0 + h2 + h3 + h4
+	var spire = MeshInstance3D.new()
+	var s_cyl = CylinderMesh.new()
+	s_cyl.top_radius = 0.15
+	s_cyl.bottom_radius = 1.2
+	s_cyl.height = 14.0
+	spire.mesh = s_cyl
+	var mat_spire = StandardMaterial3D.new()
+	mat_spire.albedo_color = Color(0.88, 0.90, 0.95)
+	mat_spire.metallic = 0.95
+	mat_spire.roughness = 0.12
+	spire.material_override = mat_spire
+	spire.position = Vector3(0, spire_y + 7.0, 0)
+	root.add_child(spire)
+
+	var beacon = OmniLight3D.new()
+	beacon.light_color = Color(1.0, 0.2, 0.15)
+	beacon.light_energy = 2.5
+	beacon.omni_range = 35.0
+	beacon.position = Vector3(0, spire_y + 14.2, 0)
+	root.add_child(beacon)
+
+	return root
+
+func _build_brownstone_row(length: float, depth: float, theme_idx: int = 2) -> Node3D:
+	var root = StaticBody3D.new()
+	root.name = "BrownstoneRow"
+	root.collision_layer = GameConstants.LAYER_WORLD
+
+	var h = 18.0
+	var col = CollisionShape3D.new()
+	var col_box = BoxShape3D.new()
+	col_box.size = Vector3(length, h, depth)
+	col.shape = col_box
+	col.position = Vector3(0, h * 0.5, 0)
+	root.add_child(col)
+
+	var mat_brick = StandardMaterial3D.new()
+	mat_brick.albedo_color = Color(0.58, 0.28, 0.22) if theme_idx == 2 else Color(0.48, 0.38, 0.30)
+	mat_brick.roughness = 0.90
+	mat_brick.metallic = 0.04
+
+	var mat_trim = StandardMaterial3D.new()
+	mat_trim.albedo_color = Color(0.82, 0.78, 0.72)
+	mat_trim.roughness = 0.70
+
+	var mat_window = StandardMaterial3D.new()
+	mat_window.albedo_color = Color(0.12, 0.15, 0.20)
+	mat_window.metallic = 0.85
+	mat_window.roughness = 0.08
+	mat_window.clearcoat_enabled = true
+	mat_window.clearcoat = 0.90
+
+	# 1. Main Brownstone Building Body
+	var body = MeshInstance3D.new()
+	var b_box = BoxMesh.new()
+	b_box.size = Vector3(length, h, depth)
+	body.mesh = b_box
+	body.material_override = mat_brick
+	body.position = Vector3(0, h * 0.5, 0)
+	root.add_child(body)
+
+	# 2. Prominent Rooftop Architectural Cornice
+	var cornice = MeshInstance3D.new()
+	var c_box = BoxMesh.new()
+	c_box.size = Vector3(length + 0.6, 1.4, depth + 0.6)
+	cornice.mesh = c_box
+	cornice.material_override = mat_trim
+	cornice.position = Vector3(0, h + 0.7, 0)
+	root.add_child(cornice)
+
+	# 3. Repeating bays with stoop stairs & window rows
+	var bays = 3
+	var bay_w = length / float(bays)
+	for b in range(bays):
+		var bx = -length * 0.5 + bay_w * (float(b) + 0.5)
+
+		# Raised Stone Stoop Stairs (entrance at 1.8m height)
+		var stoop = MeshInstance3D.new()
+		var st_box = BoxMesh.new()
+		st_box.size = Vector3(2.4, 1.8, 3.2)
+		stoop.mesh = st_box
+		stoop.material_override = mat_trim
+		stoop.position = Vector3(bx, 0.9, depth * 0.5 + 1.6)
+		root.add_child(stoop)
+
+		# Arched Entrance Doorway
+		var door = MeshInstance3D.new()
+		var d_box = BoxMesh.new()
+		d_box.size = Vector3(1.6, 2.6, 0.2)
+		door.mesh = d_box
+		var mat_door = StandardMaterial3D.new()
+		mat_door.albedo_color = Color(0.20, 0.15, 0.12)
+		door.material_override = mat_door
+		door.position = Vector3(bx, 3.1, depth * 0.5 + 0.1)
+		root.add_child(door)
+
+		# Upper Floor Windows with stone lintels
+		for floor_idx in [1, 2]:
+			var wy = 6.5 + float(floor_idx - 1) * 4.5
+			var win = MeshInstance3D.new()
+			var w_box = BoxMesh.new()
+			w_box.size = Vector3(1.4, 2.2, 0.15)
+			win.mesh = w_box
+			win.material_override = mat_window
+			win.position = Vector3(bx, wy, depth * 0.5 + 0.1)
+			root.add_child(win)
+
+	return root
+
+func _build_modernist_curtain_tower(height: float, width: float, theme_idx: int = 0) -> Node3D:
+	var root = StaticBody3D.new()
+	root.name = "ModernistCurtainTower"
+	root.collision_layer = GameConstants.LAYER_WORLD
+
+	var col = CollisionShape3D.new()
+	var col_box = BoxShape3D.new()
+	col_box.size = Vector3(width, height + 4.0, width)
+	col.shape = col_box
+	col.position = Vector3(0, (height + 4.0) * 0.5, 0)
+	root.add_child(col)
+
+	var theme = ARCHITECTURAL_THEMES[theme_idx % ARCHITECTURAL_THEMES.size()]
+	var mat_glass = StandardMaterial3D.new()
+	mat_glass.albedo_color = theme["window"]
+	mat_glass.metallic = 0.90
+	mat_glass.roughness = 0.05
+	mat_glass.clearcoat_enabled = true
+	mat_glass.clearcoat = 1.0
+	mat_glass.clearcoat_roughness = 0.03
+
+	var mat_frame = StandardMaterial3D.new()
+	mat_frame.albedo_color = Color(0.25, 0.28, 0.32)
+	mat_frame.metallic = 0.85
+	mat_frame.roughness = 0.30
+
+	# 1. Double-Height Ground Glass Lobby Podium (6m)
+	var lobby = MeshInstance3D.new()
+	var l_box = BoxMesh.new()
+	l_box.size = Vector3(width, 6.0, width)
+	lobby.mesh = l_box
+	lobby.material_override = mat_frame
+	lobby.position = Vector3(0, 3.0, 0)
+	root.add_child(lobby)
+
+	# 2. Main Glass Curtain Wall Shaft
+	var body_h = height - 6.0
+	var tower = MeshInstance3D.new()
+	var t_box = BoxMesh.new()
+	t_box.size = Vector3(width * 0.92, body_h, width * 0.92)
+	tower.mesh = t_box
+	tower.material_override = mat_glass
+	tower.position = Vector3(0, 6.0 + body_h * 0.5, 0)
+	root.add_child(tower)
+
+	# 3. Horizontal Spandrel Louvers
+	var floors = int(body_h / 4.0)
+	for f in range(floors):
+		var spandrel = MeshInstance3D.new()
+		var s_box = BoxMesh.new()
+		s_box.size = Vector3(width * 0.94, 0.35, width * 0.94)
+		spandrel.mesh = s_box
+		spandrel.material_override = mat_frame
+		spandrel.position = Vector3(0, 6.0 + float(f) * 4.0 + 2.0, 0)
+		root.add_child(spandrel)
+
+	# 4. Rooftop Mechanical Penthouse Enclosure
+	var roof_y = 6.0 + body_h
+	var pent = MeshInstance3D.new()
+	var p_box = BoxMesh.new()
+	p_box.size = Vector3(width * 0.55, 3.5, width * 0.55)
+	pent.mesh = p_box
+	pent.material_override = mat_frame
+	pent.position = Vector3(0, roof_y + 1.75, 0)
+	root.add_child(pent)
+
+	return root
+
+func _build_civic_grand_fountain(radius: float = 12.0) -> Node3D:
+	var root = StaticBody3D.new()
+	root.name = "CivicGrandFountain"
+	root.collision_layer = GameConstants.LAYER_WORLD
+
+	# Fountain basin wall collider
+	var col = CollisionShape3D.new()
+	col.name = "FountainBasinCollision"
+	var col_shape = CylinderShape3D.new()
+	col_shape.height = 1.6
+	col_shape.radius = radius * 0.75
+	col.shape = col_shape
+	col.position = Vector3(0, 0.8, 0)
+	root.add_child(col)
+
+	# 1. Paved circular plaza terrace foundation
+	var p_mesh = MeshInstance3D.new()
+	var p_cyl = CylinderMesh.new()
+	p_cyl.top_radius = radius + 6.0
+	p_cyl.bottom_radius = radius + 6.0
+	p_cyl.height = 0.16
+	p_mesh.mesh = p_cyl
+	var mat_paved = StandardMaterial3D.new()
+	mat_paved.albedo_color = Color(0.28, 0.30, 0.33)
+	mat_paved.roughness = 0.78
+	p_mesh.material_override = mat_paved
+	p_mesh.position = Vector3(0, 0.08, 0)
+	root.add_child(p_mesh)
+
+	# 2. Outer carved granite pool basin
+	var basin_mesh = MeshInstance3D.new()
+	var b_cyl = CylinderMesh.new()
+	b_cyl.top_radius = radius
+	b_cyl.bottom_radius = radius + 0.4
+	b_cyl.height = 1.1
+	basin_mesh.mesh = b_cyl
+	var mat_granite = StandardMaterial3D.new()
+	mat_granite.albedo_color = Color(0.36, 0.38, 0.42)
+	mat_granite.roughness = 0.45
+	mat_granite.metallic = 0.12
+	basin_mesh.material_override = mat_granite
+	basin_mesh.position = Vector3(0, 0.55, 0)
+	root.add_child(basin_mesh)
+
+	# 3. Shimmering reflective water surface
+	var water_mesh = MeshInstance3D.new()
+	var w_cyl = CylinderMesh.new()
+	w_cyl.top_radius = radius - 0.3
+	w_cyl.bottom_radius = radius - 0.3
+	w_cyl.height = 0.05
+	water_mesh.mesh = w_cyl
+	var mat_water = StandardMaterial3D.new()
+	mat_water.albedo_color = Color(0.12, 0.55, 0.65, 0.88)
+	mat_water.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat_water.roughness = 0.03
+	mat_water.metallic = 0.20
+	mat_water.clearcoat_enabled = true
+	mat_water.clearcoat = 1.0
+	mat_water.clearcoat_roughness = 0.02
+	water_mesh.material_override = mat_water
+	water_mesh.position = Vector3(0, 0.95, 0)
+	root.add_child(water_mesh)
+
+	# 4. Central elevated cascading bowls
+	var bowl_radii = [radius * 0.45, radius * 0.24]
+	var bowl_heights = [1.8, 2.8]
+	for b_idx in range(bowl_radii.size()):
+		var bowl = MeshInstance3D.new()
+		var b_c = CylinderMesh.new()
+		b_c.top_radius = bowl_radii[b_idx]
+		b_c.bottom_radius = bowl_radii[b_idx] * 0.4
+		b_c.height = 0.45
+		bowl.mesh = b_c
+		bowl.material_override = mat_granite
+		bowl.position = Vector3(0, bowl_heights[b_idx], 0)
+		root.add_child(bowl)
+
+		# Water overflow disk in bowl
+		var b_water = MeshInstance3D.new()
+		var bw_c = CylinderMesh.new()
+		bw_c.top_radius = bowl_radii[b_idx] - 0.1
+		bw_c.bottom_radius = bowl_radii[b_idx] - 0.1
+		bw_c.height = 0.04
+		b_water.mesh = bw_c
+		b_water.material_override = mat_water
+		b_water.position = Vector3(0, bowl_heights[b_idx] + 0.18, 0)
+		root.add_child(b_water)
+
+	# 5. Illuminated central water jet plume
+	var plume = MeshInstance3D.new()
+	var p_cone = CylinderMesh.new()
+	p_cone.top_radius = 0.15
+	p_cone.bottom_radius = 0.75
+	p_cone.height = 4.2
+	plume.mesh = p_cone
+	var mat_plume = StandardMaterial3D.new()
+	mat_plume.albedo_color = Color(0.85, 0.98, 1.0, 0.75)
+	mat_plume.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat_plume.emission_enabled = true
+	mat_plume.emission = Color(0.3, 0.85, 1.0)
+	mat_plume.emission_energy_multiplier = 2.2
+	mat_plume.roughness = 0.10
+	plume.material_override = mat_plume
+	plume.position = Vector3(0, 5.0, 0)
+	root.add_child(plume)
+
+	# 6. Center underwater uplighting omni light
+	var light = OmniLight3D.new()
+	light.light_color = Color(0.2, 0.85, 1.0)
+	light.light_energy = 3.5
+	light.omni_range = radius * 1.5
+	light.position = Vector3(0, 2.5, 0)
+	root.add_child(light)
+
+	# 7. Surrounding radial promenade benches, lamps, and manicured topiaries
+	for i in range(6):
+		var ang = float(i) * TAU / 6.0
+		var dir = Vector3(cos(ang), 0, sin(ang))
+		var bench_pos = dir * (radius + 2.8)
+		var bench = _build_street_bench()
+		bench.position = bench_pos
+		bench.rotation.y = ang + PI * 0.5
+		root.add_child(bench)
+
+		var lamp_pos = dir.rotated(Vector3.UP, deg_to_rad(30.0)) * (radius + 4.2)
+		var lamp = _build_procedural_streetlight()
+		lamp.position = lamp_pos
+		lamp.rotation.y = ang + deg_to_rad(30.0) + PI
+		root.add_child(lamp)
+
+	return root
+
+func _build_radial_tree_grate() -> MeshInstance3D:
+	var mi = MeshInstance3D.new()
+	mi.name = "CastIronTreeGrate"
+	var cyl = CylinderMesh.new()
+	cyl.top_radius = 1.28
+	cyl.bottom_radius = 1.28
+	cyl.height = 0.04
+	mi.mesh = cyl
+	var mat_grate = StandardMaterial3D.new()
+	mat_grate.albedo_color = Color(0.18, 0.19, 0.22)
+	mat_grate.metallic = 0.88
+	mat_grate.roughness = 0.40
+	mi.material_override = mat_grate
+	mi.position = Vector3(0, 0.12, 0)
+	return mi
+
+func _build_organic_branching_tree(species: String, height: float, seed_val: int) -> Node3D:
+	var root = Node3D.new()
+	root.name = "OrganicBranchingTree_%s" % species
+
+	var mat_bark = StandardMaterial3D.new()
+	mat_bark.albedo_color = Color(0.24, 0.18, 0.12)
+	mat_bark.roughness = 0.95
+	mat_bark.metallic = 0.02
+
+	var mat_leaves = StandardMaterial3D.new()
+	mat_leaves.roughness = 0.75
+	match species:
+		"cherry":
+			mat_leaves.albedo_color = Color(0.92, 0.48, 0.65)
+		"palm":
+			mat_leaves.albedo_color = Color(0.18, 0.48, 0.16)
+		"pine":
+			mat_leaves.albedo_color = Color(0.10, 0.30, 0.14)
+		_:
+			mat_leaves.albedo_color = Color(0.16, 0.44, 0.18)
+
+	# 1. Naturally Tapered Trunk Segments
+	var trunk_h = height * 0.60
+	var seg_h = trunk_h * 0.5
+	for seg in range(2):
+		var t_mi = MeshInstance3D.new()
+		var cyl = CylinderMesh.new()
+		cyl.bottom_radius = 0.38 - float(seg) * 0.10
+		cyl.top_radius = 0.28 - float(seg) * 0.10
+		cyl.height = seg_h
+		t_mi.mesh = cyl
+		t_mi.material_override = mat_bark
+		t_mi.position = Vector3(0, seg_h * 0.5 + float(seg) * seg_h, 0)
+		root.add_child(t_mi)
+
+	# 2. Organic Radiating Branches and Leaf Clusters
+	var branch_count = 4
+	for b_i in range(branch_count):
+		var ang = deg_to_rad(float(b_i * 90 + (seed_val * 23 % 45)))
+		var b_mi = MeshInstance3D.new()
+		var b_cyl = CylinderMesh.new()
+		b_cyl.top_radius = 0.08
+		b_cyl.bottom_radius = 0.16
+		b_cyl.height = height * 0.32
+		b_mi.mesh = b_cyl
+		b_mi.material_override = mat_bark
+		b_mi.rotation_degrees = Vector3(38.0, rad_to_deg(ang), 0.0)
+		var b_pos = Vector3(cos(ang) * 0.6, trunk_h * 0.85, sin(ang) * 0.6)
+		b_mi.position = b_pos
+		root.add_child(b_mi)
+
+		# Leafy foliage cluster at branch tip
+		var leaf_cluster = MeshInstance3D.new()
+		var leaf_box = BoxMesh.new()
+		var cl_size = height * 0.35
+		leaf_box.size = Vector3(cl_size, cl_size * 0.8, cl_size)
+		leaf_cluster.mesh = leaf_box
+		leaf_cluster.material_override = mat_leaves
+		leaf_cluster.position = b_pos + Vector3(cos(ang) * 1.5, height * 0.22, sin(ang) * 1.5)
+		leaf_cluster.rotation_degrees = Vector3(float((seed_val + b_i) * 17 % 45), float((seed_val + b_i) * 31 % 360), float((seed_val + b_i) * 13 % 45))
+		root.add_child(leaf_cluster)
+
+	# Top crown foliage cluster
+	var top_cluster = MeshInstance3D.new()
+	var top_box = BoxMesh.new()
+	top_box.size = Vector3(height * 0.45, height * 0.40, height * 0.45)
+	top_cluster.mesh = top_box
+	top_cluster.material_override = mat_leaves
+	top_cluster.position = Vector3(0, height * 0.95, 0)
+	root.add_child(top_cluster)
 
 	return root
 

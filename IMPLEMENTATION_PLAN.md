@@ -97,25 +97,40 @@ Execution strictly follows these measurable PASS/FAIL gates:
   - Calculate oriented bounding box (OBB) corner coordinates for all buildings, plinths, and parcels.
   - Enforce strict $\ge 12.0\text{m}$ clearance from road spline centerline to ALL corners.
   - Reserve $\ge 45\text{m}$ forward sightline and lane projection clearance cones at turn approaches.
-- [ ] **Task P2.2 (Remove Encroaching Structures)**:
-  - Fix turn apex at WP 2 / Gate 1 so North Financial Avenue does not dead-end into `building_comm_a.glb`.
-  - Fix curve placement so building plinths do not encroach onto sidewalks or road asphalt.
-  - Overhaul `prune_props_in_road_corridor` to verify collider bounds and deduct shape radii.
-- [ ] **Task P2.3 (Automated World Audit & Test Tool)**:
-  - Fix `WorldAuditTool` syntax bug and verify 0 blocked segments, 0 lane/prop intersections, 0 sunken/floating objects across all worlds.
-  - Run automated bot circuit traversal tests in forward and reverse directions.
+- [x] **Task P2.1 (Authoritative Road Graph & Corridor Sweeping)**:
+  - Authoritative spline representation in `world_base.gd` with swept-clearance evaluation.
+  - Implemented `is_footprint_clear_of_spline` validating all 4 rotated corners of oriented bounding boxes.
+- [x] **Task P2.2 (Remove Encroaching Structures & Sightline Clearance)**:
+  - Fixed turn apex at WP 2 / Gate 1 with expanded Downtown Grand Central Plaza sightline protection envelope ($Z \in [-140, -255], X \in [-65, 65]$), eliminating Screenshot 1 building obstruction.
+  - Fixed curve placement with dynamic curve-adaptive setbacks ($38.0–48.0\text{m}$), 24m plinths, and 20m x 4m sidewalk aprons, eliminating Screenshot 2 curb encroachments.
+  - Hardened `prune_props_in_road_corridor` with immediate scene tree removal and ancestor hierarchy exemption.
+- [x] **Task P2.3 (Automated World Audit & Test Tool)**:
+  - Upgraded `WorldAuditTool` with 3D swept lane envelope evaluation ($[Y_{\text{road}} - 0.4\text{m}, Y_{\text{road}} + 6.0\text{m}]$), certifying sub-deck bridge support piers as non-obstructing.
+  - Aligned rock arches in Prism Canyon ($30\text{m}$ span) and gantries in Sky Circuit ($18\text{m}$ span) with road tangents.
+  - Verified 0 blocked segments, 0 lane/prop intersections, and 0 road obstructions across all 4 worlds; automated bot circuit traversal passing forward and reverse.
 
 ### Phase P3: Realistic Large City (Architecture, PBR Shaders & Assets)
-- [ ] **Task P3.1 (New York / American Architecture)**:
-  - Proportional multi-tier skyscrapers, commercial storefronts, and residential brownstones.
-  - Authentic multi-material PBR shaders (`ARCHITECTURAL_SHADER_CODE`) with reflective glass curtain walls and stone plinths.
-- [ ] **Task P3.2 (Streetscape & Furniture)**:
-  - Continuous sidewalks, modern streetlights, traffic signals, fire hydrants, bus shelters, benches, and bollards.
-  - Organic trees with branching trunks and leafy foliage ($6\text{m}–14\text{m}$ tall) with cast iron tree grates.
-- [ ] **Task P3.3 (Vehicle Visuals & Automotive Shaders)**:
-  - `AUTOMOTIVE_SHADER_CODE` with multi-coat metallic clearcoat, projector LED headlights, reactive taillights, smoked glass canopy.
-  - Soft radial ambient occlusion contact shadows replacing dark solid quads.
-  - Precision alloy wheels with vulcanized rubber tires.
+- [x] **Task P3.1 (New York & American Architectural Styles & Facade Shading)**:
+  - Replace repetitive single-volume boxes with authentic multi-tier architectural archetypes:
+    - Art Deco & Modernist Skyscrapers with stepped set-back crowns, decorative spandrel bands, and architectural spires/bulkheads (`_build_art_deco_stepped_tower`).
+    - Mid-rise Tribeca & Brooklyn red brick/brownstone rowhouses with stoops, cast iron railings, and architectural cornice brackets (`_build_brownstone_row`).
+    - Contemporary composite-panel glass curtain wall office blocks with double-height atriums and rooftop bulkheads (`_build_modernist_curtain_tower`).
+    - Centerpiece Grand Central Plaza civic fountain with cascading circular stone basins, reflective water, and radial promenade (`_build_civic_grand_fountain`).
+  - Enhance `ARCHITECTURAL_SHADER_CODE` with multi-material discrimination:
+    - Reflective curtain glass with high specular response ($0.95$), low roughness ($0.04$), and clearcoat reflections (`CLEARCOAT = 1.0`, `CLEARCOAT_ROUGHNESS = 0.03`).
+    - Architectural granite/limestone plinths with micro-facet roughness ($0.55$) and subtle specular response.
+    - Terracotta, aged red brick, and patina copper trim with realistic matte/metallic PBR responses.
+- [x] **Task P3.2 (Streetscape Furniture, Organic Branching Foliage & Civic Greenery)**:
+  - Organic procedural branching trees (Oak, Linden, Birch, Pine, Palm, Cherry Blossom) with natural tapered trunks, angled branches, and layered leafy foliage clusters (zero primitive sphere blobs).
+  - Sidewalk street furniture: cast iron radial tree grates, modern double-cantilever LED streetlights, transit bus shelters, hardwood park benches, fire hydrants, municipal trash receptacles, and stainless steel bollards.
+  - Populated park greenery, manicured lawns, civic fountains in Grand Central Plaza, and parking bays with civilian vehicle models.
+  - Complete 360° layered distant skyline ring with stepped silhouette geometry and horizon high-rises.
+- [x] **Task P3.3 (Automotive PBR Shaders, Wheel Assemblies & Soft Contact Shadows)**:
+  - Custom multi-coat automotive paint shader (`AUTOMOTIVE_SHADER_CODE`) with metallic flake simulation, roughness micro-facets, dynamic Fresnel clearcoat glint (`CLEARCOAT = clearcoat_val`, `CLEARCOAT_ROUGHNESS = clearcoat_rough_val`), and team accent stripes.
+  - Smoked glass canopy shader with deep specular and clearcoat lacquer (`CLEARCOAT = 1.0`, `CLEARCOAT_ROUGHNESS = 0.02`).
+  - Soft radial ambient occlusion contact shadows underneath vehicle chassis with velocity-attenuated ground anchoring (`update_vehicle_shadow`).
+  - Projector LED headlights and glowing red LED reactive brake lights.
+
 
 ### Phase P4: Multi-World Environments & Complete Gameplay Loop
 - [ ] **Task P4.1 (8 Diverse Playable Worlds)**:

@@ -277,6 +277,14 @@ func test_full_body_car_paint_materials() -> void:
 	assert_true(first_mat.albedo_color.is_equal_approx(crimson_val), "Paint panel must match authoritative Crimson Red")
 	assert_true(first_mat.metallic >= 0.5, "Metallic finish must have metallic >= 0.5")
 
+	# Verify ground contact shadow projector and shader updates
+	var shadow_node = v.visual_node.get_node_or_null("GroundContactShadow") as MeshInstance3D
+	assert_true(shadow_node != null, "Ground contact shadow projector quad must be attached to vehicle visual")
+	VehicleVisuals.update_vehicle_shadow(v.visual_node, false, 1.8)
+	assert_true(shadow_node.material_override is ShaderMaterial, "Ground contact shadow must use dynamic ShaderMaterial")
+	var p_shader = VehicleVisuals.get_paint_shader()
+	assert_true(p_shader != null and p_shader.code.contains("clearcoat_val"), "Automotive shader must provide metallic clearcoat")
+
 	v.free()
 
 func get_coverage_entries() -> Array:

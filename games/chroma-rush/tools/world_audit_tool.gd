@@ -98,7 +98,7 @@ static func audit_world(world: Node3D, lane_half_width: float = 7.0, max_slope_d
 			var pn = curr_p.name
 			if ("Ground" in pn or "Ocean" in pn or "Water" in pn or "Cloud" in pn
 				or "Skyline" in pn or "Distant" in pn or "Bridge" in pn or "Pylon" in pn
-				or "Pier" in pn or "Arch" in pn or "Gantry" in pn):
+				or "Pier" in pn or "Arch" in pn or "Gantry" in pn or curr_p.has_meta("is_infrastructure")):
 				is_exempt_infra = true
 				break
 			curr_p = curr_p.get_parent()
@@ -106,6 +106,7 @@ static func audit_world(world: Node3D, lane_half_width: float = 7.0, max_slope_d
 			continue
 
 		var c_pos = _get_relative_position(c_node, world)
+		var parent_body: Node = c_node.get_parent()
 
 		# Check for sunken (< -1.0m) or floating (> 5.0m unsupported)
 		if c_node.name.begins_with("Tree") or c_node.name.begins_with("Prop") or (parent_body and parent_body.name.begins_with("Tree")):
@@ -127,17 +128,32 @@ static func audit_world(world: Node3D, lane_half_width: float = 7.0, max_slope_d
 
 		if not is_checkpoint_component:
 			var collider_radius: float = 0.0
+			var collider_half_h: float = 0.0
 			if c_node.shape is BoxShape3D:
 				var bs = c_node.shape as BoxShape3D
 				collider_radius = minf(bs.size.x, bs.size.z) * 0.5
+				collider_half_h = bs.size.y * 0.5
 			elif c_node.shape is CylinderShape3D:
 				var cs = c_node.shape as CylinderShape3D
 				collider_radius = cs.radius
+				collider_half_h = cs.height * 0.5
 			elif c_node.shape is SphereShape3D:
 				var ss = c_node.shape as SphereShape3D
 				collider_radius = ss.radius
+				collider_half_h = ss.radius
 
-			var nearest_spline_dist = _get_min_dist_to_spline(c_pos, spline_samples)
+			var prox = _get_spline_proximity(c_pos, spline_samples)
+			var nearest_spline_dist = prox["dist_2d"]
+			var road_y = prox["road_y"]
+
+			# Vertical clearance check: colliders strictly underneath the road underside
+			# (e.g. sub-deck support piers) or strictly above vehicle clearance ceiling (> 6.0m)
+			# do not intersect the driveable vehicle lane envelope.
+			var col_top = c_pos.y + collider_half_h
+			var col_bottom = c_pos.y - collider_half_h
+			if col_top < road_y - 0.4 or col_bottom > road_y + 6.0:
+				continue
+
 			var effective_clearance = nearest_spline_dist - collider_radius
 			if effective_clearance < lane_half_width:
 				result["lane_prop_intersections"].append({
@@ -179,28 +195,37 @@ static func _collect_colliders_recursive(node: Node, out_list: Array[Dictionary]
 	for child in node.get_children():
 		_collect_colliders_recursive(child, out_list)
 
-static func _get_min_dist_to_spline(pt: Vector3, spline: Array[Vector3]) -> float:
-	var min_d = 99999.0
+static func _get_spline_proximity(pt: Vector3, spline: Array[Vector3]) -> Dictionary:
+	var min_d_2d = 99999.0
+	var road_y_at_proj = 0.0
 	var pt_2d = Vector2(pt.x, pt.z)
-	for i in range(spline.size()):
+	var n_s = spline.size()
+	for i in range(n_s):
 		var s1 = spline[i]
-		var s2 = spline[(i + 1) % spline.size()]
+		var s2 = spline[(i + 1) % n_s]
 		var s1_2d = Vector2(s1.x, s1.z)
 		var s2_2d = Vector2(s2.x, s2.z)
 
 		var seg = s2_2d - s1_2d
 		var seg_len_sq = seg.length_squared()
 		var dist_to_seg = 0.0
+		var t = 0.0
 		if seg_len_sq < 0.001:
 			dist_to_seg = pt_2d.distance_to(s1_2d)
+			t = 0.0
 		else:
-			var t = clampf((pt_2d - s1_2d).dot(seg) / seg_len_sq, 0.0, 1.0)
+			t = clampf((pt_2d - s1_2d).dot(seg) / seg_len_sq, 0.0, 1.0)
 			var proj = s1_2d + seg * t
 			dist_to_seg = pt_2d.distance_to(proj)
 
-		if dist_to_seg < min_d:
-			min_d = dist_to_seg
-	return min_d
+		if dist_to_seg < min_d_2d:
+			min_d_2d = dist_to_seg
+			road_y_at_proj = lerpf(s1.y, s2.y, t)
+	return {"dist_2d": min_d_2d, "road_y": road_y_at_proj}
+
+static func _get_min_dist_to_spline(pt: Vector3, spline: Array[Vector3]) -> float:
+	return _get_spline_proximity(pt, spline)["dist_2d"]
+
 
 static func run_traversal_test(world: Node3D, vehicle_archetype: String = "apex_striker", direction: int = 1, total_steps: int = 250) -> Dictionary:
 	var result = {

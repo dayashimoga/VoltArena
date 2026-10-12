@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 90.3065451532726,
+  "overall_coverage_pct": 90.2317880794702,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -509,9 +509,9 @@
       ]
     },
     "res://games/chroma-rush/worlds/world_base.gd": {
-      "coverage_pct": 52.1739130434783,
+      "coverage_pct": 50,
       "tested": 12,
-      "total": 23,
+      "total": 24,
       "untested": [
         "setup_ground_plane",
         "generate_waypoints",
@@ -523,7 +523,8 @@
         "get_total_spline_points",
         "get_spline_samples",
         "get_lane_point",
-        "get_nearest_safe_road_transform"
+        "get_nearest_safe_road_transform",
+        "is_footprint_clear_of_spline"
       ]
     },
     "res://games/kart-racing/ai/kart_ai.gd": {
@@ -1318,6 +1319,6 @@
     }
   },
   "tested_functions": 1090,
-  "timestamp": "2026-10-11T10:40:37",
-  "total_functions": 1207
+  "timestamp": "2026-10-12T08:49:48",
+  "total_functions": 1208
 }

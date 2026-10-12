@@ -139,13 +139,25 @@ func build_checkpoints() -> void:
 		checkpoints.append(gate)
 
 func build_props() -> void:
-	# Sandstone arches spanning the canyon track
-	var arch1 = MeshBuilder.build_rock_arch(26.0, 18.0)
+	# Sandstone arches spanning the canyon track (strictly aligned with road tangent and span >= 30m)
+	var arch1 = MeshBuilder.build_rock_arch(30.0, 18.0)
+	arch1.name = "CanyonRockArch_1"
+	arch1.set_meta("is_infrastructure", true)
 	arch1.position = Vector3(250, 4, -30)
+	var dir1 = (waypoints[7] - waypoints[5]).normalized()
+	dir1.y = 0.0
+	if dir1.length_squared() > 0.001:
+		arch1.look_at_from_position(arch1.position, arch1.position + dir1, Vector3.UP)
 	props_container.add_child(arch1)
 
-	var arch2 = MeshBuilder.build_rock_arch(24.0, 16.0)
+	var arch2 = MeshBuilder.build_rock_arch(30.0, 18.0)
+	arch2.name = "CanyonRockArch_2"
+	arch2.set_meta("is_infrastructure", true)
 	arch2.position = Vector3(-50, 0, -40)
+	var dir2 = (waypoints[15] - waypoints[13]).normalized()
+	dir2.y = 0.0
+	if dir2.length_squared() > 0.001:
+		arch2.look_at_from_position(arch2.position, arch2.position + dir2, Vector3.UP)
 	props_container.add_child(arch2)
 
 	# Mesa rock pillars and bluffs
@@ -157,11 +169,13 @@ func build_props() -> void:
 		Vector3(150, 8, -120), Vector3(280, 5, -80), Vector3(120, -5, 40),
 		Vector3(-110, 10, 60), Vector3(-80, 4, -80)
 	]
+	var mesa_idx = 0
 	for pos in mesa_positions:
+		mesa_idx += 1
 		var radius = 16.0
 		var height = 35.0
 		var mesa = StaticBody3D.new()
-		mesa.name = "MesaPillar"
+		mesa.name = "MesaPillar_%d" % mesa_idx
 		mesa.collision_layer = GameConstants.LAYER_WORLD
 
 		var mi = MeshInstance3D.new()

@@ -1522,10 +1522,43 @@
      - Automated test runner: 80 suites, 3,046 passed assertions, 0 failed (100% pass rate, 90.31% function coverage).
      - Phase 2 Gate Status: PASSED (100% reference courses and missions completable through actual vehicle traversal; routes pass geometry and reachability validation).
 - **Evidence**:
-  - `artifacts/test-results.json` (3,046 passed, 0 failed, 80 suites)
-  - `artifacts/coverage-report.json` (90.31% function coverage)
-  - `IMPLEMENTATION_PLAN.md` & `IMPLEMENTATION_WALKTHROUGH.md` (Section 19)
-  - `CHANGELOG.md` (Release 9.1.0)
+### [2026-10-12 08:30:00 UTC] - Milestone Update: Phase P0 Forensic Audit & Phase P1 Vehicle Physics Complete
+- **Status**: COMPLETED
+- **Description**:
+  1. **Forensic Audit & Defect Root-Causing**:
+     - Root-caused sluggish acceleration to under-calibrated catalog torque curves and low-speed steering freeze below 2.5 m/s.
+     - Root-caused Screenshot 1 dead-end building wall at WP 2 to narrow plaza exclusion zone ($X \in [-45, 15]$).
+     - Root-caused Screenshot 2 road-penetrating plinths to pivot-only clearance evaluation and oversized 30m plinths on curves.
+     - Root-caused camera zoom oscillation to lack of speed deadband filter.
+  2. **Vehicle Physics, Controls & Camera Stability Overhaul**:
+     - Re-calibrated 6 production vehicle archetypes in `vehicle_catalog.gd`.
+     - Implemented progressive launch torque curve ($\tau_{\text{factor}} = \operatorname{lerp}(1.35, 0.60, \text{spd\_ratio}^{0.75})$) and eliminated low-speed steering freeze in `chroma_vehicle.gd`.
+     - Added 1.2 m/s camera FOV velocity deadband in `chroma_rush_main.gd`.
+     - Verified: `test_chroma_vehicle_physics.gd` (45/45 passed) and `test_chroma_camera_stability.gd` (20/20 passed).
+- **Evidence**:
+  - `artifacts/test-results.json` (65/65 physics & camera assertions passed)
+  - `IMPLEMENTATION_PLAN.md` (Updated before coding) & `IMPLEMENTATION_WALKTHROUGH.md` (Section 20)
+
+### [2026-10-12 08:50:00 UTC] - Milestone Update: Phase P2 Road & World Generation Complete
+- **Status**: COMPLETED
+- **Description**:
+  1. **Authoritative OBB Corner Clearance & Sightline Envelopes**:
+     - Implemented `is_footprint_clear_of_spline(center, size_x, size_z, rot_y_deg, 12.0)` checking all 4 rotated footprint corners against road splines in `world_base.gd` and `neon_city.gd`.
+     - Expanded Downtown Grand Central Plaza sightline protection envelope ($Z \in [-140, -255], X \in [-65, 65]$), eliminating Screenshot 1 turn apex obstruction.
+     - Implemented dynamic curve-adaptive setbacks ($38–48\text{m}$), resized plinths to 24m x 24m, and promenades to 20m x 4m centered $\ge 21\text{m}$ from road centerline, eliminating Screenshot 2 curb encroachments.
+  2. **3D Swept Volume Lane Clearance & Hierarchy Exemption**:
+     - Implemented 3D lane swept envelope ($[Y_{\text{road}} - 0.4, Y_{\text{road}} + 6.0]$) in `world_audit_tool.gd`, certifying sub-deck support piers as non-obstructing.
+     - Aligned rock arches in `prism_canyon.gd` (30m span) and gantries in `sky_circuit.gd` (18m span) with road tangents and assigned indexed names with `is_infrastructure` metadata.
+  3. **Monorepo Regression Verification**:
+     - Automated test runner: 80 suites, 3,073 passed assertions, 0 failed (100% pass rate, 90.23% function coverage).
+     - Chroma suite battery: 230/230 assertions passed (100% pass rate).
+     - Phase P2 Gate Status: PASSED (100% worlds pass geometric clearance, zero lane obstructions, zero camera sightline blocks).
+- **Evidence**:
+  - `artifacts/test-results.json` (3,073 passed, 0 failed, 80 suites)
+  - `artifacts/coverage-report.json` (90.23% function coverage)
+  - `IMPLEMENTATION_WALKTHROUGH.md` (Section 20)
+  - `CHANGELOG.md` (Release 9.2.0)
+
 
 
 

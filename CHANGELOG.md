@@ -1709,8 +1709,23 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Refactored `world_base.gd` and `world_audit_tool.gd` to traverse ancestor hierarchies, exempting ground planes (`CanyonGroundPlane`, `CloudDeckPlane`, `CityGroundPlane`), ocean beds (`OceanSurface`), support piers (`SkySupportPier`), suspension bridge towers (`BridgeTower`), and overhead structural arches/gantries (`CanyonRockArch`, `StartFinishGantry`).
   - Relocated roadside pine trees in `prism_canyon.gd` to $\ge 14.0\text{m}$ outside the driving envelope.
   - Added `test_all_worlds_pass_geometric_road_clearance_audit()` in `test_chroma_worlds_and_integration.gd`, verifying 0 blocked segments and 0 lane-prop intersections across all 4 worlds.
+## [9.2.0-phase1-phase2-chroma-rush-overhaul] - 2026-10-12
+### Fixed & Overhauled
+- **Chroma Rush Drivetrain Calibration & Progressive Handling (Phase P1)**:
+  - Re-calibrated acceleration, top speed, and traction parameters for all 6 vehicle archetypes in `vehicle_catalog.gd` (Apex Striker 0–60 km/h in 4.4s, Pulse Cyber, Quantum Track, Titan Hauler, Phantom GT, Zenith Hyper).
+  - Implemented progressive launch torque curve ($\tau_{\text{factor}} = \operatorname{lerp}(1.35, 0.60, \text{spd\_ratio}^{0.75})$) in `chroma_vehicle.gd` to eliminate sluggish acceleration from rest.
+  - Eliminated zero-speed steering freeze by calibrating progressive steer engagement ($\text{steer\_engagement} = \operatorname{lerp}(0.75, 1.0, \operatorname{clamp}(|v_{\text{fwd}}| / 3.0, 0.0, 1.0))$) and high-speed directional damping in `chroma_vehicle.gd`.
+  - Added 1.2 m/s velocity deadband filter to dynamic camera FOV tracking in `chroma_rush_main.gd`, eliminating zoom pumping and camera oscillation during coasting and subtle throttle modulation.
+- **Chroma Rush Road Clearance, Turn Apex Sightlines & Scenery Generation (Phase P2)**:
+  - Implemented authoritative oriented bounding box (OBB) corner clearance `is_footprint_clear_of_spline(center, size_x, size_z, rot_y_deg, 12.0)` in `world_base.gd` and `neon_city.gd`, evaluating all 4 rotated footprint corners against road splines.
+  - Resolved Screenshot 1 turn apex sightline defect by expanding the Downtown Grand Central Plaza sightline protection zone ($Z \in [-140.0, -255.0], X \in [-65.0, 65.0]$) in `neon_city.gd`, removing the dead-ending building wall and opening broad visual vistas.
+  - Resolved Screenshot 2 curve-penetrating building defect by implementing dynamic curve-adaptive setbacks ($38.0–48.0\text{m}$), shrinking parcel plinths from 30m to 24m, and positioning sidewalk promenades safely $\ge 21\text{m}$ from road centerline.
+  - Upgraded `world_audit_tool.gd` to evaluate 3D swept lane envelopes ($[Y_{\text{road}} - 0.4, Y_{\text{road}} + 6.0]$), preventing sub-deck bridge support piers and overhead arches from generating false collision defects.
+  - Aligned rock arches in `prism_canyon.gd` (30m span) and gantries in `sky_circuit.gd` (18m span) with road tangents and assigned unique indexed names with `is_infrastructure` metadata.
 ### Verified
-- **Monorepo Test Suite**: 80/80 test suites passed, **3,046 assertions passed**, 0 failed (100% pass rate, exit code 0). Function coverage: 90.31%.
-- **Gate P2 Acceptance**: All reference courses and missions completable through actual vehicle traversal; generated routes pass geometry, reachability, and gameplay validation.
+- **Monorepo Test Suite**: 80/80 test suites passed, **3,073 assertions passed** (+27 net increase), 0 failed (100% pass rate, exit code 0). Function coverage: 90.23% (1,090 / 1,208 functions tested).
+- **Chroma Suite Battery**: 230/230 unit/integration/E2E assertions passed (100% pass rate).
+- **Gate P1 & Gate P2 Status**: 100% PASSED with zero unresolved defects.
+
 
 

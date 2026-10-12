@@ -549,9 +549,10 @@ func _update_camera(delta: float) -> void:
 	var accel_filter_alpha = 1.0 - exp(-12.0 * delta)
 	cam_filtered_accel = lerpf(cam_filtered_accel, raw_accel, accel_filter_alpha)
 
-	# Continuous smooth FOV with zero discrete stair-stepping
-	cam_last_stable_speed = cam_filtered_speed
-	var spd_ratio = clampf(cam_filtered_speed / 140.0, 0.0, 1.0)
+	# Continuous smooth FOV with dedicated 1.2 m/s (4.3 km/h) deadband to eliminate zoom breathing/oscillation
+	if absf(cam_filtered_speed - cam_last_stable_speed) > 4.3:
+		cam_last_stable_speed = cam_filtered_speed
+	var spd_ratio = clampf(cam_last_stable_speed / 140.0, 0.0, 1.0)
 	var desired_fov = lerpf(CAM_BASE_FOV, 76.5, spd_ratio)
 
 	# Rate-limit FOV delta to prevent sudden zoom pumping

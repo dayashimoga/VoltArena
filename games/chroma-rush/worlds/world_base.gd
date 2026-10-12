@@ -840,6 +840,35 @@ func is_clear_of_spline(pos: Vector3, min_clearance: float = 7.0) -> bool:
 			return false
 	return true
 
+## Validates clearance of an oriented rectangular bounding box (OBB) footprint from the road spline.
+## Tests all 4 rotated footprint corners plus the center point.
+## Returns true only if all tested points remain at least min_clearance away horizontally from all spline segments.
+func is_footprint_clear_of_spline(center: Vector3, size_x: float, size_z: float, rot_y_deg: float, min_clearance: float = 12.0) -> bool:
+	if not is_clear_of_spline(center, min_clearance):
+		return false
+
+	var rad = deg_to_rad(rot_y_deg)
+	var cos_a = cos(rad)
+	var sin_a = sin(rad)
+	var hx = size_x * 0.5
+	var hz = size_z * 0.5
+
+	var corners = [
+		Vector2(-hx, -hz),
+		Vector2(hx, -hz),
+		Vector2(-hx, hz),
+		Vector2(hx, hz)
+	]
+
+	for c in corners:
+		var rx = c.x * cos_a - c.y * sin_a
+		var rz = c.x * sin_a + c.y * cos_a
+		var corner_pt = Vector3(center.x + rx, center.y, center.z + rz)
+		if not is_clear_of_spline(corner_pt, min_clearance):
+			return false
+
+	return true
+
 ## Automatically scans and prunes any props in props_container that penetrate the driveable road lane envelope (< 7.0m)
 func prune_props_in_road_corridor(min_clearance: float = 7.0) -> int:
 	if not props_container:
@@ -849,18 +878,27 @@ func prune_props_in_road_corridor(min_clearance: float = 7.0) -> int:
 	for child in props_container.get_children():
 		if child is Node3D:
 			# Exempt foundational ground planes, water/ocean, cloud decks, skyline silhouettes, and structural arches/gantries/piers
-			var cn = child.name
-			if ("Ground" in cn or "Ocean" in cn or "Water" in cn or "Cloud" in cn
-				or "Skyline" in cn or "Distant" in cn or "Bridge" in cn or "Pylon" in cn
-				or "Pier" in cn or "Arch" in cn or "Gantry" in cn):
+			var is_exempt = false
+			var check_node: Node = child
+			while check_node and check_node != self:
+				var n = check_node.name
+				if ("Ground" in n or "Ocean" in n or "Water" in n or "Cloud" in n
+					or "Skyline" in n or "Distant" in n or "Bridge" in n or "Pylon" in n
+					or "Pier" in n or "Arch" in n or "Gantry" in n or check_node.has_meta("is_infrastructure")):
+					is_exempt = true
+					break
+				check_node = check_node.get_parent()
+			if is_exempt:
 				continue
 			if not is_clear_of_spline(child.position, min_clearance):
 				to_prune.append(child)
 	for p in to_prune:
 		print("[ChromaWorldBase] Pruned road-obstructing prop: %s at %s" % [p.name, str(p.position)])
+		props_container.remove_child(p)
 		p.queue_free()
 		pruned_count += 1
 	return pruned_count
+
 
 
 

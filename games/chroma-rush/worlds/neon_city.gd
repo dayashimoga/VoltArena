@@ -324,6 +324,27 @@ func _is_clear_of_spline(pt: Vector3, min_clearance: float, ignore_s_idx: int = 
 			return false
 	return true
 
+func _is_footprint_clear_of_spline(center: Vector3, size_x: float, size_z: float, rot_y_deg: float, min_clearance: float) -> bool:
+	if not _is_clear_of_spline(center, min_clearance):
+		return false
+	var rad = deg_to_rad(rot_y_deg)
+	var cos_a = cos(rad)
+	var sin_a = sin(rad)
+	var hx = size_x * 0.5
+	var hz = size_z * 0.5
+	var corners = [
+		Vector2(-hx, -hz),
+		Vector2(hx, -hz),
+		Vector2(-hx, hz),
+		Vector2(hx, hz)
+	]
+	for c in corners:
+		var rx = c.x * cos_a - c.y * sin_a
+		var rz = c.x * sin_a + c.y * cos_a
+		if not _is_clear_of_spline(Vector3(center.x + rx, center.y, center.z + rz), min_clearance):
+			return false
+	return true
+
 func build_props() -> void:
 	var skyscraper_paths = [
 		"res://assets/models/environment/building_skyscraper_a.glb",
@@ -368,16 +389,23 @@ func build_props() -> void:
 
 		# Build buildings on BOTH sides to form an authentic dense metropolitan streetwall
 		for side in [-1.0, 1.0]:
-			var setback = 32.0 + float((s_idx) % 3) * 2.0
+			# Curve-adaptive setback: dynamically expand building distance on road turns
+			var fwd_next = (p_next - p_curr).normalized()
+			var curve_factor = 1.0 - clampf(tangent.dot(fwd_next), 0.0, 1.0)
+			var base_setback = 34.0 + float((s_idx) % 3) * 2.0 + (curve_factor * 70.0)
+			var setback = clampf(base_setback, 34.0, 48.0)
 			var b_pos = p_curr + right * (side * setback)
 			b_pos.y = p_curr.y
+			var b_rot_y = rot_y + (90.0 if side < 0 else -90.0)
 
-			if not _is_clear_of_spline(b_pos, 28.0):
+			# Downtown Grand Central Plaza sightline protection (Turn apex between WP 1 and WP 3)
+			# Reserves the entire vista and outside corridor of North Financial Avenue open for an expansive, clear grand plaza vista
+			if b_pos.z <= -140.0 and b_pos.z >= -255.0 and b_pos.x >= -65.0 and b_pos.x <= 65.0:
 				continue
 
-			# Downtown Central Plaza sightline protection (Turn apex between WP 1 and WP 3)
-			# Keeps the entire outside curve of North Financial Avenue open for an expansive, clear grand plaza vista
-			if b_pos.z < -155.0 and b_pos.z > -225.0 and b_pos.x < 15.0 and b_pos.x > -45.0:
+			# Strict rotated OBB footprint corner clearance check:
+			# Entire 28m x 28m parcel footprint must remain >= 12.0m from all road spline samples
+			if not _is_footprint_clear_of_spline(b_pos, 28.0, 28.0, b_rot_y, 12.0):
 				continue
 
 			var theme_idx = (s_idx * 3 + wp_nearest + (1 if side > 0 else 0)) % ARCHITECTURAL_THEMES.size()
@@ -385,9 +413,10 @@ func build_props() -> void:
 			var b_node = _create_district_building(wp_nearest, s_idx, skyscraper_paths, commercial_paths, residential_paths, theme_idx, side_str)
 			if b_node:
 				b_node.position = b_pos
-				b_node.rotation_degrees.y = rot_y + (90.0 if side < 0 else -90.0)
+				b_node.rotation_degrees.y = b_rot_y
 				props_container.add_child(b_node)
-				_build_urban_block_parcel(p_curr, right * side, setback, b_pos, rot_y + (90.0 if side < 0 else -90.0), wp_nearest, s_idx + (100 if side > 0 else 0))
+				_build_urban_block_parcel(p_curr, right * side, setback, b_pos, b_rot_y, wp_nearest, s_idx + (100 if side > 0 else 0))
+
 
 	# 2. Dense mature street trees along both sidewalk verges
 	var tree_interval = 8
@@ -407,8 +436,8 @@ func build_props() -> void:
 		var wp_nearest = get_nearest_waypoint_index(p_curr)
 		var species = _get_district_tree_species(wp_nearest)
 		for t_side in [-1.0, 1.0]:
-			var pos_t = p_curr + right * (t_side * 9.2)
-			if _is_clear_of_spline(pos_t, 8.0):
+			var pos_t = p_curr + right * (t_side * 9.8)
+			if is_clear_of_spline(pos_t, 8.5):
 				var tree = _build_realistic_tree(species, 9.0, s_idx * 17 + (50 if t_side > 0 else 0))
 				tree.position = pos_t
 				tree.position.y = p_curr.y
@@ -429,9 +458,10 @@ func build_props() -> void:
 		var rot_y = rad_to_deg(atan2(-tangent.x, -tangent.z))
 
 		for l_side in [-1.0, 1.0]:
-			var lamp_pos = p_curr + right * (l_side * 8.6)
-			if _is_clear_of_spline(lamp_pos, 7.8):
+			var lamp_pos = p_curr + right * (l_side * 9.5)
+			if is_clear_of_spline(lamp_pos, 8.2):
 				var lamp = _build_procedural_streetlight()
+				lamp.name = "StreetLight_%d_%d" % [s_idx, 0 if l_side < 0 else 1]
 				lamp.position = lamp_pos
 				lamp.rotation_degrees.y = rot_y + (90.0 if l_side > 0 else -90.0)
 				props_container.add_child(lamp)
@@ -593,8 +623,12 @@ func _build_secondary_city_blocks() -> void:
 	]
 
 	for cfg in block_configs:
-		# Strict clearance from all spline samples: width/2 + road_half_w(7.5) + sidewalk(3.5) + buffer(2.5) = width/2 + 13.5
-		if not _is_clear_of_spline(cfg["pos"], cfg["w"] * 0.5 + 13.5):
+		# Downtown Grand Central Plaza sightline protection
+		if cfg["pos"].z <= -140.0 and cfg["pos"].z >= -255.0 and cfg["pos"].x >= -65.0 and cfg["pos"].x <= 65.0:
+			continue
+
+		# Strict footprint corner clearance from all spline samples: width/2 + road_half_w(7.5) + sidewalk(3.5) + buffer(2.5) = width/2 + 13.5
+		if not _is_footprint_clear_of_spline(cfg["pos"], cfg["w"] + 6.0, cfg["w"] + 6.0, 0.0, 13.5):
 			continue
 
 		var is_tall = cfg["h"] > 45.0
@@ -1094,11 +1128,11 @@ func _build_urban_block_parcel(p_curr: Vector3, right_dir: Vector3, setback: flo
 	parcel_root.position = Vector3(b_pos.x, b_pos.y, b_pos.z)
 	parcel_root.rotation_degrees.y = b_rot_y
 
-	# 1. Main Plaza Plinth under building (30m x 0.22m x 30m)
+	# 1. Main Plaza Plinth under building (24m x 0.22m x 24m)
 	var plinth = MeshInstance3D.new()
 	plinth.name = "PlinthFoundation"
 	var plinth_box = BoxMesh.new()
-	plinth_box.size = Vector3(30.0, 0.22, 30.0)
+	plinth_box.size = Vector3(24.0, 0.22, 24.0)
 	plinth.mesh = plinth_box
 	var mat_plinth = StandardMaterial3D.new()
 	mat_plinth.albedo_color = Color(0.24, 0.26, 0.28)
@@ -1108,31 +1142,31 @@ func _build_urban_block_parcel(p_curr: Vector3, right_dir: Vector3, setback: flo
 	parcel_root.add_child(plinth)
 
 	# 2. Pedestrian Plaza Promenade connecting building frontage to road sidewalk without crossing road edge
-	# Setback is 27.5m, plinth front is at 12.5m, road sidewalk outer edge is at 9.5m.
-	# Promenade size 5.0m centered at Z = -14.0m sits safely from 11.5m to 16.5m from road centerline.
+	# Setback is 34-48m, plinth front is at 12m, road sidewalk outer edge is at 10.5m.
+	# Promenade size 4.0m centered at Z = -11.0m sits safely 21m+ from road centerline.
 	var promenade = MeshInstance3D.new()
 	promenade.name = "SidewalkApron"
 	var prom_box = BoxMesh.new()
-	prom_box.size = Vector3(26.0, 0.12, 5.0)
+	prom_box.size = Vector3(20.0, 0.12, 4.0)
 	promenade.mesh = prom_box
 	promenade.material_override = mat_sidewalk
-	promenade.position = Vector3(0.0, 0.06, -14.0)
+	promenade.position = Vector3(0.0, 0.06, -11.0)
 	parcel_root.add_child(promenade)
 
 	# 3. Manicured Green Verge & Landscaping along frontage
 	var verge_mi = MeshInstance3D.new()
 	var verge_box = BoxMesh.new()
-	verge_box.size = Vector3(24.0, 0.16, 2.4)
+	verge_box.size = Vector3(18.0, 0.16, 2.0)
 	verge_mi.mesh = verge_box
 	var mat_grass = StandardMaterial3D.new()
 	mat_grass.albedo_color = Color(0.18, 0.36, 0.16)
 	mat_grass.roughness = 0.95
 	verge_mi.material_override = mat_grass
-	verge_mi.position = Vector3(0.0, 0.08, -10.5)
+	verge_mi.position = Vector3(0.0, 0.08, -8.5)
 	parcel_root.add_child(verge_mi)
 
-	# 4. Modern Decorative Bollards along pedestrian promenade outer boundary (Z = -13.5, 14m from road centerline)
-	for bx in [-9.0, -4.5, 0.0, 4.5, 9.0]:
+	# 4. Modern Decorative Bollards along pedestrian promenade outer boundary (Z = -12.0)
+	for bx in [-7.5, -3.75, 0.0, 3.75, 7.5]:
 		var bollard_mi = MeshInstance3D.new()
 		var b_cyl = CylinderMesh.new()
 		b_cyl.top_radius = 0.10
@@ -1144,7 +1178,7 @@ func _build_urban_block_parcel(p_curr: Vector3, right_dir: Vector3, setback: flo
 		mat_bollard.metallic = 0.88
 		mat_bollard.roughness = 0.22
 		bollard_mi.material_override = mat_bollard
-		bollard_mi.position = Vector3(bx, 0.35, -13.5)
+		bollard_mi.position = Vector3(bx, 0.35, -12.0)
 		parcel_root.add_child(bollard_mi)
 
 	# 5. Side Parking Stall with Parked Vehicle (alternate blocks)

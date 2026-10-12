@@ -145,13 +145,25 @@ func build_checkpoints() -> void:
 		checkpoints.append(gate)
 
 func build_props() -> void:
-	# Holographic race gantries across the skyway
-	var gantry1 = MeshBuilder.build_start_gantry(15.0)
+	# Holographic race gantries across the skyway (aligned to road heading with clearance >= 18m)
+	var gantry1 = MeshBuilder.build_start_gantry(18.0)
+	gantry1.name = "StartFinishGantry_1"
+	gantry1.set_meta("is_infrastructure", true)
 	gantry1.position = Vector3(0, 50.0, 0)
+	var dir1 = (waypoints[1] - waypoints[15]).normalized()
+	dir1.y = 0.0
+	if dir1.length_squared() > 0.001:
+		gantry1.look_at_from_position(gantry1.position, gantry1.position + dir1, Vector3.UP)
 	props_container.add_child(gantry1)
 
-	var gantry2 = MeshBuilder.build_race_gantry_mesh()
+	var gantry2 = MeshBuilder.build_start_gantry(18.0)
+	gantry2.name = "RaceGantry_2"
+	gantry2.set_meta("is_infrastructure", true)
 	gantry2.position = Vector3(170, 68.0, -210)
+	var dir2 = (waypoints[5] - waypoints[3]).normalized()
+	dir2.y = 0.0
+	if dir2.length_squared() > 0.001:
+		gantry2.look_at_from_position(gantry2.position, gantry2.position + dir2, Vector3.UP)
 	props_container.add_child(gantry2)
 
 	# Massive support pylons anchoring the floating circuit into the clouds below (strictly clamped beneath road underside)
@@ -166,7 +178,9 @@ func build_props() -> void:
 	pylon_mat.albedo_color = Color(0.18, 0.20, 0.28)
 	pylon_mat.metallic = 0.9
 
+	var pylon_idx = 0
 	for anchor in pylon_anchors:
+		pylon_idx += 1
 		var xz: Vector2 = anchor["xz"]
 		var road_y: float = anchor["road_y"]
 		var underside_y = road_y - 0.50
@@ -175,7 +189,8 @@ func build_props() -> void:
 		var center_y = cloud_y + pier_h * 0.5
 
 		var pier = StaticBody3D.new()
-		pier.name = "SkySupportPier"
+		pier.name = "SkySupportPier_%d" % pylon_idx
+		pier.set_meta("is_infrastructure", true)
 		pier.collision_layer = GameConstants.LAYER_WORLD
 
 		var mi = MeshInstance3D.new()

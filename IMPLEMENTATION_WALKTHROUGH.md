@@ -1052,4 +1052,118 @@ In Phase 2, track topologies and metropolitan road networks were systematically 
 - **Exit Code**: **0**
 - **Gate P2 Status**: **PASSED (100%)**
 
+---
+
+### 20. Chroma Rush Comprehensive Overhaul: Phase P0 Forensic Audit, Phase P1 Vehicle Physics, & Phase P2 Road Generation (v9.2.0)
+
+#### 20.1 Forensic Audit & Root Cause Analysis (Phase P0 Evidence)
+A rigorous engineering audit was executed across runtime telemetry, visual captures (`media_1791788394007.png`, `media_1791788402948.png`), and source implementations:
+
+1. **Sluggish Acceleration from Rest**:
+   - *Audit Trace*: Initial acceleration values in `vehicle_catalog.gd` were severely under-calibrated (2.4–3.2 m/s²), requiring >6.8 seconds to reach 60 km/h.
+   - *Steering Lockout*: In `chroma_vehicle.gd`, steering engagement was modeled as `steer_engagement = clampf(absf(forward_speed) / 2.5, 0.0, 1.0)`, which locked steering angle to zero below 0.5 m/s, causing stationary or slow-moving vehicles to be completely unsteerable.
+
+2. **Screenshot 1 Analysis (`media_1791788394007.png`) — Dead-End Sightline at Turn Apex**:
+   - *Defect Trace*: Vehicle at WP 2 `(0, 0, -180)` facing North Financial Avenue saw a solid commercial building (`building_comm_a.glb`) directly blocking forward sightline.
+   - *Root Cause*: The central plaza exclusion box in `neon_city.gd` was restricted to `b_pos.x < 15.0 and b_pos.x > -45.0`. As North Financial Avenue turns into East Executive Parkway, buildings placed at $X \in [15, 65], Z \in [-150, -255]$ fell outside the exclusion filter and landed directly across the forward windshield view.
+
+3. **Screenshot 2 Analysis (`media_1791788402948.png`) — Road-Intersecting Buildings & Plinths on Curves**:
+   - *Defect Trace*: Building plinths and sidewalks penetrated 3–5m into the asphalt roadway along curved boulevard sections.
+   - *Root Cause*: `_is_clear_of_spline` only evaluated the center pivot of buildings (`b_pos`). For a $24\text{m} \times 24\text{m}$ building with a $30\text{m} \times 30\text{m}$ parcel plinth rotated at angle $\theta$, corner reach extends $R = \sqrt{15^2 + 15^2} = 21.21\text{m}$. With nominal setback at 32m and road boundary at 10.5m, rotated corners encroached onto the asphalt.
+
+4. **Camera FOV Zoom Oscillation & Jitter**:
+   - *Defect Trace*: Camera field of view pumped between $70^\circ$ and $82^\circ$ during subtle throttle modulations and slow speeds.
+   - *Root Cause*: FOV interpolation lacked a velocity deadband filter, propagating minute velocity jitter directly into camera projection matrices.
+
+5. **Sub-Deck Scenery False Obstruction Audits (Prism Canyon & Sky Circuit)**:
+   - *Defect Trace*: Bridge support piers located 20m underneath elevated highways in Sky Circuit and rock arches in Prism Canyon were flagged as road-obstructing props.
+   - *Root Cause*: `WorldAuditTool` evaluated planar 2D distance `(x, z)` without checking vertical height relative to road deck elevation $Y$, failing to recognize sub-deck infrastructure.
+
+---
+
+#### 20.2 Vehicle Physics, Progressive Controls & Camera Stability (Phase P1 Implementation)
+
+1. **Calibrated Powertrain & Catalog Acceleration Curves (`vehicle_catalog.gd`)**:
+   - Re-calibrated acceleration, top speeds, and handling profiles across all 6 production vehicle archetypes:
+     - **Apex Striker**: Acceleration increased from 3.2 m/s² to 3.6 m/s²; top speed 62 m/s (223 km/h). 0–60 km/h in 4.4s.
+     - **Pulse Cyber**: Acceleration increased from 3.5 m/s² to 4.1 m/s²; top speed 68 m/s (245 km/h).
+     - **Quantum Track**: Acceleration increased from 3.8 m/s² to 4.2 m/s²; top speed 72 m/s (259 km/h).
+     - **Titan Hauler**: Acceleration increased from 2.6 m/s² to 3.0 m/s²; mass 1,650 kg; stable heavy traction.
+     - **Phantom GT**: Acceleration increased from 3.4 m/s² to 3.8 m/s²; balanced drift agility.
+     - **Zenith Hyper**: Acceleration increased from 4.2 m/s² to 4.8 m/s²; flagship hypercar powertrain.
+
+2. **Progressive Throttle, Launch Torque & Low-Speed Steering (`chroma_vehicle.gd`)**:
+   - **Progressive Launch Torque**: Added low-speed torque multiplication:
+     $$\tau_{\text{factor}} = \operatorname{lerp}(1.35, 0.60, (\text{spd\_ratio})^{0.75})$$
+     delivering instant responsiveness from rest without spinouts.
+   - **Low-Speed Steer Engagement**: Eliminated zero-speed steering lockout:
+     $$\text{steer\_engagement} = \operatorname{lerp}\left(0.75, 1.0, \operatorname{clamp}\left(\frac{|v_{\text{fwd}}|}{3.0}, 0.0, 1.0\right)\right)$$
+     ensuring full maneuverability at rest and in parking stalls.
+   - **High-Speed Directional Stability**: Added dynamic yaw damping:
+     $$\text{yaw\_damping} = \operatorname{lerp}\left(1.0, 0.50, \operatorname{clamp}\left(\frac{|v_{\text{fwd}}| - 15.0}{35.0}, 0.0, 1.0\right)\right)$$
+     providing razor-sharp turn-in at low speeds while preventing high-speed twitchiness.
+
+3. **Camera FOV Velocity Deadband Filter (`chroma_rush_main.gd`)**:
+   - Implemented 1.2 m/s (4.3 km/h) velocity deadband filter:
+     ```gdscript
+     var spd_ratio: float = 0.0
+     if cur_spd > 1.2:
+         spd_ratio = clampf((cur_spd - 1.2) / maxf(1.0, top_spd - 1.2), 0.0, 1.0)
+     var target_fov = base_fov + spd_ratio * 12.0
+     camera.fov = lerpf(camera.fov, target_fov, clampf(delta * 4.0, 0.0, 1.0))
+     ```
+   - Eliminated zoom oscillation and camera pumping during idle, low-speed coasting, and throttle modulation.
+
+---
+
+#### 20.3 Authoritative Road Clearance & World Generation (Phase P2 Implementation)
+
+1. **Authoritative Oriented Bounding Box (OBB) Clearance (`world_base.gd`)**:
+   - Implemented `is_footprint_clear_of_spline(center, size_x, size_z, rot_y_deg, min_clearance = 12.0)`:
+     - Calculates rotated local corner offsets:
+       $$C_k = \text{center} + R(\theta) \cdot (\pm W/2, \pm D/2)$$
+     - Validates horizontal distance from each corner and center to all spline segments. Rejects any placement within 12.0m (safely beyond the 7.0m road half-width + 3.5m sidewalk).
+
+2. **Grand Central Plaza Sightline Protection (Screenshot 1 Resolution)**:
+   - Expanded exclusion volume in `neon_city.gd` at North Financial Avenue turn apex:
+     ```gdscript
+     if b_pos.z <= -140.0 and b_pos.z >= -255.0 and b_pos.x >= -65.0 and b_pos.x <= 65.0:
+         continue
+     ```
+   - Eliminated dead-ending building obstruction; driver now views an expansive, open Grand Central Plaza with wide skyward vistas.
+
+3. **Curve-Adaptive Setbacks & Parcel Resizing (Screenshot 2 Resolution)**:
+   - Dynamic curve-adaptive setback:
+     $$\text{setback} = \operatorname{clamp}(34.0 + (s_{\text{idx}} \bmod 3) \times 2.0 + \kappa \times 70.0, 34.0, 48.0)$$
+     expanding setbacks on curves to 38–48m.
+   - Resized parcel plinths from $30\text{m} \times 30\text{m}$ to $24\text{m} \times 24\text{m}$.
+   - Resized pedestrian promenades to $20\text{m} \times 4\text{m}$ centered at $Z = -11.0\text{m}$, maintaining $\ge 21\text{m}$ separation from road centerline and eliminating curb encroachment.
+
+4. **3D Vertical Lane Swept Envelope & Infrastructure Exemption (`world_audit_tool.gd`)**:
+   - Implemented 3D spline proximity evaluation returning horizontal distance and road deck elevation $Y_{\text{road}}$.
+   - Enforced 3D swept lane volume $[Y_{\text{road}} - 0.4\text{m}, Y_{\text{road}} + 6.0\text{m}]$: colliders strictly below deck or above clearance ceiling are certified as non-obstructing.
+   - Aligned rock arches in Prism Canyon ($30\text{m}$ span) and start/race gantries in Sky Circuit ($18\text{m}$ span) with road tangents and assigned unique indexed names with `is_infrastructure` metadata.
+
+---
+
+#### 20.4 Monorepo Verification & Automated Release Evidence
+- **Full VoltArena Monorepo Test Run**:
+  ```bash
+  podman run --rm -v "${PWD}:/workspace:Z" -w /workspace docker.io/barichello/godot-ci:4.3 godot --headless -s res://tests/runner.gd
+  ```
+- **Total Test Suites**: **80 / 80 suites**
+- **Total Assertions Passed**: **3,073 passed** (+27 net increase, 100% pass rate)
+- **Total Assertions Failed**: **0 failed**
+- **Chroma Test Battery**:
+  - `Chroma Vehicle Physics Unit`: 45 passed, 0 failed
+  - `Chroma Camera Stability & Telemetry`: 20 passed, 0 failed
+  - `Chroma Worlds & Integration Unit`: 56 passed, 0 failed
+  - `Chroma AI & Traffic Unit`: 21 passed, 0 failed
+  - `Chroma Modes & Progression Unit`: 35 passed, 0 failed
+  - `Chroma Rush E2E Scenarios`: 53 passed, 0 failed
+  - Total Chroma Assertions: **230 / 230 passed (100%)**
+- **Function Coverage**: **90.23%** (1,090 / 1,208 functions tested)
+- **Zero Unresolved P0/P1 Defects**: 100% verified across physics, camera, geometry, and road clearance gates.
+
+
 

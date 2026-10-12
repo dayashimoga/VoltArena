@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 90.3065451532726,
+  "coverage_percent": 90.2317880794702,
   "coverage_tested_functions": 1090,
-  "coverage_total_functions": 1207,
-  "execution_seconds": 209.46,
+  "coverage_total_functions": 1208,
+  "execution_seconds": 148.349,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -87,7 +87,7 @@
     },
     "Chroma Worlds & Integration Unit": {
       "failed": 0,
-      "passed": 35,
+      "passed": 56,
       "status": "PASS"
     },
     "ColorSwapEngine Unit": {
@@ -406,8 +406,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-10-11T10:40:37",
+  "timestamp": "2026-10-12T08:49:48",
   "total_failed": 0,
-  "total_passed": 3052,
+  "total_passed": 3073,
   "total_suites": 80
 }

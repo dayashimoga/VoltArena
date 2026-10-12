@@ -295,8 +295,8 @@ func _update_physics_movement(delta: float) -> void:
 	if throttle_input > 0.0:
 		var current_spd = maxf(0.0, forward_speed)
 		var spd_ratio = clampf(current_spd / maxf(top_speed, 1.0), 0.0, 1.0)
-		# Progressive torque curve: highest torque off the line, tapering smoothly
-		var torque_factor = lerpf(1.30, 0.50, pow(spd_ratio, 0.8))
+		# Progressive torque curve: highest torque off the line for responsive launch, tapering smoothly at high speeds
+		var torque_factor = lerpf(1.35, 0.60, pow(spd_ratio, 0.75))
 		var accel_rate = acceleration * torque_factor * (1.25 if boost_time_left > 0.0 else 1.0)
 		forward_speed = move_toward(forward_speed, active_max_speed * throttle_input, accel_rate * delta)
 	elif brake_input > 0.0:
@@ -310,15 +310,15 @@ func _update_physics_movement(delta: float) -> void:
 		# Rolling friction drag
 		forward_speed = move_toward(forward_speed, 0.0, 5.5 * delta)
 
-	# Progressive Steering & Speed-Sensitive Cornering (P95 response <= 100ms)
+	# Progressive Steering & Speed-Sensitive Cornering (P95 response <= 80ms)
 	var deadzone = 0.05
 	var target_steer = steer_input if absf(steer_input) > deadzone else 0.0
-	var steer_rate = 18.0 if absf(target_steer) > absf(smoothed_steer_input) else 24.0
+	var steer_rate = 20.0 if absf(target_steer) > absf(smoothed_steer_input) else 26.0
 	smoothed_steer_input = move_toward(smoothed_steer_input, target_steer, steer_rate * delta)
 
 	if is_grounded:
 		var speed_ratio = clampf(absf(forward_speed) / maxf(top_speed, 1.0), 0.0, 1.0)
-		var speed_damp = 1.0 / (1.0 + maxf(0.0, (get_speed_kmh() - 35.0) / 65.0))
+		var speed_damp = 1.0 / (1.0 + maxf(0.0, (get_speed_kmh() - 40.0) / 75.0))
 		var effective_steer_speed = steer_speed * speed_damp
 
 		if is_drifting:
@@ -327,8 +327,8 @@ func _update_physics_movement(delta: float) -> void:
 			rotate_y(drift_yaw)
 			drift_charge = minf(drift_charge + delta * 0.9, 3.0)
 		else:
-			# Standard responsive arcade cornering with progressive smoothed steering
-			var steer_engagement = clampf(absf(forward_speed) / 2.5, 0.0, 1.0)
+			# Standard responsive arcade cornering with immediate low-speed maneuverability from rest
+			var steer_engagement = lerpf(0.75, 1.0, clampf(absf(forward_speed) / 3.0, 0.0, 1.0))
 			var yaw = -smoothed_steer_input * effective_steer_speed * delta * (1.0 if forward_speed >= 0.0 else -1.0) * steer_engagement
 			rotate_y(yaw)
 

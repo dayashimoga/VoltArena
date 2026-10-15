@@ -1898,6 +1898,36 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **Overall Function Coverage**: **91.0%** (1,281 / 1,408 tested functions across all engine and game modules, exceeding $\ge 90.0\%$).
 - **Zero Monorepo Regressions**: Zero regressions across all 12 games in the VoltArena suite.
 
-
-
-
+## [14.1.0-production-overhaul] - 2026-10-15
+### Added
+- **Authentic 3D Aircraft Fleet Integration (Apex Flight P0/P2)**:
+  - Integrated 5 authentic licensed production 3D aircraft models:
+    - `aircraft_fighter.glb`: F/A-18C Hornet (CC BY 4.0 - Emmanuel Baranger / helijah) with twin canted vertical fins, AIM-9 Sidewinders, and afterburners.
+    - `aircraft_f22.glb`: F-22A Raptor (CC BY 4.0 - Emmanuel Baranger / helijah) with diamond wings, stealth chine, and 2D vector nozzles.
+    - `aircraft_a320.glb`: Airbus A320 (CC0 1.0 Universal - NASA / FlightGear) with supercritical swept wings, CFM56 turbofans, and cabin windows.
+    - `aircraft_propeller.glb`: Extra 330 (CC0 1.0 Universal - Kenney) unlimited aerobatic monoplane with 3-blade prop and canopy.
+    - `aircraft_helicopter.glb`: AW101 / UH-60 (CC BY 4.0 - Emmanuel Baranger / helijah) tactical rotorcraft with articulated main/tail rotors.
+  - Implemented runtime fallback `GLTFDocument.append_from_file()` in `shared/graphics/model_cache.gd` ensuring transparent loading across all platforms.
+- **Urban Legends 3D Vehicles & Traffic Overhaul (P0/P2)**:
+  - Bound authentic CC0 GLTF car models (`car_sedan_sports.glb`, `car_race.glb`, `car_race_future.glb`, `car_suv_luxury.glb`, `car_hatchback_sports.glb`) in `urban_vehicle_visuals.gd`.
+  - Upgraded ambient civilian traffic in `traffic_vehicle.gd` to instantiate authentic GLBs (`car_sedan.glb`, `car_taxi.glb`, `car_police.glb`, `car_suv.glb`, `truck_yellow.glb`) with animated rolling wheels.
+- **Metropolis Urban Reconstruction (Urban Legends P3)**:
+  - Resolved 20x underscaling defect in `urban_prop_factory.gd`; GLB skyscrapers and commercial blocks now scale to true world meters (24m-30m base, 60m-115m height).
+  - Added raised concrete sidewalks, curbs, and white road shoulder striping across all asphalt roads in `urban_world_generator.gd`.
+  - Added boulevard streetlights (`road_lightposts.glb`) spaced every 65m and perimeter mountain ridges enclosing the metropolis basin.
+  - Enabled soft exponential fog and synced celestial sunset/night sky color grading in `urban_weather_system.gd`.
+- **Natural Alpine World & Atmosphere Overhaul (Apex Flight P3)**:
+  - Replaced 12 cone cylinder mountains in `city_flight_world.gd` with multi-layered PrismMesh alpine massifs, granite crags, pine foothills, and snowcapped summits.
+  - Replaced stacked disc clouds with 18 volumetric cumulus formations featuring flat condensation bases and billowing domes across 1400m - 2800m.
+  - Upgraded sky in `flight_world_manager.gd` to `ProceduralSkyMaterial` with Rayleigh scattering and calibrated ACES sun lighting.
+- **Aircraft Showroom Overhaul (Phase 4)**:
+  - Added industrial steel roof trusses, cross-struts, side structural columns, and recessed floor guide lighting in `hangar_menu.gd`.
+  - Implemented interactive click-and-drag mouse orbit controls for manual 360° inspection of all aircraft on the showroom turntable.
+### Fixed
+- **Flight Ceiling Warning (GAP-AF-02)**: Calibrated `flight_mission_director.gd` to evaluate true radar altitude above ground level (AGL) rather than sea level barometric altitude.
+- **Vehicle Destruction Recovery (GAP-UL-04)**: Added destruction timer, wreckage visual state, and safe respawn recovery when vehicle HP reaches 0.
+- **Traffic Waypoint LookAt (GAP-UL-04)**: Replaced non-tree `look_at` with safe `look_at_from_position` in `traffic_vehicle.gd`.
+### Verified
+- **Full Monorepo Test Battery**: **93 / 93 test suites passed, 3,681 / 3,681 assertions passed, 0 failed (100% pass rate, exit code 0)** in Podman container.
+- **Overall Function Coverage**: **90.9%** (1,281 / 1,409 tested functions across all modules).
+- **Zero Monorepo Regressions**: Zero regressions across all 12 games in the VoltArena suite.

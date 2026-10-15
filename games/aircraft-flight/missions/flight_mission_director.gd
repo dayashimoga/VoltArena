@@ -145,16 +145,17 @@ func _update_takeoff_landing_logic(aircraft: CharacterBody3D) -> void:
 				fail_mission("Hard landing! Touchdown vertical speed was too high (%.1f m/s)." % vsi_touchdown)
 
 func _update_urban_corridor_logic(delta: float, aircraft: CharacterBody3D) -> void:
-	var alt = aircraft.barometric_altitude_m
+	# Use radar altitude (AGL - Above Ground Level)
+	var alt = aircraft.radar_altitude_m
 	var max_alt = current_mission_data.get("max_allowed_alt_m", 120.0)
 
 	if alt > max_alt:
-		current_objective_text = "WARNING: CEILING EXCEEDED! Descend below 100m AGL!"
+		current_objective_text = "WARNING: CEILING EXCEEDED! Descend below %.0fm AGL! (Current: %.0fm)" % [max_alt, alt]
 		objective_updated.emit(current_objective_text)
 	else:
 		urban_skimming_seconds += delta
 		score = int(urban_skimming_seconds * 120.0)
-		current_objective_text = "Urban Skimming: %.1fs / 45s (Alt: %.0fm)" % [urban_skimming_seconds, alt]
+		current_objective_text = "Downtown Corridor Skimming: %.1fs / 45s (AGL: %.0fm)" % [urban_skimming_seconds, alt]
 		objective_updated.emit(current_objective_text)
 
 		if urban_skimming_seconds >= 45.0:

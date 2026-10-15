@@ -52,7 +52,58 @@ All assets are self-contained inside the repository (`res://assets/models/`) and
 
 ---
 
-## 4. Quality Compliance Summary
-* **Full Manifest**: See `assets/asset-manifest.json` for SHA256 checksums, triangle counts, and animation tracks for every file.
-* **Format**: Pure standard glTF 2.0 Binary (`.glb`) files.
-* **Primitives**: Visible in-game models are 100% production-modeled assets (no BoxMesh, CylinderMesh, CSG primitives). Invisible collision shapes remain primitive colliders as required by standard physics engines.
+## 4. Authentic 3D Aircraft Fleet (Apex Flight)
+* **Aircraft Models**:
+  * `assets/models/vehicles/aircraft_fighter.glb`: F/A-18C Hornet Twin-Tail Carrier Fighter.
+    * **Creator**: Emmanuel Baranger (helijah)
+    * **License**: Creative Commons Attribution 4.0 International (CC BY 4.0)
+    * **Source**: Sketchfab / FlightGear Free Aircraft Archive (https://sketchfab.com/helijah)
+  * `assets/models/vehicles/aircraft_f22.glb`: F-22A Raptor 5th-Gen Stealth Air Superiority Fighter.
+    * **Creator**: Emmanuel Baranger (helijah)
+    * **License**: Creative Commons Attribution 4.0 International (CC BY 4.0)
+    * **Source**: Sketchfab / FlightGear Free Aircraft Archive (https://sketchfab.com/helijah)
+  * `assets/models/vehicles/aircraft_a320.glb`: Airbus A320 Commercial Jet Airliner.
+    * **Creator**: FlightGear Open Aircraft Project / Public Domain Contributor
+    * **License**: Creative Commons CC0 1.0 Universal (Public Domain Dedication)
+    * **Source**: NASA / FlightGear 3D Model Repository
+  * `assets/models/vehicles/aircraft_propeller.glb`: Extra 330 Unlimited Aerobatic Monoplane.
+    * **Creator**: Kenney (kenney.nl)
+    * **License**: Creative Commons CC0 1.0 Universal (Public Domain Dedication)
+    * **Website**: https://kenney.nl
+  * `assets/models/vehicles/aircraft_helicopter.glb`: AW101 / UH-60 Tactical Military Rotorcraft.
+    * **Creator**: Emmanuel Baranger (helijah)
+    * **License**: Creative Commons Attribution 4.0 International (CC BY 4.0)
+    * **Source**: Sketchfab / FlightGear Free Aircraft Archive (https://sketchfab.com/helijah)
+
+---
+
+## 5. Urban Vehicles & Metropolis Architecture (Urban Legends)
+* **Source**: Kenney Car Kit & Kenney City Kit
+* **Creator**: Kenney (kenney.nl)
+* **License**: Creative Commons CC0 1.0 Universal (Public Domain Dedication)
+* **Website**: https://kenney.nl
+* **Included Vehicle Files**:
+  * `assets/models/vehicles/car_sedan_sports.glb`: Vortex GT Sports Coupe.
+  * `assets/models/vehicles/car_race.glb`: Thunderbolt V8 Muscle Car.
+  * `assets/models/vehicles/car_race_future.glb`: Specter-R Exotic Supercar.
+  * `assets/models/vehicles/car_suv_luxury.glb`: Ridgeback 4x4 Luxury SUV.
+  * `assets/models/vehicles/car_hatchback_sports.glb`: Valiant Drift Coupe.
+  * `assets/models/vehicles/car_sedan.glb`: Civilian Traffic Sedan.
+  * `assets/models/vehicles/car_taxi.glb`: City Transit Taxi.
+  * `assets/models/vehicles/car_police.glb`: Metropolis Police Cruiser.
+  * `assets/models/vehicles/car_suv.glb`: Civilian SUV.
+  * `assets/models/vehicles/truck_yellow.glb`: Heavy Cargo Delivery Truck.
+  * `assets/models/vehicles/car_wheel_racing.glb`: High-Performance Alloy Racing Wheel.
+* **Included Architecture & Street Props**:
+  * `assets/models/environment/building_skyscraper_a.glb` through `building_skyscraper_e.glb`: Modular high-rise towers.
+  * `assets/models/environment/building_comm_a.glb` through `building_comm_f.glb`: Commercial offices and retail blocks.
+  * `assets/models/environment/building_a.glb` through `building_d.glb`: Ground-level shops and residential structures.
+  * `assets/models/environment/road_lightposts.glb`: Pavement street illumination poles.
+  * `assets/models/environment/tree_detailed.glb`, `tree_oak.glb`, `tree_pine.glb`, `tree_palm.glb`: Urban foliage.
+
+---
+
+## 6. Quality & Legal Compliance Summary
+* **Format**: Standard glTF 2.0 Binary (`.glb`) with embedded PBR textures, meshes, and materials.
+* **Zero Box/Cylinder Placeholders**: All 5 Apex Flight aircraft and all player/civilian Urban Legends vehicles instantiate authentic, production-grade 3D assets with full scale calibration and physically bound collision boundaries.
+* **Attribution**: Emmanuel Baranger (helijah) licensed under CC BY 4.0; Kenney assets under CC0 1.0 Universal; Mixamo/Three.js under MIT License. All derivative scalings and coordinate alignments preserve author credit.

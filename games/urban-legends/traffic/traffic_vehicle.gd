@@ -2,6 +2,15 @@ class_name TrafficVehicle
 extends CharacterBody3D
 
 const UrbanConstants = preload("res://games/urban-legends/core/urban_constants.gd")
+const ModelCache = preload("res://shared/graphics/model_cache.gd")
+
+const TRAFFIC_MODELS: Array[String] = [
+	"res://assets/models/vehicles/car_sedan.glb",
+	"res://assets/models/vehicles/car_taxi.glb",
+	"res://assets/models/vehicles/car_police.glb",
+	"res://assets/models/vehicles/car_suv.glb",
+	"res://assets/models/vehicles/truck_yellow.glb"
+]
 
 ## AI-driven metropolitan traffic vehicle for Urban Legends.
 ## Features:
@@ -57,6 +66,59 @@ func _build_visuals() -> void:
 	var visual_root = Node3D.new()
 	visual_root.name = "Visuals"
 
+	var model_path = TRAFFIC_MODELS[randi() % TRAFFIC_MODELS.size()]
+	var car_model = ModelCache.get_model(model_path)
+	var has_glb = is_instance_valid(car_model)
+
+	visual_wheels.clear()
+
+	if has_glb:
+		car_model.name = "BodyModel"
+		car_model.scale = Vector3(1.3, 1.3, 1.3)
+		car_model.rotation.y = PI
+		car_model.position = Vector3(0.0, 0.05, 0.0)
+		visual_root.add_child(car_model)
+
+		var w_fl = car_model.find_child("wheel-front-left", true, false)
+		var w_fr = car_model.find_child("wheel-front-right", true, false)
+		var w_rl = car_model.find_child("wheel-back-left", true, false)
+		var w_rr = car_model.find_child("wheel-back-right", true, false)
+		if w_fl and w_fr and w_rl and w_rr:
+			visual_wheels = [w_fl, w_fr, w_rl, w_rr]
+		else:
+			_spawn_fallback_wheels(visual_root)
+	else:
+		_build_procedural_traffic_visual(visual_root)
+
+	add_child(visual_root)
+
+func _spawn_fallback_wheels(visual_root: Node3D) -> void:
+	var wheel_offsets = [
+		Vector3(-0.95, 0.35, -1.3),
+		Vector3(0.95, 0.35, -1.3),
+		Vector3(-0.95, 0.35, 1.3),
+		Vector3(0.95, 0.35, 1.3)
+	]
+	var tire_mat = StandardMaterial3D.new()
+	tire_mat.albedo_color = Color(0.12, 0.12, 0.12)
+	tire_mat.roughness = 0.85
+
+	for i in range(4):
+		var wheel_node = Node3D.new()
+		wheel_node.position = wheel_offsets[i]
+		var tire_mi = MeshInstance3D.new()
+		var cyl = CylinderMesh.new()
+		cyl.top_radius = 0.35
+		cyl.bottom_radius = 0.35
+		cyl.height = 0.28
+		tire_mi.mesh = cyl
+		tire_mi.material_override = tire_mat
+		tire_mi.rotation.z = PI * 0.5
+		wheel_node.add_child(tire_mi)
+		visual_root.add_child(wheel_node)
+		visual_wheels.append(wheel_node)
+
+func _build_procedural_traffic_visual(visual_root: Node3D) -> void:
 	var colors = [
 		Color(0.85, 0.85, 0.88), # Silver
 		Color(0.12, 0.12, 0.14), # Black
@@ -93,48 +155,7 @@ func _build_visuals() -> void:
 	cabin_mi.position = Vector3(0, 1.25, 0.15)
 	visual_root.add_child(cabin_mi)
 
-	# Headlights
-	for side in [-0.7, 0.7]:
-		var hl = MeshInstance3D.new()
-		var hl_mesh = BoxMesh.new()
-		hl_mesh.size = Vector3(0.35, 0.15, 0.1)
-		var hl_mat = StandardMaterial3D.new()
-		hl_mat.albedo_color = Color(1.0, 1.0, 0.9)
-		hl_mat.emission_enabled = true
-		hl_mat.emission = Color(1.0, 0.95, 0.8) * 2.0
-		hl.mesh = hl_mesh
-		hl.material_override = hl_mat
-		hl.position = Vector3(side, 0.75, -2.12)
-		visual_root.add_child(hl)
-
-	# 4 Wheels
-	var wheel_offsets = [
-		Vector3(-0.95, 0.35, -1.3),
-		Vector3(0.95, 0.35, -1.3),
-		Vector3(-0.95, 0.35, 1.3),
-		Vector3(0.95, 0.35, 1.3)
-	]
-	var tire_mat = StandardMaterial3D.new()
-	tire_mat.albedo_color = Color(0.12, 0.12, 0.12)
-	tire_mat.roughness = 0.85
-
-	visual_wheels.clear()
-	for i in range(4):
-		var wheel_node = Node3D.new()
-		wheel_node.position = wheel_offsets[i]
-
-		var tire_mi = MeshInstance3D.new()
-		var cyl = CylinderMesh.new()
-		cyl.top_radius = 0.35
-		cyl.bottom_radius = 0.35
-		cyl.height = 0.28
-		tire_mi.mesh = cyl
-		tire_mi.material_override = tire_mat
-		tire_mi.rotation.z = PI * 0.5
-		wheel_node.add_child(tire_mi)
-
-		visual_root.add_child(wheel_node)
-		visual_wheels.append(wheel_node)
+	_spawn_fallback_wheels(visual_root)
 
 	add_child(visual_root)
 
@@ -209,11 +230,6 @@ func _physics_process(delta: float) -> void:
 func reset_traffic_state(new_pos: Vector3, new_forward: Vector3) -> void:
 	current_speed = cruise_speed_ms * 0.5
 	velocity = new_forward * current_speed
-	if is_inside_tree():
-		global_position = new_pos
-		if new_forward.length_squared() > 0.001:
-			look_at(new_pos + new_forward, Vector3.UP)
-	else:
-		position = new_pos
-		if new_forward.length_squared() > 0.001:
-			look_at_from_position(new_pos, new_pos + new_forward, Vector3.UP)
+	position = new_pos
+	if new_forward.length_squared() > 0.001:
+		look_at_from_position(new_pos, new_pos + new_forward, Vector3.UP)

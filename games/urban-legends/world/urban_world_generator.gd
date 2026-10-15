@@ -90,6 +90,62 @@ func _build_ground_planes() -> void:
 	ocean_mi.position = Vector3(0, 0.2, -1350.0)
 	terrain_container.add_child(ocean_mi)
 
+	_build_perimeter_mountain_backdrop()
+
+func _build_perimeter_mountain_backdrop() -> void:
+	var mat_mountain = StandardMaterial3D.new()
+	mat_mountain.albedo_color = Color(0.26, 0.28, 0.24) # Pine green / granite rock
+	mat_mountain.roughness = 0.92
+
+	var mat_granite = StandardMaterial3D.new()
+	mat_granite.albedo_color = Color(0.38, 0.35, 0.32) # Rocky cliff face
+	mat_granite.roughness = 0.95
+
+	# North Mountain Wall (Z = -1150 to -1600)
+	for i in range(8):
+		var mx = -1000.0 + i * 280.0
+		var mz = -1250.0 - (i * 37 % 200)
+		var mh = 220.0 + (i * 53 % 140)
+		var mw = 360.0 + (i * 29 % 100)
+
+		var mi = MeshInstance3D.new()
+		var prism = PrismMesh.new()
+		prism.size = Vector3(mw, mh, 350.0)
+		mi.mesh = prism
+		mi.material_override = mat_mountain if i % 2 == 0 else mat_granite
+		mi.position = Vector3(mx, mh * 0.5 - 2.0, mz)
+		terrain_container.add_child(mi)
+
+	# East Mountain Ridge (X = 1150 to 1550)
+	for i in range(7):
+		var mx = 1250.0 + (i * 41 % 180)
+		var mz = -800.0 + i * 260.0
+		var mh = 190.0 + (i * 47 % 130)
+		var mw = 340.0 + (i * 31 % 90)
+
+		var mi = MeshInstance3D.new()
+		var prism = PrismMesh.new()
+		prism.size = Vector3(320.0, mh, mw)
+		mi.mesh = prism
+		mi.material_override = mat_mountain
+		mi.position = Vector3(mx, mh * 0.5 - 2.0, mz)
+		terrain_container.add_child(mi)
+
+	# West Horizon Hills (X = -1150 to -1550)
+	for i in range(7):
+		var mx = -1250.0 - (i * 43 % 160)
+		var mz = -800.0 + i * 260.0
+		var mh = 180.0 + (i * 39 % 120)
+		var mw = 330.0 + (i * 23 % 90)
+
+		var mi = MeshInstance3D.new()
+		var prism = PrismMesh.new()
+		prism.size = Vector3(320.0, mh, mw)
+		mi.mesh = prism
+		mi.material_override = mat_mountain if i % 2 == 0 else mat_granite
+		mi.position = Vector3(mx, mh * 0.5 - 2.0, mz)
+		terrain_container.add_child(mi)
+
 func _build_road_meshes() -> void:
 	for seg in road_network.get_road_segments():
 		var st: Vector3 = seg["start"]
@@ -163,6 +219,60 @@ func _build_road_meshes() -> void:
 					up_vec = Vector3.RIGHT
 				stripe_mi.look_at_from_position(stripe_mi.position, stripe_mi.position + dir, up_vec)
 			roads_container.add_child(stripe_mi)
+
+			# Raised Concrete Sidewalks and White Road Edge Markings
+			var white_mat = StandardMaterial3D.new()
+			white_mat.albedo_color = Color(0.90, 0.92, 0.95)
+			white_mat.roughness = 0.55
+
+			var sw_mat = StandardMaterial3D.new()
+			sw_mat.albedo_color = Color(0.68, 0.67, 0.65) # Concrete pavement
+			sw_mat.roughness = 0.85
+
+			var right_dir = dir.cross(Vector3.UP).normalized()
+			if right_dir.length_squared() > 0.01:
+				var sw_w = 2.4
+				for side in [-1.0, 1.0]:
+					# White Edge Striping
+					var edge_mi = MeshInstance3D.new()
+					var edge_box = BoxMesh.new()
+					edge_box.size = Vector3(0.18, 0.02, dist)
+					edge_mi.mesh = edge_box
+					edge_mi.material_override = white_mat
+					edge_mi.position = center + right_dir * (side * (w * 0.5 - 0.22)) + Vector3(0.0, 0.14, 0.0)
+					if dir.length_squared() > 0.001:
+						var up_vec = Vector3.UP
+						if absf(dir.dot(up_vec)) > 0.9:
+							up_vec = Vector3.RIGHT
+						edge_mi.look_at_from_position(edge_mi.position, edge_mi.position + dir, up_vec)
+					roads_container.add_child(edge_mi)
+
+					# Pedestrian Sidewalk & Raised Curb
+					var sw_mi = MeshInstance3D.new()
+					var sw_box = BoxMesh.new()
+					sw_box.size = Vector3(sw_w, 0.28, dist)
+					sw_mi.mesh = sw_box
+					sw_mi.material_override = sw_mat
+					sw_mi.position = center + right_dir * (side * (w * 0.5 + sw_w * 0.5)) + Vector3(0.0, 0.02, 0.0)
+					if dir.length_squared() > 0.001:
+						var up_vec = Vector3.UP
+						if absf(dir.dot(up_vec)) > 0.9:
+							up_vec = Vector3.RIGHT
+						sw_mi.look_at_from_position(sw_mi.position, sw_mi.position + dir, up_vec)
+					roads_container.add_child(sw_mi)
+
+				# Streetlights along ground boulevards (every 65m)
+				if center.y < 8.0 and dist >= 60.0:
+					var lamp_spacing = 65.0
+					var num_lamps = int(dist / lamp_spacing)
+					for l in range(num_lamps):
+						var t = (float(l) + 0.5) / float(num_lamps)
+						var lamp_center = st.lerp(en, t)
+						var lamp_side = 1.0 if l % 2 == 0 else -1.0
+						var lamp_pos = lamp_center + right_dir * (lamp_side * (w * 0.5 + 1.8))
+						var lamp = UrbanPropFactory.build_street_lamp(6.8)
+						lamp.position = lamp_pos
+						props_container.add_child(lamp)
 
 		# If elevated viaduct (Harborfly Freeway Y > 10m), spawn viaduct support pillars
 		if st.y > 10.0 and en.y > 10.0:

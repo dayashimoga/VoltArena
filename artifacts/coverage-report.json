@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 90.9801136363636,
+  "overall_coverage_pct": 90.9155429382541,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -322,11 +322,12 @@
       "untested": []
     },
     "res://games/aircraft-flight/ui/hangar_menu.gd": {
-      "coverage_pct": 50,
+      "coverage_pct": 33.3333333333333,
       "tested": 1,
-      "total": 2,
+      "total": 3,
       "untested": [
-        "_physics_process"
+        "_physics_process",
+        "_unhandled_input"
       ]
     },
     "res://games/aircraft-flight/worlds/city_flight_world.gd": {
@@ -1561,6 +1562,6 @@
     }
   },
   "tested_functions": 1281,
-  "timestamp": "2026-10-15T12:51:09",
-  "total_functions": 1408
+  "timestamp": "2026-10-15T15:25:49",
+  "total_functions": 1409
 }

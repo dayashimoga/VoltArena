@@ -1691,10 +1691,37 @@
   - `IMPLEMENTATION_WALKTHROUGH.md` (Section 25)
   - `CHANGELOG.md` (Release 14.0.0 Remediation)
 
-
-
-
-
-
-
+### [2026-10-15 15:30:00 UTC] - Milestone Update: VoltArena v14.1.0 Authentic 3D Fleet, Metropolis & World Reconstruction Overhaul
+- **Status**: COMPLETED
+- **Description**:
+  1. **Phase P0 (Controls, Playability & Diagnostics)**:
+     - Fixed Urban Legends vehicle HP=0 destruction state with wreckage visual, wreck timer, and safe respawn recovery at checkpoint.
+     - Fixed Apex Flight false "CEILING EXCEEDED" warning by evaluating true radar altitude AGL rather than sea level altitude.
+     - Replaced non-tree `look_at` calls in `traffic_vehicle.gd` with safe `look_at_from_position`.
+  2. **Phase P1 & P2 (Authentic 3D Fleet & Traffic)**:
+     - Integrated authentic licensed 3D GLB models for all 5 aircraft: F/A-18C Hornet (`aircraft_fighter.glb`), F-22A Raptor (`aircraft_f22.glb`), A320 Airliner (`aircraft_a320.glb`), Extra 330 (`aircraft_propeller.glb`), and UH-60/AW101 (`aircraft_helicopter.glb`).
+     - Added transparent runtime `GLTFDocument.append_from_file()` fallback to `ModelCache` (`shared/graphics/model_cache.gd`) for headless and standalone environments.
+     - Bound authentic CC0 GLTF car models and alloy wheels in `urban_vehicle_visuals.gd`.
+     - Integrated authentic civilian GLB traffic cars (`car_sedan.glb`, `car_taxi.glb`, `car_police.glb`, `car_suv.glb`, `truck_yellow.glb`) in `traffic_vehicle.gd`.
+  3. **Phase P3 (World & Atmosphere Overhaul)**:
+     - Replaced Apex Flight cone mountains with multi-tiered natural PrismMesh alpine massifs, granite cliffs, pine foothills, and snowcapped summits.
+     - Replaced stacked disc clouds with 18 volumetric cumulus formations with flat condensation bases and billowing domes.
+     - Integrated `ProceduralSkyMaterial` with Rayleigh scattering and calibrated ACES sun lighting in `flight_world_manager.gd`.
+     - Resolved 20x model underscaling bug in `urban_prop_factory.gd`; GLB skyscrapers and commercial buildings now scale to true world meters (24m-30m base, 60m-115m height).
+     - Added raised concrete sidewalks, curbs, white road shoulder lines, and streetlights every 65m across all asphalt roads in `urban_world_generator.gd`.
+     - Added perimeter mountain backdrop framing the metropolis horizon and enabled soft exponential fog in `urban_weather_system.gd`.
+  4. **Phase P4 (Hangar Showroom & UX)**:
+     - Added overhead industrial steel roof trusses, cross-struts, side structural columns, and recessed floor guide lighting in `hangar_menu.gd`.
+     - Added interactive click-and-drag mouse orbit controls for manual 360° inspection on the showroom turntable.
+  5. **Phase P5 & P6 (Automated Testing & Full Suite Regression)**:
+     - Monorepo automated test runner: **93 / 93 test suites passed (100% pass rate)**.
+     - Total assertions: **3,681 passed, 0 failed**.
+     - Function coverage: **90.9%** (1,281 / 1,409 tested functions across all engine and game modules, exceeding $\ge 90.0\%$).
+     - Zero regressions across the remaining 10 games in the suite.
+- **Evidence**:
+  - `artifacts/test-results.json` (93 suites, 3,681 passed, 0 failed, 100% pass rate)
+  - `artifacts/coverage-report.json` (90.9% function coverage)
+  - `IMPLEMENTATION_PLAN.md` (100% Completed, all P0-P7 gates passed)
+  - `CHANGELOG.md` (Release 14.1.0 Overhaul)
+  - `assets/LICENSES.md` (Updated with complete aircraft & vehicle provenance)
 

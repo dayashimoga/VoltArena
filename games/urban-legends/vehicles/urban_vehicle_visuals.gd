@@ -147,31 +147,17 @@ static func build_vehicle_visual(vehicle_node: Node3D, vehicle_id: String, paint
 
 	# 6. 4 Articulated Wheels with Precision Alloy Rims & Rubber Tires
 	var wheel_nodes: Array[Node3D] = []
-	var wheel_offsets = [
-		Vector3(-dims.x * 0.48, 0.36, -dims.z * 0.32), # FL
-		Vector3(dims.x * 0.48, 0.36, -dims.z * 0.32),  # FR
-		Vector3(-dims.x * 0.48, 0.36, dims.z * 0.32),   # RL
-		Vector3(dims.x * 0.48, 0.36, dims.z * 0.32)    # RR
-	]
-
-	for i in range(4):
-		var wheel_holder = Node3D.new()
-		wheel_holder.name = "WheelHolder_%d" % i
-		wheel_holder.position = wheel_offsets[i]
-		vehicle_node.add_child(wheel_holder)
-
-		var wheel_model = ModelCache.get_model(WHEEL_GLB_PATH)
-		if wheel_model:
-			wheel_model.name = "WheelMesh"
-			wheel_model.scale = Vector3(1.32, 1.32, 1.32)
-			# Left wheels face outward, right wheels mirror
-			if i % 2 == 1:
-				wheel_model.rotation.y = PI
-			wheel_holder.add_child(wheel_model)
+	if has_glb:
+		var w_fl = raw_model.find_child("wheel-front-left", true, false)
+		var w_fr = raw_model.find_child("wheel-front-right", true, false)
+		var w_rl = raw_model.find_child("wheel-back-left", true, false)
+		var w_rr = raw_model.find_child("wheel-back-right", true, false)
+		if w_fl and w_fr and w_rl and w_rr:
+			wheel_nodes = [w_fl, w_fr, w_rl, w_rr]
 		else:
-			_build_procedural_wheel(wheel_holder, chrome_mat)
-
-		wheel_nodes.append(wheel_holder)
+			wheel_nodes = _spawn_wheel_holders(vehicle_node, dims, chrome_mat)
+	else:
+		wheel_nodes = _spawn_wheel_holders(vehicle_node, dims, chrome_mat)
 
 	# 7. Bind references directly to vehicle_node for real-time physics updates
 	if "chassis_node" in vehicle_node:
@@ -195,6 +181,23 @@ static func _apply_paint_to_nodes(node: Node, mat: Material) -> void:
 			mi.material_override = mat
 	for child in node.get_children():
 		_apply_paint_to_nodes(child, mat)
+
+static func _spawn_wheel_holders(parent: Node3D, dims: Vector3, rim_mat: Material) -> Array[Node3D]:
+	var wheel_offsets = [
+		Vector3(-dims.x * 0.48, UrbanConstants.TIRE_RADIUS, -dims.z * 0.32),
+		Vector3(dims.x * 0.48, UrbanConstants.TIRE_RADIUS, -dims.z * 0.32),
+		Vector3(-dims.x * 0.48, UrbanConstants.TIRE_RADIUS, dims.z * 0.32),
+		Vector3(dims.x * 0.48, UrbanConstants.TIRE_RADIUS, dims.z * 0.32)
+	]
+	var wheel_nodes: Array[Node3D] = []
+	for i in range(4):
+		var wh = Node3D.new()
+		wh.name = "WheelHolder_%d" % i
+		wh.position = wheel_offsets[i]
+		_build_procedural_wheel(wh, rim_mat)
+		parent.add_child(wh)
+		wheel_nodes.append(wh)
+	return wheel_nodes
 
 static func _build_procedural_wheel(parent: Node3D, rim_mat: Material) -> void:
 	var tire_mat = StandardMaterial3D.new()

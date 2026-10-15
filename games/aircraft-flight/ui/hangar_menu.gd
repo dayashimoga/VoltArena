@@ -39,9 +39,23 @@ func _ready() -> void:
 	_update_selected_aircraft(selected_aircraft_id)
 	_update_selected_mission(selected_mission_id)
 
+var is_dragging: bool = false
+var last_mouse_x: float = 0.0
+
 func _physics_process(delta: float) -> void:
-	if is_instance_valid(turntable_root):
-		turntable_root.rotate_y(delta * 0.45)
+	if is_instance_valid(turntable_root) and not is_dragging:
+		turntable_root.rotate_y(delta * 0.35)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			is_dragging = event.pressed
+			last_mouse_x = event.position.x
+	elif event is InputEventMouseMotion and is_dragging:
+		var dx = event.position.x - last_mouse_x
+		last_mouse_x = event.position.x
+		if is_instance_valid(turntable_root):
+			turntable_root.rotate_y(dx * 0.008)
 
 func _build_hangar_ui() -> void:
 	root_control = Control.new()
@@ -257,7 +271,7 @@ func _build_turntable_viewport() -> void:
 	floor_mesh.position = Vector3(0, -0.2, 0)
 	preview_viewport.add_child(floor_mesh)
 
-	# Hangar Rear Wall with Architectural Ribbed Panels
+	# Hangar Rear Wall with Architectural Ribbed Panels & Columns
 	var wall_mesh = MeshInstance3D.new()
 	var w_box = BoxMesh.new()
 	w_box.size = Vector3(45.0, 20.0, 0.8)
@@ -268,6 +282,45 @@ func _build_turntable_viewport() -> void:
 	wall_mesh.material_override = w_mat
 	wall_mesh.position = Vector3(0, 10.0, -14.0)
 	preview_viewport.add_child(wall_mesh)
+
+	# Structural Side Columns (Left & Right)
+	var col_mat = StandardMaterial3D.new()
+	col_mat.albedo_color = Color(0.18, 0.21, 0.26)
+	col_mat.metallic = 0.6
+	col_mat.roughness = 0.4
+	for cx in [-18.0, 18.0]:
+		for cz in [-12.0, -4.0, 4.0]:
+			var col = MeshInstance3D.new()
+			var col_box = BoxMesh.new()
+			col_box.size = Vector3(1.2, 18.0, 1.2)
+			col.mesh = col_box
+			col.material_override = col_mat
+			col.position = Vector3(cx, 9.0, cz)
+			preview_viewport.add_child(col)
+
+	# Overhead Industrial Steel Roof Trusses
+	var truss_mat = StandardMaterial3D.new()
+	truss_mat.albedo_color = Color(0.25, 0.28, 0.32)
+	truss_mat.metallic = 0.85
+	truss_mat.roughness = 0.35
+	for tz in [-10.0, -3.0, 4.0]:
+		var truss_beam = MeshInstance3D.new()
+		var beam_box = BoxMesh.new()
+		beam_box.size = Vector3(38.0, 0.8, 0.8)
+		truss_beam.mesh = beam_box
+		truss_beam.material_override = truss_mat
+		truss_beam.position = Vector3(0, 14.0, tz)
+		preview_viewport.add_child(truss_beam)
+
+		# Cross struts
+		for sx in [-12.0, 0.0, 12.0]:
+			var strut = MeshInstance3D.new()
+			var s_box = BoxMesh.new()
+			s_box.size = Vector3(0.4, 3.0, 0.4)
+			strut.mesh = s_box
+			strut.material_override = truss_mat
+			strut.position = Vector3(sx, 12.5, tz)
+			preview_viewport.add_child(strut)
 
 	# Hangar Wall Accent Stripes & LED strip
 	var strip_mesh = MeshInstance3D.new()
@@ -282,6 +335,24 @@ func _build_turntable_viewport() -> void:
 	strip_mesh.material_override = s_mat
 	strip_mesh.position = Vector3(0, 6.0, -13.5)
 	preview_viewport.add_child(strip_mesh)
+
+	# Floor Guide Run Lights
+	var guide_mat = StandardMaterial3D.new()
+	guide_mat.albedo_color = Color(0.2, 0.8, 1.0)
+	guide_mat.emission_enabled = true
+	guide_mat.emission = Color(0.2, 0.8, 1.0)
+	guide_mat.emission_energy_multiplier = 2.5
+	for gz in [-10.0, -6.0, -2.0, 2.0, 6.0]:
+		for gx in [-6.5, 6.5]:
+			var gl = MeshInstance3D.new()
+			var g_cyl = CylinderMesh.new()
+			g_cyl.top_radius = 0.08
+			g_cyl.bottom_radius = 0.08
+			g_cyl.height = 0.05
+			gl.mesh = g_cyl
+			gl.material_override = guide_mat
+			gl.position = Vector3(gx, 0.02, gz)
+			preview_viewport.add_child(gl)
 
 	# Pedestal Turntable Base
 	var base_mesh = MeshInstance3D.new()

@@ -491,11 +491,22 @@ func _update_transmission(_delta: float) -> void:
 	var rpm_norm = clampf(engine_rpm / 8000.0, 0.1, 1.0)
 	speed_changed.emit(speed_kmh, current_gear, rpm_norm)
 
+var wreck_timer: float = 0.0
+
 func _check_recovery_conditions(delta: float) -> void:
-	var up_dot = (global_basis if is_inside_tree() else transform.basis).y.dot(Vector3.UP)
+	# Automatic recovery when wrecked
+	if is_wrecked:
+		wreck_timer += delta
+		if wreck_timer >= 2.5:
+			repair(100.0)
+			recover_vehicle()
+			wreck_timer = 0.0
+		return
+
+	# Automatic flip recovery when upside down on the ground
 	var curr_y = (global_position if is_inside_tree() else position).y
-	# Check if upside down
-	if up_dot < 0.2:
+	var up_dot = (global_basis if is_inside_tree() else transform.basis).y.dot(Vector3.UP)
+	if up_dot < 0.2 and grounded_wheel_count >= 1:
 		upside_down_timer += delta
 		if upside_down_timer > 2.0:
 			recover_vehicle()

@@ -32,6 +32,16 @@ static func _load_glb(path: String) -> Node3D:
 			if inst is Node3D:
 				return inst
 
+	# Fallback to runtime GLTFDocument parser with res:// path
+	if FileAccess.file_exists(path) or ResourceLoader.exists(path):
+		var doc = GLTFDocument.new()
+		var state = GLTFState.new()
+		var err = doc.append_from_file(path, state)
+		if err == OK:
+			var root = doc.generate_scene(state)
+			if root is Node3D:
+				return root
+
 	# Fallback to runtime GLTFDocument parser with globalized path
 	var global_path = ProjectSettings.globalize_path(path)
 	if FileAccess.file_exists(global_path):

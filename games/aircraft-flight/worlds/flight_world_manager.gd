@@ -99,22 +99,36 @@ func setup_lighting_and_atmosphere() -> void:
 		sun_light = DirectionalLight3D.new()
 		sun_light.name = "SunLight"
 		sun_light.shadow_enabled = true
-		sun_light.directional_shadow_max_distance = 600.0
+		sun_light.directional_shadow_max_distance = 1200.0
+		sun_light.light_color = Color(1.0, 0.96, 0.90)
+		sun_light.light_energy = 2.2
+		sun_light.rotation_degrees = Vector3(-35.0, -45.0, 0.0)
 		add_child(sun_light)
 
 	if not world_environment:
 		world_environment = WorldEnvironment.new()
 		world_environment.name = "WorldEnv"
 		var env = Environment.new()
-		env.background_mode = Environment.BG_COLOR
-		env.background_color = Color(0.52, 0.68, 0.85)
-		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-		env.ambient_light_color = Color(0.35, 0.40, 0.48)
+		var sky = Sky.new()
+		var sky_mat = ProceduralSkyMaterial.new()
+		sky_mat.sky_top_color = Color(0.20, 0.44, 0.82)
+		sky_mat.sky_horizon_color = Color(0.65, 0.76, 0.88)
+		sky_mat.ground_bottom_color = Color(0.12, 0.15, 0.18)
+		sky_mat.ground_horizon_color = Color(0.55, 0.65, 0.74)
+		sky_mat.sun_angle_max = 30.0
+		sky_mat.sun_curve = 0.15
+		sky.sky_material = sky_mat
+
+		env.background_mode = Environment.BG_SKY
+		env.sky = sky
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+		env.ambient_light_color = Color(0.40, 0.45, 0.52)
+		env.ambient_light_sky_contribution = 0.75
 		env.tonemap_mode = Environment.TONE_MAPPER_ACES
 		env.fog_enabled = true
 		env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
-		env.fog_light_color = Color(0.75, 0.82, 0.90)
-		env.fog_density = 0.00008
+		env.fog_light_color = Color(0.72, 0.80, 0.90)
+		env.fog_density = 0.00005
 		world_environment.environment = env
 		add_child(world_environment)
 

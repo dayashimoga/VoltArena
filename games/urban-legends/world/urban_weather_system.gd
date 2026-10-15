@@ -82,7 +82,11 @@ func _setup_environment() -> void:
 
 		env.tonemap_mode = Environment.TONE_MAPPER_ACES
 		env.tonemap_exposure = 1.0
-		env.glow_enabled = false # Disabled in compatibility renderer to prevent bloom clipping
+		env.glow_enabled = false
+		env.fog_enabled = true
+		env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
+		env.fog_density = 0.00035
+		env.fog_light_color = Color(0.70, 0.75, 0.82)
 		world_environment.environment = env
 		add_child(world_environment)
 
@@ -148,6 +152,7 @@ func _update_lighting_for_time() -> void:
 				sky_mat.ground_horizon_color = horiz_c * 0.55
 			env.ambient_light_color = horiz_c * 0.75
 			env.ambient_light_energy = lerpf(0.95, 0.70, t_s)
+			env.fog_light_color = horiz_c * 0.85
 		elif not is_daytime:
 			# Neon Night Palette
 			if sky_mat:
@@ -156,6 +161,7 @@ func _update_lighting_for_time() -> void:
 				sky_mat.ground_horizon_color = Color(0.06, 0.08, 0.15)
 			env.ambient_light_color = Color(0.25, 0.30, 0.42)
 			env.ambient_light_energy = 0.55
+			env.fog_light_color = Color(0.08, 0.12, 0.22)
 		else:
 			# Clear Day Palette
 			if sky_mat:
@@ -164,6 +170,7 @@ func _update_lighting_for_time() -> void:
 				sky_mat.ground_horizon_color = Color(0.38, 0.42, 0.46)
 			env.ambient_light_color = Color(0.48, 0.52, 0.58)
 			env.ambient_light_energy = 0.95
+			env.fog_light_color = Color(0.70, 0.78, 0.88)
 
 func apply_preset(preset_name: String) -> void:
 	if not is_instance_valid(sun_light):

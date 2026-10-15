@@ -52,10 +52,10 @@ static func build_skyscraper(height: float = 75.0, width: float = 24.0, depth: f
 
 	if is_instance_valid(model):
 		model.name = "SkyscraperMesh"
-		# Typical unscaled asset is ~20m base and ~65m high
-		var sx = width / 20.0
-		var sy = height / 65.0
-		var sz = depth / 20.0
+		# Asset base size is ~1.36m x 2.88m x 1.36m
+		var sx = width / 1.36
+		var sy = height / 2.88
+		var sz = depth / 1.36
 		model.scale = Vector3(sx, sy, sz)
 		root.add_child(model)
 	else:
@@ -104,7 +104,7 @@ static func build_commercial_block(height: float = 35.0, width: float = 20.0, de
 
 	if is_instance_valid(model):
 		model.name = "CommercialMesh"
-		model.scale = Vector3(width / 18.0, height / 30.0, depth / 18.0)
+		model.scale = Vector3(width / 0.90, height / 1.30, depth / 0.95)
 		root.add_child(model)
 	else:
 		var mi = MeshInstance3D.new()
@@ -251,7 +251,8 @@ static func build_tree(height: float = 9.0) -> Node3D:
 
 	if is_instance_valid(model):
 		model.name = "TreeMesh"
-		model.scale = Vector3(height / 8.0, height / 8.0, height / 8.0)
+		var s = height / 1.33
+		model.scale = Vector3(s, s, s)
 		root.add_child(model)
 	else:
 		# Procedural tree fallback
@@ -303,7 +304,8 @@ static func build_street_lamp(height: float = 6.8) -> Node3D:
 	var model = ModelCache.get_model(LIGHTPOST_GLB)
 	if is_instance_valid(model):
 		model.name = "LightpostMesh"
-		model.scale = Vector3(1.1, 1.1, 1.1)
+		var s = height / 0.55
+		model.scale = Vector3(s, s, s)
 		root.add_child(model)
 	else:
 		# Procedural lamp

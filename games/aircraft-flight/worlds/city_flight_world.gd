@@ -291,83 +291,217 @@ func _build_harbor_and_docks() -> void:
 
 func _build_mountain_backdrop() -> void:
 	var mat_rock = StandardMaterial3D.new()
-	mat_rock.albedo_color = Color(0.30, 0.28, 0.26)
+	mat_rock.albedo_color = Color(0.24, 0.22, 0.21) # Dark granite cliff
 	mat_rock.roughness = 0.95
 
 	var mat_snow = StandardMaterial3D.new()
-	mat_snow.albedo_color = Color(0.92, 0.94, 0.98)
-	mat_snow.roughness = 0.85
+	mat_snow.albedo_color = Color(0.94, 0.96, 0.99) # Alpine glacial snowcap
+	mat_snow.roughness = 0.70
 
-	# Mountain Ridgeline peaks on north border (Z = -4500m to -5500m)
-	for m in range(12):
-		var mx = -4000.0 + m * 750.0
-		var mz = -4800.0 + (m * 41 % 800)
-		var m_height = 1400.0 + (m * 73 % 900)
-		var m_base = 700.0 + (m * 17 % 250)
+	var mat_foothill = StandardMaterial3D.new()
+	mat_foothill.albedo_color = Color(0.12, 0.18, 0.13) # Evergreen alpine pine forest
+	mat_foothill.roughness = 0.95
 
-		# Mountain base
-		var peak_sb = StaticBody3D.new()
-		var col = CollisionShape3D.new()
-		var cyl_shape = CylinderShape3D.new()
-		cyl_shape.height = m_height
-		cyl_shape.radius = m_base * 0.5
-		col.shape = cyl_shape
-		peak_sb.add_child(col)
+	var mountain_root = Node3D.new()
+	mountain_root.name = "AlpineMountains"
+	add_child(mountain_root)
 
+	# 1. Distant High Alpine Massifs (Z = -5500 to -7000)
+	var main_peaks = [
+		{"pos": Vector3(-4500.0, 0.0, -6200.0), "size": Vector3(2800.0, 2400.0, 1800.0), "rot": -12.0},
+		{"pos": Vector3(-2500.0, 0.0, -5800.0), "size": Vector3(3200.0, 2750.0, 2100.0), "rot": 8.0},
+		{"pos": Vector3(-400.0, 0.0, -6400.0), "size": Vector3(3400.0, 2900.0, 2200.0), "rot": -5.0},
+		{"pos": Vector3(1800.0, 0.0, -5900.0), "size": Vector3(3000.0, 2600.0, 1900.0), "rot": 14.0},
+		{"pos": Vector3(3800.0, 0.0, -6300.0), "size": Vector3(2900.0, 2500.0, 1850.0), "rot": -18.0},
+		{"pos": Vector3(5600.0, 0.0, -6600.0), "size": Vector3(3100.0, 2300.0, 1950.0), "rot": 10.0},
+	]
+
+	for p in main_peaks:
+		var pos: Vector3 = p["pos"]
+		var sz: Vector3 = p["size"]
+		var rot: float = p["rot"]
+
+		var sb = StaticBody3D.new()
+		sb.position = pos
+		sb.rotation_degrees.y = rot
+		mountain_root.add_child(sb)
+
+		# Mountain body with realistic triangular ridgeline cross-section
+		var prism = PrismMesh.new()
+		prism.size = sz
 		var mi = MeshInstance3D.new()
-		var cyl_mesh = CylinderMesh.new()
-		cyl_mesh.top_radius = 20.0
-		cyl_mesh.bottom_radius = m_base
-		cyl_mesh.height = m_height
-		mi.mesh = cyl_mesh
+		mi.mesh = prism
 		mi.material_override = mat_rock
-		peak_sb.add_child(mi)
+		mi.position = Vector3(0.0, sz.y * 0.5, 0.0)
+		sb.add_child(mi)
 
-		# Snowcap top
-		var cap_mesh = MeshInstance3D.new()
-		var cap = CylinderMesh.new()
-		cap.top_radius = 5.0
-		cap.bottom_radius = m_base * 0.35
-		cap.height = m_height * 0.30
-		cap_mesh.mesh = cap
-		cap_mesh.position = Vector3(0.0, m_height * 0.35, 0.0)
-		cap_mesh.material_override = mat_snow
-		peak_sb.add_child(cap_mesh)
+		# Glacial Snowcap Crest
+		var snow_prism = PrismMesh.new()
+		snow_prism.size = Vector3(sz.x * 0.62, sz.y * 0.42, sz.z * 0.62)
+		var snow_mi = MeshInstance3D.new()
+		snow_mi.mesh = snow_prism
+		snow_mi.material_override = mat_snow
+		snow_mi.position = Vector3(0.0, sz.y * 0.79, 0.0)
+		sb.add_child(snow_mi)
 
-		peak_sb.position = Vector3(mx, m_height * 0.5, mz)
-		add_child(peak_sb)
+		# Static collision
+		var col = CollisionShape3D.new()
+		var box_col = BoxShape3D.new()
+		box_col.size = Vector3(sz.x * 0.8, sz.y, sz.z * 0.8)
+		col.shape = box_col
+		col.position = Vector3(0.0, sz.y * 0.5, 0.0)
+		sb.add_child(col)
+
+	# 2. Interlocking Mid-Range Ridgelines (Z = -4200 to -5200)
+	var mid_ridges = [
+		{"pos": Vector3(-5200.0, 0.0, -4800.0), "size": Vector3(2200.0, 1600.0, 1400.0), "rot": 22.0},
+		{"pos": Vector3(-3400.0, 0.0, -4600.0), "size": Vector3(2400.0, 1750.0, 1500.0), "rot": -15.0},
+		{"pos": Vector3(-1400.0, 0.0, -4900.0), "size": Vector3(2600.0, 1850.0, 1600.0), "rot": 11.0},
+		{"pos": Vector3(800.0, 0.0, -4500.0), "size": Vector3(2500.0, 1700.0, 1450.0), "rot": -8.0},
+		{"pos": Vector3(2900.0, 0.0, -4700.0), "size": Vector3(2300.0, 1650.0, 1500.0), "rot": 19.0},
+		{"pos": Vector3(4700.0, 0.0, -5000.0), "size": Vector3(2400.0, 1550.0, 1400.0), "rot": -12.0},
+	]
+
+	for r in mid_ridges:
+		var pos: Vector3 = r["pos"]
+		var sz: Vector3 = r["size"]
+		var rot: float = r["rot"]
+
+		var sb = StaticBody3D.new()
+		sb.position = pos
+		sb.rotation_degrees.y = rot
+		mountain_root.add_child(sb)
+
+		var prism = PrismMesh.new()
+		prism.size = sz
+		var mi = MeshInstance3D.new()
+		mi.mesh = prism
+		mi.material_override = mat_rock
+		mi.position = Vector3(0.0, sz.y * 0.5, 0.0)
+		sb.add_child(mi)
+
+		# Light dusting of snow on mid-range crests
+		var snow_prism = PrismMesh.new()
+		snow_prism.size = Vector3(sz.x * 0.45, sz.y * 0.28, sz.z * 0.45)
+		var snow_mi = MeshInstance3D.new()
+		snow_mi.mesh = snow_prism
+		snow_mi.material_override = mat_snow
+		snow_mi.position = Vector3(0.0, sz.y * 0.86, 0.0)
+		sb.add_child(snow_mi)
+
+	# 3. Layered Evergreen Foothills (Z = -3200 to -3900)
+	for f in range(10):
+		var fx = -5000.0 + f * 1100.0
+		var fz = -3500.0 - (f * 37 % 500)
+		var fh = 650.0 + (f * 53 % 350)
+		var fw = 1400.0 + (f * 29 % 400)
+		var fd = 1100.0 + (f * 19 % 300)
+
+		var sb = StaticBody3D.new()
+		sb.position = Vector3(fx, 0.0, fz)
+		sb.rotation_degrees.y = float((f * 23) % 40 - 20)
+		mountain_root.add_child(sb)
+
+		var prism = PrismMesh.new()
+		prism.size = Vector3(fw, fh, fd)
+		var mi = MeshInstance3D.new()
+		mi.mesh = prism
+		mi.material_override = mat_foothill
+		mi.position = Vector3(0.0, fh * 0.5, 0.0)
+		sb.add_child(mi)
+
+	# 4. Flanking Mountain Walls on West & East Horizons
+	for flank in [-1, 1]:
+		for step in range(4):
+			var px = flank * (6200.0 + step * 400.0)
+			var pz = -3000.0 + step * 1800.0
+			var ph = 1400.0 + (step * 47 % 500)
+			var sb = StaticBody3D.new()
+			sb.position = Vector3(px, 0.0, pz)
+			sb.rotation_degrees.y = 90.0 if flank < 0 else -90.0
+			mountain_root.add_child(sb)
+
+			var prism = PrismMesh.new()
+			prism.size = Vector3(2200.0, ph, 1600.0)
+			var mi = MeshInstance3D.new()
+			mi.mesh = prism
+			mi.material_override = mat_rock
+			mi.position = Vector3(0.0, ph * 0.5, 0.0)
+			sb.add_child(mi)
 
 func _build_clouds() -> void:
 	var mat_cloud = StandardMaterial3D.new()
-	mat_cloud.albedo_color = Color(0.95, 0.96, 0.98, 0.75)
-	mat_cloud.roughness = 0.95
+	mat_cloud.albedo_color = Color(0.97, 0.98, 1.0, 0.85)
+	mat_cloud.roughness = 0.92
 	mat_cloud.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat_cloud.cull_mode = BaseMaterial3D.CULL_DISABLED
 
 	var cloud_root = Node3D.new()
 	cloud_root.name = "CumulusClouds"
 	add_child(cloud_root)
 
-	# 14 Scattered Cloud Clusters at Altitude 1200m - 1600m
-	for c in range(14):
-		var cx = -3500.0 + c * 550.0
-		var cz = -3000.0 + ((c * 67) % 5500)
-		var cy = 1300.0 + ((c * 31) % 400)
+	# 18 Organic Cumulus Formations at Stratified Flight Altitudes (1400m - 2800m)
+	var cloud_configs = [
+		{"pos": Vector3(-4200.0, 1650.0, -3200.0), "scale": 1.4},
+		{"pos": Vector3(-2800.0, 1850.0, -1800.0), "scale": 1.2},
+		{"pos": Vector3(-1200.0, 2200.0, -4200.0), "scale": 1.6},
+		{"pos": Vector3(600.0, 1950.0, -2800.0), "scale": 1.3},
+		{"pos": Vector3(2400.0, 1750.0, -3600.0), "scale": 1.5},
+		{"pos": Vector3(4200.0, 2100.0, -2200.0), "scale": 1.2},
+		{"pos": Vector3(-3600.0, 1500.0, -600.0), "scale": 1.1},
+		{"pos": Vector3(-1800.0, 1900.0, 800.0), "scale": 1.3},
+		{"pos": Vector3(400.0, 2300.0, 1400.0), "scale": 1.4},
+		{"pos": Vector3(2800.0, 1800.0, 600.0), "scale": 1.2},
+		{"pos": Vector3(-4800.0, 2400.0, 1800.0), "scale": 1.5},
+		{"pos": Vector3(-2400.0, 2600.0, 3200.0), "scale": 1.7},
+		{"pos": Vector3(1200.0, 2500.0, 2800.0), "scale": 1.6},
+		{"pos": Vector3(3600.0, 2350.0, 2400.0), "scale": 1.3},
+		{"pos": Vector3(-800.0, 1600.0, -1200.0), "scale": 1.0},
+		{"pos": Vector3(1600.0, 1700.0, -1400.0), "scale": 1.1},
+		{"pos": Vector3(-3200.0, 2250.0, -4800.0), "scale": 1.8},
+		{"pos": Vector3(2200.0, 2450.0, -5000.0), "scale": 1.7},
+	]
 
+	for cfg in cloud_configs:
 		var cluster = Node3D.new()
-		cluster.position = Vector3(cx, cy, cz)
+		cluster.position = cfg["pos"]
+		var s: float = cfg["scale"]
 		cloud_root.add_child(cluster)
 
-		# 5 overlapping soft puffs per cloud cluster
-		for p in range(5):
-			var puff = MeshInstance3D.new()
-			var sph = SphereMesh.new()
-			var r = 180.0 + (p * 23 % 80)
-			sph.radius = r
-			sph.height = r * 1.4
-			puff.mesh = sph
-			puff.position = Vector3((p - 2) * 120.0, 0.0, (p % 3 - 1) * 90.0)
-			puff.material_override = mat_cloud
-			cluster.add_child(puff)
+		# Cloud flat condensation base (3 wide flattened puffs)
+		for b in range(3):
+			var base_puff = MeshInstance3D.new()
+			var b_sph = SphereMesh.new()
+			var br = (220.0 + b * 40.0) * s
+			b_sph.radius = br
+			b_sph.height = br * 0.45
+			base_puff.mesh = b_sph
+			base_puff.material_override = mat_cloud
+			base_puff.position = Vector3((b - 1) * 160.0 * s, 0.0, (b % 2 - 0.5) * 80.0 * s)
+			cluster.add_child(base_puff)
+
+		# Billowing cumulus domes rising upward
+		var dome_offsets = [
+			Vector3(0.0, 70.0 * s, 0.0),
+			Vector3(-120.0 * s, 110.0 * s, -40.0 * s),
+			Vector3(130.0 * s, 95.0 * s, 30.0 * s),
+			Vector3(-50.0 * s, 150.0 * s, 50.0 * s),
+			Vector3(60.0 * s, 165.0 * s, -30.0 * s),
+			Vector3(0.0, 190.0 * s, 10.0 * s),
+			Vector3(-180.0 * s, 50.0 * s, 80.0 * s),
+			Vector3(190.0 * s, 60.0 * s, -70.0 * s)
+		]
+
+		for d in range(dome_offsets.size()):
+			var dome = MeshInstance3D.new()
+			var d_sph = SphereMesh.new()
+			var dr = (160.0 - d * 8.0) * s
+			d_sph.radius = dr
+			d_sph.height = dr * 1.3
+			dome.mesh = d_sph
+			dome.material_override = mat_cloud
+			dome.position = dome_offsets[d]
+			cluster.add_child(dome)
 
 func _add_colliding_box(size: Vector3, pos: Vector3, mat: Material) -> StaticBody3D:
 	var sb = StaticBody3D.new()

@@ -103,6 +103,14 @@ GAME_CATALOG = {
         "preset_name": "Windows-IronCrucible",
         "main_scene": "res://games/arena-fps/arena_fps_main.tscn",
         "description": "Iron Crucible Arena FPS"
+    },
+    "aircraft-flight": {
+        "title": "AircraftFlight",
+        "game_id": "aircraft_flight",
+        "pck_name": "AircraftFlight.pck",
+        "preset_name": "Windows-AircraftFlight",
+        "main_scene": "res://games/aircraft-flight/aircraft_flight_main.tscn",
+        "description": "Apex Flight: Open Skies 3D Flight Simulator"
     }
 }
 

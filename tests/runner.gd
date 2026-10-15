@@ -80,6 +80,14 @@ const TestAeroTracksScript = preload("res://games/aero-rush/tests/test_aero_trac
 const TestAeroAIScript = preload("res://games/aero-rush/tests/test_aero_ai_and_modes.gd")
 const TestAeroE2EScript = preload("res://games/aero-rush/tests/test_aero_e2e.gd")
 
+# --- Apex Flight Test Suites ---
+const TestFlightPhysicsScript = preload("res://games/aircraft-flight/tests/test_flight_physics_unit.gd")
+const TestAircraftCatalogScript = preload("res://games/aircraft-flight/tests/test_aircraft_catalog_unit.gd")
+const TestFlightWorldsScript = preload("res://games/aircraft-flight/tests/test_flight_worlds_unit.gd")
+const TestFlightMissionsScript = preload("res://games/aircraft-flight/tests/test_flight_missions_unit.gd")
+const TestFlightHUDScript = preload("res://games/aircraft-flight/tests/test_flight_hud_and_autopilot_unit.gd")
+const TestFlightE2EScript = preload("res://games/aircraft-flight/tests/test_flight_e2e.gd")
+
 # --- Responsive & Soak ---
 const TestResponsiveUIScript = preload("res://tests/responsive/test_responsive_ui.gd")
 const TestSoakScript = preload("res://tests/performance/test_soak.gd")
@@ -208,6 +216,13 @@ func _initialize() -> void:
 		{"name": "AeroRush AI, Ghosts & UI Unit", "instance": TestAeroAIScript.new()},
 		{"name": "AeroRush E2E Gameplay Scenarios", "instance": TestAeroE2EScript.new()},
 		{"name": "AeroRush Packaged Black-Box Acceptance", "instance": TestPackagedAeroRushE2EScript.new()},
+		# Apex Flight Suites
+		{"name": "Apex Flight Physics Unit", "instance": TestFlightPhysicsScript.new()},
+		{"name": "Apex Flight Aircraft Catalog Unit", "instance": TestAircraftCatalogScript.new()},
+		{"name": "Apex Flight Worlds & Runways Unit", "instance": TestFlightWorldsScript.new()},
+		{"name": "Apex Flight Missions & Rings Unit", "instance": TestFlightMissionsScript.new()},
+		{"name": "Apex Flight HUD & Autopilot Unit", "instance": TestFlightHUDScript.new()},
+		{"name": "Apex Flight E2E Scenarios", "instance": TestFlightE2EScript.new()},
 		# Legacy Acceptance
 		{"name": "Platform Acceptance (Legacy)", "instance": TestAcceptanceScript.new()},
 	]

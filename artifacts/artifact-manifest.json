@@ -49,6 +49,54 @@
       ],
       "foreign_resources": 0
     },
+    "AircraftFlight-Linux-x86_64.tar.gz": {
+      "size_mb": 194.39,
+      "size_bytes": 203829600,
+      "sha256": "9125b6dfe846265522bd965d5c81751ce86253eb2fa5ac882f3027bc133269e3",
+      "archive_members": [],
+      "foreign_resources": 0
+    },
+    "AircraftFlight-Web.zip": {
+      "size_mb": 302.41,
+      "size_bytes": 317097580,
+      "sha256": "cf82c370fd4aa7463e1576ad6bf4aa80dbe6aca1046393f1d093837f4b067cdc",
+      "archive_members": [
+        "index.apple-touch-icon.png",
+        "index.apple-touch-icon.png.import",
+        "index.audio.worklet.js",
+        "index.html",
+        "index.icon.png",
+        "index.icon.png.import",
+        "index.js",
+        "index.pck",
+        "index.pck.part00",
+        "index.pck.part01",
+        "index.pck.part02",
+        "index.pck.part03",
+        "index.pck.part04",
+        "index.pck.part05",
+        "index.pck.part06",
+        "index.png",
+        "index.png.import",
+        "index.wasm",
+        "index.wasm.part00",
+        "index.wasm.part01",
+        "_headers",
+        "AircraftFlight.pck"
+      ],
+      "foreign_resources": 0
+    },
+    "AircraftFlight-Windows-x86_64.zip": {
+      "size_mb": 200.24,
+      "size_bytes": 209962956,
+      "sha256": "4ee41b0bb0304f4bb2879d5260dacb6bbd58a7c5e4c8170ac2aed8a42ca63d62",
+      "archive_members": [
+        "AircraftFlight.exe",
+        "AircraftFlight.pck",
+        "standalone_manifest.json"
+      ],
+      "foreign_resources": 0
+    },
     "ChromaRush-Linux-x86_64.tar.gz": {
       "size_mb": 175.22,
       "size_bytes": 183728965,

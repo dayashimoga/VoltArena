@@ -17,7 +17,8 @@ PRESETS = {
     "skybound-odyssey": ("Windows-Skybound", "SkyboundOdyssey.pck"),
     "rocket-car": ("Windows-NitroKick", "NitroKick.pck"),
     "subway-survival": ("Windows-MetroSiege", "MetroSiege.pck"),
-    "arena-fps": ("Windows-IronCrucible", "IronCrucible.pck")
+    "arena-fps": ("Windows-IronCrucible", "IronCrucible.pck"),
+    "aircraft-flight": ("Windows-AircraftFlight", "AircraftFlight.pck")
 }
 
 def export_pcks(target="all"):
@@ -28,7 +29,7 @@ def export_pcks(target="all"):
         print(f">>> Exporting Isolated PCK: {preset_name} -> {out_path}...")
         cmd = [
             "podman", "run", "--rm",
-            "-v", f"{PROJECT_ROOT}:/workspace:Z",
+            "-v", f"{PROJECT_ROOT.replace(os.sep, '/')}:/workspace:Z",
             "-w", "/workspace",
             "docker.io/barichello/godot-ci:4.3",
             "godot", "--headless", "--export-pack", preset_name, f"export/standalone/{pck_name}"

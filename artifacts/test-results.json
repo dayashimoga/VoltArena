@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 90.1571546732837,
-  "coverage_tested_functions": 1090,
-  "coverage_total_functions": 1209,
-  "execution_seconds": 184.914,
+  "coverage_percent": 90.5138339920949,
+  "coverage_tested_functions": 1145,
+  "coverage_total_functions": 1265,
+  "execution_seconds": 174.551,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -38,6 +38,36 @@
     "AeroRush Tracks & Worlds Validation Unit": {
       "failed": 0,
       "passed": 45,
+      "status": "PASS"
+    },
+    "Apex Flight Aircraft Catalog Unit": {
+      "failed": 0,
+      "passed": 27,
+      "status": "PASS"
+    },
+    "Apex Flight E2E Scenarios": {
+      "failed": 0,
+      "passed": 13,
+      "status": "PASS"
+    },
+    "Apex Flight HUD & Autopilot Unit": {
+      "failed": 0,
+      "passed": 20,
+      "status": "PASS"
+    },
+    "Apex Flight Missions & Rings Unit": {
+      "failed": 0,
+      "passed": 20,
+      "status": "PASS"
+    },
+    "Apex Flight Physics Unit": {
+      "failed": 0,
+      "passed": 30,
+      "status": "PASS"
+    },
+    "Apex Flight Worlds & Runways Unit": {
+      "failed": 0,
+      "passed": 28,
       "status": "PASS"
     },
     "ArenaBot Unit": {
@@ -182,7 +212,7 @@
     },
     "Launcher E2E": {
       "failed": 0,
-      "passed": 98,
+      "passed": 105,
       "status": "PASS"
     },
     "LauncherArt Vector Graphics Unit": {
@@ -297,7 +327,7 @@
     },
     "Responsive UI Multi-Resolution": {
       "failed": 0,
-      "passed": 333,
+      "passed": 351,
       "status": "PASS"
     },
     "RoboForge Arena E2E": {
@@ -406,8 +436,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-10-12T10:27:29",
+  "timestamp": "2026-10-15T05:03:21",
   "total_failed": 0,
-  "total_passed": 3079,
-  "total_suites": 80
+  "total_passed": 3242,
+  "total_suites": 86
 }

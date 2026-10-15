@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 90.1571546732837,
+  "overall_coverage_pct": 90.5138339920949,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -244,6 +244,104 @@
       "untested": [
         "build_environment"
       ]
+    },
+    "res://games/aircraft-flight/aircraft/aircraft_catalog.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/aircraft-flight/aircraft/aircraft_mesh_builder.gd": {
+      "coverage_pct": 100,
+      "tested": 6,
+      "total": 6,
+      "untested": []
+    },
+    "res://games/aircraft-flight/aircraft/aircraft_visuals.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/aircraft-flight/aircraft_flight_main.gd": {
+      "coverage_pct": 100,
+      "tested": 6,
+      "total": 6,
+      "untested": []
+    },
+    "res://games/aircraft-flight/core/flight_autopilot.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/aircraft-flight/core/flight_camera_controller.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/aircraft-flight/core/flight_physics.gd": {
+      "coverage_pct": 91.6666666666667,
+      "tested": 11,
+      "total": 12,
+      "untested": [
+        "_ready"
+      ]
+    },
+    "res://games/aircraft-flight/missions/checkpoint_ring.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/aircraft-flight/missions/flight_mission_director.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/aircraft-flight/missions/mission_definitions.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/aircraft-flight/ui/flight_hud.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/aircraft-flight/ui/flight_results_screen.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/aircraft-flight/ui/hangar_menu.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/aircraft-flight/worlds/city_flight_world.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/aircraft-flight/worlds/flight_world_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/aircraft-flight/worlds/runway_generator.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
     },
     "res://games/arena-fps/ai/arena_bot.gd": {
       "coverage_pct": 100,
@@ -1319,7 +1417,7 @@
       "untested": []
     }
   },
-  "tested_functions": 1090,
-  "timestamp": "2026-10-12T10:27:29",
-  "total_functions": 1209
+  "tested_functions": 1145,
+  "timestamp": "2026-10-15T05:03:21",
+  "total_functions": 1265
 }

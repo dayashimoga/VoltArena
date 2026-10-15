@@ -20,6 +20,8 @@ static func create_game_banner(game_id: String, width: int = 360, height: int = 
 			_paint_strike_vector(image, width, height)
 		"aero_rush":
 			_paint_aero_rush(image, width, height)
+		"aircraft_flight", "apex_flight":
+			_paint_apex_flight(image, width, height)
 		_:
 			_paint_default_banner(image, width, height)
 
@@ -353,6 +355,42 @@ static func _paint_aero_rush(img: Image, w: int, h: int) -> void:
 					base_r = lerp(base_r, 0.1, 0.8)
 					base_g = lerp(base_g, 0.85, 0.8)
 					base_b = lerp(base_b, 1.0, 0.8)
+
+			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
+
+static func _paint_apex_flight(img: Image, w: int, h: int) -> void:
+	# Apex Flight: Golden sunset sky with high skyscraper silhouettes & twin jet contrails
+	for y in range(h):
+		var v: float = float(y) / float(h)
+		for x in range(w):
+			var u: float = float(x) / float(w)
+
+			# Sunset gradient: Rich orange-gold to twilight violet
+			var base_r = lerp(0.85, 0.22, v)
+			var base_g = lerp(0.55, 0.15, v)
+			var base_b = lerp(0.20, 0.45, v)
+
+			# Skyscraper skyline silhouettes in lower half
+			if y > int(float(h) * 0.65):
+				var building_slot = int(float(x) / 28.0)
+				var b_height = (0.65 - float((building_slot * 17) % 25) * 0.01) * float(h)
+				if float(y) > b_height:
+					base_r = 0.08
+					base_g = 0.10
+					base_b = 0.15
+					# Golden illuminated windows
+					if (x % 6 < 3) and (y % 8 < 4) and y > int(b_height + 15):
+						base_r = 0.95
+						base_g = 0.82
+						base_b = 0.35
+
+			# Twin Jet Contrails climbing across sky
+			var trail_y1 = float(h) * 0.70 - u * float(h) * 0.55
+			var trail_y2 = trail_y1 + 4.0
+			if absf(float(y) - trail_y1) < 2.5 or absf(float(y) - trail_y2) < 2.5:
+				base_r = minf(1.0, base_r + 0.6)
+				base_g = minf(1.0, base_g + 0.6)
+				base_b = minf(1.0, base_b + 0.7)
 
 			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
 

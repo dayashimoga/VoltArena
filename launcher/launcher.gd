@@ -106,6 +106,15 @@ var games_meta = [
 		"tags": ["ARCADE", "STUNT", "LOOPS", "WALL-RIDE", "PHYSICS"],
 		"color": Color(0.08, 0.85, 1.0),
 		"scene": "res://games/aero-rush/aero_rush_main.tscn"
+	},
+	{
+		"id": "aircraft_flight",
+		"title": "APEX FLIGHT",
+		"tagline": "Open Skies Simulator",
+		"desc": "Pilot authentic fighter jets, commercial airliners, and tactical helicopters across 8 expansive open worlds with realistic 6-DOF aerodynamics, functional glass cockpits, dual runways, and 8 mission types.",
+		"tags": ["FLIGHT", "SIMULATOR", "OPEN-WORLD", "JETS", "AERODYNAMICS"],
+		"color": Color(0.15, 0.65, 1.0),
+		"scene": "res://games/aircraft-flight/aircraft_flight_main.tscn"
 	}
 ]
 

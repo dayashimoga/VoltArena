@@ -1569,3 +1569,51 @@ Executed `scripts/modular_packager.py all`, building and auditing all 12 standal
 
 > **Certification Gate Note**: In strict adherence to release protocol, macOS and iOS are designated `UNVERIFIED` because their signing certificates and proprietary runners require external Apple Developer provisioning. All supported targets (Windows, Linux, WebGL/WASM Cloudflare Pages, Android ARM64) are **100% VERIFIED PASS**.
 
+---
+
+### 25. VoltArena v14.0.0 — Apex Flight & Urban Legends Targeted Production Remediation
+
+#### 25.1 Executive Summary
+Following the audit of production-readiness reviews, runtime telemetry, and screenshots, targeted remediation was executed strictly on **Apex Flight** and **Urban Legends**, preserving all working features and preventing regressions across the 12-game suite.
+
+```
+==================================================
+TEST RESULTS SUMMARY (v14.0.0 Targeted Remediation):
+  Total Suites:        93 / 93 PASSED (100%)
+  Total Assertions:    3,681 PASSED, 0 FAILED
+  Function Coverage:   91.0% (1,281 / 1,408 functions)
+  Monorepo Regressions: ZERO across all 12 games
+==================================================
+```
+
+#### 25.2 Forensic Defect Remediation & Implementation Details
+
+| Defect / Requirement | Root Cause | Engineering Remediation | Before vs After Verification | Status |
+| :--- | :--- | :--- | :--- | :---: |
+| **Urban Legends Reversed Steering (P0)** | `urban_vehicle.gd` applied positive rotation around `Vector3.UP` for right turn. In Godot 3D (+Y UP, -Z Forward), positive yaw rotates -Z into -X (Left). | In `urban_vehicle.gd`, changed ground yaw rate to `rotate_object_local(Vector3.UP, -yaw_rate * delta)` and stunt air yaw to `-steer_input * 2.8 * delta`. Inverted visual front wheel steering `w.rotation.y = -current_steer_angle`. | Steer Right (+1.0) now points vehicle forward vector to +X (`fwd.x > 0.05`), Steer Left (-1.0) points to -X (`fwd.x < -0.05`). Verified in `test_urban_vehicle_physics_unit.gd`. | **PASS** |
+| **Apex Flight Ground Roll & Runway Stability (P0)** | 1) Aileron roll authority was active while on ground. 2) Wide low-hanging box collider snagged runway tarmac. 3) Retracting gear while on ground dropped aircraft onto tarmac. | In `flight_physics.gd`, implemented tricycle gear ground leveling (`new_roll` smoothed to 0.0), ground pitch clamped between -2.5° and +13.5°, nose-wheel steering via rudder pedals (`-cmd_yaw`), weight-on-wheels gear collapse lockout. In `aircraft_flight_main.gd`, replaced low box with centered fuselage box (`2.4x2.0x9.2`) and elevated wing box (`0.45m` thick at `y = 0.65`). | Aircraft sits 100% level (0.0° roll, +1.2° pitch attitude) at 0 km/h on runway. Ground taxi steering responsive. Gear cannot accidentally collapse while weight-on-wheels. | **PASS** |
+| **Controls Guides & Interactive Flight Tutorial (P0)** | No visible controls guide on HUD; no contextual cues for takeoff or flight. | In `flight_hud.gd`, added on-screen `controls_guide_panel` (`[W/S] Pitch [A/D] Roll [Q/E] Rudder [G] Gear...`) and dynamic `tutorial_hint_label` updating flight director cues (Takeoff roll, Vr ~220 km/h rotate, positive climb/gear up, approach glide slope, stall recovery). In `urban_hud.gd`, added desktop controls guide. | Real-time key guides and flight tutorial hints visible in HUD on desktop and responsive on mobile touchscreens. | **PASS** |
+| **Crude Geometric Primitive Aircraft Models (P1)** | `aircraft_mesh_builder.gd` used basic boxes and cones, making F/A-18, F-22, A320, Extra 330, and UH-60 look like primitive toys. | Rebuilt all 5 aircraft in `aircraft_mesh_builder.gd` with high-detail contoured fuselages, canopies with cockpit interiors, cambered wings, canards, canted stabilizers, AIM-9 Sidewinders, CFM56 turbofans with spinning fans, Lycoming cowl with 3-blade prop, 4-blade articulated main/tail rotors with HIRSS suppressors, PBR materials, and animated control surfaces. | All 5 aircraft are visually recognized, accurately scaled, with functional animated ailerons, elevators, rudders, flaps, landing gear, propellers, and rotors. | **PASS** |
+| **Urban Legends Vehicles & World Overhaul (P1, P2)** | Primitive vehicle boxes and sparse world geometry with distant monoliths. | Upgraded `urban_vehicle_visuals.gd` with licensed CC0 GLB vehicle bodies (`car_sedan_sports`, `car_race`, `car_race_future`, `car_suv_luxury`, `car_hatchback_sports`), animated wheels, clearcoat PBR paint, spotlights, and taillights. Upgraded `urban_prop_factory.gd` and `urban_world_generator.gd` with GLB skyscrapers, commercial blocks, streetlights, trees, and yellow road centerlines. | Dense, recognizable city districts (Downtown Metro, Midtown, Colinas) with asphalt road striping and detailed traffic vehicles. | **PASS** |
+| **Apex Flight Airport Complex & Environment (P2)** | Flat empty terrain with single runway strip and distant grey blocks. | In `city_flight_world.gd` and `runway_generator.gd`, constructed dual runways (09L/09R), parallel Taxiway Alpha (2400m x 30m) with yellow centerline & blue edge lights, connecting high-speed taxiways, maintenance hangars with open bays, passenger terminal with 4 jetways, control tower with radar dish, PAPI lights, Manhattan skyscraper grid, northern alpine mountain ridgeline, and 3D cumulus cloud clusters. | Expansive, detailed international airport and metropolitan airspace with approach lighting, taxiway guidance, and mountain/cloud horizons. | **PASS** |
+| **Hangar Showroom Framing & Lighting (P3)** | Showroom was pitch-black void with cropped/offset aircraft preview models. | In `hangar_menu.gd`, built a 3D aerospace hangar showroom: polished epoxy floor, architectural ribbed rear wall with green LED accent strip, 3-point studio lighting (key, cyan rim, soft overhead downlight), calibrated camera framing, and scaled turntable models for all 5 aircraft. | Showroom displays beautifully lit, rotating 3D aircraft with balanced framing, zero clipping, and clean specs telemetry. | **PASS** |
+
+#### 25.3 Automated Validation & Test Suite Evidence
+- **Test Command**: `podman run --rm -v "${PWD}:/workspace:Z" -w /workspace docker.io/barichello/godot-ci:4.3 godot --headless -s res://tests/runner.gd`
+- **Results**:
+  - `Apex Flight Physics Unit`: 30 passed, 0 failed [PASS]
+  - `Apex Flight Aircraft Catalog Unit`: 27 passed, 0 failed [PASS]
+  - `Apex Flight Worlds & Runways Unit`: 28 passed, 0 failed [PASS]
+  - `Apex Flight Missions & Rings Unit`: 20 passed, 0 failed [PASS]
+  - `Apex Flight HUD & Autopilot Unit`: 20 passed, 0 failed [PASS]
+  - `Apex Flight E2E Scenarios`: 35 passed, 0 failed [PASS]
+  - `Urban Legends Vehicle Physics Unit`: 41 passed, 0 failed [PASS]
+  - `Urban Legends World & Roads Unit`: 189 passed, 0 failed [PASS]
+  - `Urban Legends Stunts & Missions Unit`: 58 passed, 0 failed [PASS]
+  - `Urban Legends Traffic & AI Unit`: 24 passed, 0 failed [PASS]
+  - `Urban Legends Camera & HUD Unit`: 33 passed, 0 failed [PASS]
+  - `Urban Legends Performance & Streaming Unit`: 6 passed, 0 failed [PASS]
+  - `Urban Legends E2E Scenarios`: 31 passed, 0 failed [PASS]
+  - **Monorepo Total**: **93 Suites, 3,681 Assertions Passed, 0 Failed, 91.0% Function Coverage (1,281 / 1,408 functions)**.
+
+

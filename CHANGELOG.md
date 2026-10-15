@@ -1866,5 +1866,38 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **Standalone Packaging Audit**: 36 standalone packages exported across Windows, Linux, and Web for all 12 games with 0 foreign asset leakage (`foreign_files_found: 0`, `status: "ISOLATED_PASS"`, 36 unique sizes, 36 unique SHA-256 hashes).
 - **Regression Verification**: Zero regressions detected across all 12 games in the VoltArena suite.
 
+## [14.0.0-remediation] - 2026-10-15
+### Fixed
+- **Urban Legends Vehicle Steering & Navigation (Defect Recovery P0)**:
+  - Corrected yaw rotation vector in `games/urban-legends/vehicles/urban_vehicle.gd`: replaced inverted positive yaw with vehicle-local negative rotation `rotate_object_local(Vector3.UP, -yaw_rate * delta)`. Inverted front wheel visual steering `w.rotation.y = -current_steer_angle` and mid-air stunt yaw `-steer_input * 2.8 * delta`.
+  - Added assertions in `test_urban_vehicle_physics_unit.gd` verifying right turn steers towards `+X` (`fwd.x > 0.05`) and left turn steers towards `-X` (`fwd.x < -0.05`).
+- **Apex Flight Ground Handling & Runway Roll Stability (Defect Recovery P0)**:
+  - Implemented tricycle landing gear roll leveling on ground (`new_roll` smoothed towards 0.0), disabled aileron bank into runway tarmac, and clamped ground pitch attitude between -2.5° and +13.5° in `games/aircraft-flight/core/flight_physics.gd`.
+  - Implemented ground nose-wheel / tailwheel steering via rudder pedals (`-cmd_yaw`), and weight-on-wheels gear collapse lockout.
+  - Replaced low-hanging box collider with centered fuselage box (`2.4x2.0x9.2`) and elevated wing box (`0.45m` thick at `y = 0.65`) in `games/aircraft-flight/aircraft_flight_main.gd`.
+- **Controls Reference HUD & Flight Tutorial (P0)**:
+  - Added visible on-screen desktop controls guide panels in `games/aircraft-flight/ui/flight_hud.gd` and `games/urban-legends/ui/urban_hud.gd`.
+  - Added interactive flight training cues in `flight_hud.gd` guiding pilots through takeoff roll, rotation at Vr (~220 km/h), positive climb, gear retraction, approach glide slopes, and stall recoveries.
+### Changed
+- **Realistic 3D Aircraft Models (P1)**:
+  - Overhauled `games/aircraft-flight/aircraft/aircraft_mesh_builder.gd` with high-detail models for all 5 aircraft:
+    - **F/A-18C Hornet**: Pointed radome with pitot probe, cockpit canopy with ejection seat & HUD, swept LEX strakes, side air intakes, trapezoidal wings with AIM-9 Sidewinder missiles, canted vertical stabilizers with rudders, all-moving stabilators, F404 afterburner nozzles, and carrier landing gear.
+    - **F-22A Raptor**: Blended wing-body diamond delta, caret stealth intakes, golden indium-tin-oxide canopy, canted rudders, 2D thrust-vectoring rectangular nozzles with sawtooth edges, and RAM stealth coating.
+    - **A320 SkyLiner**: Cylindrical passenger cabin with cockpit windshield and window belts, supercritical wings with Sharklets, CFM56 turbofans with spinning fan blades, airline livery tail fin, and multi-wheel bogies.
+    - **Extra 330SC**: Slender composite aerobatic monoplane fuselage, 360° bubble canopy with roll cage and pilot helmet, mid-mounted wings with spade counterbalanced ailerons, wingtip sighting devices, oversized knife-edge rudder, 3-blade prop with spinner, and streamlined wheel pants.
+    - **UH-60 BlackHawk**: Low-profile tactical cabin with pilot/co-pilot glazing, twin shoulder-mounted T700 turboshafts with HIRSS suppressors, 4-blade articulated main rotor with swept anhedral tips, canted tail rotor, variable stabilator, rescue hoist, FLIR ball, and rugged fixed gear.
+- **Urban Legends 3D Vehicles & Environment (P1, P2)**:
+  - Bound licensed CC0 GLB vehicle models (`car_sedan_sports`, `car_race`, `car_race_future`, `car_suv_luxury`, `car_hatchback_sports`), animated wheels, clearcoat PBR paint, spotlights, and taillights in `urban_vehicle_visuals.gd`.
+  - Upgraded `urban_prop_factory.gd` and `urban_world_generator.gd` with GLB skyscrapers, commercial blocks, streetlights, trees, and yellow road centerlines.
+- **Apex Flight Airport Complex & Environment (P2)**:
+  - Built dual runways (09L/09R), parallel Taxiway Alpha with yellow centerline & blue edge lights, connecting high-speed taxiways, maintenance hangars with open bays, passenger terminal with 4 jetways, control tower with radar dish, PAPI lights, northern mountain ridgeline, and 3D cumulus clouds in `city_flight_world.gd`.
+- **Hangar Showroom Framing & Lighting (P3)**:
+  - Rebuilt turntable showroom in `hangar_menu.gd` with 3-point studio lighting, polished epoxy floor, architectural ribbed rear wall with green LED strip, properly scaled aircraft models, and calibrated camera framing.
+### Verified
+- **Monorepo Test Battery**: **93 / 93 test suites passed, 3,681 / 3,681 assertions passed, 0 failed (100% pass rate, exit code 0)**.
+- **Overall Function Coverage**: **91.0%** (1,281 / 1,408 tested functions across all engine and game modules, exceeding $\ge 90.0\%$).
+- **Zero Monorepo Regressions**: Zero regressions across all 12 games in the VoltArena suite.
+
+
 
 

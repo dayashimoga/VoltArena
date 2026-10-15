@@ -198,69 +198,119 @@ func _build_turntable_viewport() -> void:
 	preview_viewport.transparent_bg = false
 	vp_container.add_child(preview_viewport)
 
-	# World environment for showroom
+	# World environment for aerospace showroom
 	var world_env = WorldEnvironment.new()
 	var env = Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.05, 0.07, 0.10)
+	env.background_color = Color(0.07, 0.09, 0.13)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.35, 0.40, 0.48)
-	env.ambient_light_energy = 0.85
+	env.ambient_light_color = Color(0.45, 0.52, 0.62)
+	env.ambient_light_energy = 1.15
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	world_env.environment = env
 	preview_viewport.add_child(world_env)
 
-	# Camera
+	# Studio Camera: perfectly framed at eye level with slight upward angle
 	var cam = Camera3D.new()
-	cam.position = Vector3(0, 3.2, 9.5)
-	cam.look_at(Vector3(0, 0.3, 0), Vector3.UP)
+	cam.position = Vector3(0.0, 2.6, 9.8)
+	cam.look_at(Vector3(0.0, 0.65, 0.0), Vector3.UP)
 	cam.current = true
-	cam.fov = 48.0
+	cam.fov = 46.0
 	preview_viewport.add_child(cam)
 
-	# Showroom Directional Key Light
+	# Three-Point Studio Lighting
+	# 1. Warm Directional Key Light
 	var key_light = DirectionalLight3D.new()
-	key_light.position = Vector3(5, 8, 7)
-	key_light.rotation_degrees = Vector3(-35, 30, 0)
-	key_light.light_color = Color(1.0, 0.98, 0.92)
-	key_light.light_energy = 1.6
+	key_light.position = Vector3(6, 9, 8)
+	key_light.rotation_degrees = Vector3(-35, 32, 0)
+	key_light.light_color = Color(1.0, 0.98, 0.94)
+	key_light.light_energy = 2.4
 	preview_viewport.add_child(key_light)
 
-	# Showroom Fill Rim Light
+	# 2. Cool Cyan Rim Light (Accentuates aircraft silhouettes)
 	var rim_light = DirectionalLight3D.new()
-	rim_light.position = Vector3(-6, 5, -5)
-	rim_light.rotation_degrees = Vector3(-25, -140, 0)
-	rim_light.light_color = Color(0.2, 0.65, 1.0)
-	rim_light.light_energy = 1.0
+	rim_light.position = Vector3(-7, 6, -6)
+	rim_light.rotation_degrees = Vector3(-25, -145, 0)
+	rim_light.light_color = Color(0.25, 0.75, 1.0)
+	rim_light.light_energy = 1.8
 	preview_viewport.add_child(rim_light)
+
+	# 3. Soft Overhead Turntable Downlight
+	var top_light = OmniLight3D.new()
+	top_light.position = Vector3(0, 7.5, 0)
+	top_light.light_color = Color(0.95, 0.98, 1.0)
+	top_light.light_energy = 2.0
+	top_light.omni_range = 16.0
+	preview_viewport.add_child(top_light)
+
+	# --- 3D HANGAR BAY ARCHITECTURE ---
+	# Polished Epoxy Hangar Floor
+	var floor_mesh = MeshInstance3D.new()
+	var f_box = BoxMesh.new()
+	f_box.size = Vector3(50.0, 0.4, 50.0)
+	floor_mesh.mesh = f_box
+	var f_mat = StandardMaterial3D.new()
+	f_mat.albedo_color = Color(0.11, 0.13, 0.16)
+	f_mat.metallic = 0.65
+	f_mat.roughness = 0.32
+	floor_mesh.material_override = f_mat
+	floor_mesh.position = Vector3(0, -0.2, 0)
+	preview_viewport.add_child(floor_mesh)
+
+	# Hangar Rear Wall with Architectural Ribbed Panels
+	var wall_mesh = MeshInstance3D.new()
+	var w_box = BoxMesh.new()
+	w_box.size = Vector3(45.0, 20.0, 0.8)
+	wall_mesh.mesh = w_box
+	var w_mat = StandardMaterial3D.new()
+	w_mat.albedo_color = Color(0.14, 0.17, 0.22)
+	w_mat.roughness = 0.75
+	wall_mesh.material_override = w_mat
+	wall_mesh.position = Vector3(0, 10.0, -14.0)
+	preview_viewport.add_child(wall_mesh)
+
+	# Hangar Wall Accent Stripes & LED strip
+	var strip_mesh = MeshInstance3D.new()
+	var s_box = BoxMesh.new()
+	s_box.size = Vector3(40.0, 0.15, 0.1)
+	strip_mesh.mesh = s_box
+	var s_mat = StandardMaterial3D.new()
+	s_mat.albedo_color = Color(0.2, 0.9, 0.4)
+	s_mat.emission_enabled = true
+	s_mat.emission = Color(0.2, 0.9, 0.4)
+	s_mat.emission_energy_multiplier = 3.0
+	strip_mesh.material_override = s_mat
+	strip_mesh.position = Vector3(0, 6.0, -13.5)
+	preview_viewport.add_child(strip_mesh)
 
 	# Pedestal Turntable Base
 	var base_mesh = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
-	cyl.top_radius = 4.2
-	cyl.bottom_radius = 4.5
+	cyl.top_radius = 4.4
+	cyl.bottom_radius = 4.8
 	cyl.height = 0.35
 	base_mesh.mesh = cyl
 	var base_mat = StandardMaterial3D.new()
-	base_mat.albedo_color = Color(0.12, 0.14, 0.18)
-	base_mat.metallic = 0.80
-	base_mat.roughness = 0.35
+	base_mat.albedo_color = Color(0.16, 0.19, 0.24)
+	base_mat.metallic = 0.85
+	base_mat.roughness = 0.28
 	base_mesh.material_override = base_mat
-	base_mesh.position = Vector3(0, -0.18, 0)
+	base_mesh.position = Vector3(0, -0.15, 0)
 	preview_viewport.add_child(base_mesh)
 
 	# Glowing Pedestal Ring
 	var ring_mesh = MeshInstance3D.new()
 	var torus = TorusMesh.new()
-	torus.inner_radius = 4.0
-	torus.outer_radius = 4.18
+	torus.inner_radius = 4.2
+	torus.outer_radius = 4.42
 	ring_mesh.mesh = torus
 	var ring_mat = StandardMaterial3D.new()
-	ring_mat.albedo_color = Color(0.15, 0.95, 0.35)
+	ring_mat.albedo_color = Color(0.2, 0.95, 0.4)
 	ring_mat.emission_enabled = true
-	ring_mat.emission = Color(0.15, 0.95, 0.35)
-	ring_mat.emission_energy_multiplier = 2.5
+	ring_mat.emission = Color(0.2, 0.95, 0.4)
+	ring_mat.emission_energy_multiplier = 3.0
 	ring_mesh.material_override = ring_mat
-	ring_mesh.position = Vector3(0, 0.01, 0)
+	ring_mesh.position = Vector3(0, 0.04, 0)
 	preview_viewport.add_child(ring_mesh)
 
 	turntable_root = Node3D.new()
@@ -291,13 +341,18 @@ func _update_selected_aircraft(ac_id: String) -> void:
 		if current_preview_model:
 			current_preview_model.name = "PreviewAircraftModel"
 			current_preview_model.position = Vector3(0, 0.65, 0)
-			# Scale large airliners down slightly to fit turntable neatly
-			if ac_id == "a320_skyliner":
-				current_preview_model.scale = Vector3(0.38, 0.38, 0.38)
-			elif ac_id == "f22_raptor" or ac_id == "fa18_hornet":
-				current_preview_model.scale = Vector3(0.58, 0.58, 0.58)
-			else:
-				current_preview_model.scale = Vector3(0.65, 0.65, 0.65)
+			# Scale models appropriately to frame turntable center
+			if ac_id == "a320_airliner":
+				current_preview_model.scale = Vector3(0.24, 0.24, 0.24)
+			elif ac_id == "uh60_helicopter":
+				current_preview_model.scale = Vector3(0.40, 0.40, 0.40)
+				current_preview_model.position = Vector3(0, 0.65, -0.3)
+			elif ac_id == "f22_raptor":
+				current_preview_model.scale = Vector3(0.44, 0.44, 0.44)
+			elif ac_id == "fa18_hornet":
+				current_preview_model.scale = Vector3(0.46, 0.46, 0.46)
+			else: # Extra 330
+				current_preview_model.scale = Vector3(0.60, 0.60, 0.60)
 			turntable_root.add_child(current_preview_model)
 
 func _update_selected_mission(m_id: String) -> void:

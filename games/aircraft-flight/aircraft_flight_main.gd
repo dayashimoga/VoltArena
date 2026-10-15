@@ -127,12 +127,20 @@ func start_flight_session() -> void:
 	var spec = AircraftCatalog.get_aircraft_spec(selected_aircraft_id)
 	player_aircraft.setup_aircraft_specs(spec)
 
-	# Collision shape for aircraft
+	# Aircraft Multi-Hull Collision Shapes (fuselage + elevated wings)
 	var col = CollisionShape3D.new()
 	var box = BoxShape3D.new()
-	box.size = Vector3(spec.get("wingspan", 12.0) * 0.75, 2.2, 8.5)
+	box.size = Vector3(2.4, 2.0, 9.2)
 	col.shape = box
+	col.position = Vector3(0.0, 0.35, 0.0)
 	player_aircraft.add_child(col)
+
+	var wing_col = CollisionShape3D.new()
+	var wing_box = BoxShape3D.new()
+	wing_box.size = Vector3(spec.get("wingspan", 12.0) * 0.85, 0.45, 2.8)
+	wing_col.shape = wing_box
+	wing_col.position = Vector3(0.0, 0.65, 0.5)
+	player_aircraft.add_child(wing_col)
 
 	# Procedural 3D Visual Mesh
 	var mesh_root = AircraftMeshBuilder.build_aircraft_visuals(selected_aircraft_id, selected_primary_color, selected_accent_color)

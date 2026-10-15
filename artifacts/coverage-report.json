@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 91.1095305832148,
+  "overall_coverage_pct": 90.9801136363636,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -1219,10 +1219,13 @@
       "untested": []
     },
     "res://games/urban-legends/world/urban_prop_factory.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 80,
       "tested": 8,
-      "total": 8,
-      "untested": []
+      "total": 10,
+      "untested": [
+        "build_commercial_block",
+        "build_tree"
+      ]
     },
     "res://games/urban-legends/world/urban_road_network.gd": {
       "coverage_pct": 100,
@@ -1558,6 +1561,6 @@
     }
   },
   "tested_functions": 1281,
-  "timestamp": "2026-10-15T11:16:39",
-  "total_functions": 1406
+  "timestamp": "2026-10-15T12:51:09",
+  "total_functions": 1408
 }

@@ -146,6 +146,24 @@ func _build_road_meshes() -> void:
 		body.add_child(col)
 		roads_container.add_child(body)
 
+		# Yellow Centerline Striping for Paved Asphalt Roads
+		if s_type == UrbanConstants.SURFACE_ASPHALT:
+			var stripe_mi = MeshInstance3D.new()
+			var stripe_box = BoxMesh.new()
+			stripe_box.size = Vector3(0.24, 0.02, dist)
+			var y_mat = StandardMaterial3D.new()
+			y_mat.albedo_color = Color(0.95, 0.82, 0.15)
+			y_mat.roughness = 0.55
+			stripe_mi.mesh = stripe_box
+			stripe_mi.material_override = y_mat
+			stripe_mi.position = center + Vector3(0.0, 0.14, 0.0)
+			if dir.length_squared() > 0.001:
+				var up_vec = Vector3.UP
+				if absf(dir.dot(up_vec)) > 0.9:
+					up_vec = Vector3.RIGHT
+				stripe_mi.look_at_from_position(stripe_mi.position, stripe_mi.position + dir, up_vec)
+			roads_container.add_child(stripe_mi)
+
 		# If elevated viaduct (Harborfly Freeway Y > 10m), spawn viaduct support pillars
 		if st.y > 10.0 and en.y > 10.0:
 			var flyover = UrbanPropFactory.build_flyover_viaduct(dist, center.y, w)
@@ -158,23 +176,38 @@ func _build_road_meshes() -> void:
 			roads_container.add_child(flyover)
 
 func _populate_district_props() -> void:
-	# 1. Downtown Metro: High-rise towers along boulevards (placed with verified road setbacks)
-	var downtown_spots = [
-		Vector3(-250, 0, -250), Vector3(-250, 0, -50), Vector3(-50, 0, -250),
-		Vector3(-350, 0, -350), Vector3(-50, 0, 50), Vector3(-350, 0, 50),
-		Vector3(-480, 0, -200), Vector3(-180, 0, -480), Vector3(-30, 0, -480)
-	]
-	for p in downtown_spots:
-		if not _is_obstructing_road(p, 18.0):
-			var tower = UrbanPropFactory.build_skyscraper(randf_range(50.0, 95.0), 22.0, 22.0, Color(0.2, 0.6, 1.0))
-			tower.position = p
-			props_container.add_child(tower)
+	# 1. Downtown Metro: Dense American / Manhattan-Style Skyscraper Grid
+	# Placed systematically across downtown city blocks with verified setbacks (clearance >= 16m)
+	var downtown_grid_x = [-480.0, -410.0, -340.0, -270.0, -200.0, -130.0, -60.0, 10.0, 80.0]
+	var downtown_grid_z = [-480.0, -410.0, -340.0, -270.0, -200.0, -130.0, -60.0, 10.0, 80.0]
 
-	# 2. Colinas Heights: Terracotta villas along winding hillside roads
+	for gx in downtown_grid_x:
+		for gz in downtown_grid_z:
+			var p = Vector3(gx, 0.0, gz)
+			if not _is_obstructing_road(p, 17.5):
+				var tower_h = randf_range(58.0, 115.0)
+				var tower_w = randf_range(18.0, 26.0)
+				var tower = UrbanPropFactory.build_skyscraper(tower_h, tower_w, tower_w, Color(0.2, 0.6, 1.0))
+				tower.position = p
+				props_container.add_child(tower)
+
+	# 2. Midtown & Commercial Corridors: Multi-story commercial blocks, offices & retail
+	var midtown_x = [-480.0, -380.0, -280.0, -180.0, -80.0, 20.0, 120.0, 220.0]
+	var midtown_z = [100.0, 180.0, 260.0, 340.0, 420.0, 500.0]
+	for mx in midtown_x:
+		for mz in midtown_z:
+			var p = Vector3(mx, 0.0, mz)
+			if not _is_obstructing_road(p, 15.0):
+				var comm = UrbanPropFactory.build_commercial_block(randf_range(26.0, 48.0), 20.0, 20.0)
+				comm.position = p
+				props_container.add_child(comm)
+
+	# 3. Colinas Heights: Terracotta villas along winding hillside roads
 	var colinas_spots = [
 		Vector3(250, 20.0, 320), Vector3(360, 38.0, 420), Vector3(460, 54.0, 520),
 		Vector3(540, 70.0, 640), Vector3(640, 84.0, 750), Vector3(380, 36.0, 320),
-		Vector3(480, 52.0, 420), Vector3(580, 72.0, 540), Vector3(660, 88.0, 660)
+		Vector3(480, 52.0, 420), Vector3(580, 72.0, 540), Vector3(660, 88.0, 660),
+		Vector3(300, 26.0, 360), Vector3(420, 46.0, 460), Vector3(520, 62.0, 580)
 	]
 	for p in colinas_spots:
 		if not _is_obstructing_road(p, 12.0):
@@ -182,27 +215,29 @@ func _populate_district_props() -> void:
 			villa.position = p
 			props_container.add_child(villa)
 
-	# 3. Verdant Glen: California Fan Palms & Parkland Stone Bridges
-	var palm_spots = [
+	# 4. Verdant Glen: Parkland trees & stone bridges
+	var tree_spots = [
 		Vector3(260, 6.0, -350), Vector3(340, 9.0, -260), Vector3(440, 13.0, -160),
 		Vector3(520, 17.0, -60), Vector3(220, 5.0, -220), Vector3(320, 8.0, -120),
-		Vector3(420, 12.0, -20), Vector3(500, 15.0, 40)
+		Vector3(420, 12.0, -20), Vector3(500, 15.0, 40), Vector3(280, 7.0, -180),
+		Vector3(360, 10.0, -80), Vector3(460, 14.0, 10), Vector3(540, 18.0, 90)
 	]
-	for p in palm_spots:
-		if not _is_obstructing_road(p, 4.5):
-			var palm = UrbanPropFactory.build_palm_tree(randf_range(8.5, 11.5))
-			palm.position = p
-			props_container.add_child(palm)
+	for p in tree_spots:
+		if not _is_obstructing_road(p, 5.5):
+			var tree = UrbanPropFactory.build_tree(randf_range(8.5, 12.0))
+			tree.position = p
+			props_container.add_child(tree)
 
 	var bridge = UrbanPropFactory.build_stone_bridge(24.0, 10.0)
 	bridge.position = Vector3(480, 15.0, 80)
 	props_container.add_child(bridge)
 
-	# 4. Industrial Apex: Freight Containers & Depots
+	# 5. Industrial Apex: Freight shipping containers & logistics depot
 	var container_spots = [
 		Vector3(-850, 0, 420), Vector3(-850, 2.9, 420), # Stacked
 		Vector3(-780, 0, 520), Vector3(-680, 0, 620),
-		Vector3(-880, 0, 600), Vector3(-620, 0, 720)
+		Vector3(-880, 0, 600), Vector3(-620, 0, 720),
+		Vector3(-760, 0, 680), Vector3(-820, 0, 540)
 	]
 	var colors = [Color(0.8, 0.2, 0.15), Color(0.15, 0.45, 0.8), Color(0.2, 0.65, 0.25), Color(0.85, 0.65, 0.1)]
 	for i in range(container_spots.size()):
@@ -212,15 +247,16 @@ func _populate_district_props() -> void:
 			c.position = p
 			props_container.add_child(c)
 
-	# 5. Street Lamps placed along Downtown Grand Ave and Bayview Promenade
-	var lamp_z_coords = [-550, -450, -350, -250, -150, -50, 50, 150, 250]
+	# 6. Continuous Street Lamps placed along Downtown Grand Ave and Bayview Promenade
+	var lamp_z_coords = [-550, -475, -400, -325, -250, -175, -100, -25, 50, 125, 200, 275, 350]
 	for z_val in lamp_z_coords:
 		for x_side in [-1.0, 1.0]:
 			var lamp_pos = Vector3(-100 + x_side * 9.5, 1.0, z_val)
-			var lamp = UrbanPropFactory.build_street_lamp(6.8)
-			lamp.position = lamp_pos
-			lamp.rotation.y = PI * 0.5 if x_side > 0 else -PI * 0.5
-			props_container.add_child(lamp)
+			if not _is_obstructing_road(lamp_pos, 4.0):
+				var lamp = UrbanPropFactory.build_street_lamp(6.8)
+				lamp.position = lamp_pos
+				lamp.rotation.y = PI * 0.5 if x_side > 0 else -PI * 0.5
+				props_container.add_child(lamp)
 
 func _populate_stunt_kickers() -> void:
 	# 1. Colinas Heights Crest Jump (Screenshot 4 reference: launches over suburban valley)

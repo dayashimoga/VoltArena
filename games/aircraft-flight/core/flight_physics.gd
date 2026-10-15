@@ -79,7 +79,7 @@ var flap_deflection: float = 0.0
 # Dynamic Internal Vectors
 var angular_velocity: Vector3 = Vector3.ZERO
 var local_velocity: Vector3 = Vector3.ZERO
-var is_airborne: bool = false
+var is_airborne: bool = true
 var flight_mode: FlightConst.FlightMode = FlightConst.FlightMode.SIMCADE
 var flight_assist_enabled: bool = true
 var autopilot_active: bool = false
@@ -176,6 +176,8 @@ func _physics_process(delta: float) -> void:
 		total_force += gr_force
 		ground_contact = true
 
+	is_airborne = radar_altitude_m > (gear_height_offset + 0.35) or (indicated_airspeed_ms > stall_speed_ms * 0.95 and velocity.y > 0.5)
+
 	# 7. Integrate Linear Acceleration (F = m * a)
 	var linear_accel = total_force / mass_kg
 	velocity += linear_accel * delta
@@ -192,15 +194,31 @@ func _physics_process(delta: float) -> void:
 	# 9. Perform CharacterBody3D Collision & Movement
 	move_and_slide()
 
-	# 10. Post-Move Ground Status Check
+	# 10. Post-Move Ground Status Check & Wings-Leveling
 	var was_airborne = is_airborne
-	is_airborne = not is_on_floor() and radar_altitude_m > gear_height_offset + 0.5
+	is_airborne = not is_on_floor() and radar_altitude_m > gear_height_offset + 0.4
 	if not was_airborne and is_airborne:
 		# Lift-off!
 		pass
 	elif was_airborne and not is_airborne:
 		# Touchdown!
 		touchdown.emit(absf(v_up))
+
+	# Active ground stabilization for tricycle/taildragger landing gear
+	# Keeps aircraft firmly upright on runway, preventing 30-degree banking while taxiing or stationary
+	if not is_airborne and gear_position > 0.5:
+		var cur_basis = global_basis if is_inside_tree() else transform.basis
+		var euler = cur_basis.get_euler()
+		# Smoothly restore wings level (roll = 0.0) relative to runway
+		var new_roll = move_toward(euler.z, 0.0, delta * 15.0)
+		# Clamp ground pitch attitude to authentic rotation limits (-2.5 deg to +13.5 deg)
+		var new_pitch = clampf(euler.x, -deg_to_rad(2.5), deg_to_rad(13.5))
+		var stabilized_basis = Basis.from_euler(Vector3(new_pitch, euler.y, new_roll)).orthonormalized()
+		if is_inside_tree():
+			global_basis = stabilized_basis
+		else:
+			transform.basis = stabilized_basis
+		angular_velocity.z = 0.0
 
 	# 11. Animate Retractable Gear & Deflections
 	_update_control_surfaces_and_gear(delta)
@@ -390,9 +408,34 @@ func _integrate_aerodynamic_moments(delta: float, q: float, v_fwd: float) -> voi
 			cmd_yaw += input_roll * 0.25
 
 	# Calculate angular accelerations (rad/s^2)
-	var target_pitch_accel = cmd_pitch * pitch_authority * surface_effectiveness - angular_velocity.x * pitch_damping
-	var target_roll_accel = cmd_roll * roll_authority * surface_effectiveness - angular_velocity.z * roll_damping
-	var target_yaw_accel = cmd_yaw * yaw_authority * surface_effectiveness - angular_velocity.y * yaw_damping
+	var target_pitch_accel: float = 0.0
+	var target_roll_accel: float = 0.0
+	var target_yaw_accel: float = 0.0
+
+	if is_rotorcraft:
+		# Rotary-wing flight dynamics: Cyclic disc tilt and tail rotor anti-torque authority
+		target_pitch_accel = cmd_pitch * pitch_authority * 2.2 - angular_velocity.x * pitch_damping
+		target_roll_accel = cmd_roll * roll_authority * 2.2 - angular_velocity.z * roll_damping
+		target_yaw_accel = -cmd_yaw * yaw_authority * 2.8 - angular_velocity.y * yaw_damping
+	elif not is_airborne and gear_position > 0.5:
+		# Ground taxiing with weight on wheels:
+		# Wings remain level on tricycle/taildragger gear; ailerons cannot bank into tarmac
+		target_roll_accel = 0.0
+		angular_velocity.z = 0.0
+		# Nose-wheel / tailwheel steering via rudder pedals
+		var g_speed = maxf(indicated_airspeed_ms, absf(v_fwd))
+		var steer_authority = 3.8
+		var speed_scale = clampf(g_speed / 12.0, 0.25, 1.0)
+		var steer_rate = -cmd_yaw * (steer_authority / speed_scale)
+		target_yaw_accel = steer_rate * 6.0 - angular_velocity.y * 5.0
+		# Elevator takeoff rotation authority
+		target_pitch_accel = cmd_pitch * pitch_authority * 1.5 - angular_velocity.x * (pitch_damping * 1.5)
+	else:
+		# Aerodynamic fixed-wing moments in flight
+		target_pitch_accel = cmd_pitch * pitch_authority * surface_effectiveness - angular_velocity.x * pitch_damping
+		target_roll_accel = cmd_roll * roll_authority * surface_effectiveness - angular_velocity.z * roll_damping
+		# Negated cmd_yaw so right rudder turns right (+X in local frame)
+		target_yaw_accel = -cmd_yaw * yaw_authority * surface_effectiveness - angular_velocity.y * yaw_damping
 
 	# Adverse yaw / directional stability damping
 	if not is_rotorcraft and absf(sideslip_angle_deg) > 1.0:
@@ -444,7 +487,10 @@ func adjust_throttle(delta_throttle: float) -> void:
 func set_afterburner(active: bool) -> void:
 	afterburner_active = active and has_afterburner
 
-func toggle_landing_gear() -> void:
+func toggle_landing_gear(force: bool = false) -> void:
+	if not force and not is_airborne and gear_deployed and radar_altitude_m < (gear_height_offset + 0.2):
+		# Safety interlock: Prevent weight-on-wheels gear collapse on runway
+		return
 	gear_deployed = not gear_deployed
 
 func cycle_flaps() -> void:
@@ -471,6 +517,7 @@ func recover_to_safe_flight(pos: Vector3, heading_deg: float, speed_kmh: float, 
 	var fwd = -new_basis.z.normalized()
 	velocity = fwd * speed_ms
 
+	is_airborne = airborne
 	if airborne:
 		gear_deployed = false
 		gear_position = 0.0

@@ -44,6 +44,10 @@ var stunt_title_label: Label
 var stunt_cash_label: Label
 var stunt_toast_timer: float = 0.0
 
+# Desktop Controls Guide
+var controls_guide_panel: PanelContainer
+var controls_guide_label: Label
+
 # Touch Controls Overlay
 var touch_controls_root: Control
 var btn_steer_left: Button
@@ -163,6 +167,7 @@ func _ready() -> void:
 	_setup_speedometer_card()
 	_setup_district_banner()
 	_setup_stunt_toast()
+	_setup_controls_guide()
 	_setup_touch_controls()
 	_update_responsive_layout(size)
 
@@ -348,6 +353,32 @@ func _setup_stunt_toast() -> void:
 	stunt_toast.add_child(vb)
 	add_child(stunt_toast)
 
+func _setup_controls_guide() -> void:
+	controls_guide_panel = PanelContainer.new()
+	controls_guide_panel.name = "ControlsGuidePanel"
+	controls_guide_panel.mouse_filter = MOUSE_FILTER_IGNORE
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.07, 0.12, 0.75)
+	style.set_corner_radius_all(8)
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.0, 0.88, 1.0, 0.35)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	controls_guide_panel.add_theme_stylebox_override("panel", style)
+
+	controls_guide_label = Label.new()
+	controls_guide_label.text = "[W/S] Throttle/Reverse  •  [A/D] Steer  •  [Space] Drift  •  [Shift] Boost  •  [R] Reset"
+	controls_guide_label.add_theme_font_size_override("font_size", 11)
+	controls_guide_label.add_theme_color_override("font_color", Color(0.85, 0.92, 1.0, 0.85))
+	controls_guide_panel.add_child(controls_guide_label)
+	add_child(controls_guide_panel)
+
 func _setup_touch_controls() -> void:
 	touch_controls_root = Control.new()
 	touch_controls_root.name = "TouchControls"
@@ -461,18 +492,30 @@ func _update_telemetry(_delta: float) -> void:
 		show_district_banner(meta.get("name", cur_dist), meta.get("speed_limit_kmh", 80.0))
 
 func show_district_banner(dist_name: String, speed_limit: float) -> void:
-	district_banner_label.text = "DISTRICT: %s (LIMIT: %d KM/H)" % [dist_name.to_upper(), int(speed_limit)]
-	district_banner.visible = true
+	if not district_banner:
+		_setup_district_banner()
+	if district_banner_label:
+		district_banner_label.text = "DISTRICT: %s (LIMIT: %d KM/H)" % [dist_name.to_upper(), int(speed_limit)]
+	if district_banner:
+		district_banner.visible = true
 	district_banner_timer = 3.5
 
 func show_stunt_reward(title: String, cash: int) -> void:
-	stunt_title_label.text = title.to_upper()
-	stunt_cash_label.text = "+$%d" % cash
-	stunt_toast.visible = true
+	if not stunt_toast:
+		_setup_stunt_toast()
+	if stunt_title_label:
+		stunt_title_label.text = title.to_upper()
+	if stunt_cash_label:
+		stunt_cash_label.text = "+$%d" % cash
+	if stunt_toast:
+		stunt_toast.visible = true
 	stunt_toast_timer = 2.8
 
 func update_wallet(cash: int) -> void:
-	cash_label.text = "💵 $%d" % cash
+	if not stats_card:
+		_setup_progression_card()
+	if cash_label:
+		cash_label.text = "💵 $%d" % cash
 
 func _update_responsive_layout(vp_size: Vector2) -> void:
 	if vp_size.x <= 0 or vp_size.y <= 0:
@@ -501,6 +544,12 @@ func _update_responsive_layout(vp_size: Vector2) -> void:
 	if stunt_toast:
 		stunt_toast.position = Vector2(vp_size.x * 0.5 - 160, vp_size.y * 0.35)
 		stunt_toast.custom_minimum_size = Vector2(320, 60)
+
+	# Controls Guide
+	if controls_guide_panel:
+		controls_guide_panel.position = Vector2(24, vp_size.y - 42)
+		var is_touch = OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios")
+		controls_guide_panel.visible = not is_touch
 
 	# Touch Controls Layout
 	if touch_controls_root:

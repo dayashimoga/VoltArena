@@ -144,6 +144,29 @@ func test_speed_sensitive_steering() -> void:
 	assert_true(low_speed_steer > high_speed_steer, "Steering angle must be larger at low speed than at high speed")
 	assert_true(rad_to_deg(low_speed_steer) > 25.0, "Low speed steer angle should be > 25 deg (was: %f)" % rad_to_deg(low_speed_steer))
 	assert_true(rad_to_deg(high_speed_steer) < 22.0, "High speed steer angle should be < 22 deg (was: %f)" % rad_to_deg(high_speed_steer))
+
+	# Verify steering direction (Right steer turns vehicle nose to the Right +X)
+	vehicle.transform = Transform3D.IDENTITY
+	vehicle.current_steer_angle = 0.0
+	vehicle.steer_input = 1.0 # Right turn
+	vehicle.set_forward_speed(15.0)
+	vehicle.throttle_input = 0.5
+	for _i in range(30):
+		vehicle._physics_process(1.0 / 60.0)
+	var fwd_right = -vehicle.transform.basis.z.normalized()
+	assert_true(fwd_right.x > 0.05, "Right steering must rotate vehicle nose to the right (+X, was: %f)" % fwd_right.x)
+
+	# Verify steering direction (Left steer turns vehicle nose to the Left -X)
+	vehicle.transform = Transform3D.IDENTITY
+	vehicle.current_steer_angle = 0.0
+	vehicle.steer_input = -1.0 # Left turn
+	vehicle.set_forward_speed(15.0)
+	vehicle.throttle_input = 0.5
+	for _i in range(30):
+		vehicle._physics_process(1.0 / 60.0)
+	var fwd_left = -vehicle.transform.basis.z.normalized()
+	assert_true(fwd_left.x < -0.05, "Left steering must rotate vehicle nose to the left (-X, was: %f)" % fwd_left.x)
+
 	_cleanup_test_vehicle(vehicle)
 
 func test_handbrake_and_drift_slip() -> void:

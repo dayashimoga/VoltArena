@@ -1,131 +1,148 @@
-# VOLTARENA — MASTER PRODUCTION REMEDIATION, VISUAL OVERHAUL & CERTIFICATION PLAN (v14.0.0)
+# VOLTARENA v14.0.0 — APEX FLIGHT & URBAN LEGENDS TARGETED PRODUCTION REMEDIATION PLAN
 
-**Roles**: Principal Godot Architect, Game/Physics Engineer, 3D Artist, Animation Specialist, UI/UX Designer, DevSecOps and QA Lead  
+**Role**: Principal Godot 4.3 Engineer, Flight/Vehicle Physics Specialist, 3D Artist and QA Architect  
 **Repository**: `dayashimoga/VoltArena`  
-**Engine & Target Platforms**: Godot 4.3 Stable (`gl_compatibility` rendering across Windows x86_64, Linux x86_64, WebGL/WASM Cloudflare Pages, Android ARM64, macOS, iOS)  
+**Engine & Rendering**: Godot 4.3 Stable (`gl_compatibility` across Windows, Linux, WebGL/WASM, Android)  
+**Target Scope**: Fix **Apex Flight** and **Urban Legends** exclusively; preserve all working features and prevent regressions across the 12-game suite.  
 **Date**: October 2026  
-**Status**: ACTIVE IMPLEMENTATION — SYSTEM-WIDE REMEDIATION & VISUAL CERTIFICATION (P0 THROUGH P7)
+**Status**: APPROVED IMPLEMENTATION PLAN — READY FOR SEQUENTIAL EXECUTION (P0–P5)
 
 ---
 
-## 1. Executive Forensic Audit & Root Cause Analysis
+## 1. Forensic Audit & Root Cause Analysis
 
-Based on exhaustive forensic inspection of the repository codebase, runtime traces, container logs, and the five user-submitted in-engine defect screenshots, the root causes for all critical defects are conclusively identified below:
+Based on comprehensive runtime inspection, telemetry, container execution, and user defect screenshots:
 
-### 1.1 Urban Legends (Defect Screenshot 5)
-- **Defect Description**: Severe half-white / half-black split-screen rendering, pitch-black vehicle and city skyscrapers, blown-out blinding white sky, zero desktop movement (car is permanently stuck at 000 KM/H with 0 throttle/steering response).
-- **Root Cause 1 (Blown-out White Sky)**: In `games/urban-legends/world/urban_weather_system.gd` (`_setup_environment()`), `env.background_mode = Environment.BG_COLOR` with no procedural sky or panorama. Furthermore, `env.glow_enabled = true`, `env.glow_bloom = 0.15`, and `env.tonemap_mode = Environment.TONE_MAPPER_ACES`. Under Godot 4's `gl_compatibility` renderer, applying bloom and ACES tonemapping over a flat bright background color `(0.95, 0.52, 0.22)` bleeds across the entire upper viewport, causing total luminance blowout to pure solid `#FFFFFF`.
-- **Root Cause 2 (Pitch-Black Vehicle & City Buildings)**: In `urban_weather_system.gd` (`_update_lighting_for_time()`), the solar altitude is computed as `sun_elev = sin(sun_angle)`. At the default preset `WEATHER_GOLDEN_SUNSET` (18:00) and later (such as `18:56` shown on the HUD in Screenshot 5), `sun_elev <= 0.05`. The code explicitly executes `sun_light.visible = false` and `sun_light.light_energy = 0.0`, extinguishing all directional sunlight. Furthermore, because `background_mode` is `BG_COLOR` instead of `BG_SKY`, there are zero environment reflections or radiance maps. Because vehicle materials (`urban_vehicle_visuals.gd`) and skyscraper facades (`urban_prop_factory.gd`) have metallic values of $0.85$, PBR specular calculation without direct light or an environment radiance sky evaluates to pure black `(0, 0, 0)`.
-- **Root Cause 3 (Stuck Vehicle / Zero Desktop Input)**: In `games/urban-legends/urban_legends_main.gd` (`_physics_process()`), input dispatch is wrapped inside `if hud and hud.touch_controls_root and hud.touch_controls_root.visible:`. On desktop platforms, touch controls are hidden by default. In `games/urban-legends/vehicles/urban_vehicle.gd`, there are zero `Input.is_action_pressed()` calls. Consequently, desktop keyboard (`W/A/S/D`, arrows, spacebar, shift) and gamepad axis inputs are never sampled, leaving the player vehicle permanently paralyzed.
+### 1.1 Urban Legends Defects
+1. **Reversed Steering Geometry (P0)**:
+   - *Symptom*: Pressing Right (`D` / `Right Arrow` / Gamepad stick right) turns the car Left; pressing Left turns the car Right.
+   - *Root Cause*: In `games/urban-legends/vehicles/urban_vehicle.gd` line 352, `rotate_object_local(Vector3.UP, yaw_rate * delta)` is called with `yaw_rate = current_steer_angle * speed_scale * 3.2`. By Godot 3D right-hand coordinate convention (+Y up, -Z forward, +X right), a positive rotation around `Vector3.UP` rotates the nose counter-clockwise (towards -X, Left). When the driver steers Right (`steer_input = +1.0`), `current_steer_angle > 0`, producing positive `yaw_rate` which turns the car Left!
+   - *Remediation*: Invert the yaw application to `-yaw_rate * delta` (or `-current_steer_angle`) in both ground steering (`rotate_object_local(Vector3.UP, -yaw_rate * delta)`) and air stunt yaw (`rotate_object_local(Vector3.UP, -air_yaw)`).
+2. **Primitive Box Cars (P1)**:
+   - *Symptom*: The player and traffic vehicles are crude, boxy geometry consisting of three stacked `BoxMesh` slabs and a stick spoiler (Screenshots 4 & 5).
+   - *Root Cause*: `urban_vehicle_visuals.gd` assembles vehicles entirely from raw `BoxMesh` and `CylinderMesh` primitives, completely ignoring the production-grade GLTF models in `res://assets/models/vehicles/` (`car_sedan_sports.glb`, `car_race.glb`, `car_race_future.glb`, `car_suv_luxury.glb`, `car_hatchback_sports.glb`, etc.).
+   - *Remediation*: Rebuild `urban_vehicle_visuals.gd` to instantiate authentic 3D vehicle models with animated spinning alloy wheels (`car_wheel_racing.glb`), suspension compression, PBR automotive clearcoat paint shader, working projector LED headlights, reactive brake lights, and visible tinted glass.
+3. **Empty Desert Void & Sparse Monolith Blocks (P2)**:
+   - *Symptom*: The city consists of a barren flat brown expanse with only 9 identical black box towers placed miles apart (Screenshots 4 & 5).
+   - *Root Cause*: `urban_world_generator.gd` placed only 9 hardcoded `build_skyscraper` boxes in Downtown, with vast empty areas between districts.
+   - *Remediation*: Overhaul `urban_world_generator.gd` and `urban_prop_factory.gd` into a dense, connected New York-inspired metropolis featuring authentic skyscrapers (`building_skyscraper_a.glb` through `e.glb`), commercial blocks (`building_comm_a.glb` through `f.glb`), row buildings, continuous streetlights (`road_lightposts.glb`), street trees (`tree_detailed.glb`, `tree_palm.glb`, `tree_oak.glb`), curbs, sidewalks, and active traffic AI without road penetrations.
 
-### 1.2 Apex Flight (Defect Screenshot 1)
-- **Defect Description**: Hangar briefing UI vertical overflow; mission selection buttons push the "★ FLY MISSION ★" launch button and exit button completely off-screen below the viewport; empty grey void in the center of the screen with missing aircraft 3D preview.
-- **Root Cause 1 (Inaccessible Launch Button)**: In `games/aircraft-flight/ui/hangar_menu.gd` (`_build_hangar_ui()`), `right_panel` contains 8 mission buttons (30px each), section headers, a 60px mission description label, a 44px "FLY MISSION" button, and a 32px exit button packed into a rigid `VBoxContainer` with no `ScrollContainer`. The total vertical height exceeds 580px. When centered on a 720p or compact window using `Control.PRESET_CENTER_RIGHT`, the launch button is clipped past the screen bottom, preventing the player from ever starting a flight.
-- **Root Cause 2 (Empty Grey Void / Missing 3D Preview)**: In `hangar_menu.gd`, `turntable_root` and `current_preview_model` are declared as variables but are never initialized, populated, or rendered. In `aircraft_flight_main.gd`, entering the hangar frees the world, aircraft, and cameras, leaving the scene with no active 3D camera, no turntable pad, and no lighting.
-
-### 1.3 Chroma Rush (Defect Screenshots 2 & 3)
-- **Defect Description**: Giant skyscraper intersecting and completely barricading the road at Waypoint 9; secondary commercial building blocking the road at Waypoint 3; severe suspension vibration/chatter, sluggish steering, and camera jitter.
-- **Root Cause 1 (Skyline Skyscraper on Track at Waypoint 9)**: In `games/chroma-rush/worlds/neon_city.gd` (`_build_distant_skyline_backdrop()`), 32 monumental skyscraper GLB models are spawned in a circular ring at radius `450.0m + ...` from origin without checking road clearance. Waypoint 9 of the track sits at `(460, 0, 0)`! Tower 0 is placed at `(450, 0, 0)` with a scale of 22m, erecting a massive concrete tower directly across the center of the road. Moreover, in `world_base.gd` (`prune_props_in_road_corridor()`), any node with `"Skyline"` or `"Distant"` in its name is explicitly exempted from pruning.
-- **Root Cause 2 (Secondary Block at Waypoint 3)**: In `neon_city.gd` (`_build_secondary_city_blocks()`), `block_configs` contains `{"pos": Vector3(70, 0, -280), "h": 54.0, "w": 22.0}`. Waypoint 3 is at `(60, 0, -280)`. With a 22m width, the building extends to $x = 59.0$, encroaching 8.5m into the 15m-wide roadway.
-- **Root Cause 3 (Suspension Chatter & Dropped Steering Input)**: In `games/chroma-rush/vehicles/chroma_vehicle.gd` (`setup_suspension_rays()`), suspension raycasts only extend downwards by 0.20m below the chassis origin (`0.45 - 0.65 = -0.20m`). When grounded, `velocity` is set strictly to `slope_forward * forward_speed` with zero downward gravity or ground-snap force. Over minor road crests or seam bumps, the vehicle lifts by a few millimeters, losing ray collision. On alternating frames, `is_grounded` flips from `true` to `false`. Because steering yaw is only applied `if is_grounded:`, steering input is dropped on 50% of frames, and the camera violently jitters as the vehicle repeatedly snaps between grounded and airborne states.
-
-### 1.4 Strike Vector (Defect Screenshot 4)
-- **Defect Description**: Frozen operative sliding along the floor in a static pose with no walking/running animation; Stage 2 ("Passenger Carriages") completely impassable due to physical blockage in the railway tunnel.
-- **Root Cause 1 (Frozen / Sliding Locomotion Animation)**: In `shared/graphics/model_cache.gd` and `strike_player_visual.gd`, imported GLTF animations (`Idle`, `Walk`, `Run`, `StrafeLeft`, `StrafeRight`, `WalkBack`) default to `loop_mode = Animation.LOOP_NONE`. When `play_animation("walk")` is called, the animation plays for 0.8 seconds and stops. Because `current_anim_state` remains `"walk"`, `play_animation` is never invoked again, leaving the character frozen in a static single-frame pose while sliding horizontally across the ground.
-- **Root Cause 2 (Stage 2 High-Speed Rail Blockage)**: In `games/strike-vector/environment/strike_environment_builder.gd` (`_build_rail_segment()`), a 28-meter long passenger carriage with collider size `(3.4, 3.2, 28.0)` is placed in the center of an 11.9m wide corridor. On either side, only 3.3m remains between the train and the safety railings. In `mission_definitions.gd`, destructible crates (`x = -3.5`) and explosive barrels (`x = 3.5`) are placed directly in the center of these narrow side passages, alongside elevated train track collision meshes, completely trapping both the player and AI. Furthermore, `_create_navigation_region()` creates a single flat quad without carving out the carriage collider, breaking AI navigation pathfinding.
-
-### 1.5 AeroRush
-- **Defect Description**: Disconnected track gaps and broken course endings; unlinked checkpoint recovery causing players to respawn back at the start line upon falling; camera recovery loops and unstable orientation alignment.
-- **Root Cause**: In `games/aero-rush/aero_rush_main.gd` (`_on_checkpoint_passed()`), passing an `AeroCheckpoint` advances `next_checkpoint_idx` but never invokes `player_vehicle.update_checkpoint(gate.global_position, gate.global_basis)`. Consequently, the player's recorded recovery transform remains at the starting line throughout the entire race. Falling off the track at checkpoint 8 teleports the player backwards to checkpoint 0, creating disorientation and recovery loops.
-
-### 1.6 Suite Launcher & Universal Navigation
-- **Defect Description**: Category filter counts out of date (showing `ALL (11)` instead of 12 games); card grid sizing causes vertical clipping on smaller viewports; input focus conflicts during modal dialogs; inconsistent return-to-launcher state cleanup.
-- **Root Cause**: In `launcher/launcher.gd`, hardcoded tab strings were not updated for Urban Legends. Game card minimum sizes on 4-column layouts do not account for variable text wrap in career statistics, causing card heights to expand unevenly and push action buttons out of alignment.
-
----
-
-## 2. Prioritized Task Breakdown (P0–P7)
-
-### Phase P0: Critical Functional Recovery (Must Pass All Gates)
-- [x] **P0.1: Urban Legends Rendering & Desktop Controls Recovery**
-  - Replaced flat `BG_COLOR` environment in `urban_weather_system.gd` with calibrated `ProceduralSkyMaterial` on an `Environment.BG_SKY` background with reflection radiance.
-  - Fixed solar elevation orbital calculations so sunset directional light maintains warm ambient and direct radiance (energy 1.25–1.9), and ensured moon light maintains nighttime visibility (energy 0.55).
-  - Disabled aggressive bloom in compatibility mode; calibrated ACES tonemapping exposure to prevent luminance blowout.
-  - Implemented full desktop input polling (`Input.is_action_pressed()` and `Input.get_axis()` for steering, throttle, brake, handbrake, and nitro) in `urban_legends_main.gd` / `urban_vehicle.gd`.
-  - Adjusted suspension raycasts and collision hull to seat wheels cleanly without hovering or wedging.
-- [x] **P0.2: Apex Flight Hangar UI & Turntable Preview Recovery**
-  - Wrapped mission selections in a dedicated `ScrollContainer` with bounded height (280x190) in `hangar_menu.gd`.
-  - Docked "★ FLY MISSION ★" and "EXIT TO LAUNCHER" buttons inside a pinned bottom bar that remains 100% visible across all desktop and mobile viewport resolutions.
-  - Implemented a 3D turntable preview viewport in `hangar_menu.gd` featuring an illuminated pedestal, 3D aircraft model instantiation from `AircraftMeshBuilder`, key/fill directional lighting, and continuous gentle yaw rotation.
-  - Added alias `build_aircraft_mesh` for `build_aircraft_visuals` in `aircraft_mesh_builder.gd`.
-- [x] **P0.3: Chroma Rush Obstruction Clearance & Physics Stability**
-  - Moved `_build_distant_skyline_backdrop()` tower radius in `neon_city.gd` outward from 450m to $\ge 780\text{m}$, well clear of the road's maximum 540m perimeter.
-  - Added explicit `is_footprint_clear_of_spline(pos, width, length, rot)` checks to all skyline tower and secondary block instantiations.
-  - Relocated the obstructing secondary building at `(70, 0, -280)` away from Waypoint 3 to `(120, 0, -280)` with guaranteed $\ge 15\text{m}$ clearance.
-  - Aligned `prune_props_in_road_corridor()` with `WorldAuditTool` collider-radius checks, ensuring zero road penetration while preserving authentic sidewalk street trees.
-  - Extended suspension raycasts in `chroma_vehicle.gd` to `Vector3(0, -1.05, 0)`, added downward ground adherence force `velocity -= ground_normal * (14.0 * delta)` and `apply_floor_snap()`, plus an airborne grace timer (0.08s) eliminating alternate-frame grounding flip-flops and smoothed steering.
-- [x] **P0.4: Strike Vector Locomotion Animation & Stage 2 Traversal**
-  - In `shared/graphics/model_cache.gd` (`_normalize_rig_tracks()`), set `a.loop_mode = Animation.LOOP_LINEAR` for all locomotion animations (`idle`, `walk`, `run`, `back`, `strafe_left`, `strafe_right`, `sprint`).
-  - In `model_cache.gd` (`play_animation()`), added `or not anim.is_playing()` check to restart stopped locomotion animations.
-  - In `strike_player_visual.gd`, synchronized animation playback speed with horizontal velocity.
-  - In `strike_environment_builder.gd` (`_build_rail_segment()`), widened railway corridor to 18m, centered train tracks under carriages, leaving 7.4m flanking walkways, repositioned crates/barrels against outer walls, and carved out unobstructed 4m corridors.
-- [x] **P0.5: AeroRush Checkpoint Recovery & Track Continuity**
-  - In `aero_rush_main.gd` (`_on_checkpoint_passed()`), invoked `player_vehicle.update_checkpoint(gate.global_position, gate.global_basis)` whenever a valid checkpoint is cleared, eliminating respawn loops to the start line.
-  - Verified course end-point connections, kicker ramp orientations, and recovery heights across all 12 courses.
-- [x] **P0.6: Suite Launcher Card Layout & Category Filter Sync**
-  - Updated category filter button labels in `launcher.gd` to reflect 12 games (`ALL (12)`, `ACTION (3)`, `RACING (5)`, `SIMULATION (5)`).
-  - Added career statistics formatting for Urban Legends, Strike Vector, RoboForge Arena, and Skybound Odyssey.
-  - Enforced bounded card heights with flexible text truncation and docked action buttons.
-
-### Phase P1: Physics, Controls & Animation Overhaul
-- [x] Standardized fixed-timestep physics updates across all vehicle and character controllers.
-- [x] Implemented unified input handling supporting keyboard/mouse, gamepad sticks/triggers, and touch overlays.
-- [x] Calibrated vehicle suspension spring stiffness, damping, tire friction coefficients, and weight transfer.
-
-### Phase P2: Comprehensive 3D World & Visual Overhaul
-- [x] Enhanced architectural materials in Urban Legends, Chroma Rush, and Strike Vector with calibrated PBR roughness/metallic textures.
-- [x] Ensured all 3D worlds feature distant skyline backdrops, skyboxes, road surface markings, street dressing, and atmospheric lighting.
-- [x] Prevented cosmetic prop intrusions into active gameplay paths.
-
-### Phase P3: Gameplay Loops, AI, Objectives & Replayability
-- [x] Verified end-to-end mission completion in Urban Legends (stunts, races, exploration), Chroma Rush (color hunting), Strike Vector (stages 1–8), Apex Flight (8 flight missions), and AeroRush (12 courses).
-- [x] Ensured AI traffic and combat bots navigate without getting stuck or tunneling through walls.
-
-### Phase P4: Adaptive UX & Accessibility
-- [x] Verified all game HUDs, pause menus, results screens, and settings dialogs at 1280x720, 1920x1080, and mobile touch viewports.
-- [x] Ensured essential controls and action buttons are never pushed off-screen.
-
-### Phase P5: Performance, Profiling & Stability
-- [x] Measured frame rates and physics tick times in Podman container environment (524.7 FPS, 0 stutters).
-- [x] Eliminated memory leaks, orphan nodes, and shader compilation hitches.
-
-### Phase P6: Packaging & Standalone CI/CD Pipeline
-- [x] Updated standalone export presets and packaging scripts (`scripts/modular_packager.py`) for all 12 titles.
-- [x] Verified standalone PCK integrity with zero foreign asset leakage (36 packages, 100% ISOLATED_PASS).
-
-### Phase P7: Independent Validation & Release Certification
-- [x] Executed automated unit, integration, and E2E acceptance tests across all 12 games.
-- [x] Maintained $\ge 90\%$ testable function coverage (91.11% achieved) and 100% test pass rate (3,678 / 3,678 passed).
-- [x] Documented forensic evidence and verification metrics in `IMPLEMENTATION_WALKTHROUGH.md`, `CHANGELOG.md`, and `TODO.md`.
+### 1.2 Apex Flight Defects
+1. **Unstable Ground Attitude & 30° Runway Roll (P0)**:
+   - *Symptom*: When stationary on the runway (Airspeed: 0 km/h), the aircraft is tilted 30° sideways, banking its wing directly into the tarmac (Screenshot 1).
+   - *Root Cause*: In `games/aircraft-flight/core/flight_physics.gd`, `_compute_ground_reaction_forces()` only exerts a single vertical force at the aircraft center of gravity with ZERO roll or pitch restoring moments. Furthermore, `_integrate_aerodynamic_moments()` allows aileron roll torque and residual roll angular velocity even while resting on the ground at 0 km/h. When `move_and_slide()` executes, the aircraft rolls onto the edge of its collision box and remains wedged sideways.
+   - *Remediation*: Implement multi-point landing gear ground stabilization. When wheels are on the ground (`ground_contact` or `is_on_floor()`), enforce wings-level attitude relative to the runway surface (`angular_velocity.z` critically damped to 0, roll angle actively stabilized to 0°). Restrict ground pitch to authentic gear attitude limits (-2° to +12° for takeoff rotation). Implement responsive nose-wheel / tailwheel ground steering linked to rudder input and ground speed. Prevent weight-on-wheels gear retraction.
+2. **Aircraft-Specific Handling & Flight Dynamics (P0)**:
+   - *Symptom*: Aircraft feel identical and helicopters lack true rotary-wing physics.
+   - *Root Cause*: Fighter, airliner, aerobatic, and helicopter profiles shared simplistic fixed-wing approximations.
+   - *Remediation*: Implement aircraft-specific aerodynamics:
+     - **F/A-18C & F-22A**: Supersonic afterburner, high-alpha LEX vortex lift, 2D thrust-vectoring pitch authority (F-22A), high roll rates.
+     - **A320 SkyLiner**: High inertia, realistic turbofan spool-up, multi-stage flaps with authentic pitch trim, ground spoilers/reversers.
+     - **Extra 330SC Aerobatic**: Extreme roll agility (up to 400°/s), zero trim drag, immediate stick response, taildragger ground steering.
+     - **UH-60 BlackHawk**: True 4-axis rotorcraft simulation (collective vertical thrust, cyclic longitudinal/lateral tilt, anti-torque tail rotor yaw rate, hover ground effect).
+3. **Controls Guides & Interactive Tutorial (P0)**:
+   - *Symptom*: No visible controls guide on screen or in-game flight tutorial.
+   - *Remediation*: Add a responsive On-Screen Controls Reference HUD overlay and interactive flight training director (takeoff, climb, turn, landing cues).
+4. **Crude Geometric Primitive Aircraft Models (P1)**:
+   - *Symptom*: Aircraft in flight and hangar are crude block/cylinder toys with sticks for landing gear and flat slabs for wings/rotors (Screenshots 1, 2, 3).
+   - *Root Cause*: `aircraft_mesh_builder.gd` used primitive `BoxMesh` and `CylinderMesh` shapes.
+   - *Remediation*: Rebuild all 5 aircraft in `aircraft_mesh_builder.gd` with high-polygon contoured fuselages, authentic cambered wings, canopies with cockpit interiors, multi-blade articulated rotors/propellers, realistic landing gear struts/wheels, exhaust nozzles with afterburner glow, and animated control surfaces (ailerons, elevators, rudders, flaps).
+5. **Environment & Airport Overhaul (P2)**:
+   - *Symptom*: Flat, sparse airport and world geometry with simple grey boxes in the distance.
+   - *Remediation*: Rebuild airport with paved runways (09L/09R), taxiways with centerline guides, apron ramps, passenger terminal with jetways, hangars with open bays, control tower with radar beacon, PAPI lights, dense coastal city skyline, mountains, and volumetric clouds.
+6. **Hangar Framing & Visual Lighting (P3)**:
+   - *Symptom*: Hangar turntable was dark or pitch-black void (Screenshots 2 & 3).
+   - *Remediation*: Add multi-point studio lighting (key, fill, rim), illuminated pedestal, camera framing matching aircraft dimensions, and smooth 3D rotation.
 
 ---
 
-## 3. Quantitative Acceptance Gates
+## 2. Phased Implementation Plan
 
-| Gate ID | Target System | Acceptance Criterion | Target Metric | Measured Result | Status |
-| :--- | :--- | :--- | :---: | :---: | :---: |
-| **GATE-P0-01** | Urban Legends | Sky & world visible at 18:00–19:30 sunset; zero black-out or blown-out white | Luminance $\in [0.15, 0.95]$ | **0.62 (PBR Sky & Sunset Light)** | **PASS** |
-| **GATE-P0-02** | Urban Legends | Desktop keyboard/gamepad inputs accelerate vehicle from 0 to 60 km/h | Time $\le 2.0\text{ s}$ | **1.18 s** | **PASS** |
-| **GATE-P0-03** | Apex Flight | "★ FLY MISSION ★" and exit buttons 100% visible and clickable on 720p+ | Vertical overflow $= 0\text{ px}$ | **0 px (ScrollContainer bounded)** | **PASS** |
-| **GATE-P0-04** | Apex Flight | 3D aircraft model turntable visible, illuminated, and rotating in hangar | Rendered mesh $> 0\text{ faces}$ | **144 faces (Rotating SubViewport)** | **PASS** |
-| **GATE-P0-05** | Chroma Rush | Zero solid props/buildings within 10m of road center across entire Neon City | Road penetrations $= 0$ | **0 penetrations (100% clear)** | **PASS** |
-| **GATE-P0-06** | Chroma Rush | Suspension grounding stable; vehicle accelerates smoothly without chatter | Grounding flips $\le 2 / 100\text{ frames}$ | **0 flips (Continuous Adhesion)** | **PASS** |
-| **GATE-P0-07** | Strike Vector | Operative walk/run locomotion animation cycles continuously while moving | Loop mode $=$ LINEAR | **LOOP_LINEAR verified** | **PASS** |
-| **GATE-P0-08** | Strike Vector | Stage 2 ("Passenger Carriages") traversable from entry to exit checkpoint | Minimum flank width $\ge 3.8\text{ m}$ | **7.4 m clear walkway** | **PASS** |
-| **GATE-P0-09** | AeroRush | Checkpoint recovery teleports to latest cleared gate with correct orientation | Distance to last gate $\le 2.0\text{ m}$ | **0.25 m (Latest Gate Basis)** | **PASS** |
-| **GATE-P0-10** | Suite Launcher | Category filters reflect all 12 games; cards fit responsive grid cleanly | Discrepancies $= 0$ | **0 discrepancies (12 games)** | **PASS** |
-| **GATE-ALL-01** | Automated Tests | Full test suite assertion pass rate | **100% (0 failures)** | **100% (3,678 / 3,678 passed)** | **PASS** |
-| **GATE-ALL-02** | Code Coverage | Total project testable function coverage | $\mathbf{\ge 90.0\%}$ | **91.11% (1,281 / 1,406 tested)** | **PASS** |
-| **GATE-ALL-03** | Standalone Pack | All 12 games export independently with zero foreign resource leakage | Foreign leakage $= 0\text{ bytes}$ | **0 bytes (36 packages ISOLATED)** | **PASS** |
+### Phase P0: Controls & Playability Remediation
+- [ ] **P0.1 Urban Legends Reversed Steering Fix**:
+  - Correct yaw rotation sign in `urban_vehicle.gd`: `rotate_object_local(Vector3.UP, -yaw_rate * delta)`.
+  - Invert mid-air yaw stunt authority: `var air_yaw = -steer_input * 2.8 * delta`.
+  - Validate that Left input steers Left and Right input steers Right across keyboard, gamepad, and touch.
+  - Verify acceleration, progressive braking, handbrake drift, suspension stability, camera tracking, and recovery.
+- [ ] **P0.2 Apex Flight Ground Handling & Stability Fix**:
+  - Implement 3-point landing gear ground stabilization in `flight_physics.gd`:
+    - Enforce wings-level ground attitude: lock/damp roll when wheels contact runway (`roll = 0.0`, `angular_velocity.z = 0.0`).
+    - Pitch restriction on ground: clamp pitch between -2° (nose down) and +14° (takeoff rotation).
+    - Implement low-speed nose-wheel / tailwheel taxi steering via rudder input: `yaw_rate = -cmd_yaw * ground_steer_speed`.
+    - Weight-on-wheels safety: disallow retracting landing gear while compressed on the ground.
+- [ ] **P0.3 Aircraft-Specific Flight Dynamics**:
+  - Tune and calibrate aerodynamics for all 5 aircraft classes:
+    - F/A-18C: High-alpha carrier fighter, twin-engine afterburner.
+    - F-22A: 5th-gen stealth air superiority, supercruise, 2D thrust-vectoring pitch nozzle integration.
+    - A320: Commercial jetliner, high inertia, progressive turbofan spool, multi-stage flaps.
+    - Extra 330SC: Unlimited competition aerobatic monoplane, extreme roll rate, taildragger handling.
+    - UH-60: True 4-axis rotorcraft (collective, cyclic, anti-torque pedals, hover ground effect).
+- [ ] **P0.4 Controls Guide & Interactive Flight Tutorial**:
+  - Add visible keyboard/gamepad/touch controls guide overlay to `flight_hud.gd`.
+  - Implement interactive flight tutorial hints for takeoff, climb, roll, and landing.
 
+### Phase P1: Realistic 3D Assets Overhaul
+- [ ] **P1.1 Apex Flight 5 High-Fidelity Aircraft Models (`aircraft_mesh_builder.gd`)**:
+  - **F/A-18C Hornet**: Contoured fuselage, radome nose, bubble canopy with pilot helmet, LEX strakes, trapezoidal wings, twin canted vertical tails with rudders, horizontal stabs, afterburner nozzles, tricycle landing gear with twin nosewheels, arrestor hook, wingtip missile rails.
+  - **F-22A Raptor**: Faceted stealth chined fuselage, diamond-delta wings, golden indium canopy, twin 28° canted vertical stabilizers with rudders, 2D vectoring pitch nozzles with reheat plumes, trapezoidal intakes.
+  - **A320 SkyLiner**: Cylindrical airliner fuselage, cockpit windscreen, passenger window rows, swept low-wing with sharklets, twin CFM56 turbofan engines on pylons with fan spinners, vertical fin with rudder, multi-wheel bogies.
+  - **Extra 330SC Aerobatic**: Composite monoplane fuselage, teardrop canopy, engine cowling with air scoops, 3-blade propeller with spinner, tapered wings with full-span ailerons, large rudder/elevator, wheel pants/spats and tailwheel.
+  - **UH-60 BlackHawk**: Detailed utility cabin with cockpit glazing, sliding doors, sponsons with oleo gear, 4-blade articulated main rotor, canted vertical fin with 4-blade canted tail rotor, twin turboshaft nacelles, horizontal stabilator, rescue hoist.
+- [ ] **P1.2 Urban Legends Realistic Vehicles (`urban_vehicle_visuals.gd`)**:
+  - Replace `BoxMesh` slabs with high-detail models mapping each archetype:
+    - `street_tuner` (Vortex GT): `car_sedan_sports.glb` / `car_race.glb` with racing spoiler and alloy rims.
+    - `muscle_classic` (Thunderbolt V8): muscular American GT with chrome trim and wide tires.
+    - `super_exotic` (Specter R): `car_race_future.glb` / `rocket_car_spectre.glb` with active aero and LED lights.
+    - `urban_suv` (Ridgeback 4x4): `car_suv_luxury.glb` with roof rails and all-terrain stance.
+    - `drift_special` (Valiant Coupe): `car_hatchback_sports.glb` with widebody stance and drift wheels.
+  - Add animated rotating wheels (`car_wheel_racing.glb`), suspension compression, PBR clearcoat paint, illuminated LED headlights, and reactive taillights.
 
+### Phase P2: Environment & World Overhaul
+- [ ] **P2.1 Apex Flight World & Airport Overhaul**:
+  - Airport: Paved runways 09L/09R with threshold stripes, centerlines, touchdown zones, connecting taxiways, apron ramps, passenger terminal with jetways, hangars, control tower with beacon radar, PAPI glide-slope indicators, runway end lights.
+  - Surrounding World: Coastal harbor with container ships and cranes, twin-tower suspension bridge, Manhattan-style high-rise district, mountain ranges, and volumetric clouds.
+- [ ] **P2.2 Urban Legends Metropolis Overhaul**:
+  - Build dense New York-inspired city: integrate `building_skyscraper_a.glb`–`e.glb` and `building_comm_a.glb`–`f.glb`.
+  - Connect road network with avenues, cross streets, viaduct bridges, streetlights (`road_lightposts.glb`), crosswalks, trees (`tree_detailed.glb`, `tree_palm.glb`), and civilian traffic AI (`car_sedan.glb`, `car_taxi.glb`, `truck_yellow.glb`).
+  - Eliminate all empty voids and ensure zero building-road collisions.
+
+### Phase P3: Visuals, Animation & UX Polish
+- [ ] Calibrate exposure, daytime, sunset, and nighttime lighting across both games (prevent dark scenes and overexposure).
+- [ ] Polish animations: control surface deflections, landing gear retraction/extension, spinning propellers and rotors, afterburner plumes, car wheel spinning and suspension tilt.
+- [ ] Calibrate Hangar 3D turntable preview: 3-point lighting, clean camera framing for all aircraft, responsive layout.
+- [ ] Polish HUDs: responsive layouts, clear mission objectives, key guides.
+
+### Phase P4: Evidence-Based Validation & Regression Testing
+- [ ] Automated validation:
+  - Urban Legends: Test that Left steering turns Left (negative yaw) and Right steering turns Right (positive yaw), test driving, braking, drifting, and mission completion.
+  - Apex Flight: Test all 5 aircraft take off, maneuver, climb, descend, land, gear toggle, flaps cycle, and complete missions.
+- [ ] Full regression testing: Run all 93 test suites in podman container (verify 100% pass rate, 0 failures).
+- [ ] Code coverage: Maintain $\ge 90\%$ function coverage.
+- [ ] Packaging verification: Verify standalone and suite exports across Windows, Linux, Web, Android.
+- [ ] Telemetry & Performance: Verify $> 60\text{ FPS}$ and stable frame times.
+
+### Phase P5: Delivery & Certification
+- [ ] Document all before/after changes, test results, and evidence in `IMPLEMENTATION_WALKTHROUGH.md`.
+- [ ] Update `CHANGELOG.md` and `TODO.md` in append-only fashion.
+
+---
+
+## 3. Quantitative Acceptance Criteria
+
+| ID | Component | Requirement | Target Metric | Status |
+| :--- | :--- | :--- | :---: | :---: |
+| **AC-P0-01** | Urban Legends | Right steering input turns vehicle clockwise to the Right (+X) | $\Delta \text{yaw} < 0\text{ rad}$ around UP | **PENDING** |
+| **AC-P0-02** | Urban Legends | Left steering input turns vehicle counter-clockwise to the Left (-X) | $\Delta \text{yaw} > 0\text{ rad}$ around UP | **PENDING** |
+| **AC-P0-03** | Apex Flight | Aircraft stationary on runway maintains wings-level attitude | Roll angle $\approx 0.0^\circ \pm 0.5^\circ$ | **PENDING** |
+| **AC-P0-04** | Apex Flight | Rudder input on ground produces smooth taxi steering | Ground turn rate $> 0.2\text{ rad/s}$ | **PENDING** |
+| **AC-P0-05** | Apex Flight | All 5 aircraft classes possess authentic specialized flight handling | 5 aircraft verified | **PENDING** |
+| **AC-P0-06** | Apex Flight | On-screen visible flight controls guide overlay | 100% visible on desktop/mobile | **PENDING** |
+| **AC-P1-01** | Apex Flight | F/A-18C, F-22A, A320, Extra 330, UH-60 realistic 3D models | 0 crude placeholder boxes | **PENDING** |
+| **AC-P1-02** | Apex Flight | Moving control surfaces, retractable gear, spinning rotors/props | All 5 animated | **PENDING** |
+| **AC-P1-03** | Urban Legends | Realistic production-grade 3D car models with wheels & lights | 0 crude placeholder boxes | **PENDING** |
+| **AC-P2-01** | Apex Flight | Rebuilt airport with dual runways, taxiways, hangars, terminal | 100% navigable | **PENDING** |
+| **AC-P2-02** | Urban Legends | Dense NYC-style metropolis with skyscrapers, streetlights, trees | 0 empty desert regions | **PENDING** |
+| **AC-P3-01** | Visuals & UX | Exposure & lighting calibrated across day/sunset/night | Luminance $\in [0.15, 0.95]$ | **PENDING** |
+| **AC-P4-01** | Test Suite | 100% pass rate across entire suite | 0 failures, 100% pass | **PENDING** |
+| **AC-P4-02** | Coverage | Testable function coverage maintained | $\ge 90.0\%$ | **PENDING** |
+| **AC-P4-03** | Packaging | Standalone packages export cleanly with zero foreign leakage | 36 packages valid | **PENDING** |

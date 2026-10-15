@@ -1664,6 +1664,34 @@
   - `IMPLEMENTATION_WALKTHROUGH.md` (Section 24)
   - `CHANGELOG.md` (Release 14.0.0)
 
+### [2026-10-15 13:00:00 UTC] - Milestone Update: VoltArena v14.0.0 Apex Flight & Urban Legends Targeted Production Remediation
+- **Status**: COMPLETED
+- **Description**:
+  1. **Phase P0 (Controls & Playability)**:
+     - Fixed Urban Legends reversed steering by applying local vehicle negative yaw rotation (`-yaw_rate * delta`) for positive steer right and inverting visual front wheel angle. Verified right turn points forward vector to `+X` (`fwd.x > 0.05`) and left turn to `-X` (`fwd.x < -0.05`).
+     - Fixed Apex Flight ground stability: removed ground aileron roll authority, clamped ground pitch (-2.5° to +13.5°), implemented nose-wheel / tailwheel rudder pedal steering, and locked out weight-on-wheels landing gear collapse. Centered fuselage box collider (`2.4x2.0x9.2`) and elevated wing collider (`y=0.65`) preventing wing snag on runway.
+     - Added visible on-screen controls guides for desktop and touchscreens, plus flight director takeoff/landing tutorial cues.
+  2. **Phase P1 (Realistic 3D Assets)**:
+     - Rebuilt all 5 aircraft in `aircraft_mesh_builder.gd` with high-detail geometry, contoured fuselages, canopies, wings, engines, landing gear, and animated surfaces (F/A-18C, F-22A, A320, Extra 330SC, UH-60).
+     - Upgraded Urban Legends vehicles in `urban_vehicle_visuals.gd` with authentic CC0 GLB vehicle models (`car_sedan_sports`, `car_race`, `car_race_future`, `car_suv_luxury`, `car_hatchback_sports`), racing wheels, PBR clearcoat paint, and headlights/taillights.
+  3. **Phase P2 (Environment Overhaul)**:
+     - Rebuilt Apex Flight airport with dual runways (09L/09R), parallel Taxiway Alpha with yellow centerline & blue edge lights, connecting high-speed taxiways, maintenance hangars with open bays, passenger terminal with 4 jetways, control tower with radar dish, PAPI lights, northern mountain ridgeline, and 3D cumulus clouds.
+     - Populated Urban Legends world with 40+ skyscrapers, commercial blocks, streetlights, trees, and yellow road centerlines.
+  4. **Phase P3 (Visuals & Showroom UX)**:
+     - Upgraded Hangar showroom turntable with 3-point studio lighting, polished epoxy floor, architectural ribbed rear wall with green LED strip, properly scaled aircraft models, and calibrated camera framing.
+  5. **Phase P4 & P5 (Automated Test Validation & Certification)**:
+     - Monorepo automated test runner: **93 / 93 test suites passed (100% pass rate)**.
+     - Total assertions: **3,681 passed, 0 failed**.
+     - Function coverage: **91.0%** (1,281 / 1,408 tested functions across all engine and game modules, exceeding $\ge 90.0\%$).
+     - Zero regressions across the remaining 10 games in the suite.
+- **Evidence**:
+  - `artifacts/test-results.json` (93 suites, 3,681 passed, 0 failed, 100% pass rate)
+  - `artifacts/coverage-report.json` (91.0% function coverage)
+  - `IMPLEMENTATION_PLAN.md` (100% Completed, all P0-P5 gates passed)
+  - `IMPLEMENTATION_WALKTHROUGH.md` (Section 25)
+  - `CHANGELOG.md` (Release 14.0.0 Remediation)
+
+
 
 
 

@@ -341,15 +341,17 @@ func _process_ground_physics(delta: float) -> void:
 	# Apply lateral grip dampening
 	local_vel.x = move_toward(local_vel.x, 0.0, grip * delta * 10.0)
 
-	# Yaw rotation according to steering
+	# Yaw rotation according to steering (vehicle-local coordinates)
+	# By Godot right-hand convention (+Y UP, -Z Forward), rotating clockwise (turning right towards +X)
+	# corresponds to a negative rotation angle around Vector3.UP.
 	var yaw_rate = 0.0
 	if absf(forward_speed) > 0.1:
 		var speed_scale = clampf(forward_speed / 12.0, -1.0, 1.0)
 		var drift_yaw_boost = 1.35 if is_drifting else 1.0
 		yaw_rate = current_steer_angle * speed_scale * 3.2 * drift_yaw_boost
 
-	# Rotate vehicle basis around its local UP axis
-	rotate_object_local(Vector3.UP, yaw_rate * delta)
+	# Rotate vehicle basis around its local UP axis (negated for correct clockwise right turn)
+	rotate_object_local(Vector3.UP, -yaw_rate * delta)
 
 	# Forward velocity update
 	local_vel.z -= drive_accel * delta
@@ -384,7 +386,7 @@ func _process_air_physics(delta: float) -> void:
 
 	# Mid-air stunt trick authority (Pitch, Yaw, Roll)
 	var air_pitch = air_pitch_input * 3.2 * delta
-	var air_yaw = steer_input * 2.8 * delta
+	var air_yaw = -steer_input * 2.8 * delta
 	var air_roll = air_roll_input * 3.5 * delta
 
 	if absf(air_pitch) > 0.001:
@@ -457,9 +459,9 @@ func _update_weight_transfer(delta: float) -> void:
 			# Suspension vertical displacement
 			var comp = wheel_compressions[i] if i < wheel_compressions.size() else 0.0
 			w.position.y = 0.35 + comp * 0.8
-			# Front wheels steer (index 0 and 1)
+			# Front wheels steer (index 0 and 1, negated to turn right towards +X)
 			if i == 0 or i == 1:
-				w.rotation.y = current_steer_angle
+				w.rotation.y = -current_steer_angle
 			# Wheel spin
 			w.rotation.x = wheel_roll_rot
 

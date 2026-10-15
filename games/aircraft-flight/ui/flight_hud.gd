@@ -32,6 +32,8 @@ var gear_indicator: Label
 var flap_indicator: Label
 var stall_warning_banner: PanelContainer
 var objective_label: Label
+var tutorial_hint_label: Label
+var controls_guide_label: Label
 var minimap_panel: PanelContainer
 
 # Touch Controls for Mobile / Tablets
@@ -190,15 +192,34 @@ func _build_hud_layout() -> void:
 	heading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hdg_vbox.add_child(heading_label)
 
-	# --- TOP BANNER: ACTIVE OBJECTIVE ---
-	var obj_card = _create_glass_panel(Vector2(420, 42))
+	# --- TOP BANNER: ACTIVE OBJECTIVE & FLIGHT DIRECTOR TUTORIAL ---
+	var obj_card = _create_glass_panel(Vector2(520, 64))
 	obj_card.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	obj_card.offset_top = 76
+	obj_card.offset_top = 74
 	hud_root.add_child(obj_card)
 
-	objective_label = _create_label("Takeoff from Runway 09L and explore the skies.", 13, Color(1.0, 0.9, 0.2))
+	var obj_vbox = VBoxContainer.new()
+	obj_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	obj_card.add_child(obj_vbox)
+
+	objective_label = _create_label("Takeoff from Runway 09L and explore the open skies.", 13, Color(1.0, 0.9, 0.2))
 	objective_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	obj_card.add_child(objective_label)
+	obj_vbox.add_child(objective_label)
+
+	tutorial_hint_label = _create_label("TUTORIAL: Advance throttle to 100% [Hold SHIFT]. Steer runway with [Q/E].", 11, Color(0.3, 0.9, 1.0))
+	tutorial_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	obj_vbox.add_child(tutorial_hint_label)
+
+	# --- BOTTOM HUD: VISIBLE FLIGHT CONTROLS GUIDE PANEL ---
+	var guide_panel = _create_glass_panel(Vector2(620, 42))
+	guide_panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	guide_panel.offset_left = 30
+	guide_panel.offset_top = -54
+	hud_root.add_child(guide_panel)
+
+	controls_guide_label = _create_label("[W/S] Pitch  [A/D] Roll  [Q/E] Rudder/Taxi  [Shift/Ctrl] Throttle  [Space] Brakes  [G] Gear  [F] Flaps  [V] Cam  [R] Reset", 11, Color(0.85, 0.95, 0.88, 0.9))
+	controls_guide_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	guide_panel.add_child(controls_guide_label)
 
 	# --- STALL MASTER CAUTION WARNING ---
 	stall_warning_banner = _create_glass_panel(Vector2(260, 48))
@@ -308,6 +329,26 @@ func _process(delta: float) -> void:
 
 	# Stall warning flashing
 	stall_warning_banner.visible = aircraft.is_stalling and (fmod(Time.get_ticks_msec(), 400.0) < 200.0)
+
+	# Interactive Flight Tutorial & Flight Director cues
+	if tutorial_hint_label:
+		if aircraft.is_rotorcraft:
+			tutorial_hint_label.text = "ROTORCRAFT: [SHIFT/CTRL] Collective Lift  |  [W/S/A/D] Cyclic Direction  |  [Q/E] Anti-Torque Pedals"
+		elif aircraft.is_stalling:
+			tutorial_hint_label.text = "⚠ STALL RECOVERY: Push nose down [W] and firewall throttle [Hold SHIFT] immediately!"
+		elif not aircraft.is_airborne:
+			if aircraft.indicated_airspeed_kmh < 40.0:
+				tutorial_hint_label.text = "TAKEOFF ROLL: Advance throttle to 100% [Hold SHIFT]. Maintain centerline with Rudder [Q/E]."
+			elif aircraft.indicated_airspeed_kmh < aircraft.stall_speed_ms * 3.6 * 1.15:
+				tutorial_hint_label.text = "ACCELERATING: Airspeed alive. Stand by for rotation speed (Vr ~220 KM/H)."
+			else:
+				tutorial_hint_label.text = "ROTATE: Gently pull back [S] to rotate and climb out cleanly!"
+		elif aircraft.is_airborne and aircraft.gear_position > 0.8:
+			tutorial_hint_label.text = "POSITIVE CLIMB: Press [G] to retract landing gear and reduce drag."
+		elif aircraft.radar_altitude_m < 150.0 and aircraft.indicated_airspeed_kmh < 260.0:
+			tutorial_hint_label.text = "APPROACH & LANDING: On final glideslope. Gear [G], flaps [F], flare gently before touchdown."
+		else:
+			tutorial_hint_label.text = "CRUISE FLIGHT: Bank with [A/D], pitch with [W/S], adjust throttle with [SHIFT/CTRL]."
 
 func set_objective_text(text: String) -> void:
 	if objective_label:

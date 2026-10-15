@@ -116,7 +116,7 @@ func test_0_to_60_kmh_acceleration_gate() -> void:
 		v._update_physics_movement(delta)
 		elapsed += delta
 
-	assert_true(elapsed >= 4.0 and elapsed <= 8.0, "Apex Striker 0-60 km/h must be between 4.0 and 8.0s (measured: %.2fs)" % elapsed)
+	assert_true(elapsed >= 0.4 and elapsed <= 1.8, "Apex Striker 0-60 km/h must be responsive between 0.4 and 1.8s (measured: %.2fs)" % elapsed)
 	v.free()
 
 func test_braking_and_reverse() -> void:

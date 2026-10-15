@@ -14,8 +14,10 @@ const ThemeGen = preload("res://shared/ui/theme_generator.gd")
 const LauncherArtScript = preload("res://launcher/launcher_art.gd")
 
 var current_target_game: String = ""
+var current_category: String = "ALL"
+var category_buttons: Dictionary = {}
 
-# Metadata for all 4 games
+# Metadata for all 11 games
 var games_meta = [
 	{
 		"id": "arena_fps",
@@ -205,6 +207,20 @@ func setup_launcher_ui() -> void:
 	header_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(header_spacer)
 
+	# Career Progression Summary Badge
+	var sm = GameConstants.get_autoload(self, "SaveManager")
+	var credits = sm.get_credits() if sm and sm.has_method("get_credits") else 0
+	var medals = sm.get_total_medals() if sm and sm.has_method("get_total_medals") else 0
+	var career_badge = Label.new()
+	career_badge.text = "CAREER: %d CREDITS | %d MEDALS" % [credits, medals]
+	career_badge.modulate = Color(1.0, 0.85, 0.25)
+	career_badge.add_theme_font_size_override("font_size", 14)
+	header.add_child(career_badge)
+
+	var spacer_h = Control.new()
+	spacer_h.custom_minimum_size = Vector2(16, 0)
+	header.add_child(spacer_h)
+
 	# Controls Guide Button
 	var btn_controls = Button.new()
 	btn_controls.text = "CONTROLS"
@@ -217,8 +233,36 @@ func setup_launcher_ui() -> void:
 	btn_settings.pressed.connect(show_settings)
 	header.add_child(btn_settings)
 
+	# Category Filter Tabs Bar
+	var cat_bar = HBoxContainer.new()
+	cat_bar.add_theme_constant_override("separation", 10)
+	main_vbox.add_child(cat_bar)
+
+	var cat_label = Label.new()
+	cat_label.text = "FILTER:"
+	cat_label.modulate = Color(0.45, 0.6, 0.75)
+	cat_bar.add_child(cat_label)
+
+	var categories = [
+		{"id": "ALL", "label": "ALL (11)"},
+		{"id": "ACTION", "label": "ACTION (3)"},
+		{"id": "RACING", "label": "RACING & STUNT (4)"},
+		{"id": "SIMULATION", "label": "SIMULATION (4)"}
+	]
+
+	for cat in categories:
+		var cat_btn = Button.new()
+		cat_btn.text = cat["label"]
+		cat_btn.custom_minimum_size = Vector2(100, 32)
+		cat_btn.pressed.connect(func():
+			set_category_filter(cat["id"])
+		)
+		cat_bar.add_child(cat_btn)
+		category_buttons[cat["id"]] = cat_btn
+	set_category_filter("ALL")
+
 	var spacer1 = Control.new()
-	spacer1.custom_minimum_size = Vector2(0, 16)
+	spacer1.custom_minimum_size = Vector2(0, 10)
 	main_vbox.add_child(spacer1)
 
 	# Game Selection Scroll / Cards Container (Vertical scroll only)
@@ -340,6 +384,11 @@ func create_game_card(meta: Dictionary) -> void:
 	stats_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(stats_lbl)
 
+	# Elastic Spacer to dock Play button cleanly at bottom of card
+	var card_spacer = Control.new()
+	card_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(card_spacer)
+
 	# Play Button
 	var btn_play = Button.new()
 	btn_play.text = "PLAY"
@@ -357,6 +406,7 @@ func create_game_card(meta: Dictionary) -> void:
 	)
 	vbox.add_child(btn_play)
 
+	card.set_meta("game_id", meta["id"])
 	game_cards_container.add_child(card)
 
 func get_game_career_stats(game_id: String) -> String:
@@ -379,6 +429,16 @@ func get_game_career_stats(game_id: String) -> String:
 			var credits = cr_data.get("credits", 0)
 			var medals = cr_data.get("medals", 0)
 			return "Credits: %d | Medals: %d" % [credits, medals]
+		"aero_rush":
+			var ar_stats = sm.save_data.get("statistics", {}).get("aero_rush", {})
+			var medals = ar_stats.get("gold_medals", 0)
+			var races = ar_stats.get("races_finished", 0)
+			return "Gold: %d | Races: %d" % [medals, races]
+		"aircraft_flight":
+			var fl_stats = sm.save_data.get("statistics", {}).get("aircraft_flight", {})
+			var hours = fl_stats.get("flight_hours", 0.0)
+			var missions = fl_stats.get("missions_completed", 0)
+			return "Hours: %.1fh | Missions: %d" % [hours, missions]
 		_:
 			return ""
 
@@ -641,11 +701,35 @@ func update_responsive_layout(viewport_size: Vector2) -> void:
 			if c is Control:
 				c.custom_minimum_size.x = card_w
 				if cols == 4:
-					c.custom_minimum_size.y = clampf(available_h, 300.0, 520.0)
+					c.custom_minimum_size.y = 350.0
 				elif cols == 2:
-					c.custom_minimum_size.y = clampf(available_h * 0.48, 280.0, 420.0)
+					c.custom_minimum_size.y = 330.0
 				else:
-					c.custom_minimum_size.y = 300.0
+					c.custom_minimum_size.y = 320.0
+
+func set_category_filter(category: String) -> void:
+	current_category = category
+	for cat_id in category_buttons:
+		var btn = category_buttons[cat_id] as Button
+		if cat_id == category:
+			btn.modulate = Color(0.15, 1.0, 1.0)
+		else:
+			btn.modulate = Color(0.7, 0.75, 0.85)
+
+	if not game_cards_container:
+		return
+
+	for card in game_cards_container.get_children():
+		if card is Control:
+			var g_id = card.get_meta("game_id", "")
+			var should_show = true
+			if category == "ACTION":
+				should_show = (g_id in ["arena_fps", "subway_survival", "strike_vector"])
+			elif category == "RACING":
+				should_show = (g_id in ["kart_racing", "rocket_car", "chroma_rush", "aero_rush"])
+			elif category == "SIMULATION":
+				should_show = (g_id in ["aircraft_flight", "skybound_odyssey", "roboforge_arena", "wildcircuit"])
+			card.visible = should_show
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):

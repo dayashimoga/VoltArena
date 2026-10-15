@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 90.5138339920949,
-  "coverage_tested_functions": 1145,
-  "coverage_total_functions": 1265,
-  "execution_seconds": 174.551,
+  "coverage_percent": 90.3785488958991,
+  "coverage_tested_functions": 1146,
+  "coverage_total_functions": 1268,
+  "execution_seconds": 174.43,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -47,7 +47,7 @@
     },
     "Apex Flight E2E Scenarios": {
       "failed": 0,
-      "passed": 13,
+      "passed": 35,
       "status": "PASS"
     },
     "Apex Flight HUD & Autopilot Unit": {
@@ -212,7 +212,7 @@
     },
     "Launcher E2E": {
       "failed": 0,
-      "passed": 105,
+      "passed": 112,
       "status": "PASS"
     },
     "LauncherArt Vector Graphics Unit": {
@@ -436,8 +436,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-10-15T05:03:21",
+  "timestamp": "2026-10-15T06:49:47",
   "total_failed": 0,
-  "total_passed": 3242,
+  "total_passed": 3271,
   "total_suites": 86
 }

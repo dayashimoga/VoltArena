@@ -380,20 +380,33 @@ func _build_track(c_def: Dictionary) -> void:
 			gate.is_finish_line = (i == cp_indices.size() - 1)
 			gate.position = wp["pos"] as Vector3
 
+			# Calculate true forward direction along the course corridor
+			var fwd = Vector3.FORWARD
+			if wp.has("forward"):
+				fwd = wp["forward"]
+			elif wp_idx < waypoints.size() - 1:
+				var next_p = waypoints[wp_idx + 1]["pos"] as Vector3
+				var cur_p = wp["pos"] as Vector3
+				if (next_p - cur_p).length_squared() > 0.01:
+					fwd = (next_p - cur_p).normalized()
+			elif wp_idx > 0:
+				var prev_p = waypoints[wp_idx - 1]["pos"] as Vector3
+				var cur_p = wp["pos"] as Vector3
+				if (cur_p - prev_p).length_squared() > 0.01:
+					fwd = (cur_p - prev_p).normalized()
+
 			gate.checkpoint_passed.connect(_on_checkpoint_passed)
 			track_container.add_child(gate)
 
 			# Orient gate along forward direction safely
-			var fwd = wp.get("forward", Vector3.FORWARD) as Vector3
 			if fwd.length_squared() > 0.001:
-				if gate.is_inside_tree():
-					gate.look_at(gate.global_position + fwd, Vector3.UP)
-				else:
-					var up = Vector3.UP
-					var z_axis = -fwd.normalized()
-					var x_axis = up.cross(z_axis).normalized()
-					var y_axis = z_axis.cross(x_axis).normalized()
-					gate.transform.basis = Basis(x_axis, y_axis, z_axis)
+				var up = Vector3.UP
+				if absf(fwd.dot(up)) > 0.95:
+					up = Vector3.FORWARD
+				var z_axis = -fwd.normalized()
+				var x_axis = up.cross(z_axis).normalized()
+				var y_axis = z_axis.cross(x_axis).normalized()
+				gate.transform.basis = Basis(x_axis, y_axis, z_axis)
 
 			checkpoints.append(gate)
 
@@ -532,13 +545,17 @@ func _on_checkpoint_passed(cp_idx: int, vehicle: CharacterBody3D) -> void:
 		if cp_idx == next_checkpoint_idx:
 			next_checkpoint_idx += 1
 			_play_sfx("beep_high")
+		elif cp_idx > next_checkpoint_idx and cp_idx <= next_checkpoint_idx + 2:
+			# Resilient forward advancement if a gate was slightly skipped or passed at high speed
+			next_checkpoint_idx = cp_idx + 1
+			_play_sfx("beep_high")
 
-			# Check if crossed finish line
-			if next_checkpoint_idx >= checkpoints.size():
-				next_checkpoint_idx = 0
-				current_lap += 1
-				if current_lap > total_laps:
-					_finish_race(true)
+		# Check if crossed finish line or completed the circuit
+		if next_checkpoint_idx >= checkpoints.size() or (cp_idx == checkpoints.size() - 1 and next_checkpoint_idx == checkpoints.size()):
+			next_checkpoint_idx = 0
+			current_lap += 1
+			if current_lap > total_laps:
+				_finish_race(true)
 
 func _finish_race(victory: bool) -> void:
 	if current_state != State.RACING:

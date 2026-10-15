@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 90.5138339920949,
+  "overall_coverage_pct": 90.3785488958991,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -1164,8 +1164,8 @@
     },
     "res://launcher/launcher.gd": {
       "coverage_pct": 100,
-      "tested": 15,
-      "total": 15,
+      "tested": 16,
+      "total": 16,
       "untested": []
     },
     "res://launcher/launcher_art.gd": {
@@ -1375,10 +1375,13 @@
       "untested": []
     },
     "res://shared/save/save_manager.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 88.8888888888889,
       "tested": 16,
-      "total": 16,
-      "untested": []
+      "total": 18,
+      "untested": [
+        "record_flight_session",
+        "record_aero_race"
+      ]
     },
     "res://shared/settings/settings_manager.gd": {
       "coverage_pct": 100,
@@ -1417,7 +1420,7 @@
       "untested": []
     }
   },
-  "tested_functions": 1145,
-  "timestamp": "2026-10-15T05:03:21",
-  "total_functions": 1265
+  "tested_functions": 1146,
+  "timestamp": "2026-10-15T06:49:47",
+  "total_functions": 1268
 }

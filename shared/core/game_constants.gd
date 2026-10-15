@@ -18,6 +18,8 @@ const GAME_ROCKET_CAR: String = "rocket_car"
 const GAME_KART_RACING: String = "kart_racing"
 const GAME_STRIKE_VECTOR: String = "strike_vector"
 const GAME_CHROMA_RUSH: String = "chroma_rush"
+const GAME_AERO_RUSH: String = "aero_rush"
+const GAME_AIRCRAFT_FLIGHT: String = "aircraft_flight"
 
 # Game States
 enum GameState {

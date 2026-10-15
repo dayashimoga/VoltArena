@@ -48,6 +48,28 @@ func get_default_save() -> Dictionary:
 				"weapon_upgrades": {},
 				"collectibles_found": 0,
 				"best_grades": {}
+			},
+			"chroma_rush": {
+				"credits": 0,
+				"medals": 0,
+				"missions_completed": 0,
+				"highest_score": 0,
+				"swaps_performed": 0
+			},
+			"aero_rush": {
+				"races_finished": 0,
+				"gold_medals": 0,
+				"silver_medals": 0,
+				"bronze_medals": 0,
+				"highest_score": 0,
+				"highest_combo": 1
+			},
+			"aircraft_flight": {
+				"flight_hours": 0.0,
+				"landings_completed": 0,
+				"missions_completed": 0,
+				"highest_rank": "Flight Cadet",
+				"total_score": 0
 			}
 		},
 		"unlocked_items": {
@@ -222,4 +244,33 @@ func get_strike_vector_stats() -> Dictionary:
 	if save_data.has("statistics") and save_data["statistics"].has("strike_vector"):
 		return save_data["statistics"]["strike_vector"]
 	return get_default_save()["statistics"]["strike_vector"]
+
+func record_flight_session(hours: float, landing: bool, mission_won: bool, score: int) -> void:
+	if not save_data.has("statistics"):
+		save_data["statistics"] = {}
+	if not save_data["statistics"].has("aircraft_flight"):
+		save_data["statistics"]["aircraft_flight"] = get_default_save()["statistics"]["aircraft_flight"]
+	var stats = save_data["statistics"]["aircraft_flight"]
+	stats["flight_hours"] = stats.get("flight_hours", 0.0) + hours
+	if landing:
+		stats["landings_completed"] = stats.get("landings_completed", 0) + 1
+	if mission_won:
+		stats["missions_completed"] = stats.get("missions_completed", 0) + 1
+	stats["total_score"] = stats.get("total_score", 0) + score
+	save_to_disk()
+
+func record_aero_race(medal: String, score: int, combo: int) -> void:
+	if not save_data.has("statistics"):
+		save_data["statistics"] = {}
+	if not save_data["statistics"].has("aero_rush"):
+		save_data["statistics"]["aero_rush"] = get_default_save()["statistics"]["aero_rush"]
+	var stats = save_data["statistics"]["aero_rush"]
+	stats["races_finished"] = stats.get("races_finished", 0) + 1
+	match medal.to_lower():
+		"gold": stats["gold_medals"] = stats.get("gold_medals", 0) + 1
+		"silver": stats["silver_medals"] = stats.get("silver_medals", 0) + 1
+		"bronze": stats["bronze_medals"] = stats.get("bronze_medals", 0) + 1
+	stats["highest_score"] = maxi(stats.get("highest_score", 0), score)
+	stats["highest_combo"] = maxi(stats.get("highest_combo", 1), combo)
+	save_to_disk()
 

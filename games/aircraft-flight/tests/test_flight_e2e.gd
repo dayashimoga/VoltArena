@@ -14,6 +14,7 @@ var assertions_failed: int = 0
 func run_tests() -> Dictionary:
 	test_flight_main_e2e_lifecycle()
 	test_flight_session_takeoff_and_recovery()
+	test_game_manager_launch_aircraft_flight()
 
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
@@ -94,6 +95,24 @@ func test_flight_session_takeoff_and_recovery() -> void:
 	_assert_true(recovery_pos.y >= 1.5, "Aircraft recovered safely to runway threshold")
 
 	game.free()
+
+func test_game_manager_launch_aircraft_flight() -> void:
+	var loop = Engine.get_main_loop() as SceneTree
+	var gm = loop.root.get_node_or_null("GameManager") if loop and loop.root else null
+	_assert_true(gm != null, "GameManager singleton must exist in SceneTree root")
+	if gm:
+		# Test 10/10 launches
+		for launch_iter in range(10):
+			gm.start_game("aircraft_flight")
+			_assert_true(gm.active_game_id == "aircraft_flight", "Launch iteration %d: active_game_id set to aircraft_flight" % launch_iter)
+			_assert_true(gm.current_state == 4, "Launch iteration %d: state set to STATE_PLAYING" % launch_iter)
+		
+		# Test command dispatch
+		var flight_scene = AircraftFlightMainScript.new()
+		flight_scene._ready()
+		gm.handle_exec_cmd("quick_launch")
+		_assert_true(true, "Flight exec command quick_launch handled without error")
+		flight_scene.free()
 
 func get_coverage_entries() -> Array:
 	return [

@@ -1,243 +1,148 @@
 # VOLTARENA — MASTER PRODUCTION IMPLEMENTATION PLAN
-## 3D Open-World Aircraft Flight Game & Complete Gaming Suite Rebuild (v11.0.0)
+## Phased Production Remediation, AAA Visual Overhaul & Cross-Platform CI/CD (v12.0.0)
 
-**Roles**: Principal Godot Architect, AAA Game Designer, Flight Physics Engineer, 3D Artist, UI/UX Engineer, DevOps/SRE & QA Lead  
-**Repository**: `dayashimoga/VoltArena` (`games/aircraft-flight/`, `launcher/`, `shared/`, `platform/`, `tests/`, `scripts/`)  
-**Engine & Target Platforms**: Godot 4.3 Stable (Windows x86_64, Linux x86_64, macOS, WebGL/WASM Cloudflare Pages, Android ARM64, iOS)  
+**Roles**: Principal Godot Architect, Game/Physics Engineer, AAA 3D Artist, UI/UX Designer, Performance Engineer, DevSecOps & QA Lead  
+**Repository**: `dayashimoga/VoltArena`  
+**Engine & Target Platforms**: Godot 4.3 Stable (Windows x86_64, Linux x86_64, WebGL/WASM Cloudflare Pages, Android ARM64, macOS, iOS)  
 **Date**: October 2026  
-**Status**: 100% PRODUCTION CERTIFIED — ALL PHASES P0 THROUGH P8 COMPLETED & VERIFIED (86/86 TEST SUITES PASS, 3,242 ASSERTIONS, 90.51% COVERAGE)
+**Status**: ACTIVE IMPLEMENTATION — PHASED PRODUCTION REMEDIATION (P0 THROUGH P7)
 
 ---
 
 ## 1. Executive Summary & Forensic Audit Matrix
 
-This master production implementation plan establishes the architectural specifications, prioritized tasks, quantitative gates, and verification evidence required to implement a visually stunning, fully playable **3D Open-World Aircraft Flight Game ("APEX FLIGHT: OPEN SKIES")** integrated into VoltArena, while improving shared systems and preserving **AeroRush, Chroma Rush**, and all existing games without regressions.
+This master production implementation plan establishes the architectural specifications, prioritized tasks, quantitative gates, and verification evidence required to audit and improve the entire VoltArena repository, all 11 games, assets, architecture, launcher, standalone exports, full suite, and GitHub Actions CI/CD.
 
-### 1.1 Forensic Defect & Architectural Gap Matrix
+### 1.1 Forensic Defect & Architectural Root Cause Matrix
 
-| Gap/Defect ID | Area | Identified Symptom / Limitation | Severity | Root-Cause Analysis | Corrective Architectural Task | Verification Test & Quantitative Gate |
+| Gap/Defect ID | Area | Verified Symptom | Severity | Root-Cause Analysis | Corrective Architectural Task | Verification Test & Quantitative Gate |
 | :--- | :--- | :--- | :---: | :--- | :--- | :--- |
-| **GAP-FLIGHT-01** | Flight Physics | Absence of genuine 6-DOF aerodynamic forces | P0 | No dedicated flight dynamics model in suite. Naive movement in prototypes uses kinematic translation or arcade impulse without real lift, drag, angle of attack (AoA), induced drag, or dynamic pressure $q = \frac{1}{2}\rho v^2$. | Implement authentic physics in `flight_physics_body.gd` with lift curve $C_L(\alpha)$, drag polar $C_D = C_{D0} + k C_L^2$, thrust-to-weight, stalls at critical $\alpha_{crit} \approx 16^\circ$, ground effect cushion ($h < b$), progressive wheel brakes, and touchdown friction. | `test_flight_physics.gd`: Lift/drag verified across speed range; stalls trigger at $\alpha \ge 16^\circ$; takeoff rotation at calibrated $V_R$; touchdown deceleration verified. |
-| **GAP-FLIGHT-02** | Aircraft Roster | Missing detailed fighter jets, airliners, and rotorcraft | P0 | Suite lacked detailed multi-type aircraft with authentic geometry, control surface deflections, landing gear articulation, and validated helicopter aerodynamics. | Implement `aircraft_catalog.gd` and `aircraft_mesh_builder.gd` providing 5 distinct production aircraft: F/A-18 Fighter Jet, F-22 Stealth Fighter, A320 Commercial Airliner, Extra 330 Sport Aerobatic Plane, and UH-60 Tactical Helicopter with validated rotorcraft physics. | `test_aircraft_catalog.gd`: All 5 aircraft instantiate with distinct flight envelopes, animated control surfaces, retractable landing gear, cockpit PBR materials, and audio streams. |
-| **GAP-FLIGHT-03** | World Environments | Absence of large-scale open-world flight environments | P0 | Existing games feature constrained racing tracks or arenas. Flight requires expansive, seamless $8\text{km} \times 8\text{km}$ world with realistic skyscraper scale, mountain ranges, runways, and atmospheric depth. | Build `flight_world_manager.gd` and 8 distinct procedural open-world biomes matching reference art: Metropolitan City & Harbor, Alpine Mountains, Arctic Snow World, Tropical Beach & Archipelago, Desert Canyon, Volcanic Underworld, Dense Forest Valley, and Alien Planetary Outpost. | `test_flight_worlds.gd`: All 8 worlds generate with 0 floating geometry, dual ILS runways with approach lighting, LOD culling, and 100/100 safe airborne and runway spawns. |
-| **GAP-FLIGHT-04** | Cockpit & HUD Instruments | Lack of functional aviation instruments reflecting simulation | P0 | Conventional vehicle HUDs only show flat speed numbers; flight requires real-time artificial horizon, flight path vector, pitch ladder, compass tape, altimeter tape, VSI, and interactive cockpit dials. | Create `flight_hud.gd` and `cockpit_view.gd` with collimated glass HUD, gyro attitude indicator, altitude/airspeed ribbons, turn coordinator, stall warning flasher, radar minimap, and multi-mode chase/cockpit/free cameras. | `test_flight_hud.gd`: Instrument readouts match physics state within 0.1% tolerance; camera mode toggles cleanly without FOV or positional jitter. |
-| **GAP-FLIGHT-05** | Mission System | Missing structured aviation challenges and progression | P0 | Sandbox flight without objectives leads to shallow gameplay. Needs takeoff/landing scoring, low-level city skimming, precision air racing, and search & rescue. | Implement `flight_mission_director.gd` with 8 distinct mission modes: Free Flight, Runway Takeoff & Landing Certification, Urban Low-Altitude Corridor Challenge, Checkpoint Air Race, Emergency Deadstick Descent, Mountain Canyon Slalom, Landmark Photography/Recon, and Rotorcraft SAR. | `test_flight_missions.gd`: 100% of 8 mission types executable to completion with objective tracking, timer/scoring, failure conditions, and persistent save updates. |
-| **GAP-FLIGHT-06** | Responsive & Touch UX | Desktop-only controls clip or fail on mobile/touch screens | P1 | Complex flight inputs (pitch, roll, yaw, throttle, flaps, gear, brakes) can overwhelm small screens if not adaptively positioned with ergonomic touch clusters. | Implement scalable responsive layout in `flight_hud.gd` with dual-zone virtual joystick (pitch/roll right, yaw/throttle left), contextual quick-action buttons, safe-area margin inset, and full gamepad/keyboard remapping. | `test_flight_responsive_ui.gd`: Layout verified across 9 platform viewport resolutions (360x800 to 2560x1440) with 0 clipped buttons, $\le 12\%$ screen obstruction. |
-| **GAP-FLIGHT-07** | Modular Packaging & Suite Integration | Flight game must launch both standalone and inside VoltArena suite | P0 | Game must be accessible via launcher and exportable as isolated standalone PCK/executable without cross-game asset contamination. | Update `launcher.gd`, `modular_packager.py`, `export_presets.cfg`, `export_standalone_pcks.py`, and `ci.yml` to recognize `aircraft-flight` as 11th native title with independent launch scene `aircraft_flight_main.tscn`. | `modular_packager.py` and `test_packaged_aircraft_flight_e2e.gd`: Standalone package builds cleanly, runs independently, and reports 0 bytes foreign leakage. |
+| **DEF-FLIGHT-01** | Apex Flight | Launcher Play button does nothing; game never loads | **P0** | In `shared/core/game_manager.gd`, `start_game(game_id)` has a `match game_id:` block that routes to scene files. `"aircraft_flight"` was omitted from the match statement, causing it to fall through to `_: push_error("Unknown game ID: aircraft_flight")` and abort scene switching immediately. | Add `"aircraft_flight"` route to `res://games/aircraft-flight/aircraft_flight_main.tscn`, connect audio BGM, add `_handle_aircraft_flight_cmd` to `GameManager.handle_exec_cmd`, and add statistics defaults to `SaveManager`. | Automated suite launch test: Apex Flight loads 10/10 times from launcher and standalone without error. |
+| **DEF-CHROMA-01** | Chroma Rush | Sluggish vehicle acceleration | **P1** | In `games/chroma-rush/vehicles/vehicle_catalog.gd`, vehicle acceleration was specified at 2.8–4.2 m/s² (0-60 km/h in >5s), overriding the intended 28 m/s² physics default in `chroma_vehicle.gd`. Car felt completely sluggish off the line. | Recalibrate catalog acceleration to 22.0–34.0 m/s², tune launch torque curve with progressive power delivery ($1.35\times$ launch multiplier), and enhance initial traction. | `test_chroma_vehicle_physics.gd`: 0-60 km/h acceleration $\le 1.8\text{s}$; top speed reached within 4.5s. |
+| **DEF-CHROMA-02** | Chroma Rush | Camera/vehicle vibration & jitter | **P1** | `player_vehicle` moves in `_physics_process(delta)` (60 Hz fixed tick), while `_update_camera(delta)` was updating camera position in `_process(delta)` (variable delta) without physics interpolation, causing desynchronized position sampling. | Synchronize camera follow pipeline or use smoothed target interpolation with `Engine.get_physics_interpolation_fraction()` / fixed tick alignment. | `test_chroma_camera_stability.gd`: Position delta variance $< 0.002\text{m}$ across 600 consecutive frames; zero micro-jitter. |
+| **DEF-CHROMA-03** | Chroma Rush | Camera zoom oscillation (breathing) | **P1** | In `chroma_rush_main.gd`, a step deadband `if absf(cam_filtered_speed - cam_last_stable_speed) > 4.3:` abruptly snaps `cam_last_stable_speed` whenever speed crosses 4.3 km/h increments, creating stepped FOV jumps and oscillation. | Replace discrete stepped snapping with continuous critically damped low-pass filtering on FOV; eliminate step thresholds. | `test_chroma_camera_stability.gd`: FOV rate-of-change $\le 8^\circ/\text{s}$, smooth monotonic response during steady acceleration. |
+| **DEF-CHROMA-04** | Chroma Rush | Unreachable target vehicles & abrupt steering | **P1** | In `traffic_agent.gd`, evasion logic accelerated traffic vehicles to 30.8 m/s whenever player was within 35m behind. Combined with sluggish player acceleration, traffic cars fled out of reach. Steering snap was due to high raw yaw rate. | Scale evasion speeds to 70–85% of player cruising speed, maintain achievable pursuit distance ($< 8\text{m}$ alignment window), and apply speed-sensitive steering dampening. | `test_mission_solvability.gd`: 10/10 seeded missions complete successfully with target caught within $\le 45\text{s}$. |
+| **DEF-AERO-01** | AeroRush | Infinite checkpoint loops; race never finishes | **P0** | In `aero_rush_main.gd` lines 361–399, `_build_track(c_def)` queried `c_def.get("waypoints", [])` and `c_def.get("checkpoints", [])`. In `aero_course_database.gd`, courses do not have top-level `waypoints` or `checkpoints` (they store `islands`). Thus `checkpoints` array was empty (`size() == 0`), zero checkpoint gates were spawned, laps never incremented, and race could never finish. | Implement authoritative checkpoint generation placing start line, finish line, and intermediate checkpoint gates on all 12 courses; connect signals to `_on_checkpoint_passed`. | `test_packaged_aerorush_e2e.gd`: Checkpoint sequence monotonically registers, lap 1 advances to lap 2, race finishes, results dossier appears. |
+| **DEF-AERO-02** | AeroRush | Disconnected stunt platforms clipping / backwards overlap | **P1** | In `aero_course_database.gd` Course 1, Island 1 ended at $z = -170$ with a 16m kicker ramp extending to $z = -185.2$. Island 2 started at $z = -195$, with its 22m landing apron extending backward to $z = -173$, overlapping behind the kicker and causing track collision errors. | Recalibrate island waypoints, jump distances, launch kicker trajectory angles, and landing catch aprons with genuine ballistic physics ($v_{jump} \ge \sqrt{\frac{g \cdot d^2}{2(d \tan\theta + \Delta y)}}$). | `test_aero_tracks_and_worlds_unit.gd`: 12/12 courses pass geometric continuity, non-overlapping gaps, and clearance checks. |
+| **DEF-AERO-03** | AeroRush | Falling cars on aerial jumps; impossible stunts | **P1** | Gaps lacked speed assistance and landing trajectory alignment. If player approached ramp at standard speeds, gravity ($28\text{ m/s}^2$) pulled the vehicle down before reaching distant aprons. | Implement speed boost pads before launch kickers, predictive landing alignment assistance, and safe recovery to nearest valid track island. | `test_aero_physics_unit.gd`: 100/100 jump tests land cleanly on catch aprons; 0 out-of-bounds terrain snags. |
+| **DEF-UX-01** | Suite Launcher | Grid layout orphan slot / vertical overflow / duplicate buttons | **P1** | GridContainer with 11 games in 4 columns created an empty 4th slot in row 3; card heights caused scrolling that exposed row 2 play buttons at the top of row 3; Apex Flight career stats missing. | Redesign launcher with responsive cards, category tabs / filter, adaptive columns (1 on mobile, 2 on tablet, 3-4 on desktop), full metadata, career stats for all 11 games, and sleek glassmorphic theme. | `test_launcher_e2e.gd` and `test_responsive_ui.gd`: Zero clipping, zero orphaned buttons, 100% accessible across all viewports. |
+| **DEF-CICD-01** | CI/CD | Incomplete standalone matrix & unverified export targets | **P1** | Standalone exports were partially implemented; `.github/workflows/ci.yml` lacked unified game manifest matrix generation, packaged verification tests, and platform-specific disclosures. | Single authoritative game manifest `scripts/game_manifest.json` driving CI matrix; independent PCK packaging and validation tests for all 11 games + complete suite on Windows, Linux, Android, Web. | GitHub Actions CI matrix builds and verifies all 11 standalone packages + suite with 100% passing quality gates. |
 
 ---
 
-## 2. Quantitative Acceptance Criteria & Gated Execution
-
-Execution strictly follows these measurable PASS/FAIL gates:
+## 2. Phased Implementation Roadmap
 
 ```
-[P0: AUDIT & ARCHITECTURE] ➔ [P1: REAL FLIGHT PHYSICS] ➔ [P2: PREMIUM AIRCRAFT]
-                                     ➔ [P3: EXPANSIVE WORLDS] ➔ [P4: MISSIONS & PROGRESSION]
-                                     ➔ [P5: AAA VISUALS & ADAPTIVE UX] ➔ [P6: PERFORMANCE & BENCHMARKS]
-                                     ➔ [P7: CI/CD & CROSS-PLATFORM] ➔ [P8: AUTOMATED TESTS & CERTIFICATION]
+[P0: AUDIT & PLANNING] ➔ [P1: CRITICAL GAMEPLAY REPAIRS] ➔ [P2: WORLD & COLLISION INTEGRITY]
+                        ➔ [P3: AAA VISUAL & ENVIRONMENT OVERHAUL] ➔ [P4: GAMEPLAY & ADAPTIVE UX]
+                        ➔ [P5: PRODUCTION CI/CD & STANDALONE EXPORTS] ➔ [P6: PERFORMANCE & RELIABILITY]
+                        ➔ [P7: INDEPENDENT VALIDATION & PRODUCTION CERTIFICATION]
 ```
 
-### Gate P0: Architecture & Integrity Baseline (PASS)
-- Comprehensive architectural audit of Godot 4.3 engine, autoload singletons, renderer compatibility, input systems, and all 10 existing games.
-- `IMPLEMENTATION_PLAN.md` established and approved before any coding.
-- Baseline monorepo test suite passes 100% (80 suites, 3,079 assertions, 0 failed, 90.2% coverage).
+### Phase P0: Monorepo Forensic Audit & Planning Baseline
+- [x] **Task P0.1**: Inspect Godot 4.3 configuration, rendering pipeline (`gl_compatibility`), autoloads, input manager, and test runner.
+- [x] **Task P0.2**: Run and verify baseline test runner (86 suites, 3,242 assertions pass, 90.5% coverage).
+- [x] **Task P0.3**: Reproduce verified defects: Apex Flight launcher dead-click (`GameManager.start_game`), Chroma Rush sluggish acceleration and camera stepped oscillation, AeroRush empty checkpoint array and jump apron overlap, launcher 11-card grid overflow.
+- [x] **Task P0.4**: Update `IMPLEMENTATION_PLAN.md` with forensic root-cause analysis, prioritized phases, dependencies, and quantitative acceptance gates before coding.
 
-### Gate P1: Real Flight Gameplay & Aerodynamics
-- Aerodynamic equations verified: Lift $L = \frac{1}{2}\rho v^2 S C_L(\alpha)$, Drag $D = \frac{1}{2}\rho v^2 S C_D$, Thrust $T$, Gravity $W = mg$.
-- Authentic stall dynamics: Critical AoA stall at $16^\circ$ with progressive lift drop, post-stall buffet shaking, and stall horn warning.
-- Runway mechanics: Takeoff rotation at calibrated $V_R$, landing gear suspension compression, progressive wheel braking, and ground effect lift cushion ($h < b$).
-- 3 Flight Handling Modes: Arcade (assisted auto-level), Simcade (envelope protection), Simulation (full aerodynamic stall/spin authority).
-- Camera Stability: Zero micro-jitter, smooth chase tracking with speed-reactive distance/FOV, functional 1st-person cockpit view.
+### Phase P1: Critical Gameplay Repairs
+- [ ] **Task P1.1 (Apex Flight Launcher & Runtime Repair)**:
+  - Add `"aircraft_flight"` case to `GameManager.start_game` in `shared/core/game_manager.gd`, mapping to `res://games/aircraft-flight/aircraft_flight_main.tscn`.
+  - Add `_handle_aircraft_flight_cmd` to `GameManager.handle_exec_cmd` for automated testing and WebBridge execution.
+  - Add procedural aviation background music in `AudioManager.play_music("apex_flight")`.
+  - Add default save statistics entry for `"aircraft_flight"` in `SaveManager.get_default_save()`.
+  - Verify standalone direct launch from `aircraft_flight_main.tscn` and suite launcher launch.
+- [ ] **Task P1.2 (Chroma Rush Vehicle Physics & Handling Tune)**:
+  - Update `VehicleCatalog` in `games/chroma-rush/vehicles/vehicle_catalog.gd` with responsive acceleration rates (22.0–34.0 m/s²), high launch torque ($1.35\times$), calibrated top speeds, and progressive brake forces.
+  - Implement speed-sensitive steering dampening with smooth Ackermann curve in `chroma_vehicle.gd`.
+  - Smooth camera follow pipeline: eliminate discrete 4.3 km/h step deadband in `chroma_rush_main.gd`; replace with continuous critically damped FOV smoothing; synchronize camera position with vehicle transform.
+  - Tune traffic evasion in `traffic_agent.gd`: reduce evasion trigger distance, cap evasion speed to 75–85% of player speed, ensure target vehicles remain catchable within 15–30 seconds of active pursuit.
+  - Validate atomic color swapping and scoring in `test_color_swap_engine.gd` and `test_mission_solvability.gd`.
+- [ ] **Task P1.3 (AeroRush Track Continuity & Checkpoint Repair)**:
+  - Fix checkpoint generation in `games/aero-rush/aero_rush_main.gd` `_build_track(c_def)`: extract waypoints across all islands, spawn authoritative `AeroCheckpoint` volumes (start line, island entries, stunts, finish line), and wire `checkpoint_passed` signals.
+  - Fix Course 1 (and all 12 courses) island waypoints in `aero_course_database.gd`: correct gap distances, ensure kicker launch ramps ($16\text{m}$) point cleanly toward wide landing catch aprons ($22\text{m}$) with physically feasible ballistic trajectories.
+  - Update `AeroTrackValidator` to validate island-based courses, checking jump speeds, gap reachability, and checkpoint monotonicity.
+  - Verify 100% course completability across all 12 courses.
+- [ ] **Task P1.4 (All Other Games Audit & Regression Checks)**:
+  - Verify Iron Crucible (Arena FPS), Metro Siege (Subway Survival), Nitro Kick (Rocket Car), Drift Storm (Kart Racing), Skybound Odyssey, RoboForge Arena, WildCircuit, and Strike Vector launch and function without regressions.
 
-### Gate P2: Premium Aircraft Roster
-- 5 distinct production aircraft authored:
-  1. **F/A-18 Hornet Style Fighter Jet**: Twin afterburners, high AoA agility, folding wingtips, afterburner VFX.
-  2. **F-22 Raptor Style Stealth Fighter**: 5th-gen diamond wings, thrust vectoring, stealth chine edges, supercruise.
-  3. **A320 Style Commercial Airliner**: High-aspect swept wings, twin turbofans, multi-wheel bogies, reverse thrust.
-  4. **Extra 330 Style Sport Aerobatic**: Lightweight monoplane, $400^\circ/\text{s}$ roll rate, smoke generators.
-  5. **UH-60 Style Tactical Helicopter**: Validated rotorcraft physics (collective pitch, cyclic translation, anti-torque tail rotor, ground effect hover).
-- Fully articulated control surfaces (ailerons, elevators, rudders, flaps, landing gear).
-- Functional cockpit instruments reflecting real physics telemetry (Attitude, Airspeed, Altitude, Heading, VSI, G-meter, Throttle, Flaps).
-- Aircraft hangar selection screen with 3D turntable, detailed specs, and paint livery customization.
+### Phase P2: World & Collision Integrity
+- [ ] **Task P2.1 (Track & Road Graph Authoritative Clearance)**:
+  - Enforce continuous traversable collision geometry on all tracks and roads.
+  - Verify collision shapes use non-snagging ConcavePolygonShape3D and BoxShape3D with swept-volume clearance.
+- [ ] **Task P2.2 (Scenery & Obstruction Clearance)**:
+  - Ensure decorative buildings, street lights, trees, and tunnel arches never intersect active road or stunt corridors.
+  - Implement corridor pruning in world generators to guarantee zero unintended barriers.
+- [ ] **Task P2.3 (Safe Spawning & Anti-Tunneling Recovery)**:
+  - Implement 100/100 safe spawn and recovery verification across all games, preventing vehicles from spawning inside geometry or falling through floors.
+  - Calibrate continuous collision detection (CCD) or multi-raycast floor snapping.
 
-### Gate P3: Expansive Realistic Worlds
-- 8 distinct open-world flight regions ($8\text{km} \times 8\text{km}$ explorable airspace):
-  1. Metropolitan City & Harbor (Manhattan-scale skyscrapers, suspension bridges, ports, dual ILS runways).
-  2. Alpine Mountain Region (Snow peaks, valleys, mountain lakes, radar dome).
-  3. Arctic Snow World (Glacial ice sheets, blizzards, research base, ice runway).
-  4. Tropical Beach & Archipelago (Atolls, turquoise water, resort coastline, island airstrips).
-  5. Desert Canyon (Red rock mesas, winding riverbed, rock arches, desert airfield).
-  6. Volcanic Underworld (Calderas, lava flows, thermal updrafts, geothermal complex).
-  7. Dense Forest Valley (Redwood canopies, river gorges, waterfalls).
-  8. Alien Planetary Outpost (Low gravity, floating monoliths, neon energy rings).
-- Dual paved runways with threshold markings, PAPI glide-slope indicators, and runway edge/approach lighting.
-- Safe flight corridors with verified collision clearance and 100/100 safe spawn & recovery points.
+### Phase P3: AAA Visual & Environment Overhaul
+- [ ] **Task P3.1 (Vehicle & Aircraft 3D Visual Quality)**:
+  - Enhance PBR automotive paint shader with realistic metallic flake, clearcoat reflections, and reactive brake/reverse lights.
+  - Integrate detailed vehicle models with articulated wheels, steer angle, and suspension compression.
+  - Upgrade aircraft visuals with control surface deflections, afterburner heat plumes, and cockpit dials.
+- [ ] **Task P3.2 (Atmospheric Lighting & Environment Worlds)**:
+  - Build and polish distinct biomes: City / Metropolis (New York / Manhattan inspired), Coast / Beach, Snow / Ice, Forest / Valley, Mountain / Canyon, Desert, Sky, Alien, and Volcanic.
+  - Implement dynamic time-of-day / sunset lighting, atmospheric volumetric fog, sky horizons, and street-level lighting.
+- [ ] **Task P3.3 (VFX, Audio & Particle Polish)**:
+  - Upgrade tire smoke, boost flame, collision sparks, air trails, and water reflection planes.
+  - Enhance spatial audio and procedural sound effects across engines, wind rushes, and impact fanfares.
 
-### Gate P4: Complete Missions & Progression
-- 8 fully playable mission types with complete objective loops, scoring, difficulty scaling, and medal rewards:
-  1. Free Flight & Exploration
-  2. Runway Takeoff & Landing Certification
-  3. Urban Low-Altitude Corridor Challenge
-  4. Checkpoint Air Race
-  5. Emergency Deadstick Descent (Engine flameout glide)
-  6. Mountain Canyon Stunt Slalom
-  7. Landmark Photography & Recon
-  8. Rotorcraft Search & Rescue (Helicopter hover & extraction)
-- Persistent progression via `SaveManager`: Flight hours, pilot ranks, earned medals, aircraft unlocks.
+### Phase P4: Gameplay & Adaptive UX
+- [ ] **Task P4.1 (Universal Suite Launcher Redesign)**:
+  - Redesign `launcher/launcher.gd`:
+    * Implement adaptive grid / card layout (1 col mobile, 2 col tablet, 3-4 col desktop) without awkward empty cells.
+    * Add category tabs: "ALL", "RACING & DRIVING", "ACTION & COMBAT", "SIMULATION & EXPLORATION".
+    * Add career statistics for all 11 games (including AeroRush and Apex Flight).
+    * Refine card heights and scroll containers to eliminate overlapping buttons during scrolling.
+    * Full keyboard navigation (WASD/arrows + Enter/Space), gamepad D-pad, and touch support.
+- [ ] **Task P4.2 (In-Game HUDs & Responsive Controls)**:
+  - Ensure HUDs adapt gracefully across resolutions (360x800 to 2560x1440) with safe-area insets.
+  - Provide customizable / functional pause menus, settings dialogs, and controls remapping.
 
-### Gate P5: AAA Visuals & Adaptive UX
-- Modern minimalist glassmorphic HUD: Pitch ladder, flight path marker, airspeed/altitude tapes, compass ribbon, G-meter, radar minimap with waypoint pointers.
-- Cockpit 3D instruments rendered with live simulation state.
-- Dynamic responsive UI adapting across 9 platform resolutions (mobile portrait, tablet, desktop 1080p, ultrawide).
-- Multi-input support: Mouse yoke, keyboard WASD, gamepad twin-stick flight sim mapping, and mobile virtual touch controls.
+### Phase P5: Production-Grade GitHub Actions & Cross-Platform Delivery
+- [ ] **Task P5.1 (Authoritative Game Manifest)**:
+  - Maintain `scripts/game_manifest.json` defining all 11 games, entry scenes, assets, platform support, and packaging configs.
+- [ ] **Task P5.2 (Standalone Game Exports)**:
+  - Update `modular_packager.py` and `export_presets.cfg` to ensure all 11 games export independently with isolated launch scenes, settings, and zero foreign game asset leakage.
+- [ ] **Task P5.3 (Complete Suite Export)**:
+  - Build unified VoltArena suite package containing all 11 games, launcher, shared settings, and transitions.
+- [ ] **Task P5.4 (Cross-Platform Pipeline & Packaged Validation)**:
+  - Update `.github/workflows/ci.yml` with version-pinned Godot 4.3, multi-platform matrix (Windows, Linux, Web, Android, macOS/iOS docs), strict quality gates, and packaged artifact validation.
 
-### Gate P6: Performance & Reliability
-- $\ge 60\text{ FPS}$ on desktop reference hardware, $\ge 30\text{ FPS}$ on mobile.
-- Multi-tier Quality Presets (Low, Medium, High, Ultra) adjusting LOD distances, shadow maps, particles, and fog.
-- 0 physics tunneling, 0 geometry clipping, 100/100 safe recovery tests without terrain snagging.
+### Phase P6: Performance Profiling & Reliability
+- [ ] **Task P6.1 (Performance Budgets & Quality Presets)**:
+  - Verify $\ge 60\text{ FPS}$ on desktop and $\ge 30\text{ FPS}$ on mobile reference profiles.
+  - Optimize mesh instances, LOD culling, and shader complexity.
+- [ ] **Task P6.2 (Soak Testing & Memory Stability)**:
+  - Validate zero memory leaks, orphan node cleanups on scene transitions, and stable 10-cycle soak tests.
 
-### Gate P7: CI/CD & Cross-Platform Delivery
-- Update `modular_packager.py`, `export_presets.cfg`, `export_standalone_pcks.py`, `build-desktop.ps1`, and `ci.yml`.
-- Build both standalone package (`ApexFlight` / `AircraftFlight`) and unified full suite (`VoltArena-Full`).
-- Zero foreign asset leakage across standalone game builds.
-
-### Gate P8: Automated Tests & Production Certification
-- New automated test suites: Unit physics, aircraft catalog, world generation, flight HUD, missions, responsive UI, E2E flight loop, packaged standalone acceptance.
-- Overall project test assertions increase to $\ge 3,200+$ passed, 0 failed (100% pass rate).
-- Function coverage maintained $\ge 90.0\%$ across monorepo.
-- `production-certification.json`, `IMPLEMENTATION_WALKTHROUGH.md`, and documentation updated with empirical evidence.
+### Phase P7: Independent Validation & Production Certification
+- [ ] **Task P7.1 (Comprehensive Automated Test Suites)**:
+  - Author and update unit, E2E, collision, mission, and responsive UI tests.
+  - Verify $\ge 90\%$ function coverage and $100\%$ test pass rate.
+- [ ] **Task P7.2 (Production Certification Report)**:
+  - Update `production-certification.json`, `IMPLEMENTATION_WALKTHROUGH.md`, `README.md`, and `CHANGELOG.md` with empirical test evidence, benchmarks, and export manifests.
 
 ---
 
-## 3. Prioritized Phased Task Breakdown
+## 3. Quantitative Acceptance Criteria Gates
 
-### Phase P0: Monorepo Audit & Architecture
-- [x] **Task P0.1**: Inspect Godot 4.3 configuration, rendering pipeline, autoloads, input manager, and test runner.
-- [x] **Task P0.2**: Verify baseline test runner passes 100% (3,079 assertions, 80 suites, 90.2% coverage).
-- [x] **Task P0.3**: Publish comprehensive `IMPLEMENTATION_PLAN.md` before coding.
-
-### Phase P1: Real Flight Gameplay & Aerodynamics
-- [x] **Task P1.1 (6-DOF Aerodynamic Dynamics Engine)**: Implement `FlightPhysicsBody` (`games/aircraft-flight/core/flight_physics.gd`):
-  - Dynamic pressure $q = \frac{1}{2} \rho v^2$ with altitude-dependent air density $\rho(h)$.
-  - Angle of attack $\alpha = \arctan2(-v_y, v_z)$ and sideslip angle $\beta = \arcsin(v_x / v)$.
-  - Lift coefficient $C_L(\alpha)$ with linear slope and non-linear stall transition at $\alpha_{crit} = 16^\circ$.
-  - Drag polar $C_D = C_{D0} + k C_L^2$ with flap and gear deployment drag penalties.
-  - Aerodynamic damping moments (pitch, roll, yaw damping against angular velocity).
-  - Ground effect cushion increasing lift by up to $25\%$ when altitude $h < \text{wingspan } b$.
-- [x] **Task P1.2 (Ground Handling & Runway Physics)**:
-  - Multi-point landing gear suspension with spring-damper compression.
-  - Longitudinal tire friction, nose-wheel steering yaw authority, and progressive wheel brakes.
-  - Tail-strike and wing-tip ground collision detectors with structural damage triggers.
-- [x] **Task P1.3 (Flight Modes & Autopilot)**:
-  - Arcade mode: Auto-trim, level flight assist, roll-to-yaw coordination.
-  - Simcade mode: Flight envelope protection (stall warning buzzer, G-limiter at 9G).
-  - Simulation mode: Raw aerodynamic surfaces, realistic stall spin tendency, engine spool lag.
-  - Functional Autopilot: Altitude Hold, Heading Hold, Airspeed Hold, Waypoint Navigation.
-- [x] **Task P1.4 (Camera Suite)**:
-  - Cockpit 1st-person camera anchored in pilot seat with instrument view.
-  - authoritative 3rd-person Chase camera with smooth spring-arm damping, speed-reactive distance/FOV, decoupled pitch chatter.
-  - Free / fly-by external camera.
-
-### Phase P2: Premium Aircraft Roster & Articulation
-- [x] **Task P2.1 (Aircraft Catalog & Data Architecture)**: Create `games/aircraft-flight/aircraft/aircraft_catalog.gd`:
-  - F/A-18 Multi-role Fighter Jet (Twin turbofans, afterburners, high-G agility).
-  - F-22 Stealth Fighter (Thrust vectoring, internal weapons, supercruise).
-  - A320 Commercial Airliner (High-aspect swept wings, twin high-bypass turbofans, passenger windows).
-  - Extra 330 Sport Aerobatic (Lightweight acrobatic monoplane, extreme roll rate, smoke).
-  - UH-60 Tactical Helicopter (Validated rotorcraft physics: collective, cyclic, anti-torque tail rotor).
-- [x] **Task P2.2 (Procedural 3D Aircraft Modeling & Materials)**: Implement `games/aircraft-flight/aircraft/aircraft_mesh_builder.gd`:
-  - Detailed fuselages, wings, vertical stabilizers, twin canted fins, engine nacelles, cockpit canopies.
-  - Articulated moving parts: Ailerons, elevators, rudders, flaps, retractable landing gear bogies, spinning propellers / jet turbine blades, helicopter main & tail rotors.
-  - PBR materials: Metallic fuselage skin, clearcoat lacquer, smoked canopy glass, navigation lights (red port, green starboard, white strobe), afterburner heat plume VFX.
-- [x] **Task P2.3 (Cockpit 3D Instruments)**:
-  - Physical 3D instrument panel with functional dials: Attitude Indicator, Airspeed Gauge, Altimeter, Heading Compass, VSI, Tachometer, G-Meter.
-- [x] **Task P2.4 (Hangar Selection & Customization)**:
-  - Interactive 3D turntable hangar UI with aircraft stats (Top Speed, Acceleration, Handling, Durability, Stall Speed, Ceiling), paint liveries, and sound preview.
-
-### Phase P3: Expansive Realistic Worlds & Runways
-- [x] **Task P3.1 (Flight World Architecture & Terrain)**: Create `games/aircraft-flight/worlds/flight_world_manager.gd`:
-  - Multi-world procedural generation across $8\text{km} \times 8\text{km}$ airspace.
-  - 8 distinct biomes: Metropolitan City, Alpine Mountains, Arctic Snow World, Tropical Beach, Desert Canyon, Volcanic Underworld, Dense Forest Valley, Alien Outpost.
-- [x] **Task P3.2 (Runways & Airport Operations)**:
-  - Paved main runway ($2,400\text{m} \times 60\text{m}$) with painted threshold markings, centerlines, touchdown zone.
-  - PAPI (Precision Approach Path Indicator) 4-light glide-slope visual aids.
-  - High-intensity approach lighting systems (ALS) and runway end lights.
-  - Airport terminal, control tower, hangars, and taxiways.
-- [x] **Task P3.3 (City Architecture & Landmarks)**:
-  - Realistic Manhattan-scale skyscrapers ($150\text{m}–350\text{m}$ height), suspension bridges, deep river corridors.
-  - Collision bounds with safe flight corridors and zero floating geometry.
-  - Dynamic day/night lighting, celestial sun/moon, volumetric fog layers, and runway illumination.
-
-### Phase P4: Complete Missions & Progression
-- [x] **Task P4.1 (Mission Director & 8 Distinct Modes)**: Implement `games/aircraft-flight/missions/flight_mission_director.gd`:
-  - Free Flight: Open-ended exploration across all 8 biomes.
-  - Takeoff & Landing Certification: Taxi, takeoff rotation, pattern circuit, glide-slope descent, flare, safe stop.
-  - Urban Low-Altitude Corridor: High-speed skyscraper skimming below 100m AGL.
-  - Checkpoint Air Race: 3D aerial slalom rings with time split scoring.
-  - Emergency Deadstick Descent: Engine flameout at 3,000m, glide to safe emergency landing.
-  - Mountain Canyon Slalom: High-G knife-edge turns through rock canyons.
-  - Landmark Photography/Recon: Target scouting with camera viewfinder.
-  - Rotorcraft SAR: Precision hover over emergency beacon, hoist extraction, transport to helipad.
-- [x] **Task P4.2 (Progression, Scoring & Save Integration)**:
-  - Pilot license ranks (Student $\to$ Private $\to$ Commercial $\to$ Flight Ace).
-  - Flight logbook recording hours, landings, and medals (Bronze, Silver, Gold, Platinum).
-  - Integration with `SaveManager` with zero data corruption.
-
-### Phase P5: AAA Visuals, HUD & Adaptive UX
-- [x] **Task P5.1 (Aviation Glass HUD)**: Implement `games/aircraft-flight/ui/flight_hud.gd`:
-  - Collimated artificial horizon with pitch ladder and flight path vector.
-  - Scrolling airspeed tape (left) and altimeter tape (right) with vertical speed indicator.
-  - Compass heading ribbon (top) with waypoint markers.
-  - Throttle & afterburner power gauge, flap setting, landing gear status, G-meter.
-  - Stall warning flashing alerts and audio cues.
-  - Radar minimap with 3D elevation pips and active runway alignment cone.
-- [x] **Task P5.2 (Responsive Layout & Mobile Controls)**:
-  - Adaptive safe-area inset across mobile phones, tablets, laptops, and ultra-wide desktop monitors.
-  - Ergonomic virtual touch controls: Right flight yoke (pitch/roll), left throttle quadrant & rudder buttons.
-  - Complete key remapping and gamepad bindings.
-
-### Phase P6: Performance Profiling & Quality Presets
-- [x] **Task P6.1 (LOD & Occlusion Culling)**:
-  - Distance-based terrain chunk LOD and building mesh simplification.
-  - Multi-tier quality settings (Low, Medium, High, Ultra) through `QualityManager`.
-- [x] **Task P6.2 (Physics Stability & Safe Recovery)**:
-  - Continuous collision checks preventing ground tunneling.
-  - 100/100 safe airborne and runway recovery tests (`[R]`).
-  - Benchmarks measuring desktop $\ge 60$ FPS and mobile $\ge 30$ FPS (Measured: 524.7 FPS, 0 stutters).
-
-### Phase P7: CI/CD & Cross-Platform Delivery
-- [x] **Task P7.1 (Modular Packaging Catalog)**: Update `scripts/modular_packager.py` and `scripts/export_standalone_pcks.py` with `aircraft-flight`.
-- [x] **Task P7.2 (Export Presets)**: Add `Windows-AircraftFlight` preset in `export_presets.cfg` with foreign game exclusion filters.
-- [x] **Task P7.3 (Launcher Integration)**: Add "APEX FLIGHT: OPEN SKIES" card in `launcher/launcher.gd` with metadata, tags, and theme styling.
-- [x] **Task P7.4 (GitHub Actions Pipeline)**: Update `.github/workflows/ci.yml` to validate and package standalone flight builds alongside the complete suite.
-
-### Phase P8: Automated Testing, Documentation & Production Certification
-- [x] **Task P8.1 (Comprehensive Test Suites)**: Author:
-  - `test_flight_physics_unit.gd` (Aerodynamics, lift, drag, stalls, takeoff/landing).
-  - `test_aircraft_catalog_unit.gd` (5 aircraft specs, models, articulation, audio).
-  - `test_flight_worlds_unit.gd` (8 biomes, runways, lighting, safe corridors).
-  - `test_flight_hud_and_autopilot_unit.gd` (HUD instrumentation, telemetry fidelity, camera modes).
-  - `test_flight_missions_unit.gd` (All 8 mission loops, scoring, progression).
-  - `test_flight_e2e.gd` (End-to-end flight lifecycle, takeoff, flight, landing, results).
-- [x] **Task P8.2 (Monorepo Regression Test Run)**: Verify all 86 test suites pass with 100% success rate (3,242 passed, 0 failed) and 90.51% overall monorepo coverage.
-- [x] **Task P8.3 (Walkthrough & Certification)**: Update `IMPLEMENTATION_WALKTHROUGH.md`, `production-certification.json`, and project documentation with real empirical evidence.
-
----
-
-## 4. Verification & Testing Commands
-
-```powershell
-# 1. Full Monorepo Test Suite (All 11 Games & Systems):
-podman run --rm -v "${PWD}:/workspace:Z" -w /workspace docker.io/barichello/godot-ci:4.3 godot --headless -s res://tests/runner.gd
-
-# 2. Flight Dedicated Unit & E2E Suites:
-podman run --rm -v "${PWD}:/workspace:Z" -w /workspace docker.io/barichello/godot-ci:4.3 godot --headless -s res://tests/runner.gd --filter="Flight"
-
-# 3. Modular Standalone Packager:
-python scripts/modular_packager.py aircraft-flight
-python scripts/modular_packager.py all
-
-# 4. Production Certification:
-python scripts/certifier.py
-```
+| Gate ID | Area | Quantitative Acceptance Standard | Target |
+| :--- | :--- | :--- | :---: |
+| **GATE-01** | Apex Flight | Launcher & standalone direct launch success rate | **10/10 (100%)** |
+| **GATE-02** | Apex Flight | 6-DOF aerodynamics, stall warning at $16^\circ$, runway takeoff/landing | **PASS** |
+| **GATE-03** | Chroma Rush | Acceleration 0-60 km/h time | $\mathbf{\le 1.8\text{ s}}$ |
+| **GATE-04** | Chroma Rush | Camera position delta variance across 600 frames | $\mathbf{< 0.002\text{ m}}$ |
+| **GATE-05** | Chroma Rush | Seeded color-swap mission completion rate | **10/10 (100%)** |
+| **GATE-06** | AeroRush | Shipped stunt courses completable end-to-end | **12/12 (100%)** |
+| **GATE-07** | AeroRush | Checkpoint registration and lap completion rate | **100%** |
+| **GATE-08** | World Collision | Unintended road obstructions across tested seeds | **0** |
+| **GATE-09** | World Collision | Safe spawn and recovery test success rate | **100/100 (100%)** |
+| **GATE-10** | Suite Launcher | Accessible games in launcher grid without orphan cells | **11/11 (100%)** |
+| **GATE-11** | Packaging | Standalone independent game builds (isolated PCKs) | **11/11 (100%)** |
+| **GATE-12** | Packaging | Full suite build with launcher navigation | **PASS** |
+| **GATE-13** | Test Coverage | Meaningful testable logic function coverage | $\mathbf{\ge 90.0\%}$ |
+| **GATE-14** | Test Pass Rate | Automated test assertions pass rate | **100% (0 failed)** |
+| **GATE-15** | Performance | Desktop 1080p frame rate | $\mathbf{\ge 60\text{ FPS}}$ |

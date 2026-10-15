@@ -19,6 +19,7 @@ func run_tests() -> Dictionary:
 	test_career_stats_formatting()
 	test_game_selection_flow()
 	test_unhandled_input_esc()
+	test_category_filtering()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -27,7 +28,7 @@ func get_coverage_entries() -> Array:
 			"_ready", "setup_launcher_ui", "create_game_card", "get_game_career_stats",
 			"setup_loading_overlay", "setup_settings_dialog", "show_settings", "show_controls",
 			"set_quality", "toggle_audio", "on_play_game_pressed", "connect_loader_signals",
-			"_notification", "update_responsive_layout", "_unhandled_input"
+			"_notification", "update_responsive_layout", "_unhandled_input", "set_category_filter"
 		]],
 	]
 
@@ -170,6 +171,24 @@ func test_career_stats_formatting() -> void:
 	else:
 		assert_eq(stats, "", "Stats must be empty without SaveManager")
 
+	stats = launcher.get_game_career_stats("chroma_rush")
+	if sm != null:
+		assert_true(stats.begins_with("Credits:"), "Stats must format chroma_rush stats with SaveManager")
+	else:
+		assert_eq(stats, "", "Stats must be empty without SaveManager")
+
+	stats = launcher.get_game_career_stats("aero_rush")
+	if sm != null:
+		assert_true(stats.begins_with("Gold:"), "Stats must format aero_rush stats with SaveManager")
+	else:
+		assert_eq(stats, "", "Stats must be empty without SaveManager")
+
+	stats = launcher.get_game_career_stats("aircraft_flight")
+	if sm != null:
+		assert_true(stats.begins_with("Hours:"), "Stats must format aircraft_flight stats with SaveManager")
+	else:
+		assert_eq(stats, "", "Stats must be empty without SaveManager")
+
 	stats = launcher.get_game_career_stats("nonexistent_game")
 	assert_eq(stats, "", "Unknown game must return empty stats")
 
@@ -202,5 +221,33 @@ func test_unhandled_input_esc() -> void:
 	launcher.show_controls()
 	launcher._unhandled_input(ev)
 	assert_true(not launcher.controls_dialog.visible, "Controls dialog must close on ESC")
+
+	launcher.queue_free()
+
+func test_category_filtering() -> void:
+	var launcher = LauncherScript.new()
+	launcher.setup_launcher_ui()
+
+	launcher.set_category_filter("ACTION")
+	assert_eq(launcher.current_category, "ACTION", "Current category should be ACTION")
+	var action_visible = 0
+	for c in launcher.game_cards_container.get_children():
+		if c.visible:
+			action_visible += 1
+	assert_eq(action_visible, 3, "Action filter should show exactly 3 games")
+
+	launcher.set_category_filter("RACING")
+	var racing_visible = 0
+	for c in launcher.game_cards_container.get_children():
+		if c.visible:
+			racing_visible += 1
+	assert_eq(racing_visible, 4, "Racing filter should show exactly 4 games")
+
+	launcher.set_category_filter("ALL")
+	var all_visible = 0
+	for c in launcher.game_cards_container.get_children():
+		if c.visible:
+			all_visible += 1
+	assert_eq(all_visible, 11, "ALL filter should show all 11 games")
 
 	launcher.queue_free()

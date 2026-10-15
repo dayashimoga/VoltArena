@@ -60,13 +60,14 @@ func update(delta: float) -> void:
 	if is_instance_valid(evasion_threat) and evasion_threat.is_inside_tree() and vehicle.is_inside_tree():
 		var t_pos = evasion_threat.global_position
 		var dist_to_threat = vpos.distance_to(t_pos)
-		if dist_to_threat < 35.0:
+		if dist_to_threat < 20.0:
 			var to_threat = (t_pos - vpos).normalized()
 			var heading = -vehicle.global_transform.basis.z.normalized()
 			# Dot product < -0.1 means threat vehicle is approaching from behind
 			if to_threat.dot(heading) < -0.1:
 				evasion_active = true
-				current_target_speed = base_speed * (1.15 + 0.25 * evasion_aggressiveness)
+				# Cap evasion speed to at most 24.0 m/s so player (at 31-40 m/s) can reliably close in and swap colors
+				current_target_speed = minf(base_speed * (1.05 + 0.12 * evasion_aggressiveness), 24.0)
 				lane_shift_timer += delta
 				if lane_shift_timer > 3.0:
 					lane_shift_timer = 0.0

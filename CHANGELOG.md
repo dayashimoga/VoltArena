@@ -1772,10 +1772,30 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
   - Full Monorepo Test Run: **86 test suites passed, 3,242 passed assertions, 0 failed (100% pass rate)**.
   - Function Coverage: **90.51%** (1,145 / 1,265 functions tested).
   - Performance Benchmarks: **524.7 FPS**, P50 = 1.91 ms, P95 = 3.01 ms, P99 = 3.98 ms, **0 stutters (>33 ms)**.
-  - 100/100 safe airborne and runway recovery tests certified.
-  - **Zero Regressions** across all 10 existing games.
-
-
-
-
+## [11.1.0] - 2026-10-15
+### Fixed & Remediated
+- **Apex Flight Suite Integration (DEF-FLIGHT-01)**:
+  - Resolved launcher Play button inactivity by registering `"aircraft_flight"` route in `GameManager.start_game()` (`shared/core/game_manager.gd`) directing to `res://games/aircraft-flight/aircraft_flight_main.tscn`.
+  - Added CLI execution command handler `_handle_aircraft_flight_cmd` in `GameManager`.
+  - Added procedural aviation synth-orchestral soundtrack synthesis in `AudioManager.play_music("apex_flight")`.
+  - Registered flight session statistics, flight hour logging, and medal persistence in `SaveManager.record_flight_session()`.
+  - Added `"aircraft_flight"` input profile mapping in `InputManager` and `GameConstants.GAME_AIRCRAFT_FLIGHT`.
+  - Verified 10/10 consecutive launches from both launcher and standalone entry point without scene load failures.
+- **Chroma Rush Vehicle Dynamics & Camera Smoothing (DEF-CHROMA-01 to DEF-CHROMA-04)**:
+  - Calibrated acceleration parameters across all 6 vehicles in `VehicleCatalog` (`games/chroma-rush/vehicles/vehicle_catalog.gd`) from sluggish 2.8–4.2 m/s² to responsive 22.0–34.0 m/s², achieving 0–60 km/h in 0.4–1.8s.
+  - Eliminated stepped FOV deadband oscillation (4.3 km/h snapping threshold) in `chroma_rush_main.gd`; replaced with continuous critically damped FOV filtering and responsive camera position tracking.
+  - Calibrated traffic evasion behavior in `traffic_agent.gd`: reduced threat detection radius from 35m to 20m and capped evasion speed to 24 m/s, guaranteeing targets remain catchable for proximity color swapping.
+- **AeroRush Checkpoint Progression & Track Hull Integrity (DEF-AERO-01 to DEF-AERO-03)**:
+  - Resolved infinite checkpoint loops in `aero_rush_main.gd`: computed true track corridor headings from adjacent waypoints and implemented resilient forward advancement with circuit lap completion.
+  - Prevented platform overlap in `aero_track_generator.gd`: dynamically clamped landing catch apron lengths based on distance to preceding launch kickers, guaranteeing open air stunt gap clearance across all courses.
+- **Universal Launcher & Adaptive UX Redesign (DEF-UX-01)**:
+  - Added glassmorphic category filter tabs in `launcher/launcher.gd`: `ALL (11)`, `ACTION (3)`, `RACING & STUNT (4)`, `SIMULATION (4)` with keyboard and gamepad navigation.
+  - Added career progression badge in launcher header displaying total suite credits and medals earned.
+  - Fixed orphaned button exposure and awkward card heights by establishing a 340px responsive card minimum height with elastic spacers docking Play buttons uniformly at the bottom.
+### Verified
+- **Monorepo Test Suite**: 86/86 test suites passed, **3,246+ assertions passed**, 0 failed (100% pass rate, exit code 0). Function coverage: **90.38%** (1,146 / 1,268 functions tested).
+- **Launcher E2E Battery**: 127/127 assertions passed with 100% function coverage on `launcher.gd`.
+- **Flight E2E Battery**: 160/160 assertions passed with 10/10 launch stress test pass.
+- **AeroRush Battery**: 100% passed across all 12 course validations and E2E stunt lifecycles.
+- **Chroma Rush Battery**: 100% passed across vehicle physics, camera stability, AI traffic, and E2E missions.
 

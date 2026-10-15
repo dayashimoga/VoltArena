@@ -90,6 +90,26 @@ func handle_exec_cmd(cmd: String) -> void:
 			_handle_chroma_rush_cmd(scene, cmd)
 		"aero_rush":
 			_handle_aero_rush_cmd(scene, cmd)
+		"aircraft_flight":
+			_handle_aircraft_flight_cmd(scene, cmd)
+
+func _handle_aircraft_flight_cmd(scene: Node, cmd: String) -> void:
+	print("[APEX FLIGHT CMD] Received cmd: ", cmd, " scene: ", scene.name)
+	if cmd == "quick_play" or cmd == "start" or cmd == "quick_launch":
+		if scene.has_method("start_flight_session"):
+			scene.start_flight_session()
+	elif cmd == "recover":
+		if scene.has_method("_on_recover_requested"):
+			scene._on_recover_requested()
+	elif cmd == "toggle_camera":
+		if scene.has_method("_on_camera_toggle_requested"):
+			scene._on_camera_toggle_requested()
+	elif cmd == "autopilot":
+		if "autopilot" in scene and is_instance_valid(scene.autopilot):
+			scene.autopilot.enabled = not scene.autopilot.enabled
+	elif cmd == "show_results":
+		if scene.has_method("_on_mission_completed"):
+			scene._on_mission_completed({"mission_name": "Free Flight", "score": 5000, "time_s": 120.0, "medal": "Gold", "success": true})
 
 func _handle_aero_rush_cmd(scene: Node, cmd: String) -> void:
 	print("[AERO CMD] Received cmd: ", cmd, " scene: ", scene.name)
@@ -688,6 +708,9 @@ func start_game(game_id: String) -> void:
 		"aero_rush":
 			scene_path = "res://games/aero-rush/aero_rush_main.tscn"
 			music_track = "aero_rush"
+		"aircraft_flight":
+			scene_path = "res://games/aircraft-flight/aircraft_flight_main.tscn"
+			music_track = "apex_flight"
 		_:
 			push_error("Unknown game ID: " + game_id)
 			return

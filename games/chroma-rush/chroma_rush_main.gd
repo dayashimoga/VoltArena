@@ -549,11 +549,10 @@ func _update_camera(delta: float) -> void:
 	var accel_filter_alpha = 1.0 - exp(-12.0 * delta)
 	cam_filtered_accel = lerpf(cam_filtered_accel, raw_accel, accel_filter_alpha)
 
-	# Continuous smooth FOV with dedicated 1.2 m/s (4.3 km/h) deadband to eliminate zoom breathing/oscillation
-	if absf(cam_filtered_speed - cam_last_stable_speed) > 4.3:
-		cam_last_stable_speed = cam_filtered_speed
-	var spd_ratio = clampf(cam_last_stable_speed / 140.0, 0.0, 1.0)
+	# Continuous smooth FOV filter eliminates zoom breathing, stepping and sudden oscillation
+	var spd_ratio = clampf(cam_filtered_speed / 140.0, 0.0, 1.0)
 	var desired_fov = lerpf(CAM_BASE_FOV, 76.5, spd_ratio)
+	cam_last_stable_speed = cam_filtered_speed
 
 	# Rate-limit FOV delta to prevent sudden zoom pumping
 	var max_fov_step = CAM_MAX_FOV_RATE * delta
@@ -563,7 +562,7 @@ func _update_camera(delta: float) -> void:
 	# 4. Stable Camera Placement: Fixed Distance (ZERO Dynamic Distance Pumping!)
 	var ideal_pos = cam_smoothed_target_pos - cam_smoothed_forward * cam_distance + Vector3(0.0, cam_height, 0.0)
 	var cam_pos = chase_camera.global_position if chase_camera.is_inside_tree() else chase_camera.position
-	cam_pos = cam_pos.lerp(ideal_pos, 1.0 - exp(-12.0 * delta))
+	cam_pos = cam_pos.lerp(ideal_pos, 1.0 - exp(-16.0 * delta))
 	if chase_camera.is_inside_tree():
 		chase_camera.global_position = cam_pos
 	else:

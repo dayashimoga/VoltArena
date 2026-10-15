@@ -421,6 +421,30 @@ func create_music_track(track_name: String) -> AudioStreamWAV:
 
 				var mixed: float = kick + b_val + l_val
 				data[i] = clampi(int(mixed * 127.0) + 128, 0, 255)
+		"apex_flight", "aircraft_flight":
+			# Soaring Open Skies Aviation Theme: driving kick, low jet engine harmonic bass, soaring orchestral synth
+			var flight_chords = [174.61, 196.00, 220.00, 261.63, 220.00, 196.00]
+			var flight_lead = [349.23, 392.00, 440.00, 523.25, 659.25, 523.25, 440.00, 392.00]
+			for i in range(num_samples):
+				var t: float = float(i) / float(sample_rate)
+				var kick_t: float = fmod(t * 3.5, 1.0)
+				var kick_env: float = maxf(0.0, 1.0 - kick_t * 3.0)
+				var kick: float = sin(kick_t * lerpf(80.0, 38.0, kick_t) * TAU) * kick_env * 0.35
+
+				# Jet turbine harmonic drone
+				var jet_drone: float = (sin(t * 110.0 * TAU) * 0.12 + sin(t * 220.0 * TAU) * 0.08) * 0.65
+
+				var c_step: int = int(t * 1.75) % flight_chords.size()
+				var c_freq: float = flight_chords[c_step]
+				var c_val: float = (sin(t * c_freq * TAU) + 0.5 * sin(t * c_freq * 1.5 * TAU)) * 0.22
+
+				var l_step: int = int(t * 7.0) % flight_lead.size()
+				var l_t: float = fmod(t * 7.0, 1.0)
+				var l_env: float = maxf(0.0, 1.0 - l_t * 1.8)
+				var l_val: float = sin(t * flight_lead[l_step] * TAU) * l_env * 0.20
+
+				var mixed: float = kick + jet_drone + c_val + l_val
+				data[i] = clampi(int(mixed * 127.0) + 128, 0, 255)
 		_:
 			for i in range(num_samples):
 				data[i] = 128

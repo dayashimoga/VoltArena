@@ -397,7 +397,13 @@ static func generate_track(course_data: Variant, default_width: float = 16.0) ->
 		if island_def.get("has_landing_apron", false) or (idx > 0 and island_def.get("is_gap_entry", true)):
 			var first_pt = dense[0]
 			var apron_w = float(island_def.get("landing_apron_width", default_width * 1.35))
-			var apron_node = _build_landing_apron(first_pt, apron_w, apron_mat)
+			var max_apron_len = 22.0
+			if idx > 0 and not all_dense_points.is_empty():
+				var prev_exit_pos = all_dense_points[all_dense_points.size() - 1]["pos"] as Vector3
+				var dist_to_prev = (first_pt["pos"] as Vector3).distance_to(prev_exit_pos)
+				# Ensure at least 10m open air gap clearance between previous kicker and apron entrance
+				max_apron_len = clampf(dist_to_prev - 22.0, 4.0, 22.0)
+			var apron_node = _build_landing_apron(first_pt, apron_w, apron_mat, max_apron_len)
 			island_root.add_child(apron_node)
 
 		# 6. Structural Pylons connecting elevated sections to ground
@@ -545,7 +551,7 @@ static func _build_launch_kicker(last_pt: Dictionary, kicker_angle_deg: float, k
 	return kicker
 
 ## Landing Catch Apron with wide entrance, hazard striping, and solid trimesh collision
-static func _build_landing_apron(first_pt: Dictionary, apron_w: float, mat: Material) -> Node3D:
+static func _build_landing_apron(first_pt: Dictionary, apron_w: float, mat: Material, max_apron_len: float = 22.0) -> Node3D:
 	var apron = Node3D.new()
 	apron.name = "LandingCatchApron"
 
@@ -554,12 +560,12 @@ static func _build_landing_apron(first_pt: Dictionary, apron_w: float, mat: Mate
 	var right: Vector3 = first_pt["right"]
 	var norm: Vector3 = first_pt["normal"]
 	var half_w = apron_w * 0.5
-	var apron_len = 22.0
+	var apron_len = clampf(max_apron_len, 4.0, 22.0)
 
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
-	# Build a catch apron extending 22m back from entrance to safely catch incoming vehicles
+	# Build a catch apron extending back from entrance without intersecting preceding ramp
 	var entry_pos = pos - fwd * apron_len - norm * 1.5 # slight downward slant
 	var p0_l = entry_pos - right * (half_w * 1.25)
 	var p0_r = entry_pos + right * (half_w * 1.25)

@@ -68,6 +68,8 @@ func set_game_context(game_id: String) -> void:
 			allowed = ["move_forward", "move_back", "move_left", "move_right", "boost", "drift", "swap", "target_cycle", "pause"]
 		"aero_rush":
 			allowed = ["move_forward", "move_back", "move_left", "move_right", "boost", "drift", "jump", "pause"]
+		"aircraft_flight":
+			allowed = ["move_forward", "move_back", "move_left", "move_right", "boost", "pause"]
 		_:
 			allowed = _action_events_cache.keys()
 

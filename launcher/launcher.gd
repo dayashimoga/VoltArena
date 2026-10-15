@@ -253,10 +253,10 @@ func setup_launcher_ui() -> void:
 	cat_bar.add_child(cat_label)
 
 	var categories = [
-		{"id": "ALL", "label": "ALL (11)"},
+		{"id": "ALL", "label": "ALL (12)"},
 		{"id": "ACTION", "label": "ACTION (3)"},
-		{"id": "RACING", "label": "RACING & STUNT (4)"},
-		{"id": "SIMULATION", "label": "SIMULATION (4)"}
+		{"id": "RACING", "label": "RACING & STUNT (5)"},
+		{"id": "SIMULATION", "label": "SIMULATION (5)"}
 	]
 
 	for cat in categories:
@@ -448,6 +448,25 @@ func get_game_career_stats(game_id: String) -> String:
 			var hours = fl_stats.get("flight_hours", 0.0)
 			var missions = fl_stats.get("missions_completed", 0)
 			return "Hours: %.1fh | Missions: %d" % [hours, missions]
+		"urban_legends":
+			var ul_data = sm.save_data.get("urban_legends", {})
+			var cash = ul_data.get("cash", 25000)
+			var stunts = ul_data.get("stunts_completed", 0)
+			return "Cash: $%d | Stunts: %d" % [cash, stunts]
+		"strike_vector":
+			var sv_stats = sm.save_data.get("statistics", {}).get("strike_vector", {})
+			var score = sv_stats.get("highest_score", 0)
+			var kills = sv_stats.get("kills", 0)
+			return "High Score: %d | Kills: %d" % [score, kills]
+		"skybound_odyssey":
+			var so_stats = sm.save_data.get("statistics", {}).get("skybound_odyssey", {})
+			return "Relics: %d | Quests: %d" % [so_stats.get("relics", 0), so_stats.get("quests_completed", 0)]
+		"roboforge_arena":
+			var rf_stats = sm.save_data.get("statistics", {}).get("roboforge_arena", {})
+			return "Bots Built: %d | Arenas: %d" % [rf_stats.get("bots_built", 0), rf_stats.get("arenas_won", 0)]
+		"wildcircuit":
+			var wc_stats = sm.save_data.get("statistics", {}).get("wildcircuit", {})
+			return "Photos: %d | Species: %d" % [wc_stats.get("photos_taken", 0), wc_stats.get("species_discovered", 0)]
 		_:
 			return ""
 

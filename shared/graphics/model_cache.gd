@@ -603,6 +603,10 @@ static func _normalize_rig_tracks(anim: AnimationPlayer) -> void:
 					a.remove_track(t)
 			continue
 
+		var is_locomotion = ("idle" in a_lower or "walk" in a_lower or "run" in a_lower or "strafe" in a_lower or "sprint" in a_lower or "back" in a_lower)
+		if is_locomotion:
+			a.loop_mode = Animation.LOOP_LINEAR
+
 		for t in range(a.get_track_count()):
 			if "mixamorig_Hips" in str(a.track_get_path(t)) and a.track_get_type(t) == Animation.TYPE_POSITION_3D:
 				var k_count = a.track_get_key_count(t)
@@ -622,7 +626,7 @@ static func play_animation(root: Node3D, anim_name: String, blend_time: float = 
 
 	var target_anim = _resolve_animation_name(anim, anim_name)
 	if target_anim != "" and anim.has_animation(target_anim):
-		if anim.current_animation != target_anim:
+		if anim.current_animation != target_anim or not anim.is_playing():
 			anim.play(target_anim, blend_time)
 		return true
 	return false

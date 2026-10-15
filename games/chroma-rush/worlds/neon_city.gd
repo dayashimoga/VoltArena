@@ -578,7 +578,7 @@ func _build_secondary_city_blocks() -> void:
 		{"pos": Vector3(100, 0, -220), "h": 58.0, "w": 24.0, "theme": 1},
 		{"pos": Vector3(180, 0, -240), "h": 52.0, "w": 22.0, "theme": 5},
 		{"pos": Vector3(140, 0, -80), "h": 62.0, "w": 24.0, "theme": 0},
-		{"pos": Vector3(70, 0, -280), "h": 54.0, "w": 22.0, "theme": 2},
+		{"pos": Vector3(120, 0, -280), "h": 54.0, "w": 22.0, "theme": 2},
 		{"pos": Vector3(220, 0, -180), "h": 48.0, "w": 26.0, "theme": 1},
 
 		# 2. Commercial Promenade & Retail Center (WP 6-10)
@@ -634,8 +634,8 @@ func _build_secondary_city_blocks() -> void:
 		if cfg["pos"].z <= -140.0 and cfg["pos"].z >= -255.0 and cfg["pos"].x >= -65.0 and cfg["pos"].x <= 65.0:
 			continue
 
-		# Strict footprint corner clearance from all spline samples: width/2 + road_half_w(7.5) + sidewalk(3.5) + buffer(2.5) = width/2 + 13.5
-		if not _is_footprint_clear_of_spline(cfg["pos"], cfg["w"] + 6.0, cfg["w"] + 6.0, 0.0, 13.5):
+		# Strict footprint corner clearance from all spline samples: width/2 + road_half_w(7.5) + sidewalk(3.5) + buffer(5.0) = width/2 + 16.0
+		if not _is_footprint_clear_of_spline(cfg["pos"], cfg["w"] + 10.0, cfg["w"] + 10.0, 0.0, 16.0):
 			continue
 
 		var is_tall = cfg["h"] > 45.0
@@ -801,6 +801,7 @@ func _build_city_landmarks() -> void:
 
 func _build_distant_skyline_backdrop() -> void:
 	# 1. 360-degree monumental skyline silhouette instanced from real skyscraper models
+	# Positioned at radius >= 780m to guarantee 240m+ clearance from the road network (max radius 540m)
 	var skyscraper_models = [
 		"res://assets/models/environment/building_skyscraper_a.glb",
 		"res://assets/models/environment/building_skyscraper_b.glb",
@@ -809,15 +810,20 @@ func _build_distant_skyline_backdrop() -> void:
 		"res://assets/models/environment/building_skyscraper_e.glb"
 	]
 	var tower_count = 32
-	var radius = 450.0
+	var radius = 780.0
 
 	for i in range(tower_count):
 		var angle = (float(i) / float(tower_count)) * TAU
 		var m_path = skyscraper_models[i % skyscraper_models.size()]
-		var dist = radius + float((i * 13) % 7) * 20.0
+		var dist = radius + float((i * 13) % 7) * 25.0
 		var pos = Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
-		var sc = 22.0 + float(i % 5) * 4.0
+		var sc = 32.0 + float(i % 5) * 6.0
 		var rot_y = float((i * 45) % 360)
+
+		# Guarantee zero encroachment near any road segment
+		if not _is_footprint_clear_of_spline(pos, sc * 1.5, sc * 1.5, rot_y, 40.0):
+			continue
+
 		var b_glb = ModelCache.get_model(m_path)
 		if b_glb:
 			b_glb.scale = Vector3(sc, sc * 1.6, sc)

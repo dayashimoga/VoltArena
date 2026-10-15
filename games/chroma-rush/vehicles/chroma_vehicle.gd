@@ -66,6 +66,7 @@ var rollover_timer: float = 0.0
 var stuck_timer: float = 0.0
 var last_valid_track_pos: Vector3 = Vector3.ZERO
 var last_valid_track_rot: float = 0.0
+var airborne_grace_timer: float = 0.0
 var wheel_raycasts: Array[RayCast3D] = []
 
 # Visual node references
@@ -168,7 +169,7 @@ func setup_suspension_rays() -> void:
 	for i in range(4):
 		var ray = RayCast3D.new()
 		ray.name = "RayCast_" + str(i)
-		ray.target_position = Vector3(0, -0.65, 0)
+		ray.target_position = Vector3(0, -1.05, 0)
 		ray.position = ray_offsets[i]
 		ray.collision_mask = GameConstants.LAYER_WORLD
 		add_child(ray)
@@ -279,9 +280,19 @@ func _update_grounding_and_suspension() -> void:
 			hits += 1
 			avg_normal += ray.get_collision_normal()
 
-	is_grounded = is_on_floor() or hits >= 2
+	var grounded_now = is_on_floor() or hits >= 1
+	if grounded_now:
+		is_grounded = true
+		airborne_grace_timer = 0.0
+	else:
+		airborne_grace_timer += get_physics_process_delta_time()
+		if airborne_grace_timer > 0.08:
+			is_grounded = false
+
 	if hits > 0:
 		ground_normal = (avg_normal / float(hits)).normalized()
+	elif is_on_floor():
+		ground_normal = get_floor_normal()
 	else:
 		ground_normal = Vector3.UP
 
@@ -340,7 +351,9 @@ func _update_physics_movement(delta: float) -> void:
 		# Project forward driving direction onto ground plane to follow ramps and slopes
 		var slope_forward = (forward_dir - ground_normal * forward_dir.dot(ground_normal)).normalized()
 		var ground_drive_vel = slope_forward * forward_speed
-		velocity = ground_drive_vel
+		# Downward ground adherence force keeps tires continuously glued to asphalt on slopes & crests
+		velocity = ground_drive_vel - ground_normal * (14.0 * delta)
+		apply_floor_snap()
 	else:
 		# Mid-air ballistics
 		var h_vel = Vector3(forward_dir.x, 0.0, forward_dir.z).normalized() * forward_speed

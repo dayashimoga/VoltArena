@@ -869,35 +869,66 @@ func is_footprint_clear_of_spline(center: Vector3, size_x: float, size_z: float,
 
 	return true
 
+func _gather_colliders(node: Node, result: Array[CollisionShape3D]) -> void:
+	if node is CollisionShape3D:
+		result.append(node)
+	for c in node.get_children():
+		_gather_colliders(c, result)
+
 ## Automatically scans and prunes any props in props_container that penetrate the driveable road lane envelope (< 7.0m)
-func prune_props_in_road_corridor(min_clearance: float = 7.0) -> int:
+func prune_props_in_road_corridor(lane_half_width: float = 7.0) -> int:
 	if not props_container:
 		return 0
 	var pruned_count = 0
 	var to_prune: Array[Node] = []
 	for child in props_container.get_children():
 		if child is Node3D:
-			# Exempt foundational ground planes, water/ocean, cloud decks, skyline silhouettes, and structural arches/gantries/piers
+			# Only exempt terrain base planes, ocean/water, and elevated overhead gantries
 			var is_exempt = false
 			var check_node: Node = child
 			while check_node and check_node != self:
 				var n = check_node.name
 				if ("Ground" in n or "Ocean" in n or "Water" in n or "Cloud" in n
-					or "Skyline" in n or "Distant" in n or "Bridge" in n or "Pylon" in n
-					or "Pier" in n or "Arch" in n or "Gantry" in n or check_node.has_meta("is_infrastructure")):
+					or "Bridge" in n or "Pylon" in n or "Pier" in n or "Arch" in n or "Gantry" in n
+					or check_node.has_meta("is_infrastructure")):
 					is_exempt = true
 					break
 				check_node = check_node.get_parent()
 			if is_exempt:
 				continue
-			if not is_clear_of_spline(child.position, min_clearance):
+
+			var colliders: Array[CollisionShape3D] = []
+			_gather_colliders(child, colliders)
+			var penetrates = false
+			if colliders.is_empty():
+				if not is_clear_of_spline(child.position, lane_half_width):
+					penetrates = true
+			else:
+				for col in colliders:
+					var c_radius = 0.0
+					if col.shape is BoxShape3D:
+						var bs = col.shape as BoxShape3D
+						c_radius = minf(bs.size.x, bs.size.z) * 0.5
+					elif col.shape is CylinderShape3D:
+						c_radius = (col.shape as CylinderShape3D).radius
+					elif col.shape is SphereShape3D:
+						c_radius = (col.shape as SphereShape3D).radius
+
+					var col_pos = child.position + col.position
+					if not is_clear_of_spline(col_pos, lane_half_width + c_radius):
+						penetrates = true
+						break
+
+			if penetrates:
 				to_prune.append(child)
+
 	for p in to_prune:
 		print("[ChromaWorldBase] Pruned road-obstructing prop: %s at %s" % [p.name, str(p.position)])
 		props_container.remove_child(p)
 		p.queue_free()
 		pruned_count += 1
 	return pruned_count
+
 
 
 

@@ -244,28 +244,28 @@ static func _build_rail_segment(root: Node3D, seg_idx: int, length: float, width
 
 	var road_len = length + 4.0
 	var z_offset = -length * 0.5 - 1.0
+	var rail_w = maxf(width + 4.0, 18.0) # 18m corridor leaves 7.4m on each side of the train carriage
 
-	_create_solid_floor(root, Vector3(width * 0.85, 1.2, road_len), Vector3(0, -0.6, z_offset), mat_metal)
-	_create_boundary_walls(root, width * 0.85 + 2.0, road_len, z_offset, seg_idx == 0, is_last)
-	_create_navigation_region(root, width * 0.85, road_len, z_offset)
+	_create_solid_floor(root, Vector3(rail_w, 1.2, road_len), Vector3(0, -0.6, z_offset), mat_metal)
+	_create_boundary_walls(root, rail_w + 2.0, road_len, z_offset, seg_idx == 0, is_last)
+	_create_navigation_region(root, rail_w, road_len, z_offset)
 	_add_skyline_backdrop(root, z_offset, length)
 
-	# Parallel High-Speed Train Tracks
-	_add_model(root, "res://assets/models/environment/subway/train_track.glb", Vector3(-3.2, 0.0, -length * 0.5), Vector3(2.2, 1.0, length * 0.1), 0.0)
-	_add_model(root, "res://assets/models/environment/subway/train_track.glb", Vector3(3.2, 0.0, -length * 0.5), Vector3(2.2, 1.0, length * 0.1), 0.0)
+	# Parallel High-Speed Train Tracks running centrally under train car
+	_add_model(root, "res://assets/models/environment/subway/train_track.glb", Vector3(0.0, 0.0, -length * 0.5), Vector3(2.2, 1.0, length * 0.1), 0.0)
 
-	# Subway Passenger Carriages with solid roof collider
+	# Subway Passenger Carriages with centered collider (width 3.2m, leaves wide flanking walkways)
 	var car_path = "res://assets/models/environment/subway/train_subway_car.glb" if seg_idx % 2 == 0 else "res://assets/models/environment/subway/train_subway_middle.glb"
-	_add_prop_model(root, car_path, Vector3(0, 0.0, -length * 0.5), Vector3(1.1, 1.1, 1.2), 0.0, Vector3(3.4, 3.2, 28.0))
+	_add_prop_model(root, car_path, Vector3(0, 0.0, -length * 0.5), Vector3(1.1, 1.1, 1.2), 0.0, Vector3(3.2, 3.2, 26.0))
 
-	# Safety Railings on elevated skyway
-	_create_solid_floor(root, Vector3(0.4, 1.2, road_len), Vector3(-width * 0.42, 0.6, z_offset), mat_hull)
-	_create_solid_floor(root, Vector3(0.4, 1.2, road_len), Vector3(width * 0.42, 0.6, z_offset), mat_hull)
+	# Safety Railings on elevated skyway at edge of viaduct
+	_create_solid_floor(root, Vector3(0.4, 1.2, road_len), Vector3(-rail_w * 0.48, 0.6, z_offset), mat_hull)
+	_create_solid_floor(root, Vector3(0.4, 1.2, road_len), Vector3(rail_w * 0.48, 0.6, z_offset), mat_hull)
 
 	# Overhead Electrification Gantries
 	for z_step in range(0, int(length), 18):
 		var z_pos = -float(z_step) - 9.0
-		_create_visual_box(root, Vector3(width * 0.9, 0.6, 0.8), Vector3(0, 5.0, z_pos), mat_orange)
+		_create_visual_box(root, Vector3(rail_w * 0.95, 0.6, 0.8), Vector3(0, 5.0, z_pos), mat_orange)
 
 # ==============================================================================
 # 3. HARBOR ASSAULT (Wet docks, shipping containers, marine cranes)

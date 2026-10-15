@@ -20,6 +20,9 @@ static func build_aircraft_visuals(aircraft_id: String, primary_col: Color, acce
 		_:
 			return build_fa18_hornet(primary_col, accent_col)
 
+static func build_aircraft_mesh(aircraft_id: String, primary_col: Color, accent_col: Color) -> Node3D:
+	return build_aircraft_visuals(aircraft_id, primary_col, accent_col)
+
 # ==============================================================================
 # 1. F/A-18 HORNET (CARRIER MULTIROLE FIGHTER)
 # ==============================================================================

@@ -62,14 +62,27 @@ func _setup_environment() -> void:
 		world_environment = WorldEnvironment.new()
 		world_environment.name = "WorldEnv"
 		var env = Environment.new()
-		env.background_mode = Environment.BG_COLOR
-		env.background_color = Color(0.55, 0.68, 0.85)
-		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-		env.ambient_light_color = Color(0.35, 0.38, 0.45)
+		env.background_mode = Environment.BG_SKY
+
+		var sky = Sky.new()
+		var sky_mat = ProceduralSkyMaterial.new()
+		sky_mat.sky_top_color = Color(0.35, 0.55, 0.85)
+		sky_mat.sky_horizon_color = Color(0.85, 0.65, 0.45)
+		sky_mat.ground_bottom_color = Color(0.12, 0.14, 0.16)
+		sky_mat.ground_horizon_color = Color(0.32, 0.35, 0.40)
+		sky_mat.sun_angle_max = 30.0
+		sky.sky_material = sky_mat
+		env.sky = sky
+
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+		env.ambient_light_color = Color(0.45, 0.48, 0.52)
+		env.ambient_light_sky_contribution = 0.70
+		env.ambient_light_energy = 0.95
+		env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
+
 		env.tonemap_mode = Environment.TONE_MAPPER_ACES
-		env.glow_enabled = true
-		env.glow_intensity = 0.4
-		env.glow_bloom = 0.15
+		env.tonemap_exposure = 1.0
+		env.glow_enabled = false # Disabled in compatibility renderer to prevent bloom clipping
 		world_environment.environment = env
 		add_child(world_environment)
 
@@ -87,50 +100,70 @@ func _physics_process(delta: float) -> void:
 		hour_changed.emit(int_hour)
 
 func _update_lighting_for_time() -> void:
-	var sun_angle = ((current_time_hours - 6.0) / 24.0) * TAU
-	var sun_elev = sin(sun_angle)
-	var sun_azimuth = cos(sun_angle)
+	# Solar orbital cycle: Sunrise ~05:30, Noon ~12:30, Golden Sunset ~17:30-19:30, Dusk ~19:30-20:30, Night ~20:30-05:00
+	var is_daytime = (current_time_hours >= 5.5 and current_time_hours < 20.0)
+	var is_sunset = (current_time_hours >= 17.0 and current_time_hours < 20.0)
+
+	var sun_rad = ((current_time_hours - 5.5) / 14.5) * PI
+	var sun_elev = sin(clampf(sun_rad, 0.0, PI)) if is_daytime else -0.3
+	var sun_azimuth = cos(clampf(sun_rad, 0.0, PI))
 
 	if is_instance_valid(sun_light):
-		sun_light.rotation = Vector3(-asin(clampf(sun_elev, -1.0, 1.0)), -atan2(sun_azimuth, 0.8), 0)
-
-		# Sun energy and color based on altitude
-		if sun_elev > 0.05:
-			# Daytime
+		if is_daytime:
 			sun_light.visible = true
-			if current_time_hours >= 17.0 and current_time_hours <= 19.5:
-				# Golden Hour Sunset (Screenshots 1 & 4)
-				var t = (current_time_hours - 17.0) / 2.5
-				sun_light.light_color = Color(1.0, 0.65, 0.28).lerp(Color(0.95, 0.35, 0.18), t)
-				sun_light.light_energy = lerpf(2.2, 1.2, t)
+			sun_light.rotation = Vector3(-asin(clampf(maxf(sun_elev, 0.08), -1.0, 1.0)), -atan2(sun_azimuth, 0.8), 0)
+
+			if is_sunset:
+				# Golden Hour Sunset: Warm amber radiance, elongated shadows, visible sun
+				var t = (current_time_hours - 17.0) / 3.0
+				sun_light.light_color = Color(1.0, 0.72, 0.38).lerp(Color(0.96, 0.48, 0.22), t)
+				sun_light.light_energy = lerpf(1.9, 1.25, t)
 			else:
-				# Normal Daylight
+				# High Daylight
 				sun_light.light_color = Color(1.0, 0.98, 0.92)
-				sun_light.light_energy = clampf(sun_elev * 2.5, 0.4, 2.0)
+				sun_light.light_energy = clampf(sun_elev * 2.2, 0.8, 1.9)
 		else:
-			# Night
+			# Nighttime: deactivate direct sun
 			sun_light.visible = false
 			sun_light.light_energy = 0.0
 
 	if is_instance_valid(moon_light):
-		moon_light.visible = (sun_elev <= 0.05)
+		moon_light.visible = not is_daytime or (current_time_hours >= 19.5 or current_time_hours < 6.0)
 		moon_light.rotation = Vector3(deg_to_rad(45.0), deg_to_rad(135.0), 0)
+		moon_light.light_energy = 0.55 if not is_daytime else 0.15
 
-	# Atmospheric sky color
+	# Update Sky & Ambient colors dynamically
 	if is_instance_valid(world_environment) and world_environment.environment:
 		var env = world_environment.environment
-		if current_time_hours >= 17.0 and current_time_hours <= 19.5:
-			# Sunset Amber
-			env.background_color = Color(0.95, 0.52, 0.22)
-			env.ambient_light_color = Color(0.55, 0.38, 0.28)
-		elif current_time_hours >= 20.0 or current_time_hours < 5.5:
-			# Neon Night
-			env.background_color = Color(0.04, 0.06, 0.12)
-			env.ambient_light_color = Color(0.12, 0.15, 0.22)
+		var sky_mat = env.sky.sky_material as ProceduralSkyMaterial if (env.sky and env.sky.sky_material is ProceduralSkyMaterial) else null
+
+		if is_sunset:
+			# Sunset Palette
+			var t_s = (current_time_hours - 17.0) / 3.0
+			var top_c = Color(0.22, 0.38, 0.65).lerp(Color(0.15, 0.20, 0.40), t_s)
+			var horiz_c = Color(0.98, 0.58, 0.25).lerp(Color(0.88, 0.38, 0.20), t_s)
+			if sky_mat:
+				sky_mat.sky_top_color = top_c
+				sky_mat.sky_horizon_color = horiz_c
+				sky_mat.ground_horizon_color = horiz_c * 0.55
+			env.ambient_light_color = horiz_c * 0.75
+			env.ambient_light_energy = lerpf(0.95, 0.70, t_s)
+		elif not is_daytime:
+			# Neon Night Palette
+			if sky_mat:
+				sky_mat.sky_top_color = Color(0.04, 0.06, 0.14)
+				sky_mat.sky_horizon_color = Color(0.10, 0.14, 0.25)
+				sky_mat.ground_horizon_color = Color(0.06, 0.08, 0.15)
+			env.ambient_light_color = Color(0.25, 0.30, 0.42)
+			env.ambient_light_energy = 0.55
 		else:
-			# Clear Day
-			env.background_color = Color(0.50, 0.68, 0.88)
-			env.ambient_light_color = Color(0.38, 0.42, 0.48)
+			# Clear Day Palette
+			if sky_mat:
+				sky_mat.sky_top_color = Color(0.35, 0.58, 0.90)
+				sky_mat.sky_horizon_color = Color(0.70, 0.82, 0.92)
+				sky_mat.ground_horizon_color = Color(0.38, 0.42, 0.46)
+			env.ambient_light_color = Color(0.48, 0.52, 0.58)
+			env.ambient_light_energy = 0.95
 
 func apply_preset(preset_name: String) -> void:
 	if not is_instance_valid(sun_light):

@@ -1837,4 +1837,34 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **Urban Legends Battery**: All 7 Urban Legends suites passed 100% (Vehicle Physics: 41/41, World & Roads: 189/189, Stunts & Missions: 58/58, Traffic & AI: 24/24, Camera & HUD: 33/33, Performance & Streaming: 6/6, E2E Scenarios: 31/31).
 - **Regression Verification**: 100% pass rate across all 86 baseline test suites for games 1 through 11.
 
+## [14.0.0] - 2026-10-15
+### Fixed
+- **Urban Legends Rendering & Desktop Controls (Defect Screenshot 5)**:
+  - Replaced flat `Environment.BG_COLOR` with `ProceduralSkyMaterial` on an `Environment.BG_SKY` background with reflection radiance in `games/urban-legends/world/urban_weather_system.gd`, eliminating upper-viewport luminance blowout in `gl_compatibility` mode.
+  - Corrected solar elevation calculations: direct directional light maintained during sunset (energy 1.25–1.9) with warm amber radiance and moon illumination maintained at night (energy 0.55), restoring specular reflection across all metallic vehicle paints and skyscraper facades.
+  - Implemented desktop keyboard (`W/A/S/D`, arrow keys, Space handbrake, Shift nitro) and gamepad analog axis/trigger polling in `urban_legends_main.gd`, resolving vehicle paralysis.
+- **Apex Flight Hangar & UI Layout (Defect Screenshot 1)**:
+  - Wrapped mission selection buttons in a `ScrollContainer` (custom minimum size 280x190) in `games/aircraft-flight/ui/hangar_menu.gd`, bounded panel heights, and pinned "★ FLY MISSION ★" and "EXIT TO LAUNCHER" inside safe viewport limits (0px vertical overflow).
+  - Built a 3D showroom turntable preview `SubViewport` (size 640x520) with illuminated pedestal, key/fill directional lighting, dedicated `Camera3D`, and continuous yaw rotation in `hangar_menu.gd`.
+  - Added alias `build_aircraft_mesh` for `build_aircraft_visuals` in `aircraft_mesh_builder.gd`.
+- **Chroma Rush Road Clearance & Suspension Dynamics (Defect Screenshots 2 & 3)**:
+  - Relocated distant skyline backdrop tower ring in `games/chroma-rush/worlds/neon_city.gd` outward from 450m to $\ge 780\text{m}$, eliminating the skyscraper that blocked Waypoint 9.
+  - Relocated secondary commercial building near Waypoint 3 to `(120, 0, -280)` with guaranteed $\ge 15\text{m}$ clearance.
+  - Aligned `prune_props_in_road_corridor()` with `WorldAuditTool` collider-radius checks, ensuring zero road penetration while preserving authentic sidewalk street trees.
+  - Extended suspension raycasts in `chroma_vehicle.gd` to `Vector3(0, -1.05, 0)`, added downward ground adherence force `velocity -= ground_normal * (14.0 * delta)` and `apply_floor_snap()`, plus an airborne grace timer (0.08s) eliminating alternate-frame grounding flip-flops and smoothed steering.
+- **Strike Vector Locomotion Animation & Rail Corridor (Defect Screenshot 4)**:
+  - Set `a.loop_mode = Animation.LOOP_LINEAR` across all locomotion tracks (`idle`, `walk`, `run`, `back`, `strafe_left`, `strafe_right`, `sprint`) in `shared/graphics/model_cache.gd`, and resumed playback if stopped in `play_animation()`.
+  - Synchronized locomotion animation playback speed with horizontal movement velocity in `strike_player_visual.gd`.
+  - Widened railway viaduct in `games/strike-vector/environment/strike_environment_builder.gd` to 18m, centered train tracks under carriages, leaving 7.4m flanking walkways, repositioned crates/barrels against outer walls, and carved out unobstructed 4m corridors.
+- **AeroRush Checkpoint Recovery Progression**:
+  - In `games/aero-rush/aero_rush_main.gd`, invoked `player_vehicle.update_checkpoint(gate.global_position, gate.global_basis)` whenever a checkpoint is passed, eliminating respawn loops to the start line.
+- **Suite Launcher Category Sync**:
+  - Updated category filter button labels in `launcher/launcher.gd` to `ALL (12)`, `ACTION (3)`, `RACING (5)`, `SIMULATION (5)`. Added career statistics formatting for Urban Legends, Strike Vector, RoboForge Arena, and Skybound Odyssey.
+### Verified
+- **Monorepo Test Battery**: **93 / 93 test suites passed, 3,678 / 3,678 assertions passed, 0 failed (100% pass rate, exit code 0)**.
+- **Overall Function Coverage**: **91.11%** (1,281 / 1,406 tested functions across all engine and game modules, exceeding the $\ge 90.0\%$ standard).
+- **Standalone Packaging Audit**: 36 standalone packages exported across Windows, Linux, and Web for all 12 games with 0 foreign asset leakage (`foreign_files_found: 0`, `status: "ISOLATED_PASS"`, 36 unique sizes, 36 unique SHA-256 hashes).
+- **Regression Verification**: Zero regressions detected across all 12 games in the VoltArena suite.
+
+
 

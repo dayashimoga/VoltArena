@@ -542,6 +542,12 @@ func _process_racing(delta: float) -> void:
 
 func _on_checkpoint_passed(cp_idx: int, vehicle: CharacterBody3D) -> void:
 	if vehicle == player_vehicle:
+		# Update authoritative recovery checkpoint to the cleared gate
+		if cp_idx >= 0 and cp_idx < checkpoints.size():
+			var gate = checkpoints[cp_idx]
+			if is_instance_valid(gate):
+				player_vehicle.update_checkpoint(gate.global_position, gate.global_basis)
+
 		if cp_idx == next_checkpoint_idx:
 			next_checkpoint_idx += 1
 			_play_sfx("beep_high")

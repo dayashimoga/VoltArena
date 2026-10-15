@@ -182,14 +182,50 @@ func _physics_process(_delta: float) -> void:
 	if stunt_detector:
 		stunt_detector.process_stunt_frame(_delta)
 
-	# Sync Touch Controls to Player Vehicle
+	# Sync Controls to Player Vehicle (Support touch + full keyboard/gamepad)
+	var steer: float = 0.0
+	var throttle: float = 0.0
+	var brake: float = 0.0
+	var handbrake: bool = false
+	var nitro: bool = false
+
 	if hud and hud.touch_controls_root and hud.touch_controls_root.visible:
-		var t_steer = hud.touch_steer
-		var t_throt = hud.touch_throttle
-		var t_brk = hud.touch_brake
-		var t_hand = hud.touch_handbrake
-		var t_nit = hud.touch_nitro
-		player_vehicle.set_inputs(t_steer, t_throt, t_brk, t_hand, t_nit)
+		steer = hud.touch_steer
+		throttle = hud.touch_throttle
+		brake = hud.touch_brake
+		handbrake = hud.touch_handbrake
+		nitro = hud.touch_nitro
+	else:
+		# Keyboard & Gamepad axis inputs
+		if Input.is_action_pressed("move_left") or Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
+			steer -= 1.0
+		if Input.is_action_pressed("move_right") or Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
+			steer += 1.0
+
+		if Input.is_action_pressed("move_forward") or Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
+			throttle = 1.0
+		if Input.is_action_pressed("move_back") or Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
+			brake = 1.0
+
+		handbrake = Input.is_action_pressed("handbrake") or Input.is_key_pressed(KEY_SPACE)
+		nitro = Input.is_action_pressed("nitro") or Input.is_key_pressed(KEY_SHIFT)
+
+		# Gamepad analog stick & trigger polling
+		var joy_steer = Input.get_joy_axis(0, JOY_AXIS_LEFT_X)
+		if absf(joy_steer) > 0.15:
+			steer = joy_steer
+		var joy_trig_r = Input.get_joy_axis(0, JOY_AXIS_TRIGGER_RIGHT)
+		if joy_trig_r > 0.1:
+			throttle = maxf(throttle, joy_trig_r)
+		var joy_trig_l = Input.get_joy_axis(0, JOY_AXIS_TRIGGER_LEFT)
+		if joy_trig_l > 0.1:
+			brake = maxf(brake, joy_trig_l)
+		if Input.is_joy_button_pressed(0, JOY_BUTTON_A):
+			handbrake = true
+		if Input.is_joy_button_pressed(0, JOY_BUTTON_B) or Input.is_joy_button_pressed(0, JOY_BUTTON_LEFT_SHOULDER):
+			nitro = true
+
+	player_vehicle.set_inputs(steer, throttle, brake, handbrake, nitro)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):

@@ -204,17 +204,17 @@ static func _get_reinforcement_spawns(m_idx: int, s_idx: int) -> Array[Array]:
 	return waves
 
 static func _populate_props_and_pickups(seg: SegmentManager, len: float) -> void:
-	# Add Destructible Crate & Barrel
+	# Add Destructible Crate & Barrel docked neatly against perimeter walls (leaves central/flanking lanes unobstructed)
 	var crate = DestructibleProp.new()
 	crate.name = "Crate"
 	crate.prop_type = DestructibleProp.PropType.CRATE
-	crate.position = Vector3(-3.5, 0, -len * 0.25)
+	crate.position = Vector3(-6.2, 0, -len * 0.25)
 	seg.add_child(crate)
 
 	var barrel = DestructibleProp.new()
 	barrel.name = "ExplosiveBarrel"
 	barrel.prop_type = DestructibleProp.PropType.EXPLOSIVE_BARREL
-	barrel.position = Vector3(3.5, 0, -len * 0.45)
+	barrel.position = Vector3(6.2, 0, -len * 0.45)
 	seg.add_child(barrel)
 
 	# Add Ammo / Health Pickup

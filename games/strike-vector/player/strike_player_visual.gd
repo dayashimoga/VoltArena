@@ -148,9 +148,11 @@ func update_animation(horizontal_speed: float, is_on_floor: bool, sliding: bool,
 		else:
 			desired_anim = "idle"
 
-	if desired_anim != current_anim_state and is_instance_valid(character_model):
-		current_anim_state = desired_anim
-		ModelCacheScript.play_animation(character_model, current_anim_state, 0.15)
+	if is_instance_valid(character_model):
+		var ap = character_model.find_child("*AnimationPlayer*", true, false) as AnimationPlayer
+		if desired_anim != current_anim_state or (ap and not ap.is_playing()):
+			current_anim_state = desired_anim
+			ModelCacheScript.play_animation(character_model, current_anim_state, 0.15)
 
 	if is_instance_valid(character_model):
 		var ap = character_model.find_child("*AnimationPlayer*", true, false) as AnimationPlayer

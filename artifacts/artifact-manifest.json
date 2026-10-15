@@ -481,6 +481,54 @@
       ],
       "foreign_resources": 0
     },
+    "UrbanLegends-Linux-x86_64.tar.gz": {
+      "size_mb": 194.46,
+      "size_bytes": 203908135,
+      "sha256": "3eb8867945c5b2b715352e70bceb7fbd9cbde6b6999779219f829859fe88406b",
+      "archive_members": [],
+      "foreign_resources": 0
+    },
+    "UrbanLegends-Web.zip": {
+      "size_mb": 302.49,
+      "size_bytes": 317179204,
+      "sha256": "8bbeccc53fe29d53f8439ba9a18f8a1690716a2ccb854f9718144e7923a74d9e",
+      "archive_members": [
+        "index.apple-touch-icon.png",
+        "index.apple-touch-icon.png.import",
+        "index.audio.worklet.js",
+        "index.html",
+        "index.icon.png",
+        "index.icon.png.import",
+        "index.js",
+        "index.pck",
+        "index.pck.part00",
+        "index.pck.part01",
+        "index.pck.part02",
+        "index.pck.part03",
+        "index.pck.part04",
+        "index.pck.part05",
+        "index.pck.part06",
+        "index.png",
+        "index.png.import",
+        "index.wasm",
+        "index.wasm.part00",
+        "index.wasm.part01",
+        "_headers",
+        "UrbanLegends.pck"
+      ],
+      "foreign_resources": 0
+    },
+    "UrbanLegends-Windows-x86_64.zip": {
+      "size_mb": 200.31,
+      "size_bytes": 210044573,
+      "sha256": "956549d880d9cf74bf7eea36a9d2b874cd3ef996b58fb665d9e74b323431e141",
+      "archive_members": [
+        "UrbanLegends.exe",
+        "UrbanLegends.pck",
+        "standalone_manifest.json"
+      ],
+      "foreign_resources": 0
+    },
     "WildCircuit-Linux-x86_64.tar.gz": {
       "size_mb": 174.94,
       "size_bytes": 183434977,

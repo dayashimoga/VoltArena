@@ -22,6 +22,8 @@ static func create_game_banner(game_id: String, width: int = 360, height: int = 
 			_paint_aero_rush(image, width, height)
 		"aircraft_flight", "apex_flight":
 			_paint_apex_flight(image, width, height)
+		"urban_legends":
+			_paint_urban_legends(image, width, height)
 		_:
 			_paint_default_banner(image, width, height)
 
@@ -391,6 +393,81 @@ static func _paint_apex_flight(img: Image, w: int, h: int) -> void:
 				base_r = minf(1.0, base_r + 0.6)
 				base_g = minf(1.0, base_g + 0.6)
 				base_b = minf(1.0, base_b + 0.7)
+
+			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
+
+static func _paint_urban_legends(img: Image, w: int, h: int) -> void:
+	# Urban Legends: Dramatic California Golden Hour sunset over city skyline & elevated freeway viaduct
+	for y in range(h):
+		var v: float = float(y) / float(h)
+		for x in range(w):
+			var u: float = float(x) / float(w)
+
+			# Golden Hour Sunset Sky (Deep indigo at top -> fiery amber/crimson -> warm gold at horizon)
+			var base_r: float = 0.0
+			var base_g: float = 0.0
+			var base_b: float = 0.0
+
+			if v < 0.45:
+				var sv = v / 0.45
+				base_r = lerpf(0.18, 0.88, sv)
+				base_g = lerpf(0.12, 0.45, sv)
+				base_b = lerpf(0.42, 0.18, sv)
+			else:
+				var hv = (v - 0.45) / 0.55
+				base_r = lerpf(0.88, 0.98, hv)
+				base_g = lerpf(0.45, 0.72, hv)
+				base_b = lerpf(0.18, 0.28, hv)
+
+			# Low-lying setting sun orb at horizon
+			var sun_cx = float(w) * 0.45
+			var sun_cy = float(h) * 0.48
+			var s_dist = Vector2(x - sun_cx, y - sun_cy).length()
+			if s_dist < 32.0:
+				var s_glow = 1.0 - (s_dist / 32.0)
+				base_r += s_glow * 0.4
+				base_g += s_glow * 0.35
+				base_b += s_glow * 0.1
+
+			# Downtown Skyscrapers silhouette along horizon
+			if v > 0.32 and v < 0.65:
+				var b_idx = int(u * 14.0)
+				var b_height = float(h) * (0.35 + sin(float(b_idx) * 2.3) * 0.12 + (float(b_idx % 3) * 0.04))
+				if y > int(b_height):
+					base_r = 0.10
+					base_g = 0.08
+					base_b = 0.14
+					# Window lights
+					if (x % 5 < 2) and (y % 7 < 3) and y > int(b_height + 10):
+						base_r = 0.95
+						base_g = 0.85
+						base_b = 0.40
+
+			# Elevated Freeway Flyover Viaduct curving across lower-third
+			var road_y = float(h) * (0.68 + sin(u * PI * 0.8) * 0.12)
+			var road_thick = 16.0
+			if absf(float(y) - road_y) < road_thick * 0.5:
+				base_r = 0.14
+				base_g = 0.15
+				base_b = 0.18
+				# Neon yellow double center divider line
+				if absf(float(y) - road_y) < 1.5:
+					base_r = 1.0
+					base_g = 0.85
+					base_b = 0.1
+
+			# Palm Tree silhouettes in foreground
+			for palm_x in [int(w * 0.12), int(w * 0.88)]:
+				if abs(x - palm_x) < 3 and y > int(h * 0.50):
+					base_r = 0.05
+					base_g = 0.04
+					base_b = 0.06
+				# Fronds
+				var p_dist = Vector2(x - palm_x, y - int(h * 0.50)).length()
+				if p_dist < 18.0 and y <= int(h * 0.52):
+					base_r = 0.06
+					base_g = 0.05
+					base_b = 0.07
 
 			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
 

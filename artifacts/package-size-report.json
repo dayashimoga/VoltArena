@@ -150,6 +150,21 @@
       "size_bytes": 189785871,
       "sha256": "279be3e2f8fd9971dbb86ec69665ce60e8670b0fbfdc7a0602c2ee1151982126"
     },
+    "UrbanLegends-Linux-x86_64.tar.gz": {
+      "size_mb": 194.46,
+      "size_bytes": 203908135,
+      "sha256": "3eb8867945c5b2b715352e70bceb7fbd9cbde6b6999779219f829859fe88406b"
+    },
+    "UrbanLegends-Web.zip": {
+      "size_mb": 302.49,
+      "size_bytes": 317179204,
+      "sha256": "8bbeccc53fe29d53f8439ba9a18f8a1690716a2ccb854f9718144e7923a74d9e"
+    },
+    "UrbanLegends-Windows-x86_64.zip": {
+      "size_mb": 200.31,
+      "size_bytes": 210044573,
+      "sha256": "956549d880d9cf74bf7eea36a9d2b874cd3ef996b58fb665d9e74b323431e141"
+    },
     "WildCircuit-Linux-x86_64.tar.gz": {
       "size_mb": 174.94,
       "size_bytes": 183434977,
@@ -189,8 +204,8 @@
     }
   },
   "per_game_assets_kb": {
-    "aero-rush": 334.5,
-    "chroma-rush": 479.5,
+    "aero-rush": 335.8,
+    "chroma-rush": 479.6,
     "kart-racing": 230.2,
     "strike-vector": 318.7,
     "roboforge-arena": 52.9,
@@ -199,9 +214,10 @@
     "rocket-car": 77.7,
     "subway-survival": 61.5,
     "arena-fps": 70.9,
-    "aircraft-flight": 175.9
+    "aircraft-flight": 176.8,
+    "urban-legends": 245.6
   },
   "isolation_verified": true,
-  "unique_standalone_sizes_count": 33,
-  "unique_standalone_hashes_count": 33
+  "unique_standalone_sizes_count": 36,
+  "unique_standalone_hashes_count": 36
 }

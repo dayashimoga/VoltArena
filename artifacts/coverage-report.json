@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 90.3785488958991,
+  "overall_coverage_pct": 91.2393162393162,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -1112,6 +1112,138 @@
       "total": 19,
       "untested": []
     },
+    "res://games/urban-legends/core/urban_save_data.gd": {
+      "coverage_pct": 100,
+      "tested": 11,
+      "total": 11,
+      "untested": []
+    },
+    "res://games/urban-legends/gameplay/mission_director.gd": {
+      "coverage_pct": 100,
+      "tested": 10,
+      "total": 10,
+      "untested": []
+    },
+    "res://games/urban-legends/gameplay/progression_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 11,
+      "total": 11,
+      "untested": []
+    },
+    "res://games/urban-legends/gameplay/stunt_detector.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/urban-legends/traffic/traffic_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/urban-legends/traffic/traffic_vehicle.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/urban-legends/ui/urban_garage_menu.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/urban-legends/ui/urban_hud.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://games/urban-legends/ui/urban_map_menu.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/urban-legends/ui/urban_pause_menu.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/urban-legends/urban_legends_main.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/urban-legends/vehicles/urban_chase_camera.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://games/urban-legends/vehicles/urban_vehicle.gd": {
+      "coverage_pct": 100,
+      "tested": 18,
+      "total": 18,
+      "untested": []
+    },
+    "res://games/urban-legends/vehicles/urban_vehicle_audio.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/urban-legends/vehicles/urban_vehicle_catalog.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/urban-legends/vehicles/urban_vehicle_visuals.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/urban-legends/world/urban_district_definitions.gd": {
+      "coverage_pct": 100,
+      "tested": 6,
+      "total": 6,
+      "untested": []
+    },
+    "res://games/urban-legends/world/urban_prop_factory.gd": {
+      "coverage_pct": 100,
+      "tested": 8,
+      "total": 8,
+      "untested": []
+    },
+    "res://games/urban-legends/world/urban_road_network.gd": {
+      "coverage_pct": 100,
+      "tested": 8,
+      "total": 8,
+      "untested": []
+    },
+    "res://games/urban-legends/world/urban_weather_system.gd": {
+      "coverage_pct": 100,
+      "tested": 8,
+      "total": 8,
+      "untested": []
+    },
+    "res://games/urban-legends/world/urban_world_generator.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/urban-legends/world/urban_world_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
     "res://games/wildcircuit/animals/animal_data.gd": {
       "coverage_pct": 100,
       "tested": 2,
@@ -1375,12 +1507,13 @@
       "untested": []
     },
     "res://shared/save/save_manager.gd": {
-      "coverage_pct": 88.8888888888889,
+      "coverage_pct": 84.2105263157895,
       "tested": 16,
-      "total": 18,
+      "total": 19,
       "untested": [
         "record_flight_session",
-        "record_aero_race"
+        "record_aero_race",
+        "record_urban_session"
       ]
     },
     "res://shared/settings/settings_manager.gd": {
@@ -1420,7 +1553,7 @@
       "untested": []
     }
   },
-  "tested_functions": 1146,
-  "timestamp": "2026-10-15T06:49:47",
-  "total_functions": 1268
+  "tested_functions": 1281,
+  "timestamp": "2026-10-15T09:26:28",
+  "total_functions": 1404
 }

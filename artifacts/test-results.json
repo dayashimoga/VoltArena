@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 90.3785488958991,
-  "coverage_tested_functions": 1146,
-  "coverage_total_functions": 1268,
-  "execution_seconds": 174.43,
+  "coverage_percent": 91.2393162393162,
+  "coverage_tested_functions": 1281,
+  "coverage_total_functions": 1404,
+  "execution_seconds": 193.094,
   "status": "PASS",
   "suites": {
     "AI Systems Unit": {
@@ -212,7 +212,7 @@
     },
     "Launcher E2E": {
       "failed": 0,
-      "passed": 112,
+      "passed": 119,
       "status": "PASS"
     },
     "LauncherArt Vector Graphics Unit": {
@@ -327,7 +327,7 @@
     },
     "Responsive UI Multi-Resolution": {
       "failed": 0,
-      "passed": 351,
+      "passed": 369,
       "status": "PASS"
     },
     "RoboForge Arena E2E": {
@@ -415,6 +415,41 @@
       "passed": 69,
       "status": "PASS"
     },
+    "Urban Legends Camera & HUD Unit": {
+      "failed": 0,
+      "passed": 33,
+      "status": "PASS"
+    },
+    "Urban Legends E2E Gameplay Scenarios": {
+      "failed": 0,
+      "passed": 31,
+      "status": "PASS"
+    },
+    "Urban Legends Performance & Streaming Unit": {
+      "failed": 0,
+      "passed": 6,
+      "status": "PASS"
+    },
+    "Urban Legends Stunts & Missions Unit": {
+      "failed": 0,
+      "passed": 58,
+      "status": "PASS"
+    },
+    "Urban Legends Traffic & AI Unit": {
+      "failed": 0,
+      "passed": 24,
+      "status": "PASS"
+    },
+    "Urban Legends Vehicle Physics Unit": {
+      "failed": 0,
+      "passed": 41,
+      "status": "PASS"
+    },
+    "Urban Legends World & Roads Unit": {
+      "failed": 0,
+      "passed": 189,
+      "status": "PASS"
+    },
     "Wave Director Unit": {
       "failed": 0,
       "passed": 10,
@@ -436,8 +471,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-10-15T06:49:47",
+  "timestamp": "2026-10-15T09:26:28",
   "total_failed": 0,
-  "total_passed": 3271,
-  "total_suites": 86
+  "total_passed": 3678,
+  "total_suites": 93
 }

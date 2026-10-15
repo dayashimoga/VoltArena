@@ -18,7 +18,8 @@ PRESETS = {
     "rocket-car": ("Windows-NitroKick", "NitroKick.pck"),
     "subway-survival": ("Windows-MetroSiege", "MetroSiege.pck"),
     "arena-fps": ("Windows-IronCrucible", "IronCrucible.pck"),
-    "aircraft-flight": ("Windows-AircraftFlight", "AircraftFlight.pck")
+    "aircraft-flight": ("Windows-AircraftFlight", "AircraftFlight.pck"),
+    "urban-legends": ("Windows-UrbanLegends", "UrbanLegends.pck")
 }
 
 def export_pcks(target="all"):

@@ -88,6 +88,15 @@ const TestFlightMissionsScript = preload("res://games/aircraft-flight/tests/test
 const TestFlightHUDScript = preload("res://games/aircraft-flight/tests/test_flight_hud_and_autopilot_unit.gd")
 const TestFlightE2EScript = preload("res://games/aircraft-flight/tests/test_flight_e2e.gd")
 
+# --- Urban Legends Suites ---
+const TestUrbanVehiclePhysicsScript = preload("res://games/urban-legends/tests/test_urban_vehicle_physics_unit.gd")
+const TestUrbanWorldAndRoadsScript = preload("res://games/urban-legends/tests/test_urban_world_and_roads_unit.gd")
+const TestUrbanStuntsAndMissionsScript = preload("res://games/urban-legends/tests/test_urban_stunts_and_missions_unit.gd")
+const TestUrbanTrafficAndAIScript = preload("res://games/urban-legends/tests/test_urban_traffic_and_ai_unit.gd")
+const TestUrbanCameraAndHUDScript = preload("res://games/urban-legends/tests/test_urban_camera_and_hud_unit.gd")
+const TestUrbanPerformanceAndStreamingScript = preload("res://games/urban-legends/tests/test_urban_performance_and_streaming_unit.gd")
+const TestUrbanLegendsE2EScript = preload("res://games/urban-legends/tests/test_urban_legends_e2e.gd")
+
 # --- Responsive & Soak ---
 const TestResponsiveUIScript = preload("res://tests/responsive/test_responsive_ui.gd")
 const TestSoakScript = preload("res://tests/performance/test_soak.gd")
@@ -223,6 +232,14 @@ func _initialize() -> void:
 		{"name": "Apex Flight Missions & Rings Unit", "instance": TestFlightMissionsScript.new()},
 		{"name": "Apex Flight HUD & Autopilot Unit", "instance": TestFlightHUDScript.new()},
 		{"name": "Apex Flight E2E Scenarios", "instance": TestFlightE2EScript.new()},
+		# Urban Legends Suites
+		{"name": "Urban Legends Vehicle Physics Unit", "instance": TestUrbanVehiclePhysicsScript.new()},
+		{"name": "Urban Legends World & Roads Unit", "instance": TestUrbanWorldAndRoadsScript.new()},
+		{"name": "Urban Legends Stunts & Missions Unit", "instance": TestUrbanStuntsAndMissionsScript.new()},
+		{"name": "Urban Legends Traffic & AI Unit", "instance": TestUrbanTrafficAndAIScript.new()},
+		{"name": "Urban Legends Camera & HUD Unit", "instance": TestUrbanCameraAndHUDScript.new()},
+		{"name": "Urban Legends Performance & Streaming Unit", "instance": TestUrbanPerformanceAndStreamingScript.new()},
+		{"name": "Urban Legends E2E Gameplay Scenarios", "instance": TestUrbanLegendsE2EScript.new()},
 		# Legacy Acceptance
 		{"name": "Platform Acceptance (Legacy)", "instance": TestAcceptanceScript.new()},
 	]

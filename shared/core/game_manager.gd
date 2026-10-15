@@ -711,6 +711,9 @@ func start_game(game_id: String) -> void:
 		"aircraft_flight":
 			scene_path = "res://games/aircraft-flight/aircraft_flight_main.tscn"
 			music_track = "apex_flight"
+		"urban_legends":
+			scene_path = "res://games/urban-legends/urban_legends_main.tscn"
+			music_track = "urban_legends"
 		_:
 			push_error("Unknown game ID: " + game_id)
 			return

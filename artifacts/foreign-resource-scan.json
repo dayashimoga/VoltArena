@@ -149,6 +149,21 @@
     "foreign_files_found": 0,
     "status": "ISOLATED_PASS"
   },
+  "UrbanLegends-Linux-x86_64.tar.gz": {
+    "target_game": "urban-legends",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "UrbanLegends-Web.zip": {
+    "target_game": "urban-legends",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
+  "UrbanLegends-Windows-x86_64.zip": {
+    "target_game": "urban-legends",
+    "foreign_files_found": 0,
+    "status": "ISOLATED_PASS"
+  },
   "WildCircuit-Linux-x86_64.tar.gz": {
     "target_game": "wildcircuit",
     "foreign_files_found": 0,

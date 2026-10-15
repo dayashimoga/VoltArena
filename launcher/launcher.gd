@@ -117,6 +117,15 @@ var games_meta = [
 		"tags": ["FLIGHT", "SIMULATOR", "OPEN-WORLD", "JETS", "AERODYNAMICS"],
 		"color": Color(0.15, 0.65, 1.0),
 		"scene": "res://games/aircraft-flight/aircraft_flight_main.tscn"
+	},
+	{
+		"id": "urban_legends",
+		"title": "URBAN LEGENDS",
+		"tagline": "Open-World Driving & Stunt Odyssey",
+		"desc": "Roam an expansive 2000m x 2000m metropolis with 8 diverse districts, 4-wheel raycast vehicle physics, elevated freeway flyovers, traffic AI, drift combos, and stunt leaps.",
+		"tags": ["OPEN-WORLD", "DRIVING", "STUNTS", "DRIFT", "PHYSICS"],
+		"color": Color(1.0, 0.42, 0.15),
+		"scene": "res://games/urban-legends/urban_legends_main.tscn"
 	}
 ]
 
@@ -726,9 +735,9 @@ func set_category_filter(category: String) -> void:
 			if category == "ACTION":
 				should_show = (g_id in ["arena_fps", "subway_survival", "strike_vector"])
 			elif category == "RACING":
-				should_show = (g_id in ["kart_racing", "rocket_car", "chroma_rush", "aero_rush"])
+				should_show = (g_id in ["kart_racing", "rocket_car", "chroma_rush", "aero_rush", "urban_legends"])
 			elif category == "SIMULATION":
-				should_show = (g_id in ["aircraft_flight", "skybound_odyssey", "roboforge_arena", "wildcircuit"])
+				should_show = (g_id in ["aircraft_flight", "skybound_odyssey", "roboforge_arena", "wildcircuit", "urban_legends"])
 			card.visible = should_show
 
 func _unhandled_input(event: InputEvent) -> void:

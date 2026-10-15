@@ -111,6 +111,14 @@ GAME_CATALOG = {
         "preset_name": "Windows-AircraftFlight",
         "main_scene": "res://games/aircraft-flight/aircraft_flight_main.tscn",
         "description": "Apex Flight: Open Skies 3D Flight Simulator"
+    },
+    "urban-legends": {
+        "title": "UrbanLegends",
+        "game_id": "urban_legends",
+        "pck_name": "UrbanLegends.pck",
+        "preset_name": "Windows-UrbanLegends",
+        "main_scene": "res://games/urban-legends/urban_legends_main.tscn",
+        "description": "Urban Legends: Open-World Driving & Stunt Simulator"
     }
 }
 

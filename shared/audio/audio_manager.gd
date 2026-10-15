@@ -113,6 +113,7 @@ func generate_all_procedural_sounds() -> void:
 	sound_cache["music_nitro_kick"] = create_music_track("nitro_kick")
 	sound_cache["music_drift_storm"] = create_music_track("drift_storm")
 	sound_cache["music_chroma_rush"] = create_music_track("chroma_rush")
+	sound_cache["music_urban_legends"] = create_music_track("urban_legends")
 	sound_cache["engine_loop"] = create_engine_loop_sound()
 
 func start_engine_sound() -> void:
@@ -444,6 +445,42 @@ func create_music_track(track_name: String) -> AudioStreamWAV:
 				var l_val: float = sin(t * flight_lead[l_step] * TAU) * l_env * 0.20
 
 				var mixed: float = kick + jet_drone + c_val + l_val
+				data[i] = clampi(int(mixed * 127.0) + 128, 0, 255)
+		"urban_legends":
+			# West Coast Golden-Hour Cruiser Soundtrack: 100 BPM laid-back kick-snare, deep funky bassline, warm sunset synths
+			var urban_bass = [65.41, 65.41, 73.42, 82.41, 65.41, 98.00, 87.31, 73.42] # C, D, E, G, F
+			var urban_chords = [261.63, 329.63, 392.00, 493.88, 392.00, 329.63]
+			var urban_lead = [523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 493.88, 523.25]
+			for i in range(num_samples):
+				var t: float = float(i) / float(sample_rate)
+				# 100 BPM kick (1.666 beats/sec)
+				var beat_t: float = fmod(t * 1.666, 1.0)
+				var kick_env: float = maxf(0.0, 1.0 - beat_t * 3.5)
+				var kick: float = sin(beat_t * lerpf(85.0, 35.0, beat_t) * TAU) * kick_env * 0.38
+
+				# Snare on 2 and 4
+				var snare_t: float = fmod((t + 0.3) * 1.666, 1.0)
+				var snare_env: float = maxf(0.0, 1.0 - snare_t * 6.0)
+				var snare: float = (randf() * 2.0 - 1.0) * snare_env * 0.18
+
+				# Smooth deep synth bass
+				var b_step: int = int(t * 3.333) % urban_bass.size()
+				var b_t: float = fmod(t * 3.333, 1.0)
+				var b_env: float = maxf(0.0, 1.0 - b_t * 1.5)
+				var b_val: float = sin(t * urban_bass[b_step] * TAU) * b_env * 0.30
+
+				# Warm Rhodes chord pads
+				var c_step: int = int(t * 0.833) % urban_chords.size()
+				var c_freq: float = urban_chords[c_step]
+				var c_val: float = (sin(t * c_freq * TAU) + 0.3 * sin(t * c_freq * 2.0 * TAU)) * 0.16
+
+				# G-Funk style high synth lead
+				var l_step: int = int(t * 1.666) % urban_lead.size()
+				var l_t: float = fmod(t * 1.666, 1.0)
+				var l_env: float = maxf(0.0, 1.0 - l_t * 1.4)
+				var l_val: float = sin(t * urban_lead[l_step] * TAU) * l_env * 0.16
+
+				var mixed: float = kick + snare + b_val + c_val + l_val
 				data[i] = clampi(int(mixed * 127.0) + 128, 0, 255)
 		_:
 			for i in range(num_samples):

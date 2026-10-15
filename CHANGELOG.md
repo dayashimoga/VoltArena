@@ -1799,3 +1799,42 @@ This file is strictly APPEND-ONLY. Entries are never overwritten or deleted.
 - **AeroRush Battery**: 100% passed across all 12 course validations and E2E stunt lifecycles.
 - **Chroma Rush Battery**: 100% passed across vehicle physics, camera stability, AI traffic, and E2E missions.
 
+## [12.0.0] - 2026-10-15
+### Added
+- **Game #12: Urban Legends (Open-World Driving & Stunt Simulator)**:
+  - Designed, built, and certified **Urban Legends** as the 12th production game in the VoltArena suite.
+  - **Physics & Vehicle Engineering** (`urban_vehicle.gd`, `urban_vehicle_catalog.gd`):
+    - 4-wheel independent raycast suspension with non-linear spring rates, rebound damping, speed-sensitive Ackerman steering, dynamic weight transfer (pitch under braking/acceleration, roll under cornering), surface friction coefficient lookups, power drift sliding, handbrake slip angles, and mid-air aerodynamic pitch/yaw/roll attitude thrusters.
+    - 5 original vehicle archetypes: Vortex GT (mid-engine exotic supercar), Thunderbolt V8 (heavy torque American muscle), Specter R (high-grip street tuner), Ridgeback 4x4 (rugged all-terrain SUV), and Valiant Coupe (classic vintage cruiser).
+    - Tiered performance upgrades (Engine, Tires, Nitro Boost, Suspension, Armor) with persistent save data (`urban_save_data.gd`).
+  - **Procedural 3D Automotive Art & Audio** (`urban_vehicle_visuals.gd`, `urban_vehicle_audio.gd`):
+    - Procedural 3D vehicle generation with aerodynamic body shells, metallic/clearcoat paint shaders, tinted glass, spoilers, dual exhaust tips, illuminated headlights, reactive brake glow, and articulated alloy wheels with brake calipers.
+    - Dynamic procedural audio synthesis for engine RPM load pitch, transmission gear whine, tire skid squeals, nitro thrust hiss, and collision impacts.
+  - **Massive 2000m x 2000m Contiguous Metropolitan World** (`urban_world_generator.gd`, `urban_road_network.gd`, `urban_district_definitions.gd`, `urban_prop_factory.gd`):
+    - 8 coherent districts: Downtown Metro (commercial skyscraper canyon), Colinas Heights (winding residential switchbacks & crest jumps inspired by Las Colinas), Verdant Glen (parkland, ponds & grass drifts inspired by Glen Park), Harborfly Freeway (multi-tier elevated viaducts at +18m elevation), Bayview Promenade (coastal boardwalk & seaside), Industrial Apex (freight depots & container yards), Ridgecrest Hills (high-altitude mountain switchbacks), and Skyline Airport (twin parallel runways & service loops).
+    - 60 interconnected road segments spanning 15.4 km of contiguous roadway with 650+ verified waypoints, smooth grade elevations, and 0 solid prop obstructions across lanes.
+    - 112 verified safe spawn and recovery waypoints.
+  - **Atmospheric Weather & Celestial Cycle** (`urban_weather_system.gd`):
+    - 24-hour orbital day/night cycle with golden hour sunset (warm amber/crimson haze, elongated shadows), neon night luminescence, wet road specular reflection modulation, and preset locks.
+  - **Living World & Gameplay Systems** (`traffic_manager.gd`, `traffic_vehicle.gd`, `stunt_detector.gd`, `mission_director.gd`, `progression_manager.gd`):
+    - Autonomous metropolitan traffic AI pool navigating waypoints with raycast obstacle sensing, braking, and avoidance.
+    - Real-time stunt scoring detecting air time, ballistic meters cleared, barrel rolls, flat spins, flips, insane jump bonuses, continuous drift multipliers, and high-speed traffic near-misses.
+    - 6 replayable mission archetypes: Downtown Grand Prix (circuit race), Glen Park Slipstream (drift trial), Colinas Ridge Ascent (hill climb sprint), Apex Express (courier parcel drops), Crest Aviator (65m ballistic stunt leap), and Urban Cartographer (district exploration).
+  - **AAA UI/UX & Cross-Platform Ergonomics** (`urban_hud.gd`, `urban_garage_menu.gd`, `urban_map_menu.gd`, `urban_pause_menu.gd`):
+    - Circular vector minimap with active vehicle orientation arrow, road network rendering, and dynamic district banners.
+    - Digital telemetry HUD with speedometer, tachometer, gear, health/armor bars, nitro gauge, in-game clock, and career wallet.
+    - Full-screen interactive district map with fast-travel capabilities to discovered regions.
+    - Interactive 3D garage kiosk for vehicle switching, custom color swatch application, and upgrade tuning.
+    - Responsive on-screen virtual touch controls for mobile profiles.
+  - **Performance & Spatial Streaming** (`urban_world_manager.gd`):
+    - 10x10 spatial chunk streaming with 400m distance culling and MultiMesh instancing.
+  - **Standalone PCK & Packaging Architecture**:
+    - Dedicated preset `Windows-UrbanLegends` in `export_presets.cfg` with strict exclusion of foreign game code/assets.
+    - Standalone isolated PCK export (`UrbanLegends.pck`, 96.76 MB) and multi-platform packages (Windows, Linux, Web) certified with 0 foreign asset leakage (`foreign_files_found: 0`, `ISOLATED_PASS`).
+### Verified
+- **Monorepo Test Battery**: **93/93 test suites passed, 3,678 / 3,678 assertions passed, 0 failed (100% pass rate, exit code 0)**.
+- **Function Coverage**: **91.2%** (1,281 / 1,404 functions tested, exceeding the >= 90.0% standard).
+- **Urban Legends Battery**: All 7 Urban Legends suites passed 100% (Vehicle Physics: 41/41, World & Roads: 189/189, Stunts & Missions: 58/58, Traffic & AI: 24/24, Camera & HUD: 33/33, Performance & Streaming: 6/6, E2E Scenarios: 31/31).
+- **Regression Verification**: 100% pass rate across all 86 baseline test suites for games 1 through 11.
+
+

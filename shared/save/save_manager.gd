@@ -70,6 +70,14 @@ func get_default_save() -> Dictionary:
 				"missions_completed": 0,
 				"highest_rank": "Flight Cadet",
 				"total_score": 0
+			},
+			"urban_legends": {
+				"career_cash": 25000,
+				"districts_discovered": 1,
+				"stunts_performed": 0,
+				"missions_completed": 0,
+				"longest_jump_meters": 0.0,
+				"unlocked_vehicles": ["vortex_gt"]
 			}
 		},
 		"unlocked_items": {
@@ -273,4 +281,18 @@ func record_aero_race(medal: String, score: int, combo: int) -> void:
 	stats["highest_score"] = maxi(stats.get("highest_score", 0), score)
 	stats["highest_combo"] = maxi(stats.get("highest_combo", 1), combo)
 	save_to_disk()
+
+func record_urban_session(cash: int, districts_cnt: int, stunts_cnt: int, missions_cnt: int, best_jump: float) -> void:
+	if not save_data.has("statistics"):
+		save_data["statistics"] = {}
+	if not save_data["statistics"].has("urban_legends"):
+		save_data["statistics"]["urban_legends"] = get_default_save()["statistics"]["urban_legends"]
+	var stats = save_data["statistics"]["urban_legends"]
+	stats["career_cash"] = maxi(stats.get("career_cash", 0), cash)
+	stats["districts_discovered"] = maxi(stats.get("districts_discovered", 1), districts_cnt)
+	stats["stunts_performed"] = stats.get("stunts_performed", 0) + stunts_cnt
+	stats["missions_completed"] = stats.get("missions_completed", 0) + missions_cnt
+	stats["longest_jump_meters"] = maxf(stats.get("longest_jump_meters", 0.0), best_jump)
+	save_to_disk()
+
 

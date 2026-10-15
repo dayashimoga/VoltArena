@@ -64,12 +64,12 @@ func test_game_cards_creation() -> void:
 func test_game_metadata_completeness() -> void:
 	var launcher = LauncherScript.new()
 
-	assert_eq(launcher.games_meta.size(), 11, "Must have metadata for 11 games")
+	assert_eq(launcher.games_meta.size(), 12, "Must have metadata for 12 games")
 
 	var expected_ids = [
 		"arena_fps", "subway_survival", "rocket_car", "kart_racing",
 		"skybound_odyssey", "roboforge_arena", "wildcircuit", "strike_vector",
-		"chroma_rush", "aero_rush", "aircraft_flight"
+		"chroma_rush", "aero_rush", "aircraft_flight", "urban_legends"
 	]
 	for meta in launcher.games_meta:
 		assert_true(meta["id"] in expected_ids, "Game ID must be valid: %s" % meta["id"])
@@ -241,13 +241,13 @@ func test_category_filtering() -> void:
 	for c in launcher.game_cards_container.get_children():
 		if c.visible:
 			racing_visible += 1
-	assert_eq(racing_visible, 4, "Racing filter should show exactly 4 games")
+	assert_eq(racing_visible, 5, "Racing filter should show exactly 5 games")
 
 	launcher.set_category_filter("ALL")
 	var all_visible = 0
 	for c in launcher.game_cards_container.get_children():
 		if c.visible:
 			all_visible += 1
-	assert_eq(all_visible, 11, "ALL filter should show all 11 games")
+	assert_eq(all_visible, 12, "ALL filter should show all 12 games")
 
 	launcher.queue_free()

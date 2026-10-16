@@ -16,14 +16,24 @@ static func create_game_banner(game_id: String, width: int = 360, height: int = 
 			_paint_nitro_kick(image, width, height)
 		"kart_racing", "drift_storm":
 			_paint_drift_storm(image, width, height)
+		"skybound_odyssey":
+			_paint_skybound_odyssey(image, width, height)
+		"roboforge_arena":
+			_paint_roboforge_arena(image, width, height)
+		"wildcircuit":
+			_paint_wildcircuit(image, width, height)
 		"strike_vector":
 			_paint_strike_vector(image, width, height)
+		"chroma_rush":
+			_paint_chroma_rush(image, width, height)
 		"aero_rush":
 			_paint_aero_rush(image, width, height)
 		"aircraft_flight", "apex_flight":
 			_paint_apex_flight(image, width, height)
 		"urban_legends":
 			_paint_urban_legends(image, width, height)
+		"flight_simulator_6dof", "aerosim_6dof":
+			_paint_flight_simulator_6dof(image, width, height)
 		_:
 			_paint_default_banner(image, width, height)
 
@@ -468,6 +478,338 @@ static func _paint_urban_legends(img: Image, w: int, h: int) -> void:
 					base_r = 0.06
 					base_g = 0.05
 					base_b = 0.07
+
+			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
+
+static func _paint_skybound_odyssey(img: Image, w: int, h: int) -> void:
+	# Floating Sky Realms: Celestial azure gradient, stylized cumulus decks, floating monolithic islands, glider contrail
+	for y in range(h):
+		var v: float = float(y) / float(h)
+		for x in range(w):
+			var u: float = float(x) / float(w)
+
+			# Ethereal celestial atmosphere gradient (deep sapphire at top to bright cyan-teal to sunset gold at horizon)
+			var base_r = lerp(0.08, 0.22, v)
+			var base_g = lerp(0.35, 0.70, v)
+			var base_b = lerp(0.68, 0.88, v)
+
+			# Distant cumulus cloud layers
+			var cloud_val = sin(u * 12.0 + 1.2) * cos(v * 8.0) * 0.5 + sin(u * 24.0) * 0.25
+			if v > 0.42 and v < 0.75 and cloud_val > 0.15:
+				var c_bright = clampf((cloud_val - 0.15) * 1.8, 0.0, 0.45)
+				base_r += c_bright * 0.95
+				base_g += c_bright * 0.98
+				base_b += c_bright * 1.0
+
+			# Floating monolithic sky island (center-left)
+			var island_cx = float(w) * 0.42
+			var island_cy = float(h) * 0.56
+			var dx = (float(x) - island_cx) / (float(w) * 0.22)
+			var dy = (float(y) - island_cy) / (float(h) * 0.16)
+			var is_island_top = (dx * dx + dy * dy < 1.0) and y < int(island_cy + 5.0)
+			var is_island_keel = abs(dx) < (1.0 - (float(y) - island_cy) / (float(h) * 0.25)) and y >= int(island_cy + 5.0) and y < int(island_cy + h * 0.25)
+			if is_island_top or is_island_keel:
+				base_r = 0.16
+				base_g = 0.26
+				base_b = 0.24
+				# Grass/foliage plateau
+				if y < int(island_cy - 4.0):
+					base_r = 0.25
+					base_g = 0.75
+					base_b = 0.45
+				# Ancient runic monument on plateau
+				if abs(x - int(island_cx)) < 4 and y < int(island_cy - 4.0) and y > int(island_cy - 28.0):
+					base_r = 0.90
+					base_g = 0.92
+					base_b = 0.95
+
+			# Sweeping cyan glider trail arc
+			var arc_y = float(h) * (0.35 + sin(u * PI * 1.2) * 0.18)
+			var arc_dist = abs(float(y) - arc_y)
+			if arc_dist < 3.5:
+				var glow = 1.0 - (arc_dist / 3.5)
+				base_r = lerp(base_r, 0.2, glow)
+				base_g = lerp(base_g, 0.95, glow)
+				base_b = lerp(base_b, 1.0, glow)
+
+			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
+
+static func _paint_roboforge_arena(img: Image, w: int, h: int) -> void:
+	# Modular Robotics Engineering: Dark carbon-fiber floor, amber/gold isometric grid, robot chassis silhouette & welding sparks
+	for y in range(h):
+		var v: float = float(y) / float(h)
+		for x in range(w):
+			var u: float = float(x) / float(w)
+
+			# Industrial hangar atmosphere (deep charcoal to dark bronze gradient)
+			var base_r = lerp(0.12, 0.22, v)
+			var base_g = lerp(0.14, 0.20, v)
+			var base_b = lerp(0.18, 0.22, v)
+
+			# Engineering blueprint grid lines (upper half)
+			if v < 0.60:
+				if (x % 28 == 0) or (y % 28 == 0):
+					base_r += 0.08
+					base_g += 0.12
+					base_b += 0.16
+
+			# Industrial floor platform (lower 40%)
+			if v >= 0.60:
+				base_r = 0.15
+				base_g = 0.16
+				base_b = 0.18
+				# Amber test-bay perspective floor lines
+				if (int(float(x) + (v - 0.6) * 120.0) % 36 == 0) or (int(y) % 18 == 0):
+					base_r = 0.85
+					base_g = 0.65
+					base_b = 0.12
+
+			# Robotic Chassis silhouette in center
+			var dist_robot = Vector2(x - w * 0.5, y - h * 0.58).length()
+			if dist_robot < 32.0:
+				base_r = 0.22
+				base_g = 0.24
+				base_b = 0.28
+				# Articulated tool arm
+				if abs(x - w * 0.5 + 18) < 4 and y < h * 0.58 and y > h * 0.42:
+					base_r = 0.35
+					base_g = 0.38
+					base_b = 0.42
+
+			# Welding spark burst with radiant bloom (near robot arm tip)
+			var spark_origin = Vector2(w * 0.5 - 18, h * 0.42)
+			var spark_dist = (Vector2(x, y) - spark_origin).length()
+			if spark_dist < 18.0:
+				var s_glow = 1.0 - (spark_dist / 18.0)
+				base_r = lerp(base_r, 1.0, s_glow)
+				base_g = lerp(base_g, 0.88, s_glow)
+				base_b = lerp(base_b, 0.35, s_glow)
+
+			# Warning chevron stripes along bottom border
+			if y > h - 8:
+				if (x + y) % 16 < 8:
+					base_r = 0.95
+					base_g = 0.75
+					base_b = 0.10
+				else:
+					base_r = 0.10
+					base_g = 0.10
+					base_b = 0.10
+
+			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
+
+static func _paint_wildcircuit(img: Image, w: int, h: int) -> void:
+	# Wildlife Photography & Conservation: Golden hour sunset, layered savannah horizons, acacia silhouette & viewfinder HUD
+	for y in range(h):
+		var v: float = float(y) / float(h)
+		for x in range(w):
+			var u: float = float(x) / float(w)
+
+			# Warm radiant sunset gradient (golden amber to crimson peach to deep violet)
+			var base_r = lerp(0.85, 0.35, v)
+			var base_g = lerp(0.52, 0.22, v)
+			var base_b = lerp(0.22, 0.35, v)
+
+			# Setting sun orb
+			var sun_dist = (Vector2(x, y) - Vector2(w * 0.32, h * 0.38)).length()
+			if sun_dist < 28.0:
+				var s_int = 1.0 - (sun_dist / 28.0)
+				base_r = lerp(base_r, 1.0, s_int)
+				base_g = lerp(base_g, 0.95, s_int)
+				base_b = lerp(base_b, 0.65, s_int)
+
+			# Layered distant mountain ridges
+			var mtn1_y = float(h) * (0.50 + sin(u * 5.0) * 0.06 + sin(u * 11.0) * 0.03)
+			if y > int(mtn1_y) and y < int(h * 0.68):
+				base_r = 0.38
+				base_g = 0.22
+				base_b = 0.28
+
+			# Savannah plain plateau (foreground)
+			if y >= int(h * 0.66):
+				base_r = 0.18
+				base_g = 0.12
+				base_b = 0.10
+				if y % 12 == 0:
+					base_r += 0.04
+					base_g += 0.03
+
+			# Acacia tree silhouette on right
+			var tree_x = int(w * 0.76)
+			var tree_root_y = int(h * 0.66)
+			if abs(x - tree_x) < 4 and y > int(h * 0.42) and y <= tree_root_y:
+				base_r = 0.08
+				base_g = 0.06
+				base_b = 0.05
+			# Canopy umbrella
+			var c_dx = (float(x) - float(tree_x)) / 36.0
+			var c_dy = (float(y) - float(h) * 0.42) / 10.0
+			if (c_dx * c_dx + c_dy * c_dy < 1.0) and y <= int(h * 0.44):
+				base_r = 0.07
+				base_g = 0.06
+				base_b = 0.05
+
+			# Viewfinder HUD Overlay (corner reticles & focal indicator)
+			var is_corner = false
+			var m = 14
+			if (x >= m and x <= m + 14 and (y == m or y == h - m)) or (y >= m and y <= m + 14 and (x == m or x == w - m)):
+				is_corner = true
+			if (x >= w - m - 14 and x <= w - m and (y == m or y == h - m)) or (y >= h - m - 14 and y <= h - m and (x == m or x == w - m)):
+				is_corner = true
+			# Center autofocus brackets
+			var center_dist = (Vector2(x, y) - Vector2(w * 0.5, h * 0.48)).length()
+			if (center_dist >= 14.0 and center_dist <= 16.0) and ((abs(x - w * 0.5) > 6.0) or (abs(y - h * 0.48) > 6.0)):
+				is_corner = true
+
+			if is_corner:
+				base_r = 0.95
+				base_g = 0.95
+				base_b = 0.95
+
+			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
+
+static func _paint_chroma_rush(img: Image, w: int, h: int) -> void:
+	# The Color Chase: Synthwave chromatic split highway (magenta / cyan), neon perspective lines, distant glowing portal
+	for y in range(h):
+		var v: float = float(y) / float(h)
+		for x in range(w):
+			var u: float = float(x) / float(w)
+
+			# Deep neon space void gradient
+			var base_r = lerp(0.12, 0.05, v)
+			var base_g = lerp(0.04, 0.02, v)
+			var base_b = lerp(0.25, 0.12, v)
+
+			# Horizon at v = 0.45
+			if v > 0.45:
+				# Perspective chromatic track
+				var v_track = (v - 0.45) / 0.55
+				var track_half_w = (v_track * 0.48 + 0.02) * float(w)
+				var center_x = float(w) * 0.5
+				var track_dx = float(x) - center_x
+
+				if abs(track_dx) < track_half_w:
+					# Split color lane: Left side hot magenta (#FF1493), Right side cyan (#00FFFF)
+					if track_dx < 0.0:
+						base_r = 0.85
+						base_g = 0.10
+						base_b = 0.55
+					else:
+						base_r = 0.05
+						base_g = 0.85
+						base_b = 0.95
+
+					# Track grid scanlines
+					if int(v_track * 40.0) % 4 == 0:
+						base_r *= 0.65
+						base_g *= 0.65
+						base_b *= 0.65
+
+					# White center line
+					if abs(track_dx) < 2.5:
+						base_r = 1.0
+						base_g = 1.0
+						base_b = 1.0
+				elif abs(abs(track_dx) - track_half_w) < 4.0:
+					# Neon track barrier rails
+					base_r = 1.0
+					base_g = 0.95
+					base_b = 0.20
+
+			# Distant glowing chromatic portal / sun at horizon
+			var portal_dist = (Vector2(x, y) - Vector2(w * 0.5, h * 0.45)).length()
+			if portal_dist < 24.0:
+				var p_glow = 1.0 - (portal_dist / 24.0)
+				base_r = lerp(base_r, 1.0, p_glow)
+				base_g = lerp(base_g, 0.85, p_glow * 0.5)
+				base_b = lerp(base_b, 1.0, p_glow)
+
+			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
+
+static func _paint_flight_simulator_6dof(img: Image, w: int, h: int) -> void:
+	# AeroSim 6-DoF: Runway perspective centerline, PAPI 3.0 deg light array, green threshold lights, glass cockpit HUD pitch ladder
+	for y in range(h):
+		var v: float = float(y) / float(h)
+		for x in range(w):
+			var u: float = float(x) / float(w)
+
+			# Twilight atmospheric sky (deep navy blue to twilight amber gradient at horizon)
+			var base_r = lerp(0.06, 0.28, v) if v < 0.50 else 0.08
+			var base_g = lerp(0.12, 0.32, v) if v < 0.50 else 0.10
+			var base_b = lerp(0.32, 0.42, v) if v < 0.50 else 0.12
+
+			# Horizon line at v = 0.50
+			if v >= 0.50:
+				# Dark airfield ground
+				base_r = 0.06
+				base_g = 0.08
+				base_b = 0.07
+
+				# Perspective Runway 09L tapering to horizon
+				var r_v = (v - 0.50) / 0.50
+				var r_half_w = (r_v * 0.28 + 0.01) * float(w)
+				var r_center_x = float(w) * 0.5
+				var r_dx = float(x) - r_center_x
+
+				if abs(r_dx) < r_half_w:
+					# Asphalt surface
+					base_r = 0.16
+					base_g = 0.18
+					base_b = 0.20
+
+					# Dashed white centerline stripes
+					if abs(r_dx) < 2.0 and int(r_v * 30.0) % 2 == 0:
+						base_r = 0.95
+						base_g = 0.95
+						base_b = 0.95
+
+				# Runway Edge Lights (white pearls)
+				if abs(abs(r_dx) - r_half_w) < 1.5 and int(r_v * 24.0) % 2 == 0:
+					base_r = 0.95
+					base_g = 0.95
+					base_b = 0.80
+
+				# Green Threshold Lights near horizon
+				if v >= 0.50 and v <= 0.52 and abs(r_dx) < r_half_w + 5.0:
+					base_r = 0.1
+					base_g = 1.0
+					base_b = 0.2
+
+				# PAPI 4-Light Array (Port side of runway: 2 White, 2 Red on-glidepath)
+				var papi_y = int(h * 0.56)
+				var papi_x_start = int(r_center_x - r_half_w - 22.0)
+				if y >= papi_y - 1 and y <= papi_y + 1:
+					for p_idx in range(4):
+						var p_x = papi_x_start + p_idx * 5
+						if abs(x - p_x) <= 1:
+							if p_idx < 2:
+								# White lights
+								base_r = 1.0; base_g = 1.0; base_b = 0.9
+							else:
+								# Red lights
+								base_r = 1.0; base_g = 0.15; base_b = 0.15
+
+			# HUD Flight Director & Pitch Ladder Overlay (Glowing Green #00FF66)
+			var hud_cx = w * 0.5
+			var hud_cy = h * 0.42
+			# Aircraft boresight symbol (circle + wings)
+			var dist_bore = Vector2(x - hud_cx, y - hud_cy).length()
+			var is_hud_pixel = false
+			if (dist_bore >= 5.0 and dist_bore <= 7.0) or (abs(y - hud_cy) < 1.5 and abs(x - hud_cx) >= 7.0 and abs(x - hud_cx) <= 18.0):
+				is_hud_pixel = true
+			# +10 deg pitch ladder bar
+			var pitch_10_y = hud_cy - 18.0
+			if abs(y - pitch_10_y) < 1.0 and abs(x - hud_cx) >= 12.0 and abs(x - hud_cx) <= 28.0:
+				is_hud_pixel = true
+			# -10 deg pitch ladder dashed bar
+			var pitch_neg10_y = hud_cy + 18.0
+			if abs(y - pitch_neg10_y) < 1.0 and abs(x - hud_cx) >= 12.0 and abs(x - hud_cx) <= 28.0 and (int(x) % 4 < 2):
+				is_hud_pixel = true
+
+			if is_hud_pixel:
+				base_r = 0.1
+				base_g = 1.0
+				base_b = 0.35
 
 			img.set_pixel(x, y, Color(clampf(base_r, 0.0, 1.0), clampf(base_g, 0.0, 1.0), clampf(base_b, 0.0, 1.0)))
 

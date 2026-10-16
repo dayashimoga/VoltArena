@@ -111,10 +111,10 @@ func setup_lighting_and_atmosphere() -> void:
 		var env = Environment.new()
 		var sky = Sky.new()
 		var sky_mat = ProceduralSkyMaterial.new()
-		sky_mat.sky_top_color = Color(0.20, 0.44, 0.82)
-		sky_mat.sky_horizon_color = Color(0.65, 0.76, 0.88)
-		sky_mat.ground_bottom_color = Color(0.12, 0.15, 0.18)
-		sky_mat.ground_horizon_color = Color(0.55, 0.65, 0.74)
+		sky_mat.sky_top_color = Color(0.18, 0.38, 0.75)
+		sky_mat.sky_horizon_color = Color(0.78, 0.62, 0.48) # Warm dusk golden-hour atmospheric scattering
+		sky_mat.ground_bottom_color = Color(0.12, 0.14, 0.15)
+		sky_mat.ground_horizon_color = Color(0.48, 0.42, 0.38)
 		sky_mat.sun_angle_max = 30.0
 		sky_mat.sun_curve = 0.15
 		sky.sky_material = sky_mat
@@ -122,13 +122,15 @@ func setup_lighting_and_atmosphere() -> void:
 		env.background_mode = Environment.BG_SKY
 		env.sky = sky
 		env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-		env.ambient_light_color = Color(0.40, 0.45, 0.52)
+		env.ambient_light_color = Color(0.42, 0.45, 0.50)
 		env.ambient_light_sky_contribution = 0.75
 		env.tonemap_mode = Environment.TONE_MAPPER_ACES
+		env.tonemap_exposure = 1.00 # Calibrated to preserve snow highlight and normal definition
+		env.tonemap_white = 1.0
 		env.fog_enabled = true
 		env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
-		env.fog_light_color = Color(0.72, 0.80, 0.90)
-		env.fog_density = 0.00005
+		env.fog_light_color = Color(0.82, 0.74, 0.68)
+		env.fog_density = 0.00004
 		world_environment.environment = env
 		add_child(world_environment)
 
@@ -184,18 +186,22 @@ func _build_mountain_biome() -> void:
 	rwy.position = Vector3(0.0, 450.0, 0.0) # Elevated mountain plateau
 	active_world_root.add_child(rwy)
 
-	var mat_snow = StandardMaterial3D.new()
-	mat_snow.albedo_color = Color(0.92, 0.95, 0.98) # Alpine glacial snow
-	mat_snow.roughness = 0.85
+	var terrain_shader = load("res://games/aircraft-flight/worlds/shaders/terrain_geology.gdshader")
+	var mat_geology: Material
+	if terrain_shader:
+		var sm = ShaderMaterial.new()
+		sm.shader = terrain_shader
+		mat_geology = sm
+	else:
+		var mat_rock = StandardMaterial3D.new()
+		mat_rock.albedo_color = Color(0.32, 0.30, 0.28) # Granite cliff
+		mat_rock.roughness = 0.90
+		mat_geology = mat_rock
 
-	var mat_rock = StandardMaterial3D.new()
-	mat_rock.albedo_color = Color(0.32, 0.30, 0.28) # Granite cliff
-	mat_rock.roughness = 0.90
+	# Ground plateau plane with 4-layer geological shader
+	_create_terrain_plane(Vector3(12000.0, 10.0, 12000.0), Vector3(0.0, 445.0, 0.0), mat_geology)
 
-	# Ground plateau plane
-	_create_terrain_plane(Vector3(12000.0, 10.0, 12000.0), Vector3(0.0, 445.0, 0.0), mat_rock)
-
-	# Mountain Peaks (Pyramidal / Conical peaks rising to 2,800m)
+	# Mountain Massifs (Rugged geological ridged peaks rising to 2,800m)
 	for p in range(16):
 		var p_angle = p * (PI * 2.0 / 16.0)
 		var p_dist = 1800.0 + (p % 4) * 600.0
@@ -203,7 +209,7 @@ func _build_mountain_biome() -> void:
 		var pz = sin(p_angle) * p_dist
 		var p_height = 1400.0 + (p * 73 % 900)
 
-		var peak = _create_peak(px, pz, p_height, 650.0, mat_snow)
+		var peak = _create_peak(px, pz, p_height, 650.0, mat_geology)
 		active_world_root.add_child(peak)
 
 func _build_arctic_biome() -> void:
@@ -341,9 +347,7 @@ func _create_colliding_box(size: Vector3, pos: Vector3, mat: Material) -> Static
 	sb.add_child(col)
 
 	var mi = MeshInstance3D.new()
-	var mesh = BoxMesh.new()
-	mesh.size = size
-	mi.mesh = mesh
+	mi.mesh = _create_box_mesh(size)
 	if mat:
 		mi.material_override = mat
 	sb.add_child(mi)
@@ -361,16 +365,64 @@ func _create_peak(px: float, pz: float, height: float, base_radius: float, mat: 
 	sb.add_child(col)
 
 	var mi = MeshInstance3D.new()
-	var cyl_mesh = CylinderMesh.new()
-	cyl_mesh.top_radius = 5.0
-	cyl_mesh.bottom_radius = base_radius
-	cyl_mesh.height = height
-	mi.mesh = cyl_mesh
+	mi.mesh = _create_alpine_peak_mesh(height, base_radius)
 	if mat:
 		mi.material_override = mat
 	sb.add_child(mi)
 	sb.position = Vector3(px, height * 0.5, pz)
 	return sb
+
+static func _create_box_mesh(size: Vector3) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hw = size.x * 0.5
+	var hh = size.y * 0.5
+	var hd = size.z * 0.5
+
+	var faces = [
+		[Vector3.FORWARD, [Vector3(-hw, -hh, -hd), Vector3(hw, -hh, -hd), Vector3(hw, hh, -hd), Vector3(-hw, hh, -hd)]],
+		[Vector3.BACK,    [Vector3(hw, -hh, hd), Vector3(-hw, -hh, hd), Vector3(-hw, hh, hd), Vector3(hw, hh, hd)]],
+		[Vector3.UP,      [Vector3(-hw, hh, -hd), Vector3(hw, hh, -hd), Vector3(hw, hh, hd), Vector3(-hw, hh, hd)]],
+		[Vector3.DOWN,    [Vector3(-hw, -hh, hd), Vector3(hw, -hh, hd), Vector3(hw, -hh, -hd), Vector3(-hw, -hh, -hd)]],
+		[Vector3.LEFT,    [Vector3(-hw, -hh, hd), Vector3(-hw, -hh, -hd), Vector3(-hw, hh, -hd), Vector3(-hw, hh, hd)]],
+		[Vector3.RIGHT,   [Vector3(hw, -hh, -hd), Vector3(hw, -hh, hd), Vector3(hw, hh, hd), Vector3(hw, hh, -hd)]],
+	]
+	for f in faces:
+		var n: Vector3 = f[0]
+		var v: Array = f[1]
+		st.set_normal(n)
+		st.set_uv(Vector2(0, 1)); st.add_vertex(v[0])
+		st.set_uv(Vector2(1, 1)); st.add_vertex(v[1])
+		st.set_uv(Vector2(1, 0)); st.add_vertex(v[2])
+		st.set_uv(Vector2(0, 1)); st.add_vertex(v[0])
+		st.set_uv(Vector2(1, 0)); st.add_vertex(v[2])
+		st.set_uv(Vector2(0, 0)); st.add_vertex(v[3])
+
+	return st.commit()
+
+static func _create_alpine_peak_mesh(height: float, base_radius: float) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hh = height * 0.5
+	var segments = 16
+	var p_top = Vector3(0, hh, 0)
+
+	for i in range(segments):
+		var a0 = float(i) * TAU / float(segments)
+		var a1 = float(i + 1) * TAU / float(segments)
+		# Multi-octave ridged modulation creates realistic arêtes and cirques
+		var r0 = base_radius * (0.80 + 0.20 * sin(a0 * 3.0) + 0.10 * cos(a0 * 7.0))
+		var r1 = base_radius * (0.80 + 0.20 * sin(a1 * 3.0) + 0.10 * cos(a1 * 7.0))
+		var v0 = Vector3(cos(a0) * r0, -hh, sin(a0) * r0)
+		var v1 = Vector3(cos(a1) * r1, -hh, sin(a1) * r1)
+
+		var n = (v1 - p_top).cross(v0 - p_top).normalized()
+		st.set_normal(n)
+		st.set_uv(Vector2(0.5, 1)); st.add_vertex(p_top)
+		st.set_uv(Vector2(float(i) / float(segments), 0)); st.add_vertex(v1)
+		st.set_uv(Vector2(float(i + 1) / float(segments), 0)); st.add_vertex(v0)
+
+	return st.commit()
 
 func get_spawn_point(spawn_type: String) -> Dictionary:
 	if is_instance_valid(active_world_root):

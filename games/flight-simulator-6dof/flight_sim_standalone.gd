@@ -21,6 +21,33 @@ func _ready() -> void:
 	_ensure_save_directory()
 	_setup_ui()
 
+	# If launched via GameManager suite, auto-launch into runway flight session within < 2.0s
+	var gm = GameConstants.get_autoload(self, "GameManager")
+	if gm and gm.get("active_game_id") == "flight_simulator_6dof":
+		call_deferred("_launch_simulation", 0)
+
+func quick_play() -> void:
+	_launch_simulation(0)
+
+func launch_free_flight() -> void:
+	_launch_simulation(5)
+
+func start_lesson(lesson_id: int = 0) -> void:
+	_launch_simulation(lesson_id)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("pause") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
+		if active_world and not main_menu_panel.visible:
+			# Return from simulation to standalone menu
+			main_menu_panel.visible = true
+			if active_world:
+				active_world.queue_free()
+				active_world = null
+			get_viewport().set_input_as_handled()
+		elif main_menu_panel.visible:
+			_on_exit_pressed()
+			get_viewport().set_input_as_handled()
+
 func _ensure_save_directory() -> void:
 	var dir = DirAccess.open("user://")
 	if dir:
@@ -74,8 +101,8 @@ func _setup_ui() -> void:
 	vbox.add_child(sep)
 
 	# Menu Buttons
-	var btn_flight_school = _create_menu_button("FLIGHT SCHOOL", Callable(self, "_on_flight_school_pressed"))
-	var btn_free_flight = _create_menu_button("FREE FLIGHT (RUNWAY 36)", Callable(self, "_on_free_flight_pressed"))
+	var btn_flight_school = _create_menu_button("FLIGHT SCHOOL (RUNWAY 09L)", Callable(self, "_on_flight_school_pressed"))
+	var btn_free_flight = _create_menu_button("FREE FLIGHT (RUNWAY 09L)", Callable(self, "_on_free_flight_pressed"))
 	var btn_controls = _create_menu_button("FLIGHT CONTROLS & CALIBRATION", Callable(self, "_on_controls_pressed"))
 	var btn_exit = _create_menu_button("EXIT SIMULATOR", Callable(self, "_on_exit_pressed"))
 
@@ -153,7 +180,8 @@ func _build_controls_dialog() -> void:
 		["Flaps Cycle (0/15/35°):", "F  |  Y Button"],
 		["Landing Gear Toggle:", "G  |  B Button"],
 		["Camera Cockpit/Chase:", "V / C  |  Back / Select"],
-		["Axis Deadzone:", "0.12 (Calibrated)"]
+		["Reset Aircraft:", "R  |  Runway 09L Centerline"],
+		["Pause / Exit:", "ESC  |  Menu / Start"]
 	]
 
 	for item in controls_map:
@@ -202,8 +230,11 @@ func _on_exit_pressed() -> void:
 	if OS.has_feature("standalone"):
 		get_tree().quit()
 	else:
-		# Return to suite launcher if running inside suite
 		var bus = GameConstants.get_autoload(self, "EventBus")
 		if bus:
 			bus.return_to_launcher_requested.emit()
-		get_tree().change_scene_to_file("res://launcher/launcher.tscn")
+		var gm = GameConstants.get_autoload(self, "GameManager")
+		if gm and gm.has_method("return_to_launcher"):
+			gm.return_to_launcher()
+		else:
+			get_tree().change_scene_to_file("res://launcher/launcher.tscn")

@@ -75,7 +75,7 @@ var touch_nitro: bool = false
 class MinimapCanvas extends Control:
 	var hud_ref: UrbanHUD = null
 	var radar_radius: float = 75.0
-	var world_radius: float = 220.0 # Meters represented in radar
+	var world_radius: float = 240.0 # Meters represented in radar
 
 	func _init(hud: UrbanHUD) -> void:
 		hud_ref = hud
@@ -84,10 +84,11 @@ class MinimapCanvas extends Control:
 
 	func _draw() -> void:
 		var center = size * 0.5
-		# Glass background
-		draw_circle(center, radar_radius, Color(0.04, 0.08, 0.12, 0.85))
-		draw_arc(center, radar_radius, 0, TAU, 48, Color(0.0, 0.88, 1.0, 0.6), 2.0)
-		draw_arc(center, radar_radius * 0.5, 0, TAU, 32, Color(0.2, 0.4, 0.5, 0.25), 1.0)
+		# Glass background with subtle radial grid
+		draw_circle(center, radar_radius, Color(0.04, 0.07, 0.12, 0.94))
+		draw_arc(center, radar_radius, 0, TAU, 64, Color(0.0, 0.88, 1.0, 0.80), 2.5)
+		draw_arc(center, radar_radius * 0.65, 0, TAU, 48, Color(0.2, 0.45, 0.55, 0.30), 1.0)
+		draw_arc(center, radar_radius * 0.32, 0, TAU, 32, Color(0.2, 0.45, 0.55, 0.20), 1.0)
 
 		if not hud_ref or not is_instance_valid(hud_ref.player_vehicle):
 			_draw_player_icon(center, 0.0)
@@ -96,26 +97,74 @@ class MinimapCanvas extends Control:
 		var p_pos = hud_ref.player_vehicle.global_position if hud_ref.player_vehicle.is_inside_tree() else hud_ref.player_vehicle.position
 		var p_rot = hud_ref.player_vehicle.rotation.y
 
-		# Draw Roads
+		# 1. City Block Backdrop Polygons (Simulated dense urban parcels)
+		var block_grid_offsets = [
+			Vector2(-45, -45), Vector2(10, -45), Vector2(-45, 10), Vector2(10, 10),
+			Vector2(-100, -45), Vector2(65, -45), Vector2(-100, 10), Vector2(65, 10)
+		]
+		for bo in block_grid_offsets:
+			var b_pos = center + bo.rotated(-p_rot)
+			if (b_pos - center).length() < radar_radius - 8.0:
+				var rect = Rect2(b_pos - Vector2(22, 22), Vector2(44, 44))
+				draw_rect(rect, Color(0.08, 0.13, 0.18, 0.65), true)
+
+		# 2. Continuous Vector Road Network with authentic hierarchies
 		if hud_ref.road_network and "segments" in hud_ref.road_network:
 			for seg in hud_ref.road_network.segments:
 				var st: Vector3 = seg["start"]
 				var en: Vector3 = seg["end"]
 
-				# Transform world pos to minimap local pos
 				var p1 = _world_to_minimap(st, p_pos, p_rot, center)
 				var p2 = _world_to_minimap(en, p_pos, p_rot, center)
 
-				# Draw road lines clamped to circle
-				if (p1 - center).length() <= radar_radius or (p2 - center).length() <= radar_radius:
-					var road_col = Color(0.7, 0.75, 0.82, 0.7)
-					if seg.get("is_freeway", false):
-						road_col = Color(0.2, 0.9, 1.0, 0.9) # Neon cyan for flyovers
-					elif seg.get("surface", 0) == 2:
-						road_col = Color(0.3, 0.85, 0.4, 0.6) # Green for grass drift trails
-					draw_line(p1, p2, road_col, 2.5)
+				var clipped = _clip_line_to_circle(p1, p2, center, radar_radius - 1.5)
+				if clipped.size() == 2:
+					var is_freeway = seg.get("is_freeway", false)
+					var surface_type = seg.get("surface", 0)
+					var lanes = seg.get("lanes", 2)
 
-		# Draw Stunt Kickers
+					# Road edge casing
+					var casing_col = Color(0.02, 0.04, 0.06, 0.95)
+					var casing_w = 6.8 if is_freeway else (5.4 if lanes >= 4 else 3.8)
+					draw_line(clipped[0], clipped[1], casing_col, casing_w)
+
+					# Road surface fill
+					var road_col = Color(0.90, 0.92, 0.95, 0.90)
+					if is_freeway:
+						road_col = Color(0.0, 0.90, 1.0, 0.95) # Neon cyan for elevated viaducts
+					elif lanes >= 4:
+						road_col = Color(0.98, 0.82, 0.22, 0.95) # Warm amber/yellow for Grand Ave arterials
+					elif surface_type == UrbanConstants.SURFACE_GRASS:
+						road_col = Color(0.35, 0.85, 0.40, 0.75) # Park drift paths
+					elif surface_type == UrbanConstants.SURFACE_DIRT:
+						road_col = Color(0.85, 0.65, 0.40, 0.75) # Gravel / mountain
+
+					var road_w = 4.8 if is_freeway else (3.6 if lanes >= 4 else 2.4)
+					draw_line(clipped[0], clipped[1], road_col, road_w)
+
+		# 3. GPS Navigation Route Line to Nearest Objective / Stunt Ramp
+		var target_dest = Vector3.ZERO
+		var has_target = false
+		if hud_ref.player_vehicle.is_inside_tree():
+			var kickers = hud_ref.player_vehicle.get_tree().get_nodes_in_group("stunt_ramps")
+			var min_d = 999999.0
+			for k in kickers:
+				if is_instance_valid(k):
+					var kp = k.global_position if k.is_inside_tree() else k.position
+					var d = p_pos.distance_to(kp)
+					if d < min_d:
+						min_d = d
+						target_dest = kp
+						has_target = true
+
+		if has_target:
+			var target_pt = _world_to_minimap(target_dest, p_pos, p_rot, center)
+			var clipped_gps = _clip_line_to_circle(center, target_pt, center, radar_radius - 2.0)
+			if clipped_gps.size() == 2:
+				var pulse = 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.006)
+				draw_line(clipped_gps[0], clipped_gps[1], Color(1.0, 0.65, 0.1, 0.85 * pulse), 2.2)
+
+		# 4. Draw Stunt Kickers & Objective Blips
 		if hud_ref.player_vehicle.is_inside_tree():
 			var kickers = hud_ref.player_vehicle.get_tree().get_nodes_in_group("stunt_ramps")
 			for k in kickers:
@@ -123,15 +172,52 @@ class MinimapCanvas extends Control:
 					var k_pos = k.global_position if k.is_inside_tree() else k.position
 					var k_pt = _world_to_minimap(k_pos, p_pos, p_rot, center)
 					if (k_pt - center).length() <= radar_radius - 4.0:
-						draw_circle(k_pt, 3.5, Color(1.0, 0.8, 0.1, 0.9))
+						# Diamond blip
+						var diamond = PackedVector2Array([
+							k_pt + Vector2(0, -4),
+							k_pt + Vector2(4, 0),
+							k_pt + Vector2(0, 4),
+							k_pt + Vector2(-4, 0)
+						])
+						draw_colored_polygon(diamond, Color(1.0, 0.85, 0.15, 0.95))
+						draw_polyline(diamond, Color(0.1, 0.1, 0.1, 1.0), 1.2)
 
-		# North Indicator on Ring
+		# 5. North Indicator on Compass Ring
 		var north_angle = -p_rot - PI * 0.5
 		var north_pos = center + Vector2(cos(north_angle), sin(north_angle)) * (radar_radius - 8.0)
-		draw_circle(north_pos, 4.0, Color(1.0, 0.25, 0.3, 0.95))
+		draw_circle(north_pos, 4.5, Color(1.0, 0.25, 0.3, 0.95))
 
-		# Player Vehicle Arrow at Center
+		# 6. Player Vehicle Arrow at Center
 		_draw_player_icon(center, 0.0)
+
+	func _clip_line_to_circle(p1: Vector2, p2: Vector2, center: Vector2, radius: float) -> Array[Vector2]:
+		var d = p2 - p1
+		var seg_len = d.length()
+		if seg_len < 0.001:
+			if (p1 - center).length() <= radius:
+				return [p1, p2]
+			return []
+
+		var u = d / seg_len
+		var f = p1 - center
+		var b = f.dot(u)
+		var c = f.length_squared() - radius * radius
+		var discriminant = b * b - c
+
+		if discriminant < 0.0:
+			return []
+
+		var sqrt_d = sqrt(discriminant)
+		var t_enter = -b - sqrt_d
+		var t_exit = -b + sqrt_d
+
+		var t0 = clampf(t_enter, 0.0, seg_len)
+		var t1 = clampf(t_exit, 0.0, seg_len)
+
+		if t0 >= t1:
+			return []
+
+		return [p1 + u * t0, p1 + u * t1]
 
 	func _world_to_minimap(world_pt: Vector3, player_pos: Vector3, player_yaw: float, center: Vector2) -> Vector2:
 		var rel_x = world_pt.x - player_pos.x
@@ -147,14 +233,21 @@ class MinimapCanvas extends Control:
 		return center + Vector2(rot_x * scale_f, rot_z * scale_f)
 
 	func _draw_player_icon(center: Vector2, _heading: float) -> void:
-		var arrow_pts = PackedVector2Array([
+		var chevron_outline = PackedVector2Array([
+			center + Vector2(0, -10),
+			center + Vector2(-7, 8),
+			center + Vector2(0, 3.5),
+			center + Vector2(7, 8),
+			center + Vector2(0, -10)
+		])
+		var chevron_fill = PackedVector2Array([
 			center + Vector2(0, -9),
 			center + Vector2(-6, 7),
 			center + Vector2(0, 3),
 			center + Vector2(6, 7)
 		])
-		draw_colored_polygon(arrow_pts, Color(0.0, 1.0, 0.85, 1.0))
-		draw_polyline(arrow_pts, Color(1.0, 1.0, 1.0, 0.9), 1.5)
+		draw_polyline(chevron_outline, Color(1.0, 1.0, 1.0, 1.0), 2.0)
+		draw_colored_polygon(chevron_fill, Color(0.0, 1.0, 0.85, 1.0))
 
 func _ready() -> void:
 	anchor_right = 1.0

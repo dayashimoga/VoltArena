@@ -10,6 +10,11 @@ signal flight_telemetry_updated(data: Dictionary)
 signal stall_warning_changed(is_stalling: bool)
 signal gear_toggled(is_down: bool)
 signal flaps_changed(stage_index: int, angle_deg: float)
+signal aircraft_crashed(reason: String)
+
+const AeroMath = preload("res://games/flight-simulator-6dof/aero_math.gd")
+
+enum DifficultyMode { ASSISTED, REALISTIC }
 
 # Configuration Constants
 const AIR_MOLAR_MASS: float = 0.0289644
@@ -20,6 +25,7 @@ const ADIABATIC_INDEX: float = 1.4
 
 # Aircraft Specs (Standard 4-Seat Tourer / Trainer, e.g. Cirrus SR20 / C172SP)
 @export var aircraft_name: String = "Volt Trainer 6-DoF"
+@export var difficulty_mode: DifficultyMode = DifficultyMode.ASSISTED
 @export var empty_mass_kg: float = 850.0
 @export var fuel_mass_kg: float = 150.0
 @export var payload_mass_kg: float = 150.0 # Total 1150 kg
@@ -37,10 +43,14 @@ var roll_input: float = 0.0
 var rudder_input: float = 0.0
 var pitch_trim: float = 0.0
 var brake_input: float = 0.0
-var parking_brake_engaged: bool = false
+var parking_brake_engaged: bool = true
 var gear_extended: bool = true
 var flaps_index: int = 0 # 0: 0 deg, 1: 15 deg (takeoff), 2: 35 deg (landing)
 var flaps_angles: Array[float] = [0.0, 15.0, 35.0]
+
+# Crash & Safety State
+var is_crashed: bool = false
+var crash_reason: String = ""
 
 # Engine & Propeller State
 var current_rpm: float = 800.0
@@ -144,7 +154,7 @@ func _physics_process(delta: float) -> void:
 	_read_inputs(delta)
 
 	# 1. Atmospheric Model (ISA up to 20,000m)
-	altitude_msl = global_position.y
+	altitude_msl = global_position.y if is_inside_tree() else position.y
 	_update_altitude_agl()
 	var atmo = calculate_isa_atmosphere(altitude_msl)
 	var air_density = atmo["density"]
@@ -162,14 +172,44 @@ func _physics_process(delta: float) -> void:
 	# 5. Telemetry & G-Force Calculations
 	_update_telemetry(delta, air_density, speed_of_sound)
 
-	# 6. Audio, Visuals & Animations
+	# 6. Crash & Structural Integrity Checks
+	_check_crash_conditions()
+
+	# 7. Audio, Visuals & Animations
 	_update_visuals_and_audio(delta)
 
 func _read_inputs(delta: float) -> void:
+	if is_crashed:
+		throttle_input = 0.0
+		pitch_input = 0.0
+		roll_input = 0.0
+		rudder_input = 0.0
+		brake_input = 1.0
+		if Input.is_action_just_pressed("flight_reset") or Input.is_key_pressed(KEY_R):
+			reset_aircraft()
+		return
+
 	# Read flight controls with deadzone handled by InputManager or local mapping
 	var raw_pitch = Input.get_axis("pitch_up", "pitch_down") # nose up/down
 	var raw_roll = Input.get_axis("roll_left", "roll_right")
 	var raw_yaw = Input.get_axis("yaw_left", "yaw_right")
+
+	# NaN & extreme input sanitization
+	if is_nan(pitch_input): pitch_input = 0.0
+	if is_nan(roll_input): roll_input = 0.0
+	if is_nan(rudder_input): rudder_input = 0.0
+	if is_nan(raw_pitch): raw_pitch = 0.0
+	if is_nan(raw_roll): raw_roll = 0.0
+	if is_nan(raw_yaw): raw_yaw = 0.0
+
+	# Assisted Difficulty Enhancements
+	if difficulty_mode == DifficultyMode.ASSISTED:
+		# Auto turn coordination
+		raw_yaw += -0.30 * raw_roll
+		# Stall envelope barrier: limit pitch-up when approaching critical stall AoA
+		if max_inboard_aoa_deg > 12.0 and raw_pitch > 0.0:
+			var stall_headroom = clampf((stall_warning_aoa_deg - max_inboard_aoa_deg) / 1.5, 0.0, 1.0)
+			raw_pitch *= stall_headroom
 
 	pitch_input = lerp(pitch_input, raw_pitch, 18.0 * delta)
 	roll_input = lerp(roll_input, raw_roll, 18.0 * delta)
@@ -200,6 +240,60 @@ func _read_inputs(delta: float) -> void:
 	if Input.is_action_just_pressed("camera_toggle"):
 		toggle_camera_mode()
 
+	# Reset aircraft (Runway 09L centerline)
+	if Input.is_action_just_pressed("flight_reset") or Input.is_key_pressed(KEY_R):
+		reset_aircraft()
+
+## Triggers aircraft structural crash or terrain collision
+func trigger_crash(reason: String) -> void:
+	if is_crashed:
+		return
+	is_crashed = true
+	crash_reason = reason
+	aircraft_crashed.emit(reason)
+
+func _check_crash_conditions() -> void:
+	if is_crashed:
+		return
+	# 1. Hard vertical impact (touchdown vertical speed > 6.0 m/s)
+	if weight_on_wheels and abs(linear_velocity.y) > 6.0:
+		trigger_crash("Hard Touchdown Impact (Sink rate > 6 m/s)")
+		return
+	# 2. Inverted airframe ground strike
+	var my_basis = global_transform.basis if is_inside_tree() else transform.basis
+	if weight_on_wheels and my_basis.y.y < 0.25:
+		trigger_crash("Ground Inversion / Airframe Strike")
+		return
+	# 3. Excessive G-load (> 9.5 G structural failure)
+	if current_g_force > 9.5 or current_g_force < -4.5:
+		trigger_crash("Structural G-Force Overload (> 9.5 G)")
+		return
+
+## Resets aircraft to Runway 09L centerline rest state
+func reset_aircraft() -> void:
+	is_crashed = false
+	crash_reason = ""
+	position = Vector3(0.0, 0.72, 35.0)
+	rotation = Vector3.ZERO
+	if is_inside_tree():
+		global_position = Vector3(0.0, 0.72, 35.0)
+		global_rotation = Vector3.ZERO
+	linear_velocity = Vector3.ZERO
+	angular_velocity = Vector3.ZERO
+	_previous_linear_vel = Vector3.ZERO
+	throttle_input = 0.0
+	pitch_input = 0.0
+	roll_input = 0.0
+	rudder_input = 0.0
+	brake_input = 0.0
+	parking_brake_engaged = true
+	gear_extended = true
+	flaps_index = 0
+	current_rpm = idle_rpm
+	current_thrust_n = 0.0
+	for w in _wheels:
+		w.enabled = true
+
 ## Cycles flap settings: 0 (clean) -> 1 (takeoff 15 deg) -> 2 (landing 35 deg) -> 0
 func cycle_flaps() -> void:
 	flaps_index = (flaps_index + 1) % flaps_angles.size()
@@ -220,6 +314,10 @@ func toggle_camera_mode() -> void:
 	if cockpit_camera and chase_camera:
 		cockpit_camera.current = (_current_camera_mode == 1)
 		chase_camera.current = (_current_camera_mode == 0)
+
+## Evaluates ISA air density (kg/m^3) using standard atmospheric lapse formula
+static func calculate_isa_density(alt_m: float) -> float:
+	return AeroMath.isa_density(alt_m)
 
 ## Computes International Standard Atmosphere (ISA) parameters up to 20,000m.
 ## Returns Dictionary with temperature (K), pressure (Pa), density (kg/m^3), speed_of_sound (m/s).
@@ -260,7 +358,13 @@ static func calculate_isa_atmosphere(alt_m: float) -> Dictionary:
 	}
 
 func _update_altitude_agl() -> void:
+	if not is_inside_tree() or get_world_3d() == null:
+		altitude_agl = max(0.0, global_position.y)
+		return
 	var space_state = get_world_3d().direct_space_state
+	if not space_state:
+		altitude_agl = max(0.0, global_position.y)
+		return
 	var query = PhysicsRayQueryParameters3D.create(
 		global_position,
 		global_position + Vector3(0, -5000, 0),
@@ -284,7 +388,8 @@ func _update_engine_and_propeller(delta: float, air_density: float) -> void:
 	current_power_watts = max_engine_power_watts * pow(density_ratio, 1.15) * rpm_ratio
 
 	# 3. Propeller Thrust: T = eta * P / max(V_TAS, 12.0)
-	var forward_axis_world = -global_transform.basis.z # Aircraft nose (-Z)
+	var my_basis = global_transform.basis if is_inside_tree() else transform.basis
+	var forward_axis_world = -my_basis.z # Aircraft nose (-Z)
 	var v_forward = linear_velocity.dot(forward_axis_world)
 	airspeed_tas = max(0.0, v_forward)
 
@@ -310,7 +415,9 @@ func _update_engine_and_propeller(delta: float, air_density: float) -> void:
 		prop_rotation_angle -= 2.0 * PI
 
 func _update_aerodynamics(delta: float, air_density: float) -> void:
-	var com_world = global_position + (global_transform.basis * center_of_mass)
+	var my_pos = global_position if is_inside_tree() else position
+	var my_basis = global_transform.basis if is_inside_tree() else transform.basis
+	var com_world = my_pos + (my_basis * center_of_mass)
 	max_inboard_aoa_deg = 0.0
 
 	var flap_deflection_norm = flaps_angles[flaps_index] / 35.0
@@ -348,7 +455,12 @@ func _update_aerodynamics(delta: float, air_density: float) -> void:
 				max_inboard_aoa_deg = aoa_deg
 
 func _update_landing_gear(delta: float) -> void:
-	var com_world = global_position + (global_transform.basis * center_of_mass)
+	if _wheels.is_empty():
+		_cache_nodes()
+
+	var my_pos = global_position if is_inside_tree() else position
+	var my_basis = global_transform.basis if is_inside_tree() else transform.basis
+	var com_world = my_pos + (my_basis * center_of_mass)
 	var any_contact = false
 
 	var ground_speed = linear_velocity.length()
@@ -368,6 +480,9 @@ func _update_landing_gear(delta: float) -> void:
 			any_contact = true
 
 	weight_on_wheels = any_contact
+	if weight_on_wheels and parking_brake_engaged and throttle_input < 0.05 and linear_velocity.length() < 0.2:
+		linear_velocity = Vector3.ZERO
+		angular_velocity = Vector3.ZERO
 
 func _update_telemetry(delta: float, air_density: float, speed_of_sound: float) -> void:
 	# Indicated Airspeed (IAS) = TAS * sqrt(rho / rho_0)
@@ -382,7 +497,7 @@ func _update_telemetry(delta: float, air_density: float, speed_of_sound: float) 
 	# Load Factor G-Force: G = 1.0 + (a_normal / 9.80665)
 	var accel = (linear_velocity - _previous_linear_vel) / max(delta, 0.001)
 	_previous_linear_vel = linear_velocity
-	var normal_axis = global_transform.basis.y
+	var normal_axis = (global_transform.basis if is_inside_tree() else transform.basis).y
 	var a_normal = accel.dot(normal_axis)
 	current_g_force = 1.0 + (a_normal / GRAVITY_CONST)
 

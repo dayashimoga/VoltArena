@@ -15,12 +15,16 @@ const LAYER_BALL: int = 32         # Physics stunt balls / beach balls
 const LAYER_GOALS: int = 64        # Garages & trigger zones
 const LAYER_CHECKPOINTS: int = 128 # Race & mission checkpoint gates
 
-# --- Vehicle Archetype Identifiers ---
-const VEHICLE_VORTEX_GT: String = "vortex_gt"          # Mid-engine exotic supercar (Reference car)
-const VEHICLE_THUNDERBOLT_V8: String = "thunderbolt_v8" # Heavy torque American muscle car
-const VEHICLE_SPECTER_R: String = "specter_r"          # High-grip street tuner / drift specialist
-const VEHICLE_RIDGEBACK_4X4: String = "ridgeback_4x4"  # Rugged all-terrain SUV
-const VEHICLE_VALIANT_COUPE: String = "valiant_coupe"  # Classic vintage cruiser
+# --- Vehicle Archetype Identifiers (7 Authentic Classes) ---
+const VEHICLE_VORTEX_GT: String = "vortex_gt"          # Class 1: Player Sports Supercar (Apex GT)
+const VEHICLE_SPECTER_R: String = "specter_r"          # Class 2: Sport Tuner Coupe
+const VEHICLE_NYC_TAXI: String = "nyc_taxi"             # Class 3: 4-Door Executive Sedan / NYC Yellow Taxi
+const VEHICLE_COMPACT_HATCH: String = "compact_hatch"   # Class 4: Compact Hatchback
+const VEHICLE_RIDGEBACK_4X4: String = "ridgeback_4x4"  # Class 5: Full-Size SUV
+const VEHICLE_BOX_TRUCK: String = "box_truck"           # Class 6: Box Delivery Truck
+const VEHICLE_POLICE_CRUISER: String = "police_cruiser" # Class 7: Police Cruiser / Transit Bus
+const VEHICLE_THUNDERBOLT_V8: String = "thunderbolt_v8" # Muscle GT
+const VEHICLE_VALIANT_COUPE: String = "valiant_coupe"  # Classic Cruiser
 
 # --- World District Identifiers (8 Coherent Regions) ---
 const DISTRICT_DOWNTOWN: String = "district_downtown"       # High-rise commercial core & plazas

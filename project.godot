@@ -58,11 +58,12 @@ textures/vram_compression/import_etc2_astc=true
 
 [layer_names]
 
-3d_physics/layer_1="World"
-3d_physics/layer_2="Player"
-3d_physics/layer_3="Enemies"
-3d_physics/layer_4="Projectiles"
-3d_physics/layer_5="Pickups"
-3d_physics/layer_6="Ball"
-3d_physics/layer_7="Goals"
+3d_physics/layer_1="StaticTerrain_Roads"
+3d_physics/layer_2="PlayerVehicle_Aircraft"
+3d_physics/layer_3="AITraffic_Ground"
+3d_physics/layer_4="Props_Buildings_Trees"
+3d_physics/layer_5="Pedestrians"
+3d_physics/layer_6="Checkpoints_Triggers"
+3d_physics/layer_7="CameraOccluders"
 3d_physics/layer_8="Checkpoints"
+

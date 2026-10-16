@@ -26,6 +26,7 @@ var heading_label: Label
 var heading_ribbon: Control
 var vsi_label: Label
 var g_force_label: Label
+var aoa_label: Label
 var throttle_bar: ProgressBar
 var throttle_label: Label
 var gear_indicator: Label
@@ -149,6 +150,9 @@ func _build_hud_layout() -> void:
 
 	g_force_label = _create_label("1.0 G", 13, Color(0.95, 0.85, 0.2))
 	spd_vbox.add_child(g_force_label)
+
+	aoa_label = _create_label("AoA: +0.0°", 12, Color(0.3, 0.9, 1.0))
+	spd_vbox.add_child(aoa_label)
 
 	# --- RIGHT HUD: ALTIMETER & VSI TAPE ---
 	var alt_card = _create_glass_panel(Vector2(110, 160))
@@ -287,12 +291,16 @@ func _process(delta: float) -> void:
 		return
 
 	# Update Readouts
-	airspeed_label.text = "%d KM/H" % int(aircraft.indicated_airspeed_kmh)
+	var kias = int(aircraft.indicated_airspeed_ms * 1.94384)
+	airspeed_label.text = "%d KM/H\n%d KIAS" % [int(aircraft.indicated_airspeed_kmh), kias]
 	airspeed_bar.value = aircraft.indicated_airspeed_kmh
 
 	altimeter_label.text = "%d M" % int(aircraft.barometric_altitude_m)
-	radar_alt_label.text = "RALT: %d M" % int(aircraft.radar_altitude_m)
+	radar_alt_label.text = "RALT: %d M (AGL)" % int(aircraft.radar_altitude_m)
 	vsi_label.text = "VSI: %+0.1f" % aircraft.vertical_speed_ms
+
+	if aoa_label:
+		aoa_label.text = "AoA: %+0.1f°" % aircraft.angle_of_attack_deg
 
 	var thr_pct = int(aircraft.engine_rpm_pct)
 	if aircraft.afterburner_active and aircraft.throttle >= 0.95:

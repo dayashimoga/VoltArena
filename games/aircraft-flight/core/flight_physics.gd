@@ -192,7 +192,10 @@ func _physics_process(delta: float) -> void:
 	_integrate_aerodynamic_moments(delta, dynamic_pressure, v_fwd)
 
 	# 9. Perform CharacterBody3D Collision & Movement
-	move_and_slide()
+	if is_inside_tree():
+		move_and_slide()
+	else:
+		position += velocity * delta
 
 	# 10. Post-Move Ground Status Check & Wings-Leveling
 	var was_airborne = is_airborne

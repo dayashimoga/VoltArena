@@ -197,10 +197,70 @@ func test_prop_factory_instantiation() -> void:
 	assert_true(_find_static_body(ramp) != null, "Stunt ramp must have StaticBody3D")
 	ramp.free()
 
+	# NYC Phase 2 Modular Prop Builders
+	var deco = UrbanPropFactory.build_art_deco_skyscraper(120.0, 35.0, 35.0)
+	assert_true(_find_static_body(deco) != null, "Art Deco skyscraper must have StaticBody3D")
+	deco.free()
+
+	var brownstone = UrbanPropFactory.build_brownstone_rowhouse(18.0, 12.0, 16.0, true)
+	assert_true(_find_static_body(brownstone) != null, "Brownstone rowhouse must have StaticBody3D")
+	brownstone.free()
+
+	var marquee = UrbanPropFactory.build_theater_marquee_store(22.0, 25.0, 20.0)
+	assert_true(_find_static_body(marquee) != null, "Theater marquee store must have StaticBody3D")
+	marquee.free()
+
+	var subway = UrbanPropFactory.build_subway_kiosk()
+	assert_true(subway != null, "Subway kiosk must instantiate")
+	subway.free()
+
+	var pwall = UrbanPropFactory.build_park_stone_wall(30.0, 1.4)
+	assert_true(_find_static_body(pwall) != null, "Park stone wall must have StaticBody3D")
+	pwall.free()
+
+	var crane = UrbanPropFactory.build_gantry_crane(35.0, 40.0)
+	assert_true(crane != null, "Gantry crane must instantiate")
+	crane.free()
+
+	var sbridge = UrbanPropFactory.build_suspension_bridge(450.0, 35.0, 20.0)
+	assert_true(_find_static_body(sbridge) != null, "Suspension bridge must have StaticBody3D")
+	sbridge.free()
+
+	var tunnel = UrbanPropFactory.build_underpass_tunnel(80.0, 16.0, 6.5)
+	assert_true(tunnel != null, "Underpass tunnel must instantiate")
+	tunnel.free()
+
+	var signal_mast = UrbanPropFactory.build_traffic_signal_mast(6.5, 8.0)
+	assert_true(signal_mast != null, "Traffic signal mast must instantiate")
+	signal_mast.free()
+
+	var hydrant = UrbanPropFactory.build_fire_hydrant()
+	assert_true(hydrant != null, "Fire hydrant must instantiate")
+	hydrant.free()
+
+	var cluster = UrbanPropFactory.build_street_furniture_cluster()
+	assert_true(cluster != null, "Street furniture cluster must instantiate")
+	cluster.free()
+
+	var shelter = UrbanPropFactory.build_bus_shelter()
+	assert_true(shelter != null, "Bus shelter must instantiate")
+	shelter.free()
+
+	var acorn = UrbanPropFactory.build_acorn_streetlight(5.5)
+	assert_true(acorn != null, "Acorn streetlight must instantiate")
+	acorn.free()
+
+	var skyline = UrbanPropFactory.build_distant_skyline(600.0)
+	assert_true(skyline != null, "Distant skyline must instantiate")
+	skyline.free()
+
 func _find_static_body(node: Node) -> StaticBody3D:
+	if node is StaticBody3D:
+		return node
 	for c in node.get_children():
-		if c is StaticBody3D:
-			return c
+		var found = _find_static_body(c)
+		if found != null:
+			return found
 	return null
 
 func test_zero_road_obstructions() -> void:
@@ -253,7 +313,12 @@ func get_coverage_entries() -> Array:
 		["res://games/urban-legends/world/urban_prop_factory.gd", [
 			"build_skyscraper", "build_residential_villa", "build_flyover_viaduct",
 			"build_palm_tree", "build_street_lamp", "build_stunt_ramp",
-			"build_shipping_container", "build_stone_bridge"
+			"build_shipping_container", "build_stone_bridge",
+			"build_art_deco_skyscraper", "build_brownstone_rowhouse",
+			"build_theater_marquee_store", "build_subway_kiosk", "build_park_stone_wall",
+			"build_gantry_crane", "build_suspension_bridge", "build_underpass_tunnel",
+			"build_traffic_signal_mast", "build_fire_hydrant", "build_street_furniture_cluster",
+			"build_bus_shelter", "build_acorn_streetlight", "build_distant_skyline"
 		]],
 		["res://games/urban-legends/world/urban_world_generator.gd", [
 			"_ready", "generate_world", "_cleanup_children", "_build_ground_planes",

@@ -139,6 +139,34 @@ func start_lesson(lesson: LessonType) -> void:
 			_set_instruction("FREE FLIGHT\nExplore the 8000m airspace and mountain ranges. Press [V] to toggle cockpit view.")
 
 	_update_waypoint_marker()
+	_update_flight_director_cue()
+
+## Configures flight difficulty: true for Assisted 6-DoF, false for Realistic 6-DoF
+func set_difficulty(is_assisted: bool) -> void:
+	if aircraft:
+		aircraft.difficulty_mode = AircraftController.DifficultyMode.ASSISTED if is_assisted else AircraftController.DifficultyMode.REALISTIC
+	if score_label:
+		var mode_name = "ASSISTED" if is_assisted else "REALISTIC 6-DoF"
+		score_label.text = "MODE: %s | SCORE: %d" % [mode_name, current_score]
+
+func _update_flight_director_cue() -> void:
+	if not aircraft or not aircraft.hud_node or not aircraft.hud_node.has_method("set_ghost_director"):
+		return
+	var tgt_pitch = 0.0
+	var tgt_roll = 0.0
+	match current_lesson:
+		LessonType.TAXI_TAKEOFF:
+			tgt_pitch = 8.0 if current_step >= 1 else 0.0
+		LessonType.LEVEL_FLIGHT_TRIM:
+			tgt_pitch = 1.5
+		LessonType.COORDINATED_TURNS:
+			tgt_roll = 30.0
+			tgt_pitch = 2.5
+		LessonType.STALL_RECOVERY:
+			tgt_pitch = -5.0 if current_step == 2 else 12.0
+		LessonType.PATTERN_LANDING:
+			tgt_pitch = -3.0
+	aircraft.hud_node.set_ghost_director(lesson_active, tgt_pitch, tgt_roll)
 
 func _physics_process(delta: float) -> void:
 	if not lesson_active or not aircraft:

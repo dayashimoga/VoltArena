@@ -63,7 +63,7 @@ func evaluate_and_apply_forces(
 		return {}
 
 	# 1. Surface Point Velocity: v = v_linear + omega.cross(p_surface - p_COM)
-	var p_surface = global_position
+	var p_surface = global_position if is_inside_tree() else position
 	var r_arm = p_surface - com_world
 	var v_point = body.linear_velocity + body.angular_velocity.cross(r_arm)
 
@@ -74,7 +74,8 @@ func evaluate_and_apply_forces(
 
 	# 3. Transform to Local Surface Coordinate Frame
 	# Local Convention: Nose is -Z, Canopy/Normal is +Y, Starboard/Span is +X
-	var local_vel = global_transform.basis.inverse() * v_apparent
+	var s_basis = global_transform.basis if is_inside_tree() else transform.basis
+	var local_vel = s_basis.inverse() * v_apparent
 	var speed = local_vel.length()
 	if speed < 0.1:
 		current_aoa = 0.0
@@ -162,9 +163,9 @@ func evaluate_and_apply_forces(
 	var f_total_local = f_lift_local + f_drag_local
 
 	# 9. Transform to World Space
-	var f_lift_world = global_transform.basis * f_lift_local
-	var f_drag_world = global_transform.basis * f_drag_local
-	var f_total_world = global_transform.basis * f_total_local
+	var f_lift_world = s_basis * f_lift_local
+	var f_drag_world = s_basis * f_drag_local
+	var f_total_world = s_basis * f_total_local
 
 	current_lift_force = f_lift_world
 	current_drag_force = f_drag_world
@@ -173,12 +174,13 @@ func evaluate_and_apply_forces(
 	# 10. Pitching Moment: M = q * S * chord * C_m(alpha)
 	var cm = config.pitch_moment_c0 + config.pitch_moment_slope * alpha_eff
 	var m_pitch_mag = q * area * config.chord * cm
-	var pitch_axis_world = global_transform.basis * Vector3.RIGHT # Starboard axis
+	var pitch_axis_world = s_basis * Vector3.RIGHT # Starboard axis
 	var m_pitch_world = pitch_axis_world * m_pitch_mag
 
 	# 11. Apply Forces and Torques to RigidBody3D
 	# Force applied at surface aerodynamic center relative to body origin
-	var force_offset = p_surface - body.global_position
+	var body_pos = body.global_position if body.is_inside_tree() else body.position
+	var force_offset = p_surface - body_pos
 	body.apply_force(f_total_world, force_offset)
 	body.apply_torque(m_pitch_world)
 

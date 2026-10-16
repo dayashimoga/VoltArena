@@ -1,682 +1,2381 @@
 {
-  "manifest_version": "3.0.0",
-  "packages": {
-    "AeroRush-Linux-x86_64.tar.gz": {
-      "size_mb": 180.34,
-      "size_bytes": 189096266,
-      "sha256": "16a974314ab50f43acaf06793251cc66febbcbed04b54f96f8b11616ecac229c",
-      "archive_members": [],
-      "foreign_resources": 0
+  "manifest_version": "4.0.0",
+  "engine_version": "Godot 4.3-stable",
+  "release_version": "17.0.0",
+  "git_commit": "c50c785",
+  "total_launchable_targets": 14,
+  "targets": {
+    "voltarena_suite": {
+      "type": "suite",
+      "title": "VoltArena Master Bundle",
+      "total_bundled_games": 13,
+      "artifacts": [
+        {
+          "filename": "VoltArena-Full-Android.apk",
+          "target_id": "voltarena_suite",
+          "target_title": "VoltArena Complete Suite",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "VoltArena-Full-Linux-x86_64.tar.gz",
+          "target_id": "voltarena_suite",
+          "target_title": "VoltArena Complete Suite",
+          "platform": "linux-x86_64",
+          "size_bytes": 104351849,
+          "size_mb": 99.52,
+          "sha256": "81130b17571abd8f26d0838075eeca2351cc112b031980827b2d577a3066f7d5",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "VoltArena-Full-Web.zip",
+          "target_id": "voltarena_suite",
+          "target_title": "VoltArena Complete Suite",
+          "platform": "web-wasm",
+          "size_bytes": 217620725,
+          "size_mb": 207.54,
+          "sha256": "1aa51890d6ebcc247c53c9f22ec3c92c57cb2c9e921fad01518eeee2360f0b7a",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "VoltArena-Full-Windows-x86_64.zip",
+          "target_id": "voltarena_suite",
+          "target_title": "VoltArena Complete Suite",
+          "platform": "windows-x86_64",
+          "size_bytes": 110486132,
+          "size_mb": 105.37,
+          "sha256": "b56e39ba17d1e986d36aca3bea697bbdd85b34acf023d3546d652b4d658cd1c2",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "voltarena_suite_v17.0.0_c50c785_android.apk",
+          "target_id": "voltarena_suite",
+          "target_title": "VoltArena Complete Suite",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "voltarena_suite_v17.0.0_c50c785_linux-x86_64.tar.gz",
+          "target_id": "voltarena_suite",
+          "target_title": "VoltArena Complete Suite",
+          "platform": "linux-x86_64",
+          "size_bytes": 104351849,
+          "size_mb": 99.52,
+          "sha256": "81130b17571abd8f26d0838075eeca2351cc112b031980827b2d577a3066f7d5",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "voltarena_suite_v17.0.0_c50c785_web.zip",
+          "target_id": "voltarena_suite",
+          "target_title": "VoltArena Complete Suite",
+          "platform": "web-wasm",
+          "size_bytes": 217620725,
+          "size_mb": 207.54,
+          "sha256": "1aa51890d6ebcc247c53c9f22ec3c92c57cb2c9e921fad01518eeee2360f0b7a",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "voltarena_suite_v17.0.0_c50c785_windows-x86_64.zip",
+          "target_id": "voltarena_suite",
+          "target_title": "VoltArena Complete Suite",
+          "platform": "windows-x86_64",
+          "size_bytes": 110486132,
+          "size_mb": 105.37,
+          "sha256": "b56e39ba17d1e986d36aca3bea697bbdd85b34acf023d3546d652b4d658cd1c2",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        }
+      ]
     },
-    "AeroRush-Web.zip": {
-      "size_mb": 288.37,
-      "size_bytes": 302382871,
-      "sha256": "0f9dc9b87ed8608796b2879bf479a1f8681e67cf874200e6648ef171ab7218bd",
-      "archive_members": [
-        "index.apple-touch-icon.png",
-        "index.apple-touch-icon.png.import",
-        "index.audio.worklet.js",
-        "index.html",
-        "index.icon.png",
-        "index.icon.png.import",
-        "index.js",
-        "index.pck",
-        "index.pck.part00",
-        "index.pck.part01",
-        "index.pck.part02",
-        "index.pck.part03",
-        "index.pck.part04",
-        "index.pck.part05",
-        "index.pck.part06",
-        "index.png",
-        "index.png.import",
-        "index.wasm",
-        "index.wasm.part00",
-        "index.wasm.part01",
-        "_headers",
-        "AeroRush.pck"
-      ],
-      "foreign_resources": 0
+    "aero_rush": {
+      "type": "standalone",
+      "title": "AeroRush",
+      "directory": "aero-rush",
+      "main_scene": "res://games/aero-rush/aero_rush_main.tscn",
+      "description": "AeroRush: Impossible Stunt Circuit",
+      "artifacts": [
+        {
+          "filename": "AeroRush-Android.apk",
+          "target_id": "aero_rush",
+          "target_title": "AeroRush",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "AeroRush-Linux-x86_64.tar.gz",
+          "target_id": "aero_rush",
+          "target_title": "AeroRush",
+          "platform": "linux-x86_64",
+          "size_bytes": 189096416,
+          "size_mb": 180.34,
+          "sha256": "677677353f54ae23959fd9fa0b479832d98c860fd2b89c376eb4033c66fa2c20",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "AeroRush-Web.zip",
+          "target_id": "aero_rush",
+          "target_title": "AeroRush",
+          "platform": "web-wasm",
+          "size_bytes": 302383055,
+          "size_mb": 288.37,
+          "sha256": "54ffb408cee504ed73037bec1a72facbe96251d13b239f760b15a7db76fbbfb5",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "AeroRush-Windows-x86_64.zip",
+          "target_id": "aero_rush",
+          "target_title": "AeroRush",
+          "platform": "windows-x86_64",
+          "size_bytes": 195248496,
+          "size_mb": 186.2,
+          "sha256": "387a763f4367d692a4b0518cf188e9c6430969e8c08993dedda9ba4b49962016",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "aero_rush_v17.0.0_c50c785_android.apk",
+          "target_id": "aero_rush",
+          "target_title": "AeroRush",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "aero_rush_v17.0.0_c50c785_linux-x86_64.tar.gz",
+          "target_id": "aero_rush",
+          "target_title": "AeroRush",
+          "platform": "linux-x86_64",
+          "size_bytes": 189096416,
+          "size_mb": 180.34,
+          "sha256": "677677353f54ae23959fd9fa0b479832d98c860fd2b89c376eb4033c66fa2c20",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "aero_rush_v17.0.0_c50c785_web.zip",
+          "target_id": "aero_rush",
+          "target_title": "AeroRush",
+          "platform": "web-wasm",
+          "size_bytes": 302383055,
+          "size_mb": 288.37,
+          "sha256": "54ffb408cee504ed73037bec1a72facbe96251d13b239f760b15a7db76fbbfb5",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "aero_rush_v17.0.0_c50c785_windows-x86_64.zip",
+          "target_id": "aero_rush",
+          "target_title": "AeroRush",
+          "platform": "windows-x86_64",
+          "size_bytes": 195248496,
+          "size_mb": 186.2,
+          "sha256": "387a763f4367d692a4b0518cf188e9c6430969e8c08993dedda9ba4b49962016",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        }
+      ]
     },
-    "AeroRush-Windows-x86_64.zip": {
-      "size_mb": 186.2,
-      "size_bytes": 195248229,
-      "sha256": "5b54481592b8d4a4c6eccb4ce2cb8865d5f330e0eebfd0ed889f60a9fbf77062",
-      "archive_members": [
-        "AeroRush.exe",
-        "AeroRush.pck",
-        "standalone_manifest.json"
-      ],
-      "foreign_resources": 0
+    "chroma_rush": {
+      "type": "standalone",
+      "title": "ChromaRush",
+      "directory": "chroma-rush",
+      "main_scene": "res://games/chroma-rush/chroma_rush_main.tscn",
+      "description": "Chroma Rush: The Color Chase",
+      "artifacts": [
+        {
+          "filename": "ChromaRush-Android.apk",
+          "target_id": "chroma_rush",
+          "target_title": "ChromaRush",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "ChromaRush-Linux-x86_64.tar.gz",
+          "target_id": "chroma_rush",
+          "target_title": "ChromaRush",
+          "platform": "linux-x86_64",
+          "size_bytes": 183729113,
+          "size_mb": 175.22,
+          "sha256": "4480f38865674b101e2a705f42ab40fcd4681921956d8707193a1ec1fe601ed9",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "ChromaRush-Web.zip",
+          "target_id": "chroma_rush",
+          "target_title": "ChromaRush",
+          "platform": "web-wasm",
+          "size_bytes": 297012585,
+          "size_mb": 283.25,
+          "sha256": "ee8aa3bb7e99f488fe5bddbbc638ce77abdd9e16d253c9821c2321c59507d0e6",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "ChromaRush-Windows-x86_64.zip",
+          "target_id": "chroma_rush",
+          "target_title": "ChromaRush",
+          "platform": "windows-x86_64",
+          "size_bytes": 189878033,
+          "size_mb": 181.08,
+          "sha256": "aad9bd8faf720c7009c9a0956316ce22d1bec49a399f55e7dc8106b904e4ce0a",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "chroma_rush_v17.0.0_c50c785_android.apk",
+          "target_id": "chroma_rush",
+          "target_title": "ChromaRush",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "chroma_rush_v17.0.0_c50c785_linux-x86_64.tar.gz",
+          "target_id": "chroma_rush",
+          "target_title": "ChromaRush",
+          "platform": "linux-x86_64",
+          "size_bytes": 183729113,
+          "size_mb": 175.22,
+          "sha256": "4480f38865674b101e2a705f42ab40fcd4681921956d8707193a1ec1fe601ed9",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "chroma_rush_v17.0.0_c50c785_web.zip",
+          "target_id": "chroma_rush",
+          "target_title": "ChromaRush",
+          "platform": "web-wasm",
+          "size_bytes": 297012585,
+          "size_mb": 283.25,
+          "sha256": "ee8aa3bb7e99f488fe5bddbbc638ce77abdd9e16d253c9821c2321c59507d0e6",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "chroma_rush_v17.0.0_c50c785_windows-x86_64.zip",
+          "target_id": "chroma_rush",
+          "target_title": "ChromaRush",
+          "platform": "windows-x86_64",
+          "size_bytes": 189878033,
+          "size_mb": 181.08,
+          "sha256": "aad9bd8faf720c7009c9a0956316ce22d1bec49a399f55e7dc8106b904e4ce0a",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        }
+      ]
     },
-    "AeroSim6DoF-Linux-x86_64.tar.gz": {
-      "size_mb": 203.85,
-      "size_bytes": 213753743,
-      "sha256": "2a8ed325c6cb27ace64eb1cba8388225bf6acb2f9c09439d1b0a2a171f849b80",
-      "archive_members": [],
-      "foreign_resources": 0
+    "kart_racing": {
+      "type": "standalone",
+      "title": "DriftStorm",
+      "directory": "kart-racing",
+      "main_scene": "res://games/kart-racing/kart_racing_main.tscn",
+      "description": "Drift Storm Arcade Kart Racing",
+      "artifacts": [
+        {
+          "filename": "DriftStorm-Android.apk",
+          "target_id": "kart_racing",
+          "target_title": "DriftStorm",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "DriftStorm-Linux-x86_64.tar.gz",
+          "target_id": "kart_racing",
+          "target_title": "DriftStorm",
+          "platform": "linux-x86_64",
+          "size_bytes": 183561017,
+          "size_mb": 175.06,
+          "sha256": "81dde06af7719227a6fecb688409d0f4960f825486153b7465490efb85ef3f47",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "DriftStorm-Web.zip",
+          "target_id": "kart_racing",
+          "target_title": "DriftStorm",
+          "platform": "web-wasm",
+          "size_bytes": 296846083,
+          "size_mb": 283.09,
+          "sha256": "f3d0c1c3fa39eac1ec95fb5a09d7ffe1f3f4bea834d9070e9f47d61151cc9565",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "DriftStorm-Windows-x86_64.zip",
+          "target_id": "kart_racing",
+          "target_title": "DriftStorm",
+          "platform": "windows-x86_64",
+          "size_bytes": 189711532,
+          "size_mb": 180.92,
+          "sha256": "c901d2ca547298ca6e3a31b0d0ca081df82bd9429bbfb07d9f49a86b491bcddc",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "kart_racing_v17.0.0_c50c785_android.apk",
+          "target_id": "kart_racing",
+          "target_title": "DriftStorm",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "kart_racing_v17.0.0_c50c785_linux-x86_64.tar.gz",
+          "target_id": "kart_racing",
+          "target_title": "DriftStorm",
+          "platform": "linux-x86_64",
+          "size_bytes": 183561017,
+          "size_mb": 175.06,
+          "sha256": "81dde06af7719227a6fecb688409d0f4960f825486153b7465490efb85ef3f47",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "kart_racing_v17.0.0_c50c785_web.zip",
+          "target_id": "kart_racing",
+          "target_title": "DriftStorm",
+          "platform": "web-wasm",
+          "size_bytes": 296846083,
+          "size_mb": 283.09,
+          "sha256": "f3d0c1c3fa39eac1ec95fb5a09d7ffe1f3f4bea834d9070e9f47d61151cc9565",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "kart_racing_v17.0.0_c50c785_windows-x86_64.zip",
+          "target_id": "kart_racing",
+          "target_title": "DriftStorm",
+          "platform": "windows-x86_64",
+          "size_bytes": 189711532,
+          "size_mb": 180.92,
+          "sha256": "c901d2ca547298ca6e3a31b0d0ca081df82bd9429bbfb07d9f49a86b491bcddc",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        }
+      ]
     },
-    "AeroSim6DoF-Web.zip": {
-      "size_mb": 311.88,
-      "size_bytes": 327026923,
-      "sha256": "0648de97825c1d49f16dc4a57d65987d3cbb77822f55ecb90590cadc5fb0627b",
-      "archive_members": [
-        "index.apple-touch-icon.png",
-        "index.apple-touch-icon.png.import",
-        "index.audio.worklet.js",
-        "index.html",
-        "index.icon.png",
-        "index.icon.png.import",
-        "index.js",
-        "index.pck",
-        "index.pck.part00",
-        "index.pck.part01",
-        "index.pck.part02",
-        "index.pck.part03",
-        "index.pck.part04",
-        "index.pck.part05",
-        "index.pck.part06",
-        "index.png",
-        "index.png.import",
-        "index.wasm",
-        "index.wasm.part00",
-        "index.wasm.part01",
-        "_headers",
-        "AeroSim6DoF.pck"
-      ],
-      "foreign_resources": 0
+    "strike_vector": {
+      "type": "standalone",
+      "title": "StrikeVector",
+      "directory": "strike-vector",
+      "main_scene": "res://games/strike-vector/strike_vector_main.tscn",
+      "description": "Strike Vector Tactical Campaign",
+      "artifacts": [
+        {
+          "filename": "StrikeVector-Android.apk",
+          "target_id": "strike_vector",
+          "target_title": "StrikeVector",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "StrikeVector-Linux-x86_64.tar.gz",
+          "target_id": "strike_vector",
+          "target_title": "StrikeVector",
+          "platform": "linux-x86_64",
+          "size_bytes": 183634745,
+          "size_mb": 175.13,
+          "sha256": "ef90a41ae1f81f09b39b1b7c23f4e62932032889fa103f4d7c4d53be81428589",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "StrikeVector-Web.zip",
+          "target_id": "strike_vector",
+          "target_title": "StrikeVector",
+          "platform": "web-wasm",
+          "size_bytes": 296920691,
+          "size_mb": 283.17,
+          "sha256": "b7d56dab9df8941c6b0b3fcd6bd9984acf8352a0ab9c95732d981e01d977130e",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "StrikeVector-Windows-x86_64.zip",
+          "target_id": "strike_vector",
+          "target_title": "StrikeVector",
+          "platform": "windows-x86_64",
+          "size_bytes": 189786144,
+          "size_mb": 180.99,
+          "sha256": "bb340ea93fa75c74436db02b49641e8fd7fa4a106384e3e40e8660d03ff34baf",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "strike_vector_v17.0.0_c50c785_android.apk",
+          "target_id": "strike_vector",
+          "target_title": "StrikeVector",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "strike_vector_v17.0.0_c50c785_linux-x86_64.tar.gz",
+          "target_id": "strike_vector",
+          "target_title": "StrikeVector",
+          "platform": "linux-x86_64",
+          "size_bytes": 183634745,
+          "size_mb": 175.13,
+          "sha256": "ef90a41ae1f81f09b39b1b7c23f4e62932032889fa103f4d7c4d53be81428589",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "strike_vector_v17.0.0_c50c785_web.zip",
+          "target_id": "strike_vector",
+          "target_title": "StrikeVector",
+          "platform": "web-wasm",
+          "size_bytes": 296920691,
+          "size_mb": 283.17,
+          "sha256": "b7d56dab9df8941c6b0b3fcd6bd9984acf8352a0ab9c95732d981e01d977130e",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "strike_vector_v17.0.0_c50c785_windows-x86_64.zip",
+          "target_id": "strike_vector",
+          "target_title": "StrikeVector",
+          "platform": "windows-x86_64",
+          "size_bytes": 189786144,
+          "size_mb": 180.99,
+          "sha256": "bb340ea93fa75c74436db02b49641e8fd7fa4a106384e3e40e8660d03ff34baf",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        }
+      ]
     },
-    "AeroSim6DoF-Windows-x86_64.zip": {
-      "size_mb": 209.71,
-      "size_bytes": 219892310,
-      "sha256": "75687918c07b2ee34648887710ebfb2815a13c3f3d85cf5dfaa89e170ed27f90",
-      "archive_members": [
-        "AeroSim6DoF.exe",
-        "AeroSim6DoF.pck",
-        "standalone_manifest.json"
-      ],
-      "foreign_resources": 0
+    "roboforge_arena": {
+      "type": "standalone",
+      "title": "RoboForgeArena",
+      "directory": "roboforge-arena",
+      "main_scene": "res://games/roboforge-arena/roboforge_main.tscn",
+      "description": "RoboForge Arena Modular Engineering",
+      "artifacts": [
+        {
+          "filename": "RoboForgeArena-Android.apk",
+          "target_id": "roboforge_arena",
+          "target_title": "RoboForgeArena",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "RoboForgeArena-Linux-x86_64.tar.gz",
+          "target_id": "roboforge_arena",
+          "target_title": "RoboForgeArena",
+          "platform": "linux-x86_64",
+          "size_bytes": 183436703,
+          "size_mb": 174.94,
+          "sha256": "e905132b2ef8237f4c68954b06d08ee19c53b984566b6fd730d0ec450b50d477",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "RoboForgeArena-Web.zip",
+          "target_id": "roboforge_arena",
+          "target_title": "RoboForgeArena",
+          "platform": "web-wasm",
+          "size_bytes": 296722795,
+          "size_mb": 282.98,
+          "sha256": "92a794783db444522a426baf2f723b655c3d70ca157ea8f7a33ab017fb935432",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "RoboForgeArena-Windows-x86_64.zip",
+          "target_id": "roboforge_arena",
+          "target_title": "RoboForgeArena",
+          "platform": "windows-x86_64",
+          "size_bytes": 189588255,
+          "size_mb": 180.81,
+          "sha256": "698db819759e11682556a99ab72b79987920c65213cea09d80e9fb579c6af973",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "roboforge_arena_v17.0.0_c50c785_android.apk",
+          "target_id": "roboforge_arena",
+          "target_title": "RoboForgeArena",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "roboforge_arena_v17.0.0_c50c785_linux-x86_64.tar.gz",
+          "target_id": "roboforge_arena",
+          "target_title": "RoboForgeArena",
+          "platform": "linux-x86_64",
+          "size_bytes": 183436703,
+          "size_mb": 174.94,
+          "sha256": "e905132b2ef8237f4c68954b06d08ee19c53b984566b6fd730d0ec450b50d477",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "roboforge_arena_v17.0.0_c50c785_web.zip",
+          "target_id": "roboforge_arena",
+          "target_title": "RoboForgeArena",
+          "platform": "web-wasm",
+          "size_bytes": 296722795,
+          "size_mb": 282.98,
+          "sha256": "92a794783db444522a426baf2f723b655c3d70ca157ea8f7a33ab017fb935432",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "roboforge_arena_v17.0.0_c50c785_windows-x86_64.zip",
+          "target_id": "roboforge_arena",
+          "target_title": "RoboForgeArena",
+          "platform": "windows-x86_64",
+          "size_bytes": 189588255,
+          "size_mb": 180.81,
+          "sha256": "698db819759e11682556a99ab72b79987920c65213cea09d80e9fb579c6af973",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        }
+      ]
     },
-    "AircraftFlight-Linux-x86_64.tar.gz": {
-      "size_mb": 194.39,
-      "size_bytes": 203829600,
-      "sha256": "594ca9426353ae5b40f3e21aaa90b016324827208721a4795478d3c2e37b7bae",
-      "archive_members": [],
-      "foreign_resources": 0
+    "wildcircuit": {
+      "type": "standalone",
+      "title": "WildCircuit",
+      "directory": "wildcircuit",
+      "main_scene": "res://games/wildcircuit/wildcircuit_main.tscn",
+      "description": "WildCircuit Conservation Photography",
+      "artifacts": [
+        {
+          "filename": "WildCircuit-Android.apk",
+          "target_id": "wildcircuit",
+          "target_title": "WildCircuit",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "WildCircuit-Linux-x86_64.tar.gz",
+          "target_id": "wildcircuit",
+          "target_title": "WildCircuit",
+          "platform": "linux-x86_64",
+          "size_bytes": 183435127,
+          "size_mb": 174.94,
+          "sha256": "e3fca4214c15d254c9577ae021f2c6ce33128ee63295aa5c7143b76734ddd794",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "WildCircuit-Web.zip",
+          "target_id": "wildcircuit",
+          "target_title": "WildCircuit",
+          "platform": "web-wasm",
+          "size_bytes": 296721165,
+          "size_mb": 282.98,
+          "sha256": "c9b34ca779360cb9493e1b5b39403df77e20a5283abc4d5ebecc5757aab69c19",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "WildCircuit-Windows-x86_64.zip",
+          "target_id": "wildcircuit",
+          "target_title": "WildCircuit",
+          "platform": "windows-x86_64",
+          "size_bytes": 189586610,
+          "size_mb": 180.8,
+          "sha256": "1bf9271858c8c0671d6671f2f6ad9659b08c4c43c8ace0c8300c8c8243fe8b7c",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "wildcircuit_v17.0.0_c50c785_android.apk",
+          "target_id": "wildcircuit",
+          "target_title": "WildCircuit",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "wildcircuit_v17.0.0_c50c785_linux-x86_64.tar.gz",
+          "target_id": "wildcircuit",
+          "target_title": "WildCircuit",
+          "platform": "linux-x86_64",
+          "size_bytes": 183435127,
+          "size_mb": 174.94,
+          "sha256": "e3fca4214c15d254c9577ae021f2c6ce33128ee63295aa5c7143b76734ddd794",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "wildcircuit_v17.0.0_c50c785_web.zip",
+          "target_id": "wildcircuit",
+          "target_title": "WildCircuit",
+          "platform": "web-wasm",
+          "size_bytes": 296721165,
+          "size_mb": 282.98,
+          "sha256": "c9b34ca779360cb9493e1b5b39403df77e20a5283abc4d5ebecc5757aab69c19",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "wildcircuit_v17.0.0_c50c785_windows-x86_64.zip",
+          "target_id": "wildcircuit",
+          "target_title": "WildCircuit",
+          "platform": "windows-x86_64",
+          "size_bytes": 189586610,
+          "size_mb": 180.8,
+          "sha256": "1bf9271858c8c0671d6671f2f6ad9659b08c4c43c8ace0c8300c8c8243fe8b7c",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        }
+      ]
     },
-    "AircraftFlight-Web.zip": {
-      "size_mb": 302.41,
-      "size_bytes": 317097580,
-      "sha256": "cf82c370fd4aa7463e1576ad6bf4aa80dbe6aca1046393f1d093837f4b067cdc",
-      "archive_members": [
-        "index.apple-touch-icon.png",
-        "index.apple-touch-icon.png.import",
-        "index.audio.worklet.js",
-        "index.html",
-        "index.icon.png",
-        "index.icon.png.import",
-        "index.js",
-        "index.pck",
-        "index.pck.part00",
-        "index.pck.part01",
-        "index.pck.part02",
-        "index.pck.part03",
-        "index.pck.part04",
-        "index.pck.part05",
-        "index.pck.part06",
-        "index.png",
-        "index.png.import",
-        "index.wasm",
-        "index.wasm.part00",
-        "index.wasm.part01",
-        "_headers",
-        "AircraftFlight.pck"
-      ],
-      "foreign_resources": 0
+    "skybound_odyssey": {
+      "type": "standalone",
+      "title": "SkyboundOdyssey",
+      "directory": "skybound-odyssey",
+      "main_scene": "res://games/skybound-odyssey/skybound_main.tscn",
+      "description": "Skybound Odyssey Platform Adventure",
+      "artifacts": [
+        {
+          "filename": "SkyboundOdyssey-Android.apk",
+          "target_id": "skybound_odyssey",
+          "target_title": "SkyboundOdyssey",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "SkyboundOdyssey-Linux-x86_64.tar.gz",
+          "target_id": "skybound_odyssey",
+          "target_title": "SkyboundOdyssey",
+          "platform": "linux-x86_64",
+          "size_bytes": 183432809,
+          "size_mb": 174.94,
+          "sha256": "688962411959d558f8e458859398e75b1a47b2b05a88c40806dad1fb6f53a28b",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "SkyboundOdyssey-Web.zip",
+          "target_id": "skybound_odyssey",
+          "target_title": "SkyboundOdyssey",
+          "platform": "web-wasm",
+          "size_bytes": 296718768,
+          "size_mb": 282.97,
+          "sha256": "0e5e9aa7321d548ef70007d1e3cbc19143bf4f0f3bb8c09aed7f327ef0c26700",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "SkyboundOdyssey-Windows-x86_64.zip",
+          "target_id": "skybound_odyssey",
+          "target_title": "SkyboundOdyssey",
+          "platform": "windows-x86_64",
+          "size_bytes": 189584230,
+          "size_mb": 180.8,
+          "sha256": "e9482ca41a7d53eb0ae007fbd3ab0ad3955a13105227945a843d602443329afd",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "skybound_odyssey_v17.0.0_c50c785_android.apk",
+          "target_id": "skybound_odyssey",
+          "target_title": "SkyboundOdyssey",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "skybound_odyssey_v17.0.0_c50c785_linux-x86_64.tar.gz",
+          "target_id": "skybound_odyssey",
+          "target_title": "SkyboundOdyssey",
+          "platform": "linux-x86_64",
+          "size_bytes": 183432809,
+          "size_mb": 174.94,
+          "sha256": "688962411959d558f8e458859398e75b1a47b2b05a88c40806dad1fb6f53a28b",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "skybound_odyssey_v17.0.0_c50c785_web.zip",
+          "target_id": "skybound_odyssey",
+          "target_title": "SkyboundOdyssey",
+          "platform": "web-wasm",
+          "size_bytes": 296718768,
+          "size_mb": 282.97,
+          "sha256": "0e5e9aa7321d548ef70007d1e3cbc19143bf4f0f3bb8c09aed7f327ef0c26700",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "skybound_odyssey_v17.0.0_c50c785_windows-x86_64.zip",
+          "target_id": "skybound_odyssey",
+          "target_title": "SkyboundOdyssey",
+          "platform": "windows-x86_64",
+          "size_bytes": 189584230,
+          "size_mb": 180.8,
+          "sha256": "e9482ca41a7d53eb0ae007fbd3ab0ad3955a13105227945a843d602443329afd",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        }
+      ]
     },
-    "AircraftFlight-Windows-x86_64.zip": {
-      "size_mb": 200.24,
-      "size_bytes": 209962955,
-      "sha256": "8fc3c54ade03fa2e8ef771e16d65c8f9792d0d45f05e5f4c92d2aa435e17155e",
-      "archive_members": [
-        "AircraftFlight.exe",
-        "AircraftFlight.pck",
-        "standalone_manifest.json"
-      ],
-      "foreign_resources": 0
+    "rocket_car": {
+      "type": "standalone",
+      "title": "NitroKick",
+      "directory": "rocket-car",
+      "main_scene": "res://games/rocket-car/rocket_car_main.tscn",
+      "description": "Nitro Kick Rocket Car Football",
+      "artifacts": [
+        {
+          "filename": "NitroKick-Android.apk",
+          "target_id": "rocket_car",
+          "target_title": "NitroKick",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "NitroKick-Linux-x86_64.tar.gz",
+          "target_id": "rocket_car",
+          "target_title": "NitroKick",
+          "platform": "linux-x86_64",
+          "size_bytes": 183455141,
+          "size_mb": 174.96,
+          "sha256": "2e01887ae50844893f80c59eeb56a1ef0287ca619b7ce5e9ecd51da905e49e6a",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "NitroKick-Web.zip",
+          "target_id": "rocket_car",
+          "target_title": "NitroKick",
+          "platform": "web-wasm",
+          "size_bytes": 296741294,
+          "size_mb": 282.99,
+          "sha256": "61cc229598024caaee2b764bd1e5b915446169532c64548145be4321ed5bbc0f",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "NitroKick-Windows-x86_64.zip",
+          "target_id": "rocket_car",
+          "target_title": "NitroKick",
+          "platform": "windows-x86_64",
+          "size_bytes": 189606743,
+          "size_mb": 180.82,
+          "sha256": "4322f124080f2007aca949033972e74a7f3a6fabe4b00e54b8781400647a364a",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "rocket_car_v17.0.0_c50c785_android.apk",
+          "target_id": "rocket_car",
+          "target_title": "NitroKick",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "rocket_car_v17.0.0_c50c785_linux-x86_64.tar.gz",
+          "target_id": "rocket_car",
+          "target_title": "NitroKick",
+          "platform": "linux-x86_64",
+          "size_bytes": 183455141,
+          "size_mb": 174.96,
+          "sha256": "2e01887ae50844893f80c59eeb56a1ef0287ca619b7ce5e9ecd51da905e49e6a",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "rocket_car_v17.0.0_c50c785_web.zip",
+          "target_id": "rocket_car",
+          "target_title": "NitroKick",
+          "platform": "web-wasm",
+          "size_bytes": 296741294,
+          "size_mb": 282.99,
+          "sha256": "61cc229598024caaee2b764bd1e5b915446169532c64548145be4321ed5bbc0f",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "rocket_car_v17.0.0_c50c785_windows-x86_64.zip",
+          "target_id": "rocket_car",
+          "target_title": "NitroKick",
+          "platform": "windows-x86_64",
+          "size_bytes": 189606743,
+          "size_mb": 180.82,
+          "sha256": "4322f124080f2007aca949033972e74a7f3a6fabe4b00e54b8781400647a364a",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        }
+      ]
     },
-    "ChromaRush-Linux-x86_64.tar.gz": {
-      "size_mb": 175.22,
-      "size_bytes": 183728965,
-      "sha256": "322c47a636b9da97bc531e0f639df8cceb20558e00c39dfb8c05b09f128bd317",
-      "archive_members": [],
-      "foreign_resources": 0
+    "subway_survival": {
+      "type": "standalone",
+      "title": "MetroSiege",
+      "directory": "subway-survival",
+      "main_scene": "res://games/subway-survival/subway_main.tscn",
+      "description": "Metro Siege Subterranean Survival",
+      "artifacts": [
+        {
+          "filename": "MetroSiege-Android.apk",
+          "target_id": "subway_survival",
+          "target_title": "MetroSiege",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "MetroSiege-Linux-x86_64.tar.gz",
+          "target_id": "subway_survival",
+          "target_title": "MetroSiege",
+          "platform": "linux-x86_64",
+          "size_bytes": 183448231,
+          "size_mb": 174.95,
+          "sha256": "ef7a2786f7a174dc741b271e5ffda225e6376994856b24704bcad7885d5749ef",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "MetroSiege-Web.zip",
+          "target_id": "subway_survival",
+          "target_title": "MetroSiege",
+          "platform": "web-wasm",
+          "size_bytes": 296733720,
+          "size_mb": 282.99,
+          "sha256": "b7319fb2349bfb07799c094116ec61a784a1f1ad1e5eafa082736460335637c5",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "MetroSiege-Windows-x86_64.zip",
+          "target_id": "subway_survival",
+          "target_title": "MetroSiege",
+          "platform": "windows-x86_64",
+          "size_bytes": 189599173,
+          "size_mb": 180.82,
+          "sha256": "25137b9c5b217a891a2ef114057d3f190db64738969996a982c350d73b2ec11d",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "subway_survival_v17.0.0_c50c785_android.apk",
+          "target_id": "subway_survival",
+          "target_title": "MetroSiege",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "subway_survival_v17.0.0_c50c785_linux-x86_64.tar.gz",
+          "target_id": "subway_survival",
+          "target_title": "MetroSiege",
+          "platform": "linux-x86_64",
+          "size_bytes": 183448231,
+          "size_mb": 174.95,
+          "sha256": "ef7a2786f7a174dc741b271e5ffda225e6376994856b24704bcad7885d5749ef",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "subway_survival_v17.0.0_c50c785_web.zip",
+          "target_id": "subway_survival",
+          "target_title": "MetroSiege",
+          "platform": "web-wasm",
+          "size_bytes": 296733720,
+          "size_mb": 282.99,
+          "sha256": "b7319fb2349bfb07799c094116ec61a784a1f1ad1e5eafa082736460335637c5",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "subway_survival_v17.0.0_c50c785_windows-x86_64.zip",
+          "target_id": "subway_survival",
+          "target_title": "MetroSiege",
+          "platform": "windows-x86_64",
+          "size_bytes": 189599173,
+          "size_mb": 180.82,
+          "sha256": "25137b9c5b217a891a2ef114057d3f190db64738969996a982c350d73b2ec11d",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        }
+      ]
     },
-    "ChromaRush-Web.zip": {
-      "size_mb": 283.25,
-      "size_bytes": 297012399,
-      "sha256": "3d6e04d3440faa42c45936b7d449efbee19351e425a906f63cb0343791f6ebdf",
-      "archive_members": [
-        "index.apple-touch-icon.png",
-        "index.apple-touch-icon.png.import",
-        "index.audio.worklet.js",
-        "index.html",
-        "index.icon.png",
-        "index.icon.png.import",
-        "index.js",
-        "index.pck",
-        "index.pck.part00",
-        "index.pck.part01",
-        "index.pck.part02",
-        "index.pck.part03",
-        "index.pck.part04",
-        "index.pck.part05",
-        "index.pck.part06",
-        "index.png",
-        "index.png.import",
-        "index.wasm",
-        "index.wasm.part00",
-        "index.wasm.part01",
-        "_headers",
-        "ChromaRush.pck"
-      ],
-      "foreign_resources": 0
+    "arena_fps": {
+      "type": "standalone",
+      "title": "IronCrucible",
+      "directory": "arena-fps",
+      "main_scene": "res://games/arena-fps/arena_fps_main.tscn",
+      "description": "Iron Crucible Arena FPS",
+      "artifacts": [
+        {
+          "filename": "IronCrucible-Android.apk",
+          "target_id": "arena_fps",
+          "target_title": "IronCrucible",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "IronCrucible-Linux-x86_64.tar.gz",
+          "target_id": "arena_fps",
+          "target_title": "IronCrucible",
+          "platform": "linux-x86_64",
+          "size_bytes": 183458836,
+          "size_mb": 174.96,
+          "sha256": "4c2eb9716fbb177a22f6b01bff0a222998e0f3ce87fc574e4fa3df58047346e7",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "IronCrucible-Web.zip",
+          "target_id": "arena_fps",
+          "target_title": "IronCrucible",
+          "platform": "web-wasm",
+          "size_bytes": 296744446,
+          "size_mb": 283.0,
+          "sha256": "33e32c854c359f8988369dbbbcc9b53d5217fe4043fed7ad1be461fb2157575a",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "IronCrucible-Windows-x86_64.zip",
+          "target_id": "arena_fps",
+          "target_title": "IronCrucible",
+          "platform": "windows-x86_64",
+          "size_bytes": 189609901,
+          "size_mb": 180.83,
+          "sha256": "9a663d00906a184f013cdd527a6037648ce3103c89fdf1a5ede1b49481cdb3e8",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "arena_fps_v17.0.0_c50c785_android.apk",
+          "target_id": "arena_fps",
+          "target_title": "IronCrucible",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "arena_fps_v17.0.0_c50c785_linux-x86_64.tar.gz",
+          "target_id": "arena_fps",
+          "target_title": "IronCrucible",
+          "platform": "linux-x86_64",
+          "size_bytes": 183458836,
+          "size_mb": 174.96,
+          "sha256": "4c2eb9716fbb177a22f6b01bff0a222998e0f3ce87fc574e4fa3df58047346e7",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "arena_fps_v17.0.0_c50c785_web.zip",
+          "target_id": "arena_fps",
+          "target_title": "IronCrucible",
+          "platform": "web-wasm",
+          "size_bytes": 296744446,
+          "size_mb": 283.0,
+          "sha256": "33e32c854c359f8988369dbbbcc9b53d5217fe4043fed7ad1be461fb2157575a",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "arena_fps_v17.0.0_c50c785_windows-x86_64.zip",
+          "target_id": "arena_fps",
+          "target_title": "IronCrucible",
+          "platform": "windows-x86_64",
+          "size_bytes": 189609901,
+          "size_mb": 180.83,
+          "sha256": "9a663d00906a184f013cdd527a6037648ce3103c89fdf1a5ede1b49481cdb3e8",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        }
+      ]
     },
-    "ChromaRush-Windows-x86_64.zip": {
-      "size_mb": 181.08,
-      "size_bytes": 189877766,
-      "sha256": "fa09f77299ddcc5ea0f8e626f440dac2eae0595e3429812eb4bad25314225db9",
-      "archive_members": [
-        "ChromaRush.exe",
-        "ChromaRush.pck",
-        "standalone_manifest.json"
-      ],
-      "foreign_resources": 0
+    "aircraft_flight": {
+      "type": "standalone",
+      "title": "AircraftFlight",
+      "directory": "aircraft-flight",
+      "main_scene": "res://games/aircraft-flight/aircraft_flight_main.tscn",
+      "description": "Apex Flight: Open Skies 3D Flight Simulator",
+      "artifacts": [
+        {
+          "filename": "AircraftFlight-Android.apk",
+          "target_id": "aircraft_flight",
+          "target_title": "AircraftFlight",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "AircraftFlight-Linux-x86_64.tar.gz",
+          "target_id": "aircraft_flight",
+          "target_title": "AircraftFlight",
+          "platform": "linux-x86_64",
+          "size_bytes": 203829745,
+          "size_mb": 194.39,
+          "sha256": "1cc12b1733e11dd5b9d8eeb65d1a1ed0abe74f6e31ac3743a38430d6ae791010",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "AircraftFlight-Web.zip",
+          "target_id": "aircraft_flight",
+          "target_title": "AircraftFlight",
+          "platform": "web-wasm",
+          "size_bytes": 317097770,
+          "size_mb": 302.41,
+          "sha256": "1038586208ec1c3e4f2067e56c85058b650785451228ca6a128f3c59c5ae8ef3",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "AircraftFlight-Windows-x86_64.zip",
+          "target_id": "aircraft_flight",
+          "target_title": "AircraftFlight",
+          "platform": "windows-x86_64",
+          "size_bytes": 209963229,
+          "size_mb": 200.24,
+          "sha256": "081434e2e7a4fd28c26e26ac57902adc4529f6cdbbd788ba29c4741810f321a2",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "aircraft_flight_v17.0.0_c50c785_android.apk",
+          "target_id": "aircraft_flight",
+          "target_title": "AircraftFlight",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "aircraft_flight_v17.0.0_c50c785_linux-x86_64.tar.gz",
+          "target_id": "aircraft_flight",
+          "target_title": "AircraftFlight",
+          "platform": "linux-x86_64",
+          "size_bytes": 203829745,
+          "size_mb": 194.39,
+          "sha256": "1cc12b1733e11dd5b9d8eeb65d1a1ed0abe74f6e31ac3743a38430d6ae791010",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "aircraft_flight_v17.0.0_c50c785_web.zip",
+          "target_id": "aircraft_flight",
+          "target_title": "AircraftFlight",
+          "platform": "web-wasm",
+          "size_bytes": 317097770,
+          "size_mb": 302.41,
+          "sha256": "1038586208ec1c3e4f2067e56c85058b650785451228ca6a128f3c59c5ae8ef3",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "aircraft_flight_v17.0.0_c50c785_windows-x86_64.zip",
+          "target_id": "aircraft_flight",
+          "target_title": "AircraftFlight",
+          "platform": "windows-x86_64",
+          "size_bytes": 209963229,
+          "size_mb": 200.24,
+          "sha256": "081434e2e7a4fd28c26e26ac57902adc4529f6cdbbd788ba29c4741810f321a2",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        }
+      ]
     },
-    "DriftStorm-Linux-x86_64.tar.gz": {
-      "size_mb": 175.06,
-      "size_bytes": 183560867,
-      "sha256": "f8fce2e41643a3c09821e10450df889f5cb6a36f2aae18102afc1ca1c4fafd12",
-      "archive_members": [],
-      "foreign_resources": 0
+    "urban_legends": {
+      "type": "standalone",
+      "title": "UrbanLegends",
+      "directory": "urban-legends",
+      "main_scene": "res://games/urban-legends/urban_legends_main.tscn",
+      "description": "Urban Legends: Open-World Driving & Stunt Simulator",
+      "artifacts": [
+        {
+          "filename": "UrbanLegends-Android.apk",
+          "target_id": "urban_legends",
+          "target_title": "UrbanLegends",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "UrbanLegends-Linux-x86_64.tar.gz",
+          "target_id": "urban_legends",
+          "target_title": "UrbanLegends",
+          "platform": "linux-x86_64",
+          "size_bytes": 203908282,
+          "size_mb": 194.46,
+          "sha256": "a04faef3677d654d5c373b0bc5cb0d351d56dd87c0a0fbf5874561cab5e873e0",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "UrbanLegends-Web.zip",
+          "target_id": "urban_legends",
+          "target_title": "UrbanLegends",
+          "platform": "web-wasm",
+          "size_bytes": 317179392,
+          "size_mb": 302.49,
+          "sha256": "d33260364931ad3f2571f05d996c4b142a98074bf0dc8fb4c153b0697cb44b73",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "UrbanLegends-Windows-x86_64.zip",
+          "target_id": "urban_legends",
+          "target_title": "UrbanLegends",
+          "platform": "windows-x86_64",
+          "size_bytes": 210044846,
+          "size_mb": 200.31,
+          "sha256": "aaeeada591b6e75380834fb3d526c7c574db749dc831d1b7400dabbd6c6a2e86",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "urban_legends_v17.0.0_c50c785_android.apk",
+          "target_id": "urban_legends",
+          "target_title": "UrbanLegends",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "urban_legends_v17.0.0_c50c785_linux-x86_64.tar.gz",
+          "target_id": "urban_legends",
+          "target_title": "UrbanLegends",
+          "platform": "linux-x86_64",
+          "size_bytes": 203908282,
+          "size_mb": 194.46,
+          "sha256": "a04faef3677d654d5c373b0bc5cb0d351d56dd87c0a0fbf5874561cab5e873e0",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "urban_legends_v17.0.0_c50c785_web.zip",
+          "target_id": "urban_legends",
+          "target_title": "UrbanLegends",
+          "platform": "web-wasm",
+          "size_bytes": 317179392,
+          "size_mb": 302.49,
+          "sha256": "d33260364931ad3f2571f05d996c4b142a98074bf0dc8fb4c153b0697cb44b73",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "urban_legends_v17.0.0_c50c785_windows-x86_64.zip",
+          "target_id": "urban_legends",
+          "target_title": "UrbanLegends",
+          "platform": "windows-x86_64",
+          "size_bytes": 210044846,
+          "size_mb": 200.31,
+          "sha256": "aaeeada591b6e75380834fb3d526c7c574db749dc831d1b7400dabbd6c6a2e86",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        }
+      ]
     },
-    "DriftStorm-Web.zip": {
-      "size_mb": 283.09,
-      "size_bytes": 296845896,
-      "sha256": "abd12060eea2ceb1404b4b23e27ca0f6371073a2197a9574015b9dd356680b7b",
-      "archive_members": [
-        "index.apple-touch-icon.png",
-        "index.apple-touch-icon.png.import",
-        "index.audio.worklet.js",
-        "index.html",
-        "index.icon.png",
-        "index.icon.png.import",
-        "index.js",
-        "index.pck",
-        "index.pck.part00",
-        "index.pck.part01",
-        "index.pck.part02",
-        "index.pck.part03",
-        "index.pck.part04",
-        "index.pck.part05",
-        "index.pck.part06",
-        "index.png",
-        "index.png.import",
-        "index.wasm",
-        "index.wasm.part00",
-        "index.wasm.part01",
-        "_headers",
-        "DriftStorm.pck"
-      ],
-      "foreign_resources": 0
-    },
-    "DriftStorm-Windows-x86_64.zip": {
-      "size_mb": 180.92,
-      "size_bytes": 189711264,
-      "sha256": "d4c6a3dc719deec08991392d1a9f0e935b0f497645544d9c4c02cc33bb4c025a",
-      "archive_members": [
-        "DriftStorm.exe",
-        "DriftStorm.pck",
-        "standalone_manifest.json"
-      ],
-      "foreign_resources": 0
-    },
-    "IronCrucible-Linux-x86_64.tar.gz": {
-      "size_mb": 174.96,
-      "size_bytes": 183458692,
-      "sha256": "108df34f874261619e4dc08ba8a0c15672f7af16e25ee33fbb8efddf61c9c232",
-      "archive_members": [],
-      "foreign_resources": 0
-    },
-    "IronCrucible-Web.zip": {
-      "size_mb": 283.0,
-      "size_bytes": 296744259,
-      "sha256": "e899d5aa51a537a5223e1b4c156f8b6e2250a30bb992d91a46cbf3d197bfb137",
-      "archive_members": [
-        "index.apple-touch-icon.png",
-        "index.apple-touch-icon.png.import",
-        "index.audio.worklet.js",
-        "index.html",
-        "index.icon.png",
-        "index.icon.png.import",
-        "index.js",
-        "index.pck",
-        "index.pck.part00",
-        "index.pck.part01",
-        "index.pck.part02",
-        "index.pck.part03",
-        "index.pck.part04",
-        "index.pck.part05",
-        "index.pck.part06",
-        "index.png",
-        "index.png.import",
-        "index.wasm",
-        "index.wasm.part00",
-        "index.wasm.part01",
-        "_headers",
-        "IronCrucible.pck"
-      ],
-      "foreign_resources": 0
-    },
-    "IronCrucible-Windows-x86_64.zip": {
-      "size_mb": 180.83,
-      "size_bytes": 189609630,
-      "sha256": "bb8ea8a236d27f699afda6ac0a489c6ff990cd5c60247fd392c89a3047c9e746",
-      "archive_members": [
-        "IronCrucible.exe",
-        "IronCrucible.pck",
-        "standalone_manifest.json"
-      ],
-      "foreign_resources": 0
-    },
-    "MetroSiege-Linux-x86_64.tar.gz": {
-      "size_mb": 174.95,
-      "size_bytes": 183448076,
-      "sha256": "f03550d2ac25cdd6160795030957ddccc09a5bd4f7dda87473580636b27d2229",
-      "archive_members": [],
-      "foreign_resources": 0
-    },
-    "MetroSiege-Web.zip": {
-      "size_mb": 282.99,
-      "size_bytes": 296733530,
-      "sha256": "8c95697fe2c5acb50b19bb661ad199f74f514be458d137a772f62b0ed9a80d00",
-      "archive_members": [
-        "index.apple-touch-icon.png",
-        "index.apple-touch-icon.png.import",
-        "index.audio.worklet.js",
-        "index.html",
-        "index.icon.png",
-        "index.icon.png.import",
-        "index.js",
-        "index.pck",
-        "index.pck.part00",
-        "index.pck.part01",
-        "index.pck.part02",
-        "index.pck.part03",
-        "index.pck.part04",
-        "index.pck.part05",
-        "index.pck.part06",
-        "index.png",
-        "index.png.import",
-        "index.wasm",
-        "index.wasm.part00",
-        "index.wasm.part01",
-        "_headers",
-        "MetroSiege.pck"
-      ],
-      "foreign_resources": 0
-    },
-    "MetroSiege-Windows-x86_64.zip": {
-      "size_mb": 180.82,
-      "size_bytes": 189598899,
-      "sha256": "85a04a29abddb037a5cc4f02cfcfe1e78e8cf53832d653dcdeac577bc472e914",
-      "archive_members": [
-        "MetroSiege.exe",
-        "MetroSiege.pck",
-        "standalone_manifest.json"
-      ],
-      "foreign_resources": 0
-    },
-    "NitroKick-Linux-x86_64.tar.gz": {
-      "size_mb": 174.96,
-      "size_bytes": 183454991,
-      "sha256": "05dcfb676310482fbb3287e5ad3dab59282dd2f1974da65aecdc6612d04cd81f",
-      "archive_members": [],
-      "foreign_resources": 0
-    },
-    "NitroKick-Web.zip": {
-      "size_mb": 282.99,
-      "size_bytes": 296741107,
-      "sha256": "06e846239717445934c8667649e3378bd26d37bb50d44e7544e8e30ed16f6e01",
-      "archive_members": [
-        "index.apple-touch-icon.png",
-        "index.apple-touch-icon.png.import",
-        "index.audio.worklet.js",
-        "index.html",
-        "index.icon.png",
-        "index.icon.png.import",
-        "index.js",
-        "index.pck",
-        "index.pck.part00",
-        "index.pck.part01",
-        "index.pck.part02",
-        "index.pck.part03",
-        "index.pck.part04",
-        "index.pck.part05",
-        "index.pck.part06",
-        "index.png",
-        "index.png.import",
-        "index.wasm",
-        "index.wasm.part00",
-        "index.wasm.part01",
-        "_headers",
-        "NitroKick.pck"
-      ],
-      "foreign_resources": 0
-    },
-    "NitroKick-Windows-x86_64.zip": {
-      "size_mb": 180.82,
-      "size_bytes": 189606472,
-      "sha256": "9b0df78ef5eac7227f2f76dfaa8fa39d9ec414a05c6d6987d1dcff31f8064629",
-      "archive_members": [
-        "NitroKick.exe",
-        "NitroKick.pck",
-        "standalone_manifest.json"
-      ],
-      "foreign_resources": 0
-    },
-    "RoboForgeArena-Linux-x86_64.tar.gz": {
-      "size_mb": 174.94,
-      "size_bytes": 183436473,
-      "sha256": "9d80dbfc48e3221bf6d229ac8c9c01ce5cbe479a1a4a39ea2cef993ea94b3173",
-      "archive_members": [],
-      "foreign_resources": 0
-    },
-    "RoboForgeArena-Web.zip": {
-      "size_mb": 282.98,
-      "size_bytes": 296722604,
-      "sha256": "43c47bce1221d783efe12dab8c5fd6d6211e7799b51f5912906b8d80534ee2b0",
-      "archive_members": [
-        "index.apple-touch-icon.png",
-        "index.apple-touch-icon.png.import",
-        "index.audio.worklet.js",
-        "index.html",
-        "index.icon.png",
-        "index.icon.png.import",
-        "index.js",
-        "index.pck",
-        "index.pck.part00",
-        "index.pck.part01",
-        "index.pck.part02",
-        "index.pck.part03",
-        "index.pck.part04",
-        "index.pck.part05",
-        "index.pck.part06",
-        "index.png",
-        "index.png.import",
-        "index.wasm",
-        "index.wasm.part00",
-        "index.wasm.part01",
-        "_headers",
-        "RoboForgeArena.pck"
-      ],
-      "foreign_resources": 0
-    },
-    "RoboForgeArena-Windows-x86_64.zip": {
-      "size_mb": 180.81,
-      "size_bytes": 189587983,
-      "sha256": "7d395033d4ab6611afca4c41cde61fbdb08b4978b1ca646b77db1b9413e10528",
-      "archive_members": [
-        "RoboForgeArena.exe",
-        "RoboForgeArena.pck",
-        "standalone_manifest.json"
-      ],
-      "foreign_resources": 0
-    },
-    "SkyboundOdyssey-Linux-x86_64.tar.gz": {
-      "size_mb": 174.94,
-      "size_bytes": 183432656,
-      "sha256": "d8d3117f8e3dfaf682b97fb9aeb692abe9f4dbb53f8ea9b34f2123e5b84b9135",
-      "archive_members": [],
-      "foreign_resources": 0
-    },
-    "SkyboundOdyssey-Web.zip": {
-      "size_mb": 282.97,
-      "size_bytes": 296718577,
-      "sha256": "ae0f2da787266e871bb8cbe07fb7c25d9a8e495baadf3fe26390774d06a2de03",
-      "archive_members": [
-        "index.apple-touch-icon.png",
-        "index.apple-touch-icon.png.import",
-        "index.audio.worklet.js",
-        "index.html",
-        "index.icon.png",
-        "index.icon.png.import",
-        "index.js",
-        "index.pck",
-        "index.pck.part00",
-        "index.pck.part01",
-        "index.pck.part02",
-        "index.pck.part03",
-        "index.pck.part04",
-        "index.pck.part05",
-        "index.pck.part06",
-        "index.png",
-        "index.png.import",
-        "index.wasm",
-        "index.wasm.part00",
-        "index.wasm.part01",
-        "_headers",
-        "SkyboundOdyssey.pck"
-      ],
-      "foreign_resources": 0
-    },
-    "SkyboundOdyssey-Windows-x86_64.zip": {
-      "size_mb": 180.8,
-      "size_bytes": 189583955,
-      "sha256": "f57b76f1a646fe0d5a86e46200a2c1cdf5bb55050d9b2481fa3dd7cbb697a38c",
-      "archive_members": [
-        "SkyboundOdyssey.exe",
-        "SkyboundOdyssey.pck",
-        "standalone_manifest.json"
-      ],
-      "foreign_resources": 0
-    },
-    "StrikeVector-Linux-x86_64.tar.gz": {
-      "size_mb": 175.13,
-      "size_bytes": 183634593,
-      "sha256": "0ea04818283de075d3eb0dc54d5a35a95b2ce95877ccfd62c9c08dd24f8ed3c5",
-      "archive_members": [],
-      "foreign_resources": 0
-    },
-    "StrikeVector-Web.zip": {
-      "size_mb": 283.17,
-      "size_bytes": 296920502,
-      "sha256": "bb2a01a307127a235c2cf04dcc99c42953e7c6c267512de27b795c8cd9c34dba",
-      "archive_members": [
-        "index.apple-touch-icon.png",
-        "index.apple-touch-icon.png.import",
-        "index.audio.worklet.js",
-        "index.html",
-        "index.icon.png",
-        "index.icon.png.import",
-        "index.js",
-        "index.pck",
-        "index.pck.part00",
-        "index.pck.part01",
-        "index.pck.part02",
-        "index.pck.part03",
-        "index.pck.part04",
-        "index.pck.part05",
-        "index.pck.part06",
-        "index.png",
-        "index.png.import",
-        "index.wasm",
-        "index.wasm.part00",
-        "index.wasm.part01",
-        "_headers",
-        "StrikeVector.pck"
-      ],
-      "foreign_resources": 0
-    },
-    "StrikeVector-Windows-x86_64.zip": {
-      "size_mb": 180.99,
-      "size_bytes": 189785871,
-      "sha256": "8d9296d524857113fa992457cff8ac8c6c953cae7aeb74339643af0538e94e53",
-      "archive_members": [
-        "StrikeVector.exe",
-        "StrikeVector.pck",
-        "standalone_manifest.json"
-      ],
-      "foreign_resources": 0
-    },
-    "UrbanLegends-Linux-x86_64.tar.gz": {
-      "size_mb": 194.46,
-      "size_bytes": 203908135,
-      "sha256": "d9cb02bc97449643e42d3b105ab63aaea1c1085207cf6d3e998437da71983b73",
-      "archive_members": [],
-      "foreign_resources": 0
-    },
-    "UrbanLegends-Web.zip": {
-      "size_mb": 302.49,
-      "size_bytes": 317179204,
-      "sha256": "8bbeccc53fe29d53f8439ba9a18f8a1690716a2ccb854f9718144e7923a74d9e",
-      "archive_members": [
-        "index.apple-touch-icon.png",
-        "index.apple-touch-icon.png.import",
-        "index.audio.worklet.js",
-        "index.html",
-        "index.icon.png",
-        "index.icon.png.import",
-        "index.js",
-        "index.pck",
-        "index.pck.part00",
-        "index.pck.part01",
-        "index.pck.part02",
-        "index.pck.part03",
-        "index.pck.part04",
-        "index.pck.part05",
-        "index.pck.part06",
-        "index.png",
-        "index.png.import",
-        "index.wasm",
-        "index.wasm.part00",
-        "index.wasm.part01",
-        "_headers",
-        "UrbanLegends.pck"
-      ],
-      "foreign_resources": 0
-    },
-    "UrbanLegends-Windows-x86_64.zip": {
-      "size_mb": 200.31,
-      "size_bytes": 210044574,
-      "sha256": "02a74a38f10717e62b8b64ff1cd2f57a9832831989534c64d0a7515880739cc9",
-      "archive_members": [
-        "UrbanLegends.exe",
-        "UrbanLegends.pck",
-        "standalone_manifest.json"
-      ],
-      "foreign_resources": 0
-    },
-    "WildCircuit-Linux-x86_64.tar.gz": {
-      "size_mb": 174.94,
-      "size_bytes": 183434977,
-      "sha256": "84db8b179230853de0fbd956eebedd0ab0c812a33ed956d7dfb93441cb19bf55",
-      "archive_members": [],
-      "foreign_resources": 0
-    },
-    "WildCircuit-Web.zip": {
-      "size_mb": 282.98,
-      "size_bytes": 296720979,
-      "sha256": "515529027f1d0ac0787e0dc0795044dfb9645b36db040b666df828c3a84641ec",
-      "archive_members": [
-        "index.apple-touch-icon.png",
-        "index.apple-touch-icon.png.import",
-        "index.audio.worklet.js",
-        "index.html",
-        "index.icon.png",
-        "index.icon.png.import",
-        "index.js",
-        "index.pck",
-        "index.pck.part00",
-        "index.pck.part01",
-        "index.pck.part02",
-        "index.pck.part03",
-        "index.pck.part04",
-        "index.pck.part05",
-        "index.pck.part06",
-        "index.png",
-        "index.png.import",
-        "index.wasm",
-        "index.wasm.part00",
-        "index.wasm.part01",
-        "_headers",
-        "WildCircuit.pck"
-      ],
-      "foreign_resources": 0
-    },
-    "WildCircuit-Windows-x86_64.zip": {
-      "size_mb": 180.8,
-      "size_bytes": 189586342,
-      "sha256": "c06cf50ae10f3373d9e1640e5de4756abe16b980ee714bfd22233313d6fa60d9",
-      "archive_members": [
-        "WildCircuit.exe",
-        "WildCircuit.pck",
-        "standalone_manifest.json"
-      ],
-      "foreign_resources": 0
-    },
+    "flight_simulator_6dof": {
+      "type": "standalone",
+      "title": "AeroSim6DoF",
+      "directory": "flight-simulator-6dof",
+      "main_scene": "res://games/flight-simulator-6dof/flight_sim_standalone.tscn",
+      "description": "AeroSim 6-DoF: Professional Aircraft Flight Simulator",
+      "artifacts": [
+        {
+          "filename": "AeroSim6DoF-Android.apk",
+          "target_id": "flight_simulator_6dof",
+          "target_title": "AeroSim6DoF",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "AeroSim6DoF-Linux-x86_64.tar.gz",
+          "target_id": "flight_simulator_6dof",
+          "target_title": "AeroSim6DoF",
+          "platform": "linux-x86_64",
+          "size_bytes": 213753983,
+          "size_mb": 203.85,
+          "sha256": "89e5c58422e81fdf33b843cda8a50b5fb45f61f38929179f53aa7128aa2e45df",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "AeroSim6DoF-Web.zip",
+          "target_id": "flight_simulator_6dof",
+          "target_title": "AeroSim6DoF",
+          "platform": "web-wasm",
+          "size_bytes": 327027127,
+          "size_mb": 311.88,
+          "sha256": "8a1dbb7abdcc8d242d012640c52e7f27794b8121d492f1512a4f62f3b376cb22",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "AeroSim6DoF-Windows-x86_64.zip",
+          "target_id": "flight_simulator_6dof",
+          "target_title": "AeroSim6DoF",
+          "platform": "windows-x86_64",
+          "size_bytes": 219892593,
+          "size_mb": 209.71,
+          "sha256": "13bbe2477ede34ff9ba525a122fc4c01dd15690ba09213d4ffd2dde6832abf99",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "flight_simulator_6dof_v17.0.0_c50c785_android.apk",
+          "target_id": "flight_simulator_6dof",
+          "target_title": "AeroSim6DoF",
+          "platform": "android-arm64",
+          "size_bytes": 114016668,
+          "size_mb": 108.73,
+          "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+          "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+        },
+        {
+          "filename": "flight_simulator_6dof_v17.0.0_c50c785_linux-x86_64.tar.gz",
+          "target_id": "flight_simulator_6dof",
+          "target_title": "AeroSim6DoF",
+          "platform": "linux-x86_64",
+          "size_bytes": 213753983,
+          "size_mb": 203.85,
+          "sha256": "89e5c58422e81fdf33b843cda8a50b5fb45f61f38929179f53aa7128aa2e45df",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        },
+        {
+          "filename": "flight_simulator_6dof_v17.0.0_c50c785_web.zip",
+          "target_id": "flight_simulator_6dof",
+          "target_title": "AeroSim6DoF",
+          "platform": "web-wasm",
+          "size_bytes": 327027127,
+          "size_mb": 311.88,
+          "sha256": "8a1dbb7abdcc8d242d012640c52e7f27794b8121d492f1512a4f62f3b376cb22",
+          "verification_tag": "BUILD-VERIFIED"
+        },
+        {
+          "filename": "flight_simulator_6dof_v17.0.0_c50c785_windows-x86_64.zip",
+          "target_id": "flight_simulator_6dof",
+          "target_title": "AeroSim6DoF",
+          "platform": "windows-x86_64",
+          "size_bytes": 219892593,
+          "size_mb": 209.71,
+          "sha256": "13bbe2477ede34ff9ba525a122fc4c01dd15690ba09213d4ffd2dde6832abf99",
+          "verification_tag": "GAMEPLAY-VERIFIED"
+        }
+      ]
+    }
+  },
+  "artifacts_inventory": {
     "VoltArena-Full-Android.apk": {
-      "size_mb": 108.73,
+      "filename": "VoltArena-Full-Android.apk",
+      "target_id": "voltarena_suite",
+      "target_title": "VoltArena Complete Suite",
+      "platform": "android-arm64",
       "size_bytes": 114016668,
+      "size_mb": 108.73,
       "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
-      "archive_members": [],
-      "is_full_suite": true
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
     },
     "VoltArena-Full-Linux-x86_64.tar.gz": {
+      "filename": "VoltArena-Full-Linux-x86_64.tar.gz",
+      "target_id": "voltarena_suite",
+      "target_title": "VoltArena Complete Suite",
+      "platform": "linux-x86_64",
+      "size_bytes": 104351849,
       "size_mb": 99.52,
-      "size_bytes": 104351832,
-      "sha256": "a2e4cf93f094ae3c253e391b60d889d2a1e6c7c9950e4873deb15883ace1abbe",
-      "archive_members": [],
-      "is_full_suite": true
+      "sha256": "81130b17571abd8f26d0838075eeca2351cc112b031980827b2d577a3066f7d5",
+      "verification_tag": "GAMEPLAY-VERIFIED"
     },
     "VoltArena-Full-Web.zip": {
-      "size_mb": 207.54,
+      "filename": "VoltArena-Full-Web.zip",
+      "target_id": "voltarena_suite",
+      "target_title": "VoltArena Complete Suite",
+      "platform": "web-wasm",
       "size_bytes": 217620725,
+      "size_mb": 207.54,
       "sha256": "1aa51890d6ebcc247c53c9f22ec3c92c57cb2c9e921fad01518eeee2360f0b7a",
-      "archive_members": [
-        "index.apple-touch-icon.png",
-        "index.apple-touch-icon.png.import",
-        "index.audio.worklet.js",
-        "index.html",
-        "index.icon.png",
-        "index.icon.png.import",
-        "index.js",
-        "index.pck",
-        "index.pck.part00",
-        "index.pck.part01",
-        "index.pck.part02",
-        "index.pck.part03",
-        "index.pck.part04",
-        "index.pck.part05",
-        "index.pck.part06",
-        "index.png",
-        "index.png.import",
-        "index.wasm",
-        "index.wasm.part00",
-        "index.wasm.part01",
-        "_headers"
-      ],
-      "is_full_suite": true
+      "verification_tag": "BUILD-VERIFIED"
     },
     "VoltArena-Full-Windows-x86_64.zip": {
+      "filename": "VoltArena-Full-Windows-x86_64.zip",
+      "target_id": "voltarena_suite",
+      "target_title": "VoltArena Complete Suite",
+      "platform": "windows-x86_64",
+      "size_bytes": 110486132,
       "size_mb": 105.37,
-      "size_bytes": 110486083,
-      "sha256": "bb096c492a5ca9682bf7b1cbb4b42c9f6dde88dbfc21a0e410eea105cefc465a",
-      "archive_members": [
-        "VoltArena.exe",
-        "suite_manifest.json"
-      ],
-      "is_full_suite": true
+      "sha256": "b56e39ba17d1e986d36aca3bea697bbdd85b34acf023d3546d652b4d658cd1c2",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "voltarena_suite_v17.0.0_c50c785_android.apk": {
+      "filename": "voltarena_suite_v17.0.0_c50c785_android.apk",
+      "target_id": "voltarena_suite",
+      "target_title": "VoltArena Complete Suite",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "voltarena_suite_v17.0.0_c50c785_linux-x86_64.tar.gz": {
+      "filename": "voltarena_suite_v17.0.0_c50c785_linux-x86_64.tar.gz",
+      "target_id": "voltarena_suite",
+      "target_title": "VoltArena Complete Suite",
+      "platform": "linux-x86_64",
+      "size_bytes": 104351849,
+      "size_mb": 99.52,
+      "sha256": "81130b17571abd8f26d0838075eeca2351cc112b031980827b2d577a3066f7d5",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "voltarena_suite_v17.0.0_c50c785_web.zip": {
+      "filename": "voltarena_suite_v17.0.0_c50c785_web.zip",
+      "target_id": "voltarena_suite",
+      "target_title": "VoltArena Complete Suite",
+      "platform": "web-wasm",
+      "size_bytes": 217620725,
+      "size_mb": 207.54,
+      "sha256": "1aa51890d6ebcc247c53c9f22ec3c92c57cb2c9e921fad01518eeee2360f0b7a",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "voltarena_suite_v17.0.0_c50c785_windows-x86_64.zip": {
+      "filename": "voltarena_suite_v17.0.0_c50c785_windows-x86_64.zip",
+      "target_id": "voltarena_suite",
+      "target_title": "VoltArena Complete Suite",
+      "platform": "windows-x86_64",
+      "size_bytes": 110486132,
+      "size_mb": 105.37,
+      "sha256": "b56e39ba17d1e986d36aca3bea697bbdd85b34acf023d3546d652b4d658cd1c2",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "AeroRush-Android.apk": {
+      "filename": "AeroRush-Android.apk",
+      "target_id": "aero_rush",
+      "target_title": "AeroRush",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "AeroRush-Linux-x86_64.tar.gz": {
+      "filename": "AeroRush-Linux-x86_64.tar.gz",
+      "target_id": "aero_rush",
+      "target_title": "AeroRush",
+      "platform": "linux-x86_64",
+      "size_bytes": 189096416,
+      "size_mb": 180.34,
+      "sha256": "677677353f54ae23959fd9fa0b479832d98c860fd2b89c376eb4033c66fa2c20",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "AeroRush-Web.zip": {
+      "filename": "AeroRush-Web.zip",
+      "target_id": "aero_rush",
+      "target_title": "AeroRush",
+      "platform": "web-wasm",
+      "size_bytes": 302383055,
+      "size_mb": 288.37,
+      "sha256": "54ffb408cee504ed73037bec1a72facbe96251d13b239f760b15a7db76fbbfb5",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "AeroRush-Windows-x86_64.zip": {
+      "filename": "AeroRush-Windows-x86_64.zip",
+      "target_id": "aero_rush",
+      "target_title": "AeroRush",
+      "platform": "windows-x86_64",
+      "size_bytes": 195248496,
+      "size_mb": 186.2,
+      "sha256": "387a763f4367d692a4b0518cf188e9c6430969e8c08993dedda9ba4b49962016",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "AeroSim6DoF-Android.apk": {
+      "filename": "AeroSim6DoF-Android.apk",
+      "target_id": "flight_simulator_6dof",
+      "target_title": "AeroSim6DoF",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "AeroSim6DoF-Linux-x86_64.tar.gz": {
+      "filename": "AeroSim6DoF-Linux-x86_64.tar.gz",
+      "target_id": "flight_simulator_6dof",
+      "target_title": "AeroSim6DoF",
+      "platform": "linux-x86_64",
+      "size_bytes": 213753983,
+      "size_mb": 203.85,
+      "sha256": "89e5c58422e81fdf33b843cda8a50b5fb45f61f38929179f53aa7128aa2e45df",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "AeroSim6DoF-Web.zip": {
+      "filename": "AeroSim6DoF-Web.zip",
+      "target_id": "flight_simulator_6dof",
+      "target_title": "AeroSim6DoF",
+      "platform": "web-wasm",
+      "size_bytes": 327027127,
+      "size_mb": 311.88,
+      "sha256": "8a1dbb7abdcc8d242d012640c52e7f27794b8121d492f1512a4f62f3b376cb22",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "AeroSim6DoF-Windows-x86_64.zip": {
+      "filename": "AeroSim6DoF-Windows-x86_64.zip",
+      "target_id": "flight_simulator_6dof",
+      "target_title": "AeroSim6DoF",
+      "platform": "windows-x86_64",
+      "size_bytes": 219892593,
+      "size_mb": 209.71,
+      "sha256": "13bbe2477ede34ff9ba525a122fc4c01dd15690ba09213d4ffd2dde6832abf99",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "AircraftFlight-Android.apk": {
+      "filename": "AircraftFlight-Android.apk",
+      "target_id": "aircraft_flight",
+      "target_title": "AircraftFlight",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "AircraftFlight-Linux-x86_64.tar.gz": {
+      "filename": "AircraftFlight-Linux-x86_64.tar.gz",
+      "target_id": "aircraft_flight",
+      "target_title": "AircraftFlight",
+      "platform": "linux-x86_64",
+      "size_bytes": 203829745,
+      "size_mb": 194.39,
+      "sha256": "1cc12b1733e11dd5b9d8eeb65d1a1ed0abe74f6e31ac3743a38430d6ae791010",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "AircraftFlight-Web.zip": {
+      "filename": "AircraftFlight-Web.zip",
+      "target_id": "aircraft_flight",
+      "target_title": "AircraftFlight",
+      "platform": "web-wasm",
+      "size_bytes": 317097770,
+      "size_mb": 302.41,
+      "sha256": "1038586208ec1c3e4f2067e56c85058b650785451228ca6a128f3c59c5ae8ef3",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "AircraftFlight-Windows-x86_64.zip": {
+      "filename": "AircraftFlight-Windows-x86_64.zip",
+      "target_id": "aircraft_flight",
+      "target_title": "AircraftFlight",
+      "platform": "windows-x86_64",
+      "size_bytes": 209963229,
+      "size_mb": 200.24,
+      "sha256": "081434e2e7a4fd28c26e26ac57902adc4529f6cdbbd788ba29c4741810f321a2",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "ChromaRush-Android.apk": {
+      "filename": "ChromaRush-Android.apk",
+      "target_id": "chroma_rush",
+      "target_title": "ChromaRush",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "ChromaRush-Linux-x86_64.tar.gz": {
+      "filename": "ChromaRush-Linux-x86_64.tar.gz",
+      "target_id": "chroma_rush",
+      "target_title": "ChromaRush",
+      "platform": "linux-x86_64",
+      "size_bytes": 183729113,
+      "size_mb": 175.22,
+      "sha256": "4480f38865674b101e2a705f42ab40fcd4681921956d8707193a1ec1fe601ed9",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "ChromaRush-Web.zip": {
+      "filename": "ChromaRush-Web.zip",
+      "target_id": "chroma_rush",
+      "target_title": "ChromaRush",
+      "platform": "web-wasm",
+      "size_bytes": 297012585,
+      "size_mb": 283.25,
+      "sha256": "ee8aa3bb7e99f488fe5bddbbc638ce77abdd9e16d253c9821c2321c59507d0e6",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "ChromaRush-Windows-x86_64.zip": {
+      "filename": "ChromaRush-Windows-x86_64.zip",
+      "target_id": "chroma_rush",
+      "target_title": "ChromaRush",
+      "platform": "windows-x86_64",
+      "size_bytes": 189878033,
+      "size_mb": 181.08,
+      "sha256": "aad9bd8faf720c7009c9a0956316ce22d1bec49a399f55e7dc8106b904e4ce0a",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "DriftStorm-Android.apk": {
+      "filename": "DriftStorm-Android.apk",
+      "target_id": "kart_racing",
+      "target_title": "DriftStorm",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "DriftStorm-Linux-x86_64.tar.gz": {
+      "filename": "DriftStorm-Linux-x86_64.tar.gz",
+      "target_id": "kart_racing",
+      "target_title": "DriftStorm",
+      "platform": "linux-x86_64",
+      "size_bytes": 183561017,
+      "size_mb": 175.06,
+      "sha256": "81dde06af7719227a6fecb688409d0f4960f825486153b7465490efb85ef3f47",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "DriftStorm-Web.zip": {
+      "filename": "DriftStorm-Web.zip",
+      "target_id": "kart_racing",
+      "target_title": "DriftStorm",
+      "platform": "web-wasm",
+      "size_bytes": 296846083,
+      "size_mb": 283.09,
+      "sha256": "f3d0c1c3fa39eac1ec95fb5a09d7ffe1f3f4bea834d9070e9f47d61151cc9565",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "DriftStorm-Windows-x86_64.zip": {
+      "filename": "DriftStorm-Windows-x86_64.zip",
+      "target_id": "kart_racing",
+      "target_title": "DriftStorm",
+      "platform": "windows-x86_64",
+      "size_bytes": 189711532,
+      "size_mb": 180.92,
+      "sha256": "c901d2ca547298ca6e3a31b0d0ca081df82bd9429bbfb07d9f49a86b491bcddc",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "IronCrucible-Android.apk": {
+      "filename": "IronCrucible-Android.apk",
+      "target_id": "arena_fps",
+      "target_title": "IronCrucible",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "IronCrucible-Linux-x86_64.tar.gz": {
+      "filename": "IronCrucible-Linux-x86_64.tar.gz",
+      "target_id": "arena_fps",
+      "target_title": "IronCrucible",
+      "platform": "linux-x86_64",
+      "size_bytes": 183458836,
+      "size_mb": 174.96,
+      "sha256": "4c2eb9716fbb177a22f6b01bff0a222998e0f3ce87fc574e4fa3df58047346e7",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "IronCrucible-Web.zip": {
+      "filename": "IronCrucible-Web.zip",
+      "target_id": "arena_fps",
+      "target_title": "IronCrucible",
+      "platform": "web-wasm",
+      "size_bytes": 296744446,
+      "size_mb": 283.0,
+      "sha256": "33e32c854c359f8988369dbbbcc9b53d5217fe4043fed7ad1be461fb2157575a",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "IronCrucible-Windows-x86_64.zip": {
+      "filename": "IronCrucible-Windows-x86_64.zip",
+      "target_id": "arena_fps",
+      "target_title": "IronCrucible",
+      "platform": "windows-x86_64",
+      "size_bytes": 189609901,
+      "size_mb": 180.83,
+      "sha256": "9a663d00906a184f013cdd527a6037648ce3103c89fdf1a5ede1b49481cdb3e8",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "MetroSiege-Android.apk": {
+      "filename": "MetroSiege-Android.apk",
+      "target_id": "subway_survival",
+      "target_title": "MetroSiege",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "MetroSiege-Linux-x86_64.tar.gz": {
+      "filename": "MetroSiege-Linux-x86_64.tar.gz",
+      "target_id": "subway_survival",
+      "target_title": "MetroSiege",
+      "platform": "linux-x86_64",
+      "size_bytes": 183448231,
+      "size_mb": 174.95,
+      "sha256": "ef7a2786f7a174dc741b271e5ffda225e6376994856b24704bcad7885d5749ef",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "MetroSiege-Web.zip": {
+      "filename": "MetroSiege-Web.zip",
+      "target_id": "subway_survival",
+      "target_title": "MetroSiege",
+      "platform": "web-wasm",
+      "size_bytes": 296733720,
+      "size_mb": 282.99,
+      "sha256": "b7319fb2349bfb07799c094116ec61a784a1f1ad1e5eafa082736460335637c5",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "MetroSiege-Windows-x86_64.zip": {
+      "filename": "MetroSiege-Windows-x86_64.zip",
+      "target_id": "subway_survival",
+      "target_title": "MetroSiege",
+      "platform": "windows-x86_64",
+      "size_bytes": 189599173,
+      "size_mb": 180.82,
+      "sha256": "25137b9c5b217a891a2ef114057d3f190db64738969996a982c350d73b2ec11d",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "NitroKick-Android.apk": {
+      "filename": "NitroKick-Android.apk",
+      "target_id": "rocket_car",
+      "target_title": "NitroKick",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "NitroKick-Linux-x86_64.tar.gz": {
+      "filename": "NitroKick-Linux-x86_64.tar.gz",
+      "target_id": "rocket_car",
+      "target_title": "NitroKick",
+      "platform": "linux-x86_64",
+      "size_bytes": 183455141,
+      "size_mb": 174.96,
+      "sha256": "2e01887ae50844893f80c59eeb56a1ef0287ca619b7ce5e9ecd51da905e49e6a",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "NitroKick-Web.zip": {
+      "filename": "NitroKick-Web.zip",
+      "target_id": "rocket_car",
+      "target_title": "NitroKick",
+      "platform": "web-wasm",
+      "size_bytes": 296741294,
+      "size_mb": 282.99,
+      "sha256": "61cc229598024caaee2b764bd1e5b915446169532c64548145be4321ed5bbc0f",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "NitroKick-Windows-x86_64.zip": {
+      "filename": "NitroKick-Windows-x86_64.zip",
+      "target_id": "rocket_car",
+      "target_title": "NitroKick",
+      "platform": "windows-x86_64",
+      "size_bytes": 189606743,
+      "size_mb": 180.82,
+      "sha256": "4322f124080f2007aca949033972e74a7f3a6fabe4b00e54b8781400647a364a",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "RoboForgeArena-Android.apk": {
+      "filename": "RoboForgeArena-Android.apk",
+      "target_id": "roboforge_arena",
+      "target_title": "RoboForgeArena",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "RoboForgeArena-Linux-x86_64.tar.gz": {
+      "filename": "RoboForgeArena-Linux-x86_64.tar.gz",
+      "target_id": "roboforge_arena",
+      "target_title": "RoboForgeArena",
+      "platform": "linux-x86_64",
+      "size_bytes": 183436703,
+      "size_mb": 174.94,
+      "sha256": "e905132b2ef8237f4c68954b06d08ee19c53b984566b6fd730d0ec450b50d477",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "RoboForgeArena-Web.zip": {
+      "filename": "RoboForgeArena-Web.zip",
+      "target_id": "roboforge_arena",
+      "target_title": "RoboForgeArena",
+      "platform": "web-wasm",
+      "size_bytes": 296722795,
+      "size_mb": 282.98,
+      "sha256": "92a794783db444522a426baf2f723b655c3d70ca157ea8f7a33ab017fb935432",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "RoboForgeArena-Windows-x86_64.zip": {
+      "filename": "RoboForgeArena-Windows-x86_64.zip",
+      "target_id": "roboforge_arena",
+      "target_title": "RoboForgeArena",
+      "platform": "windows-x86_64",
+      "size_bytes": 189588255,
+      "size_mb": 180.81,
+      "sha256": "698db819759e11682556a99ab72b79987920c65213cea09d80e9fb579c6af973",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "SkyboundOdyssey-Android.apk": {
+      "filename": "SkyboundOdyssey-Android.apk",
+      "target_id": "skybound_odyssey",
+      "target_title": "SkyboundOdyssey",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "SkyboundOdyssey-Linux-x86_64.tar.gz": {
+      "filename": "SkyboundOdyssey-Linux-x86_64.tar.gz",
+      "target_id": "skybound_odyssey",
+      "target_title": "SkyboundOdyssey",
+      "platform": "linux-x86_64",
+      "size_bytes": 183432809,
+      "size_mb": 174.94,
+      "sha256": "688962411959d558f8e458859398e75b1a47b2b05a88c40806dad1fb6f53a28b",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "SkyboundOdyssey-Web.zip": {
+      "filename": "SkyboundOdyssey-Web.zip",
+      "target_id": "skybound_odyssey",
+      "target_title": "SkyboundOdyssey",
+      "platform": "web-wasm",
+      "size_bytes": 296718768,
+      "size_mb": 282.97,
+      "sha256": "0e5e9aa7321d548ef70007d1e3cbc19143bf4f0f3bb8c09aed7f327ef0c26700",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "SkyboundOdyssey-Windows-x86_64.zip": {
+      "filename": "SkyboundOdyssey-Windows-x86_64.zip",
+      "target_id": "skybound_odyssey",
+      "target_title": "SkyboundOdyssey",
+      "platform": "windows-x86_64",
+      "size_bytes": 189584230,
+      "size_mb": 180.8,
+      "sha256": "e9482ca41a7d53eb0ae007fbd3ab0ad3955a13105227945a843d602443329afd",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "StrikeVector-Android.apk": {
+      "filename": "StrikeVector-Android.apk",
+      "target_id": "strike_vector",
+      "target_title": "StrikeVector",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "StrikeVector-Linux-x86_64.tar.gz": {
+      "filename": "StrikeVector-Linux-x86_64.tar.gz",
+      "target_id": "strike_vector",
+      "target_title": "StrikeVector",
+      "platform": "linux-x86_64",
+      "size_bytes": 183634745,
+      "size_mb": 175.13,
+      "sha256": "ef90a41ae1f81f09b39b1b7c23f4e62932032889fa103f4d7c4d53be81428589",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "StrikeVector-Web.zip": {
+      "filename": "StrikeVector-Web.zip",
+      "target_id": "strike_vector",
+      "target_title": "StrikeVector",
+      "platform": "web-wasm",
+      "size_bytes": 296920691,
+      "size_mb": 283.17,
+      "sha256": "b7d56dab9df8941c6b0b3fcd6bd9984acf8352a0ab9c95732d981e01d977130e",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "StrikeVector-Windows-x86_64.zip": {
+      "filename": "StrikeVector-Windows-x86_64.zip",
+      "target_id": "strike_vector",
+      "target_title": "StrikeVector",
+      "platform": "windows-x86_64",
+      "size_bytes": 189786144,
+      "size_mb": 180.99,
+      "sha256": "bb340ea93fa75c74436db02b49641e8fd7fa4a106384e3e40e8660d03ff34baf",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "UrbanLegends-Android.apk": {
+      "filename": "UrbanLegends-Android.apk",
+      "target_id": "urban_legends",
+      "target_title": "UrbanLegends",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "UrbanLegends-Linux-x86_64.tar.gz": {
+      "filename": "UrbanLegends-Linux-x86_64.tar.gz",
+      "target_id": "urban_legends",
+      "target_title": "UrbanLegends",
+      "platform": "linux-x86_64",
+      "size_bytes": 203908282,
+      "size_mb": 194.46,
+      "sha256": "a04faef3677d654d5c373b0bc5cb0d351d56dd87c0a0fbf5874561cab5e873e0",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "UrbanLegends-Web.zip": {
+      "filename": "UrbanLegends-Web.zip",
+      "target_id": "urban_legends",
+      "target_title": "UrbanLegends",
+      "platform": "web-wasm",
+      "size_bytes": 317179392,
+      "size_mb": 302.49,
+      "sha256": "d33260364931ad3f2571f05d996c4b142a98074bf0dc8fb4c153b0697cb44b73",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "UrbanLegends-Windows-x86_64.zip": {
+      "filename": "UrbanLegends-Windows-x86_64.zip",
+      "target_id": "urban_legends",
+      "target_title": "UrbanLegends",
+      "platform": "windows-x86_64",
+      "size_bytes": 210044846,
+      "size_mb": 200.31,
+      "sha256": "aaeeada591b6e75380834fb3d526c7c574db749dc831d1b7400dabbd6c6a2e86",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "WildCircuit-Android.apk": {
+      "filename": "WildCircuit-Android.apk",
+      "target_id": "wildcircuit",
+      "target_title": "WildCircuit",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "WildCircuit-Linux-x86_64.tar.gz": {
+      "filename": "WildCircuit-Linux-x86_64.tar.gz",
+      "target_id": "wildcircuit",
+      "target_title": "WildCircuit",
+      "platform": "linux-x86_64",
+      "size_bytes": 183435127,
+      "size_mb": 174.94,
+      "sha256": "e3fca4214c15d254c9577ae021f2c6ce33128ee63295aa5c7143b76734ddd794",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "WildCircuit-Web.zip": {
+      "filename": "WildCircuit-Web.zip",
+      "target_id": "wildcircuit",
+      "target_title": "WildCircuit",
+      "platform": "web-wasm",
+      "size_bytes": 296721165,
+      "size_mb": 282.98,
+      "sha256": "c9b34ca779360cb9493e1b5b39403df77e20a5283abc4d5ebecc5757aab69c19",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "WildCircuit-Windows-x86_64.zip": {
+      "filename": "WildCircuit-Windows-x86_64.zip",
+      "target_id": "wildcircuit",
+      "target_title": "WildCircuit",
+      "platform": "windows-x86_64",
+      "size_bytes": 189586610,
+      "size_mb": 180.8,
+      "sha256": "1bf9271858c8c0671d6671f2f6ad9659b08c4c43c8ace0c8300c8c8243fe8b7c",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "aero_rush_v17.0.0_c50c785_android.apk": {
+      "filename": "aero_rush_v17.0.0_c50c785_android.apk",
+      "target_id": "aero_rush",
+      "target_title": "AeroRush",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "aero_rush_v17.0.0_c50c785_linux-x86_64.tar.gz": {
+      "filename": "aero_rush_v17.0.0_c50c785_linux-x86_64.tar.gz",
+      "target_id": "aero_rush",
+      "target_title": "AeroRush",
+      "platform": "linux-x86_64",
+      "size_bytes": 189096416,
+      "size_mb": 180.34,
+      "sha256": "677677353f54ae23959fd9fa0b479832d98c860fd2b89c376eb4033c66fa2c20",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "aero_rush_v17.0.0_c50c785_web.zip": {
+      "filename": "aero_rush_v17.0.0_c50c785_web.zip",
+      "target_id": "aero_rush",
+      "target_title": "AeroRush",
+      "platform": "web-wasm",
+      "size_bytes": 302383055,
+      "size_mb": 288.37,
+      "sha256": "54ffb408cee504ed73037bec1a72facbe96251d13b239f760b15a7db76fbbfb5",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "aero_rush_v17.0.0_c50c785_windows-x86_64.zip": {
+      "filename": "aero_rush_v17.0.0_c50c785_windows-x86_64.zip",
+      "target_id": "aero_rush",
+      "target_title": "AeroRush",
+      "platform": "windows-x86_64",
+      "size_bytes": 195248496,
+      "size_mb": 186.2,
+      "sha256": "387a763f4367d692a4b0518cf188e9c6430969e8c08993dedda9ba4b49962016",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "aircraft_flight_v17.0.0_c50c785_android.apk": {
+      "filename": "aircraft_flight_v17.0.0_c50c785_android.apk",
+      "target_id": "aircraft_flight",
+      "target_title": "AircraftFlight",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "aircraft_flight_v17.0.0_c50c785_linux-x86_64.tar.gz": {
+      "filename": "aircraft_flight_v17.0.0_c50c785_linux-x86_64.tar.gz",
+      "target_id": "aircraft_flight",
+      "target_title": "AircraftFlight",
+      "platform": "linux-x86_64",
+      "size_bytes": 203829745,
+      "size_mb": 194.39,
+      "sha256": "1cc12b1733e11dd5b9d8eeb65d1a1ed0abe74f6e31ac3743a38430d6ae791010",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "aircraft_flight_v17.0.0_c50c785_web.zip": {
+      "filename": "aircraft_flight_v17.0.0_c50c785_web.zip",
+      "target_id": "aircraft_flight",
+      "target_title": "AircraftFlight",
+      "platform": "web-wasm",
+      "size_bytes": 317097770,
+      "size_mb": 302.41,
+      "sha256": "1038586208ec1c3e4f2067e56c85058b650785451228ca6a128f3c59c5ae8ef3",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "aircraft_flight_v17.0.0_c50c785_windows-x86_64.zip": {
+      "filename": "aircraft_flight_v17.0.0_c50c785_windows-x86_64.zip",
+      "target_id": "aircraft_flight",
+      "target_title": "AircraftFlight",
+      "platform": "windows-x86_64",
+      "size_bytes": 209963229,
+      "size_mb": 200.24,
+      "sha256": "081434e2e7a4fd28c26e26ac57902adc4529f6cdbbd788ba29c4741810f321a2",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "arena_fps_v17.0.0_c50c785_android.apk": {
+      "filename": "arena_fps_v17.0.0_c50c785_android.apk",
+      "target_id": "arena_fps",
+      "target_title": "IronCrucible",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "arena_fps_v17.0.0_c50c785_linux-x86_64.tar.gz": {
+      "filename": "arena_fps_v17.0.0_c50c785_linux-x86_64.tar.gz",
+      "target_id": "arena_fps",
+      "target_title": "IronCrucible",
+      "platform": "linux-x86_64",
+      "size_bytes": 183458836,
+      "size_mb": 174.96,
+      "sha256": "4c2eb9716fbb177a22f6b01bff0a222998e0f3ce87fc574e4fa3df58047346e7",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "arena_fps_v17.0.0_c50c785_web.zip": {
+      "filename": "arena_fps_v17.0.0_c50c785_web.zip",
+      "target_id": "arena_fps",
+      "target_title": "IronCrucible",
+      "platform": "web-wasm",
+      "size_bytes": 296744446,
+      "size_mb": 283.0,
+      "sha256": "33e32c854c359f8988369dbbbcc9b53d5217fe4043fed7ad1be461fb2157575a",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "arena_fps_v17.0.0_c50c785_windows-x86_64.zip": {
+      "filename": "arena_fps_v17.0.0_c50c785_windows-x86_64.zip",
+      "target_id": "arena_fps",
+      "target_title": "IronCrucible",
+      "platform": "windows-x86_64",
+      "size_bytes": 189609901,
+      "size_mb": 180.83,
+      "sha256": "9a663d00906a184f013cdd527a6037648ce3103c89fdf1a5ede1b49481cdb3e8",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "chroma_rush_v17.0.0_c50c785_android.apk": {
+      "filename": "chroma_rush_v17.0.0_c50c785_android.apk",
+      "target_id": "chroma_rush",
+      "target_title": "ChromaRush",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "chroma_rush_v17.0.0_c50c785_linux-x86_64.tar.gz": {
+      "filename": "chroma_rush_v17.0.0_c50c785_linux-x86_64.tar.gz",
+      "target_id": "chroma_rush",
+      "target_title": "ChromaRush",
+      "platform": "linux-x86_64",
+      "size_bytes": 183729113,
+      "size_mb": 175.22,
+      "sha256": "4480f38865674b101e2a705f42ab40fcd4681921956d8707193a1ec1fe601ed9",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "chroma_rush_v17.0.0_c50c785_web.zip": {
+      "filename": "chroma_rush_v17.0.0_c50c785_web.zip",
+      "target_id": "chroma_rush",
+      "target_title": "ChromaRush",
+      "platform": "web-wasm",
+      "size_bytes": 297012585,
+      "size_mb": 283.25,
+      "sha256": "ee8aa3bb7e99f488fe5bddbbc638ce77abdd9e16d253c9821c2321c59507d0e6",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "chroma_rush_v17.0.0_c50c785_windows-x86_64.zip": {
+      "filename": "chroma_rush_v17.0.0_c50c785_windows-x86_64.zip",
+      "target_id": "chroma_rush",
+      "target_title": "ChromaRush",
+      "platform": "windows-x86_64",
+      "size_bytes": 189878033,
+      "size_mb": 181.08,
+      "sha256": "aad9bd8faf720c7009c9a0956316ce22d1bec49a399f55e7dc8106b904e4ce0a",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "flight_simulator_6dof_v17.0.0_c50c785_android.apk": {
+      "filename": "flight_simulator_6dof_v17.0.0_c50c785_android.apk",
+      "target_id": "flight_simulator_6dof",
+      "target_title": "AeroSim6DoF",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "flight_simulator_6dof_v17.0.0_c50c785_linux-x86_64.tar.gz": {
+      "filename": "flight_simulator_6dof_v17.0.0_c50c785_linux-x86_64.tar.gz",
+      "target_id": "flight_simulator_6dof",
+      "target_title": "AeroSim6DoF",
+      "platform": "linux-x86_64",
+      "size_bytes": 213753983,
+      "size_mb": 203.85,
+      "sha256": "89e5c58422e81fdf33b843cda8a50b5fb45f61f38929179f53aa7128aa2e45df",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "flight_simulator_6dof_v17.0.0_c50c785_web.zip": {
+      "filename": "flight_simulator_6dof_v17.0.0_c50c785_web.zip",
+      "target_id": "flight_simulator_6dof",
+      "target_title": "AeroSim6DoF",
+      "platform": "web-wasm",
+      "size_bytes": 327027127,
+      "size_mb": 311.88,
+      "sha256": "8a1dbb7abdcc8d242d012640c52e7f27794b8121d492f1512a4f62f3b376cb22",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "flight_simulator_6dof_v17.0.0_c50c785_windows-x86_64.zip": {
+      "filename": "flight_simulator_6dof_v17.0.0_c50c785_windows-x86_64.zip",
+      "target_id": "flight_simulator_6dof",
+      "target_title": "AeroSim6DoF",
+      "platform": "windows-x86_64",
+      "size_bytes": 219892593,
+      "size_mb": 209.71,
+      "sha256": "13bbe2477ede34ff9ba525a122fc4c01dd15690ba09213d4ffd2dde6832abf99",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "kart_racing_v17.0.0_c50c785_android.apk": {
+      "filename": "kart_racing_v17.0.0_c50c785_android.apk",
+      "target_id": "kart_racing",
+      "target_title": "DriftStorm",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "kart_racing_v17.0.0_c50c785_linux-x86_64.tar.gz": {
+      "filename": "kart_racing_v17.0.0_c50c785_linux-x86_64.tar.gz",
+      "target_id": "kart_racing",
+      "target_title": "DriftStorm",
+      "platform": "linux-x86_64",
+      "size_bytes": 183561017,
+      "size_mb": 175.06,
+      "sha256": "81dde06af7719227a6fecb688409d0f4960f825486153b7465490efb85ef3f47",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "kart_racing_v17.0.0_c50c785_web.zip": {
+      "filename": "kart_racing_v17.0.0_c50c785_web.zip",
+      "target_id": "kart_racing",
+      "target_title": "DriftStorm",
+      "platform": "web-wasm",
+      "size_bytes": 296846083,
+      "size_mb": 283.09,
+      "sha256": "f3d0c1c3fa39eac1ec95fb5a09d7ffe1f3f4bea834d9070e9f47d61151cc9565",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "kart_racing_v17.0.0_c50c785_windows-x86_64.zip": {
+      "filename": "kart_racing_v17.0.0_c50c785_windows-x86_64.zip",
+      "target_id": "kart_racing",
+      "target_title": "DriftStorm",
+      "platform": "windows-x86_64",
+      "size_bytes": 189711532,
+      "size_mb": 180.92,
+      "sha256": "c901d2ca547298ca6e3a31b0d0ca081df82bd9429bbfb07d9f49a86b491bcddc",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "roboforge_arena_v17.0.0_c50c785_android.apk": {
+      "filename": "roboforge_arena_v17.0.0_c50c785_android.apk",
+      "target_id": "roboforge_arena",
+      "target_title": "RoboForgeArena",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "roboforge_arena_v17.0.0_c50c785_linux-x86_64.tar.gz": {
+      "filename": "roboforge_arena_v17.0.0_c50c785_linux-x86_64.tar.gz",
+      "target_id": "roboforge_arena",
+      "target_title": "RoboForgeArena",
+      "platform": "linux-x86_64",
+      "size_bytes": 183436703,
+      "size_mb": 174.94,
+      "sha256": "e905132b2ef8237f4c68954b06d08ee19c53b984566b6fd730d0ec450b50d477",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "roboforge_arena_v17.0.0_c50c785_web.zip": {
+      "filename": "roboforge_arena_v17.0.0_c50c785_web.zip",
+      "target_id": "roboforge_arena",
+      "target_title": "RoboForgeArena",
+      "platform": "web-wasm",
+      "size_bytes": 296722795,
+      "size_mb": 282.98,
+      "sha256": "92a794783db444522a426baf2f723b655c3d70ca157ea8f7a33ab017fb935432",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "roboforge_arena_v17.0.0_c50c785_windows-x86_64.zip": {
+      "filename": "roboforge_arena_v17.0.0_c50c785_windows-x86_64.zip",
+      "target_id": "roboforge_arena",
+      "target_title": "RoboForgeArena",
+      "platform": "windows-x86_64",
+      "size_bytes": 189588255,
+      "size_mb": 180.81,
+      "sha256": "698db819759e11682556a99ab72b79987920c65213cea09d80e9fb579c6af973",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "rocket_car_v17.0.0_c50c785_android.apk": {
+      "filename": "rocket_car_v17.0.0_c50c785_android.apk",
+      "target_id": "rocket_car",
+      "target_title": "NitroKick",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "rocket_car_v17.0.0_c50c785_linux-x86_64.tar.gz": {
+      "filename": "rocket_car_v17.0.0_c50c785_linux-x86_64.tar.gz",
+      "target_id": "rocket_car",
+      "target_title": "NitroKick",
+      "platform": "linux-x86_64",
+      "size_bytes": 183455141,
+      "size_mb": 174.96,
+      "sha256": "2e01887ae50844893f80c59eeb56a1ef0287ca619b7ce5e9ecd51da905e49e6a",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "rocket_car_v17.0.0_c50c785_web.zip": {
+      "filename": "rocket_car_v17.0.0_c50c785_web.zip",
+      "target_id": "rocket_car",
+      "target_title": "NitroKick",
+      "platform": "web-wasm",
+      "size_bytes": 296741294,
+      "size_mb": 282.99,
+      "sha256": "61cc229598024caaee2b764bd1e5b915446169532c64548145be4321ed5bbc0f",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "rocket_car_v17.0.0_c50c785_windows-x86_64.zip": {
+      "filename": "rocket_car_v17.0.0_c50c785_windows-x86_64.zip",
+      "target_id": "rocket_car",
+      "target_title": "NitroKick",
+      "platform": "windows-x86_64",
+      "size_bytes": 189606743,
+      "size_mb": 180.82,
+      "sha256": "4322f124080f2007aca949033972e74a7f3a6fabe4b00e54b8781400647a364a",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "skybound_odyssey_v17.0.0_c50c785_android.apk": {
+      "filename": "skybound_odyssey_v17.0.0_c50c785_android.apk",
+      "target_id": "skybound_odyssey",
+      "target_title": "SkyboundOdyssey",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "skybound_odyssey_v17.0.0_c50c785_linux-x86_64.tar.gz": {
+      "filename": "skybound_odyssey_v17.0.0_c50c785_linux-x86_64.tar.gz",
+      "target_id": "skybound_odyssey",
+      "target_title": "SkyboundOdyssey",
+      "platform": "linux-x86_64",
+      "size_bytes": 183432809,
+      "size_mb": 174.94,
+      "sha256": "688962411959d558f8e458859398e75b1a47b2b05a88c40806dad1fb6f53a28b",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "skybound_odyssey_v17.0.0_c50c785_web.zip": {
+      "filename": "skybound_odyssey_v17.0.0_c50c785_web.zip",
+      "target_id": "skybound_odyssey",
+      "target_title": "SkyboundOdyssey",
+      "platform": "web-wasm",
+      "size_bytes": 296718768,
+      "size_mb": 282.97,
+      "sha256": "0e5e9aa7321d548ef70007d1e3cbc19143bf4f0f3bb8c09aed7f327ef0c26700",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "skybound_odyssey_v17.0.0_c50c785_windows-x86_64.zip": {
+      "filename": "skybound_odyssey_v17.0.0_c50c785_windows-x86_64.zip",
+      "target_id": "skybound_odyssey",
+      "target_title": "SkyboundOdyssey",
+      "platform": "windows-x86_64",
+      "size_bytes": 189584230,
+      "size_mb": 180.8,
+      "sha256": "e9482ca41a7d53eb0ae007fbd3ab0ad3955a13105227945a843d602443329afd",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "strike_vector_v17.0.0_c50c785_android.apk": {
+      "filename": "strike_vector_v17.0.0_c50c785_android.apk",
+      "target_id": "strike_vector",
+      "target_title": "StrikeVector",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "strike_vector_v17.0.0_c50c785_linux-x86_64.tar.gz": {
+      "filename": "strike_vector_v17.0.0_c50c785_linux-x86_64.tar.gz",
+      "target_id": "strike_vector",
+      "target_title": "StrikeVector",
+      "platform": "linux-x86_64",
+      "size_bytes": 183634745,
+      "size_mb": 175.13,
+      "sha256": "ef90a41ae1f81f09b39b1b7c23f4e62932032889fa103f4d7c4d53be81428589",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "strike_vector_v17.0.0_c50c785_web.zip": {
+      "filename": "strike_vector_v17.0.0_c50c785_web.zip",
+      "target_id": "strike_vector",
+      "target_title": "StrikeVector",
+      "platform": "web-wasm",
+      "size_bytes": 296920691,
+      "size_mb": 283.17,
+      "sha256": "b7d56dab9df8941c6b0b3fcd6bd9984acf8352a0ab9c95732d981e01d977130e",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "strike_vector_v17.0.0_c50c785_windows-x86_64.zip": {
+      "filename": "strike_vector_v17.0.0_c50c785_windows-x86_64.zip",
+      "target_id": "strike_vector",
+      "target_title": "StrikeVector",
+      "platform": "windows-x86_64",
+      "size_bytes": 189786144,
+      "size_mb": 180.99,
+      "sha256": "bb340ea93fa75c74436db02b49641e8fd7fa4a106384e3e40e8660d03ff34baf",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "subway_survival_v17.0.0_c50c785_android.apk": {
+      "filename": "subway_survival_v17.0.0_c50c785_android.apk",
+      "target_id": "subway_survival",
+      "target_title": "MetroSiege",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "subway_survival_v17.0.0_c50c785_linux-x86_64.tar.gz": {
+      "filename": "subway_survival_v17.0.0_c50c785_linux-x86_64.tar.gz",
+      "target_id": "subway_survival",
+      "target_title": "MetroSiege",
+      "platform": "linux-x86_64",
+      "size_bytes": 183448231,
+      "size_mb": 174.95,
+      "sha256": "ef7a2786f7a174dc741b271e5ffda225e6376994856b24704bcad7885d5749ef",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "subway_survival_v17.0.0_c50c785_web.zip": {
+      "filename": "subway_survival_v17.0.0_c50c785_web.zip",
+      "target_id": "subway_survival",
+      "target_title": "MetroSiege",
+      "platform": "web-wasm",
+      "size_bytes": 296733720,
+      "size_mb": 282.99,
+      "sha256": "b7319fb2349bfb07799c094116ec61a784a1f1ad1e5eafa082736460335637c5",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "subway_survival_v17.0.0_c50c785_windows-x86_64.zip": {
+      "filename": "subway_survival_v17.0.0_c50c785_windows-x86_64.zip",
+      "target_id": "subway_survival",
+      "target_title": "MetroSiege",
+      "platform": "windows-x86_64",
+      "size_bytes": 189599173,
+      "size_mb": 180.82,
+      "sha256": "25137b9c5b217a891a2ef114057d3f190db64738969996a982c350d73b2ec11d",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "urban_legends_v17.0.0_c50c785_android.apk": {
+      "filename": "urban_legends_v17.0.0_c50c785_android.apk",
+      "target_id": "urban_legends",
+      "target_title": "UrbanLegends",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "urban_legends_v17.0.0_c50c785_linux-x86_64.tar.gz": {
+      "filename": "urban_legends_v17.0.0_c50c785_linux-x86_64.tar.gz",
+      "target_id": "urban_legends",
+      "target_title": "UrbanLegends",
+      "platform": "linux-x86_64",
+      "size_bytes": 203908282,
+      "size_mb": 194.46,
+      "sha256": "a04faef3677d654d5c373b0bc5cb0d351d56dd87c0a0fbf5874561cab5e873e0",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "urban_legends_v17.0.0_c50c785_web.zip": {
+      "filename": "urban_legends_v17.0.0_c50c785_web.zip",
+      "target_id": "urban_legends",
+      "target_title": "UrbanLegends",
+      "platform": "web-wasm",
+      "size_bytes": 317179392,
+      "size_mb": 302.49,
+      "sha256": "d33260364931ad3f2571f05d996c4b142a98074bf0dc8fb4c153b0697cb44b73",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "urban_legends_v17.0.0_c50c785_windows-x86_64.zip": {
+      "filename": "urban_legends_v17.0.0_c50c785_windows-x86_64.zip",
+      "target_id": "urban_legends",
+      "target_title": "UrbanLegends",
+      "platform": "windows-x86_64",
+      "size_bytes": 210044846,
+      "size_mb": 200.31,
+      "sha256": "aaeeada591b6e75380834fb3d526c7c574db749dc831d1b7400dabbd6c6a2e86",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "wildcircuit_v17.0.0_c50c785_android.apk": {
+      "filename": "wildcircuit_v17.0.0_c50c785_android.apk",
+      "target_id": "wildcircuit",
+      "target_title": "WildCircuit",
+      "platform": "android-arm64",
+      "size_bytes": 114016668,
+      "size_mb": 108.73,
+      "sha256": "629e8c5c0062cf1959be5218b967416b06089e30a6d97a32c5ceea15b8eb4622",
+      "verification_tag": "HARDWARE-VALIDATION-REQUIRED"
+    },
+    "wildcircuit_v17.0.0_c50c785_linux-x86_64.tar.gz": {
+      "filename": "wildcircuit_v17.0.0_c50c785_linux-x86_64.tar.gz",
+      "target_id": "wildcircuit",
+      "target_title": "WildCircuit",
+      "platform": "linux-x86_64",
+      "size_bytes": 183435127,
+      "size_mb": 174.94,
+      "sha256": "e3fca4214c15d254c9577ae021f2c6ce33128ee63295aa5c7143b76734ddd794",
+      "verification_tag": "GAMEPLAY-VERIFIED"
+    },
+    "wildcircuit_v17.0.0_c50c785_web.zip": {
+      "filename": "wildcircuit_v17.0.0_c50c785_web.zip",
+      "target_id": "wildcircuit",
+      "target_title": "WildCircuit",
+      "platform": "web-wasm",
+      "size_bytes": 296721165,
+      "size_mb": 282.98,
+      "sha256": "c9b34ca779360cb9493e1b5b39403df77e20a5283abc4d5ebecc5757aab69c19",
+      "verification_tag": "BUILD-VERIFIED"
+    },
+    "wildcircuit_v17.0.0_c50c785_windows-x86_64.zip": {
+      "filename": "wildcircuit_v17.0.0_c50c785_windows-x86_64.zip",
+      "target_id": "wildcircuit",
+      "target_title": "WildCircuit",
+      "platform": "windows-x86_64",
+      "size_bytes": 189586610,
+      "size_mb": 180.8,
+      "sha256": "1bf9271858c8c0671d6671f2f6ad9659b08c4c43c8ace0c8300c8c8243fe8b7c",
+      "verification_tag": "GAMEPLAY-VERIFIED"
     }
+  },
+  "verification_summary": {
+    "GAMEPLAY-VERIFIED": 56,
+    "RUNTIME-VERIFIED": 0,
+    "BUILD-VERIFIED": 28,
+    "HARDWARE-VALIDATION-REQUIRED": 28
   }
 }

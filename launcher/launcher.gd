@@ -262,10 +262,10 @@ func setup_launcher_ui() -> void:
 	cat_bar.add_child(cat_label)
 
 	var categories = [
-		{"id": "ALL", "label": "ALL (12)"},
+		{"id": "ALL", "label": "ALL (13)"},
 		{"id": "ACTION", "label": "ACTION (3)"},
 		{"id": "RACING", "label": "RACING & STUNT (5)"},
-		{"id": "SIMULATION", "label": "SIMULATION (5)"}
+		{"id": "SIMULATION", "label": "SIMULATION (6)"}
 	]
 
 	for cat in categories:
@@ -409,6 +409,7 @@ func create_game_card(meta: Dictionary) -> void:
 
 	# Play Button
 	var btn_play = Button.new()
+	btn_play.name = "PlayButton"
 	btn_play.text = "PLAY"
 	btn_play.custom_minimum_size = Vector2(0, 38)
 	btn_play.mouse_entered.connect(func():
@@ -476,6 +477,11 @@ func get_game_career_stats(game_id: String) -> String:
 		"wildcircuit":
 			var wc_stats = sm.save_data.get("statistics", {}).get("wildcircuit", {})
 			return "Photos: %d | Species: %d" % [wc_stats.get("photos_taken", 0), wc_stats.get("species_discovered", 0)]
+		"flight_simulator_6dof":
+			var fs_stats = sm.save_data.get("statistics", {}).get("flight_simulator_6dof", {})
+			var hours = fs_stats.get("flight_hours", 0.0)
+			var lessons = fs_stats.get("lessons_completed", 0)
+			return "Flight: %.1fh | Lessons: %d" % [hours, lessons]
 		_:
 			return ""
 
@@ -744,6 +750,8 @@ func update_responsive_layout(viewport_size: Vector2) -> void:
 				else:
 					c.custom_minimum_size.y = 320.0
 
+		_update_gamepad_focus_routing()
+
 func set_category_filter(category: String) -> void:
 	current_category = category
 	for cat_id in category_buttons:
@@ -765,8 +773,43 @@ func set_category_filter(category: String) -> void:
 			elif category == "RACING":
 				should_show = (g_id in ["kart_racing", "rocket_car", "chroma_rush", "aero_rush", "urban_legends"])
 			elif category == "SIMULATION":
-				should_show = (g_id in ["aircraft_flight", "skybound_odyssey", "roboforge_arena", "wildcircuit", "urban_legends"])
+				should_show = (g_id in ["aircraft_flight", "flight_simulator_6dof", "skybound_odyssey", "roboforge_arena", "wildcircuit", "urban_legends"])
 			card.visible = should_show
+
+	_update_gamepad_focus_routing()
+
+func _update_gamepad_focus_routing() -> void:
+	if not game_cards_container:
+		return
+	var visible_play_buttons: Array[Button] = []
+	for card in game_cards_container.get_children():
+		if card is Control and card.visible:
+			var btn = card.find_child("PlayButton", true, false) as Button
+			if not btn:
+				for child in card.find_children("", "Button", true, false):
+					if child is Button and child.text == "PLAY":
+						btn = child
+						break
+			if btn:
+				visible_play_buttons.append(btn)
+
+	var cols = game_cards_container.columns
+	var n = visible_play_buttons.size()
+	for i in range(n):
+		var b = visible_play_buttons[i]
+		# Left / Right
+		if i % cols > 0:
+			b.focus_neighbor_left = visible_play_buttons[i - 1].get_path()
+		if (i % cols < cols - 1) and (i + 1 < n):
+			b.focus_neighbor_right = visible_play_buttons[i + 1].get_path()
+		# Top / Bottom
+		if i >= cols:
+			b.focus_neighbor_top = visible_play_buttons[i - cols].get_path()
+		if i + cols < n:
+			b.focus_neighbor_bottom = visible_play_buttons[i + cols].get_path()
+
+	if not visible_play_buttons.is_empty() and get_viewport() and get_viewport().gui_get_focus_owner() == null:
+		visible_play_buttons[0].grab_focus()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):

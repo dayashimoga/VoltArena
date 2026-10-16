@@ -9,6 +9,7 @@ const UrbanPropFactory = preload("res://games/urban-legends/world/urban_prop_fac
 ## Massive 2000m x 2000m Open-World Scene Generator for Urban Legends.
 ## Assembles 8 contiguous districts, procedural roads, elevated flyovers,
 ## PBR architecture, stunt kickers, vegetation, and zero-obstruction collision.
+## STRICT ZERO-PRIMITIVE MANDATE: All visible terrain, roads, curbs, and backdrop mountains use ArrayMeshes.
 
 var road_network: UrbanRoadNetwork = null
 var props_container: Node3D = null
@@ -55,14 +56,12 @@ func _build_ground_planes() -> void:
 	ground.collision_layer = UrbanConstants.LAYER_WORLD
 	ground.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
 
-	var g_mesh = BoxMesh.new()
-	g_mesh.size = Vector3(2200.0, 2.0, 2200.0)
 	var g_mat = StandardMaterial3D.new()
-	g_mat.albedo_color = Color(0.25, 0.30, 0.22) # Parkland grass / urban soil
+	g_mat.albedo_color = Color(0.24, 0.30, 0.22) # Parkland grass / urban soil
 	g_mat.roughness = 0.9
 
 	var mi = MeshInstance3D.new()
-	mi.mesh = g_mesh
+	mi.mesh = _create_ground_array_mesh(2200.0, 2.0, 2200.0)
 	mi.material_override = g_mat
 	mi.position = Vector3(0, -1.0, 0)
 	ground.add_child(mi)
@@ -78,16 +77,14 @@ func _build_ground_planes() -> void:
 
 	# South Ocean Water Plane (Bayview Promenade Coast)
 	var ocean_mi = MeshInstance3D.new()
-	var ocean_mesh = PlaneMesh.new()
-	ocean_mesh.size = Vector2(2500.0, 800.0)
+	ocean_mi.mesh = _create_ground_array_mesh(2500.0, 0.2, 800.0)
 	var ocean_mat = StandardMaterial3D.new()
 	ocean_mat.albedo_color = Color(0.08, 0.32, 0.55, 0.88)
 	ocean_mat.metallic = 0.9
 	ocean_mat.roughness = 0.08
 	ocean_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	ocean_mi.mesh = ocean_mesh
 	ocean_mi.material_override = ocean_mat
-	ocean_mi.position = Vector3(0, 0.2, -1350.0)
+	ocean_mi.position = Vector3(0, 0.1, -1350.0)
 	terrain_container.add_child(ocean_mi)
 
 	_build_perimeter_mountain_backdrop()
@@ -109,11 +106,9 @@ func _build_perimeter_mountain_backdrop() -> void:
 		var mw = 360.0 + (i * 29 % 100)
 
 		var mi = MeshInstance3D.new()
-		var prism = PrismMesh.new()
-		prism.size = Vector3(mw, mh, 350.0)
-		mi.mesh = prism
+		mi.mesh = _create_ridge_mountain_mesh(mw, mh, 350.0)
 		mi.material_override = mat_mountain if i % 2 == 0 else mat_granite
-		mi.position = Vector3(mx, mh * 0.5 - 2.0, mz)
+		mi.position = Vector3(mx, 0.0, mz)
 		terrain_container.add_child(mi)
 
 	# East Mountain Ridge (X = 1150 to 1550)
@@ -124,11 +119,9 @@ func _build_perimeter_mountain_backdrop() -> void:
 		var mw = 340.0 + (i * 31 % 90)
 
 		var mi = MeshInstance3D.new()
-		var prism = PrismMesh.new()
-		prism.size = Vector3(320.0, mh, mw)
-		mi.mesh = prism
+		mi.mesh = _create_ridge_mountain_mesh(320.0, mh, mw)
 		mi.material_override = mat_mountain
-		mi.position = Vector3(mx, mh * 0.5 - 2.0, mz)
+		mi.position = Vector3(mx, 0.0, mz)
 		terrain_container.add_child(mi)
 
 	# West Horizon Hills (X = -1150 to -1550)
@@ -139,11 +132,9 @@ func _build_perimeter_mountain_backdrop() -> void:
 		var mw = 330.0 + (i * 23 % 90)
 
 		var mi = MeshInstance3D.new()
-		var prism = PrismMesh.new()
-		prism.size = Vector3(320.0, mh, mw)
-		mi.mesh = prism
+		mi.mesh = _create_ridge_mountain_mesh(320.0, mh, mw)
 		mi.material_override = mat_mountain if i % 2 == 0 else mat_granite
-		mi.position = Vector3(mx, mh * 0.5 - 2.0, mz)
+		mi.position = Vector3(mx, 0.0, mz)
 		terrain_container.add_child(mi)
 
 func _build_road_meshes() -> void:
@@ -155,10 +146,9 @@ func _build_road_meshes() -> void:
 		var center = (st + en) * 0.5
 		var dir = seg["direction"]
 
-		# Road Surface Mesh
+		# Road Surface Mesh (Crowned asphalt deck, ArrayMesh)
 		var road_mi = MeshInstance3D.new()
-		var road_box = BoxMesh.new()
-		road_box.size = Vector3(w, 0.25, dist)
+		road_mi.mesh = _create_crowned_road_mesh(w, 0.25, dist)
 		var r_mat = StandardMaterial3D.new()
 		var s_type = seg["surface"]
 		if s_type == UrbanConstants.SURFACE_GRASS:
@@ -168,14 +158,22 @@ func _build_road_meshes() -> void:
 			r_mat.albedo_color = Color(0.48, 0.38, 0.25) # Mountain gravel
 			r_mat.roughness = 0.9
 		else:
-			r_mat.albedo_color = Color(0.18, 0.18, 0.20) # Asphalt
-			r_mat.roughness = 0.72
+			var road_shader = load("res://games/urban-legends/world/shaders/road_asphalt.gdshader")
+			if road_shader:
+				var sm = ShaderMaterial.new()
+				sm.shader = road_shader
+				sm.set_shader_parameter("road_lanes", 4 if w >= 14.0 else 2)
+				sm.set_shader_parameter("road_width_meters", w)
+				sm.set_shader_parameter("wetness", 0.0)
+				r_mat = sm
+			else:
+				r_mat.albedo_color = Color(0.19, 0.19, 0.21) # Crowned weathered asphalt
+				r_mat.roughness = 0.76
+				r_mat.metallic = 0.10
 
-		road_mi.mesh = road_box
 		road_mi.material_override = r_mat
 		road_mi.position = center
 
-		# Orientation along road segment
 		if dir.length_squared() > 0.001:
 			var up_vec = Vector3.UP
 			if absf(dir.dot(up_vec)) > 0.9:
@@ -184,7 +182,7 @@ func _build_road_meshes() -> void:
 
 		roads_container.add_child(road_mi)
 
-		# Road Physical Collision Box
+		# Road Physical Collision Box (Invisible physics proxy)
 		var body = StaticBody3D.new()
 		body.collision_layer = UrbanConstants.LAYER_WORLD
 		body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
@@ -202,15 +200,13 @@ func _build_road_meshes() -> void:
 		body.add_child(col)
 		roads_container.add_child(body)
 
-		# Yellow Centerline Striping for Paved Asphalt Roads
+		# Yellow Centerline Striping for Paved Asphalt Roads (Double-Yellow ArrayMesh)
 		if s_type == UrbanConstants.SURFACE_ASPHALT:
 			var stripe_mi = MeshInstance3D.new()
-			var stripe_box = BoxMesh.new()
-			stripe_box.size = Vector3(0.24, 0.02, dist)
+			stripe_mi.mesh = _create_double_yellow_stripes_mesh(0.42, 0.02, dist)
 			var y_mat = StandardMaterial3D.new()
-			y_mat.albedo_color = Color(0.95, 0.82, 0.15)
-			y_mat.roughness = 0.55
-			stripe_mi.mesh = stripe_box
+			y_mat.albedo_color = Color(0.95, 0.80, 0.12)
+			y_mat.roughness = 0.50
 			stripe_mi.material_override = y_mat
 			stripe_mi.position = center + Vector3(0.0, 0.14, 0.0)
 			if dir.length_squared() > 0.001:
@@ -233,11 +229,9 @@ func _build_road_meshes() -> void:
 			if right_dir.length_squared() > 0.01:
 				var sw_w = 3.0 # 3m sidewalks
 				for side in [-1.0, 1.0]:
-					# White Edge Striping
+					# White Edge Striping (ArrayMesh)
 					var edge_mi = MeshInstance3D.new()
-					var edge_box = BoxMesh.new()
-					edge_box.size = Vector3(0.18, 0.02, dist)
-					edge_mi.mesh = edge_box
+					edge_mi.mesh = _create_strip_mesh(0.18, 0.02, dist)
 					edge_mi.material_override = white_mat
 					edge_mi.position = center + right_dir * (side * (w * 0.5 - 0.22)) + Vector3(0.0, 0.14, 0.0)
 					if dir.length_squared() > 0.001:
@@ -247,11 +241,9 @@ func _build_road_meshes() -> void:
 						edge_mi.look_at_from_position(edge_mi.position, edge_mi.position + dir, up_vec)
 					roads_container.add_child(edge_mi)
 
-					# 45-degree Chamfered Curb Bevel (0.14m vertical, zero car snagging)
+					# 45-degree Chamfered Curb Bevel (0.14m vertical, zero car snagging, ArrayMesh)
 					var curb_bevel_mi = MeshInstance3D.new()
-					var curb_prism = PrismMesh.new()
-					curb_prism.size = Vector3(0.20, 0.14, dist)
-					curb_bevel_mi.mesh = curb_prism
+					curb_bevel_mi.mesh = _create_curb_bevel_mesh(0.20, 0.14, dist)
 					curb_bevel_mi.material_override = sw_mat
 					curb_bevel_mi.position = center + right_dir * (side * (w * 0.5 + 0.10)) + Vector3(0.0, 0.07, 0.0)
 					if dir.length_squared() > 0.001:
@@ -261,11 +253,9 @@ func _build_road_meshes() -> void:
 						curb_bevel_mi.look_at_from_position(curb_bevel_mi.position, curb_bevel_mi.position + dir, up_vec)
 					roads_container.add_child(curb_bevel_mi)
 
-					# Pedestrian Sidewalk (0.14m height)
+					# Pedestrian Sidewalk (0.14m height, ArrayMesh)
 					var sw_mi = MeshInstance3D.new()
-					var sw_box = BoxMesh.new()
-					sw_box.size = Vector3(sw_w - 0.20, 0.14, dist)
-					sw_mi.mesh = sw_box
+					sw_mi.mesh = _create_sidewalk_mesh(sw_w - 0.20, 0.14, dist)
 					sw_mi.material_override = sw_mat
 					sw_mi.position = center + right_dir * (side * (w * 0.5 + 0.20 + (sw_w - 0.20) * 0.5)) + Vector3(0.0, 0.07, 0.0)
 					if dir.length_squared() > 0.001:
@@ -288,7 +278,7 @@ func _build_road_meshes() -> void:
 						lamp.position = lamp_pos
 						props_container.add_child(lamp)
 
-		# If elevated viaduct (Harborfly Freeway Y > 10m), spawn viaduct support pillars
+		# Elevated viaduct support pillars
 		if st.y > 10.0 and en.y > 10.0:
 			var flyover = UrbanPropFactory.build_flyover_viaduct(dist, center.y, w)
 			flyover.position = center
@@ -300,46 +290,94 @@ func _build_road_meshes() -> void:
 			roads_container.add_child(flyover)
 
 func _populate_district_props() -> void:
-	# 1. Downtown Metro: Dense American / Manhattan-Style Skyscraper Grid
-	# Placed systematically across downtown city blocks with verified setbacks (clearance >= 16m)
+	# 1. District 1: Midtown & Financial Skyscraper Core (Manhattan-Inspired)
 	var downtown_grid_x = [-480.0, -410.0, -340.0, -270.0, -200.0, -130.0, -60.0, 10.0, 80.0]
 	var downtown_grid_z = [-480.0, -410.0, -340.0, -270.0, -200.0, -130.0, -60.0, 10.0, 80.0]
-
 	for gx in downtown_grid_x:
 		for gz in downtown_grid_z:
 			var p = Vector3(gx, 0.0, gz)
 			if not _is_obstructing_road(p, 17.5):
-				var tower_h = randf_range(58.0, 115.0)
-				var tower_w = randf_range(18.0, 26.0)
-				var tower = UrbanPropFactory.build_skyscraper(tower_h, tower_w, tower_w, Color(0.2, 0.6, 1.0))
-				tower.position = p
-				props_container.add_child(tower)
+				# Alternate between Art Deco limestone towers with water tanks and steel curtain-wall skyscrapers
+				if int(absf(gx + gz)) % 2 == 0:
+					var ad_h = randf_range(85.0, 160.0)
+					var ad_w = randf_range(26.0, 34.0)
+					var ad_tower = UrbanPropFactory.build_art_deco_skyscraper(ad_h, ad_w, ad_w, Color(1.0, 0.88, 0.65))
+					ad_tower.position = p
+					props_container.add_child(ad_tower)
+				else:
+					var tower_h = randf_range(65.0, 135.0)
+					var tower_w = randf_range(20.0, 28.0)
+					var tower = UrbanPropFactory.build_skyscraper(tower_h, tower_w, tower_w, Color(0.2, 0.6, 1.0))
+					tower.position = p
+					props_container.add_child(tower)
 
-	# 2. Midtown & Commercial Corridors: Multi-story commercial blocks, offices & retail
-	var midtown_x = [-480.0, -380.0, -280.0, -180.0, -80.0, 20.0, 120.0, 220.0]
-	var midtown_z = [100.0, 180.0, 260.0, 340.0, 420.0, 500.0]
-	for mx in midtown_x:
-		for mz in midtown_z:
-			var p = Vector3(mx, 0.0, mz)
-			if not _is_obstructing_road(p, 15.0):
-				var comm = UrbanPropFactory.build_commercial_block(randf_range(26.0, 48.0), 20.0, 20.0)
-				comm.position = p
-				props_container.add_child(comm)
+	# 2. District 2: Historic Brownstone & Mixed-Use Neighborhood (Brooklyn / Greenwich Village)
+	var brownstone_x = [220.0, 280.0, 340.0, 400.0, 460.0, 520.0, 580.0]
+	var brownstone_z = [220.0, 290.0, 360.0, 430.0, 500.0, 570.0]
+	for bx in brownstone_x:
+		for bz in brownstone_z:
+			var p = Vector3(bx, 0.0, bz)
+			if not _is_obstructing_road(p, 14.0):
+				var has_bodega = (int(absf(bx * 7.0 + bz)) % 5 == 0)
+				var bs = UrbanPropFactory.build_brownstone_rowhouse(randf_range(16.0, 22.0), 12.0, 16.0, has_bodega)
+				bs.position = p
+				props_container.add_child(bs)
 
-	# 3. Colinas Heights: Terracotta villas along winding hillside roads
-	var colinas_spots = [
-		Vector3(250, 20.0, 320), Vector3(360, 38.0, 420), Vector3(460, 54.0, 520),
-		Vector3(540, 70.0, 640), Vector3(640, 84.0, 750), Vector3(380, 36.0, 320),
-		Vector3(480, 52.0, 420), Vector3(580, 72.0, 540), Vector3(660, 88.0, 660),
-		Vector3(300, 26.0, 360), Vector3(420, 46.0, 460), Vector3(520, 62.0, 580)
+				# Historic Acorn streetlights along brownstone sidewalks
+				if int(absf(bx + bz)) % 3 == 0:
+					var acorn = UrbanPropFactory.build_acorn_streetlight(4.8)
+					acorn.position = p + Vector3(7.0, 0.0, 0.0)
+					props_container.add_child(acorn)
+
+	# 3. District 3: Commercial Shopping & Theater Avenue (Broadway / Times Square)
+	var theater_x = [-450.0, -350.0, -250.0, -150.0, -50.0, 50.0, 150.0]
+	var theater_z = [120.0, 200.0, 280.0, 360.0, 440.0]
+	for tx in theater_x:
+		for tz in theater_z:
+			var p = Vector3(tx, 0.0, tz)
+			if not _is_obstructing_road(p, 16.0):
+				var th = UrbanPropFactory.build_theater_marquee_store(randf_range(22.0, 38.0), 22.0, 20.0)
+				th.position = p
+				props_container.add_child(th)
+
+				# Street furniture clusters & fire hydrants
+				if int(absf(tx * 3.0 + tz)) % 4 == 0:
+					var furn = UrbanPropFactory.build_street_furniture_cluster()
+					furn.position = p + Vector3(0.0, 0.0, 11.5)
+					props_container.add_child(furn)
+
+				if int(absf(tx + tz * 2.0)) % 5 == 0:
+					var hyd = UrbanPropFactory.build_fire_hydrant()
+					hyd.position = p + Vector3(-9.0, 0.0, 11.5)
+					props_container.add_child(hyd)
+
+	# Subway entrance kiosks at key intersections
+	var subway_spots = [
+		Vector3(-100.0, 1.0, -120.0),
+		Vector3(-100.0, 1.0, 120.0),
+		Vector3(-250.0, 1.0, -250.0),
+		Vector3(80.0, 1.0, 80.0)
 	]
-	for p in colinas_spots:
-		if not _is_obstructing_road(p, 12.0):
-			var villa = UrbanPropFactory.build_residential_villa(14.0, 12.0)
-			villa.position = p
-			props_container.add_child(villa)
+	for sp in subway_spots:
+		var kiosk = UrbanPropFactory.build_subway_kiosk()
+		kiosk.position = sp
+		props_container.add_child(kiosk)
 
-	# 4. Verdant Glen: Parkland trees & stone bridges
+	# Cantilevered traffic signal mast arms at major intersections
+	var signal_spots = [
+		Vector3(-100.0, 1.0, -350.0),
+		Vector3(-100.0, 1.0, -100.0),
+		Vector3(-100.0, 1.0, 150.0),
+		Vector3(-450.0, 1.0, -450.0),
+		Vector3(100.0, 1.0, -450.0),
+		Vector3(100.0, 1.0, 100.0)
+	]
+	for sig_pos in signal_spots:
+		var sig = UrbanPropFactory.build_traffic_signal_mast(5.8, 7.5)
+		sig.position = sig_pos + Vector3(9.0, 0.0, 0.0)
+		props_container.add_child(sig)
+
+	# 4. District 4: Central Metropolitan Park & Residential Courtyards
 	var tree_spots = [
 		Vector3(260, 6.0, -350), Vector3(340, 9.0, -260), Vector3(440, 13.0, -160),
 		Vector3(520, 17.0, -60), Vector3(220, 5.0, -220), Vector3(320, 8.0, -120),
@@ -352,13 +390,36 @@ func _populate_district_props() -> void:
 			tree.position = p
 			props_container.add_child(tree)
 
+	# Park Perimeter Ashlar Granite Stone Walls
+	var wall_segments = [
+		Vector3(200.0, 3.0, -480.0),
+		Vector3(200.0, 6.0, -300.0),
+		Vector3(200.0, 9.0, -100.0),
+		Vector3(200.0, 12.0, 100.0)
+	]
+	for wp in wall_segments:
+		var p_wall = UrbanPropFactory.build_park_stone_wall(40.0, 1.4)
+		p_wall.position = wp
+		props_container.add_child(p_wall)
+
 	var bridge = UrbanPropFactory.build_stone_bridge(24.0, 10.0)
 	bridge.position = Vector3(480, 15.0, 80)
 	props_container.add_child(bridge)
 
-	# 5. Industrial Apex: Freight shipping containers & logistics depot
+	# 5. District 5: Industrial Waterfront, Docks & Suspension Bridge
+	# Dockside Rail-Mounted Gantry Container Cranes
+	var gantry_spots = [
+		Vector3(-850.0, 0.0, 320.0),
+		Vector3(-700.0, 0.0, 320.0)
+	]
+	for gp in gantry_spots:
+		var gantry = UrbanPropFactory.build_gantry_crane(38.0, 32.0)
+		gantry.position = gp
+		props_container.add_child(gantry)
+
+	# Shipping Containers
 	var container_spots = [
-		Vector3(-850, 0, 420), Vector3(-850, 2.9, 420), # Stacked
+		Vector3(-850, 0, 420), Vector3(-850, 2.9, 420),
 		Vector3(-780, 0, 520), Vector3(-680, 0, 620),
 		Vector3(-880, 0, 600), Vector3(-620, 0, 720),
 		Vector3(-760, 0, 680), Vector3(-820, 0, 540)
@@ -371,7 +432,21 @@ func _populate_district_props() -> void:
 			c.position = p
 			props_container.add_child(c)
 
-	# 6. Continuous Street Lamps placed along Downtown Grand Ave and Bayview Promenade
+	# Iconic Multi-Span Steel Suspension Bridge (450m span, 35m water clearance)
+	var bridge_susp = UrbanPropFactory.build_suspension_bridge(450.0, 35.0, 24.0)
+	bridge_susp.position = Vector3(0.0, 24.0, -1050.0)
+	props_container.add_child(bridge_susp)
+
+	# Tiled Vehicular Underpass Tunnel
+	var tunnel = UrbanPropFactory.build_underpass_tunnel(80.0, 16.0, 6.0)
+	tunnel.position = Vector3(-600.0, 1.0, -80.0)
+	props_container.add_child(tunnel)
+
+	# Horizon Skyline Continuity: Low-Draw-Call LOD2 Skyline Silhouettes across water
+	var skyline = UrbanPropFactory.build_distant_skyline(1400.0)
+	props_container.add_child(skyline)
+
+	# 6. Continuous Modern Street Lamps along Grand Ave
 	var lamp_z_coords = [-550, -475, -400, -325, -250, -175, -100, -25, 50, 125, 200, 275, 350]
 	for z_val in lamp_z_coords:
 		for x_side in [-1.0, 1.0]:
@@ -383,28 +458,24 @@ func _populate_district_props() -> void:
 				props_container.add_child(lamp)
 
 func _populate_stunt_kickers() -> void:
-	# 1. Colinas Heights Crest Jump (Screenshot 4 reference: launches over suburban valley)
 	var colinas_ramp = UrbanPropFactory.build_stunt_ramp(8.0, 14.0, 3.8, 28.0)
 	colinas_ramp.name = "StuntRamp_Colinas"
 	colinas_ramp.position = Vector3(450.0, 52.0, 620.0)
 	colinas_ramp.rotation.y = deg_to_rad(15.0)
 	props_container.add_child(colinas_ramp)
 
-	# 2. Harborfly Freeway Overpass Leap (Launches from upper viaduct down to ground)
 	var freeway_ramp = UrbanPropFactory.build_stunt_ramp(10.0, 16.0, 3.5, 22.0)
 	freeway_ramp.name = "StuntRamp_Freeway"
 	freeway_ramp.position = Vector3(150.0, 18.0, 20.0)
 	freeway_ramp.rotation.y = deg_to_rad(90.0)
 	props_container.add_child(freeway_ramp)
 
-	# 3. Verdant Glen Lake Leap (Launches over park stream)
 	var glen_ramp = UrbanPropFactory.build_stunt_ramp(7.5, 12.0, 3.2, 25.0)
 	glen_ramp.name = "StuntRamp_Glen"
 	glen_ramp.position = Vector3(380.0, 11.0, -220.0)
 	glen_ramp.rotation.y = deg_to_rad(-45.0)
 	props_container.add_child(glen_ramp)
 
-	# 4. Skyline Airport Runway Drag Kicker
 	var airport_ramp = UrbanPropFactory.build_stunt_ramp(14.0, 18.0, 4.2, 30.0)
 	airport_ramp.name = "StuntRamp_Airport"
 	airport_ramp.position = Vector3(-250.0, 1.0, -520.0)
@@ -420,7 +491,6 @@ func _is_obstructing_road(pos: Vector3, clearance: float) -> bool:
 func _build_verified_spawns() -> void:
 	verified_spawn_points.clear()
 
-	# 1. District Curated Spawns
 	var all_district_spawns = UrbanDistrictDefinitions.get_all_spawn_points()
 	for sp in all_district_spawns:
 		var pos = sp.origin
@@ -433,7 +503,6 @@ func _build_verified_spawns() -> void:
 				safe_t = safe_t.looking_at(safe_t.origin + dir, Vector3.UP)
 			verified_spawn_points.append(safe_t)
 
-	# 2. Road Network Traffic Waypoints (guarantees >= 100 safe verified spawn points)
 	var waypoints = road_network.get_traffic_waypoints()
 	var step_stride = maxi(1, waypoints.size() / 60)
 	for i in range(0, waypoints.size(), step_stride):
@@ -459,3 +528,206 @@ func get_random_spawn_point() -> Transform3D:
 	if verified_spawn_points.is_empty():
 		return Transform3D(Basis.IDENTITY, Vector3(0, 1.5, 0))
 	return verified_spawn_points[randi() % verified_spawn_points.size()]
+
+# ==============================================================================
+# PROCEDURAL ARRAYMESH GENERATORS FOR TERRAIN AND ROADS
+# ==============================================================================
+
+static func _create_ground_array_mesh(width: float, height: float, depth: float) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hw = width * 0.5
+	var hh = height * 0.5
+	var hd = depth * 0.5
+
+	# Top face (primary ground surface)
+	var v0 = Vector3(-hw, hh, -hd)
+	var v1 = Vector3(hw, hh, -hd)
+	var v2 = Vector3(hw, hh, hd)
+	var v3 = Vector3(-hw, hh, hd)
+
+	st.set_normal(Vector3.UP)
+	st.set_uv(Vector2(0, 0)); st.add_vertex(v0)
+	st.set_uv(Vector2(50, 0)); st.add_vertex(v1)
+	st.set_uv(Vector2(50, 50)); st.add_vertex(v2)
+
+	st.set_uv(Vector2(0, 0)); st.add_vertex(v0)
+	st.set_uv(Vector2(50, 50)); st.add_vertex(v2)
+	st.set_uv(Vector2(0, 50)); st.add_vertex(v3)
+
+	return st.commit()
+
+static func _create_ridge_mountain_mesh(width: float, height: float, depth: float) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hw = width * 0.5
+	var hd = depth * 0.5
+
+	# Peak ridge line
+	var r0 = Vector3(-hw * 0.25, height, 0.0)
+	var r1 = Vector3(hw * 0.25, height * 0.95, 0.0)
+
+	# Base footprint
+	var b_fl = Vector3(-hw, 0.0, -hd)
+	var b_fr = Vector3(hw, 0.0, -hd)
+	var b_rr = Vector3(hw, 0.0, hd)
+	var b_rl = Vector3(-hw, 0.0, hd)
+
+	# Front slope (-Z)
+	var n_front = Vector3(0, depth, -height).normalized()
+	st.set_normal(n_front)
+	st.set_uv(Vector2(0.5, 1)); st.add_vertex(r0)
+	st.set_uv(Vector2(1, 0)); st.add_vertex(b_fr)
+	st.set_uv(Vector2(0, 0)); st.add_vertex(b_fl)
+
+	st.set_uv(Vector2(0.5, 1)); st.add_vertex(r0)
+	st.set_uv(Vector2(1, 1)); st.add_vertex(r1)
+	st.set_uv(Vector2(1, 0)); st.add_vertex(b_fr)
+
+	# Back slope (+Z)
+	var n_back = Vector3(0, depth, height).normalized()
+	st.set_normal(n_back)
+	st.set_uv(Vector2(0.5, 1)); st.add_vertex(r1)
+	st.set_uv(Vector2(0, 0)); st.add_vertex(b_rl)
+	st.set_uv(Vector2(1, 0)); st.add_vertex(b_rr)
+
+	st.set_uv(Vector2(0.5, 1)); st.add_vertex(r1)
+	st.set_uv(Vector2(0, 1)); st.add_vertex(r0)
+	st.set_uv(Vector2(0, 0)); st.add_vertex(b_rl)
+
+	# Left slope (-X)
+	var n_left = Vector3(-height, width * 0.5, 0).normalized()
+	st.set_normal(n_left)
+	st.set_uv(Vector2(0.5, 1)); st.add_vertex(r0)
+	st.set_uv(Vector2(0, 0)); st.add_vertex(b_fl)
+	st.set_uv(Vector2(1, 0)); st.add_vertex(b_rl)
+
+	# Right slope (+X)
+	var n_right = Vector3(height, width * 0.5, 0).normalized()
+	st.set_normal(n_right)
+	st.set_uv(Vector2(0.5, 1)); st.add_vertex(r1)
+	st.set_uv(Vector2(1, 0)); st.add_vertex(b_rr)
+	st.set_uv(Vector2(0, 0)); st.add_vertex(b_fr)
+
+	return st.commit()
+
+static func _create_crowned_road_mesh(width: float, height: float, length: float) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hw = width * 0.5
+	var hl = length * 0.5
+	var hh = height * 0.5
+	var crown_h = 0.03 # 3cm crown elevation at road centerline for realistic drainage crossfall
+
+	# Left edge, Center crest, Right edge
+	var v_cl_front = Vector3(0, hh + crown_h, -hl)
+	var v_cl_back  = Vector3(0, hh + crown_h, hl)
+	var v_le_front = Vector3(-hw, hh, -hl)
+	var v_le_back  = Vector3(-hw, hh, hl)
+	var v_re_front = Vector3(hw, hh, -hl)
+	var v_re_back  = Vector3(hw, hh, hl)
+
+	# Left lane
+	var n_left = Vector3(-crown_h, hw, 0).normalized()
+	st.set_normal(n_left)
+	st.set_uv(Vector2(0, 0)); st.add_vertex(v_le_front)
+	st.set_uv(Vector2(0.5, 0)); st.add_vertex(v_cl_front)
+	st.set_uv(Vector2(0.5, length * 0.2)); st.add_vertex(v_cl_back)
+
+	st.set_uv(Vector2(0, 0)); st.add_vertex(v_le_front)
+	st.set_uv(Vector2(0.5, length * 0.2)); st.add_vertex(v_cl_back)
+	st.set_uv(Vector2(0, length * 0.2)); st.add_vertex(v_le_back)
+
+	# Right lane
+	var n_right = Vector3(crown_h, hw, 0).normalized()
+	st.set_normal(n_right)
+	st.set_uv(Vector2(0.5, 0)); st.add_vertex(v_cl_front)
+	st.set_uv(Vector2(1, 0)); st.add_vertex(v_re_front)
+	st.set_uv(Vector2(1, length * 0.2)); st.add_vertex(v_re_back)
+
+	st.set_uv(Vector2(0.5, 0)); st.add_vertex(v_cl_front)
+	st.set_uv(Vector2(1, length * 0.2)); st.add_vertex(v_re_back)
+	st.set_uv(Vector2(0.5, length * 0.2)); st.add_vertex(v_cl_back)
+
+	return st.commit()
+
+static func _create_double_yellow_stripes_mesh(width: float, height: float, length: float) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var stripe_w = 0.12 # 12cm stripe width
+	var gap = 0.10     # 10cm gap between double-yellows
+	var hl = length * 0.5
+	var hh = height * 0.5
+
+	# Left Stripe
+	var lx0 = -(gap * 0.5 + stripe_w)
+	var lx1 = -gap * 0.5
+	st.set_normal(Vector3.UP)
+	st.add_vertex(Vector3(lx0, hh, -hl)); st.add_vertex(Vector3(lx1, hh, -hl)); st.add_vertex(Vector3(lx1, hh, hl))
+	st.add_vertex(Vector3(lx0, hh, -hl)); st.add_vertex(Vector3(lx1, hh, hl)); st.add_vertex(Vector3(lx0, hh, hl))
+
+	# Right Stripe
+	var rx0 = gap * 0.5
+	var rx1 = gap * 0.5 + stripe_w
+	st.set_normal(Vector3.UP)
+	st.add_vertex(Vector3(rx0, hh, -hl)); st.add_vertex(Vector3(rx1, hh, -hl)); st.add_vertex(Vector3(rx1, hh, hl))
+	st.add_vertex(Vector3(rx0, hh, -hl)); st.add_vertex(Vector3(rx1, hh, hl)); st.add_vertex(Vector3(rx0, hh, hl))
+
+	return st.commit()
+
+static func _create_strip_mesh(width: float, height: float, length: float) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hw = width * 0.5
+	var hl = length * 0.5
+	var hh = height * 0.5
+
+	st.set_normal(Vector3.UP)
+	st.add_vertex(Vector3(-hw, hh, -hl)); st.add_vertex(Vector3(hw, hh, -hl)); st.add_vertex(Vector3(hw, hh, hl))
+	st.add_vertex(Vector3(-hw, hh, -hl)); st.add_vertex(Vector3(hw, hh, hl)); st.add_vertex(Vector3(-hw, hh, hl))
+
+	return st.commit()
+
+static func _create_curb_bevel_mesh(width: float, height: float, length: float) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hw = width * 0.5
+	var hl = length * 0.5
+	var hh = height * 0.5
+
+	# 45-degree chamfered bevel face
+	var v0 = Vector3(-hw, -hh, -hl)
+	var v1 = Vector3(hw, hh, -hl)
+	var v2 = Vector3(hw, hh, hl)
+	var v3 = Vector3(-hw, -hh, hl)
+
+	var bevel_n = Vector3(height, width, 0.0).normalized()
+	st.set_normal(bevel_n)
+	st.add_vertex(v0); st.add_vertex(v1); st.add_vertex(v2)
+	st.add_vertex(v0); st.add_vertex(v2); st.add_vertex(v3)
+
+	return st.commit()
+
+static func _create_sidewalk_mesh(width: float, height: float, length: float) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hw = width * 0.5
+	var hl = length * 0.5
+	var hh = height * 0.5
+
+	# Top pavement surface
+	var v0 = Vector3(-hw, hh, -hl)
+	var v1 = Vector3(hw, hh, -hl)
+	var v2 = Vector3(hw, hh, hl)
+	var v3 = Vector3(-hw, hh, hl)
+
+	st.set_normal(Vector3.UP)
+	st.set_uv(Vector2(0, 0)); st.add_vertex(v0)
+	st.set_uv(Vector2(width * 0.5, 0)); st.add_vertex(v1)
+	st.set_uv(Vector2(width * 0.5, length * 0.5)); st.add_vertex(v2)
+
+	st.set_uv(Vector2(0, 0)); st.add_vertex(v0)
+	st.set_uv(Vector2(width * 0.5, length * 0.5)); st.add_vertex(v2)
+	st.set_uv(Vector2(0, length * 0.5)); st.add_vertex(v3)
+
+	return st.commit()

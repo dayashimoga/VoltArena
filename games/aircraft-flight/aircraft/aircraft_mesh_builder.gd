@@ -86,6 +86,15 @@ static func build_fa18_hornet(hull_color: Color, accent_color: Color) -> Node3D:
 		elev_r.position = Vector3(1.9, 0.28, 3.8)
 		root.add_child(elev_r)
 
+		# Dorsal Speedbrake (articulating)
+		var speedbrake = _add_box(root, Vector3(0.55, 0.08, 1.4), Vector3(0.0, 0.85, 0.8), mat_dark)
+		speedbrake.name = "Speedbrake"
+
+		# Wingtip AIM-9 Sidewinder Missiles & Underwing Weapon Pylons
+		var mat_white = _create_pbr_material(Color(0.92, 0.94, 0.96), 0.4, 0.1)
+		_add_missile(root, Vector3(-5.8, 0.32, 0.9), mat_white, mat_dark)
+		_add_missile(root, Vector3(5.8, 0.32, 0.9), mat_white, mat_dark)
+
 		# Afterburner Plumes
 		var ab_l = _add_cone(root, 0.42, 1.8, Vector3(-0.62, 0.36, 4.4), mat_glow)
 		ab_l.rotation_degrees.x = -90.0
@@ -133,6 +142,8 @@ static func _build_procedural_fa18(root: Node3D, hull_color: Color, accent_color
 	_add_box(root, Vector3(1.85, 0.95, 3.2), Vector3(0.0, 0.38, 3.6), mat_hull)
 	# Dorsal Avionics Spine
 	_add_box(root, Vector3(0.65, 0.30, 4.8), Vector3(0.0, 0.95, -0.4), mat_hull)
+	var speedbrake = _add_box(root, Vector3(0.55, 0.08, 1.4), Vector3(0.0, 1.10, 0.8), mat_dark_metal)
+	speedbrake.name = "Speedbrake"
 
 	# Cockpit & Canopy
 	var canopy = _add_box(root, Vector3(0.78, 0.62, 2.8), Vector3(0.0, 0.98, -2.2), mat_canopy)
@@ -427,6 +438,13 @@ static func build_a320_airliner(hull_color: Color, accent_color: Color) -> Node3
 		flap_r.name = "FlapRight"
 		root.add_child(flap_r)
 
+		var sp_l = Node3D.new()
+		sp_l.name = "SpoilerLeft"
+		root.add_child(sp_l)
+		var sp_r = Node3D.new()
+		sp_r.name = "SpoilerRight"
+		root.add_child(sp_r)
+
 		var rudder_l = Node3D.new()
 		rudder_l.name = "RudderLeft"
 		root.add_child(rudder_l)
@@ -508,6 +526,11 @@ static func _build_procedural_a320(root: Node3D, hull_color: Color, accent_color
 	var flap_r = _add_box(root, Vector3(7.2, 0.16, 0.95), Vector3(5.8, 0.35, 2.2), mat_metal)
 	flap_r.name = "FlapRight"
 
+	var sp_l = _add_box(root, Vector3(5.5, 0.08, 0.65), Vector3(-6.0, 0.55, 0.8), mat_metal)
+	sp_l.name = "SpoilerLeft"
+	var sp_r = _add_box(root, Vector3(5.5, 0.08, 0.65), Vector3(6.0, 0.55, 0.8), mat_metal)
+	sp_r.name = "SpoilerRight"
+
 	for fx in [-4.0, -7.0, 4.0, 7.0]:
 		var canoe = _add_cyl(root, 0.18, 0.12, 2.4, Vector3(fx, 0.15, 2.0), mat_hull)
 		canoe.rotation_degrees.x = 90.0
@@ -580,6 +603,11 @@ static func build_extra330_sport(hull_color: Color, accent_color: Color) -> Node
 		for i in range(3):
 			var blade = _add_box(prop_root, Vector3(0.08, 1.05, 0.04), Vector3(0.0, 0.55, 0.0), mat_metal)
 			blade.rotation_degrees.z = i * 120.0
+
+		var blur_mat = _create_prop_blur_material(3)
+		var blur_disk = _add_disc(prop_root, 1.15, Vector3(0.0, 0.0, -0.05), blur_mat)
+		blur_disk.name = "PropBlurDisk"
+		blur_disk.visible = false
 
 		# Control Surfaces
 		var aileron_l = Node3D.new()
@@ -657,6 +685,11 @@ static func _build_procedural_extra330(root: Node3D, hull_color: Color, accent_c
 		blade.rotation_degrees.z = i * 120.0
 		_add_box(blade, Vector3(0.09, 0.18, 0.05), Vector3(0.0, 0.45, 0.0), _create_pbr_material(Color(0.95, 0.85, 0.1), 0.4, 0.1))
 
+	var blur_mat = _create_prop_blur_material(3)
+	var blur_disk = _add_disc(prop_root, 1.15, Vector3(0.0, 0.0, -0.05), blur_mat)
+	blur_disk.name = "PropBlurDisk"
+	blur_disk.visible = false
+
 	_add_box(root, Vector3(7.2, 0.10, 1.45), Vector3(0.0, 0.25, -0.3), mat_hull)
 
 	var aileron_l = _add_box(root, Vector3(3.0, 0.07, 0.45), Vector3(-2.1, 0.25, 0.55), mat_accent)
@@ -730,6 +763,19 @@ static func build_uh60_helicopter(hull_color: Color, accent_color: Color) -> Nod
 		var hoist = _add_box(root, Vector3(0.12, 0.12, 1.4), Vector3(1.15, 1.85, -1.8), mat_metal)
 		hoist.name = "RescueHoist"
 		_add_cyl(hoist, 0.16, 0.16, 0.35, Vector3(0.0, -0.15, -0.5), mat_dark).rotation_degrees.x = 90.0
+
+		# Rotor Motion Blur Disks
+		var main_blur_mat = _create_prop_blur_material(4)
+		var main_blur = _add_disc(root, 8.2, Vector3(0.0, 3.2, -0.4), main_blur_mat)
+		main_blur.rotation_degrees.x = 90.0
+		main_blur.name = "MainRotorBlur"
+		main_blur.visible = false
+
+		var tail_blur_mat = _create_prop_blur_material(4)
+		var tail_blur = _add_disc(root, 1.6, Vector3(0.35, 2.65, 9.0), tail_blur_mat)
+		tail_blur.rotation_degrees.y = 90.0
+		tail_blur.name = "TailRotorBlur"
+		tail_blur.visible = false
 
 		var elev_l = Node3D.new()
 		elev_l.name = "ElevatorLeft"
@@ -822,6 +868,19 @@ static func _build_procedural_uh60(root: Node3D, hull_color: Color, accent_color
 	hoist.name = "RescueHoist"
 	_add_cyl(hoist, 0.16, 0.16, 0.35, Vector3(0.0, -0.15, -0.5), mat_dark).rotation_degrees.x = 90.0
 
+	# Rotor Motion Blur Disks
+	var main_blur_mat = _create_prop_blur_material(4)
+	var main_blur = _add_disc(root, 8.2, Vector3(0.0, 2.75, -0.4), main_blur_mat)
+	main_blur.rotation_degrees.x = 90.0
+	main_blur.name = "MainRotorBlur"
+	main_blur.visible = false
+
+	var tail_blur_mat = _create_prop_blur_material(4)
+	var tail_blur = _add_disc(root, 1.6, Vector3(0.35, 2.65, 9.0), tail_blur_mat)
+	tail_blur.rotation_degrees.y = 90.0
+	tail_blur.name = "TailRotorBlur"
+	tail_blur.visible = false
+
 	var gear_node = Node3D.new()
 	gear_node.name = "LandingGear"
 	root.add_child(gear_node)
@@ -841,9 +900,32 @@ static func _build_procedural_uh60(root: Node3D, hull_color: Color, accent_color
 
 static func _add_box(parent: Node, size: Vector3, pos: Vector3, mat: Material) -> MeshInstance3D:
 	var mi = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = size
-	mi.mesh = box
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hw = size.x * 0.5
+	var hh = size.y * 0.5
+	var hd = size.z * 0.5
+
+	var faces = [
+		[Vector3.FORWARD, [Vector3(-hw, -hh, -hd), Vector3(hw, -hh, -hd), Vector3(hw, hh, -hd), Vector3(-hw, hh, -hd)]],
+		[Vector3.BACK,    [Vector3(hw, -hh, hd), Vector3(-hw, -hh, hd), Vector3(-hw, hh, hd), Vector3(hw, hh, hd)]],
+		[Vector3.UP,      [Vector3(-hw, hh, -hd), Vector3(hw, hh, -hd), Vector3(hw, hh, hd), Vector3(-hw, hh, hd)]],
+		[Vector3.DOWN,    [Vector3(-hw, -hh, hd), Vector3(hw, -hh, hd), Vector3(hw, -hh, -hd), Vector3(-hw, -hh, -hd)]],
+		[Vector3.LEFT,    [Vector3(-hw, -hh, hd), Vector3(-hw, -hh, -hd), Vector3(-hw, hh, -hd), Vector3(-hw, hh, hd)]],
+		[Vector3.RIGHT,   [Vector3(hw, -hh, -hd), Vector3(hw, -hh, hd), Vector3(hw, hh, hd), Vector3(hw, hh, -hd)]],
+	]
+	for f in faces:
+		var n: Vector3 = f[0]
+		var v: Array = f[1]
+		st.set_normal(n)
+		st.set_uv(Vector2(0, 1)); st.add_vertex(v[0])
+		st.set_uv(Vector2(1, 1)); st.add_vertex(v[1])
+		st.set_uv(Vector2(1, 0)); st.add_vertex(v[2])
+		st.set_uv(Vector2(0, 1)); st.add_vertex(v[0])
+		st.set_uv(Vector2(1, 0)); st.add_vertex(v[2])
+		st.set_uv(Vector2(0, 0)); st.add_vertex(v[3])
+
+	mi.mesh = st.commit()
 	mi.position = pos
 	if mat:
 		mi.material_override = mat
@@ -852,12 +934,41 @@ static func _add_box(parent: Node, size: Vector3, pos: Vector3, mat: Material) -
 
 static func _add_cyl(parent: Node, r_top: float, r_bot: float, height: float, pos: Vector3, mat: Material) -> MeshInstance3D:
 	var mi = MeshInstance3D.new()
-	var cyl = CylinderMesh.new()
-	cyl.top_radius = r_top
-	cyl.bottom_radius = r_bot
-	cyl.height = height
-	cyl.radial_segments = 16
-	mi.mesh = cyl
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var segments = 16
+	var hh = height * 0.5
+
+	for i in range(segments):
+		var a0 = float(i) * TAU / float(segments)
+		var a1 = float(i + 1) * TAU / float(segments)
+		var c0 = cos(a0); var s0 = sin(a0)
+		var c1 = cos(a1); var s1 = sin(a1)
+
+		var pb0 = Vector3(c0 * r_bot, -hh, s0 * r_bot)
+		var pb1 = Vector3(c1 * r_bot, -hh, s1 * r_bot)
+		var pt0 = Vector3(c0 * r_top, hh, s0 * r_top)
+		var pt1 = Vector3(c1 * r_top, hh, s1 * r_top)
+
+		var n0 = Vector3(c0, 0.0, s0)
+		var n1 = Vector3(c1, 0.0, s1)
+
+		st.set_normal(n0); st.add_vertex(pb0)
+		st.set_normal(n1); st.add_vertex(pb1)
+		st.set_normal(n1); st.add_vertex(pt1)
+
+		st.set_normal(n0); st.add_vertex(pb0)
+		st.set_normal(n1); st.add_vertex(pt1)
+		st.set_normal(n0); st.add_vertex(pt0)
+
+		if r_top > 0.01:
+			st.set_normal(Vector3.UP)
+			st.add_vertex(Vector3(0, hh, 0)); st.add_vertex(pt0); st.add_vertex(pt1)
+		if r_bot > 0.01:
+			st.set_normal(Vector3.DOWN)
+			st.add_vertex(Vector3(0, -hh, 0)); st.add_vertex(pb1); st.add_vertex(pb0)
+
+	mi.mesh = st.commit()
 	mi.position = pos
 	if mat:
 		mi.material_override = mat
@@ -869,12 +980,40 @@ static func _add_cone(parent: Node, radius: float, height: float, pos: Vector3, 
 
 static func _add_sphere(parent: Node, radius: float, pos: Vector3, mat: Material) -> MeshInstance3D:
 	var mi = MeshInstance3D.new()
-	var sph = SphereMesh.new()
-	sph.radius = radius
-	sph.height = radius * 2.0
-	sph.radial_segments = 16
-	sph.rings = 8
-	mi.mesh = sph
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rings = 8
+	var sectors = 14
+
+	for r in range(rings):
+		var phi0 = float(r) * PI / float(rings)
+		var phi1 = float(r + 1) * PI / float(rings)
+		var y0 = cos(phi0) * radius; var r0 = sin(phi0) * radius
+		var y1 = cos(phi1) * radius; var r1 = sin(phi1) * radius
+
+		for s in range(sectors):
+			var th0 = float(s) * TAU / float(sectors)
+			var th1 = float(s + 1) * TAU / float(sectors)
+
+			var v0 = Vector3(cos(th0) * r0, y0, sin(th0) * r0)
+			var v1 = Vector3(cos(th1) * r0, y0, sin(th1) * r0)
+			var v2 = Vector3(cos(th1) * r1, y1, sin(th1) * r1)
+			var v3 = Vector3(cos(th0) * r1, y1, sin(th0) * r1)
+
+			var n0 = v0.normalized()
+			var n1 = v1.normalized()
+			var n2 = v2.normalized()
+			var n3 = v3.normalized()
+
+			st.set_normal(n0); st.add_vertex(v0)
+			st.set_normal(n1); st.add_vertex(v1)
+			st.set_normal(n2); st.add_vertex(v2)
+
+			st.set_normal(n0); st.add_vertex(v0)
+			st.set_normal(n2); st.add_vertex(v2)
+			st.set_normal(n3); st.add_vertex(v3)
+
+	mi.mesh = st.commit()
 	mi.position = pos
 	if mat:
 		mi.material_override = mat
@@ -882,18 +1021,8 @@ static func _add_sphere(parent: Node, radius: float, pos: Vector3, mat: Material
 	return mi
 
 static func _add_wheel(parent: Node, radius: float, width: float, pos: Vector3, mat: Material) -> MeshInstance3D:
-	var mi = MeshInstance3D.new()
-	var cyl = CylinderMesh.new()
-	cyl.top_radius = radius
-	cyl.bottom_radius = radius
-	cyl.height = width
-	cyl.radial_segments = 14
-	mi.mesh = cyl
-	mi.position = pos
+	var mi = _add_cyl(parent, radius, radius, width, pos, mat)
 	mi.rotation_degrees.z = 90.0
-	if mat:
-		mi.material_override = mat
-	parent.add_child(mi)
 	return mi
 
 static func _add_missile(parent: Node, pos: Vector3, mat_body: Material, mat_fins: Material) -> void:
@@ -937,3 +1066,40 @@ static func _create_emissive_material(color: Color, energy: float) -> StandardMa
 	mat.emission = color
 	mat.emission_energy_multiplier = energy
 	return mat
+
+static func _add_disc(parent: Node, radius: float, pos: Vector3, mat: Material) -> MeshInstance3D:
+	var mi = MeshInstance3D.new()
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var sectors = 24
+	for s in range(sectors):
+		var th0 = float(s) * TAU / float(sectors)
+		var th1 = float(s + 1) * TAU / float(sectors)
+		var p0 = Vector3(0.0, 0.0, 0.0)
+		var p1 = Vector3(cos(th0) * radius, sin(th0) * radius, 0.0)
+		var p2 = Vector3(cos(th1) * radius, sin(th1) * radius, 0.0)
+		var uv0 = Vector2(0.5, 0.5)
+		var uv1 = Vector2(0.5 + 0.5 * cos(th0), 0.5 + 0.5 * sin(th0))
+		var uv2 = Vector2(0.5 + 0.5 * cos(th1), 0.5 + 0.5 * sin(th1))
+		st.set_normal(Vector3.FORWARD)
+		st.set_uv(uv0); st.add_vertex(p0)
+		st.set_uv(uv1); st.add_vertex(p1)
+		st.set_uv(uv2); st.add_vertex(p2)
+	mi.mesh = st.commit()
+	mi.position = pos
+	if mat:
+		mi.material_override = mat
+	parent.add_child(mi)
+	return mi
+
+static func _create_prop_blur_material(blade_count: int, tip_col: Color = Color(0.95, 0.85, 0.15, 0.70)) -> ShaderMaterial:
+	var shader = load("res://games/aircraft-flight/aircraft/prop_blur.gdshader")
+	if not shader:
+		return null
+	var mat = ShaderMaterial.new()
+	mat.shader = shader
+	mat.set_shader_parameter("blade_count", blade_count)
+	mat.set_shader_parameter("tip_color", tip_col)
+	mat.set_shader_parameter("rpm_normalized", 1.0)
+	return mat
+

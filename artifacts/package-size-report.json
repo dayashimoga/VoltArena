@@ -3,7 +3,7 @@
     "AeroRush-Linux-x86_64.tar.gz": {
       "size_mb": 180.34,
       "size_bytes": 189096266,
-      "sha256": "d48304c616712cd6e21c68e2c9b1c007096b8810c4bdb60996877b1dedfdc9fc"
+      "sha256": "36c3ca9c777f7b1c3a891a710c6b8630016b929eccec1215f30478eb1eb683fb"
     },
     "AeroRush-Web.zip": {
       "size_mb": 288.37,
@@ -13,7 +13,7 @@
     "AeroRush-Windows-x86_64.zip": {
       "size_mb": 186.2,
       "size_bytes": 195248229,
-      "sha256": "da4706b164d4c4352047bad79f443a6d49364b208639671848ee2d2b15d528a5"
+      "sha256": "3aea09e6f1160a6aab590c18f6bc256307df176e375384164fa03ddaacb90878"
     },
     "AeroSim6DoF-Linux-x86_64.tar.gz": {
       "size_mb": 203.85,
@@ -33,7 +33,7 @@
     "AircraftFlight-Linux-x86_64.tar.gz": {
       "size_mb": 194.39,
       "size_bytes": 203829600,
-      "sha256": "35881c8cc76f34f3abd8e8778c38aa35f2dca8625f98eee1c95657fe5762fb4b"
+      "sha256": "a04154d5de4b8f37885757e015285b29e5dfe8c2592db68f7b6f6465398fa806"
     },
     "AircraftFlight-Web.zip": {
       "size_mb": 302.41,
@@ -43,12 +43,12 @@
     "AircraftFlight-Windows-x86_64.zip": {
       "size_mb": 200.24,
       "size_bytes": 209962955,
-      "sha256": "a05038c6b9d9cdf93bab961a017b65b47dc653d96b4b15bc911988e70e732631"
+      "sha256": "739422e128265eec5f4687805618e902605f747dfe6afe2e1798e61e14d0c510"
     },
     "ChromaRush-Linux-x86_64.tar.gz": {
       "size_mb": 175.22,
       "size_bytes": 183728965,
-      "sha256": "d4e88a56be9823325ebada3180f3969fe91aba16a54ca520032e3a0916b08f7b"
+      "sha256": "ffb5074c87ee75d81579822785c67f4ac8e3021e142591c102df64831f78556e"
     },
     "ChromaRush-Web.zip": {
       "size_mb": 283.25,
@@ -58,12 +58,12 @@
     "ChromaRush-Windows-x86_64.zip": {
       "size_mb": 181.08,
       "size_bytes": 189877766,
-      "sha256": "9d6dec7a0e1f358266d33f5b93221fa84a6354cd660fcecdf3b1243e6a32f058"
+      "sha256": "6d36078c42f3a1d87799135353916925eb94e0b8d28873a0ffb6d1fa4387e10d"
     },
     "DriftStorm-Linux-x86_64.tar.gz": {
       "size_mb": 175.06,
       "size_bytes": 183560867,
-      "sha256": "b42010a1260fb57dade0dfee96516f1eab45180f26a954d726fa85dad6dc095d"
+      "sha256": "56ad13388dac8069dc894f37c97db4d38d11f15139af1e175de5580becc4cd2b"
     },
     "DriftStorm-Web.zip": {
       "size_mb": 283.09,
@@ -73,7 +73,7 @@
     "DriftStorm-Windows-x86_64.zip": {
       "size_mb": 180.92,
       "size_bytes": 189711264,
-      "sha256": "0a4a2e857a8ea6d6679fb048998e7f185a51da2c6ddb5b903c86d8ecc900061b"
+      "sha256": "cc3302045ff28d3d9478d49b598e412a4ea7674160e44b774b8a8fa04cf8b29a"
     },
     "IronCrucible-Linux-x86_64.tar.gz": {
       "size_mb": 174.96,
@@ -123,7 +123,7 @@
     "RoboForgeArena-Linux-x86_64.tar.gz": {
       "size_mb": 174.94,
       "size_bytes": 183436473,
-      "sha256": "ff83a4a3fd68feb69b8a3eab44bed131f6e26a6bb8eb6489b89d1af58ce35205"
+      "sha256": "d9197b516996c589d446f4c4c87df2efd6818e9d7cb18e5a80d688f89a3c490b"
     },
     "RoboForgeArena-Web.zip": {
       "size_mb": 282.98,
@@ -133,12 +133,12 @@
     "RoboForgeArena-Windows-x86_64.zip": {
       "size_mb": 180.81,
       "size_bytes": 189587983,
-      "sha256": "92dc6bd324bbad20a63ab96a12463eed9a49a321d9a2366bb4c5cee5e1a8e4e4"
+      "sha256": "018459a14d36fb0abc78580a2d714fe63f2236d7c476a46913b6e2c83afde058"
     },
     "SkyboundOdyssey-Linux-x86_64.tar.gz": {
       "size_mb": 174.94,
       "size_bytes": 183432656,
-      "sha256": "ed5c49d40cf9c682f0c044f5ab7772bb70a99b61eced70cc64885915dfc48ae7"
+      "sha256": "7c39fd52e1473a9aae718dc31e2457658c94e535b85333b58cfccca9502c79e2"
     },
     "SkyboundOdyssey-Web.zip": {
       "size_mb": 282.97,
@@ -148,12 +148,12 @@
     "SkyboundOdyssey-Windows-x86_64.zip": {
       "size_mb": 180.8,
       "size_bytes": 189583955,
-      "sha256": "442fe45e8d0e7f34d9b3c4c4c85ea2fe184f9b6b57210c19590d7f2a9b971927"
+      "sha256": "d1e1ceb2e0287d6d53c61e46c35d5faf681caadbd54380a91b9c6f0ae2d232bb"
     },
     "StrikeVector-Linux-x86_64.tar.gz": {
       "size_mb": 175.13,
       "size_bytes": 183634593,
-      "sha256": "7bdaa29f3e246d34154be79b7138064ef9f3abe71ab006822d6a694843901de1"
+      "sha256": "fd9a590c1af3bcf1c70bf134d2b9dcdf8781879dbc865999207b73430d79e7ea"
     },
     "StrikeVector-Web.zip": {
       "size_mb": 283.17,
@@ -163,7 +163,7 @@
     "StrikeVector-Windows-x86_64.zip": {
       "size_mb": 180.99,
       "size_bytes": 189785870,
-      "sha256": "a81ec197b59dde9227c3bcf7ff4b36440f26247c81eb0839ef6fe4d625a2f74e"
+      "sha256": "70318e471620023396f86a59e123d254ad31ad7ea414be1abd69fc0fd7a7e8b2"
     },
     "UrbanLegends-Linux-x86_64.tar.gz": {
       "size_mb": 194.46,
@@ -183,7 +183,7 @@
     "WildCircuit-Linux-x86_64.tar.gz": {
       "size_mb": 174.94,
       "size_bytes": 183434977,
-      "sha256": "6c8e1dae8add78f3a7adddaf791d9228f9d72c6e90b1702917739246ffa509e1"
+      "sha256": "881f9f562bb8465b24494adaee98a6b6b7f10e4d757d3f944d23e4484bdba217"
     },
     "WildCircuit-Web.zip": {
       "size_mb": 282.98,
@@ -193,7 +193,7 @@
     "WildCircuit-Windows-x86_64.zip": {
       "size_mb": 180.8,
       "size_bytes": 189586342,
-      "sha256": "a99cc241bf8255359f2a2df7feb456ef2b429bf7b48031a50c8b27c5ee8e61e8"
+      "sha256": "4ca107a58fd5eece29d4b64f34a7ed4913c6991e18861d3ef0b9f059bcbf40e9"
     }
   },
   "suite_packages": {
@@ -205,7 +205,7 @@
     "VoltArena-Full-Linux-x86_64.tar.gz": {
       "size_mb": 99.52,
       "size_bytes": 104351832,
-      "sha256": "a6b2b30bbc9979538878c6799422f8d4e97b9e79645c491e43edc4c11d76d662"
+      "sha256": "7384166ce715e2fba5343e4524872a7dab01d78867d9b29f650f24618c633568"
     },
     "VoltArena-Full-Web.zip": {
       "size_mb": 207.54,
@@ -215,12 +215,12 @@
     "VoltArena-Full-Windows-x86_64.zip": {
       "size_mb": 105.37,
       "size_bytes": 110486083,
-      "sha256": "0f87a79bef0d484c0e175f08bc278f831fed68c54b251a37115823dfddcf3f5c"
+      "sha256": "274ba0fb4614816b6d65374d37d76240418918d5c61bc07b1943a854bf912028"
     }
   },
   "per_game_assets_kb": {
     "aero-rush": 336.0,
-    "chroma-rush": 481.1,
+    "chroma-rush": 481.2,
     "kart-racing": 230.2,
     "strike-vector": 319.0,
     "roboforge-arena": 52.9,
@@ -229,8 +229,8 @@
     "rocket-car": 77.7,
     "subway-survival": 61.5,
     "arena-fps": 70.9,
-    "aircraft-flight": 235.9,
-    "urban-legends": 270.8,
+    "aircraft-flight": 250.1,
+    "urban-legends": 296.9,
     "flight-simulator-6dof": 117.2
   },
   "isolation_verified": true,

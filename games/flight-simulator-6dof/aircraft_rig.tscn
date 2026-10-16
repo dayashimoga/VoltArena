@@ -202,6 +202,7 @@ fov = 75.0
 
 [node name="ChaseSpringArm" type="SpringArm3D" parent="CameraRig"]
 transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 1.8, 0)
+collision_mask = 9
 spring_length = 11.0
 
 [node name="ChaseCamera" type="Camera3D" parent="CameraRig/ChaseSpringArm"]

@@ -6,6 +6,7 @@ signal drift_boost_triggered(boost_level: int)
 @export var kart_type: String = "speeder" # "speeder", "phantom", "enforcer", "turbo_demon"
 @export var base_speed: float = 26.0
 @export var boost_top_speed: float = 38.0
+@export var boost_multiplier: float = 1.46
 @export var acceleration: float = 24.0
 @export var brake_deceleration: float = 32.0
 @export var steer_speed: float = 3.2
@@ -112,6 +113,7 @@ func setup_kart_archetype() -> void:
 			# High-speed drift specialist
 			base_speed = 29.0
 			boost_top_speed = 43.0
+			boost_multiplier = 1.48
 			acceleration = 20.0
 			brake_deceleration = 30.0
 			steer_speed = 2.9
@@ -120,6 +122,7 @@ func setup_kart_archetype() -> void:
 			# Heavy chassis, high grip, fast off the line
 			base_speed = 24.0
 			boost_top_speed = 35.0
+			boost_multiplier = 1.45
 			acceleration = 29.0
 			brake_deceleration = 36.0
 			steer_speed = 3.6
@@ -127,7 +130,8 @@ func setup_kart_archetype() -> void:
 		"turbo_demon":
 			# Rocket burst racer
 			base_speed = 25.5
-			boost_top_speed = 45.0
+			boost_top_speed = 42.0
+			boost_multiplier = 1.65
 			acceleration = 26.0
 			brake_deceleration = 32.0
 			steer_speed = 3.4
@@ -136,6 +140,7 @@ func setup_kart_archetype() -> void:
 			# Lightweight high-downforce open-wheeler
 			base_speed = 30.5
 			boost_top_speed = 43.0
+			boost_multiplier = 1.41
 			acceleration = 27.0
 			brake_deceleration = 38.0
 			steer_speed = 3.8
@@ -144,6 +149,7 @@ func setup_kart_archetype() -> void:
 			# Balanced all-rounder
 			base_speed = 26.0
 			boost_top_speed = 38.0
+			boost_multiplier = 1.46
 			acceleration = 24.0
 			brake_deceleration = 32.0
 			steer_speed = 3.2

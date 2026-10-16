@@ -96,6 +96,7 @@ var previous_euler: Vector3 = Vector3.ZERO
 # Weight transfer visual offsets
 var chassis_node: Node3D = null
 var visual_wheels: Array[Node3D] = []
+var taillight_material: StandardMaterial3D = null
 var body_pitch: float = 0.0
 var body_roll: float = 0.0
 var wheel_roll_rot: float = 0.0
@@ -464,6 +465,23 @@ func _update_weight_transfer(delta: float) -> void:
 	if chassis_node:
 		chassis_node.rotation.x = body_pitch
 		chassis_node.rotation.z = body_roll
+
+	# Dynamic reactive brake light emission (1.5 cruising / 6.0 braking)
+	if is_instance_valid(taillight_material):
+		var is_braking = brake_input > 0.1 or handbrake_input
+		taillight_material.emission_energy_multiplier = 6.0 if is_braking else 1.5
+
+	# Nitro exhaust flame VFX update
+	if chassis_node:
+		var flame_l = chassis_node.get_node_or_null("NitroFlame_L")
+		var flame_r = chassis_node.get_node_or_null("NitroFlame_R")
+		if flame_l and flame_r:
+			flame_l.visible = is_nitro_active
+			flame_r.visible = is_nitro_active
+			if is_nitro_active:
+				var flicker = randf_range(0.85, 1.25)
+				flame_l.scale = Vector3(flicker, flicker, flicker * randf_range(0.9, 1.3))
+				flame_r.scale = Vector3(flicker, flicker, flicker * randf_range(0.9, 1.3))
 
 	# Visual wheel rolling & steering
 	var roll_delta = -(forward_speed * delta) / UrbanConstants.TIRE_RADIUS

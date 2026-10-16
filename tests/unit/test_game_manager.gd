@@ -12,6 +12,7 @@ func run_tests() -> Dictionary:
 	test_game_manager_signals()
 	test_asset_loader()
 	test_game_constants()
+	test_all_13_games_routing()
 	return {"passed": assertions_passed, "failed": assertions_failed}
 
 func get_coverage_entries() -> Array:
@@ -70,4 +71,24 @@ func test_game_constants() -> void:
 	var res = GameConstants.get_autoload(dummy, "NonExistentAutoload")
 	assert_true(res == null, "NonExistent autoload must return null")
 	dummy.queue_free()
+
+func test_all_13_games_routing() -> void:
+	var expected_games = [
+		{"id": "arena_fps", "scene": "res://games/arena-fps/arena_fps_main.tscn"},
+		{"id": "subway_survival", "scene": "res://games/subway-survival/subway_main.tscn"},
+		{"id": "rocket_car", "scene": "res://games/rocket-car/rocket_car_main.tscn"},
+		{"id": "kart_racing", "scene": "res://games/kart-racing/kart_racing_main.tscn"},
+		{"id": "skybound_odyssey", "scene": "res://games/skybound-odyssey/skybound_main.tscn"},
+		{"id": "roboforge_arena", "scene": "res://games/roboforge-arena/roboforge_main.tscn"},
+		{"id": "wildcircuit", "scene": "res://games/wildcircuit/wildcircuit_main.tscn"},
+		{"id": "strike_vector", "scene": "res://games/strike-vector/strike_vector_main.tscn"},
+		{"id": "chroma_rush", "scene": "res://games/chroma-rush/chroma_rush_main.tscn"},
+		{"id": "aero_rush", "scene": "res://games/aero-rush/aero_rush_main.tscn"},
+		{"id": "aircraft_flight", "scene": "res://games/aircraft-flight/aircraft_flight_main.tscn"},
+		{"id": "urban_legends", "scene": "res://games/urban-legends/urban_legends_main.tscn"},
+		{"id": "flight_simulator_6dof", "scene": "res://games/flight-simulator-6dof/flight_sim_standalone.tscn"}
+	]
+	for g in expected_games:
+		assert_true(ResourceLoader.exists(g["scene"]), "Scene file must exist for %s: %s" % [g["id"], g["scene"]])
+
 

@@ -27,6 +27,12 @@ var heading_deg: float = 0.0
 var roll_rad: float = 0.0
 var pitch_rad: float = 0.0
 
+var is_crashed: bool = false
+var crash_reason: String = ""
+var ghost_director_active: bool = false
+var ghost_target_pitch_deg: float = 0.0
+var ghost_target_roll_deg: float = 0.0
+
 var _font: Font
 
 func _ready() -> void:
@@ -315,3 +321,47 @@ func _draw_annunciators(screen_size: Vector2) -> void:
 
 	if brakes_on:
 		draw_string(_font, Vector2(sx + 175, sy), "BRK", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, HUD_WARN)
+
+	# Ghost Flight Director Target Brackets
+	if ghost_director_active:
+		_draw_ghost_flight_director(screen_size * 0.5)
+
+	# Crash Banner
+	if is_crashed:
+		var banner_w = 420.0
+		var banner_h = 90.0
+		var r = Rect2(cx - banner_w * 0.5, screen_size.y * 0.42, banner_w, banner_h)
+		draw_rect(r, Color(0.1, 0.02, 0.02, 0.92), true)
+		draw_rect(r, HUD_DANGER, false, 3.0)
+		draw_string(_font, Vector2(cx - 200, screen_size.y * 0.42 + 28), "AIRCRAFT DESTROYED", HORIZONTAL_ALIGNMENT_CENTER, 400, 20, HUD_DANGER)
+		draw_string(_font, Vector2(cx - 200, screen_size.y * 0.42 + 52), crash_reason, HORIZONTAL_ALIGNMENT_CENTER, 400, 13, Color(1, 0.8, 0.8))
+		draw_string(_font, Vector2(cx - 200, screen_size.y * 0.42 + 76), "PRESS [R] TO RESET SIMULATION", HORIZONTAL_ALIGNMENT_CENTER, 400, 14, Color(1, 1, 0.3))
+
+func _draw_ghost_flight_director(center: Vector2) -> void:
+	var cue_color = Color(0.15, 0.85, 1.0, 0.85) # Cyan flight director cue
+	var pitch_offset_px = (ghost_target_pitch_deg - rad_to_deg(pitch_rad)) * 6.0
+	pitch_offset_px = clampf(pitch_offset_px, -120.0, 120.0)
+
+	var cue_y = center.y - pitch_offset_px
+	var cue_x = center.x
+	var d_roll = deg_to_rad(ghost_target_roll_deg) - roll_rad
+
+	# Flight director inverted-V / wing chevron
+	var p_left = Vector2(cue_x - 36, cue_y + 12).rotated(d_roll)
+	var p_center = Vector2(cue_x, cue_y).rotated(d_roll)
+	var p_right = Vector2(cue_x + 36, cue_y + 12).rotated(d_roll)
+
+	draw_line(p_center + (center - center.rotated(d_roll)), p_left + (center - center.rotated(d_roll)), cue_color, 2.5)
+	draw_line(p_center + (center - center.rotated(d_roll)), p_right + (center - center.rotated(d_roll)), cue_color, 2.5)
+	draw_string(_font, Vector2(cue_x - 40, cue_y - 8), "FD: TGT", HORIZONTAL_ALIGNMENT_CENTER, 80, 10, cue_color)
+
+func set_ghost_director(active: bool, pitch_deg: float = 0.0, roll_deg: float = 0.0) -> void:
+	ghost_director_active = active
+	ghost_target_pitch_deg = pitch_deg
+	ghost_target_roll_deg = roll_deg
+	queue_redraw()
+
+func show_crash_banner(reason: String) -> void:
+	is_crashed = true
+	crash_reason = reason
+	queue_redraw()

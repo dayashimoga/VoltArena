@@ -15,27 +15,38 @@ const POOL_SIZE: int = 16
 const POOL_3D_SIZE: int = 12
 
 func _ready() -> void:
+	setup_audio_buses()
 	setup_players()
 	generate_all_procedural_sounds()
 
+func setup_audio_buses() -> void:
+	var buses = ["Music", "SFX", "Engines", "Environment", "UI"]
+	for b_name in buses:
+		if AudioServer.get_bus_index(b_name) == -1:
+			var idx = AudioServer.bus_count
+			AudioServer.add_bus(idx)
+			AudioServer.set_bus_name(idx, b_name)
+			AudioServer.set_bus_send(idx, "Master")
+
 func setup_players() -> void:
+	setup_audio_buses()
 	if not is_instance_valid(bgm_player):
 		bgm_player = AudioStreamPlayer.new()
 		bgm_player.name = "BGMPlayer"
-		bgm_player.bus = "Master"
+		bgm_player.bus = "Music"
 		add_child(bgm_player)
 
 	if not is_instance_valid(engine_sfx_player):
 		engine_sfx_player = AudioStreamPlayer.new()
 		engine_sfx_player.name = "EngineSFXPlayer"
-		engine_sfx_player.bus = "Master"
+		engine_sfx_player.bus = "Engines"
 		add_child(engine_sfx_player)
 
 	if sfx_pool.is_empty():
 		for i in range(POOL_SIZE):
 			var p = AudioStreamPlayer.new()
 			p.name = "SFXPlayer_" + str(i)
-			p.bus = "Master"
+			p.bus = "SFX"
 			add_child(p)
 			sfx_pool.append(p)
 
@@ -43,7 +54,7 @@ func setup_players() -> void:
 		for i in range(POOL_3D_SIZE):
 			var p3 = AudioStreamPlayer3D.new()
 			p3.name = "SFX3DPlayer_" + str(i)
-			p3.bus = "Master"
+			p3.bus = "SFX"
 			p3.max_distance = 50.0
 			p3.unit_size = 10.0
 			add_child(p3)
@@ -138,13 +149,17 @@ func stop_engine_sound() -> void:
 func play_sfx(sound_name: String, pitch_scale: float = 1.0, volume_db: float = 0.0) -> void:
 	play_sound(sound_name, pitch_scale, volume_db)
 
-func play_sound(sound_name: String, pitch_scale: float = 1.0, volume_db: float = 0.0) -> void:
+func play_ui_sfx(sound_name: String, pitch_scale: float = 1.0, volume_db: float = 0.0) -> void:
+	play_sound(sound_name, pitch_scale, volume_db, "UI")
+
+func play_sound(sound_name: String, pitch_scale: float = 1.0, volume_db: float = 0.0, bus_name: String = "SFX") -> void:
 	if not sound_cache.has(sound_name):
 		return
 	var stream: AudioStreamWAV = sound_cache[sound_name]
 	for p in sfx_pool:
 		if not p.playing:
 			p.stream = stream
+			p.bus = bus_name
 			p.pitch_scale = clampf(pitch_scale + randf_range(-0.04, 0.04), 0.5, 2.0)
 			p.volume_db = volume_db
 			if p.is_inside_tree():
@@ -153,6 +168,7 @@ func play_sound(sound_name: String, pitch_scale: float = 1.0, volume_db: float =
 	if not sfx_pool.is_empty():
 		var p = sfx_pool[0]
 		p.stream = stream
+		p.bus = bus_name
 		p.pitch_scale = pitch_scale
 		p.volume_db = volume_db
 		if p.is_inside_tree():
@@ -203,6 +219,11 @@ func set_bus_volume(bus_name: String, volume_linear: float) -> void:
 	if idx >= 0:
 		var db = linear_to_db(clampf(volume_linear, 0.0001, 1.0))
 		AudioServer.set_bus_volume_db(idx, db)
+
+func set_bus_mute(bus_name: String, is_muted: bool) -> void:
+	var idx = AudioServer.get_bus_index(bus_name)
+	if idx >= 0:
+		AudioServer.set_bus_mute(idx, is_muted)
 
 func stop_all() -> void:
 	if is_instance_valid(bgm_player) and bgm_player.playing:

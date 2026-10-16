@@ -52,9 +52,10 @@ func setup_default_actions() -> void:
 	add_action_if_missing("throttle_down", [KEY_CTRL, KEY_X], -1, JOY_AXIS_TRIGGER_LEFT, 1.0)
 	add_action_key("flaps_cycle", KEY_F, JOY_BUTTON_Y)
 	add_action_key("wheel_brakes", KEY_SPACE, JOY_BUTTON_A)
-	add_action_key("parking_brake", KEY_B, JOY_BUTTON_X)
+	add_action_if_missing("parking_brake", [KEY_B, KEY_P], JOY_BUTTON_X, -1, 0.0)
 	add_action_key("landing_gear", KEY_G, JOY_BUTTON_B)
-	add_action_key("camera_toggle", KEY_V, JOY_BUTTON_BACK)
+	add_action_if_missing("camera_toggle", [KEY_V, KEY_C], JOY_BUTTON_BACK, -1, 0.0)
+	add_action_if_missing("flight_reset", [KEY_R], -1, -1, 0.0)
 	_cache_all_action_events()
 
 func _cache_all_action_events() -> void:
@@ -64,7 +65,7 @@ func _cache_all_action_events() -> void:
 		"boost", "drift", "swap", "target_cycle", "pause",
 		"pitch_up", "pitch_down", "roll_left", "roll_right", "yaw_left", "yaw_right",
 		"throttle_up", "throttle_down", "flaps_cycle", "wheel_brakes", "parking_brake",
-		"landing_gear", "camera_toggle"
+		"landing_gear", "camera_toggle", "flight_reset"
 	]
 	for a in standard_actions:
 		if InputMap.has_action(a):
@@ -93,7 +94,7 @@ func set_game_context(game_id: String) -> void:
 			allowed = [
 				"pitch_up", "pitch_down", "roll_left", "roll_right", "yaw_left", "yaw_right",
 				"throttle_up", "throttle_down", "flaps_cycle", "wheel_brakes", "parking_brake",
-				"landing_gear", "camera_toggle", "pause"
+				"landing_gear", "camera_toggle", "flight_reset", "pause"
 			]
 		_:
 			allowed = _action_events_cache.keys()

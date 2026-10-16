@@ -19,40 +19,34 @@ func _ready() -> void:
 func build_terrain() -> void:
 	name = "TerrainSystem"
 
-	var plane_mesh = PlaneMesh.new()
-	plane_mesh.size = Vector2(TERRAIN_SIZE, TERRAIN_SIZE)
-	plane_mesh.subdivide_width = GRID_SUBDIVISIONS
-	plane_mesh.subdivide_depth = GRID_SUBDIVISIONS
-
-	# Apply procedural height displacement
 	var st = SurfaceTool.new()
-	st.create_from(plane_mesh, 0)
-	var array_mesh = st.commit()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var half_size = TERRAIN_SIZE * 0.5
+	var step = TERRAIN_SIZE / float(GRID_SUBDIVISIONS)
 
-	var mdt = MeshDataTool.new()
-	mdt.create_from_surface(array_mesh, 0)
+	for z_i in range(GRID_SUBDIVISIONS):
+		var z0 = -half_size + float(z_i) * step
+		var z1 = -half_size + float(z_i + 1) * step
+		for x_i in range(GRID_SUBDIVISIONS):
+			var x0 = -half_size + float(x_i) * step
+			var x1 = -half_size + float(x_i + 1) * step
 
-	for i in range(mdt.get_vertex_count()):
-		var v = mdt.get_vertex(i)
-		var h = _compute_height(v.x, v.z)
-		v.y = h
-		mdt.set_vertex(i, v)
+			var p0 = Vector3(x0, _compute_height(x0, z0), z0)
+			var p1 = Vector3(x1, _compute_height(x1, z0), z0)
+			var p2 = Vector3(x1, _compute_height(x1, z1), z1)
+			var p3 = Vector3(x0, _compute_height(x0, z1), z1)
 
-	# Recalculate smooth normals for realistic lighting & slope calculations
-	for i in range(mdt.get_face_count()):
-		var v1_idx = mdt.get_face_vertex(i, 0)
-		var v2_idx = mdt.get_face_vertex(i, 1)
-		var v3_idx = mdt.get_face_vertex(i, 2)
-		var p1 = mdt.get_vertex(v1_idx)
-		var p2 = mdt.get_vertex(v2_idx)
-		var p3 = mdt.get_vertex(v3_idx)
-		var normal = (p2 - p1).cross(p3 - p1).normalized()
-		mdt.set_vertex_normal(v1_idx, normal)
-		mdt.set_vertex_normal(v2_idx, normal)
-		mdt.set_vertex_normal(v3_idx, normal)
+			var n0 = (p1 - p0).cross(p2 - p0).normalized()
+			st.set_normal(n0); st.add_vertex(p0)
+			st.set_normal(n0); st.add_vertex(p1)
+			st.set_normal(n0); st.add_vertex(p2)
 
-	var displaced_mesh = ArrayMesh.new()
-	mdt.commit_to_surface(displaced_mesh)
+			var n1 = (p2 - p0).cross(p3 - p0).normalized()
+			st.set_normal(n1); st.add_vertex(p0)
+			st.set_normal(n1); st.add_vertex(p2)
+			st.set_normal(n1); st.add_vertex(p3)
+
+	var displaced_mesh = st.commit()
 
 	# Mesh Instance
 	terrain_mesh_instance = MeshInstance3D.new()

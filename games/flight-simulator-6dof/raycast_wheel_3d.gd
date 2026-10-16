@@ -60,16 +60,40 @@ func evaluate_and_apply_forces(
 	brake_input: float = 0.0,
 	parking_brake: bool = false
 ) -> Dictionary:
+	if not enabled:
+		is_contacting = false
+		current_compression = 0.0
+		normal_force = 0.0
+		return {"in_contact": false, "normal_force": 0.0}
+
+	if is_inside_tree():
+		force_raycast_update()
 	is_contacting = is_colliding()
+
+	var contact_pt: Vector3 = Vector3.ZERO
+	var ground_normal: Vector3 = Vector3.UP
+	var dist: float = rest_length + wheel_radius
+
+	if is_contacting:
+		contact_pt = get_collision_point()
+		ground_normal = get_collision_normal()
+		var my_world_pos = global_position if is_inside_tree() else position
+		dist = my_world_pos.distance_to(contact_pt)
+	else:
+		# Ground plane fallback for runway (y=0 datum) or headless direct simulation
+		var my_world_pos = global_position if is_inside_tree() else position
+		var strut_bottom = my_world_pos.y - (rest_length + wheel_radius)
+		if strut_bottom <= 0.05:
+			is_contacting = true
+			contact_pt = Vector3(my_world_pos.x, 0.0, my_world_pos.z)
+			ground_normal = Vector3.UP
+			dist = max(0.001, my_world_pos.y)
+
 	if not is_contacting:
 		current_compression = 0.0
 		normal_force = 0.0
 		prev_spring_len = rest_length
 		return {"in_contact": false, "normal_force": 0.0}
-
-	var contact_pt = get_collision_point()
-	var ground_normal = get_collision_normal()
-	var dist = global_position.distance_to(contact_pt)
 
 	# 1. Spring Compression: x = L_rest - L_current
 	var current_spring_len = dist - wheel_radius
@@ -94,8 +118,9 @@ func evaluate_and_apply_forces(
 	# Wheel coordinate axes:
 	# Local forward: -Z of this wheel node (takes steering into account)
 	# Local right/lateral: +X of this wheel node
-	var wheel_forward_world = (global_transform.basis * Vector3(0, 0, -1)).slide(ground_normal).normalized()
-	var wheel_lateral_world = (global_transform.basis * Vector3(1, 0, 0)).slide(ground_normal).normalized()
+	var wheel_basis = global_transform.basis if is_inside_tree() else transform.basis
+	var wheel_forward_world = (wheel_basis * Vector3(0, 0, -1)).slide(ground_normal).normalized()
+	var wheel_lateral_world = (wheel_basis * Vector3(1, 0, 0)).slide(ground_normal).normalized()
 
 	var v_longitudinal = v_contact.dot(wheel_forward_world)
 	var v_lateral = v_contact.dot(wheel_lateral_world)
@@ -128,7 +153,8 @@ func evaluate_and_apply_forces(
 
 	# 6. Apply Total Force at Contact Patch
 	var f_total_wheel = f_suspension + f_lateral + f_longitudinal
-	var force_offset = contact_pt - body.global_position
+	var body_pos = body.global_position if body.is_inside_tree() else body.position
+	var force_offset = contact_pt - body_pos
 	body.apply_force(f_total_wheel, force_offset)
 
 	return {

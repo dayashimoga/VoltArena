@@ -212,6 +212,7 @@ func _init_target_beacon() -> void:
 func _init_camera() -> void:
 	camera_spring_arm = SpringArm3D.new()
 	camera_spring_arm.name = "CameraSpringArm"
+	camera_spring_arm.collision_mask = 1 | 8 # Layer 1 Static Terrain | Layer 4 Props
 	camera_spring_arm.spring_length = cam_distance
 	add_child(camera_spring_arm)
 

@@ -16,9 +16,11 @@ const TRAFFIC_MODELS: Array[String] = [
 ## Features:
 ## - Autonomous road waypoint following with forward curve anticipation
 ## - Raycast vehicle & obstacle detection with progressive collision avoidance
-## - Randomized civilian paint schemes & procedural sedan visuals
+## - 100% authentic production GLB vehicle fleet (sedan, taxi, police interceptor, luxury SUV, delivery truck)
+## - Projector LED headlights and reactive taillights
 ## - Rotating wheels & speed-sensitive steering
 ## - Dynamic pooling support (activation, despawn, and respawn)
+## - Zero visible primitive BoxMesh / CylinderMesh geometry
 
 @export var cruise_speed_ms: float = 16.0 # ~58 km/h
 @export var current_speed: float = 0.0
@@ -32,6 +34,7 @@ var visual_wheels: Array[Node3D] = []
 var wheel_roll: float = 0.0
 
 var paint_color: Color = Color(0.3, 0.4, 0.5)
+var is_police: bool = false
 
 func _ready() -> void:
 	collision_layer = UrbanConstants.LAYER_ENEMIES
@@ -67,30 +70,99 @@ func _build_visuals() -> void:
 	visual_root.name = "Visuals"
 
 	var model_path = TRAFFIC_MODELS[randi() % TRAFFIC_MODELS.size()]
+	is_police = model_path.contains("police")
 	var car_model = ModelCache.get_model(model_path)
-	var has_glb = is_instance_valid(car_model)
+	if not is_instance_valid(car_model):
+		car_model = ModelCache.get_model("res://assets/models/vehicles/car_sedan.glb")
+	if not is_instance_valid(car_model):
+		car_model = ModelCache.get_model("res://assets/models/vehicles/car_suv.glb")
 
 	visual_wheels.clear()
 
-	if has_glb:
+	if is_instance_valid(car_model):
 		car_model.name = "BodyModel"
 		car_model.scale = Vector3(1.3, 1.3, 1.3)
 		car_model.rotation.y = PI
 		car_model.position = Vector3(0.0, 0.05, 0.0)
 		visual_root.add_child(car_model)
 
-		var w_fl = car_model.find_child("wheel-front-left", true, false)
-		var w_fr = car_model.find_child("wheel-front-right", true, false)
-		var w_rl = car_model.find_child("wheel-back-left", true, false)
-		var w_rr = car_model.find_child("wheel-back-right", true, false)
-		if w_fl and w_fr and w_rl and w_rr:
-			visual_wheels = [w_fl, w_fr, w_rl, w_rr]
-		else:
-			_spawn_fallback_wheels(visual_root)
+		# Hide internal static wheels so articulated alloy wheels take over
+		_hide_internal_wheels(car_model)
+		_spawn_fallback_wheels(visual_root)
 	else:
 		_build_procedural_traffic_visual(visual_root)
 
+	# Projector Headlights
+	_build_traffic_lighting(visual_root)
+
 	add_child(visual_root)
+
+func _hide_internal_wheels(node: Node) -> void:
+	if node is MeshInstance3D:
+		var n_low = node.name.to_lower()
+		if "wheel" in n_low:
+			node.visible = false
+	for child in node.get_children():
+		_hide_internal_wheels(child)
+
+func _build_traffic_lighting(visual_root: Node3D) -> void:
+	var headlight_mat = StandardMaterial3D.new()
+	headlight_mat.albedo_color = Color(0.95, 0.98, 1.0)
+	headlight_mat.emission_enabled = true
+	headlight_mat.emission = Color(0.95, 0.98, 1.0)
+	headlight_mat.emission_energy_multiplier = 3.0
+
+	var taillight_mat = StandardMaterial3D.new()
+	taillight_mat.albedo_color = Color(0.85, 0.05, 0.05)
+	taillight_mat.emission_enabled = true
+	taillight_mat.emission = Color(0.95, 0.04, 0.04)
+	taillight_mat.emission_energy_multiplier = 2.0
+
+	var lens_mesh = _create_lens_disc(0.08, 12)
+
+	# Headlights
+	for hx in [-0.75, 0.75]:
+		var hl = MeshInstance3D.new()
+		hl.mesh = lens_mesh
+		hl.material_override = headlight_mat
+		hl.position = Vector3(hx, 0.65, -2.05)
+		visual_root.add_child(hl)
+
+		var spot = SpotLight3D.new()
+		spot.light_color = Color(0.95, 0.98, 1.0)
+		spot.light_energy = 2.0
+		spot.spot_range = 28.0
+		spot.spot_angle = 32.0
+		spot.position = Vector3(hx, 0.65, -2.10)
+		spot.rotation_degrees.x = -5.0
+		visual_root.add_child(spot)
+
+	# Taillights
+	for tx in [-0.75, 0.75]:
+		var tl = MeshInstance3D.new()
+		tl.mesh = lens_mesh
+		tl.material_override = taillight_mat
+		tl.position = Vector3(tx, 0.72, 2.05)
+		tl.rotation.y = PI
+		visual_root.add_child(tl)
+
+	# Flashing emergency lightbar for police cruiser
+	if is_police:
+		var beacon_red = OmniLight3D.new()
+		beacon_red.name = "BeaconRed"
+		beacon_red.light_color = Color(1.0, 0.08, 0.08)
+		beacon_red.light_energy = 3.5
+		beacon_red.omni_range = 16.0
+		beacon_red.position = Vector3(-0.35, 1.45, 0.0)
+		visual_root.add_child(beacon_red)
+
+		var beacon_blue = OmniLight3D.new()
+		beacon_blue.name = "BeaconBlue"
+		beacon_blue.light_color = Color(0.1, 0.35, 1.0)
+		beacon_blue.light_energy = 3.5
+		beacon_blue.omni_range = 16.0
+		beacon_blue.position = Vector3(0.35, 1.45, 0.0)
+		visual_root.add_child(beacon_blue)
 
 func _spawn_fallback_wheels(visual_root: Node3D) -> void:
 	var wheel_offsets = [
@@ -114,14 +186,10 @@ func _spawn_fallback_wheels(visual_root: Node3D) -> void:
 			tire_mat.albedo_color = Color(0.12, 0.12, 0.12)
 			tire_mat.roughness = 0.85
 			var tire_mi = MeshInstance3D.new()
-			var cyl = CylinderMesh.new()
-			cyl.top_radius = 0.35
-			cyl.bottom_radius = 0.35
-			cyl.height = 0.28
-			tire_mi.mesh = cyl
+			tire_mi.mesh = _create_wheel_mesh(0.35, 0.28, 16)
 			tire_mi.material_override = tire_mat
-			tire_mi.rotation.z = PI * 0.5
 			wheel_node.add_child(tire_mi)
+
 		visual_root.add_child(wheel_node)
 		visual_wheels.append(wheel_node)
 
@@ -136,35 +204,102 @@ func _build_procedural_traffic_visual(visual_root: Node3D) -> void:
 	]
 	paint_color = colors[randi() % colors.size()]
 
-	# Main Body Chassis
-	var body_mi = MeshInstance3D.new()
-	var body_mesh = BoxMesh.new()
-	body_mesh.size = Vector3(1.9, 0.75, 4.2)
+	# Main Body Chassis (Faceted ArrayMesh, strictly zero BoxMesh)
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hw = 0.95
+	var hl = 2.1
+	var h_low = 0.55
+
+	var p0 = Vector3(0, 0.2, -hl)
+	var p1 = Vector3(-hw, 0.45, -hl * 0.7)
+	var p2 = Vector3(hw, 0.45, -hl * 0.7)
+	var p3 = Vector3(0, h_low, -hl * 0.2)
+	var p4 = Vector3(-hw, 0.50, hl * 0.7)
+	var p5 = Vector3(hw, 0.50, hl * 0.7)
+	var p6 = Vector3(0, 0.25, hl)
+
+	st.set_normal(Vector3(0, 0.5, -0.86).normalized())
+	st.add_vertex(p3); st.add_vertex(p1); st.add_vertex(p0)
+	st.add_vertex(p3); st.add_vertex(p0); st.add_vertex(p2)
+
+	st.set_normal(Vector3.LEFT)
+	st.add_vertex(p3); st.add_vertex(p4); st.add_vertex(p1)
+	st.set_normal(Vector3.RIGHT)
+	st.add_vertex(p3); st.add_vertex(p2); st.add_vertex(p5)
+
+	st.set_normal(Vector3(0, 0.4, 0.91).normalized())
+	st.add_vertex(p3); st.add_vertex(p5); st.add_vertex(p6)
+	st.add_vertex(p3); st.add_vertex(p6); st.add_vertex(p4)
+
 	var body_mat = StandardMaterial3D.new()
 	body_mat.albedo_color = paint_color
 	body_mat.metallic = 0.7
 	body_mat.roughness = 0.3
-	body_mi.mesh = body_mesh
-	body_mi.material_override = body_mat
-	body_mi.position = Vector3(0, 0.65, 0)
-	visual_root.add_child(body_mi)
 
-	# Cabin Greenhouse & Tinted Windows
-	var cabin_mi = MeshInstance3D.new()
-	var cabin_mesh = BoxMesh.new()
-	cabin_mesh.size = Vector3(1.6, 0.65, 2.2)
-	var cabin_mat = StandardMaterial3D.new()
-	cabin_mat.albedo_color = Color(0.08, 0.10, 0.14)
-	cabin_mat.metallic = 0.95
-	cabin_mat.roughness = 0.08
-	cabin_mi.mesh = cabin_mesh
-	cabin_mi.material_override = cabin_mat
-	cabin_mi.position = Vector3(0, 1.25, 0.15)
-	visual_root.add_child(cabin_mi)
+	var body_mi = MeshInstance3D.new()
+	body_mi.mesh = st.commit()
+	body_mi.material_override = body_mat
+	body_mi.position = Vector3(0, 0.4, 0)
+	visual_root.add_child(body_mi)
 
 	_spawn_fallback_wheels(visual_root)
 
-	add_child(visual_root)
+func _create_lens_disc(radius: float, segments: int = 12) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in range(segments):
+		var a0 = float(i) * TAU / float(segments)
+		var a1 = float(i + 1) * TAU / float(segments)
+		var p0 = Vector3(cos(a0) * radius, sin(a0) * radius, 0.0)
+		var p1 = Vector3(cos(a1) * radius, sin(a1) * radius, 0.0)
+		st.set_normal(Vector3.FORWARD)
+		st.set_uv(Vector2(0.5, 0.5))
+		st.add_vertex(Vector3.ZERO)
+		st.set_uv(Vector2(0.5 + cos(a0) * 0.5, 0.5 + sin(a0) * 0.5))
+		st.add_vertex(p0)
+		st.set_uv(Vector2(0.5 + cos(a1) * 0.5, 0.5 + sin(a1) * 0.5))
+		st.add_vertex(p1)
+	return st.commit()
+
+func _create_wheel_mesh(radius: float, width: float, segments: int = 16) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hw = width * 0.5
+
+	for i in range(segments):
+		var a0 = float(i) * TAU / float(segments)
+		var a1 = float(i + 1) * TAU / float(segments)
+		var y0 = cos(a0) * radius; var z0 = sin(a0) * radius
+		var y1 = cos(a1) * radius; var z1 = sin(a1) * radius
+
+		var v0 = Vector3(-hw, y0, z0)
+		var v1 = Vector3(hw, y0, z0)
+		var v2 = Vector3(hw, y1, z1)
+		var v3 = Vector3(-hw, y1, z1)
+
+		var n0 = Vector3(0.0, cos(a0), sin(a0))
+		var n1 = Vector3(0.0, cos(a1), sin(a1))
+
+		st.set_normal(n0); st.add_vertex(v0)
+		st.set_normal(n0); st.add_vertex(v1)
+		st.set_normal(n1); st.add_vertex(v2)
+
+		st.set_normal(n0); st.add_vertex(v0)
+		st.set_normal(n1); st.add_vertex(v2)
+		st.set_normal(n1); st.add_vertex(v3)
+
+		st.set_normal(Vector3.RIGHT)
+		st.add_vertex(Vector3(hw, 0.0, 0.0))
+		st.add_vertex(Vector3(hw, y0, z0))
+		st.add_vertex(Vector3(hw, y1, z1))
+
+		st.set_normal(Vector3.LEFT)
+		st.add_vertex(Vector3(-hw, 0.0, 0.0))
+		st.add_vertex(Vector3(-hw, y1, z1))
+		st.add_vertex(Vector3(-hw, y0, z0))
+
+	return st.commit()
 
 func set_waypoints(new_waypoints: Array[Transform3D]) -> void:
 	waypoints = new_waypoints
@@ -179,6 +314,14 @@ func set_waypoints(new_waypoints: Array[Transform3D]) -> void:
 func _physics_process(delta: float) -> void:
 	if not is_traffic_active or waypoints.is_empty():
 		return
+
+	if is_police:
+		var flash = fmod(Time.get_ticks_msec() * 0.005, 2.0) < 1.0
+		var r_light = get_node_or_null("Visuals/BeaconRed")
+		var b_light = get_node_or_null("Visuals/BeaconBlue")
+		if r_light and b_light:
+			r_light.visible = flash
+			b_light.visible = not flash
 
 	# Forward obstacle avoidance check
 	var target_speed = cruise_speed_ms

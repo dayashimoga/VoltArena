@@ -92,6 +92,29 @@ func handle_exec_cmd(cmd: String) -> void:
 			_handle_aero_rush_cmd(scene, cmd)
 		"aircraft_flight":
 			_handle_aircraft_flight_cmd(scene, cmd)
+		"urban_legends":
+			_handle_urban_legends_cmd(scene, cmd)
+		"flight_simulator_6dof":
+			_handle_flight_sim_6dof_cmd(scene, cmd)
+
+func _handle_urban_legends_cmd(scene: Node, cmd: String) -> void:
+	print("[URBAN LEGENDS CMD] Received cmd: ", cmd, " scene: ", scene.name)
+	if cmd == "quick_play" or cmd == "start":
+		if scene.has_method("quick_play"):
+			scene.quick_play()
+	elif cmd == "reset_car":
+		var car = scene.get("player_vehicle")
+		if car and car.has_method("reset_to_nearest_road"):
+			car.reset_to_nearest_road()
+
+func _handle_flight_sim_6dof_cmd(scene: Node, cmd: String) -> void:
+	print("[AEROSIM 6DOF CMD] Received cmd: ", cmd, " scene: ", scene.name)
+	if cmd == "quick_play" or cmd == "start":
+		if scene.has_method("launch_free_flight"):
+			scene.launch_free_flight()
+		elif scene.has_method("start_lesson"):
+			scene.start_lesson(0)
+
 
 func _handle_aircraft_flight_cmd(scene: Node, cmd: String) -> void:
 	print("[APEX FLIGHT CMD] Received cmd: ", cmd, " scene: ", scene.name)
@@ -714,6 +737,9 @@ func start_game(game_id: String) -> void:
 		"urban_legends":
 			scene_path = "res://games/urban-legends/urban_legends_main.tscn"
 			music_track = "urban_legends"
+		"flight_simulator_6dof":
+			scene_path = "res://games/flight-simulator-6dof/flight_sim_standalone.tscn"
+			music_track = "apex_flight"
 		_:
 			push_error("Unknown game ID: " + game_id)
 			return

@@ -29,7 +29,8 @@ void vertex() {
 	v_world_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
 	// Compute tangent view direction for interior room parallax
 	mat3 tbn = mat3(TANGENT, BINORMAL, NORMAL);
-	v_tangent_view_dir = tbn * VIEW;
+	vec3 view_dir = normalize(-VERTEX);
+	v_tangent_view_dir = tbn * view_dir;
 }
 
 void fragment() {

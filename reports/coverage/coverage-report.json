@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 90.495867768595,
+  "overall_coverage_pct": 90.1135604542418,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -343,10 +343,13 @@
       ]
     },
     "res://games/aircraft-flight/worlds/city_flight_world.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 60,
       "tested": 3,
-      "total": 3,
-      "untested": []
+      "total": 5,
+      "untested": [
+        "_process",
+        "sample_terrain_elevation"
+      ]
     },
     "res://games/aircraft-flight/worlds/flight_world_manager.gd": {
       "coverage_pct": 100,
@@ -643,6 +646,16 @@
         "is_footprint_clear_of_spline"
       ]
     },
+    "res://games/flight-simulator-6dof/aero_math.gd": {
+      "coverage_pct": 76.9230769230769,
+      "tested": 10,
+      "total": 13,
+      "untested": [
+        "wind_to_body_forces",
+        "integrate_symplectic_euler",
+        "integrate_rk4"
+      ]
+    },
     "res://games/flight-simulator-6dof/aero_surface_3d.gd": {
       "coverage_pct": 100,
       "tested": 3,
@@ -651,33 +664,40 @@
     },
     "res://games/flight-simulator-6dof/aero_surface_config.gd": {
       "coverage_pct": 100,
-      "tested": 3,
-      "total": 3,
+      "tested": 5,
+      "total": 5,
       "untested": []
     },
     "res://games/flight-simulator-6dof/aircraft_controller.gd": {
       "coverage_pct": 100,
-      "tested": 6,
-      "total": 6,
+      "tested": 9,
+      "total": 9,
       "untested": []
     },
     "res://games/flight-simulator-6dof/cockpit_hud.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 50,
       "tested": 2,
-      "total": 2,
-      "untested": []
+      "total": 4,
+      "untested": [
+        "set_ghost_director",
+        "show_crash_banner"
+      ]
     },
     "res://games/flight-simulator-6dof/flight_school_director.gd": {
       "coverage_pct": 100,
-      "tested": 3,
-      "total": 3,
+      "tested": 4,
+      "total": 4,
       "untested": []
     },
     "res://games/flight-simulator-6dof/flight_sim_standalone.gd": {
-      "coverage_pct": 100,
-      "tested": 1,
-      "total": 1,
-      "untested": []
+      "coverage_pct": 40,
+      "tested": 2,
+      "total": 5,
+      "untested": [
+        "quick_play",
+        "launch_free_flight",
+        "start_lesson"
+      ]
     },
     "res://games/flight-simulator-6dof/floating_origin.gd": {
       "coverage_pct": 100,
@@ -1293,8 +1313,8 @@
     },
     "res://games/urban-legends/vehicles/urban_vehicle_catalog.gd": {
       "coverage_pct": 100,
-      "tested": 2,
-      "total": 2,
+      "tested": 3,
+      "total": 3,
       "untested": []
     },
     "res://games/urban-legends/vehicles/urban_vehicle_visuals.gd": {
@@ -1310,13 +1330,10 @@
       "untested": []
     },
     "res://games/urban-legends/world/urban_prop_factory.gd": {
-      "coverage_pct": 80,
-      "tested": 8,
-      "total": 10,
-      "untested": [
-        "build_commercial_block",
-        "build_tree"
-      ]
+      "coverage_pct": 100,
+      "tested": 24,
+      "total": 24,
+      "untested": []
     },
     "res://games/urban-legends/world/urban_road_network.gd": {
       "coverage_pct": 100,
@@ -1385,12 +1402,10 @@
       "untested": []
     },
     "res://games/wildcircuit/world/wild_biomes.gd": {
-      "coverage_pct": 87.5,
-      "tested": 7,
+      "coverage_pct": 100,
+      "tested": 8,
       "total": 8,
-      "untested": [
-        "build_biome"
-      ]
+      "untested": []
     },
     "res://launcher/launcher.gd": {
       "coverage_pct": 100,
@@ -1417,10 +1432,14 @@
       "untested": []
     },
     "res://shared/audio/audio_manager.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 86.3636363636364,
       "tested": 19,
-      "total": 19,
-      "untested": []
+      "total": 22,
+      "untested": [
+        "setup_audio_buses",
+        "play_ui_sfx",
+        "set_bus_mute"
+      ]
     },
     "res://shared/cameras/orbit_camera.gd": {
       "coverage_pct": 100,
@@ -1653,7 +1672,7 @@
       "untested": []
     }
   },
-  "tested_functions": 1314,
-  "timestamp": "2026-10-16T07:09:08",
-  "total_functions": 1452
+  "tested_functions": 1349,
+  "timestamp": "2026-10-16T14:49:12",
+  "total_functions": 1497
 }

@@ -50,7 +50,7 @@ func _ready() -> void:
 func _setup_camera_rig() -> void:
 	spring_arm = SpringArm3D.new()
 	spring_arm.name = "SpringArm"
-	spring_arm.collision_mask = GameConstants.LAYER_WORLD
+	spring_arm.collision_mask = GameConstants.LAYER_WORLD | 8 # Layer 1 Static World | Layer 4 Props
 	spring_arm.spring_length = 2.8
 	spring_arm.margin = 0.2
 	add_child(spring_arm)

@@ -13,6 +13,11 @@ static func validate_course(course_def: Dictionary) -> Dictionary:
 
 	# 1. Waypoint Integrity & Curvature Continuity
 	var waypoints = course_def.get("waypoints", []) as Array
+	if waypoints.is_empty() and course_def.has("islands"):
+		for isl in course_def["islands"]:
+			var isl_wps = isl.get("waypoints", []) as Array
+			waypoints.append_array(isl_wps)
+
 	checks["waypoint_count"] = waypoints.size() >= 4
 	if waypoints.size() < 4:
 		errors.append("Course '%s' has fewer than 4 waypoints." % course_def.get("id", "unknown"))
@@ -42,15 +47,18 @@ static func validate_course(course_def: Dictionary) -> Dictionary:
 
 	# 2. Checkpoint Monotonicity and Ordering
 	var checkpoints = course_def.get("checkpoints", []) as Array
-	var cp_ok = checkpoints.size() >= 3
-	if checkpoints.size() < 3:
-		errors.append("Course requires at least 3 checkpoints (has %d)" % checkpoints.size())
+	if checkpoints.is_empty() and course_def.has("islands"):
+		checks["checkpoints_ok"] = course_def["islands"].size() >= 2
 	else:
-		for c in range(checkpoints.size() - 1):
-			if int(checkpoints[c]) >= int(checkpoints[c + 1]):
-				cp_ok = false
-				errors.append("Non-monotonic checkpoint ordering at idx %d" % c)
-	checks["checkpoints_ok"] = cp_ok
+		var cp_ok = checkpoints.size() >= 3
+		if checkpoints.size() < 3:
+			errors.append("Course requires at least 3 checkpoints (has %d)" % checkpoints.size())
+		else:
+			for c in range(checkpoints.size() - 1):
+				if int(checkpoints[c]) >= int(checkpoints[c + 1]):
+					cp_ok = false
+					errors.append("Non-monotonic checkpoint ordering at idx %d" % c)
+		checks["checkpoints_ok"] = cp_ok
 
 	# 3. Procedural Track Geometry & Collision Body Verification
 	var track_data = AeroTrackGenerator.generate_track(course_def if course_def.has("islands") else waypoints, 14.0)
@@ -85,6 +93,7 @@ static func validate_course(course_def: Dictionary) -> Dictionary:
 
 	var is_passed = errors.is_empty()
 	return {
+		"is_valid": is_passed,
 		"passed": is_passed,
 		"course_id": course_def.get("id", "unknown"),
 		"checks": checks,

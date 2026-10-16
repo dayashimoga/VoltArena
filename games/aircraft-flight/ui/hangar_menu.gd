@@ -227,10 +227,10 @@ func _build_turntable_viewport() -> void:
 	# Studio Camera: perfectly framed at eye level with slight upward angle
 	var cam = Camera3D.new()
 	cam.position = Vector3(0.0, 2.6, 9.8)
-	cam.look_at(Vector3(0.0, 0.65, 0.0), Vector3.UP)
 	cam.current = true
 	cam.fov = 46.0
 	preview_viewport.add_child(cam)
+	cam.look_at(Vector3(0.0, 0.65, 0.0), Vector3.UP)
 
 	# Three-Point Studio Lighting
 	# 1. Warm Directional Key Light
@@ -260,9 +260,7 @@ func _build_turntable_viewport() -> void:
 	# --- 3D HANGAR BAY ARCHITECTURE ---
 	# Polished Epoxy Hangar Floor
 	var floor_mesh = MeshInstance3D.new()
-	var f_box = BoxMesh.new()
-	f_box.size = Vector3(50.0, 0.4, 50.0)
-	floor_mesh.mesh = f_box
+	floor_mesh.mesh = _create_box_mesh(Vector3(50.0, 0.4, 50.0))
 	var f_mat = StandardMaterial3D.new()
 	f_mat.albedo_color = Color(0.11, 0.13, 0.16)
 	f_mat.metallic = 0.65
@@ -273,9 +271,7 @@ func _build_turntable_viewport() -> void:
 
 	# Hangar Rear Wall with Architectural Ribbed Panels & Columns
 	var wall_mesh = MeshInstance3D.new()
-	var w_box = BoxMesh.new()
-	w_box.size = Vector3(45.0, 20.0, 0.8)
-	wall_mesh.mesh = w_box
+	wall_mesh.mesh = _create_box_mesh(Vector3(45.0, 20.0, 0.8))
 	var w_mat = StandardMaterial3D.new()
 	w_mat.albedo_color = Color(0.14, 0.17, 0.22)
 	w_mat.roughness = 0.75
@@ -291,9 +287,7 @@ func _build_turntable_viewport() -> void:
 	for cx in [-18.0, 18.0]:
 		for cz in [-12.0, -4.0, 4.0]:
 			var col = MeshInstance3D.new()
-			var col_box = BoxMesh.new()
-			col_box.size = Vector3(1.2, 18.0, 1.2)
-			col.mesh = col_box
+			col.mesh = _create_box_mesh(Vector3(1.2, 18.0, 1.2))
 			col.material_override = col_mat
 			col.position = Vector3(cx, 9.0, cz)
 			preview_viewport.add_child(col)
@@ -305,9 +299,7 @@ func _build_turntable_viewport() -> void:
 	truss_mat.roughness = 0.35
 	for tz in [-10.0, -3.0, 4.0]:
 		var truss_beam = MeshInstance3D.new()
-		var beam_box = BoxMesh.new()
-		beam_box.size = Vector3(38.0, 0.8, 0.8)
-		truss_beam.mesh = beam_box
+		truss_beam.mesh = _create_box_mesh(Vector3(38.0, 0.8, 0.8))
 		truss_beam.material_override = truss_mat
 		truss_beam.position = Vector3(0, 14.0, tz)
 		preview_viewport.add_child(truss_beam)
@@ -315,18 +307,14 @@ func _build_turntable_viewport() -> void:
 		# Cross struts
 		for sx in [-12.0, 0.0, 12.0]:
 			var strut = MeshInstance3D.new()
-			var s_box = BoxMesh.new()
-			s_box.size = Vector3(0.4, 3.0, 0.4)
-			strut.mesh = s_box
+			strut.mesh = _create_box_mesh(Vector3(0.4, 3.0, 0.4))
 			strut.material_override = truss_mat
 			strut.position = Vector3(sx, 12.5, tz)
 			preview_viewport.add_child(strut)
 
 	# Hangar Wall Accent Stripes & LED strip
 	var strip_mesh = MeshInstance3D.new()
-	var s_box = BoxMesh.new()
-	s_box.size = Vector3(40.0, 0.15, 0.1)
-	strip_mesh.mesh = s_box
+	strip_mesh.mesh = _create_box_mesh(Vector3(40.0, 0.15, 0.1))
 	var s_mat = StandardMaterial3D.new()
 	s_mat.albedo_color = Color(0.2, 0.9, 0.4)
 	s_mat.emission_enabled = true
@@ -345,22 +333,14 @@ func _build_turntable_viewport() -> void:
 	for gz in [-10.0, -6.0, -2.0, 2.0, 6.0]:
 		for gx in [-6.5, 6.5]:
 			var gl = MeshInstance3D.new()
-			var g_cyl = CylinderMesh.new()
-			g_cyl.top_radius = 0.08
-			g_cyl.bottom_radius = 0.08
-			g_cyl.height = 0.05
-			gl.mesh = g_cyl
+			gl.mesh = _create_cyl_mesh(0.08, 0.08, 0.05, 12)
 			gl.material_override = guide_mat
 			gl.position = Vector3(gx, 0.02, gz)
 			preview_viewport.add_child(gl)
 
 	# Pedestal Turntable Base
 	var base_mesh = MeshInstance3D.new()
-	var cyl = CylinderMesh.new()
-	cyl.top_radius = 4.4
-	cyl.bottom_radius = 4.8
-	cyl.height = 0.35
-	base_mesh.mesh = cyl
+	base_mesh.mesh = _create_cyl_mesh(4.4, 4.8, 0.35, 24)
 	var base_mat = StandardMaterial3D.new()
 	base_mat.albedo_color = Color(0.16, 0.19, 0.24)
 	base_mat.metallic = 0.85
@@ -371,10 +351,7 @@ func _build_turntable_viewport() -> void:
 
 	# Glowing Pedestal Ring
 	var ring_mesh = MeshInstance3D.new()
-	var torus = TorusMesh.new()
-	torus.inner_radius = 4.2
-	torus.outer_radius = 4.42
-	ring_mesh.mesh = torus
+	ring_mesh.mesh = _create_ring_mesh(4.2, 4.42, 0.04, 32)
 	var ring_mat = StandardMaterial3D.new()
 	ring_mat.albedo_color = Color(0.2, 0.95, 0.4)
 	ring_mat.emission_enabled = true
@@ -465,3 +442,88 @@ func _create_glass_panel(size: Vector2) -> PanelContainer:
 	style.content_margin_bottom = 12
 	pc.add_theme_stylebox_override("panel", style)
 	return pc
+
+static func _create_box_mesh(size: Vector3) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hx: float = size.x * 0.5
+	var hy: float = size.y * 0.5
+	var hz: float = size.z * 0.5
+	var faces = [
+		[Vector3(0, 0, 1), [Vector3(-hx, -hy, hz), Vector3(hx, -hy, hz), Vector3(hx, hy, hz), Vector3(-hx, hy, hz)]],
+		[Vector3(0, 0, -1), [Vector3(hx, -hy, -hz), Vector3(-hx, -hy, -hz), Vector3(-hx, hy, -hz), Vector3(hx, hy, -hz)]],
+		[Vector3(1, 0, 0), [Vector3(hx, -hy, hz), Vector3(hx, -hy, -hz), Vector3(hx, hy, -hz), Vector3(hx, hy, hz)]],
+		[Vector3(-1, 0, 0), [Vector3(-hx, -hy, -hz), Vector3(-hx, -hy, hz), Vector3(-hx, hy, hz), Vector3(-hx, hy, -hz)]],
+		[Vector3(0, 1, 0), [Vector3(-hx, hy, hz), Vector3(hx, hy, hz), Vector3(hx, hy, -hz), Vector3(-hx, hy, -hz)]],
+		[Vector3(0, -1, 0), [Vector3(-hx, -hy, -hz), Vector3(hx, -hy, -hz), Vector3(hx, -hy, hz), Vector3(-hx, -hy, hz)]]
+	]
+	for f in faces:
+		var norm: Vector3 = f[0]
+		var v: Array = f[1]
+		st.set_normal(norm)
+		st.add_vertex(v[0])
+		st.add_vertex(v[1])
+		st.add_vertex(v[2])
+		st.add_vertex(v[0])
+		st.add_vertex(v[2])
+		st.add_vertex(v[3])
+	return st.commit()
+
+static func _create_cyl_mesh(top_r: float, bot_r: float, height: float, seg: int = 16) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hy: float = height * 0.5
+	for i in range(seg):
+		var a0: float = float(i) / float(seg) * TAU
+		var a1: float = float(i + 1) / float(seg) * TAU
+		var p_b0 = Vector3(cos(a0) * bot_r, -hy, sin(a0) * bot_r)
+		var p_b1 = Vector3(cos(a1) * bot_r, -hy, sin(a1) * bot_r)
+		var p_t0 = Vector3(cos(a0) * top_r, hy, sin(a0) * top_r)
+		var p_t1 = Vector3(cos(a1) * top_r, hy, sin(a1) * top_r)
+		var n0 = Vector3(cos(a0), 0, sin(a0)).normalized()
+		var n1 = Vector3(cos(a1), 0, sin(a1)).normalized()
+		st.set_normal(n0)
+		st.add_vertex(p_b0)
+		st.set_normal(n1)
+		st.add_vertex(p_b1)
+		st.set_normal(n1)
+		st.add_vertex(p_t1)
+		st.set_normal(n0)
+		st.add_vertex(p_b0)
+		st.set_normal(n1)
+		st.add_vertex(p_t1)
+		st.set_normal(n0)
+		st.add_vertex(p_t0)
+		st.set_normal(Vector3(0, 1, 0))
+		st.add_vertex(Vector3(0, hy, 0))
+		st.add_vertex(p_t0)
+		st.add_vertex(p_t1)
+		st.set_normal(Vector3(0, -1, 0))
+		st.add_vertex(Vector3(0, -hy, 0))
+		st.add_vertex(p_b1)
+		st.add_vertex(p_b0)
+	return st.commit()
+
+static func _create_ring_mesh(inner_r: float, outer_r: float, height: float = 0.04, seg: int = 32) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hy: float = height * 0.5
+	for i in range(seg):
+		var a0: float = float(i) / float(seg) * TAU
+		var a1: float = float(i + 1) / float(seg) * TAU
+		var c0: float = cos(a0)
+		var s0: float = sin(a0)
+		var c1: float = cos(a1)
+		var s1: float = sin(a1)
+		var p_in0 = Vector3(c0 * inner_r, hy, s0 * inner_r)
+		var p_out0 = Vector3(c0 * outer_r, hy, s0 * outer_r)
+		var p_in1 = Vector3(c1 * inner_r, hy, s1 * inner_r)
+		var p_out1 = Vector3(c1 * outer_r, hy, s1 * outer_r)
+		st.set_normal(Vector3(0, 1, 0))
+		st.add_vertex(p_in0)
+		st.add_vertex(p_out0)
+		st.add_vertex(p_out1)
+		st.add_vertex(p_in0)
+		st.add_vertex(p_out1)
+		st.add_vertex(p_in1)
+	return st.commit()

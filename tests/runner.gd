@@ -100,6 +100,7 @@ const TestUrbanLegendsE2EScript = preload("res://games/urban-legends/tests/test_
 # --- Game #13: 6-DoF Flight Simulator Suites ---
 const TestFlightSim6DoFUnitScript = preload("res://games/flight-simulator-6dof/tests/test_flight_sim_6dof_unit.gd")
 const TestFlightSim6DoFE2EScript = preload("res://games/flight-simulator-6dof/tests/test_flight_sim_6dof_e2e.gd")
+const TestAeroSimValidationSuiteScript = preload("res://tests/aerosim_validation/test_aerosim_validation_suite.gd")
 
 # --- Responsive & Soak ---
 const TestResponsiveUIScript = preload("res://tests/responsive/test_responsive_ui.gd")
@@ -120,6 +121,9 @@ const TestGameplayScreensScript = preload("res://tests/e2e/test_gameplay_screens
 # --- Acceptance ---
 const TestAcceptanceScript = preload("res://tests/acceptance/test_platform_acceptance.gd")
 const TestPackagedAeroRushE2EScript = preload("res://tests/acceptance/test_packaged_aerorush_e2e.gd")
+const TestWorldGeometryAndClearanceScript = preload("res://tests/integration/test_world_geometry_and_clearance.gd")
+const TestScriptedGameplayBotsScript = preload("res://tests/e2e/test_scripted_gameplay_bots.gd")
+const TestDeterministicVisualRegressionScript = preload("res://tests/visual_regression/test_deterministic_visual_regression.gd")
 
 # --- Coverage ---
 const CoverageRegistryScript = preload("res://tests/coverage_registry.gd")
@@ -247,6 +251,11 @@ func _initialize() -> void:
 		# 6-DoF Flight Simulator Suites
 		{"name": "6-DoF Flight Simulator Physics & Aerodynamics Unit", "instance": TestFlightSim6DoFUnitScript.new()},
 		{"name": "6-DoF Flight Simulator E2E Scenarios", "instance": TestFlightSim6DoFE2EScript.new()},
+		{"name": "AeroSim 6-DoF Engineering Validation (9 Scenarios)", "instance": TestAeroSimValidationSuiteScript.new()},
+		# Phase 7 Comprehensive Validation
+		{"name": "World Geometry & Clearance Integration", "instance": TestWorldGeometryAndClearanceScript.new()},
+		{"name": "Scripted E2E Gameplay Bots", "instance": TestScriptedGameplayBotsScript.new()},
+		{"name": "Deterministic Visual Regression Gate", "instance": TestDeterministicVisualRegressionScript.new()},
 		# Legacy Acceptance
 		{"name": "Platform Acceptance (Legacy)", "instance": TestAcceptanceScript.new()},
 	]

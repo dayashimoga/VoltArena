@@ -132,21 +132,41 @@ static func build_commercial_block(height: float = 35.0, width: float = 20.0, de
 	return root
 
 static func _build_procedural_skyscraper_mesh(parent: Node3D, height: float, width: float, depth: float, neon_tint: Color) -> void:
-	var body_mesh = BoxMesh.new()
-	body_mesh.size = Vector3(width, height, depth)
-
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.12, 0.16, 0.22)
-	mat.metallic = 0.85
-	mat.roughness = 0.18
-	mat.emission_enabled = true
-	mat.emission = neon_tint * 0.2
-
 	var mi = MeshInstance3D.new()
-	mi.mesh = body_mesh
-	mi.material_override = mat
+	var box = BoxMesh.new()
+	box.size = Vector3(width, height, depth)
+	mi.mesh = box
 	mi.position = Vector3(0, height * 0.5, 0)
+
+	var facade_shader = load("res://games/urban-legends/world/shaders/building_facade.gdshader")
+	if facade_shader:
+		var sm = ShaderMaterial.new()
+		sm.shader = facade_shader
+		sm.set_shader_parameter("facade_base_color", Color(0.20, 0.22, 0.25))
+		sm.set_shader_parameter("window_lit_probability", 0.45)
+		sm.set_shader_parameter("night_emission_factor", 3.5)
+		mi.material_override = sm
+	else:
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.18, 0.22, 0.26)
+		mat.metallic = 0.85
+		mat.roughness = 0.15
+		mi.material_override = mat
+
 	parent.add_child(mi)
+
+	# Rooftop neon logo / billboard trim
+	var neon_mi = MeshInstance3D.new()
+	var n_box = BoxMesh.new()
+	n_box.size = Vector3(width * 0.6, 1.8, 0.4)
+	neon_mi.mesh = n_box
+	var n_mat = StandardMaterial3D.new()
+	n_mat.albedo_color = neon_tint
+	n_mat.emission_enabled = true
+	n_mat.emission = neon_tint * 4.5
+	neon_mi.material_override = n_mat
+	neon_mi.position = Vector3(0, height + 1.2, depth * 0.48)
+	parent.add_child(neon_mi)
 
 static func build_residential_villa(width: float = 14.0, depth: float = 12.0) -> Node3D:
 	var root = Node3D.new()
@@ -342,6 +362,17 @@ static func build_street_lamp(height: float = 6.8) -> Node3D:
 		bulb_mi.material_override = bulb_mat
 		bulb_mi.position = Vector3(0, height - 0.1, -0.45)
 		root.add_child(bulb_mi)
+
+	# Night streetlight illumination: distance-faded OmniLight3D (90m fade)
+	var light = OmniLight3D.new()
+	light.light_color = Color(1.0, 0.92, 0.78)
+	light.light_energy = 2.4
+	light.omni_range = 28.0
+	light.distance_fade_enabled = true
+	light.distance_fade_begin = 60.0
+	light.distance_fade_length = 30.0 # 90m total fade distance
+	light.position = Vector3(0, height - 0.2, -0.45)
+	root.add_child(light)
 
 	# Lightweight pole collision
 	var body = StaticBody3D.new()

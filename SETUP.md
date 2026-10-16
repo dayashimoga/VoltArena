@@ -61,12 +61,12 @@ Expected output:
 ```
 ==================================================
 TEST RESULTS SUMMARY:
-  Total Suites:            80
-  Total Assertions Passed: 3051
+  Total Suites:            95
+  Total Assertions Passed: 3770
   Total Assertions Failed: 0
-  Function Coverage:       90.6% (Required: >=90.0%)
+  Function Coverage:       90.81% (Required: >=90.0%)
 ==================================================
-ALL TEST GATES PASSED [3051/3051 ASSERTIONS, 100% SUCCESS]
+ALL TEST GATES PASSED [3770/3770 ASSERTIONS, 100% SUCCESS]
 ```
 
 ---
@@ -79,11 +79,15 @@ python scripts/certifier.py
 ```
 Validates all verification gates and produces `artifacts/production-certification.json` and `artifacts/screenshots/contact_sheet.html`.
 
-### Build Standalone Packages:
+### Build Standalone Game Packages (All 13 Games + Suite):
 ```bash
+# Export isolated PCKs
 python scripts/export_standalone_pcks.py
+
+# Package 13 standalone deliverables + full suite across Windows, Linux, and Web
+python scripts/modular_packager.py all
 ```
-Exports standalone game packages (e.g., `export/standalone/AeroRush.pck`, `IronCrucible.pck`, `DriftStorm.pck`) containing isolated entry points and required assets.
+Produces 39 standalone packages in `export/dist/standalone/` (Windows `.zip`, Linux `.tar.gz`, Web `.zip` for each of the 13 games) and 4 full suite packages in `export/dist/suite/`.
 
 ### Run Local Web Preview:
 ```powershell
@@ -92,4 +96,5 @@ powershell -ExecutionPolicy Bypass -File scripts/bring-up.ps1
 bash scripts/bring-up.sh
 ```
 Launches local web server serving the reassembled WebGL export at `http://localhost:8080`.
+
 

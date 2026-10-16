@@ -78,6 +78,13 @@ func get_default_save() -> Dictionary:
 				"missions_completed": 0,
 				"longest_jump_meters": 0.0,
 				"unlocked_vehicles": ["vortex_gt"]
+			},
+			"flight_simulator_6dof": {
+				"flight_hours": 0.0,
+				"landings_completed": 0,
+				"lessons_completed": 0,
+				"highest_score": 0,
+				"pilot_rating": "Student Pilot"
 			}
 		},
 		"unlocked_items": {
@@ -294,5 +301,23 @@ func record_urban_session(cash: int, districts_cnt: int, stunts_cnt: int, missio
 	stats["missions_completed"] = stats.get("missions_completed", 0) + missions_cnt
 	stats["longest_jump_meters"] = maxf(stats.get("longest_jump_meters", 0.0), best_jump)
 	save_to_disk()
+
+func record_flight_sim_flight(hours: float, landings: int, score: int, lesson_completed: bool) -> void:
+	if not save_data.has("statistics"):
+		save_data["statistics"] = {}
+	if not save_data["statistics"].has("flight_simulator_6dof"):
+		save_data["statistics"]["flight_simulator_6dof"] = get_default_save()["statistics"]["flight_simulator_6dof"]
+	var stats = save_data["statistics"]["flight_simulator_6dof"]
+	stats["flight_hours"] = stats.get("flight_hours", 0.0) + hours
+	stats["landings_completed"] = stats.get("landings_completed", 0) + landings
+	if lesson_completed:
+		stats["lessons_completed"] = stats.get("lessons_completed", 0) + 1
+	stats["highest_score"] = maxi(stats.get("highest_score", 0), score)
+	save_to_disk()
+
+func get_flight_sim_stats() -> Dictionary:
+	if save_data.has("statistics") and save_data["statistics"].has("flight_simulator_6dof"):
+		return save_data["statistics"]["flight_simulator_6dof"]
+	return get_default_save()["statistics"]["flight_simulator_6dof"]
 
 

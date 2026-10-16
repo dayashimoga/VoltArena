@@ -1,0 +1,68 @@
+[gd_scene load_steps=9 format=3 uid="uid://c6dofworld01"]
+
+[ext_resource type="Script" path="res://games/flight-simulator-6dof/world_main.gd" id="1_world"]
+[ext_resource type="Script" path="res://games/flight-simulator-6dof/world/terrain_builder.gd" id="2_terrain"]
+[ext_resource type="Script" path="res://games/flight-simulator-6dof/world/runway_builder.gd" id="3_runway"]
+[ext_resource type="PackedScene" uid="uid://b7v8k1m3f6dof" path="res://games/flight-simulator-6dof/aircraft_rig.tscn" id="4_aircraft"]
+[ext_resource type="Script" path="res://games/flight-simulator-6dof/floating_origin.gd" id="5_origin"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+sky_top_color = Color(0.28, 0.48, 0.75, 1)
+sky_horizon_color = Color(0.65, 0.75, 0.88, 1)
+ground_bottom_color = Color(0.18, 0.22, 0.16, 1)
+ground_horizon_color = Color(0.65, 0.75, 0.88, 1)
+sun_angle_max = 30.0
+
+[sub_resource type="Sky" id="Sky_env"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_world"]
+background_mode = 2
+sky = SubResource("Sky_env")
+ambient_light_source = 3
+ambient_light_color = Color(0.65, 0.75, 0.88, 1)
+ambient_light_sky_contribution = 0.65
+tonemap_mode = 3
+tonemap_exposure = 1.0
+glow_enabled = true
+glow_bloom = 0.05
+volumetric_fog_density = 0.0015
+volumetric_fog_gi_inject = 1.0
+volumetric_fog_anisotropy = 0.6
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_cam"]
+auto_exposure_enabled = false
+
+[node name="WorldRoot" type="Node3D"]
+script = ExtResource("1_world")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_world")
+camera_attributes = SubResource("CameraAttributesPractical_cam")
+
+[node name="CameraAttributesPractical" type="Node" parent="."]
+
+[node name="SunLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.819152, 0.395123, -0.415627, 0, 0.724991, 0.688758, 0.573576, -0.564197, 0.593878, 0, 500, 0)
+light_color = Color(1, 0.98, 0.92, 1)
+light_energy = 1.25
+shadow_enabled = true
+directional_shadow_mode = 2
+directional_shadow_split_1 = 0.05
+directional_shadow_split_2 = 0.15
+directional_shadow_split_3 = 0.35
+directional_shadow_max_distance = 1500.0
+shadow_bias = 0.05
+
+[node name="TerrainSystem" type="Node3D" parent="."]
+script = ExtResource("2_terrain")
+
+[node name="RunwayComplex" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+script = ExtResource("3_runway")
+
+[node name="AircraftRig" parent="." instance=ExtResource("4_aircraft")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 35)
+
+[node name="FloatingOrigin" type="Node" parent="."]
+script = ExtResource("5_origin")

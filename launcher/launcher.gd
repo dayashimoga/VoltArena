@@ -126,6 +126,15 @@ var games_meta = [
 		"tags": ["OPEN-WORLD", "DRIVING", "STUNTS", "DRIFT", "PHYSICS"],
 		"color": Color(1.0, 0.42, 0.15),
 		"scene": "res://games/urban-legends/urban_legends_main.tscn"
+	},
+	{
+		"id": "flight_simulator_6dof",
+		"title": "AEROSIM 6-DoF",
+		"tagline": "6-DoF Flight Simulator",
+		"desc": "High-fidelity 6-DoF aircraft simulation with finite-wing lift-slope aerodynamics, ground effect, ISA atmosphere, PAPI runway landing, and flight school training.",
+		"tags": ["SIMULATOR", "6-DOF", "AERODYNAMICS", "FLIGHT-SCHOOL", "PHYSICS"],
+		"color": Color(0.18, 0.88, 1.0),
+		"scene": "res://games/flight-simulator-6dof/flight_sim_standalone.tscn"
 	}
 ]
 

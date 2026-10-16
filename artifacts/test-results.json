@@ -1,10 +1,20 @@
 {
-  "coverage_percent": 90.9155429382541,
-  "coverage_tested_functions": 1281,
-  "coverage_total_functions": 1409,
-  "execution_seconds": 247.819,
+  "coverage_percent": 90.495867768595,
+  "coverage_tested_functions": 1314,
+  "coverage_total_functions": 1452,
+  "execution_seconds": 300.13,
   "status": "PASS",
   "suites": {
+    "6-DoF Flight Simulator E2E Scenarios": {
+      "failed": 0,
+      "passed": 26,
+      "status": "PASS"
+    },
+    "6-DoF Flight Simulator Physics & Aerodynamics Unit": {
+      "failed": 0,
+      "passed": 38,
+      "status": "PASS"
+    },
     "AI Systems Unit": {
       "failed": 0,
       "passed": 8,
@@ -212,7 +222,7 @@
     },
     "Launcher E2E": {
       "failed": 0,
-      "passed": 119,
+      "passed": 126,
       "status": "PASS"
     },
     "LauncherArt Vector Graphics Unit": {
@@ -327,7 +337,7 @@
     },
     "Responsive UI Multi-Resolution": {
       "failed": 0,
-      "passed": 369,
+      "passed": 387,
       "status": "PASS"
     },
     "RoboForge Arena E2E": {
@@ -471,8 +481,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-10-15T15:25:49",
+  "timestamp": "2026-10-16T07:09:08",
   "total_failed": 0,
-  "total_passed": 3681,
-  "total_suites": 93
+  "total_passed": 3770,
+  "total_suites": 95
 }

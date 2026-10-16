@@ -124,11 +124,16 @@ func _physics_process(delta: float) -> void:
 
 func _update_fov(delta: float) -> void:
 	var speed = 0.0
+	var is_nitro = false
 	if target_vehicle.has_method("get_speed_kmh"):
 		speed = target_vehicle.get_speed_kmh()
+	if "is_nitro_active" in target_vehicle and target_vehicle.is_nitro_active:
+		is_nitro = true
 
 	var speed_ratio = clampf(speed / 200.0, 0.0, 1.0)
 	var target_fov = lerpf(base_fov, max_fov, speed_ratio)
+	if is_nitro:
+		target_fov += 8.0 # +8 deg nitro kick
 
 	# Critically damped smooth zoom without stepping or oscillation
 	current_fov = move_toward(current_fov, target_fov, fov_damp_speed * delta * 8.0)

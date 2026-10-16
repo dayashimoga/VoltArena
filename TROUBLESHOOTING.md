@@ -135,5 +135,30 @@
 * **Cause**: Countdown toasts used raw top-left fixed pixel coordinates that clipped off-screen on non-standard aspect ratios.
 * **Resolution**: Standardized HUD notification banner on centered `Control` with proportional anchoring and dynamic text wrapping.
 
+---
+
+## 7. 6-DoF Aircraft Flight Simulator & Aerodynamics Gotchas
+
+### Gotcha: Flat-Plate Polar Discontinuity at Stall Transition
+* **Cause**: Abruptly switching between linear lift slope $C_L = 2\pi \alpha$ and flat-plate crossflow $C_L = 2\sin\alpha\cos\alpha$ at stall angle $\alpha_{stall}$ causes violent torque spikes in the physics integrator.
+* **Resolution**: Implemented smooth cubic Hermite blending across $\alpha_{stall} \pm 2.0^\circ$ transition band in `aero_surface_3d.gd` to ensure continuous $C_L(\alpha)$ and $C_D(\alpha)$ derivatives across the entire $[-\pi, \pi]$ envelope.
+
+### Gotcha: Ground Effect Singularity at Wheel Touchdown
+* **Cause**: Ground effect reduction factor $(16h/b)^2 / [1 + (16h/b)^2]$ approaches zero as altitude above ground $h \to 0$, causing division by zero or unrealistic zero-induced-drag forces when wheels rest on tarmac.
+* **Resolution**: Clamped minimum effective height to $h_{min} = 0.1 \times b$ in `aero_surface_3d.gd`, ensuring realistic ground effect cushion while taxiing.
+
+### Gotcha: High-Speed Ground Loop / Rollover During Takeoff Roll
+* **Cause**: Full rudder/steering authority at high takeoff speeds ($> 30\text{ m/s}$) causes high lateral tire forces that roll the tricycle gear aircraft over.
+* **Resolution**: Implemented speed-sensitive steering scaling in `raycast_wheel_3d.gd` that tapers nosewheel angle from $1.0$ at taxi speeds down to $0.15$ above takeoff speed ($Vr \approx 30\text{ m/s}$), delegating high-speed yaw control to aerodynamic rudder wash.
+
+### Gotcha: False Stall Horn on Tarmac
+* **Cause**: When parked or taxiing at high pitch angles, AoA calculations against ambient wind can trigger stall warnings.
+* **Resolution**: Added Weight-on-Wheels (WoW) interlock in `aircraft_controller.gd`; the 13.5° inboard-wing AoA stall horn is strictly inhibited whenever main gear springs are compressed.
+
+### Gotcha: Headless SceneTree RID and ObjectDB Leaks on Exit
+* **Cause**: In single-step headless test runner execution, calling `node.queue_free()` defers cleanup to the next idle frame. Calling `quit(0)` at script conclusion immediately terminates the process before idle frames execute, triggering ObjectDB and RID leak warnings.
+* **Resolution**: Used explicit immediate `.free()` cleanup in test harness teardown routines (`after_each()`).
+
+
 
 

@@ -65,16 +65,18 @@ static func build_vehicle_visual(vehicle_node: Node3D, vehicle_id: String, paint
 	chrome_mat.roughness = 0.12
 
 	var headlight_mat = StandardMaterial3D.new()
+	headlight_mat.resource_name = "Mat_Headlights"
 	headlight_mat.albedo_color = Color(0.95, 0.98, 1.0)
 	headlight_mat.emission_enabled = true
 	headlight_mat.emission = Color(0.92, 0.96, 1.0)
-	headlight_mat.emission_energy_multiplier = 3.5
+	headlight_mat.emission_energy_multiplier = 4.0 # 4.0 night emission
 
 	var taillight_mat = StandardMaterial3D.new()
+	taillight_mat.resource_name = "Mat_Taillights"
 	taillight_mat.albedo_color = Color(0.88, 0.05, 0.05)
 	taillight_mat.emission_enabled = true
 	taillight_mat.emission = Color(0.95, 0.04, 0.04)
-	taillight_mat.emission_energy_multiplier = 2.4
+	taillight_mat.emission_energy_multiplier = 1.5 # 1.5 drive / 6.0 brake
 
 	# 3. Instantiate Authentic Production 3D Car Model
 	var glb_path = VEHICLE_GLB_MAP.get(vehicle_id, VEHICLE_GLB_MAP[UrbanConstants.VEHICLE_VORTEX_GT])
@@ -113,14 +115,15 @@ static func build_vehicle_visual(vehicle_node: Node3D, vehicle_id: String, paint
 		hl.position = Vector3(hx, dims.y * 0.48, -dims.z * 0.49)
 		chassis_node.add_child(hl)
 
-		# Add forward spotlight projection for night / dusk visibility
+		# Add forward spotlight projection for night / dusk visibility (65m range, 38 deg, shadows on)
 		var spot = SpotLight3D.new()
 		spot.light_color = Color(0.96, 0.98, 1.0)
-		spot.light_energy = 2.2
-		spot.spot_range = 38.0
-		spot.spot_angle = 32.0
+		spot.light_energy = 3.5
+		spot.spot_range = 65.0
+		spot.spot_angle = 38.0
+		spot.shadow_enabled = true
 		spot.position = Vector3(hx, dims.y * 0.48, -dims.z * 0.50)
-		spot.rotation_degrees.x = -8.0
+		spot.rotation_degrees.x = -6.0
 		chassis_node.add_child(spot)
 
 	for tx in [-dims.x * 0.38, dims.x * 0.38]:
@@ -153,6 +156,10 @@ static func build_vehicle_visual(vehicle_node: Node3D, vehicle_id: String, paint
 		var w_rl = raw_model.find_child("wheel-back-left", true, false)
 		var w_rr = raw_model.find_child("wheel-back-right", true, false)
 		if w_fl and w_fr and w_rl and w_rr:
+			w_fl.name = "Wheel_FL"
+			w_fr.name = "Wheel_FR"
+			w_rl.name = "Wheel_RL"
+			w_rr.name = "Wheel_RR"
 			wheel_nodes = [w_fl, w_fr, w_rl, w_rr]
 		else:
 			wheel_nodes = _spawn_wheel_holders(vehicle_node, dims, chrome_mat)
@@ -189,12 +196,21 @@ static func _spawn_wheel_holders(parent: Node3D, dims: Vector3, rim_mat: Materia
 		Vector3(-dims.x * 0.48, UrbanConstants.TIRE_RADIUS, dims.z * 0.32),
 		Vector3(dims.x * 0.48, UrbanConstants.TIRE_RADIUS, dims.z * 0.32)
 	]
+	var wheel_names = ["Wheel_FL", "Wheel_FR", "Wheel_RL", "Wheel_RR"]
 	var wheel_nodes: Array[Node3D] = []
 	for i in range(4):
 		var wh = Node3D.new()
-		wh.name = "WheelHolder_%d" % i
+		wh.name = wheel_names[i]
 		wh.position = wheel_offsets[i]
-		_build_procedural_wheel(wh, rim_mat)
+		var wheel_glb = ModelCache.get_model(WHEEL_GLB_PATH)
+		if is_instance_valid(wheel_glb):
+			wheel_glb.name = "WheelMesh"
+			wheel_glb.scale = Vector3(1.15, 1.15, 1.15)
+			if i % 2 == 1:
+				wheel_glb.rotation.y = PI
+			wh.add_child(wheel_glb)
+		else:
+			_build_procedural_wheel(wh, rim_mat)
 		parent.add_child(wh)
 		wheel_nodes.append(wh)
 	return wheel_nodes

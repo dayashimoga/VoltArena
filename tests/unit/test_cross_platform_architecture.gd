@@ -190,12 +190,12 @@ func _test_graphics_profiles_and_invariants(results: Dictionary) -> void:
 		results["failed"] += 1
 		results["errors"].append("Shadow atlas did not scale properly across presets")
 
-	# 3. Physics step invariant (60Hz)
-	if Engine.physics_ticks_per_second == 60:
+	# 3. Physics step invariant (60Hz or 120Hz for 6-DoF flight)
+	if Engine.physics_ticks_per_second == 60 or Engine.physics_ticks_per_second == 120:
 		results["passed"] += 1
 	else:
 		results["failed"] += 1
-		results["errors"].append("Physics ticks per second must strictly equal 60")
+		results["errors"].append("Physics ticks per second must equal 60 or 120")
 
 	# 4. Apply to dummy viewport
 	var vp = SubViewport.new()

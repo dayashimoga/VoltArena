@@ -597,6 +597,59 @@ Each environment extends `AeroWorldBase` with customized lighting, terrain, vege
 - Stunt combo system tracking airtime, clean landings, and spins with score multipliers ($x1.0 - x5.0$).
 - Clean anchoring ensuring zero text overlap across all target viewports ($360\times 800$ to $2560\times 1440$).
 
+---
+
+## 12. Game #13: 6-DoF Aircraft Flight Simulator & 13-Game Standalone Architecture
+
+### 12.1 Authoritative 13-Game Manifest System
+VoltArena v15 establishes a single authoritative game manifest (`shared/manifest/games_manifest.json`) orchestrating:
+- Metadata for all 13 standalone games and 1 unified full suite (`VoltArena-Full`).
+- Dedicated entry scenes (`main_scene`), icons, package identifiers, and platform capabilities.
+- Isolated save namespaces (`user://saves/<game_id>/save.json`) preventing cross-game state pollution.
+- Isolated export presets in `export_presets.cfg` (`Windows-FlightSim6DoF`, `Windows-AeroRush`, etc.).
+
+### 12.2 Modular Release Architecture
+The standalone packaging pipeline (`scripts/modular_packager.py`) guarantees:
+- **14 independently launchable deliverables per supported platform** (13 standalone games + 1 full suite).
+- Strict dependency isolation: standalone packages contain only the target game directory and shared foundation runtime files, excluding all foreign game assets (0 bytes cross-game leakage verified via automated SHA-256 and zip archive scans in `artifacts/foreign-resource-scan.json`).
+- Formats: Windows x86_64 `.zip`, Linux x86_64 `.tar.gz`, WebGL `.zip`, Android APK.
+
+### 12.3 Mathematical 6-DoF Flight Dynamics Engine
+`games/flight-simulator-6dof/` implements a rigorous flight dynamics model:
+1. **Aerodynamic Surface Configuration (`aero_surface_config.gd`)**:
+   - Finite-wing lift-slope approximation: $C_{L\alpha} = \frac{2\pi \cdot AR}{AR + 2}$.
+   - Flap lift increment: $\Delta C_L \approx \tau \cdot \delta_f$, where $\tau \approx 1.15 \sqrt{c_f / c}$.
+   - Parasitic skin-friction drag and Oswald span efficiency factor $e$.
+2. **Aerodynamic Surface 3D Node (`aero_surface_3d.gd`)**:
+   - Surface point velocity: $\mathbf{v}_p = \mathbf{v}_{linear} + \boldsymbol{\omega} \times (\mathbf{p}_{surface} - \mathbf{p}_{COM})$.
+   - Propeller slipstream wash: adds induced slipstream velocity $\mathbf{v}_{prop}$ to wing surfaces immersed within the propeller wash cylinder.
+   - Continuous angle of attack: $\alpha = \text{atan2}(-v_y, -v_z)$ in local aerodynamic coordinates.
+   - Continuous lift/drag polars across $[-\pi, \pi]$: blends thin-airfoil theory ($C_L = C_{L0} + C_{L\alpha}\alpha$, $C_D = C_{D0} + \frac{C_L^2}{\pi AR e}$) with post-stall flat-plate crossflow ($C_L = 2\sin\alpha\cos\alpha$, $C_D = 2\sin^2\alpha$) using cubic Hermite transition blending across stall boundaries.
+   - Ground effect reduction factor: $\sigma = \frac{(16h/b)^2}{1 + (16h/b)^2}$, reducing induced drag as wing height $h$ approaches runway surface.
+   - Pitching moment: $M = q \cdot S \cdot c \cdot C_M(\alpha)$.
+   - Real-time debug vector visualization: green lift, red drag, yellow resultant.
+3. **Aircraft Controller (`aircraft_controller.gd`)**:
+   - International Standard Atmosphere (ISA) barometric equations computing temperature $T(h)$, pressure $P(h)$, air density $\rho(h)$, and speed of sound $a(h)$ continuously up to 20,000m MSL.
+   - Engine RPM spool-up inertia and density-dependent shaft horsepower scaling: $P(h) = P_{SL} \cdot (\rho / \rho_0)^{1.15}$.
+   - Propeller thrust: $T = \frac{\eta \cdot P}{\max(V_{TAS}, 12.0)}$.
+   - Stall warning horn: triggers when inboard-wing AoA $\ge 13.5^\circ$, with Weight-on-Wheels (WoW) interlock inhibiting false alarms on the ground.
+   - Control surface deflection mixing with 0.12 deadzone and pitch trim.
+4. **Tricycle Landing Gear (`raycast_wheel_3d.gd`)**:
+   - Spring-damper suspension: $F_{susp} = \max(0, k\cdot x - c\cdot v_{normal})$.
+   - Coulomb friction clamping: lateral tire force clamped to $|F_{lat}| \le \mu F_n$.
+   - Speed-sensitive nosewheel steering: tapers steering authority at high speeds to prevent ground rollover while taxiing.
+5. **Cockpit HUD & Telemetry (`cockpit_hud.gd`)**:
+   - Vector-drawn heads-up display (`_draw()`) with camera-unprojected Flight Path Marker (FPM), 5° roll-corrected pitch ladder, calibrated KIAS airspeed tape, MSL altitude tape, vertical speed indicator (VSI), G-meter, AoA bracket, and warning annunciators.
+6. **Floating Origin Rebasing (`floating_origin.gd`)**:
+   - Synchronized 5000m threshold spatial rebasing preserving momentum, velocities, and contacts.
+7. **Shaders & Environment**:
+   - `prop_blur.gdshader`: Polar-UV propeller rotation shader with blade-to-disc blur transition.
+   - `terrain_splat.gdshader`: Triplanar terrain splat shader with rock slope exposure and snow above 1800m MSL.
+   - `world/runway_builder.gd`: 60m x 3000m asphalt runway, 4-unit 3.0° PAPI lights, and 60m edge lights.
+   - `world/terrain_builder.gd`: 8000m x 8000m procedural mountain terrain.
+   - `flight_school_director.gd`: 6 progressive flight school lessons with scoring and checkpoints.
+
+
 
 
 

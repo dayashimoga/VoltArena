@@ -97,6 +97,10 @@ const TestUrbanCameraAndHUDScript = preload("res://games/urban-legends/tests/tes
 const TestUrbanPerformanceAndStreamingScript = preload("res://games/urban-legends/tests/test_urban_performance_and_streaming_unit.gd")
 const TestUrbanLegendsE2EScript = preload("res://games/urban-legends/tests/test_urban_legends_e2e.gd")
 
+# --- Game #13: 6-DoF Flight Simulator Suites ---
+const TestFlightSim6DoFUnitScript = preload("res://games/flight-simulator-6dof/tests/test_flight_sim_6dof_unit.gd")
+const TestFlightSim6DoFE2EScript = preload("res://games/flight-simulator-6dof/tests/test_flight_sim_6dof_e2e.gd")
+
 # --- Responsive & Soak ---
 const TestResponsiveUIScript = preload("res://tests/responsive/test_responsive_ui.gd")
 const TestSoakScript = preload("res://tests/performance/test_soak.gd")
@@ -240,6 +244,9 @@ func _initialize() -> void:
 		{"name": "Urban Legends Camera & HUD Unit", "instance": TestUrbanCameraAndHUDScript.new()},
 		{"name": "Urban Legends Performance & Streaming Unit", "instance": TestUrbanPerformanceAndStreamingScript.new()},
 		{"name": "Urban Legends E2E Gameplay Scenarios", "instance": TestUrbanLegendsE2EScript.new()},
+		# 6-DoF Flight Simulator Suites
+		{"name": "6-DoF Flight Simulator Physics & Aerodynamics Unit", "instance": TestFlightSim6DoFUnitScript.new()},
+		{"name": "6-DoF Flight Simulator E2E Scenarios", "instance": TestFlightSim6DoFE2EScript.new()},
 		# Legacy Acceptance
 		{"name": "Platform Acceptance (Legacy)", "instance": TestAcceptanceScript.new()},
 	]
@@ -310,7 +317,11 @@ func _initialize() -> void:
 	var report_file = FileAccess.open("res://artifacts/test-results.json", FileAccess.WRITE)
 	if report_file:
 		report_file.store_string(JSON.stringify(report, "  "))
+		report_file.flush()
 		report_file.close()
+		print("[TESTS] Saved results to: res://artifacts/test-results.json")
+	else:
+		push_error("[TESTS] Failed to open test-results.json! Error: %d" % FileAccess.get_open_error())
 
 	# Save coverage report
 	coverage.save_report("res://artifacts/coverage-report.json")

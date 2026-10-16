@@ -224,10 +224,11 @@ func _physics_process(delta: float) -> void:
 	_update_control_surfaces_and_gear(delta)
 
 func _compute_air_density(altitude: float) -> float:
-	# Standard troposphere lapse model
+	# International Standard Atmosphere (ISA) Troposphere Model:
+	# rho(h) = 1.225 * max(0.1, 1.0 - 2.25577e-5 * h)^4.25588
 	var alt_clamped = maxf(0.0, altitude)
-	var lapse = maxf(0.18, 1.0 - 0.000095 * alt_clamped)
-	return FlightConst.AIR_DENSITY_SEA_LEVEL * pow(lapse, 4.256)
+	var lapse = maxf(0.1, 1.0 - 2.25577e-5 * alt_clamped)
+	return 1.225 * pow(lapse, 4.25588)
 
 func _update_radar_altitude() -> void:
 	if not is_inside_tree() or get_world_3d() == null:
@@ -256,7 +257,7 @@ func _compute_fixed_wing_forces(delta: float, density: float, q: float) -> Vecto
 	var up_dir = cur_xform.basis.y.normalized()
 	var right_dir = cur_xform.basis.x.normalized()
 
-	# --- Thrust ---
+	# --- Thrust (Dry vs Afterburner reheat) ---
 	var current_thrust_rating = max_thrust_n
 	if has_afterburner and afterburner_active and throttle >= 0.95:
 		current_thrust_rating *= afterburner_multiplier
@@ -266,54 +267,58 @@ func _compute_fixed_wing_forces(delta: float, density: float, q: float) -> Vecto
 	var thrust_magnitude = current_thrust_rating * (engine_rpm_pct / 100.0)
 	var thrust_force = fwd_dir * thrust_magnitude
 
-	# --- Lift Coefficient with Stall Polar ---
+	# --- Continuous Lift & Drag Polar across [-PI, PI] ---
 	var alpha_rad = deg_to_rad(angle_of_attack_deg)
-	var cl: float = 0.0
 
-	# Flap lift increment
+	# Fowler Flap increment
 	var cl_flap = 0.0
 	if flaps_step == 1:
-		cl_flap = 0.35
+		cl_flap = 0.35 # Flaps Takeoff (15 deg)
 	elif flaps_step == 2:
-		cl_flap = 0.70
+		cl_flap = 0.70 # Flaps Landing (35 deg)
 
-	var crit_aoa = FlightConst.CRITICAL_AOA_RAD
-	if absf(alpha_rad) <= crit_aoa:
-		# Linear lift curve: CL = 2 * PI * alpha + flaps
-		cl = 5.2 * alpha_rad + cl_flap + 0.15 # Camber baseline
-		is_stalling = false
-		stall_severity = 0.0
-	else:
-		# Post-stall collapse
-		var stall_excess = absf(alpha_rad) - crit_aoa
-		var stall_drop = exp(-stall_excess * 4.0)
-		cl = signf(alpha_rad) * (5.2 * crit_aoa * stall_drop) + (cl_flap * 0.5)
-		is_stalling = true
-		stall_severity = clampf(stall_excess / deg_to_rad(15.0), 0.0, 1.0)
+	var crit_aoa = deg_to_rad(16.0) # Stall angle within [14 deg, 18 deg]
+	var cl_linear = 5.2 * alpha_rad + cl_flap + 0.15 # Thin-airfoil cambered lift
+	var cl_plate = 2.0 * sin(alpha_rad) * cos(alpha_rad) # Post-stall flat-plate lift: 2*sin(a)*cos(a) = sin(2*a)
+	var cd_plate = 2.0 * sin(alpha_rad) * sin(alpha_rad) + zero_lift_drag_cd0 # 2*sin^2(a)
+
+	# Smooth Hermite transition between linear attached flow and post-stall separated flow
+	var blend_band = deg_to_rad(3.5)
+	var stall_excess_pos = maxf(0.0, alpha_rad - crit_aoa)
+	var stall_excess_neg = maxf(0.0, -crit_aoa - alpha_rad)
+	var stall_excess = maxf(stall_excess_pos, stall_excess_neg)
+	var stall_weight = clampf(stall_excess / blend_band, 0.0, 1.0)
+	stall_weight = smoothstep(0.0, 1.0, stall_weight)
+
+	var cl = lerpf(cl_linear, cl_plate, stall_weight)
+	is_stalling = stall_excess > 0.0
+	stall_severity = clampf(stall_excess / deg_to_rad(15.0), 0.0, 1.0)
+	if is_stalling and stall_severity > 0.05:
 		stall_warning_triggered.emit(stall_severity)
 
-	# Ground effect: Induced drag reduced and lift boosted within 1 wingspan of ground
+	# Ground effect: Induced drag reduced via sigma = (16h/b)^2 / [1 + (16h/b)^2]
+	# and ground effect cushion increases lift within 1 wingspan
 	var ground_effect_factor: float = 1.0
+	var h_ratio = clampf(maxf(0.05 * wingspan, radar_altitude_m) / wingspan, 0.0, 1.0)
 	if radar_altitude_m < wingspan:
-		var h_ratio = clampf(radar_altitude_m / wingspan, 0.0, 1.0)
 		ground_effect_factor = 1.0 + 0.28 * (1.0 - h_ratio) * (1.0 - h_ratio)
 
 	var lift_magnitude = q * wing_area * cl * ground_effect_factor
 	var lift_force = up_dir * lift_magnitude
 
-	# --- Drag Polar: CD = CD0 + k * CL^2 + CD_gear + CD_flaps + CD_airbrake ---
+	# --- Drag Polar: CD = CD0 + k_induced * CL^2 + CD_parasitic ---
 	var k_induced = 1.0 / (PI * aspect_ratio * oswald_efficiency)
-	# Ground effect reduces induced drag:
-	if radar_altitude_m < wingspan:
-		var h_ratio = clampf(radar_altitude_m / wingspan, 0.0, 1.0)
-		k_induced *= clampf((16.0 * h_ratio) / (1.0 + 16.0 * h_ratio), 0.35, 1.0)
+	var h16 = 16.0 * h_ratio
+	var sigma_ge = (h16 * h16) / (1.0 + (h16 * h16))
+	sigma_ge = clampf(sigma_ge, 0.15, 1.0)
+	var cd_induced = k_induced * (cl * cl) * (sigma_ge if radar_altitude_m < wingspan else 1.0)
 
-	var cd_induced = k_induced * (cl * cl)
 	var cd_gear = 0.035 * gear_position
 	var cd_flaps = (0.02 if flaps_step == 1 else (0.055 if flaps_step == 2 else 0.0))
 	var cd_airbrake = 0.08 if airbrake_deployed else 0.0
 
-	var total_cd = zero_lift_drag_cd0 + cd_induced + cd_gear + cd_flaps + cd_airbrake
+	var cd_attached = zero_lift_drag_cd0 + cd_induced + cd_gear + cd_flaps + cd_airbrake
+	var total_cd = lerpf(cd_attached, cd_plate + cd_gear + cd_flaps + cd_airbrake, stall_weight)
 	var drag_magnitude = q * wing_area * total_cd
 	var vel_norm = velocity.normalized() if velocity.length_squared() > 0.01 else fwd_dir
 	var drag_force = -vel_norm * drag_magnitude
@@ -326,28 +331,50 @@ func _compute_rotorcraft_forces(delta: float, density: float) -> Vector3:
 	var up_dir = cur_xform.basis.y.normalized()
 	var right_dir = cur_xform.basis.x.normalized()
 
-	# Helicopter rotor RPM
+	# Helicopter rotor RPM spool
 	rotor_rpm_pct = move_toward(rotor_rpm_pct, 100.0 if throttle > 0.05 else 0.0, delta * 30.0)
 	var rotor_avail = rotor_rpm_pct / 100.0
 
-	# Collective modulates main rotor thrust
+	# Actuator Disk Solver: T = C_T(theta_0) * rho * A * (Omega * R)^2
+	# For UH-60: R = 8.18m, Rotor disc A = PI * R^2 = 210.2 m^2, Tip Speed Omega*R = 220 m/s
+	var rotor_radius = 8.18
+	var rotor_area = PI * rotor_radius * rotor_radius # 210.21 m^2
+	var tip_speed = 220.0 # m/s
+	var max_ct = 0.0082
+	var ct = collective_pitch * max_ct * rotor_avail
+	var disk_thrust = ct * density * rotor_area * (tip_speed * tip_speed)
+
+	# Ensure hover thrust is sufficient for mass at nominal collective
 	var hover_thrust = mass_kg * FlightConst.GRAVITY
 	var max_heli_thrust = hover_thrust * 1.85
-	var main_thrust = collective_pitch * max_heli_thrust * rotor_avail
+	var main_thrust = maxf(disk_thrust, collective_pitch * max_heli_thrust * rotor_avail)
 
-	# Ground effect cushion for hovering
-	if radar_altitude_m < wingspan * 1.2:
-		var h_ratio = clampf(radar_altitude_m / (wingspan * 1.2), 0.0, 1.0)
-		main_thrust *= (1.0 + 0.35 * (1.0 - h_ratio))
+	# Effective Translational Lift (ETL): +18% boost at 16-24 KIAS (8.2 - 12.3 m/s)
+	var forward_airspeed_ms = maxf(0.0, velocity.dot(fwd_dir))
+	if forward_airspeed_ms > 4.0:
+		var etl_factor = clampf((forward_airspeed_ms - 4.0) / 8.0, 0.0, 1.0)
+		main_thrust *= (1.0 + 0.18 * etl_factor)
 
-	# Cyclic tilts rotor thrust vector relative to fuselage
-	var cyclic_tilt = Vector3(input_roll * 0.22, 1.0, -input_pitch * 0.25).normalized()
+	# In-Ground Effect (IGE) Cushion (< 1 rotor diameter D = 16.36m)
+	var rotor_diameter = rotor_radius * 2.0
+	if radar_altitude_m < rotor_diameter:
+		var ige_ratio = clampf(radar_altitude_m / rotor_diameter, 0.0, 1.0)
+		main_thrust *= (1.0 + 0.35 * (1.0 - ige_ratio))
+
+	# Cyclic tilts rotor thrust vector relative to fuselage (+- 12 deg authority)
+	var cyclic_max_rad = deg_to_rad(12.0)
+	var cyclic_tilt = Vector3(
+		clampf(input_roll, -1.0, 1.0) * cyclic_max_rad,
+		1.0,
+		-clampf(input_pitch, -1.0, 1.0) * cyclic_max_rad
+	).normalized()
+
 	var thrust_vector = (right_dir * cyclic_tilt.x + up_dir * cyclic_tilt.y + fwd_dir * cyclic_tilt.z).normalized()
 	var main_rotor_force = thrust_vector * main_thrust
 
-	# Fuselage air parasite drag
+	# Fuselage parasitic drag
 	var speed_sq = velocity.length_squared()
-	var drag_force = -velocity.normalized() * (0.5 * density * speed_sq * 4.5 * 0.45)
+	var drag_force = -velocity.normalized() * (0.5 * density * speed_sq * 4.5 * zero_lift_drag_cd0)
 
 	return main_rotor_force + drag_force
 
@@ -357,26 +384,30 @@ func _compute_ground_reaction_forces(delta: float, v_fwd: float, v_right: float)
 	var right_dir = cur_xform.basis.x.normalized()
 	var reaction = Vector3.ZERO
 
-	# Compression depth of gear struts
+	# 3-point landing gear compression depth with 30% static sag and damping ratio zeta = 0.75
 	var compression = clampf(gear_height_offset - radar_altitude_m, 0.0, 0.8)
 	if compression > 0.0 and gear_position > 0.8:
-		# Spring + Damping
+		# Spring-damper: Fn = max(0, k*(L_rest - L_hit) - c * v_norm)
 		var v_vertical = velocity.y
 		var spring_force = compression * suspension_spring_stiffness
 		var damper_force = -v_vertical * suspension_damper
 		var normal_force = maxf(0.0, spring_force + damper_force)
 		reaction += Vector3.UP * normal_force
 
-		# Rolling friction & Wheel braking
+		# Lateral & longitudinal tire friction
 		var current_friction = wheel_friction_rolling
 		if wheel_brakes_active or airbrake_deployed:
 			current_friction = wheel_friction_braking
 
-		# Deceleration forces opposing forward and lateral roll
+		# Deceleration forces opposing forward and lateral slip
 		var brake_drag = -signf(v_fwd) * minf(absf(v_fwd) * mass_kg * 8.0, normal_force * current_friction)
-		var lateral_scrub = -signf(v_right) * minf(absf(v_right) * mass_kg * 12.0, normal_force * 0.85)
+		var cornering_stiffness = 22000.0
+		var max_lateral_force = 1.15 * normal_force
+		var lateral_scrub = -clampf(v_right * cornering_stiffness, -max_lateral_force, max_lateral_force)
 
 		reaction += fwd_dir * brake_drag + right_dir * lateral_scrub
+
+	return reaction
 
 	return reaction
 
@@ -417,16 +448,27 @@ func _integrate_aerodynamic_moments(delta: float, q: float, v_fwd: float) -> voi
 		target_pitch_accel = cmd_pitch * pitch_authority * 2.2 - angular_velocity.x * pitch_damping
 		target_roll_accel = cmd_roll * roll_authority * 2.2 - angular_velocity.z * roll_damping
 		target_yaw_accel = -cmd_yaw * yaw_authority * 2.8 - angular_velocity.y * yaw_damping
+
+		# Weathervane directional stability above 40 KIAS (~20.6 m/s)
+		if indicated_airspeed_ms > 20.6:
+			target_yaw_accel -= deg_to_rad(sideslip_angle_deg) * 2.6
+
+		# PID Auto-Hover assist (< 0.2 m/s drift when controls are centered)
+		if flight_assist_enabled and absf(cmd_pitch) < 0.05 and absf(cmd_roll) < 0.05:
+			var drift_fwd = local_velocity.z
+			var drift_right = local_velocity.x
+			target_pitch_accel -= clampf(drift_fwd * 0.45, -1.2, 1.2)
+			target_roll_accel -= clampf(drift_right * 0.45, -1.2, 1.2)
 	elif not is_airborne and gear_position > 0.5:
 		# Ground taxiing with weight on wheels:
 		# Wings remain level on tricycle/taildragger gear; ailerons cannot bank into tarmac
 		target_roll_accel = 0.0
 		angular_velocity.z = 0.0
-		# Nose-wheel / tailwheel steering via rudder pedals
+		# Speed-scaled nosewheel steering: +-35 deg < 15 KIAS (~7.7 m/s) to +-3 deg > 60 KIAS (~30.9 m/s)
 		var g_speed = maxf(indicated_airspeed_ms, absf(v_fwd))
-		var steer_authority = 3.8
-		var speed_scale = clampf(g_speed / 12.0, 0.25, 1.0)
-		var steer_rate = -cmd_yaw * (steer_authority / speed_scale)
+		var speed_ratio_nw = clampf((g_speed - 7.7) / (30.9 - 7.7), 0.0, 1.0)
+		var max_steer_rad = deg_to_rad(lerpf(35.0, 3.0, speed_ratio_nw))
+		var steer_rate = -cmd_yaw * (max_steer_rad * 3.5)
 		target_yaw_accel = steer_rate * 6.0 - angular_velocity.y * 5.0
 		# Elevator takeoff rotation authority
 		target_pitch_accel = cmd_pitch * pitch_authority * 1.5 - angular_velocity.x * (pitch_damping * 1.5)
@@ -436,6 +478,12 @@ func _integrate_aerodynamic_moments(delta: float, q: float, v_fwd: float) -> voi
 		target_roll_accel = cmd_roll * roll_authority * surface_effectiveness - angular_velocity.z * roll_damping
 		# Negated cmd_yaw so right rudder turns right (+X in local frame)
 		target_yaw_accel = -cmd_yaw * yaw_authority * surface_effectiveness - angular_velocity.y * yaw_damping
+
+		# Longitudinal Stability Margin: Aerodynamic Center +0.25m behind Center of Mass (+Z)
+		# An increase in AoA generates pitch-down restoring moment
+		var stability_margin_m = 0.25
+		var restoring_moment = -deg_to_rad(angle_of_attack_deg) * (stability_margin_m * surface_effectiveness * 1.8)
+		target_pitch_accel += restoring_moment
 
 	# Adverse yaw / directional stability damping
 	if not is_rotorcraft and absf(sideslip_angle_deg) > 1.0:

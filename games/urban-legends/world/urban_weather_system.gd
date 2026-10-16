@@ -160,7 +160,8 @@ func _update_lighting_for_time() -> void:
 				sky_mat.sky_horizon_color = Color(0.10, 0.14, 0.25)
 				sky_mat.ground_horizon_color = Color(0.06, 0.08, 0.15)
 			env.ambient_light_color = Color(0.25, 0.30, 0.42)
-			env.ambient_light_energy = 0.55
+			env.ambient_light_energy = 0.35 # Calibrated night ambient light energy
+			env.tonemap_exposure = 1.15 # Calibrated tonemap exposure preventing black voids
 			env.fog_light_color = Color(0.08, 0.12, 0.22)
 		else:
 			# Clear Day Palette
@@ -170,6 +171,7 @@ func _update_lighting_for_time() -> void:
 				sky_mat.ground_horizon_color = Color(0.38, 0.42, 0.46)
 			env.ambient_light_color = Color(0.48, 0.52, 0.58)
 			env.ambient_light_energy = 0.95
+			env.tonemap_exposure = 1.0
 			env.fog_light_color = Color(0.70, 0.78, 0.88)
 
 func apply_preset(preset_name: String) -> void:

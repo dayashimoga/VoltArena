@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 90.5138339920949,
+  "overall_coverage_pct": 90.495867768595,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -252,10 +252,12 @@
       "untested": []
     },
     "res://games/aircraft-flight/aircraft/aircraft_mesh_builder.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 85.7142857142857,
       "tested": 6,
-      "total": 6,
-      "untested": []
+      "total": 7,
+      "untested": [
+        "build_aircraft_mesh"
+      ]
     },
     "res://games/aircraft-flight/aircraft/aircraft_visuals.gd": {
       "coverage_pct": 100,
@@ -268,6 +270,18 @@
       "tested": 6,
       "total": 6,
       "untested": []
+    },
+    "res://games/aircraft-flight/core/flight_audio.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 5,
+      "untested": [
+        "_ready",
+        "setup_aircraft",
+        "_physics_process",
+        "trigger_gpws",
+        "get_last_gpws_callout"
+      ]
     },
     "res://games/aircraft-flight/core/flight_autopilot.gd": {
       "coverage_pct": 100,
@@ -320,10 +334,13 @@
       "untested": []
     },
     "res://games/aircraft-flight/ui/hangar_menu.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 33.3333333333333,
       "tested": 1,
-      "total": 1,
-      "untested": []
+      "total": 3,
+      "untested": [
+        "_physics_process",
+        "_unhandled_input"
+      ]
     },
     "res://games/aircraft-flight/worlds/city_flight_world.gd": {
       "coverage_pct": 100,
@@ -625,6 +642,84 @@
         "get_nearest_safe_road_transform",
         "is_footprint_clear_of_spline"
       ]
+    },
+    "res://games/flight-simulator-6dof/aero_surface_3d.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/flight-simulator-6dof/aero_surface_config.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/flight-simulator-6dof/aircraft_controller.gd": {
+      "coverage_pct": 100,
+      "tested": 6,
+      "total": 6,
+      "untested": []
+    },
+    "res://games/flight-simulator-6dof/cockpit_hud.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/flight-simulator-6dof/flight_school_director.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/flight-simulator-6dof/flight_sim_standalone.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/flight-simulator-6dof/floating_origin.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://games/flight-simulator-6dof/raycast_wheel_3d.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/flight-simulator-6dof/visuals/aircraft_visuals_6dof.gd": {
+      "coverage_pct": 50,
+      "tested": 1,
+      "total": 2,
+      "untested": [
+        "_process"
+      ]
+    },
+    "res://games/flight-simulator-6dof/world/runway_builder.gd": {
+      "coverage_pct": 50,
+      "tested": 1,
+      "total": 2,
+      "untested": [
+        "_ready"
+      ]
+    },
+    "res://games/flight-simulator-6dof/world/terrain_builder.gd": {
+      "coverage_pct": 50,
+      "tested": 1,
+      "total": 2,
+      "untested": [
+        "_ready"
+      ]
+    },
+    "res://games/flight-simulator-6dof/world_main.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
     },
     "res://games/kart-racing/ai/kart_ai.gd": {
       "coverage_pct": 66.6666666666667,
@@ -1112,6 +1207,141 @@
       "total": 19,
       "untested": []
     },
+    "res://games/urban-legends/core/urban_save_data.gd": {
+      "coverage_pct": 100,
+      "tested": 11,
+      "total": 11,
+      "untested": []
+    },
+    "res://games/urban-legends/gameplay/mission_director.gd": {
+      "coverage_pct": 100,
+      "tested": 10,
+      "total": 10,
+      "untested": []
+    },
+    "res://games/urban-legends/gameplay/progression_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 11,
+      "total": 11,
+      "untested": []
+    },
+    "res://games/urban-legends/gameplay/stunt_detector.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/urban-legends/traffic/traffic_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/urban-legends/traffic/traffic_vehicle.gd": {
+      "coverage_pct": 100,
+      "tested": 4,
+      "total": 4,
+      "untested": []
+    },
+    "res://games/urban-legends/ui/urban_garage_menu.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/urban-legends/ui/urban_hud.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://games/urban-legends/ui/urban_map_menu.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/urban-legends/ui/urban_pause_menu.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/urban-legends/urban_legends_main.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/urban-legends/vehicles/urban_chase_camera.gd": {
+      "coverage_pct": 100,
+      "tested": 7,
+      "total": 7,
+      "untested": []
+    },
+    "res://games/urban-legends/vehicles/urban_vehicle.gd": {
+      "coverage_pct": 100,
+      "tested": 18,
+      "total": 18,
+      "untested": []
+    },
+    "res://games/urban-legends/vehicles/urban_vehicle_audio.gd": {
+      "coverage_pct": 100,
+      "tested": 3,
+      "total": 3,
+      "untested": []
+    },
+    "res://games/urban-legends/vehicles/urban_vehicle_catalog.gd": {
+      "coverage_pct": 100,
+      "tested": 2,
+      "total": 2,
+      "untested": []
+    },
+    "res://games/urban-legends/vehicles/urban_vehicle_visuals.gd": {
+      "coverage_pct": 100,
+      "tested": 1,
+      "total": 1,
+      "untested": []
+    },
+    "res://games/urban-legends/world/urban_district_definitions.gd": {
+      "coverage_pct": 100,
+      "tested": 6,
+      "total": 6,
+      "untested": []
+    },
+    "res://games/urban-legends/world/urban_prop_factory.gd": {
+      "coverage_pct": 80,
+      "tested": 8,
+      "total": 10,
+      "untested": [
+        "build_commercial_block",
+        "build_tree"
+      ]
+    },
+    "res://games/urban-legends/world/urban_road_network.gd": {
+      "coverage_pct": 100,
+      "tested": 8,
+      "total": 8,
+      "untested": []
+    },
+    "res://games/urban-legends/world/urban_weather_system.gd": {
+      "coverage_pct": 100,
+      "tested": 8,
+      "total": 8,
+      "untested": []
+    },
+    "res://games/urban-legends/world/urban_world_generator.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
+    "res://games/urban-legends/world/urban_world_manager.gd": {
+      "coverage_pct": 100,
+      "tested": 5,
+      "total": 5,
+      "untested": []
+    },
     "res://games/wildcircuit/animals/animal_data.gd": {
       "coverage_pct": 100,
       "tested": 2,
@@ -1164,8 +1394,8 @@
     },
     "res://launcher/launcher.gd": {
       "coverage_pct": 100,
-      "tested": 15,
-      "total": 15,
+      "tested": 16,
+      "total": 16,
       "untested": []
     },
     "res://launcher/launcher_art.gd": {
@@ -1375,10 +1605,16 @@
       "untested": []
     },
     "res://shared/save/save_manager.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 76.1904761904762,
       "tested": 16,
-      "total": 16,
-      "untested": []
+      "total": 21,
+      "untested": [
+        "record_flight_session",
+        "record_aero_race",
+        "record_urban_session",
+        "record_flight_sim_flight",
+        "get_flight_sim_stats"
+      ]
     },
     "res://shared/settings/settings_manager.gd": {
       "coverage_pct": 100,
@@ -1417,7 +1653,7 @@
       "untested": []
     }
   },
-  "tested_functions": 1145,
-  "timestamp": "2026-10-15T05:03:21",
-  "total_functions": 1265
+  "tested_functions": 1314,
+  "timestamp": "2026-10-16T07:09:08",
+  "total_functions": 1452
 }

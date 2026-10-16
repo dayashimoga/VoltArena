@@ -1,10 +1,20 @@
 {
-  "coverage_percent": 90.5138339920949,
-  "coverage_tested_functions": 1145,
-  "coverage_total_functions": 1265,
-  "execution_seconds": 174.551,
+  "coverage_percent": 90.495867768595,
+  "coverage_tested_functions": 1314,
+  "coverage_total_functions": 1452,
+  "execution_seconds": 300.13,
   "status": "PASS",
   "suites": {
+    "6-DoF Flight Simulator E2E Scenarios": {
+      "failed": 0,
+      "passed": 26,
+      "status": "PASS"
+    },
+    "6-DoF Flight Simulator Physics & Aerodynamics Unit": {
+      "failed": 0,
+      "passed": 38,
+      "status": "PASS"
+    },
     "AI Systems Unit": {
       "failed": 0,
       "passed": 8,
@@ -47,7 +57,7 @@
     },
     "Apex Flight E2E Scenarios": {
       "failed": 0,
-      "passed": 13,
+      "passed": 35,
       "status": "PASS"
     },
     "Apex Flight HUD & Autopilot Unit": {
@@ -212,7 +222,7 @@
     },
     "Launcher E2E": {
       "failed": 0,
-      "passed": 105,
+      "passed": 126,
       "status": "PASS"
     },
     "LauncherArt Vector Graphics Unit": {
@@ -327,7 +337,7 @@
     },
     "Responsive UI Multi-Resolution": {
       "failed": 0,
-      "passed": 351,
+      "passed": 387,
       "status": "PASS"
     },
     "RoboForge Arena E2E": {
@@ -415,6 +425,41 @@
       "passed": 69,
       "status": "PASS"
     },
+    "Urban Legends Camera & HUD Unit": {
+      "failed": 0,
+      "passed": 33,
+      "status": "PASS"
+    },
+    "Urban Legends E2E Gameplay Scenarios": {
+      "failed": 0,
+      "passed": 32,
+      "status": "PASS"
+    },
+    "Urban Legends Performance & Streaming Unit": {
+      "failed": 0,
+      "passed": 6,
+      "status": "PASS"
+    },
+    "Urban Legends Stunts & Missions Unit": {
+      "failed": 0,
+      "passed": 58,
+      "status": "PASS"
+    },
+    "Urban Legends Traffic & AI Unit": {
+      "failed": 0,
+      "passed": 24,
+      "status": "PASS"
+    },
+    "Urban Legends Vehicle Physics Unit": {
+      "failed": 0,
+      "passed": 43,
+      "status": "PASS"
+    },
+    "Urban Legends World & Roads Unit": {
+      "failed": 0,
+      "passed": 189,
+      "status": "PASS"
+    },
     "Wave Director Unit": {
       "failed": 0,
       "passed": 10,
@@ -436,8 +481,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-10-15T05:03:21",
+  "timestamp": "2026-10-16T07:09:08",
   "total_failed": 0,
-  "total_passed": 3242,
-  "total_suites": 86
+  "total_passed": 3770,
+  "total_suites": 95
 }

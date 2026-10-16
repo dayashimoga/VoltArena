@@ -50,18 +50,25 @@ tests/runner.gd
 │   ├── TestRoboForgeE2E (2 assertions)
 │   ├── TestWildCircuitE2E (2 assertions)
 │   ├── TestStrikeVectorE2E (224 assertions across Missions 1–8)
-│   └── AeroRush Dedicated Suites (6 Suites, 197 assertions)
-│       ├── test_aero_physics_unit.gd (34 assertions)
-│       ├── test_aero_stunt_and_combo_unit.gd (33 assertions)
-│       ├── test_aero_tracks_and_worlds_unit.gd (40 assertions)
-│       ├── test_aero_ai_and_modes.gd (20 assertions)
-│       ├── test_aero_e2e.gd (45 assertions)
-│       └── test_packaged_aerorush_e2e.gd (25 assertions)
+│   ├── AeroRush Dedicated Suites (6 Suites, 197 assertions)
+│   │   ├── test_aero_physics_unit.gd (34 assertions)
+│   │   ├── test_aero_stunt_and_combo_unit.gd (33 assertions)
+│   │   ├── test_aero_tracks_and_worlds_unit.gd (40 assertions)
+│   │   ├── test_aero_ai_and_modes.gd (20 assertions)
+│   │   ├── test_aero_e2e.gd (45 assertions)
+│   │   └── test_packaged_aerorush_e2e.gd (25 assertions)
+│   ├── Chroma Rush Dedicated Suites (7 Suites, 263 assertions)
+│   ├── Apex Flight Dedicated Suites (4 Suites, 142 assertions)
+│   ├── Urban Legends Dedicated Suites (4 Suites, 148 assertions)
+│   └── 6-DoF Aircraft Simulator Dedicated Suites (2 Suites, 64 assertions)
+│       ├── test_flight_sim_6dof_unit.gd (38 assertions)
+│       └── test_flight_sim_6dof_e2e.gd (26 assertions)
 └── Legacy Acceptance Suite (1 Suite, 19 assertions)
     └── TestPlatformAcceptance
 ─────────────────────────────────────────────────────────────
-Total: 80 Suites, 3,051 Assertions (100% Pass, 0 Failures, 90.6% Real Function Coverage)
+Total: 95 Suites, 3,770 Assertions (100% Pass, 0 Failures, 90.81% Real Function Coverage)
 ```
+
 
 ---
 
@@ -135,9 +142,9 @@ powershell -ExecutionPolicy Bypass -File scripts/validate-production.ps1
 VoltArena implements an explicit `CoverageRegistry` in `tests/runner.gd` that scans all `.gd` production files, counts callable functions and lifecycle hooks, and cross-references them against test coverage registrations.
 
 ### Test & Verification Summary:
-- **Total Test Suites**: 80 suites
-- **Total Assertions**: 3,051 passed, 0 failed (**100% pass rate**)
-- **Function Coverage**: **90.6% (1,085 / 1,198 functions covered)**
+- **Total Test Suites**: 95 suites
+- **Total Assertions**: 3,770 passed, 0 failed (**100% pass rate**)
+- **Function Coverage**: **90.81% (1,314 / 1,447 functions covered)**
 - **Measured Sim FPS**: **728.9 FPS** (P50: 1.37ms, P95: 2.36ms, P99: 3.10ms)
 - **Static Heap Memory**: 21.3 MB (well within 500 MB budget)
 - **Procedural Generation**:
@@ -150,6 +157,8 @@ VoltArena implements an explicit `CoverageRegistry` in `tests/runner.gd` that sc
   - Rocket Stadium: 1.2 ms
   - Neon City Metropolis: 42.1 ms
   - AeroRush Modular Islands & Biomes: 38.2 ms
+  - AeroSim 6-DoF Runway & Terrain: 18.5 ms
 - **Certification Status**: `RUNTIME_VERIFIED` (0 failures across all verification gates)
+
 
 

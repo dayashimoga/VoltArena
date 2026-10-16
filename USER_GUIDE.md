@@ -127,6 +127,35 @@ When a match concludes (time runs out, all waves survived, race finished, or goa
 * **Quick Recovery (`R`)**: If you miss a jump and drop off a platform, the automatic kill plane restores your car to the previous checkpoint with $2.5\text{s}$ safe grace. You can also manually tap `R` at any time to recover instantly.
 * **12 Championship Circuits across 6 Biomes**: Tackle diverse environments including *Snowbound Peaks*, *Coastal Velocity*, *Wild Forest*, *Skyline Rush*, *Desert Extreme*, and *Neon Afterdark*.
 
+### 6.8 AeroSim 6-DoF: Professional Aircraft Flight Simulator
+* **Rigorous Flight Dynamics**: Powered by a full 6-Degrees-of-Freedom aerodynamic simulation with continuous post-stall polars across $[-\pi, \pi]$, thin-airfoil theory blending with flat-plate flow, downwash, ground effect, and International Standard Atmosphere (ISA) barometric modeling up to 20,000m.
+* **Flight Controls & Keybindings**:
+  - **Pitch**: `W / S` or `Down / Up Arrow` (pull stick back to pitch nose up, push forward to pitch nose down).
+  - **Roll / Ailerons**: `A / D` or `Left / Right Arrow` (bank aircraft left or right).
+  - **Yaw / Rudder**: `Q / E` (yaw nose left or right; use coordinated rudder during turns).
+  - **Throttle**: `Shift` (throttle up) / `Ctrl` (throttle down) or `I / K`.
+  - **Flaps**: `F` (extend flaps by 10° increments up to 35°) / `Shift + F` (retract flaps).
+  - **Wheel Brakes**: `B` or `Spacebar` (differential toe braking with Coulomb friction clamping).
+  - **Parking Brake**: `P` (toggles parking brake latch).
+  - **Landing Gear**: `G` (toggles landing gear extension / retraction).
+  - **Pitch Trim**: `[` (trim nose down) / `]` (trim nose up).
+  - **Camera View**: `C` (toggles between first-person Cockpit View with 75° FOV and third-person Chase Camera on an 11m spring arm).
+* **Cockpit Instrumentation & Telemetry**:
+  - **Flight Path Marker (FPM / Velocity Vector)**: Projected directly in world space to show where the aircraft is flying regardless of aircraft pitch attitude.
+  - **Pitch Ladder**: Roll-stabilized artificial horizon with 5° pitch increments and solid/dashed reference rungs.
+  - **Airspeed Tape (Left)**: Calibrated Indicated Airspeed (KIAS) tape with current speed readout box and rate trends.
+  - **Altitude Tape (Right)**: Mean Sea Level (MSL) altitude tape with digital altitude box and radar AGL readout.
+  - **Vertical Speed Indicator (VSI)**: Analog needle and numerical Feet Per Minute (FPM) readout indicating climb/sink rate.
+  - **G-Meter & AoA Bracket**: Real-time load factor acceleration display and angle-of-attack reference bracket.
+  - **Annunciators**: Real-time warnings for STALL (active above 13.5° inboard-wing AoA with WoW interlock), GEAR, FLAPS, and BRAKE status.
+* **Progressive Flight School Curriculum**:
+  1. *Lesson 1: Takeoff & Positive Climb* — Master throttle spool-up, centerline tracking, rotation at Vr (60 KIAS), and establishing a steady 500 FPM climb.
+  2. *Lesson 2: Level Flight & Trim* — Practice level-off at 1,500 ft MSL, throttle power management, and elevator trim neutralization.
+  3. *Lesson 3: Coordinated Turns* — Learn standard rate 20° banked turns while applying rudder pressure to keep the slip/skid ball centered.
+  4. *Lesson 4: Power-Off Stall & Recovery* — Reduce throttle to idle, raise the nose until the 13.5° stall horn blares, drop nose forward, firewall throttle, and recover level flight.
+  5. *Lesson 5: Traffic Pattern & Touchdown* — Enter the downwind leg, extend flaps to 20°/35°, follow the 3.0° PAPI light slope, flare smoothly over runway threshold, and touch down under 250 FPM.
+  6. *Lesson 6: Free Flight Navigation* — Explore the 8,000m x 8,000m mountain basin, river corridors, and alpine ridges with seamless floating-origin rebasing.
+
 ---
 
 ## 7. Cross-Platform Controls & Touch UI Guide
@@ -138,5 +167,6 @@ VoltArena provides 100% feature parity across Desktop, Web, and Android devices 
   * **Adaptive Layouts**: Floating virtual thumbsticks for directional movement and aiming; oversized action buttons ($\ge 48\text{dp}$) for jump, boost, drift, fire, and reload.
   * **Safe-Area Inset Handling**: Automatically offsets on-screen HUD elements away from display notches, camera cutouts, and OS gesture bars.
   * **Zero Screen Clipping**: Responsive UI scaling guarantees all dialogs, pause menus, and pre-race hubs render cleanly on screens as narrow as 360px up to 2560px QHD.
+
 
 

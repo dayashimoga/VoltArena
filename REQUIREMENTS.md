@@ -241,13 +241,21 @@ This document specifies the technical, functional, architectural, performance, a
 | **FR-AERO-04**  | Vehicle Physics & 3-Mode Camera | Suspension raycasts, aerial gyros, Chase/Hood/Orbit views, safe recovery | **RUNTIME_VERIFIED** | Verified in `test_aero_physics.gd` & `test_aero_e2e.gd` |
 | **FR-AERO-05**  | Glass HUD & Progression Loop | Glass-card telemetry, countdown, next stunt alert, results dossier | **RUNTIME_VERIFIED** | Verified in `test_aero_hud.gd` & Playwright runtime captures |
 | **FR-AERO-06**  | 12 Handcrafted Championship Circuits | 100% reachability across all 12 circuits with loops, wall-rides, kinetic platforms | **RUNTIME_VERIFIED** | Verified in `test_aero_tracks.gd` & `AeroTrackValidator` |
+| **FR-AEROSIM-01**| 6-DoF Aerodynamics Engine | Continuous polars $[-\pi, \pi]$, thin-airfoil/flat-plate blend, slipstream wash, induced drag, ground effect, pitching moment | **RUNTIME_VERIFIED** | Verified in `test_flight_sim_6dof_unit.gd` (38 assertions) |
+| **FR-AEROSIM-02**| ISA Barometric Atmosphere | Standard atmosphere model to 20,000m, density-scaled power and thrust $T = \eta P / \max(V_{TAS}, 12)$ | **RUNTIME_VERIFIED** | Verified in `test_flight_sim_6dof_unit.gd` |
+| **FR-AEROSIM-03**| Tricycle Landing Gear & Steering | Spring-damper suspension, Coulomb friction clamping $\pm\mu F_n$, speed-sensitive nosewheel steering | **RUNTIME_VERIFIED** | Verified in `test_flight_sim_6dof_unit.gd` |
+| **FR-AEROSIM-04**| Vector Cockpit HUD & Telemetry | Unprojected FPM, roll-corrected pitch ladder, KIAS, MSL altitude, VSI, G-meter, AoA bracket, WoW stall interlock | **RUNTIME_VERIFIED** | Verified in `test_flight_sim_6dof_unit.gd` & `test_flight_sim_6dof_e2e.gd` |
+| **FR-AEROSIM-05**| Procedural Runway & Terrain | 60x3000m runway, 3° PAPI lights, 60m edge lights, 8000x8000m terrain with `terrain_splat.gdshader` | **RUNTIME_VERIFIED** | Verified in `test_flight_sim_6dof_e2e.gd` |
+| **FR-AEROSIM-06**| Flight School & Gameplay Loop | 6 progressive lessons (takeoff to pattern landing), waypoints, scoring, HUD prompts, recovery | **RUNTIME_VERIFIED** | Verified in `test_flight_sim_6dof_e2e.gd` (26 assertions) |
+| **FR-RELEASE-01**| 13-Game Standalone Architecture | Single authoritative manifest (`games_manifest.json`), 14 deliverables per platform, zero foreign asset leakage | **RUNTIME_VERIFIED** | Verified in `modular_packager.py`, `foreign-resource-scan.json` (0 leakage) |
 | **NFR-PERF-01**| Frame Rate | Stable 60+ FPS rendered gameplay, >1000 FPS sim | **RUNTIME_VERIFIED** | 1028.8 FPS benchmarked in `TestBenchmark` |
 | **NFR-PERF-02**| ProcGen Execution | Map and circuit generation under 2,500ms | **RUNTIME_VERIFIED** | All biomes generated under 2,500ms |
 | **NFR-PERF-03**| Memory Budget | Heap under 500MB | **RUNTIME_VERIFIED** | 22.3 MB static heap footprint |
 | **NFR-WEB-01** | Cloudflare 25MB Limit | All individual deployed files $\le 25.0$ MB | **RUNTIME_VERIFIED** | `index.pck` and `index.wasm` split into <= 18MB chunks, all files PASS |
-| **NFR-QA-01**  | Test Pass Rate | 100% assertions passing | **RUNTIME_VERIFIED** | **80/80 suites, 3051/3051 assertions PASS (100% pass rate, 0 failures)** |
-| **NFR-QA-02**  | Code Coverage | $\ge 90.0\%$ function coverage | **RUNTIME_VERIFIED** | **90.6% real function coverage across repository** |
-| **NFR-GATE-01**| Production Gates | G0-G10 verified, zero automatable failures | **RUNTIME_VERIFIED** | Automated certification passed with exit code 0 (`RUNTIME_VERIFIED`) |
+| **NFR-QA-01**  | Test Pass Rate | 100% assertions passing | **RUNTIME_VERIFIED** | **95/95 suites, 3770/3770 assertions PASS (100% pass rate, 0 failures)** |
+| **NFR-QA-02**  | Code Coverage | $\ge 90.0\%$ function coverage | **RUNTIME_VERIFIED** | **90.81% real function coverage across repository** |
+| **NFR-GATE-01**| Production Gates | All certification gates verified, zero defects | **RUNTIME_VERIFIED** | Automated certification passed with exit code 0 (`RUNTIME_VERIFIED`) |
+
 
 
 

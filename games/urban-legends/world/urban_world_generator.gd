@@ -231,7 +231,7 @@ func _build_road_meshes() -> void:
 
 			var right_dir = dir.cross(Vector3.UP).normalized()
 			if right_dir.length_squared() > 0.01:
-				var sw_w = 2.4
+				var sw_w = 3.0 # 3m sidewalks
 				for side in [-1.0, 1.0]:
 					# White Edge Striping
 					var edge_mi = MeshInstance3D.new()
@@ -247,13 +247,27 @@ func _build_road_meshes() -> void:
 						edge_mi.look_at_from_position(edge_mi.position, edge_mi.position + dir, up_vec)
 					roads_container.add_child(edge_mi)
 
-					# Pedestrian Sidewalk & Raised Curb
+					# 45-degree Chamfered Curb Bevel (0.14m vertical, zero car snagging)
+					var curb_bevel_mi = MeshInstance3D.new()
+					var curb_prism = PrismMesh.new()
+					curb_prism.size = Vector3(0.20, 0.14, dist)
+					curb_bevel_mi.mesh = curb_prism
+					curb_bevel_mi.material_override = sw_mat
+					curb_bevel_mi.position = center + right_dir * (side * (w * 0.5 + 0.10)) + Vector3(0.0, 0.07, 0.0)
+					if dir.length_squared() > 0.001:
+						var up_vec = Vector3.UP
+						if absf(dir.dot(up_vec)) > 0.9:
+							up_vec = Vector3.RIGHT
+						curb_bevel_mi.look_at_from_position(curb_bevel_mi.position, curb_bevel_mi.position + dir, up_vec)
+					roads_container.add_child(curb_bevel_mi)
+
+					# Pedestrian Sidewalk (0.14m height)
 					var sw_mi = MeshInstance3D.new()
 					var sw_box = BoxMesh.new()
-					sw_box.size = Vector3(sw_w, 0.28, dist)
+					sw_box.size = Vector3(sw_w - 0.20, 0.14, dist)
 					sw_mi.mesh = sw_box
 					sw_mi.material_override = sw_mat
-					sw_mi.position = center + right_dir * (side * (w * 0.5 + sw_w * 0.5)) + Vector3(0.0, 0.02, 0.0)
+					sw_mi.position = center + right_dir * (side * (w * 0.5 + 0.20 + (sw_w - 0.20) * 0.5)) + Vector3(0.0, 0.07, 0.0)
 					if dir.length_squared() > 0.001:
 						var up_vec = Vector3.UP
 						if absf(dir.dot(up_vec)) > 0.9:
@@ -261,9 +275,9 @@ func _build_road_meshes() -> void:
 						sw_mi.look_at_from_position(sw_mi.position, sw_mi.position + dir, up_vec)
 					roads_container.add_child(sw_mi)
 
-				# Streetlights along ground boulevards (every 65m)
-				if center.y < 8.0 and dist >= 60.0:
-					var lamp_spacing = 65.0
+				# Streetlights along ground boulevards (every 30m)
+				if center.y < 8.0 and dist >= 30.0:
+					var lamp_spacing = 30.0
 					var num_lamps = int(dist / lamp_spacing)
 					for l in range(num_lamps):
 						var t = (float(l) + 0.5) / float(num_lamps)

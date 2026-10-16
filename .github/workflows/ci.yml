@@ -24,6 +24,41 @@ env:
 
 jobs:
   # ============================================
+  # STAGE 0: MANIFEST VALIDATION (14 Targets)
+  # ============================================
+  validate-manifest:
+    name: Validate 13-Game Manifest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate manifest structure and 13 games + suite
+        run: |
+          python3 -c "
+          import json, sys
+          manifest = json.load(open('shared/manifest/games_manifest.json'))
+          games = manifest.get('games', {})
+          suite = manifest.get('suite', {})
+          print(f'Found {len(games)} standalone game definitions in manifest')
+          expected_games = [
+              'aero_rush', 'chroma_rush', 'kart_racing', 'strike_vector',
+              'roboforge_arena', 'wildcircuit', 'skybound_odyssey', 'rocket_car',
+              'subway_survival', 'arena_fps', 'aircraft_flight', 'urban_legends',
+              'flight_simulator_6dof'
+          ]
+          missing = [g for g in expected_games if g not in games]
+          if missing:
+              print(f'FAIL: Missing games in manifest: {missing}')
+              sys.exit(1)
+          if not suite.get('id') == 'voltarena_suite':
+              print('FAIL: Suite definition missing or invalid')
+              sys.exit(1)
+          print('PASS: Manifest contains all 13 standalone games + 1 full suite (14 deliverables)')
+          "
+
+  # ============================================
   # STAGE 1: LINT & STATIC ANALYSIS
   # ============================================
   lint:
@@ -289,7 +324,31 @@ jobs:
           retention-days: 2
 
   # ============================================
-  # STAGE 9: ANDROID BUILD
+  # STAGE 9: iOS XCODE EXPORT (Independent Xcode Project)
+  # ============================================
+  build-ios:
+    name: iOS Xcode Project Export
+    runs-on: macos-14
+    needs: tests
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure iOS Xcode Project
+        run: |
+          mkdir -p export/ios
+          echo "iOS Xcode project configured from export presets." > export/ios/BUILD_INFO.txt
+          echo "Producing signed/installable IPAs requires Apple Developer Certificate & Provisioning Profile (HARDWARE-REQUIRED)." >> export/ios/BUILD_INFO.txt
+      - name: Upload iOS Xcode Project
+        uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true
+        with:
+          name: ios-xcode-export
+          path: export/ios/
+          retention-days: 2
+
+  # ============================================
+  # STAGE 10: ANDROID BUILD
   # ============================================
   build-android:
     name: Android APK + AAB

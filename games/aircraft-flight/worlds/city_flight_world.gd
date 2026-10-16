@@ -44,34 +44,48 @@ func _build_ground_plane() -> void:
 
 	var col = CollisionShape3D.new()
 	var box_col = BoxShape3D.new()
-	box_col.size = Vector3(14000.0, 2.0, 14000.0)
+	box_col.size = Vector3(16000.0, 2.0, 16000.0)
 	col.shape = box_col
 	col.position = Vector3(0.0, -1.0, 0.0)
 	sb.add_child(col)
 
 	var mi = MeshInstance3D.new()
 	var plane_mesh = BoxMesh.new()
-	plane_mesh.size = Vector3(14000.0, 1.8, 14000.0)
+	plane_mesh.size = Vector3(16000.0, 1.8, 16000.0)
 	mi.mesh = plane_mesh
 	mi.position = Vector3(0.0, -0.9, 0.0)
 
-	var mat_terrain = StandardMaterial3D.new()
-	mat_terrain.albedo_color = Color(0.18, 0.24, 0.22) # Coastal dark green / urban asphalt
-	mat_terrain.roughness = 0.95
-	mi.material_override = mat_terrain
+	# 4-Layer Triplanar Height-Blended PBR Terrain Splatmap Shader
+	var terrain_shader = load("res://games/aircraft-flight/worlds/shaders/terrain_splatmap.gdshader")
+	if terrain_shader:
+		var mat_terrain_shader = ShaderMaterial.new()
+		mat_terrain_shader.shader = terrain_shader
+		mi.material_override = mat_terrain_shader
+	else:
+		var mat_terrain = StandardMaterial3D.new()
+		mat_terrain.albedo_color = Color(0.24, 0.42, 0.18)
+		mat_terrain.roughness = 0.95
+		mi.material_override = mat_terrain
 	add_child(mi)
 
-	# Water Plane (River & Ocean Bay at Y = -0.2)
+	# Realistic Water Plane with Gerstner Waves, Shoreline Foam & Beer-Lambert absorption
 	var water_mi = MeshInstance3D.new()
 	var water_mesh = BoxMesh.new()
-	water_mesh.size = Vector3(3600.0, 0.5, 14000.0)
+	water_mesh.size = Vector3(4200.0, 0.5, 16000.0)
 	water_mi.mesh = water_mesh
 	water_mi.position = Vector3(2200.0, -0.2, 0.0)
-	var mat_water = StandardMaterial3D.new()
-	mat_water.albedo_color = Color(0.08, 0.22, 0.35, 0.92)
-	mat_water.roughness = 0.08
-	mat_water.metallic = 0.85
-	water_mi.material_override = mat_water
+
+	var water_shader = load("res://games/aircraft-flight/worlds/shaders/realistic_water.gdshader")
+	if water_shader:
+		var mat_water_shader = ShaderMaterial.new()
+		mat_water_shader.shader = water_shader
+		water_mi.material_override = mat_water_shader
+	else:
+		var mat_water = StandardMaterial3D.new()
+		mat_water.albedo_color = Color(0.08, 0.22, 0.35, 0.92)
+		mat_water.roughness = 0.08
+		mat_water.metallic = 0.85
+		water_mi.material_override = mat_water
 	add_child(water_mi)
 
 func _build_airport_complex() -> void:

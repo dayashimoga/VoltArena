@@ -22,6 +22,12 @@ signal vehicle_reset_complete(spawn_pos: Vector3)
 @export var paint_color: Color = Color(0.08, 0.45, 0.95)
 
 # Physics attributes populated from catalog + upgrades
+var center_of_mass_offset: Vector3 = Vector3(0.0, 0.28, -0.05)
+var invert_steering_in_reverse: bool = false
+var mu_longitudinal: float = 1.35
+var mu_lateral: float = 1.25
+var stuck_timer: float = 0.0
+
 var top_speed: float = 68.0
 var acceleration_rate: float = 32.0
 var brake_force: float = 46.0
@@ -30,10 +36,10 @@ var max_steer_angle_rad: float = deg_to_rad(33.0)
 var min_steer_angle_rad: float = deg_to_rad(12.0)
 var vehicle_mass: float = 1250.0
 var drift_factor: float = 1.25
-var suspension_stiffness: float = 22.0
-var suspension_damping: float = 4.2
+var suspension_stiffness: float = 52.0
+var suspension_damping: float = 4.5
 var rest_suspension_length: float = 0.65
-var max_suspension_travel: float = 0.28
+var max_suspension_travel: float = 0.22
 var nitro_force: float = 28.0
 var nitro_duration: float = 4.0
 
@@ -129,10 +135,11 @@ func _apply_catalog_specs() -> void:
 	min_steer_angle_rad = deg_to_rad(def.get("min_steer_angle_deg", 12.0))
 	vehicle_mass = def.get("mass", 1250.0)
 	drift_factor = def.get("drift_factor", 1.25)
-	suspension_stiffness = def.get("suspension_stiffness", 22.0) * suspension_mult
-	suspension_damping = def.get("suspension_damping", 4.2)
+	var is_suv = vehicle_id == UrbanConstants.VEHICLE_RIDGEBACK_4X4
+	suspension_stiffness = def.get("suspension_stiffness", 52.0 if not is_suv else 58.0) * suspension_mult
+	suspension_damping = def.get("suspension_damping", 4.5)
 	rest_suspension_length = def.get("rest_length", 0.65)
-	max_suspension_travel = def.get("max_travel", 0.28)
+	max_suspension_travel = 0.38 if is_suv else 0.22
 	nitro_force = def.get("nitro_force", 28.0) * nitro_mult
 	nitro_duration = def.get("nitro_duration", 4.0)
 
@@ -284,27 +291,27 @@ func _process_ground_physics(delta: float) -> void:
 	if absf(forward_speed) < 14.0 and throttle_input > 0.1:
 		launch_mult = lerpf(1.45, 1.0, absf(forward_speed) / 14.0)
 
-	# Nitro boost handling
+	# Nitro boost handling: +45% engine force boost
 	is_nitro_active = false
 	var effective_nitro = 0.0
 	if nitro_input and nitro_gauge > 0.05 and throttle_input > 0.2:
 		is_nitro_active = true
-		effective_nitro = nitro_force
+		effective_nitro = acceleration_rate * 0.45
 		nitro_gauge = maxf(0.0, nitro_gauge - (delta / nitro_duration))
 	elif not nitro_input and nitro_gauge < 1.0:
 		# Slow passive nitro recharge while driving
 		nitro_gauge = minf(1.0, nitro_gauge + (delta * 0.08))
 
-	# Throttle application
+	# Throttle application (Longitudinal friction mu_long = 1.35)
 	var drive_accel = 0.0
 	if throttle_input > 0.01:
 		if forward_speed < top_speed:
 			var speed_factor = clampf(1.0 - (forward_speed / top_speed), 0.1, 1.0)
-			drive_accel = (acceleration_rate * launch_mult * speed_factor + effective_nitro) * throttle_input
+			drive_accel = (acceleration_rate * launch_mult * speed_factor + effective_nitro) * throttle_input * (mu_longitudinal / 1.35)
 	elif brake_input > 0.01:
 		# Braking or reversing
 		if forward_speed > 0.8:
-			drive_accel = -brake_force * brake_input
+			drive_accel = -brake_force * brake_input * (mu_longitudinal / 1.35)
 		else:
 			# Reverse gear
 			drive_accel = -acceleration_rate * 0.55 * brake_input
@@ -315,21 +322,26 @@ func _process_ground_physics(delta: float) -> void:
 	if throttle_input <= 0.01 and brake_input <= 0.01:
 		drive_accel -= signf(forward_speed) * (rolling_resistance + air_drag)
 
-	# Lateral Grip & Drift Slip Physics
+	# Lateral Grip & Drift Slip Physics (Separate mu_long = 1.35, mu_lat = 1.25)
 	is_drifting = false
 	var lateral_speed = local_vel.x
 	current_lateral_velocity = lateral_speed
 
-	var grip = 18.0 * tires_mult
-	if handbrake_input:
+	var current_mu_lat = mu_lateral * tires_mult
+	if handbrake_input and absf(forward_speed) > 12.0:
 		is_drifting = true
-		grip = 4.2 / drift_factor # Low lateral friction lets the rear step out
+		current_mu_lat = 0.55 # Drops rear lateral friction to 0.55 above 12 m/s
+		if absf(steer_input) > 0.1:
+			drift_direction = signf(steer_input)
+	elif handbrake_input:
+		is_drifting = true
+		current_mu_lat = 0.65
 		if absf(steer_input) > 0.1:
 			drift_direction = signf(steer_input)
 	elif absf(lateral_speed) > 5.5 and absf(steer_input) > 0.4:
 		# Power slide / drift break through aggressive steering
 		is_drifting = true
-		grip = 8.5 / drift_factor
+		current_mu_lat = 0.85
 
 	# Calculate drift angle
 	if absf(forward_speed) > 3.0:
@@ -338,19 +350,23 @@ func _process_ground_physics(delta: float) -> void:
 	else:
 		drift_angle_deg = 0.0
 
-	# Apply lateral grip dampening
+	# Apply lateral grip dampening with yaw stabilization
+	var grip = current_mu_lat * 14.5
 	local_vel.x = move_toward(local_vel.x, 0.0, grip * delta * 10.0)
 
-	# Yaw rotation according to steering (vehicle-local coordinates)
-	# By Godot right-hand convention (+Y UP, -Z Forward), rotating clockwise (turning right towards +X)
-	# corresponds to a negative rotation angle around Vector3.UP.
+	# Camera-relative steering:
+	# Left input strictly rotates counter-clockwise around +Y from chase/cockpit view (nose to -X).
+	# Right input rotates clockwise around +Y from chase/cockpit view (nose to +X).
+	# Never inverts in reverse unless invert_steering_in_reverse is toggled.
 	var yaw_rate = 0.0
 	if absf(forward_speed) > 0.1:
 		var speed_scale = clampf(forward_speed / 12.0, -1.0, 1.0)
+		if not invert_steering_in_reverse and forward_speed < 0.0:
+			speed_scale = absf(speed_scale)
 		var drift_yaw_boost = 1.35 if is_drifting else 1.0
 		yaw_rate = current_steer_angle * speed_scale * 3.2 * drift_yaw_boost
 
-	# Rotate vehicle basis around its local UP axis (negated for correct clockwise right turn)
+	# Rotate vehicle basis around its local UP axis (negated for clockwise right turn, CCW for left)
 	rotate_object_local(Vector3.UP, -yaw_rate * delta)
 
 	# Forward velocity update
@@ -494,16 +510,16 @@ func _update_transmission(_delta: float) -> void:
 var wreck_timer: float = 0.0
 
 func _check_recovery_conditions(delta: float) -> void:
-	# Automatic recovery when wrecked
+	# Automatic recovery when wrecked (respawn UI within 1.5s)
 	if is_wrecked:
 		wreck_timer += delta
-		if wreck_timer >= 2.5:
+		if wreck_timer >= 1.5:
 			repair(100.0)
 			recover_vehicle()
 			wreck_timer = 0.0
 		return
 
-	# Automatic flip recovery when upside down on the ground
+	# Automatic flip recovery when upside down on the ground (up.dot(Vector3.UP) < 0.2)
 	var curr_y = (global_position if is_inside_tree() else position).y
 	var up_dot = (global_basis if is_inside_tree() else transform.basis).y.dot(Vector3.UP)
 	if up_dot < 0.2 and grounded_wheel_count >= 1:
@@ -512,6 +528,15 @@ func _check_recovery_conditions(delta: float) -> void:
 			recover_vehicle()
 	else:
 		upside_down_timer = 0.0
+
+	# Auto-recovery if stuck > 3 seconds with throttle applied
+	if grounded_wheel_count >= 2 and throttle_input > 0.2 and absf(forward_speed) < 0.25:
+		stuck_timer += delta
+		if stuck_timer > 3.0:
+			recover_vehicle()
+			stuck_timer = 0.0
+	else:
+		stuck_timer = 0.0
 
 	# Fallen out of world
 	if curr_y < -35.0:
@@ -526,8 +551,9 @@ func _handle_collision_impacts() -> void:
 		var collider = col.get_collider()
 		if collider and collider != self:
 			var impact_vel = col.get_travel().length() / get_physics_process_delta_time()
-			if impact_vel > 8.0:
-				var damage_amount = (impact_vel - 8.0) * 1.8 / armor_mult
+			# Normal impact damage > 6.0 m/s
+			if impact_vel > 6.0:
+				var damage_amount = (impact_vel - 6.0) * 2.2 / armor_mult
 				take_damage(damage_amount)
 
 func take_damage(amount: float) -> void:
@@ -537,31 +563,36 @@ func take_damage(amount: float) -> void:
 	vehicle_damaged.emit(health, amount)
 	if health <= 0.0:
 		is_wrecked = true
+		controls_enabled = false # Disable controls on wreck
 		vehicle_wrecked.emit()
 
 func repair(amount: float = 100.0) -> void:
 	health = minf(100.0, health + amount)
 	if health > 0.0:
 		is_wrecked = false
+		controls_enabled = true
 
 func recover_vehicle() -> void:
-	# Flip car right side up and place at last safe ground position
+	# Flip car right side up and place at last safe ground centerline (+0.35m Y)
 	velocity = Vector3.ZERO
-	var target_pos = last_safe_ground_pos + Vector3(0, 0.75, 0)
+	var target_pos = last_safe_ground_pos + Vector3(0, 0.35, 0)
 	if is_inside_tree():
 		global_position = target_pos
 	else:
 		position = target_pos
 
-	# Align yaw to safe basis, clear roll/pitch
+	# Align yaw to safe road tangent basis, clear roll/pitch
 	var safe_yaw = last_safe_ground_basis.get_euler().y
 	if is_inside_tree():
 		global_rotation = Vector3(0, safe_yaw, 0)
 	else:
 		rotation = Vector3(0, safe_yaw, 0)
 	upside_down_timer = 0.0
+	stuck_timer = 0.0
 	is_airborne = false
 	current_steer_angle = 0.0
+	controls_enabled = true
+	is_wrecked = false
 
 	vehicle_reset_complete.emit(target_pos)
 

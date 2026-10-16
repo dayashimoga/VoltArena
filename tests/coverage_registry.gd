@@ -132,6 +132,7 @@ func save_report(output_path: String) -> void:
 	var file = FileAccess.open(output_path, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(report, "  "))
+		file.flush()
 		file.close()
 		print("[COVERAGE] Report saved to: %s" % output_path)
 	else:

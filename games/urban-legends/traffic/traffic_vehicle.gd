@@ -99,22 +99,29 @@ func _spawn_fallback_wheels(visual_root: Node3D) -> void:
 		Vector3(-0.95, 0.35, 1.3),
 		Vector3(0.95, 0.35, 1.3)
 	]
-	var tire_mat = StandardMaterial3D.new()
-	tire_mat.albedo_color = Color(0.12, 0.12, 0.12)
-	tire_mat.roughness = 0.85
 
 	for i in range(4):
 		var wheel_node = Node3D.new()
 		wheel_node.position = wheel_offsets[i]
-		var tire_mi = MeshInstance3D.new()
-		var cyl = CylinderMesh.new()
-		cyl.top_radius = 0.35
-		cyl.bottom_radius = 0.35
-		cyl.height = 0.28
-		tire_mi.mesh = cyl
-		tire_mi.material_override = tire_mat
-		tire_mi.rotation.z = PI * 0.5
-		wheel_node.add_child(tire_mi)
+		var w_model = ModelCache.get_model("res://assets/models/vehicles/car_wheel_racing.glb")
+		if is_instance_valid(w_model):
+			w_model.scale = Vector3(1.1, 1.1, 1.1)
+			if i % 2 == 1:
+				w_model.rotation.y = PI
+			wheel_node.add_child(w_model)
+		else:
+			var tire_mat = StandardMaterial3D.new()
+			tire_mat.albedo_color = Color(0.12, 0.12, 0.12)
+			tire_mat.roughness = 0.85
+			var tire_mi = MeshInstance3D.new()
+			var cyl = CylinderMesh.new()
+			cyl.top_radius = 0.35
+			cyl.bottom_radius = 0.35
+			cyl.height = 0.28
+			tire_mi.mesh = cyl
+			tire_mi.material_override = tire_mat
+			tire_mi.rotation.z = PI * 0.5
+			wheel_node.add_child(tire_mi)
 		visual_root.add_child(wheel_node)
 		visual_wheels.append(wheel_node)
 

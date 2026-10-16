@@ -4,6 +4,7 @@ var mouse_sensitivity: float = 0.0025
 var gamepad_sensitivity: float = 2.5
 var invert_y: bool = false
 var gamepad_deadzone: float = 0.15
+var flight_deadzone: float = 0.12
 
 # Accumulated look delta from mouse or touch
 var look_delta: Vector2 = Vector2.ZERO
@@ -39,13 +40,31 @@ func setup_default_actions() -> void:
 	add_action_key("swap", KEY_E, JOY_BUTTON_Y)
 	add_action_key("target_cycle", KEY_TAB, JOY_BUTTON_RIGHT_SHOULDER)
 	add_action_key("pause", KEY_ESCAPE, JOY_BUTTON_START)
+
+	# 6-DoF Flight Simulator Controls
+	add_action_if_missing("pitch_up", [KEY_S, KEY_DOWN], JOY_BUTTON_DPAD_DOWN, JOY_AXIS_LEFT_Y, 1.0)
+	add_action_if_missing("pitch_down", [KEY_W, KEY_UP], JOY_BUTTON_DPAD_UP, JOY_AXIS_LEFT_Y, -1.0)
+	add_action_if_missing("roll_left", [KEY_A, KEY_LEFT], JOY_BUTTON_DPAD_LEFT, JOY_AXIS_LEFT_X, -1.0)
+	add_action_if_missing("roll_right", [KEY_D, KEY_RIGHT], JOY_BUTTON_DPAD_RIGHT, JOY_AXIS_LEFT_X, 1.0)
+	add_action_if_missing("yaw_left", [KEY_Q], JOY_BUTTON_LEFT_SHOULDER, -1, 0.0)
+	add_action_if_missing("yaw_right", [KEY_E], JOY_BUTTON_RIGHT_SHOULDER, -1, 0.0)
+	add_action_if_missing("throttle_up", [KEY_SHIFT, KEY_Z], -1, JOY_AXIS_TRIGGER_RIGHT, 1.0)
+	add_action_if_missing("throttle_down", [KEY_CTRL, KEY_X], -1, JOY_AXIS_TRIGGER_LEFT, 1.0)
+	add_action_key("flaps_cycle", KEY_F, JOY_BUTTON_Y)
+	add_action_key("wheel_brakes", KEY_SPACE, JOY_BUTTON_A)
+	add_action_key("parking_brake", KEY_B, JOY_BUTTON_X)
+	add_action_key("landing_gear", KEY_G, JOY_BUTTON_B)
+	add_action_key("camera_toggle", KEY_V, JOY_BUTTON_BACK)
 	_cache_all_action_events()
 
 func _cache_all_action_events() -> void:
 	var standard_actions = [
 		"move_forward", "move_back", "move_left", "move_right",
 		"fire", "alt_fire", "jump", "sprint", "crouch", "reload",
-		"boost", "drift", "swap", "target_cycle", "pause"
+		"boost", "drift", "swap", "target_cycle", "pause",
+		"pitch_up", "pitch_down", "roll_left", "roll_right", "yaw_left", "yaw_right",
+		"throttle_up", "throttle_down", "flaps_cycle", "wheel_brakes", "parking_brake",
+		"landing_gear", "camera_toggle"
 	]
 	for a in standard_actions:
 		if InputMap.has_action(a):
@@ -70,6 +89,12 @@ func set_game_context(game_id: String) -> void:
 			allowed = ["move_forward", "move_back", "move_left", "move_right", "boost", "drift", "jump", "pause"]
 		"aircraft_flight":
 			allowed = ["move_forward", "move_back", "move_left", "move_right", "boost", "pause"]
+		"flight_simulator_6dof":
+			allowed = [
+				"pitch_up", "pitch_down", "roll_left", "roll_right", "yaw_left", "yaw_right",
+				"throttle_up", "throttle_down", "flaps_cycle", "wheel_brakes", "parking_brake",
+				"landing_gear", "camera_toggle", "pause"
+			]
 		_:
 			allowed = _action_events_cache.keys()
 

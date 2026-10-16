@@ -93,5 +93,5 @@ static func apply_to_viewport(vp: Viewport, preset: Preset) -> void:
 	if vp is Window:
 		vp.scaling_3d_scale = settings["render_scale"]
 	
-	# Invariant check: Verify physics tick rate remains untouched (e.g. 60 Hz)
-	assert(Engine.physics_ticks_per_second == 60, "Physics ticks per second must remain 60Hz regardless of graphics preset")
+	# Invariant check: Verify physics tick rate remains untouched (e.g. 60 Hz or 120 Hz for 6-DoF flight)
+	assert(Engine.physics_ticks_per_second == 60 or Engine.physics_ticks_per_second == 120, "Physics ticks per second must remain deterministic (60Hz or 120Hz) regardless of graphics preset")

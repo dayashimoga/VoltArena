@@ -19,7 +19,8 @@ PRESETS = {
     "subway-survival": ("Windows-MetroSiege", "MetroSiege.pck"),
     "arena-fps": ("Windows-IronCrucible", "IronCrucible.pck"),
     "aircraft-flight": ("Windows-AircraftFlight", "AircraftFlight.pck"),
-    "urban-legends": ("Windows-UrbanLegends", "UrbanLegends.pck")
+    "urban-legends": ("Windows-UrbanLegends", "UrbanLegends.pck"),
+    "flight-simulator-6dof": ("Windows-FlightSim6DoF", "AeroSim6DoF.pck")
 }
 
 def export_pcks(target="all"):

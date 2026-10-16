@@ -119,6 +119,14 @@ GAME_CATALOG = {
         "preset_name": "Windows-UrbanLegends",
         "main_scene": "res://games/urban-legends/urban_legends_main.tscn",
         "description": "Urban Legends: Open-World Driving & Stunt Simulator"
+    },
+    "flight-simulator-6dof": {
+        "title": "AeroSim6DoF",
+        "game_id": "flight_simulator_6dof",
+        "pck_name": "AeroSim6DoF.pck",
+        "preset_name": "Windows-FlightSim6DoF",
+        "main_scene": "res://games/flight-simulator-6dof/flight_sim_standalone.tscn",
+        "description": "AeroSim 6-DoF: Professional Aircraft Flight Simulator"
     }
 }
 

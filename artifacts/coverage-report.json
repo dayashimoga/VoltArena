@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 89.5750332005312,
+  "overall_coverage_pct": 89.5888594164456,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -296,9 +296,9 @@
       "untested": []
     },
     "res://games/aircraft-flight/core/flight_physics.gd": {
-      "coverage_pct": 91.6666666666667,
-      "tested": 11,
-      "total": 12,
+      "coverage_pct": 92.8571428571429,
+      "tested": 13,
+      "total": 14,
       "untested": [
         "_ready"
       ]
@@ -1682,7 +1682,7 @@
       "untested": []
     }
   },
-  "tested_functions": 1349,
-  "timestamp": "2026-10-17T14:20:27",
-  "total_functions": 1506
+  "tested_functions": 1351,
+  "timestamp": "2026-10-17T15:02:46",
+  "total_functions": 1508
 }

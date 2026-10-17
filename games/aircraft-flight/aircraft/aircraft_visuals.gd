@@ -173,15 +173,15 @@ func _process(delta: float) -> void:
 		landing_gear.scale = Vector3(1.0, gear_pos, 1.0)
 		landing_gear.visible = gear_pos > 0.05
 
-	# 9. Afterburner Plume Scaling & Visibility
-	var ab_active = aircraft_physics.afterburner_active and aircraft_physics.throttle >= 0.95
-	var ab_scale = 1.8 if ab_active else (0.6 * (aircraft_physics.engine_rpm_pct / 100.0))
+	# 9. Afterburner Plume Scaling & Visibility (Hidden at idle; visible only when throttle >= 0.85 with AB)
+	var ab_active = aircraft_physics.afterburner_active and aircraft_physics.throttle >= 0.85
+	var ab_scale = 1.8 if ab_active else 0.0
 	if afterburner_l:
-		afterburner_l.visible = aircraft_physics.engine_rpm_pct > 10.0
-		afterburner_l.scale = Vector3(ab_scale, ab_scale, ab_scale * 1.5 if ab_active else 0.5)
+		afterburner_l.visible = ab_active
+		afterburner_l.scale = Vector3(ab_scale, ab_scale, ab_scale * 1.5)
 	if afterburner_r:
-		afterburner_r.visible = aircraft_physics.engine_rpm_pct > 10.0
-		afterburner_r.scale = Vector3(ab_scale, ab_scale, ab_scale * 1.5 if ab_active else 0.5)
+		afterburner_r.visible = ab_active
+		afterburner_r.scale = Vector3(ab_scale, ab_scale, ab_scale * 1.5)
 
 	# 10. Spinning Propeller & Motion Blur Disk (Extra 330)
 	var prop_rpm = (aircraft_physics.engine_rpm_pct / 100.0) * 2800.0

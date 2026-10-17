@@ -1,9 +1,10 @@
 class_name FlightHUD
 extends CanvasLayer
 
-## FlightHUD: Professional Aviation Glass Head-Up Display (HUD) & Adaptive Touch Controls.
-## Features a collimated artificial horizon with pitch ladder, flight path vector,
-## airspeed & altimeter tapes, heading ribbon, G-meter, stall warning, and radar minimap.
+## FlightHUD: Collimated Aviation Glass Head-Up Display (HUD) & Flight Telemetry.
+## Features a screen-centered collimated artificial horizon with pitch ladder,
+## flight path marker (velocity vector), airspeed & altimeter tapes, heading ribbon,
+## G-meter, flight mode indicator, stall warning, and adaptive touch controls.
 
 const FlightConst = preload("res://games/aircraft-flight/core/flight_constants.gd")
 const FlightPhysics = preload("res://games/aircraft-flight/core/flight_physics.gd")
@@ -15,8 +16,10 @@ var hud_root: Control
 var center_hud: Control
 
 # Instrument Readouts
+var boresight_marker: Label
 var artificial_horizon_line: Line2D
 var pitch_ladder_container: Control
+var pitch_rungs_container: Control
 var flight_path_vector: Control
 var airspeed_label: Label
 var airspeed_bar: ProgressBar
@@ -31,6 +34,7 @@ var throttle_bar: ProgressBar
 var throttle_label: Label
 var gear_indicator: Label
 var flap_indicator: Label
+var flight_mode_label: Label
 var stall_warning_banner: PanelContainer
 var objective_label: Label
 var tutorial_hint_label: Label
@@ -45,6 +49,9 @@ var virtual_throttle_slider: VSlider
 var is_stick_active: bool = false
 var stick_center: Vector2 = Vector2.ZERO
 
+# Pixels per degree for pitch ladder translation
+const PIXELS_PER_DEGREE: float = 4.5
+
 signal pause_requested()
 signal camera_toggle_requested()
 signal recover_requested()
@@ -52,9 +59,12 @@ signal recover_requested()
 func _ready() -> void:
 	layer = 15
 	_build_hud_layout()
-	_update_responsive_layout(DisplayServer.window_get_size())
-
 	var vp = get_viewport()
+	var init_size = vp.get_visible_rect().size if vp else DisplayServer.window_get_size()
+	if init_size.x <= 0 or init_size.y <= 0:
+		init_size = Vector2(1920, 1080)
+	_update_responsive_layout(init_size)
+
 	if vp and not vp.size_changed.is_connected(_on_viewport_size_changed):
 		vp.size_changed.connect(_on_viewport_size_changed)
 
@@ -70,55 +80,90 @@ func _build_hud_layout() -> void:
 	hud_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(hud_root)
 
-	# Center Reticle & Pitch Ladder Area
+	# --- SCREEN-CENTERED COLLIMATED HUD RETICLE & PITCH LADDER ---
+	# CenterHUD is positioned exactly at viewport_size * 0.5 with (0,0) as screen center
 	center_hud = Control.new()
 	center_hud.name = "CenterHUD"
-	center_hud.set_anchors_preset(Control.PRESET_CENTER)
-	center_hud.custom_minimum_size = Vector2(400, 400)
 	center_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	center_hud.position = Vector2(960, 540) # default until layout update
 	hud_root.add_child(center_hud)
 
-	# Boresight Crosshair
-	var boresight = _create_label("+", 24, Color(0.2, 0.95, 0.3))
-	boresight.set_anchors_preset(Control.PRESET_CENTER)
-	center_hud.add_child(boresight)
+	# Boresight Crosshair (Fixed aircraft longitudinal reference at 0,0)
+	boresight_marker = _create_label("+", 24, Color(0.2, 0.95, 0.3))
+	boresight_marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	boresight_marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	boresight_marker.position = Vector2(-15, -16)
+	boresight_marker.size = Vector2(30, 30)
+	center_hud.add_child(boresight_marker)
 
-	# Flight Path Vector Marker (Velocity Vector)
+	# Flight Path Vector Marker (Velocity Vector —○—)
 	flight_path_vector = Control.new()
 	flight_path_vector.name = "VelocityVector"
+	flight_path_vector.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var fpv_label = _create_label("—○—", 20, Color(0.2, 0.95, 0.3))
-	fpv_label.set_anchors_preset(Control.PRESET_CENTER)
+	fpv_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	fpv_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	fpv_label.position = Vector2(-30, -15)
+	fpv_label.size = Vector2(60, 30)
 	flight_path_vector.add_child(fpv_label)
 	center_hud.add_child(flight_path_vector)
 
-	# Pitch Ladder Container (Roll-rotated)
+	# Pitch Ladder Container (Rotates around screen center 0,0 by -roll_rad)
 	pitch_ladder_container = Control.new()
 	pitch_ladder_container.name = "PitchLadder"
-	pitch_ladder_container.set_anchors_preset(Control.PRESET_CENTER)
+	pitch_ladder_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pitch_ladder_container.position = Vector2.ZERO
+	pitch_ladder_container.pivot_offset = Vector2.ZERO
 	center_hud.add_child(pitch_ladder_container)
 
-	# Artificial Horizon Center Line
+	# Pitch Rungs Container (Translates along pitch axis inside roll frame)
+	pitch_rungs_container = Control.new()
+	pitch_rungs_container.name = "PitchRungs"
+	pitch_rungs_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pitch_rungs_container.position = Vector2.ZERO
+	pitch_ladder_container.add_child(pitch_rungs_container)
+
+	# Artificial Horizon Center Line (Through 0,0 at 0 deg pitch)
 	artificial_horizon_line = Line2D.new()
 	artificial_horizon_line.width = 2.0
-	artificial_horizon_line.default_color = Color(0.2, 0.95, 0.3, 0.75)
-	artificial_horizon_line.points = PackedVector2Array([Vector2(-120, 0), Vector2(120, 0)])
-	pitch_ladder_container.add_child(artificial_horizon_line)
+	artificial_horizon_line.default_color = Color(0.2, 0.95, 0.3, 0.85)
+	artificial_horizon_line.points = PackedVector2Array([Vector2(-140, 0), Vector2(-25, 0), Vector2(25, 0), Vector2(140, 0)])
+	pitch_rungs_container.add_child(artificial_horizon_line)
 
-	# Pitch Rungs (+10, +20, -10, -20)
+	# Calibrated Pitch Rungs (+10, +20, +30 / -10, -20, -30)
 	for p_deg in [-30, -20, -10, 10, 20, 30]:
-		var rung_y = -p_deg * 4.0
+		var rung_y = -p_deg * PIXELS_PER_DEGREE
 		var rung_line = Line2D.new()
 		rung_line.width = 1.5
-		rung_line.default_color = Color(0.2, 0.95, 0.3, 0.6)
-		rung_line.points = PackedVector2Array([Vector2(-45, rung_y), Vector2(-20, rung_y), Vector2(-20, rung_y + 4), Vector2(20, rung_y + 4), Vector2(20, rung_y), Vector2(45, rung_y)])
-		pitch_ladder_container.add_child(rung_line)
+		var is_positive = p_deg > 0
+		rung_line.default_color = Color(0.2, 0.95, 0.3, 0.70) if is_positive else Color(0.2, 0.85, 0.4, 0.55)
 
-		var lbl = _create_label(str(abs(p_deg)), 10, Color(0.2, 0.95, 0.3, 0.7))
-		lbl.position = Vector2(50, rung_y - 8)
-		pitch_ladder_container.add_child(lbl)
+		# Positive pitch: solid hooks down; Negative pitch: dashed hooks up
+		if is_positive:
+			rung_line.points = PackedVector2Array([
+				Vector2(-55, rung_y + 6), Vector2(-55, rung_y),
+				Vector2(-20, rung_y), Vector2(20, rung_y),
+				Vector2(55, rung_y), Vector2(55, rung_y + 6)
+			])
+		else:
+			rung_line.points = PackedVector2Array([
+				Vector2(-55, rung_y - 6), Vector2(-55, rung_y),
+				Vector2(-35, rung_y), Vector2(-20, rung_y),
+				Vector2(20, rung_y), Vector2(35, rung_y),
+				Vector2(55, rung_y), Vector2(55, rung_y - 6)
+			])
+		pitch_rungs_container.add_child(rung_line)
+
+		var lbl = _create_label(str(abs(p_deg)), 10, Color(0.2, 0.95, 0.3, 0.75))
+		lbl.position = Vector2(60, rung_y - 7)
+		pitch_rungs_container.add_child(lbl)
+
+		var lbl_l = _create_label(str(abs(p_deg)), 10, Color(0.2, 0.95, 0.3, 0.75))
+		lbl_l.position = Vector2(-75, rung_y - 7)
+		pitch_rungs_container.add_child(lbl_l)
 
 	# --- LEFT HUD: AIRSPEED TAPE ---
-	var speed_card = _create_glass_panel(Vector2(110, 160))
+	var speed_card = _create_glass_panel(Vector2(115, 175))
 	speed_card.set_anchors_preset(Control.PRESET_CENTER_LEFT)
 	speed_card.offset_left = 30
 	hud_root.add_child(speed_card)
@@ -134,7 +179,7 @@ func _build_hud_layout() -> void:
 	spd_vbox.add_child(airspeed_label)
 
 	airspeed_bar = ProgressBar.new()
-	airspeed_bar.custom_minimum_size = Vector2(90, 8)
+	airspeed_bar.custom_minimum_size = Vector2(95, 8)
 	airspeed_bar.max_value = 1000.0
 	airspeed_bar.show_percentage = false
 	spd_vbox.add_child(airspeed_bar)
@@ -143,7 +188,7 @@ func _build_hud_layout() -> void:
 	spd_vbox.add_child(throttle_label)
 
 	throttle_bar = ProgressBar.new()
-	throttle_bar.custom_minimum_size = Vector2(90, 8)
+	throttle_bar.custom_minimum_size = Vector2(95, 8)
 	throttle_bar.max_value = 100.0
 	throttle_bar.show_percentage = false
 	spd_vbox.add_child(throttle_bar)
@@ -155,9 +200,9 @@ func _build_hud_layout() -> void:
 	spd_vbox.add_child(aoa_label)
 
 	# --- RIGHT HUD: ALTIMETER & VSI TAPE ---
-	var alt_card = _create_glass_panel(Vector2(110, 160))
+	var alt_card = _create_glass_panel(Vector2(120, 185))
 	alt_card.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	alt_card.offset_left = -140
+	alt_card.offset_left = -150
 	hud_root.add_child(alt_card)
 
 	var alt_vbox = VBoxContainer.new()
@@ -170,7 +215,7 @@ func _build_hud_layout() -> void:
 	altimeter_label = _create_label("0 M", 22, Color(0.2, 0.95, 0.3))
 	alt_vbox.add_child(altimeter_label)
 
-	radar_alt_label = _create_label("RALT: 0 M", 12, Color(0.85, 0.9, 0.95))
+	radar_alt_label = _create_label("RALT: 0 M (AGL)", 12, Color(0.85, 0.9, 0.95))
 	alt_vbox.add_child(radar_alt_label)
 
 	vsi_label = _create_label("VSI: +0.0", 13, Color(0.2, 0.95, 0.3))
@@ -181,6 +226,9 @@ func _build_hud_layout() -> void:
 
 	flap_indicator = _create_label("FLAPS: UP", 12, Color(0.8, 0.85, 0.9))
 	alt_vbox.add_child(flap_indicator)
+
+	flight_mode_label = _create_label("MODE: SIMCADE", 11, Color(0.3, 0.85, 1.0))
+	alt_vbox.add_child(flight_mode_label)
 
 	# --- TOP HUD: HEADING COMPASS RIBBON ---
 	var heading_card = _create_glass_panel(Vector2(220, 52))
@@ -197,7 +245,7 @@ func _build_hud_layout() -> void:
 	hdg_vbox.add_child(heading_label)
 
 	# --- TOP BANNER: ACTIVE OBJECTIVE & FLIGHT DIRECTOR TUTORIAL ---
-	var obj_card = _create_glass_panel(Vector2(520, 64))
+	var obj_card = _create_glass_panel(Vector2(540, 64))
 	obj_card.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	obj_card.offset_top = 74
 	hud_root.add_child(obj_card)
@@ -215,13 +263,13 @@ func _build_hud_layout() -> void:
 	obj_vbox.add_child(tutorial_hint_label)
 
 	# --- BOTTOM HUD: VISIBLE FLIGHT CONTROLS GUIDE PANEL ---
-	var guide_panel = _create_glass_panel(Vector2(620, 42))
+	var guide_panel = _create_glass_panel(Vector2(740, 42))
 	guide_panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	guide_panel.offset_left = 30
 	guide_panel.offset_top = -54
 	hud_root.add_child(guide_panel)
 
-	controls_guide_label = _create_label("[W/S] Pitch  [A/D] Roll  [Q/E] Rudder/Taxi  [Shift/Ctrl] Throttle  [Space] Brakes  [G] Gear  [F] Flaps  [V] Cam  [R] Reset", 11, Color(0.85, 0.95, 0.88, 0.9))
+	controls_guide_label = _create_label("[W/S] Pitch  [A/D] Roll  [Q/E] Rudder/Taxi  [Shift/Ctrl] Throttle  [Space] Brakes  [G] Gear  [F] Flaps  [M] Mode  [V] Cam  [R] Reset", 11, Color(0.85, 0.95, 0.88, 0.9))
 	controls_guide_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	guide_panel.add_child(controls_guide_label)
 
@@ -313,32 +361,51 @@ func _process(delta: float) -> void:
 	gear_indicator.text = "GEAR: %s" % ("DOWN" if aircraft.gear_position > 0.8 else ("UP" if aircraft.gear_position < 0.2 else "IN TRANS"))
 	flap_indicator.text = "FLAPS: %s" % ("UP" if aircraft.flaps_step == 0 else ("TAKEOFF" if aircraft.flaps_step == 1 else "LANDING"))
 
-	# Heading ribbon
+	if flight_mode_label and aircraft.get("flight_mode") != null:
+		var mode_str = "SIMCADE"
+		match aircraft.flight_mode:
+			FlightConst.FlightMode.ARCADE: mode_str = "ARCADE"
+			FlightConst.FlightMode.SIMCADE: mode_str = "SIMCADE"
+			FlightConst.FlightMode.SIMULATION: mode_str = "SIMULATION"
+		flight_mode_label.text = "MODE: %s" % mode_str
+
+	# Compass Heading Tape
 	var fwd = -aircraft.global_transform.basis.z.normalized()
 	var heading_deg = rad_to_deg(atan2(fwd.x, -fwd.z))
 	if heading_deg < 0.0:
 		heading_deg += 360.0
 	heading_label.text = "HDG: %03d°" % int(heading_deg)
 
-	# Pitch Ladder & Horizon rotation
-	var pitch_deg = aircraft.angle_of_attack_deg
-	var roll_rad = aircraft.global_transform.basis.get_euler().z
-	pitch_ladder_container.rotation = -roll_rad
-	artificial_horizon_line.position.y = clampf(pitch_deg * 3.5, -120.0, 120.0)
+	# --- PITCH LADDER & ARTIFICIAL HORIZON ATTITUDE COMPUTATION ---
+	# Calculate pitch angle relative to world horizontal datum
+	# Pitch: -asin(basis.z.y)
+	var ac_basis = aircraft.global_transform.basis
+	var pitch_rad = -asin(clampf(ac_basis.z.y, -1.0, 1.0))
+	var pitch_deg = rad_to_deg(pitch_rad)
+	# Roll: atan2(basis.x.y, basis.y.y)
+	var roll_rad = atan2(ac_basis.x.y, ac_basis.y.y)
 
-	# Velocity Vector FPV displacement
-	if aircraft.indicated_airspeed_ms > 5.0:
-		var fpv_x = clampf(aircraft.sideslip_angle_deg * 4.0, -90.0, 90.0)
-		var fpv_y = clampf(aircraft.angle_of_attack_deg * 4.0, -90.0, 90.0)
-		flight_path_vector.position = Vector2(fpv_x, fpv_y)
+	# Rotate pitch ladder around exact screen center by -roll_rad
+	pitch_ladder_container.rotation = -roll_rad
+
+	# Translate horizon line & rungs vertically by pitch_deg * PIXELS_PER_DEGREE
+	# When pitch > 0 (nose up), horizon moves DOWN (+Y on screen)
+	pitch_rungs_container.position.y = pitch_deg * PIXELS_PER_DEGREE
+
+	# Velocity Vector (Flight Path Marker)
+	if aircraft.indicated_airspeed_ms > 4.0:
+		var fpv_x = clampf(aircraft.sideslip_angle_deg * PIXELS_PER_DEGREE, -120.0, 120.0)
+		var fpv_y = clampf((pitch_deg - aircraft.angle_of_attack_deg) * PIXELS_PER_DEGREE, -120.0, 120.0)
+		flight_path_vector.position = Vector2(fpv_x, -fpv_y)
 		flight_path_vector.visible = true
 	else:
+		flight_path_vector.position = Vector2.ZERO
 		flight_path_vector.visible = false
 
 	# Stall warning flashing
 	stall_warning_banner.visible = aircraft.is_stalling and (fmod(Time.get_ticks_msec(), 400.0) < 200.0)
 
-	# Interactive Flight Tutorial & Flight Director cues
+	# Flight Director / Tutorial Hints
 	if tutorial_hint_label:
 		if aircraft.is_rotorcraft:
 			tutorial_hint_label.text = "ROTORCRAFT: [SHIFT/CTRL] Collective Lift  |  [W/S/A/D] Cyclic Direction  |  [Q/E] Anti-Torque Pedals"
@@ -366,8 +433,11 @@ func _update_responsive_layout(viewport_size: Vector2) -> void:
 	var is_portrait = viewport_size.y > viewport_size.x
 	var is_narrow = viewport_size.x < 720.0
 
+	# Hard lock HUD reticle and pitch ladder strictly to screen center
+	if center_hud:
+		center_hud.position = viewport_size * 0.5
+
 	if touch_root:
-		# Auto-enable touch controls on mobile or narrow portrait screens
 		var pa = GameConstants.get_autoload(self, "PlatformAdapter")
 		var show_touch = (pa and pa.is_touch_active()) or is_portrait or is_narrow
 		touch_root.visible = show_touch

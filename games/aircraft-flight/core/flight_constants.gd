@@ -30,9 +30,10 @@ enum MissionType {
 }
 
 enum CameraViewMode {
-	CHASE,    ## Authoritative dynamic 3rd-person spring-arm camera
-	COCKPIT,  ## 1st-person interior cockpit view with functional instruments
-	FREE      ## Exterior cinematic orbit / fly-by camera
+	CHASE,      ## Authoritative dynamic 3rd-person spring-arm camera
+	COCKPIT,    ## 1st-person interior cockpit view with functional instruments
+	AEROBATIC,  ## Rigid aerobatic chase camera locked 100% to aircraft axes
+	FREE        ## Exterior cinematic orbit / fly-by camera
 }
 
 # Standard atmospheric constants

@@ -95,14 +95,16 @@ static func build_fa18_hornet(hull_color: Color, accent_color: Color) -> Node3D:
 		_add_missile(root, Vector3(-5.8, 0.32, 0.9), mat_white, mat_dark)
 		_add_missile(root, Vector3(5.8, 0.32, 0.9), mat_white, mat_dark)
 
-		# Afterburner Plumes
+		# Afterburner Plumes (translucent shock-diamond cones, initialized invisible)
 		var ab_l = _add_cone(root, 0.42, 1.8, Vector3(-0.62, 0.36, 4.4), mat_glow)
 		ab_l.rotation_degrees.x = -90.0
 		ab_l.name = "AfterburnerPlumeLeft"
+		ab_l.visible = false
 
 		var ab_r = _add_cone(root, 0.42, 1.8, Vector3(0.62, 0.36, 4.4), mat_glow)
 		ab_r.rotation_degrees.x = -90.0
 		ab_r.name = "AfterburnerPlumeRight"
+		ab_r.visible = false
 
 		# Retractable Landing Gear assembly
 		var gear_node = Node3D.new()
@@ -215,9 +217,11 @@ static func _build_procedural_fa18(root: Node3D, hull_color: Color, accent_color
 	var ab_l = _add_cone(root, 0.42, 1.8, Vector3(-0.62, 0.36, 5.8), mat_glow)
 	ab_l.rotation_degrees.x = -90.0
 	ab_l.name = "AfterburnerPlumeLeft"
+	ab_l.visible = false
 	var ab_r = _add_cone(root, 0.42, 1.8, Vector3(0.62, 0.36, 5.8), mat_glow)
 	ab_r.rotation_degrees.x = -90.0
 	ab_r.name = "AfterburnerPlumeRight"
+	ab_r.visible = false
 
 	var gear_node = Node3D.new()
 	gear_node.name = "LandingGear"
@@ -266,9 +270,11 @@ static func build_f22_raptor(hull_color: Color, accent_color: Color) -> Node3D:
 
 		var ab_l = _add_box(nozzle_l, Vector3(0.72, 0.32, 1.6), Vector3(0.0, 0.0, 1.2), mat_glow)
 		ab_l.name = "AfterburnerPlumeLeft"
+		ab_l.visible = false
 
 		var ab_r = _add_box(nozzle_r, Vector3(0.72, 0.32, 1.6), Vector3(0.0, 0.0, 1.2), mat_glow)
 		ab_r.name = "AfterburnerPlumeRight"
+		ab_r.visible = false
 
 		# Control Surfaces
 		var aileron_l = Node3D.new()
@@ -378,8 +384,10 @@ static func _build_procedural_f22(root: Node3D, hull_color: Color, accent_color:
 
 	var ab_l = _add_box(nozzle_l, Vector3(0.72, 0.32, 1.6), Vector3(0.0, 0.0, 1.2), mat_glow)
 	ab_l.name = "AfterburnerPlumeLeft"
+	ab_l.visible = false
 	var ab_r = _add_box(nozzle_r, Vector3(0.72, 0.32, 1.6), Vector3(0.0, 0.0, 1.2), mat_glow)
 	ab_r.name = "AfterburnerPlumeRight"
+	ab_r.visible = false
 
 	var gear_node = Node3D.new()
 	gear_node.name = "LandingGear"

@@ -7,6 +7,15 @@ extends CharacterBody3D
 
 const FlightConst = preload("res://games/aircraft-flight/core/flight_constants.gd")
 
+# Maneuvering Speed, Q-Limiter & SAS Fly-By-Wire Constants
+const MANEUVERING_SPEED_MS: float = 123.46 # V_A = 240 KIAS
+const Q_REF_PA: float = 9336.0 # Reference dynamic pressure q_ref = 0.5 * 1.225 * 123.46^2
+const MAX_PITCH_RATE_RAD_S: float = deg_to_rad(35.0) # +-35 deg/s
+const MAX_ROLL_RATE_SIMCADE_RAD_S: float = deg_to_rad(120.0) # +-120 deg/s in Simcade
+const MAX_ROLL_RATE_SIM_RAD_S: float = deg_to_rad(210.0) # +-210 deg/s in Simulation
+const MAX_YAW_RATE_RAD_S: float = deg_to_rad(18.0) # +-18 deg/s
+const SAS_KP: float = 22.0 # Proportional restoring torque (settles rate in < 0.18s)
+
 # Aerodynamic Aircraft Properties
 @export var aircraft_name: String = "F/A-18 Hornet"
 @export var aircraft_type: FlightConst.AircraftType = FlightConst.AircraftType.FIGHTER_JET
@@ -316,7 +325,21 @@ func _compute_fixed_wing_forces(delta: float, density: float, q: float) -> Vecto
 	sigma_ge = clampf(sigma_ge, 0.15, 1.0)
 	var cd_induced = k_induced * (cl * cl) * (sigma_ge if radar_altitude_m < wingspan else 1.0)
 
-	var cd_gear = 0.035 * gear_position
+	var cd_gear = 0.045 * gear_position
+	# Parasitic gear drag enforcement & structural speed cap:
+	if is_airborne and gear_position > 0.05:
+		if indicated_airspeed_ms > 133.7: # > 260 KIAS
+			if flight_mode != FlightConst.FlightMode.SIMULATION:
+				# Auto-retract landing gear in Arcade / Simcade
+				gear_deployed = false
+			else:
+				# Severe structural drag penalty and airframe overspeed buffet in Simulation
+				var overspeed = indicated_airspeed_ms - 133.7
+				cd_gear += 0.09 * pow(overspeed / 30.0, 2.0)
+		elif indicated_airspeed_ms > 100.0:
+			var spd_ratio = (indicated_airspeed_ms - 100.0) / 40.0
+			cd_gear += 0.035 * spd_ratio
+
 	var cd_flaps = (0.02 if flaps_step == 1 else (0.055 if flaps_step == 2 else 0.0))
 	var cd_airbrake = 0.08 if airbrake_deployed else 0.0
 
@@ -412,34 +435,63 @@ func _compute_ground_reaction_forces(delta: float, v_fwd: float, v_right: float)
 
 	return reaction
 
-	return reaction
-
 func _integrate_aerodynamic_moments(delta: float, q: float, v_fwd: float) -> void:
 	# Surface effectiveness scales with forward airspeed:
 	var surface_effectiveness = clampf(v_fwd / 35.0, 0.15, 1.25)
 	if is_rotorcraft:
 		surface_effectiveness = clampf(rotor_rpm_pct / 100.0, 0.2, 1.0)
 
-	# Pilot commanded torques
+	# 1. Speed-Scheduled Control Authority (Q-Limiter above V_A = 240 KIAS = 123.46 m/s):
+	# authority_scale = clamp(q_ref / max(q, q_ref), 0.12, 1.0)
+	var dynamic_q = maxf(q, 0.5 * 1.225 * v_fwd * v_fwd)
+	var authority_scale = clampf(Q_REF_PA / maxf(dynamic_q, Q_REF_PA), 0.12, 1.0)
+
+	# Pilot commanded inputs
 	var cmd_pitch = input_pitch
 	var cmd_roll = input_roll
 	var cmd_yaw = input_yaw
 
-	# Autopilot / Flight Assists:
-	if flight_assist_enabled or flight_mode == FlightConst.FlightMode.ARCADE:
-		# Auto-trim pitch and roll stabilization
-		var cur_xform = global_transform if is_inside_tree() else transform
-		var current_roll_deg = rad_to_deg(cur_xform.basis.get_euler().z)
-		var current_pitch_deg = rad_to_deg(cur_xform.basis.get_euler().x)
+	# 2. Selectable Flight Modes & FBW Angular Rate Command Formulation
+	var max_roll_rate = MAX_ROLL_RATE_SIM_RAD_S if flight_mode == FlightConst.FlightMode.SIMULATION else MAX_ROLL_RATE_SIMCADE_RAD_S
+	var target_rate_pitch: float = cmd_pitch * MAX_PITCH_RATE_RAD_S * authority_scale
+	var target_rate_roll: float = cmd_roll * max_roll_rate * authority_scale
+	var target_rate_yaw: float = -cmd_yaw * MAX_YAW_RATE_RAD_S * authority_scale
 
-		if absf(input_roll) < 0.05 and is_airborne:
-			cmd_roll -= clampf(current_roll_deg * 0.035, -0.6, 0.6)
-		if absf(input_pitch) < 0.05 and is_airborne:
-			cmd_pitch -= clampf(current_pitch_deg * 0.02, -0.4, 0.4)
+	var cur_xform = global_transform if is_inside_tree() else transform
 
-		# Coordinated turn assist (rudder automatically follows roll)
-		if absf(input_yaw) < 0.05 and absf(input_roll) > 0.1:
-			cmd_yaw += input_roll * 0.25
+	if not is_rotorcraft and is_airborne:
+		if flight_mode == FlightConst.FlightMode.ARCADE:
+			# Arcade: Auto-bank-to-turn (stick commands target bank up to 45 deg) + auto-level wings
+			var cur_roll_rad = cur_xform.basis.get_euler().z
+			var desired_bank = -input_roll * deg_to_rad(45.0)
+			target_rate_roll = clampf((desired_bank - cur_roll_rad) * 4.5, -max_roll_rate, max_roll_rate)
+			if absf(input_roll) < 0.05:
+				target_rate_roll = -cur_roll_rad * 4.5
+			else:
+				var bank_angle = absf(cur_roll_rad)
+				target_rate_pitch += (1.0 - cos(bank_angle)) * deg_to_rad(14.0)
+				target_rate_yaw += sin(cur_roll_rad) * deg_to_rad(8.0)
+
+		elif flight_mode == FlightConst.FlightMode.SIMCADE:
+			# Simcade (Default): G-Limiter (-3.0G to +9.0G)
+			if g_force_current > 8.5 and target_rate_pitch > 0.0:
+				target_rate_pitch *= clampf((9.0 - g_force_current) / 0.5, 0.0, 1.0)
+			elif g_force_current < -2.5 and target_rate_pitch < 0.0:
+				target_rate_pitch *= clampf((g_force_current - (-3.0)) / 0.5, 0.0, 1.0)
+
+			# AoA Stall Protection (alpha <= 18 deg)
+			if angle_of_attack_deg > 16.5 and target_rate_pitch > 0.0:
+				target_rate_pitch *= clampf((18.0 - angle_of_attack_deg) / 1.5, 0.0, 1.0)
+
+			# Auto-turn coordination
+			if absf(input_yaw) < 0.05 and absf(target_rate_roll) > 0.1:
+				target_rate_yaw += target_rate_roll * 0.18
+
+		# Autopilot / Flight assist trim (Arcade mode auto-level)
+		if flight_mode == FlightConst.FlightMode.ARCADE and absf(input_roll) < 0.05 and absf(input_pitch) < 0.05:
+			var cur_roll_deg = rad_to_deg(cur_xform.basis.get_euler().z)
+			if absf(cur_roll_deg) < 15.0:
+				target_rate_roll -= deg_to_rad(cur_roll_deg) * 1.5
 
 	# Calculate angular accelerations (rad/s^2)
 	var target_pitch_accel: float = 0.0
@@ -447,50 +499,49 @@ func _integrate_aerodynamic_moments(delta: float, q: float, v_fwd: float) -> voi
 	var target_yaw_accel: float = 0.0
 
 	if is_rotorcraft:
-		# Rotary-wing flight dynamics: Cyclic disc tilt and tail rotor anti-torque authority
 		target_pitch_accel = cmd_pitch * pitch_authority * 2.2 - angular_velocity.x * pitch_damping
 		target_roll_accel = cmd_roll * roll_authority * 2.2 - angular_velocity.z * roll_damping
 		target_yaw_accel = -cmd_yaw * yaw_authority * 2.8 - angular_velocity.y * yaw_damping
-
-		# Weathervane directional stability above 40 KIAS (~20.6 m/s)
 		if indicated_airspeed_ms > 20.6:
 			target_yaw_accel -= deg_to_rad(sideslip_angle_deg) * 2.6
-
-		# PID Auto-Hover assist (< 0.2 m/s drift when controls are centered)
 		if flight_assist_enabled and absf(cmd_pitch) < 0.05 and absf(cmd_roll) < 0.05:
 			var drift_fwd = local_velocity.z
 			var drift_right = local_velocity.x
 			target_pitch_accel -= clampf(drift_fwd * 0.45, -1.2, 1.2)
 			target_roll_accel -= clampf(drift_right * 0.45, -1.2, 1.2)
 	elif not is_airborne and gear_position > 0.5:
-		# Ground taxiing with weight on wheels:
-		# Wings remain level on tricycle/taildragger gear; ailerons cannot bank into tarmac
 		target_roll_accel = 0.0
 		angular_velocity.z = 0.0
-		# Speed-scaled nosewheel steering: +-35 deg < 15 KIAS (~7.7 m/s) to +-3 deg > 60 KIAS (~30.9 m/s)
 		var g_speed = maxf(indicated_airspeed_ms, absf(v_fwd))
 		var speed_ratio_nw = clampf((g_speed - 7.7) / (30.9 - 7.7), 0.0, 1.0)
 		var max_steer_rad = deg_to_rad(lerpf(35.0, 3.0, speed_ratio_nw))
 		var steer_rate = -cmd_yaw * (max_steer_rad * 3.5)
 		target_yaw_accel = steer_rate * 6.0 - angular_velocity.y * 5.0
-		# Elevator takeoff rotation authority
 		target_pitch_accel = cmd_pitch * pitch_authority * 1.5 - angular_velocity.x * (pitch_damping * 1.5)
 	else:
-		# Aerodynamic fixed-wing moments in flight
-		target_pitch_accel = cmd_pitch * pitch_authority * surface_effectiveness - angular_velocity.x * pitch_damping
-		target_roll_accel = cmd_roll * roll_authority * surface_effectiveness - angular_velocity.z * roll_damping
-		# Negated cmd_yaw so right rudder turns right (+X in local frame)
-		target_yaw_accel = -cmd_yaw * yaw_authority * surface_effectiveness - angular_velocity.y * yaw_damping
+		# 3. 3-Axis SAS / Fly-By-Wire Proportional-Derivative Angular Velocity Damper
+		# tau = Kp * (omega_target - omega_local)
+		# When stick input is released, SAS_KP = 18.0 settles rate to zero in < 0.18 seconds cleanly!
+		var err_pitch = target_rate_pitch - angular_velocity.x
+		var err_roll = target_rate_roll - angular_velocity.z
+		var err_yaw = target_rate_yaw - angular_velocity.y
 
-		# Longitudinal Stability Margin: Aerodynamic Center +0.25m behind Center of Mass (+Z)
-		# An increase in AoA generates pitch-down restoring moment
+		var kp_pitch = SAS_KP if absf(input_pitch) < 0.05 else (pitch_authority * 6.0 * authority_scale)
+		var kp_roll = SAS_KP if absf(input_roll) < 0.05 else (roll_authority * 6.0 * authority_scale)
+		var kp_yaw = (SAS_KP * 0.8) if absf(input_yaw) < 0.05 else (yaw_authority * 5.0 * authority_scale)
+
+		target_pitch_accel = err_pitch * kp_pitch
+		target_roll_accel = err_roll * kp_roll
+		target_yaw_accel = err_yaw * kp_yaw
+
+		# Longitudinal Stability Margin (AoA pitch-down restoring moment)
 		var stability_margin_m = 0.25
-		var restoring_moment = -deg_to_rad(angle_of_attack_deg) * (stability_margin_m * surface_effectiveness * 1.8)
+		var restoring_moment = -deg_to_rad(angle_of_attack_deg) * (stability_margin_m * surface_effectiveness * 1.6)
 		target_pitch_accel += restoring_moment
 
-	# Adverse yaw / directional stability damping
-	if not is_rotorcraft and absf(sideslip_angle_deg) > 1.0:
-		target_yaw_accel -= deg_to_rad(sideslip_angle_deg) * 2.2
+		# Directional stability / adverse yaw damping
+		if absf(sideslip_angle_deg) > 1.0:
+			target_yaw_accel -= deg_to_rad(sideslip_angle_deg) * 2.2
 
 	# Post-stall buffet jitter:
 	if is_stalling and stall_severity > 0.2:
@@ -504,7 +555,6 @@ func _integrate_aerodynamic_moments(delta: float, q: float, v_fwd: float) -> voi
 	angular_velocity.z += target_roll_accel * delta
 
 	# Apply rotation to aircraft basis:
-	# Pitch (local X), Yaw (local Y), Roll (local Z)
 	rotate_object_local(Vector3.RIGHT, angular_velocity.x * delta)
 	rotate_object_local(Vector3.UP, angular_velocity.y * delta)
 	rotate_object_local(Vector3.FORWARD, angular_velocity.z * delta)
@@ -586,3 +636,15 @@ func recover_to_safe_flight(pos: Vector3, heading_deg: float, speed_kmh: float, 
 	is_stalling = false
 	stall_severity = 0.0
 	airframe_damage_pct = 0.0
+
+func set_flight_mode(mode: FlightConst.FlightMode) -> void:
+	flight_mode = mode
+
+func cycle_flight_mode() -> void:
+	match flight_mode:
+		FlightConst.FlightMode.SIMCADE:
+			flight_mode = FlightConst.FlightMode.SIMULATION
+		FlightConst.FlightMode.SIMULATION:
+			flight_mode = FlightConst.FlightMode.ARCADE
+		FlightConst.FlightMode.ARCADE:
+			flight_mode = FlightConst.FlightMode.SIMCADE

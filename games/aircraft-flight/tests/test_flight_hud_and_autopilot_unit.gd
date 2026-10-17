@@ -64,6 +64,9 @@ func test_camera_controller_modes() -> void:
 	_assert_true(cam_ctrl.current_mode == FlightConst.CameraViewMode.COCKPIT, "Toggles to Cockpit mode")
 
 	cam_ctrl.toggle_camera_mode()
+	_assert_true(cam_ctrl.current_mode == FlightConst.CameraViewMode.AEROBATIC, "Toggles to Aerobatic mode")
+
+	cam_ctrl.toggle_camera_mode()
 	_assert_true(cam_ctrl.current_mode == FlightConst.CameraViewMode.FREE, "Toggles to Free camera mode")
 
 	cam_ctrl.toggle_camera_mode()
@@ -144,8 +147,8 @@ func get_coverage_entries() -> Array:
 			"res://games/aircraft-flight/core/flight_camera_controller.gd",
 			[
 				"_ready", "toggle_camera_mode", "set_camera_mode", "_physics_process",
-				"_update_chase_camera", "_update_cockpit_camera", "_update_free_camera",
-				"add_look_input"
+				"_update_chase_camera", "_update_cockpit_camera", "_update_aerobatic_camera",
+				"_update_free_camera", "add_look_input"
 			]
 		],
 		[

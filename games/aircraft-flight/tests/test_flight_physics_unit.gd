@@ -195,6 +195,25 @@ func test_flight_modes_and_recovery() -> void:
 	_assert_true(plane.is_airborne == true, "Airborne recovery state flag active")
 	_assert_true(plane.gear_deployed == false, "Gear retracted for airborne spawn")
 	_assert_true(plane.velocity.length() > 100.0, "Initial airspeed applied on airborne spawn")
+
+	# Test Flight Mode cycling
+	_assert_true(plane.flight_mode == FlightConst.FlightMode.SIMCADE, "Initial mode is Simcade")
+	plane.cycle_flight_mode()
+	_assert_true(plane.flight_mode == FlightConst.FlightMode.SIMULATION, "Cycles to Simulation mode")
+	plane.cycle_flight_mode()
+	_assert_true(plane.flight_mode == FlightConst.FlightMode.ARCADE, "Cycles to Arcade mode")
+	plane.set_flight_mode(FlightConst.FlightMode.SIMCADE)
+	_assert_true(plane.flight_mode == FlightConst.FlightMode.SIMCADE, "Directly set flight mode to Simcade")
+
+	# Acceptance Gate: Control Stability Test at 489 KIAS (906 KM/H)
+	# Releasing controls must damp angular velocity ||omega|| < 0.05 rad/s within < 0.2s
+	plane.angular_velocity = Vector3(1.5, 0.4, 2.5)
+	plane.set_pilot_inputs(0.0, 0.0, 0.0)
+	var q_high_speed = 0.5 * 1.225 * 251.6 * 251.6 # ~38,760 Pa
+	for _i in range(12): # 12 frames at 16.6ms = 0.20s
+		plane._integrate_aerodynamic_moments(0.016, q_high_speed, 251.6)
+
+	_assert_true(plane.angular_velocity.length() < 0.05, "SAS actively damps high-speed angular rate to < 0.05 rad/s in < 0.20s")
 	plane.free()
 
 func get_coverage_entries() -> Array:
@@ -207,7 +226,8 @@ func get_coverage_entries() -> Array:
 				"_compute_ground_reaction_forces", "_integrate_aerodynamic_moments",
 				"_update_control_surfaces_and_gear", "set_pilot_inputs", "set_throttle",
 				"adjust_throttle", "set_afterburner", "toggle_landing_gear", "cycle_flaps",
-				"set_airbrake", "set_wheel_brakes", "recover_to_safe_flight"
+				"set_airbrake", "set_wheel_brakes", "recover_to_safe_flight",
+				"set_flight_mode", "cycle_flight_mode"
 			]
 		]
 	]

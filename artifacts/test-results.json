@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 89.5750332005312,
-  "coverage_tested_functions": 1349,
-  "coverage_total_functions": 1506,
-  "execution_seconds": 152.554,
+  "coverage_percent": 89.5888594164456,
+  "coverage_tested_functions": 1351,
+  "coverage_total_functions": 1508,
+  "execution_seconds": 135.725,
   "status": "PASS",
   "suites": {
     "6-DoF Flight Simulator E2E Scenarios": {
@@ -67,7 +67,7 @@
     },
     "Apex Flight HUD & Autopilot Unit": {
       "failed": 0,
-      "passed": 20,
+      "passed": 21,
       "status": "PASS"
     },
     "Apex Flight Missions & Rings Unit": {
@@ -77,7 +77,7 @@
     },
     "Apex Flight Physics Unit": {
       "failed": 0,
-      "passed": 30,
+      "passed": 35,
       "status": "PASS"
     },
     "Apex Flight Worlds & Runways Unit": {
@@ -501,8 +501,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-10-17T14:20:27",
+  "timestamp": "2026-10-17T15:02:46",
   "total_failed": 0,
-  "total_passed": 4075,
+  "total_passed": 4081,
   "total_suites": 99
 }

@@ -110,14 +110,20 @@ func setup_lighting_and_atmosphere() -> void:
 		world_environment.name = "WorldEnv"
 		var env = Environment.new()
 		var sky = Sky.new()
-		var sky_mat = ProceduralSkyMaterial.new()
-		sky_mat.sky_top_color = Color(0.18, 0.38, 0.75)
-		sky_mat.sky_horizon_color = Color(0.78, 0.62, 0.48) # Warm dusk golden-hour atmospheric scattering
-		sky_mat.ground_bottom_color = Color(0.12, 0.14, 0.15)
-		sky_mat.ground_horizon_color = Color(0.48, 0.42, 0.38)
-		sky_mat.sun_angle_max = 30.0
-		sky_mat.sun_curve = 0.15
-		sky.sky_material = sky_mat
+		if ClassDB.class_exists("PhysicalSkyMaterial"):
+			var phys_sky = PhysicalSkyMaterial.new()
+			phys_sky.rayleigh_coefficient = 2.2
+			phys_sky.mie_coefficient = 0.005
+			sky.sky_material = phys_sky
+		else:
+			var sky_mat = ProceduralSkyMaterial.new()
+			sky_mat.sky_top_color = Color(0.18, 0.38, 0.75)
+			sky_mat.sky_horizon_color = Color(0.72, 0.80, 0.90) # Soft atmospheric blue scattering
+			sky_mat.ground_bottom_color = Color(0.12, 0.14, 0.15)
+			sky_mat.ground_horizon_color = Color(0.48, 0.42, 0.38)
+			sky_mat.sun_angle_max = 30.0
+			sky_mat.sun_curve = 0.15
+			sky.sky_material = sky_mat
 
 		env.background_mode = Environment.BG_SKY
 		env.sky = sky
@@ -129,8 +135,12 @@ func setup_lighting_and_atmosphere() -> void:
 		env.tonemap_white = 1.0
 		env.fog_enabled = true
 		env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
-		env.fog_light_color = Color(0.82, 0.74, 0.68)
-		env.fog_density = 0.00004
+		env.fog_light_color = Color(0.72, 0.80, 0.90) # Soft atmospheric blue haze
+		env.fog_density = 0.00003
+		env.fog_aerial_perspective = 0.75
+		env.volumetric_fog_enabled = true
+		env.volumetric_fog_density = 0.00002
+		env.volumetric_fog_albedo = Color(0.75, 0.82, 0.92)
 		world_environment.environment = env
 		add_child(world_environment)
 

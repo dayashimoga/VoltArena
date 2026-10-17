@@ -11,15 +11,18 @@ static func build_runway(length_m: float = 3000.0, width_m: float = 45.0, runway
 	var root = Node3D.new()
 	root.name = "Runway_" + runway_id
 
-	# Materials
+	# Materials (Calibrated dark grooved grey asphalt & crisp matte white ICAO markings)
 	var mat_asphalt = StandardMaterial3D.new()
-	mat_asphalt.albedo_color = Color(0.11, 0.12, 0.13) # High-resolution grooved runway asphalt
-	mat_asphalt.roughness = 0.85
-	mat_asphalt.metallic = 0.05
+	mat_asphalt.albedo_color = Color(0.22, 0.22, 0.24) # Dark grooved grey asphalt
+	mat_asphalt.roughness = 0.92
+	mat_asphalt.metallic = 0.0
+	mat_asphalt.specular = 0.05
 
 	var mat_paint = StandardMaterial3D.new()
-	mat_paint.albedo_color = Color(0.96, 0.97, 0.99)
-	mat_paint.roughness = 0.60
+	mat_paint.albedo_color = Color(0.92, 0.92, 0.90) # Crisp white ICAO markings (no neon blue reflection)
+	mat_paint.roughness = 0.95
+	mat_paint.metallic = 0.0
+	mat_paint.specular = 0.04
 
 	var mat_yellow = StandardMaterial3D.new()
 	mat_yellow.albedo_color = Color(0.95, 0.82, 0.10)

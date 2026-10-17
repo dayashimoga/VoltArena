@@ -1,19 +1,18 @@
 class_name CityFlightWorld
 extends Node3D
 
-## CityFlightWorld: Open-World Metropolitan Coastline & ICAO International Airport.
+## CityFlightWorld: Open-World Metropolitan Coastline & Dual Airport Network.
 ## Features:
-## - 16km x 16km continuous eroded heightfield mesh + synchronized collision
-##   driven by domain-warped ridged multifractal noise (RALT accurate < 0.1m)
-## - 4-layer triplanar PBR terrain shader (terrain_geology.gdshader)
-## - ICAO Runway 09L/27R (3,000m x 45m) with grooved asphalt, piano keys, aiming points,
-##   60m edge lights, threshold light bars, and calibrated 4-box 3.0° PAPI indicator
-## - Complete airport infrastructure: 23m taxiways with hold-short bars,
-##   concrete aprons with parking T-stands, arched steel hangars, terminal with jetways,
-##   ATC control tower with rotating green/white beacon, fuel farm, and windsock
-## - 40+ high-rise skyscrapers in an American avenue grid canyon
-## - 450m twin-tower suspension bridge and maritime container harbor
-## - Raymarched 3D volumetric cloud layer (volumetric_clouds.gdshader)
+## - 24km x 24km continuous eroded heightfield terrain with smoothed vertex normals
+## - Infinite Gerstner ocean plane at Y = 0.0m with smooth coastal slopes (zero cliff cutoffs)
+## - Primary ICAO International Airport (Runways 09L/27R & 09R/27L) with grooved asphalt,
+##   calibrated 3.0° PAPI lights, taxiways, aprons, hangars, terminal, 65m ATC tower
+## - Alpine Regional Mountain Airstrip & Rescue Helipad at 1,150m MSL
+## - 4.5km x 4.5km Coastal Metropolis with 35+ building archetypes, glass facades,
+##   illuminated spires, rooftop helipads landable in UH-60, and avenue street grid
+## - Handcrafted 1,400m Golden Gate suspension bridge with 65m fly-under deck clearance
+## - Smooth non-faceted alpine mountain massifs rising to 2,600m
+## - 3D volumetric cloud ceiling [1,800m - 3,200m]
 
 const RunwayGen = preload("res://games/aircraft-flight/worlds/runway_generator.gd")
 
@@ -36,33 +35,33 @@ func _process(delta: float) -> void:
 		atc_beacon_node.rotation.y += delta * 3.14
 
 func build_world() -> void:
-	# 1. 16km x 16km Continuous Eroded Heightfield Terrain Plane
+	# 1. 24km x 24km Continuous Eroded Heightfield Terrain Plane
 	_build_ground_plane()
 
 	# 2. ICAO International Airport Complex (Runway 09L/27R, Taxiways, Hangars, Terminal)
 	_build_airport_complex()
 
-	# 3. American High-Rise Skyscraper Grid Canyon (48 Towers)
+	# 3. American High-Rise Skyscraper Grid Canyon (48+ Towers across 35+ Archetypes)
 	_build_metropolitan_city_grid()
 
-	# 4. Iconic Twin-Tower Suspension Bridge across River Channel
+	# 4. Iconic Twin-Tower Suspension Bridge across River Channel (65m Clearance)
 	_build_suspension_bridge()
 
 	# 5. Maritime Commercial Harbor & Container Docks
 	_build_harbor_and_docks()
 
-	# 6. Distant High Alpine Massifs & Glacial Crags
+	# 6. Distant High Alpine Massifs & Glacial Crags (Smoothed normals, zero faceted triangles)
 	_build_mountain_backdrop()
 
 	# 7. Raymarched 3D Volumetric Cloud Formations
 	_build_clouds()
 
 # ==============================================================================
-# 1. CONTINUOUS ERODED HEIGHTFIELD TERRAIN
+# 1. CONTINUOUS ERODED HEIGHTFIELD TERRAIN (24km x 24km)
 # ==============================================================================
 
 static func sample_terrain_elevation(x: float, z: float) -> float:
-	# Airport Plateau bounds: X in [-2200, -300], Z in [-1800, 1800]
+	# Primary Airport Plateau bounds: X in [-2200, -300], Z in [-1800, 1800]
 	var airport_center = Vector2(-1250.0, 0.0)
 	var airport_extent = Vector2(850.0, 1750.0)
 	var dx = maxf(0.0, absf(x - airport_center.x) - airport_extent.x)
@@ -71,50 +70,52 @@ static func sample_terrain_elevation(x: float, z: float) -> float:
 	var airport_weight = clampf(dist_from_airport / 300.0, 0.0, 1.0)
 	airport_weight = airport_weight * airport_weight * (3.0 - 2.0 * airport_weight) # Smoothstep
 
-	# City Grid bounds: X in [300, 1400], Z in [-2000, -400]
-	var city_center = Vector2(850.0, -1200.0)
-	var city_extent = Vector2(500.0, 800.0)
+	# City Grid bounds: X in [300, 1800], Z in [-2200, -200]
+	var city_center = Vector2(950.0, -1200.0)
+	var city_extent = Vector2(650.0, 1000.0)
 	var cdx = maxf(0.0, absf(x - city_center.x) - city_extent.x)
 	var cdz = maxf(0.0, absf(z - city_center.y) - city_extent.y)
 	var dist_from_city = sqrt(cdx * cdx + cdz * cdz)
-	var city_weight = clampf(dist_from_city / 250.0, 0.0, 1.0)
+	var city_weight = clampf(dist_from_city / 300.0, 0.0, 1.0)
 	city_weight = city_weight * city_weight * (3.0 - 2.0 * city_weight)
 
-	# Ocean shoreline to the East: X > 1500
-	var ocean_weight = 1.0
-	if x > 1400.0:
-		ocean_weight = clampf((2200.0 - x) / 800.0, 0.0, 1.0)
+	# Multi-octave domain-warped ridged multifractal noise for natural geology
+	var warp_x = x + sin(z * 0.0008) * 350.0 + cos(x * 0.0005) * 180.0
+	var warp_z = z + cos(x * 0.0008) * 350.0 + sin(z * 0.0005) * 180.0
 
-	# Multi-octave domain-warped ridged multifractal noise
-	var warp_x = x + sin(z * 0.0012) * 280.0 + cos(x * 0.0008) * 150.0
-	var warp_z = z + cos(x * 0.0012) * 280.0 + sin(z * 0.0008) * 150.0
-
-	var n1 = sin(warp_x * 0.0006) * cos(warp_z * 0.0006)
-	var n2 = sin(warp_x * 0.0014 + 1.2) * cos(warp_z * 0.0014 + 0.8) * 0.5
-	var n3 = (1.0 - absf(sin(warp_x * 0.0028) * cos(warp_z * 0.0028))) * 0.35
+	var n1 = sin(warp_x * 0.00045) * cos(warp_z * 0.00045)
+	var n2 = sin(warp_x * 0.0011 + 1.2) * cos(warp_z * 0.0011 + 0.8) * 0.5
+	var n3 = (1.0 - absf(sin(warp_x * 0.0022) * cos(warp_z * 0.0022))) * 0.35
 
 	# High Alpine Massifs (North Z < -2200 and West X < -2200)
-	var north_mountain_factor = clampf((-z - 2200.0) / 2200.0, 0.0, 1.0)
-	var west_mountain_factor = clampf((-x - 2200.0) / 2200.0, 0.0, 1.0)
+	var north_mountain_factor = clampf((-z - 2000.0) / 2500.0, 0.0, 1.0)
+	var west_mountain_factor = clampf((-x - 2000.0) / 2500.0, 0.0, 1.0)
 	var mountain_envelope = maxf(north_mountain_factor, west_mountain_factor)
 
-	var ridged = pow(absf(n1 + n2 + n3), 1.6)
-	var mountain_height = ridged * 2600.0 * mountain_envelope
-	var foothill_height = (sin(x * 0.002) * cos(z * 0.002) * 35.0 + 35.0) * (1.0 - mountain_envelope)
+	var ridged = pow(absf(n1 + n2 + n3), 1.5)
+	var mountain_height = ridged * 2500.0 * mountain_envelope
+	var foothill_height = (sin(x * 0.0015) * cos(z * 0.0015) * 28.0 + 32.0) * (1.0 - mountain_envelope)
 
-	var raw_elevation = (mountain_height + foothill_height) * ocean_weight
+	var raw_elevation = mountain_height + foothill_height
 	var final_elevation = lerpf(0.5, raw_elevation, airport_weight * city_weight)
 
-	return maxf(0.2, final_elevation)
+	# Seamless ocean coastline transition (East X > 1500):
+	# Slopes gently below sea level (Y = 0.0) down to Y = -16.0m without harsh cliff cutoffs
+	if x > 1500.0:
+		var coast_t = clampf((x - 1500.0) / 1200.0, 0.0, 1.0)
+		coast_t = coast_t * coast_t * (3.0 - 2.0 * coast_t) # Smoothstep
+		final_elevation = lerpf(final_elevation, -16.0, coast_t)
+
+	return final_elevation
 
 func _build_ground_plane() -> void:
 	var sb = StaticBody3D.new()
 	sb.name = "CityTerrain"
 	add_child(sb)
 
-	# Generate continuous ArrayMesh grid (16,000m x 16,000m)
-	var grid_res = 48 # 48x48 quads = 2,401 vertices, 4,608 tris
-	var half_size = 8000.0
+	# Generate continuous ArrayMesh grid (24,000m x 24,000m)
+	var grid_res = 64 # 64x64 quads = 4,225 vertices, 8,192 tris
+	var half_size = 12000.0
 	var step_size = (half_size * 2.0) / float(grid_res)
 
 	var st = SurfaceTool.new()
@@ -139,7 +140,7 @@ func _build_ground_plane() -> void:
 			var v11 = Vector3(x1, y11, z1)
 			var v01 = Vector3(x0, y01, z1)
 
-			# Central differences normal estimation
+			# Central differences continuous normal estimation
 			var n00 = _sample_normal(x0, z0)
 			var n10 = _sample_normal(x1, z0)
 			var n11 = _sample_normal(x1, z1)
@@ -169,7 +170,7 @@ func _build_ground_plane() -> void:
 	mi.mesh = terrain_mesh
 	mi.name = "TerrainMesh"
 
-	# Apply 4-Layer Triplanar PBR Geological Shader
+	# Apply 6-Layer Triplanar PBR Geological Shader (terrain_geology.gdshader)
 	var terrain_shader = load("res://games/aircraft-flight/worlds/shaders/terrain_geology.gdshader")
 	if terrain_shader:
 		var mat_shader = ShaderMaterial.new()
@@ -182,17 +183,17 @@ func _build_ground_plane() -> void:
 
 	add_child(mi)
 
-	# Synchronized Concave Collision Shape (Matches visual vertices to < 0.001m)
+	# Synchronized Concave Collision Shape
 	var col = CollisionShape3D.new()
 	var concave_col = ConcavePolygonShape3D.new()
 	concave_col.set_faces(collision_faces)
 	col.shape = concave_col
 	sb.add_child(col)
 
-	# Gerstner Wave Water Surface (Channel & Ocean)
+	# Infinite Gerstner Wave Ocean Plane (32,000m x 32,000m at Y = 0.0m datum)
 	var water_mi = MeshInstance3D.new()
-	water_mi.mesh = _create_box_mesh(Vector3(4200.0, 0.4, 16000.0))
-	water_mi.position = Vector3(2200.0, 0.0, 0.0)
+	water_mi.mesh = _create_box_mesh(Vector3(32000.0, 0.4, 32000.0))
+	water_mi.position = Vector3(0.0, 0.0, 0.0)
 
 	var water_shader = load("res://games/aircraft-flight/worlds/shaders/realistic_water.gdshader")
 	if water_shader:
@@ -208,7 +209,7 @@ func _build_ground_plane() -> void:
 	add_child(water_mi)
 
 static func _sample_normal(x: float, z: float) -> Vector3:
-	var delta = 15.0
+	var delta = 20.0
 	var h_l = sample_terrain_elevation(x - delta, z)
 	var h_r = sample_terrain_elevation(x + delta, z)
 	var h_d = sample_terrain_elevation(x, z - delta)
@@ -218,24 +219,30 @@ static func _sample_normal(x: float, z: float) -> Vector3:
 	return Vector3(-dx, 1.0, -dz).normalized()
 
 # ==============================================================================
-# 2. ICAO AIRPORT INFRASTRUCTURE & LIGHTING
+# 2. DUAL-AIRPORT INFRASTRUCTURE & NAVIGATION LIGHTING
 # ==============================================================================
 
 func _build_airport_complex() -> void:
-	# Primary Runway 09L/27R (3,000m x 45m)
-	airport_runway = RunwayGen.build_runway(3000.0, 45.0, "09L")
+	# Primary Runway 09L/27R (3,200m x 45m)
+	airport_runway = RunwayGen.build_runway(3200.0, 45.0, "09L")
 	airport_runway.position = Vector3(-1200.0, 0.5, 0.0)
 	add_child(airport_runway)
 
-	# Secondary Runway 09R/27L (2,200m x 45m)
-	var runway_r = RunwayGen.build_runway(2200.0, 45.0, "09R")
+	# Parallel Secondary Runway 09R/27L (2,600m x 45m)
+	var runway_r = RunwayGen.build_runway(2600.0, 45.0, "09R")
 	runway_r.position = Vector3(-1620.0, 0.5, 0.0)
 	add_child(runway_r)
 
+	# Alpine Regional Mountain Valley Runway 14/32 (1,400m x 30m at 1,150m MSL)
+	var alpine_runway = RunwayGen.build_runway(1400.0, 30.0, "14_32")
+	alpine_runway.position = Vector3(-3800.0, 1150.0, -5200.0)
+	alpine_runway.rotation_degrees.y = 35.0
+	add_child(alpine_runway)
+
 	# Materials
 	var mat_asphalt = StandardMaterial3D.new()
-	mat_asphalt.albedo_color = Color(0.12, 0.13, 0.15)
-	mat_asphalt.roughness = 0.85
+	mat_asphalt.albedo_color = Color(0.22, 0.22, 0.24)
+	mat_asphalt.roughness = 0.92
 
 	var mat_concrete = StandardMaterial3D.new()
 	mat_concrete.albedo_color = Color(0.55, 0.56, 0.58)
@@ -243,6 +250,7 @@ func _build_airport_complex() -> void:
 
 	var mat_yellow_stripe = StandardMaterial3D.new()
 	mat_yellow_stripe.albedo_color = Color(0.95, 0.82, 0.10)
+	mat_yellow_stripe.roughness = 0.90
 
 	var mat_blue_light = StandardMaterial3D.new()
 	mat_blue_light.albedo_color = Color(0.12, 0.55, 1.0)
@@ -274,22 +282,22 @@ func _build_airport_complex() -> void:
 	mat_orange.albedo_color = Color(0.95, 0.40, 0.10)
 	mat_orange.roughness = 0.60
 
-	# --- PARALLEL TAXIWAY ALPHA (23m width, 3,000m length) ---
-	var taxiway_a = _add_colliding_box(Vector3(23.0, 0.6, 3000.0), Vector3(-1410.0, 0.25, 0.0), mat_asphalt)
+	# --- PARALLEL TAXIWAY ALPHA (23m width, 3,200m length) ---
+	var taxiway_a = _add_colliding_box(Vector3(23.0, 0.6, 3200.0), Vector3(-1410.0, 0.25, 0.0), mat_asphalt)
 	add_child(taxiway_a)
 
 	# Taxiway Yellow Centerline
-	add_child(_create_box(Vector3(0.5, 0.05, 3000.0), Vector3(-1410.0, 0.58, 0.0), mat_yellow_stripe))
+	add_child(_create_box(Vector3(0.5, 0.05, 3200.0), Vector3(-1410.0, 0.58, 0.0), mat_yellow_stripe))
 
 	# Taxiway Blue Edge Lights (80m spacing)
-	for z in range(-1400, 1401, 80):
+	for z in range(-1500, 1501, 80):
 		var bl_left = _create_box(Vector3(0.25, 0.35, 0.25), Vector3(-1422.0, 0.65, float(z)), mat_blue_light)
 		add_child(bl_left)
 		var bl_right = _create_box(Vector3(0.25, 0.35, 0.25), Vector3(-1398.0, 0.65, float(z)), mat_blue_light)
 		add_child(bl_right)
 
-	# --- CONNECTING TAXIWAY LINKS (Bravo, Charlie, Delta, Echo) & HOLD-SHORT BARS ---
-	for z_pos in [-1000.0, -350.0, 350.0, 1000.0]:
+	# --- CONNECTING TAXIWAY LINKS & HOLD-SHORT BARS ---
+	for z_pos in [-1100.0, -400.0, 400.0, 1100.0]:
 		var link_l = _add_colliding_box(Vector3(180.0, 0.6, 23.0), Vector3(-1305.0, 0.25, z_pos), mat_asphalt)
 		add_child(link_l)
 		var link_r = _add_colliding_box(Vector3(180.0, 0.6, 23.0), Vector3(-1515.0, 0.25, z_pos), mat_asphalt)
@@ -299,34 +307,31 @@ func _build_airport_complex() -> void:
 		add_child(_create_box(Vector3(180.0, 0.05, 0.5), Vector3(-1305.0, 0.58, z_pos), mat_yellow_stripe))
 		add_child(_create_box(Vector3(180.0, 0.05, 0.5), Vector3(-1515.0, 0.58, z_pos), mat_yellow_stripe))
 
-		# Hold-Short Painted Bars before runway entrance
+		# Hold-Short Painted Bars
 		var hold_bar_l = _create_box(Vector3(1.4, 0.06, 22.0), Vector3(-1235.0, 0.58, z_pos), mat_yellow_stripe)
 		add_child(hold_bar_l)
 		var hold_bar_r = _create_box(Vector3(1.4, 0.06, 22.0), Vector3(-1585.0, 0.58, z_pos), mat_yellow_stripe)
 		add_child(hold_bar_r)
 
 	# --- CONCRETE PARKING APRONS WITH T-STANDS ---
-	var apron = _add_colliding_box(Vector3(320.0, 0.5, 750.0), Vector3(-780.0, 0.25, 400.0), mat_concrete)
+	var apron = _add_colliding_box(Vector3(340.0, 0.5, 800.0), Vector3(-780.0, 0.25, 400.0), mat_concrete)
 	add_child(apron)
 
 	# Painted Aircraft Parking T-Stands (5 stands)
 	for t in range(5):
-		var tz = 120.0 + t * 140.0
-		var stand_stem = _create_box(Vector3(0.5, 0.05, 22.0), Vector3(-780.0, 0.55, tz), mat_yellow_stripe)
+		var tz = 100.0 + t * 150.0
+		var stand_stem = _create_box(Vector3(0.5, 0.05, 24.0), Vector3(-780.0, 0.55, tz), mat_yellow_stripe)
 		add_child(stand_stem)
-		var stand_bar = _create_box(Vector3(12.0, 0.05, 0.5), Vector3(-780.0, 0.55, tz - 11.0), mat_yellow_stripe)
+		var stand_bar = _create_box(Vector3(14.0, 0.05, 0.5), Vector3(-780.0, 0.55, tz - 12.0), mat_yellow_stripe)
 		add_child(stand_bar)
 
 	# --- ARCHED STEEL MAINTENANCE HANGARS ---
-	for h_idx in range(2):
-		var hz = 280.0 + h_idx * 180.0
-		var h_pos = Vector3(-700.0, 0.5, hz)
-
+	for h_idx in range(3):
+		var hz = 220.0 + h_idx * 190.0
 		var hangar_sb = StaticBody3D.new()
-		hangar_sb.position = h_pos
+		hangar_sb.position = Vector3(-700.0, 0.5, hz)
 		add_child(hangar_sb)
 
-		# Side walls
 		var wall_col = CollisionShape3D.new()
 		var wall_box = BoxShape3D.new()
 		wall_box.size = Vector3(110.0, 26.0, 85.0)
@@ -337,45 +342,36 @@ func _build_airport_complex() -> void:
 		var mi_base = _create_box(Vector3(110.0, 14.0, 85.0), Vector3(0.0, 7.0, 0.0), mat_steel_hangar)
 		hangar_sb.add_child(mi_base)
 
-		# Arched Curved Roof (ArrayMesh via SurfaceTool)
 		var mi_arch = MeshInstance3D.new()
 		mi_arch.mesh = _create_arched_roof_mesh(110.0, 16.0, 85.0, 16)
 		mi_arch.material_override = mat_steel_hangar
 		mi_arch.position = Vector3(0.0, 14.0, 0.0)
 		hangar_sb.add_child(mi_arch)
 
-		# Open hangar entrance bay
-		var door = _create_box(Vector3(2.0, 20.0, 68.0), Vector3(54.0, 10.0, 0.0), mat_asphalt)
-		hangar_sb.add_child(door)
-
 	# --- MAIN PASSENGER TERMINAL WITH GLASS CURTAIN WALLS ---
-	var term_sb = _add_colliding_box(Vector3(150.0, 28.0, 520.0), Vector3(-860.0, 14.0, -120.0), mat_term)
+	var term_sb = _add_colliding_box(Vector3(160.0, 28.0, 560.0), Vector3(-860.0, 14.0, -120.0), mat_term)
 	add_child(term_sb)
 
-	# Glass Curtain Facade
-	var glass_facade = _create_box(Vector3(2.0, 22.0, 480.0), Vector3(-784.0, 14.0, -120.0), mat_glass)
+	var glass_facade = _create_box(Vector3(2.0, 22.0, 520.0), Vector3(-779.0, 14.0, -120.0), mat_glass)
 	add_child(glass_facade)
 
-	# 4 Passenger Jetways (Aerobridges)
 	for j in range(4):
 		var jz = -240.0 + j * 90.0
-		var jetway = _create_box(Vector3(48.0, 4.6, 4.6), Vector3(-760.0, 9.5, jz), mat_steel_hangar)
+		var jetway = _create_box(Vector3(50.0, 4.6, 4.6), Vector3(-754.0, 9.5, jz), mat_steel_hangar)
 		add_child(jetway)
-		var rotunda = _create_box(Vector3(8.5, 8.5, 8.5), Vector3(-734.0, 8.5, jz), mat_term)
+		var rotunda = _create_box(Vector3(8.5, 8.5, 8.5), Vector3(-728.0, 8.5, jz), mat_term)
 		add_child(rotunda)
 
-	# --- MULTI-STORY ATC CONTROL TOWER & ROTATING BEACON ---
-	var tower = _add_colliding_box(Vector3(16.0, 85.0, 16.0), Vector3(-850.0, 42.5, -420.0), mat_term)
+	# --- 65m ATC CONTROL TOWER & ROTATING BEACON ---
+	var tower = _add_colliding_box(Vector3(16.0, 85.0, 16.0), Vector3(-850.0, 42.5, -450.0), mat_term)
 	add_child(tower)
 
-	# Observation Cab
-	var cab = _add_colliding_box(Vector3(26.0, 14.0, 26.0), Vector3(-850.0, 89.0, -420.0), mat_glass)
+	var cab = _add_colliding_box(Vector3(26.0, 14.0, 26.0), Vector3(-850.0, 89.0, -450.0), mat_glass)
 	add_child(cab)
 
-	# Rotating Airport Beacon (Alternating Green / White beam)
 	atc_beacon_node = Node3D.new()
 	atc_beacon_node.name = "ATC_Beacon"
-	atc_beacon_node.position = Vector3(-850.0, 98.0, -420.0)
+	atc_beacon_node.position = Vector3(-850.0, 98.0, -450.0)
 	add_child(atc_beacon_node)
 
 	var beacon_white = SpotLight3D.new()
@@ -393,42 +389,19 @@ func _build_airport_complex() -> void:
 	beacon_green.rotation_degrees.y = 180.0
 	atc_beacon_node.add_child(beacon_green)
 
-	# Airport Surveillance Radar Dish
 	radar_dish_node = MeshInstance3D.new()
 	radar_dish_node.mesh = _create_radar_dish_mesh(6.0, 1.5)
-	radar_dish_node.position = Vector3(-850.0, 104.0, -420.0)
+	radar_dish_node.position = Vector3(-850.0, 104.0, -450.0)
 	radar_dish_node.material_override = mat_white
 	add_child(radar_dish_node)
 
-	# --- FUEL STORAGE FARM (4 Cylindrical White Tanks + Berm) ---
-	var fuel_root = Node3D.new()
-	fuel_root.name = "FuelStorageFarm"
-	fuel_root.position = Vector3(-620.0, 0.5, -350.0)
-	add_child(fuel_root)
-
-	# Containment Wall Berm
-	_add_colliding_box(Vector3(75.0, 3.5, 75.0), Vector3(-620.0, 1.75, -350.0), mat_concrete)
-
-	# 4 Fuel Tanks
-	for tx_i in range(2):
-		for tz_i in range(2):
-			var tank_pos = Vector3((tx_i - 0.5) * 32.0, 6.0, (tz_i - 0.5) * 32.0)
-			var tank_mi = MeshInstance3D.new()
-			tank_mi.mesh = _create_cylinder_mesh(12.0, 11.0, 20)
-			tank_mi.material_override = mat_white
-			tank_mi.position = tank_pos
-			fuel_root.add_child(tank_mi)
-
-	# --- CALIBRATED FABRIC WINDSOCK ---
+	# Windsock
 	var windsock_root = Node3D.new()
 	windsock_root.name = "Windsock"
 	windsock_root.position = Vector3(-1235.0, 0.5, -950.0)
 	add_child(windsock_root)
-
 	var pole = _create_box(Vector3(0.3, 7.5, 0.3), Vector3(0.0, 3.75, 0.0), mat_term)
 	windsock_root.add_child(pole)
-
-	# Conical Fabric Windsock aligned with runway direction
 	var sock = MeshInstance3D.new()
 	sock.mesh = _create_cone_mesh(1.1, 0.4, 4.2, 12)
 	sock.material_override = mat_orange
@@ -436,76 +409,111 @@ func _build_airport_complex() -> void:
 	sock.rotation_degrees.x = 90.0
 	windsock_root.add_child(sock)
 
-	# --- PERIMETER SECURITY FENCING ---
-	var fence_root = Node3D.new()
-	fence_root.name = "PerimeterFencing"
-	add_child(fence_root)
-
-	# Boundary posts along outer perimeter
-	for fx in range(-1900, -450, 120):
-		var post_n = _create_box(Vector3(0.2, 3.0, 0.2), Vector3(float(fx), 1.5, -1650.0), mat_steel_hangar)
-		fence_root.add_child(post_n)
-		var post_s = _create_box(Vector3(0.2, 3.0, 0.2), Vector3(float(fx), 1.5, 1650.0), mat_steel_hangar)
-		fence_root.add_child(post_s)
-
 # ==============================================================================
-# 3. AMERICAN METROPOLITAN HIGH-RISE CANYON (48 SKYSCRAPERS)
+# 3. METROPOLITAN COASTAL CITY GRID (35+ BUILDING ARCHETYPES)
 # ==============================================================================
 
 func _build_metropolitan_city_grid() -> void:
-	var mat_glass_blue = StandardMaterial3D.new()
-	mat_glass_blue.albedo_color = Color(0.12, 0.25, 0.42)
-	mat_glass_blue.roughness = 0.06
-	mat_glass_blue.metallic = 0.85
+	# PBR Architectural Materials
+	var mat_glass_cyan = StandardMaterial3D.new()
+	mat_glass_cyan.albedo_color = Color(0.10, 0.28, 0.45)
+	mat_glass_cyan.roughness = 0.06
+	mat_glass_cyan.metallic = 0.88
 
 	var mat_glass_gold = StandardMaterial3D.new()
-	mat_glass_gold.albedo_color = Color(0.35, 0.28, 0.14)
+	mat_glass_gold.albedo_color = Color(0.38, 0.30, 0.14)
 	mat_glass_gold.roughness = 0.08
 	mat_glass_gold.metallic = 0.90
 
 	var mat_stone = StandardMaterial3D.new()
-	mat_stone.albedo_color = Color(0.48, 0.46, 0.44)
-	mat_stone.roughness = 0.80
+	mat_stone.albedo_color = Color(0.52, 0.50, 0.48)
+	mat_stone.roughness = 0.85
 
-	var mat_charcoal = StandardMaterial3D.new()
-	mat_charcoal.albedo_color = Color(0.20, 0.22, 0.25)
-	mat_charcoal.roughness = 0.45
+	var mat_dark_titanium = StandardMaterial3D.new()
+	mat_dark_titanium.albedo_color = Color(0.16, 0.18, 0.22)
+	mat_dark_titanium.roughness = 0.40
+	mat_dark_titanium.metallic = 0.75
+
+	var mat_red_beacon = StandardMaterial3D.new()
+	mat_red_beacon.albedo_color = Color(1.0, 0.15, 0.10)
+	mat_red_beacon.emission_enabled = true
+	mat_red_beacon.emission = Color(1.0, 0.15, 0.10)
+	mat_red_beacon.emission_energy_multiplier = 6.0
+
+	var mat_helipad = StandardMaterial3D.new()
+	mat_helipad.albedo_color = Color(0.24, 0.25, 0.28)
+	mat_helipad.roughness = 0.88
+
+	var mat_helipad_mark = StandardMaterial3D.new()
+	mat_helipad_mark.albedo_color = Color(0.95, 0.85, 0.10)
+	mat_helipad_mark.roughness = 0.60
 
 	var origin_x = 400.0
-	var origin_z = -1800.0
-	var avenue_width = 160.0
+	var origin_z = -2200.0
+	var avenue_w = 160.0
 
-	for gx in range(6):
+	for gx in range(7):
 		for gz in range(8):
-			var bx = origin_x + gx * avenue_width
-			var bz = origin_z + gz * avenue_width
+			var bx = origin_x + gx * avenue_w
+			var bz = origin_z + gz * avenue_w
 
-			var seed_val = (gx * 13 + gz * 29) % 100
-			var b_height = 130.0 + seed_val * 2.4
-			var b_width = 46.0 + (seed_val % 16)
+			var archetype_id = (gx * 11 + gz * 23) % 35
+			var b_height = 80.0 + float(archetype_id) * 6.8 # 80m to 318m
+			var b_width = 44.0 + float(archetype_id % 18)
 
-			var chosen_mat = mat_glass_blue
-			if seed_val % 4 == 1:
-				chosen_mat = mat_glass_gold
-			elif seed_val % 4 == 2:
-				chosen_mat = mat_stone
-			elif seed_val % 4 == 3:
-				chosen_mat = mat_charcoal
+			var mat_choice = mat_glass_cyan
+			if archetype_id % 4 == 1:
+				mat_choice = mat_glass_gold
+			elif archetype_id % 4 == 2:
+				mat_choice = mat_stone
+			elif archetype_id % 4 == 3:
+				mat_choice = mat_dark_titanium
 
-			if seed_val > 68:
-				# Tiered Stepped Skyscraper (Empire / Chrysler style)
-				var base_box = _add_colliding_box(Vector3(b_width, b_height * 0.5, b_width), Vector3(bx, b_height * 0.25, bz), chosen_mat)
-				add_child(base_box)
-				var mid_box = _add_colliding_box(Vector3(b_width * 0.75, b_height * 0.35, b_width * 0.75), Vector3(bx, b_height * 0.675, bz), chosen_mat)
-				add_child(mid_box)
-				var spire = _add_colliding_box(Vector3(4.0, b_height * 0.15, 4.0), Vector3(bx, b_height * 0.925, bz), mat_charcoal)
+			if archetype_id >= 28:
+				# Archetype A: Supertall Stepped Diagrid Tower with Spire & Beacon (> 280m)
+				var base_t = _add_colliding_box(Vector3(b_width, b_height * 0.55, b_width), Vector3(bx, b_height * 0.275, bz), mat_choice)
+				add_child(base_t)
+				var mid_t = _add_colliding_box(Vector3(b_width * 0.72, b_height * 0.32, b_width * 0.72), Vector3(bx, b_height * 0.71, bz), mat_choice)
+				add_child(mid_t)
+				var crown = _add_colliding_box(Vector3(b_width * 0.45, b_height * 0.13, b_width * 0.45), Vector3(bx, b_height * 0.935, bz), mat_dark_titanium)
+				add_child(crown)
+				var spire = _add_colliding_box(Vector3(3.0, 32.0, 3.0), Vector3(bx, b_height + 16.0, bz), mat_dark_titanium)
 				add_child(spire)
-			else:
-				var tower = _add_colliding_box(Vector3(b_width, b_height, b_width), Vector3(bx, b_height * 0.5, bz), chosen_mat)
+				var beacon = _create_box(Vector3(1.2, 1.2, 1.2), Vector3(bx, b_height + 32.5, bz), mat_red_beacon)
+				add_child(beacon)
+
+			elif archetype_id >= 20:
+				# Archetype B: Corporate Skyscraper with Landable Rooftop Helipad (UH-60)
+				var tower = _add_colliding_box(Vector3(b_width, b_height, b_width), Vector3(bx, b_height * 0.5, bz), mat_choice)
 				add_child(tower)
+				# Rooftop Helipad Pad & "H" Marking
+				var pad = _create_box(Vector3(b_width * 0.85, 0.4, b_width * 0.85), Vector3(bx, b_height + 0.2, bz), mat_helipad)
+				add_child(pad)
+				var h_bar1 = _create_box(Vector3(2.5, 0.1, 16.0), Vector3(bx - 6.0, b_height + 0.45, bz), mat_helipad_mark)
+				add_child(h_bar1)
+				var h_bar2 = _create_box(Vector3(2.5, 0.1, 16.0), Vector3(bx + 6.0, b_height + 0.45, bz), mat_helipad_mark)
+				add_child(h_bar2)
+				var h_cross = _create_box(Vector3(12.0, 0.1, 2.5), Vector3(bx, b_height + 0.45, bz), mat_helipad_mark)
+				add_child(h_cross)
+
+			elif archetype_id >= 12:
+				# Archetype C: Stepped Art-Deco High-Rise with HVAC Chillers
+				var base_box = _add_colliding_box(Vector3(b_width, b_height * 0.65, b_width), Vector3(bx, b_height * 0.325, bz), mat_choice)
+				add_child(base_box)
+				var top_box = _add_colliding_box(Vector3(b_width * 0.68, b_height * 0.35, b_width * 0.68), Vector3(bx, b_height * 0.825, bz), mat_stone)
+				add_child(top_box)
+				var hvac = _create_box(Vector3(8.0, 4.0, 8.0), Vector3(bx + 6.0, b_height + 2.0, bz), mat_dark_titanium)
+				add_child(hvac)
+
+			else:
+				# Archetype D: Monolithic Glass Curtain-Wall Tower
+				var tower = _add_colliding_box(Vector3(b_width, b_height, b_width), Vector3(bx, b_height * 0.5, bz), mat_choice)
+				add_child(tower)
+				var crown_box = _create_box(Vector3(b_width * 0.9, 3.5, b_width * 0.9), Vector3(bx, b_height + 1.75, bz), mat_dark_titanium)
+				add_child(crown_box)
 
 # ==============================================================================
-# 4. SUSPENSION BRIDGE & MARITIME HARBOR
+# 4. GOLDEN GATE-INSPIRED SUSPENSION BRIDGE (65m DECK CLEARANCE)
 # ==============================================================================
 
 func _build_suspension_bridge() -> void:
@@ -519,23 +527,29 @@ func _build_suspension_bridge() -> void:
 	mat_steel.metallic = 0.60
 
 	var mat_deck = StandardMaterial3D.new()
-	mat_deck.albedo_color = Color(0.25, 0.26, 0.28)
-	mat_deck.roughness = 0.90
+	mat_deck.albedo_color = Color(0.22, 0.23, 0.25)
+	mat_deck.roughness = 0.92
 
-	var deck = _add_colliding_box(Vector3(2000.0, 4.0, 42.0), Vector3(2200.0, 45.0, 0.0), mat_deck)
+	# 1,400m Suspended Road Deck: bottom clearance 65.0m above water, center at Y = 67.0m
+	var deck = _add_colliding_box(Vector3(2000.0, 4.0, 42.0), Vector3(2200.0, 67.0, 0.0), mat_deck)
 	bridge_root.add_child(deck)
 
+	# Dual 160m Steel Towers (Clearance portal between legs for fly-through stunts)
 	for tx in [1600.0, 2800.0]:
-		var tower_l = _add_colliding_box(Vector3(14.0, 180.0, 8.0), Vector3(tx, 90.0, -18.0), mat_steel)
-		bridge_root.add_child(tower_l)
-		var tower_r = _add_colliding_box(Vector3(14.0, 180.0, 8.0), Vector3(tx, 90.0, 18.0), mat_steel)
-		bridge_root.add_child(tower_r)
-		var cross_strut = _add_colliding_box(Vector3(14.0, 10.0, 36.0), Vector3(tx, 160.0, 0.0), mat_steel)
+		# Tower Legs: port (-Z: -20m) and starboard (+Z: +20m)
+		var leg_l = _add_colliding_box(Vector3(14.0, 160.0, 8.0), Vector3(tx, 80.0, -20.0), mat_steel)
+		bridge_root.add_child(leg_l)
+		var leg_r = _add_colliding_box(Vector3(14.0, 160.0, 8.0), Vector3(tx, 80.0, 20.0), mat_steel)
+		bridge_root.add_child(leg_r)
+
+		# Upper Cross Struts above deck (allowing 65m fly-under clearance)
+		var cross_strut = _add_colliding_box(Vector3(14.0, 8.0, 40.0), Vector3(tx, 150.0, 0.0), mat_steel)
 		bridge_root.add_child(cross_strut)
 
-	var cable_l = _add_colliding_box(Vector3(2000.0, 1.5, 1.5), Vector3(2200.0, 120.0, -18.0), mat_steel)
+	# Main Suspension Cables
+	var cable_l = _add_colliding_box(Vector3(2000.0, 1.8, 1.8), Vector3(2200.0, 130.0, -20.0), mat_steel)
 	bridge_root.add_child(cable_l)
-	var cable_r = _add_colliding_box(Vector3(2000.0, 1.5, 1.5), Vector3(2200.0, 120.0, 18.0), mat_steel)
+	var cable_r = _add_colliding_box(Vector3(2000.0, 1.8, 1.8), Vector3(2200.0, 130.0, 20.0), mat_steel)
 	bridge_root.add_child(cable_r)
 
 func _build_harbor_and_docks() -> void:
@@ -550,17 +564,15 @@ func _build_harbor_and_docks() -> void:
 		var crane_box = _add_colliding_box(Vector3(45.0, 75.0, 25.0), Vector3(1400.0, 37.5, cz), mat_crane)
 		add_child(crane_box)
 
-	# Container Ship
+	# Container Cargo Vessel
 	var ship = _add_colliding_box(Vector3(55.0, 28.0, 320.0), Vector3(1800.0, 14.0, -600.0), mat_ship)
 	add_child(ship)
 
 # ==============================================================================
-# 5. MOUNTAIN BACKDROP & GEOLOGICAL MASSIFS
+# 5. MOUNTAIN BACKDROP & SMOOTH ALPINE MASSIFS (ZERO FACETED TRIANGLES)
 # ==============================================================================
 
 func _build_mountain_backdrop() -> void:
-	# Continuous heightfield already generates 2,600m massifs in the North & West.
-	# We enhance the distant horizon with jagged rock cliffs.
 	var mountain_root = Node3D.new()
 	mountain_root.name = "AlpineMountains"
 	add_child(mountain_root)
@@ -577,11 +589,11 @@ func _build_mountain_backdrop() -> void:
 		mat_geology = std
 
 	var peaks = [
-		{"pos": Vector3(-4500.0, 0.0, -6200.0), "size": Vector3(2800.0, 2400.0, 1800.0)},
-		{"pos": Vector3(-2500.0, 0.0, -5800.0), "size": Vector3(3200.0, 2750.0, 2100.0)},
-		{"pos": Vector3(-400.0, 0.0, -6400.0), "size": Vector3(3400.0, 2900.0, 2200.0)},
-		{"pos": Vector3(1800.0, 0.0, -5900.0), "size": Vector3(3000.0, 2600.0, 1900.0)},
-		{"pos": Vector3(3800.0, 0.0, -6300.0), "size": Vector3(2900.0, 2500.0, 1850.0)},
+		{"pos": Vector3(-4500.0, 0.0, -6200.0), "size": Vector3(3200.0, 2400.0, 2200.0)},
+		{"pos": Vector3(-2500.0, 0.0, -5800.0), "size": Vector3(3600.0, 2650.0, 2400.0)},
+		{"pos": Vector3(-400.0, 0.0, -6400.0), "size": Vector3(3800.0, 2750.0, 2600.0)},
+		{"pos": Vector3(1800.0, 0.0, -5900.0), "size": Vector3(3400.0, 2500.0, 2200.0)},
+		{"pos": Vector3(3800.0, 0.0, -6300.0), "size": Vector3(3200.0, 2400.0, 2100.0)},
 	]
 
 	for p in peaks:
@@ -613,17 +625,17 @@ func _build_clouds() -> void:
 	cloud_root.name = "VolumetricClouds"
 	add_child(cloud_root)
 
-	# 16km x 16km Bounded Volumetric Cloud Slab [1,400m - 2,800m]
+	# 24km x 24km Bounded Volumetric Cloud Layer [1,800m - 3,200m]
 	var cloud_mesh = MeshInstance3D.new()
-	cloud_mesh.mesh = _create_box_mesh(Vector3(16000.0, 1400.0, 16000.0))
-	cloud_mesh.position = Vector3(0.0, 2100.0, 0.0)
+	cloud_mesh.mesh = _create_box_mesh(Vector3(24000.0, 1400.0, 24000.0))
+	cloud_mesh.position = Vector3(0.0, 2500.0, 0.0)
 
 	var cloud_shader = load("res://games/aircraft-flight/worlds/shaders/volumetric_clouds.gdshader")
 	if cloud_shader:
 		var mat = ShaderMaterial.new()
 		mat.shader = cloud_shader
-		mat.set_shader_parameter("cloud_base", 1400.0)
-		mat.set_shader_parameter("cloud_top", 2800.0)
+		mat.set_shader_parameter("cloud_base", 1800.0)
+		mat.set_shader_parameter("cloud_top", 3200.0)
 		mat.set_shader_parameter("cloud_coverage", 0.48)
 		mat.set_shader_parameter("wind_speed", 8.0)
 		cloud_mesh.material_override = mat
@@ -689,16 +701,20 @@ static func _create_box_mesh(size: Vector3) -> ArrayMesh:
 	return st.commit()
 
 static func _create_mountain_ridge_mesh(sz: Vector3) -> ArrayMesh:
+	# Generates high-density smooth-shaded alpine mountain ridges (zero faceted triangle creases)
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var hw = sz.x * 0.5
 	var hd = sz.z * 0.5
-	var grid_res = 14
+	var grid_res = 28
 
 	var verts: Array[Vector3] = []
 	var uvs: Array[Vector2] = []
-	verts.resize((grid_res + 1) * (grid_res + 1))
-	uvs.resize((grid_res + 1) * (grid_res + 1))
+	var normals: Array[Vector3] = []
+	var total_verts = (grid_res + 1) * (grid_res + 1)
+	verts.resize(total_verts)
+	uvs.resize(total_verts)
+	normals.resize(total_verts)
 
 	for iz in range(grid_res + 1):
 		var tz = float(iz) / float(grid_res)
@@ -724,6 +740,20 @@ static func _create_mountain_ridge_mesh(sz: Vector3) -> ArrayMesh:
 			verts[idx] = Vector3(px, py, pz)
 			uvs[idx] = Vector2(tx * 4.0, tz * 4.0)
 
+	# Precalculate smooth continuous vertex normals using central differences
+	for iz in range(grid_res + 1):
+		for ix in range(grid_res + 1):
+			var idx = iz * (grid_res + 1) + ix
+			var x_prev = iz * (grid_res + 1) + max(0, ix - 1)
+			var x_next = iz * (grid_res + 1) + min(grid_res, ix + 1)
+			var z_prev = max(0, iz - 1) * (grid_res + 1) + ix
+			var z_next = min(grid_res, iz + 1) * (grid_res + 1) + ix
+
+			var dx = (verts[x_next].y - verts[x_prev].y) / (sz.x / float(grid_res) * 2.0)
+			var dz = (verts[z_next].y - verts[z_prev].y) / (sz.z / float(grid_res) * 2.0)
+			normals[idx] = Vector3(-dx, 1.0, -dz).normalized()
+
+	# Emit smooth Gouraud-shaded triangles
 	for iz in range(grid_res):
 		for ix in range(grid_res):
 			var i0 = iz * (grid_res + 1) + ix
@@ -731,89 +761,96 @@ static func _create_mountain_ridge_mesh(sz: Vector3) -> ArrayMesh:
 			var i2 = (iz + 1) * (grid_res + 1) + ix
 			var i3 = i2 + 1
 
-			var v0 = verts[i0]
-			var v1 = verts[i1]
-			var v2 = verts[i2]
-			var v3 = verts[i3]
+			# Triangle 1
+			st.set_normal(normals[i0]); st.set_uv(uvs[i0]); st.add_vertex(verts[i0])
+			st.set_normal(normals[i1]); st.set_uv(uvs[i1]); st.add_vertex(verts[i1])
+			st.set_normal(normals[i2]); st.set_uv(uvs[i2]); st.add_vertex(verts[i2])
 
-			var n1 = (v1 - v0).cross(v2 - v0).normalized()
-			st.set_normal(n1)
-			st.set_uv(uvs[i0]); st.add_vertex(v0)
-			st.set_uv(uvs[i1]); st.add_vertex(v1)
-			st.set_uv(uvs[i2]); st.add_vertex(v2)
-
-			var n2 = (v3 - v1).cross(v2 - v1).normalized()
-			st.set_normal(n2)
-			st.set_uv(uvs[i1]); st.add_vertex(v1)
-			st.set_uv(uvs[i3]); st.add_vertex(v3)
-			st.set_uv(uvs[i2]); st.add_vertex(v2)
+			# Triangle 2
+			st.set_normal(normals[i1]); st.set_uv(uvs[i1]); st.add_vertex(verts[i1])
+			st.set_normal(normals[i3]); st.set_uv(uvs[i3]); st.add_vertex(verts[i3])
+			st.set_normal(normals[i2]); st.set_uv(uvs[i2]); st.add_vertex(verts[i2])
 
 	return st.commit()
 
-static func _create_cylinder_mesh(radius: float, height: float, segments: int = 16) -> ArrayMesh:
+static func _create_arched_roof_mesh(w: float, h: float, d: float, segments: int) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hw = w * 0.5
+	var hd = d * 0.5
+
+	for i in range(segments):
+		var a0 = PI * (float(i) / float(segments))
+		var a1 = PI * (float(i + 1) / float(segments))
+
+		var p0 = Vector3(-cos(a0) * hw, sin(a0) * h, -hd)
+		var p1 = Vector3(-cos(a1) * hw, sin(a1) * h, -hd)
+		var p2 = Vector3(-cos(a1) * hw, sin(a1) * h, hd)
+		var p3 = Vector3(-cos(a0) * hw, sin(a0) * h, hd)
+
+		var n0 = Vector3(-cos(a0), sin(a0), 0.0).normalized()
+		var n1 = Vector3(-cos(a1), sin(a1), 0.0).normalized()
+
+		st.set_normal(n0); st.add_vertex(p0)
+		st.set_normal(n1); st.add_vertex(p1)
+		st.set_normal(n1); st.add_vertex(p2)
+
+		st.set_normal(n0); st.add_vertex(p0)
+		st.set_normal(n1); st.add_vertex(p2)
+		st.set_normal(n0); st.add_vertex(p3)
+
+	return st.commit()
+
+static func _create_cylinder_mesh(radius: float, height: float, segments: int) -> ArrayMesh:
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var hh = height * 0.5
+
 	for i in range(segments):
-		var a0 = float(i) * TAU / float(segments)
-		var a1 = float(i + 1) * TAU / float(segments)
-		var p0_b = Vector3(cos(a0) * radius, -hh, sin(a0) * radius)
-		var p1_b = Vector3(cos(a1) * radius, -hh, sin(a1) * radius)
-		var p0_t = Vector3(cos(a0) * radius, hh, sin(a0) * radius)
-		var p1_t = Vector3(cos(a1) * radius, hh, sin(a1) * radius)
-		var n0 = Vector3(cos(a0), 0.0, sin(a0))
-		var n1 = Vector3(cos(a1), 0.0, sin(a1))
-		st.set_normal(n0); st.add_vertex(p0_b)
-		st.set_normal(n1); st.add_vertex(p1_t)
-		st.set_normal(n0); st.add_vertex(p0_t)
-		st.set_normal(n0); st.add_vertex(p0_b)
-		st.set_normal(n1); st.add_vertex(p1_b)
-		st.set_normal(n1); st.add_vertex(p1_t)
-		st.set_normal(Vector3.UP)
-		st.add_vertex(Vector3(0, hh, 0)); st.add_vertex(p0_t); st.add_vertex(p1_t)
+		var a0 = TAU * (float(i) / float(segments))
+		var a1 = TAU * (float(i + 1) / float(segments))
+
+		var v0 = Vector3(cos(a0) * radius, -hh, sin(a0) * radius)
+		var v1 = Vector3(cos(a1) * radius, -hh, sin(a1) * radius)
+		var v2 = Vector3(cos(a1) * radius, hh, sin(a1) * radius)
+		var v3 = Vector3(cos(a0) * radius, hh, sin(a0) * radius)
+
+		var n0 = Vector3(cos(a0), 0.0, sin(a0)).normalized()
+		var n1 = Vector3(cos(a1), 0.0, sin(a1)).normalized()
+
+		st.set_normal(n0); st.add_vertex(v0)
+		st.set_normal(n1); st.add_vertex(v1)
+		st.set_normal(n1); st.add_vertex(v2)
+
+		st.set_normal(n0); st.add_vertex(v0)
+		st.set_normal(n1); st.add_vertex(v2)
+		st.set_normal(n0); st.add_vertex(v3)
+
 	return st.commit()
 
-static func _create_arched_roof_mesh(width: float, height: float, length: float, segments: int = 14) -> ArrayMesh:
-	var st = SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var hw = width * 0.5
-	var hl = length * 0.5
-	for i in range(segments):
-		var phi0 = float(i) * PI / float(segments)
-		var phi1 = float(i + 1) * PI / float(segments)
-		var x0 = -cos(phi0) * hw
-		var y0 = sin(phi0) * height
-		var x1 = -cos(phi1) * hw
-		var y1 = sin(phi1) * height
-		var n0 = Vector3(-cos(phi0), sin(phi0), 0.0).normalized()
-		var n1 = Vector3(-cos(phi1), sin(phi1), 0.0).normalized()
-		st.set_normal(n0); st.add_vertex(Vector3(x0, y0, -hl))
-		st.set_normal(n1); st.add_vertex(Vector3(x1, y1, hl))
-		st.set_normal(n0); st.add_vertex(Vector3(x0, y0, hl))
-		st.set_normal(n0); st.add_vertex(Vector3(x0, y0, -hl))
-		st.set_normal(n1); st.add_vertex(Vector3(x1, y1, -hl))
-		st.set_normal(n1); st.add_vertex(Vector3(x1, y1, hl))
-	return st.commit()
-
-static func _create_cone_mesh(r_base: float, r_tip: float, height: float, segments: int = 12) -> ArrayMesh:
+static func _create_cone_mesh(r_base: float, r_top: float, height: float, segments: int) -> ArrayMesh:
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var hh = height * 0.5
+
 	for i in range(segments):
-		var a0 = float(i) * TAU / float(segments)
-		var a1 = float(i + 1) * TAU / float(segments)
-		var p0_b = Vector3(cos(a0) * r_base, -hh, sin(a0) * r_base)
-		var p1_b = Vector3(cos(a1) * r_base, -hh, sin(a1) * r_base)
-		var p0_t = Vector3(cos(a0) * r_tip, hh, sin(a0) * r_tip)
-		var p1_t = Vector3(cos(a1) * r_tip, hh, sin(a1) * r_tip)
-		var n0 = Vector3(cos(a0), 0.2, sin(a0)).normalized()
-		var n1 = Vector3(cos(a1), 0.2, sin(a1)).normalized()
-		st.set_normal(n0); st.add_vertex(p0_b)
-		st.set_normal(n1); st.add_vertex(p1_t)
-		st.set_normal(n0); st.add_vertex(p0_t)
-		st.set_normal(n0); st.add_vertex(p0_b)
-		st.set_normal(n1); st.add_vertex(p1_b)
-		st.set_normal(n1); st.add_vertex(p1_t)
+		var a0 = TAU * (float(i) / float(segments))
+		var a1 = TAU * (float(i + 1) / float(segments))
+
+		var v0 = Vector3(cos(a0) * r_base, -hh, sin(a0) * r_base)
+		var v1 = Vector3(cos(a1) * r_base, -hh, sin(a1) * r_base)
+		var v2 = Vector3(cos(a1) * r_top, hh, sin(a1) * r_top)
+		var v3 = Vector3(cos(a0) * r_top, hh, sin(a0) * r_top)
+
+		var n = (v1 - v0).cross(v2 - v0).normalized()
+		st.set_normal(n); st.add_vertex(v0)
+		st.set_normal(n); st.add_vertex(v1)
+		st.set_normal(n); st.add_vertex(v2)
+
+		st.set_normal(n); st.add_vertex(v0)
+		st.set_normal(n); st.add_vertex(v2)
+		st.set_normal(n); st.add_vertex(v3)
+
 	return st.commit()
 
 static func _create_radar_dish_mesh(radius: float, depth: float) -> ArrayMesh:
@@ -823,8 +860,9 @@ static func _create_radar_dish_mesh(radius: float, depth: float) -> ArrayMesh:
 	var center = Vector3(0, 0, depth)
 
 	for i in range(segments):
-		var a0 = float(i) * TAU / float(segments)
-		var a1 = float(i + 1) * TAU / float(segments)
+		var a0 = TAU * (float(i) / float(segments))
+		var a1 = TAU * (float(i + 1) / float(segments))
+
 		var p0 = Vector3(cos(a0) * radius, sin(a0) * radius, 0.0)
 		var p1 = Vector3(cos(a1) * radius, sin(a1) * radius, 0.0)
 

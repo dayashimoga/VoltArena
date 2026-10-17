@@ -242,6 +242,16 @@ func _unhandled_input(event: InputEvent) -> void:
 				if is_instance_valid(player_aircraft): player_aircraft.toggle_landing_gear()
 			KEY_F:
 				if is_instance_valid(player_aircraft): player_aircraft.cycle_flaps()
+			KEY_M:
+				if is_instance_valid(player_aircraft):
+					var new_mode = player_aircraft.cycle_flight_mode()
+					var mode_str = "SIMCADE"
+					match new_mode:
+						FlightConst.FlightMode.ARCADE: mode_str = "ARCADE"
+						FlightConst.FlightMode.SIMCADE: mode_str = "SIMCADE"
+						FlightConst.FlightMode.SIMULATION: mode_str = "SIMULATION"
+					if flight_hud:
+						flight_hud.set_objective_text("FLIGHT MODE SWITCHED: " + mode_str)
 			KEY_V:
 				_on_camera_toggle_requested()
 			KEY_R:

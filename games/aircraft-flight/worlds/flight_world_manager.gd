@@ -19,73 +19,73 @@ const WORLD_BIOME_CATALOG: Dictionary = {
 	"metropolitan_city": {
 		"name": "Metropolitan Harbor City",
 		"desc": "American skyscraper canyons, suspension bridges, maritime shipping port, and dual ILS runways.",
-		"ambient_color": Color(0.12, 0.16, 0.22),
+		"ambient_color": Color(0.48, 0.52, 0.60),
 		"fog_color": Color(0.72, 0.78, 0.85),
-		"fog_density": 0.00008,
-		"sun_energy": 2.2,
-		"sun_angle": Vector3(-25.0, -45.0, 0.0)
+		"fog_density": 0.00004,
+		"sun_energy": 1.6,
+		"sun_angle": Vector3(-48.0, -35.0, 0.0)
 	},
 	"alpine_mountains": {
 		"name": "Alpine Mountain Peaks",
 		"desc": "Snow-capped 3,000m summits, deep glacial valleys, crystal mountain lakes, and high-altitude plateau runway.",
-		"ambient_color": Color(0.15, 0.20, 0.28),
+		"ambient_color": Color(0.45, 0.50, 0.60),
 		"fog_color": Color(0.85, 0.90, 0.98),
-		"fog_density": 0.00006,
-		"sun_energy": 2.6,
-		"sun_angle": Vector3(-35.0, -60.0, 0.0)
+		"fog_density": 0.00004,
+		"sun_energy": 1.8,
+		"sun_angle": Vector3(-48.0, -45.0, 0.0)
 	},
 	"arctic_snow": {
 		"name": "Arctic Fjord & Glacier",
 		"desc": "Endless frozen ice sheets, polar research station, sub-zero blizzard visibility, and packed-snow runway.",
-		"ambient_color": Color(0.18, 0.22, 0.30),
+		"ambient_color": Color(0.45, 0.50, 0.58),
 		"fog_color": Color(0.90, 0.94, 1.0),
-		"fog_density": 0.00015,
+		"fog_density": 0.00010,
 		"sun_energy": 1.6,
-		"sun_angle": Vector3(-15.0, -30.0, 0.0)
+		"sun_angle": Vector3(-35.0, -30.0, 0.0)
 	},
 	"tropical_beach": {
 		"name": "Tropical Beach & Atolls",
 		"desc": "Turquoise coral lagoons, white sand archipelagos, coastal resort towers, and palm-lined island strip.",
-		"ambient_color": Color(0.10, 0.22, 0.30),
+		"ambient_color": Color(0.45, 0.55, 0.65),
 		"fog_color": Color(0.75, 0.88, 0.95),
-		"fog_density": 0.00005,
-		"sun_energy": 2.8,
+		"fog_density": 0.00003,
+		"sun_energy": 1.8,
 		"sun_angle": Vector3(-55.0, -35.0, 0.0)
 	},
 	"desert_canyon": {
 		"name": "Redrock Desert Canyons",
 		"desc": "Towering sandstone mesas, serpentine river chasms, natural stone arches, and remote desert airfield.",
-		"ambient_color": Color(0.25, 0.18, 0.14),
+		"ambient_color": Color(0.50, 0.42, 0.36),
 		"fog_color": Color(0.92, 0.75, 0.60),
-		"fog_density": 0.00009,
-		"sun_energy": 2.7,
-		"sun_angle": Vector3(-30.0, -50.0, 0.0)
+		"fog_density": 0.00006,
+		"sun_energy": 1.8,
+		"sun_angle": Vector3(-45.0, -45.0, 0.0)
 	},
 	"volcanic_underworld": {
 		"name": "Volcanic Calderas & Lava",
 		"desc": "Active volcanic calderas, incandescent lava rivers, geothermal power stations, and thermal updraft pillars.",
-		"ambient_color": Color(0.25, 0.10, 0.08),
-		"fog_color": Color(0.55, 0.25, 0.15),
-		"fog_density": 0.00018,
+		"ambient_color": Color(0.40, 0.25, 0.20),
+		"fog_color": Color(0.65, 0.35, 0.25),
+		"fog_density": 0.00012,
 		"sun_energy": 1.4,
-		"sun_angle": Vector3(-20.0, -80.0, 0.0)
+		"sun_angle": Vector3(-35.0, -60.0, 0.0)
 	},
 	"dense_forest": {
 		"name": "Redwood Forest & Gorges",
 		"desc": "Ancient thousand-year redwood forests, rushing river canyons, cascading waterfalls, and tree-top skimming corridors.",
-		"ambient_color": Color(0.12, 0.22, 0.15),
+		"ambient_color": Color(0.38, 0.48, 0.38),
 		"fog_color": Color(0.68, 0.80, 0.72),
-		"fog_density": 0.00010,
-		"sun_energy": 2.3,
-		"sun_angle": Vector3(-40.0, -45.0, 0.0)
+		"fog_density": 0.00006,
+		"sun_energy": 1.6,
+		"sun_angle": Vector3(-48.0, -35.0, 0.0)
 	},
 	"alien_planet": {
 		"name": "Xenon Outpost & Rings",
 		"desc": "Low-gravity alien planetscape with floating monolithic arches, crystalline spires, and luminescent atmospheric scattering.",
-		"ambient_color": Color(0.18, 0.08, 0.28),
+		"ambient_color": Color(0.45, 0.30, 0.55),
 		"fog_color": Color(0.65, 0.35, 0.85),
-		"fog_density": 0.00012,
-		"sun_energy": 2.0,
+		"fog_density": 0.00008,
+		"sun_energy": 1.6,
 		"sun_angle": Vector3(-45.0, -70.0, 0.0)
 	}
 }
@@ -99,10 +99,11 @@ func setup_lighting_and_atmosphere() -> void:
 		sun_light = DirectionalLight3D.new()
 		sun_light.name = "SunLight"
 		sun_light.shadow_enabled = true
-		sun_light.directional_shadow_max_distance = 1200.0
-		sun_light.light_color = Color(1.0, 0.96, 0.90)
-		sun_light.light_energy = 2.2
-		sun_light.rotation_degrees = Vector3(-35.0, -45.0, 0.0)
+		sun_light.shadow_opacity = 0.65
+		sun_light.directional_shadow_max_distance = 1500.0
+		sun_light.light_color = Color(1.0, 0.98, 0.92)
+		sun_light.light_energy = 1.6
+		sun_light.rotation_degrees = Vector3(-48.0, -35.0, 0.0)
 		add_child(sun_light)
 
 	if not world_environment:
@@ -128,10 +129,11 @@ func setup_lighting_and_atmosphere() -> void:
 		env.background_mode = Environment.BG_SKY
 		env.sky = sky
 		env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-		env.ambient_light_color = Color(0.42, 0.45, 0.50)
+		env.ambient_light_color = Color(0.48, 0.52, 0.60)
 		env.ambient_light_sky_contribution = 0.75
+		env.ambient_light_energy = 1.2
 		env.tonemap_mode = Environment.TONE_MAPPER_ACES
-		env.tonemap_exposure = 1.00 # Calibrated to preserve snow highlight and normal definition
+		env.tonemap_exposure = 1.10
 		env.tonemap_white = 1.0
 		env.fog_enabled = true
 		env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
@@ -139,8 +141,7 @@ func setup_lighting_and_atmosphere() -> void:
 		env.fog_density = 0.00003
 		env.fog_aerial_perspective = 0.75
 		env.volumetric_fog_enabled = true
-		env.volumetric_fog_density = 0.00002
-		env.volumetric_fog_albedo = Color(0.75, 0.82, 0.92)
+		env.volumetric_fog_albedo = Color(0.85, 0.90, 0.98)
 		world_environment.environment = env
 		add_child(world_environment)
 
@@ -180,15 +181,18 @@ func load_world(world_id: String) -> void:
 
 func _apply_atmosphere(biome: Dictionary) -> void:
 	if sun_light:
-		sun_light.light_energy = biome.get("sun_energy", 2.2)
-		var angle = biome.get("sun_angle", Vector3(-35.0, -45.0, 0.0))
+		sun_light.light_energy = biome.get("sun_energy", 1.6)
+		var angle = biome.get("sun_angle", Vector3(-48.0, -35.0, 0.0))
 		sun_light.rotation_degrees = angle
+		sun_light.shadow_opacity = 0.65
 
 	if world_environment and world_environment.environment:
 		var env = world_environment.environment
-		env.ambient_light_color = biome.get("ambient_color", Color(0.35, 0.40, 0.48))
-		env.fog_light_color = biome.get("fog_color", Color(0.75, 0.82, 0.90))
-		env.fog_density = biome.get("fog_density", 0.00008)
+		env.ambient_light_color = biome.get("ambient_color", Color(0.48, 0.52, 0.60))
+		env.ambient_light_energy = 1.2
+		env.tonemap_exposure = 1.10
+		env.fog_light_color = biome.get("fog_color", Color(0.72, 0.80, 0.90))
+		env.fog_density = biome.get("fog_density", 0.00004)
 
 func _build_mountain_biome() -> void:
 	# Paved Alpine Runway ($2,200\text{m}$)

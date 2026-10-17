@@ -126,8 +126,10 @@ func start_flight_session() -> void:
 	player_aircraft.name = "PlayerAircraft"
 	var spec = AircraftCatalog.get_aircraft_spec(selected_aircraft_id)
 	player_aircraft.setup_aircraft_specs(spec)
+	player_aircraft.collision_layer = 2
+	player_aircraft.collision_mask = 1 | 4 # Layer 1 (Terrain/Runways) | Layer 4 (Buildings/Bridges)
 
-	# Aircraft Multi-Hull Collision Shapes (fuselage + elevated wings)
+	# Aircraft Multi-Hull Collision Shapes (fuselage belly + wings + tail)
 	var col = CollisionShape3D.new()
 	var box = BoxShape3D.new()
 	box.size = Vector3(2.4, 2.0, 9.2)

@@ -15,6 +15,7 @@ extends Node3D
 ## - 3D volumetric cloud ceiling [1,800m - 3,200m]
 
 const RunwayGen = preload("res://games/aircraft-flight/worlds/runway_generator.gd")
+const AircraftMeshBuilder = preload("res://games/aircraft-flight/aircraft/aircraft_mesh_builder.gd")
 
 var airport_runway: Node3D
 var bridge_root: Node3D
@@ -183,7 +184,9 @@ func _build_ground_plane() -> void:
 
 	add_child(mi)
 
-	# Synchronized Concave Collision Shape
+	# Synchronized Concave Collision Shape (Layer 1 World Terrain)
+	sb.collision_layer = 1
+	sb.collision_mask = 2
 	var col = CollisionShape3D.new()
 	var concave_col = ConcavePolygonShape3D.new()
 	concave_col.set_faces(collision_faces)
@@ -208,7 +211,7 @@ func _build_ground_plane() -> void:
 		water_mi.material_override = mat_water
 	add_child(water_mi)
 
-static func _sample_normal(x: float, z: float) -> Vector3:
+static func sample_terrain_normal(x: float, z: float) -> Vector3:
 	var delta = 20.0
 	var h_l = sample_terrain_elevation(x - delta, z)
 	var h_r = sample_terrain_elevation(x + delta, z)
@@ -217,6 +220,9 @@ static func _sample_normal(x: float, z: float) -> Vector3:
 	var dx = (h_r - h_l) / (delta * 2.0)
 	var dz = (h_u - h_d) / (delta * 2.0)
 	return Vector3(-dx, 1.0, -dz).normalized()
+
+static func _sample_normal(x: float, z: float) -> Vector3:
+	return sample_terrain_normal(x, z)
 
 # ==============================================================================
 # 2. DUAL-AIRPORT INFRASTRUCTURE & NAVIGATION LIGHTING
@@ -324,6 +330,14 @@ func _build_airport_complex() -> void:
 		add_child(stand_stem)
 		var stand_bar = _create_box(Vector3(14.0, 0.05, 0.5), Vector3(-780.0, 0.55, tz - 12.0), mat_yellow_stripe)
 		add_child(stand_bar)
+
+	# Parked static airliners at gates
+	for gate_i in [1, 3]:
+		var gate_z = 100.0 + gate_i * 150.0
+		var airliner = AircraftMeshBuilder.build_aircraft_visuals("a320_neo", Color(0.92, 0.94, 0.96), Color(0.12, 0.45, 0.85))
+		airliner.position = Vector3(-780.0, 1.2, gate_z)
+		airliner.rotation_degrees.y = 90.0 # Nose facing terminal
+		add_child(airliner)
 
 	# --- ARCHED STEEL MAINTENANCE HANGARS ---
 	for h_idx in range(3):
@@ -512,6 +526,14 @@ func _build_metropolitan_city_grid() -> void:
 				var crown_box = _create_box(Vector3(b_width * 0.9, 3.5, b_width * 0.9), Vector3(bx, b_height + 1.75, bz), mat_dark_titanium)
 				add_child(crown_box)
 
+			# Architectural horizontal spandrel bands (floor divisions breaking up box silhouettes)
+			var floor_step = 26.0
+			var num_spandrels = int(b_height / floor_step)
+			for sp_i in range(1, num_spandrels):
+				var sp_y = float(sp_i) * floor_step
+				var sp_band = _create_box(Vector3(b_width + 0.8, 1.2, b_width + 0.8), Vector3(bx, sp_y, bz), mat_dark_titanium)
+				add_child(sp_band)
+
 # ==============================================================================
 # 4. GOLDEN GATE-INSPIRED SUSPENSION BRIDGE (65m DECK CLEARANCE)
 # ==============================================================================
@@ -601,6 +623,8 @@ func _build_mountain_backdrop() -> void:
 		var sz: Vector3 = p["size"]
 		var sb = StaticBody3D.new()
 		sb.position = pos
+		sb.collision_layer = 1
+		sb.collision_mask = 2
 		mountain_root.add_child(sb)
 
 		var mi = MeshInstance3D.new()
@@ -611,7 +635,7 @@ func _build_mountain_backdrop() -> void:
 
 		var col = CollisionShape3D.new()
 		var box_col = BoxShape3D.new()
-		box_col.size = Vector3(sz.x * 0.75, sz.y, sz.z * 0.75)
+		box_col.size = Vector3(sz.x * 0.82, sz.y, sz.z * 0.82)
 		col.shape = box_col
 		col.position = Vector3(0.0, sz.y * 0.5, 0.0)
 		sb.add_child(col)
@@ -701,12 +725,12 @@ static func _create_box_mesh(size: Vector3) -> ArrayMesh:
 	return st.commit()
 
 static func _create_mountain_ridge_mesh(sz: Vector3) -> ArrayMesh:
-	# Generates high-density smooth-shaded alpine mountain ridges (zero faceted triangle creases)
+	# Generates high-density ridged multifractal alpine mountain massifs (spines, arêtes, valleys, zero round cones)
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var hw = sz.x * 0.5
 	var hd = sz.z * 0.5
-	var grid_res = 28
+	var grid_res = 32
 
 	var verts: Array[Vector3] = []
 	var uvs: Array[Vector2] = []
@@ -726,19 +750,26 @@ static func _create_mountain_ridge_mesh(sz: Vector3) -> ArrayMesh:
 			var px = -hw + tx * sz.x
 			var norm_x = (tx - 0.5) * 2.0
 
-			var r = sqrt(norm_x * norm_x + norm_z * norm_z)
-			var falloff = clampf(1.0 - r, 0.0, 1.0)
-			falloff = falloff * falloff * (3.0 - 2.0 * falloff)
+			# Sinuous spine ridge path along X
+			var spine_offset = sin(norm_x * 3.14) * 0.28 + cos(norm_x * 6.28) * 0.08
+			var dist_to_spine = absf(norm_z - spine_offset)
+			var ridge_falloff = clampf(1.0 - dist_to_spine * 1.35, 0.0, 1.0)
+			ridge_falloff = ridge_falloff * ridge_falloff * (3.0 - 2.0 * ridge_falloff)
 
-			var oct1 = sin(tx * 8.2 + tz * 4.5) * cos(tz * 7.1 - tx * 3.4)
-			var oct2 = absf(sin(tx * 16.0 - tz * 13.0) * 0.5 + 0.5)
-			var oct3 = sin(tx * 32.0 + tz * 28.0) * 0.25
-			var raw_h = (0.68 + 0.20 * oct1 + 0.16 * oct2 + 0.08 * oct3) * falloff
-			var py = (raw_h - 0.5) * sz.y
+			var x_edge_falloff = clampf(1.0 - absf(norm_x), 0.0, 1.0)
+			x_edge_falloff = x_edge_falloff * x_edge_falloff * (3.0 - 2.0 * x_edge_falloff)
+			var envelope = ridge_falloff * x_edge_falloff
+
+			# Multi-octave ridged multifractal noise (sharp knife-edge peaks & crags)
+			var oct1 = 1.0 - absf(sin(tx * 8.5 + tz * 4.2) * cos(tz * 7.8 - tx * 3.6))
+			var oct2 = 1.0 - absf(sin(tx * 18.2 - tz * 14.5) * cos(tz * 15.6 + tx * 10.2)) * 0.5
+			var oct3 = sin(tx * 36.0 + tz * 32.0) * cos(tz * 30.0 - tx * 26.0) * 0.22
+			var ridge_shape = pow(oct1 * 0.65 + oct2 * 0.35, 1.8) * 1.25 + oct3
+			var py = (ridge_shape * envelope - 0.02) * sz.y
 
 			var idx = iz * (grid_res + 1) + ix
 			verts[idx] = Vector3(px, py, pz)
-			uvs[idx] = Vector2(tx * 4.0, tz * 4.0)
+			uvs[idx] = Vector2(tx * 2.0, tz * 2.0)
 
 	# Precalculate smooth continuous vertex normals using central differences
 	for iz in range(grid_res + 1):

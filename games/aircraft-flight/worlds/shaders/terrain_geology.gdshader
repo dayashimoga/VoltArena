@@ -15,7 +15,7 @@ uniform vec4 scree_color : source_color = vec4(0.42, 0.39, 0.36, 1.0);
 uniform vec4 cliff_color : source_color = vec4(0.30, 0.28, 0.26, 1.0);
 uniform vec4 snow_color : source_color = vec4(0.82, 0.84, 0.85, 1.0); // Clamped albedo <= 0.85 prevents #FFFFFF blowout
 
-uniform float uv_scale : hint_range(0.001, 0.1) = 0.012;
+uniform float uv_scale : hint_range(0.0005, 0.05) = 0.0018;
 uniform float triplanar_sharpness : hint_range(1.0, 16.0) = 4.0;
 
 varying vec3 v_world_pos;

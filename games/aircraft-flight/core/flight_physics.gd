@@ -6,6 +6,7 @@ extends CharacterBody3D
 ## ground effect, gear suspension, progressive braking, and rotorcraft dynamics.
 
 const FlightConst = preload("res://games/aircraft-flight/core/flight_constants.gd")
+const CityFlightWorldScript = preload("res://games/aircraft-flight/worlds/city_flight_world.gd")
 
 # Maneuvering Speed, Q-Limiter & SAS Fly-By-Wire Constants
 const MANEUVERING_SPEED_MS: float = 123.46 # V_A = 240 KIAS
@@ -200,13 +201,63 @@ func _physics_process(delta: float) -> void:
 	# 8. Compute Angular Moments and Integrate Rotations
 	_integrate_aerodynamic_moments(delta, dynamic_pressure, v_fwd)
 
-	# 9. Perform CharacterBody3D Collision & Movement
+	# 9. Coordinated Bank-to-Turn & Ground Steering Heading Rotation
+	if not is_rotorcraft and is_airborne and flight_mode != FlightConst.FlightMode.SIMULATION:
+		var cur_basis = global_transform.basis if is_inside_tree() else transform.basis
+		var bank_angle_rad: float = cur_basis.get_euler().z
+		# Coordinated turn rate: omega_yaw = -(g * tan(bank)) / V + rudder_assist
+		var turn_airspeed = maxf(indicated_airspeed_ms, 25.0)
+		var coordinated_yaw_rate: float = -(FlightConst.GRAVITY * tan(clampf(bank_angle_rad, -1.2, 1.2))) / turn_airspeed
+		# Q/E direct heading authority + 35% roll-coupling for effortless A/D turns
+		var direct_rudder_yaw: float = (-input_yaw * deg_to_rad(32.0)) + (-input_roll * 0.35 * deg_to_rad(24.0))
+		var total_world_yaw_step: float = (coordinated_yaw_rate + direct_rudder_yaw) * delta
+
+		if absf(total_world_yaw_step) > 0.00001:
+			if is_inside_tree():
+				global_transform.basis = global_transform.basis.rotated(Vector3.UP, total_world_yaw_step)
+			else:
+				transform.basis = transform.basis.rotated(Vector3.UP, total_world_yaw_step)
+			velocity = velocity.rotated(Vector3.UP, total_world_yaw_step)
+
+	elif not is_rotorcraft and not is_airborne and gear_position > 0.5:
+		# Ground Taxi & Takeoff Runway Steering (Q/E & A/D)
+		# Steer heading at up to 45 deg/sec at low speed tapering to 15 deg/sec at high speed
+		var ground_speed = maxf(indicated_airspeed_ms, absf(v_fwd))
+		var steer_input = -input_yaw + (-input_roll * 0.65)
+		if absf(steer_input) > 0.05:
+			var speed_factor = clampf(ground_speed / 45.0, 0.0, 1.0)
+			var steer_rate_rad = deg_to_rad(lerpf(45.0, 15.0, speed_factor)) * steer_input
+			var steer_step = steer_rate_rad * delta
+			if is_inside_tree():
+				global_transform.basis = global_transform.basis.rotated(Vector3.UP, steer_step)
+			else:
+				transform.basis = transform.basis.rotated(Vector3.UP, steer_step)
+			var fwd = -(global_transform.basis if is_inside_tree() else transform.basis).z.normalized()
+			velocity = fwd * velocity.length()
+
+	# 10. Perform Movement & Hard Anti-Tunneling Floor Guard (Safety Clamp)
+	var terrain_y = 0.5
+	if CityFlightWorldScript:
+		terrain_y = CityFlightWorldScript.sample_terrain_elevation(global_position.x, global_position.z)
+	var min_clearance = gear_height_offset if (gear_deployed and gear_position > 0.6) else 0.65
+	var floor_limit = terrain_y + min_clearance
+
 	if is_inside_tree():
 		move_and_slide()
 	else:
 		position += velocity * delta
 
-	# 10. Post-Move Ground Status Check & Wings-Leveling
+	# Post-movement safety clamp: guarantees the aircraft can NEVER penetrate the terrain into the underworld
+	if global_position.y < floor_limit:
+		global_position.y = floor_limit
+		if velocity.y < 0.0:
+			velocity.y = 0.0
+		var t_norm = CityFlightWorldScript.sample_terrain_normal(global_position.x, global_position.z) if CityFlightWorldScript else Vector3.UP
+		if velocity.dot(t_norm) < 0.0:
+			velocity = velocity.slide(t_norm)
+		is_airborne = false
+
+	# 11. Post-Move Ground Status Check & Wings-Leveling
 	var was_airborne = is_airborne
 	is_airborne = not is_on_floor() and radar_altitude_m > gear_height_offset + 0.4
 	if not was_airborne and is_airborne:

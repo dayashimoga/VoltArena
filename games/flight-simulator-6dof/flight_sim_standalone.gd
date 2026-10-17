@@ -21,10 +21,14 @@ func _ready() -> void:
 	_ensure_save_directory()
 	_setup_ui()
 
-	# If launched via GameManager suite, auto-launch into runway flight session within < 2.0s
+	# Immediately instantiate the 3D flight world so the runway, aircraft, and sky are active (zero blank grey screen!)
+	_launch_simulation(0)
+
 	var gm = GameConstants.get_autoload(self, "GameManager")
 	if gm and gm.get("active_game_id") == "flight_simulator_6dof":
-		call_deferred("_launch_simulation", 0)
+		main_menu_panel.visible = false
+	else:
+		main_menu_panel.visible = true
 
 func quick_play() -> void:
 	_launch_simulation(0)
@@ -38,11 +42,8 @@ func start_lesson(lesson_id: int = 0) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
 		if active_world and not main_menu_panel.visible:
-			# Return from simulation to standalone menu
+			# Return from simulation to standalone menu overlay
 			main_menu_panel.visible = true
-			if active_world:
-				active_world.queue_free()
-				active_world = null
 			get_viewport().set_input_as_handled()
 		elif main_menu_panel.visible:
 			_on_exit_pressed()
@@ -57,22 +58,29 @@ func _ensure_save_directory() -> void:
 			dir.make_dir("saves/flight_simulator_6dof")
 
 func _setup_ui() -> void:
-	# Background 3D Viewport for live hangar/flight backdrop
+	# Background 3D Viewport for live flight simulation backdrop
 	world_container = SubViewportContainer.new()
-	world_container.anchors_preset = Control.PRESET_FULL_RECT
+	world_container.set_anchors_preset(Control.PRESET_FULL_RECT)
 	world_container.stretch = true
+	world_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(world_container)
 
 	world_viewport = SubViewport.new()
 	world_viewport.size = Vector2i(1280, 720)
-	world_viewport.handle_input_locally = true
+	world_viewport.own_world_3d = false
+	world_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	world_viewport.handle_input_locally = false
 	world_container.add_child(world_viewport)
 
 	# Main Menu Overlay
 	main_menu_panel = PanelContainer.new()
-	main_menu_panel.anchors_preset = Control.PRESET_FULL_RECT
+	main_menu_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	main_menu_panel.offset_left = 0
+	main_menu_panel.offset_top = 0
+	main_menu_panel.offset_right = 0
+	main_menu_panel.offset_bottom = 0
 	var bg_style = StyleBoxFlat.new()
-	bg_style.bg_color = Color(0.04, 0.07, 0.1, 0.75)
+	bg_style.bg_color = Color(0.04, 0.07, 0.1, 0.65)
 	main_menu_panel.add_theme_stylebox_override("panel", bg_style)
 
 	var center_box = CenterContainer.new()

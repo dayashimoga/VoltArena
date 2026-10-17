@@ -26,6 +26,7 @@ const TRAFFIC_MODELS: Array[String] = [
 @export var current_speed: float = 0.0
 @export var is_traffic_active: bool = true
 var force_obstacle_detected: bool = false
+var stuck_timer: float = 0.0
 
 var waypoints: Array[Transform3D] = []
 var current_waypoint_index: int = 0
@@ -362,9 +363,37 @@ func _physics_process(delta: float) -> void:
 		else:
 			rotation.y = new_y
 
-	# Update velocity and move
+	# Upright stabilizing damper (actively restores roll & pitch so car NEVER tilts on 2 wheels)
+	var cur_rot = global_rotation if is_inside_tree() else rotation
+	var stabilized_pitch = move_toward(cur_rot.x, 0.0, 10.0 * delta)
+	var stabilized_roll = move_toward(cur_rot.z, 0.0, 14.0 * delta)
+	if is_inside_tree():
+		global_rotation.x = stabilized_pitch
+		global_rotation.z = stabilized_roll
+	else:
+		rotation.x = stabilized_pitch
+		rotation.z = stabilized_roll
+
+	# Traffic unfreeze / anti-stuck watchdog
+	if current_speed < 0.5 and not force_obstacle_detected:
+		stuck_timer += delta
+		if stuck_timer > 3.5:
+			# Unfreeze: advance to next waypoint or nudge
+			current_waypoint_index = (current_waypoint_index + 1) % waypoints.size()
+			current_speed = cruise_speed_ms * 0.4
+			stuck_timer = 0.0
+	else:
+		stuck_timer = 0.0
+
+	# Update velocity with road gravity adhesion
 	var fwd = -(global_basis if is_inside_tree() else transform.basis).z
-	velocity = fwd * current_speed
+	var horiz_dir = Vector3(fwd.x, 0.0, fwd.z).normalized()
+	velocity.x = horiz_dir.x * current_speed
+	velocity.z = horiz_dir.z * current_speed
+	if is_inside_tree() and not is_on_floor():
+		velocity.y -= 19.6 * delta
+	else:
+		velocity.y = -1.5 # Ground stick force
 
 	if is_inside_tree():
 		move_and_slide()

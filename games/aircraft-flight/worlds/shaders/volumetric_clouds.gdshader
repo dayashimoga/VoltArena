@@ -9,15 +9,15 @@ render_mode blend_mix, depth_draw_opaque, cull_front;
 // - Aerial perspective atmospheric depth fog blending
 // - Altitude-bounded slab between cloud_base and cloud_top
 
-uniform vec3 sun_direction = vec3(0.35, 0.75, 0.45);
-uniform vec4 sun_color : source_color = vec4(1.0, 0.95, 0.88, 1.0);
-uniform vec4 ambient_top_color : source_color = vec4(0.55, 0.70, 0.90, 1.0);
-uniform vec4 ambient_base_color : source_color = vec4(0.25, 0.30, 0.38, 1.0);
+uniform vec3 sun_direction = vec3(0.45, 0.82, 0.35);
+uniform vec4 sun_color : source_color = vec4(1.0, 0.98, 0.94, 1.0);
+uniform vec4 ambient_top_color : source_color = vec4(0.96, 0.97, 1.0, 1.0);
+uniform vec4 ambient_base_color : source_color = vec4(0.85, 0.88, 0.95, 1.0);
 
-uniform float cloud_base : hint_range(500.0, 3000.0) = 1400.0;
-uniform float cloud_top : hint_range(1500.0, 6000.0) = 2800.0;
-uniform float cloud_coverage : hint_range(0.1, 0.9) = 0.48;
-uniform float cloud_density_scale : hint_range(0.001, 0.05) = 0.008;
+uniform float cloud_base : hint_range(500.0, 3000.0) = 1600.0;
+uniform float cloud_top : hint_range(1500.0, 6000.0) = 3200.0;
+uniform float cloud_coverage : hint_range(0.1, 0.9) = 0.45;
+uniform float cloud_density_scale : hint_range(0.001, 0.05) = 0.006;
 uniform float wind_speed : hint_range(0.0, 50.0) = 8.0;
 
 uniform int raymarch_steps : hint_range(8, 48) = 24;
@@ -174,15 +174,15 @@ void fragment() {
 				vec3 lp = p + sun_norm * (float(j) * l_step);
 				light_d += sample_cloud_density(lp) * l_step;
 			}
-			float sun_transmittance = exp(-light_d * 18.0);
+			float sun_transmittance = exp(-light_d * 2.5);
 
 			// Ambient sky gradient
 			float h_frac = clamp((p.y - cloud_base) / (cloud_top - cloud_base), 0.0, 1.0);
 			vec3 ambient = mix(ambient_base_color.rgb, ambient_top_color.rgb, h_frac);
 
-			// In-scattered radiance
-			vec3 step_light = sun_color.rgb * sun_transmittance * phase * 4.5 + ambient * (1.0 - sun_transmittance * 0.5);
-			float step_transmittance = exp(-d * step_size * 22.0);
+			// In-scattered radiance (bright sunlit silver lining)
+			vec3 step_light = sun_color.rgb * sun_transmittance * phase * 3.8 + ambient * (1.0 - sun_transmittance * 0.25);
+			float step_transmittance = exp(-d * step_size * 5.5);
 
 			accum_color += step_light * (1.0 - step_transmittance) * transmittance;
 			transmittance *= step_transmittance;

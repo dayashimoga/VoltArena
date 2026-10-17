@@ -693,36 +693,60 @@ static func _create_mountain_ridge_mesh(sz: Vector3) -> ArrayMesh:
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var hw = sz.x * 0.5
 	var hd = sz.z * 0.5
-	var hh = sz.y * 0.5
+	var grid_res = 14
 
-	var r0 = Vector3(-hw * 0.25, hh, 0.0)
-	var r1 = Vector3(hw * 0.25, hh, 0.0)
-	var b_fl = Vector3(-hw, -hh, -hd)
-	var b_fr = Vector3(hw, -hh, -hd)
-	var b_rr = Vector3(hw, -hh, hd)
-	var b_rl = Vector3(-hw, -hh, hd)
+	var verts: Array[Vector3] = []
+	var uvs: Array[Vector2] = []
+	verts.resize((grid_res + 1) * (grid_res + 1))
+	uvs.resize((grid_res + 1) * (grid_res + 1))
 
-	# Front slope (-Z)
-	var n_front = Vector3(0, sz.z, -sz.y).normalized()
-	st.set_normal(n_front)
-	st.add_vertex(r0); st.add_vertex(b_fr); st.add_vertex(b_fl)
-	st.add_vertex(r0); st.add_vertex(r1); st.add_vertex(b_fr)
+	for iz in range(grid_res + 1):
+		var tz = float(iz) / float(grid_res)
+		var pz = -hd + tz * sz.z
+		var norm_z = (tz - 0.5) * 2.0
 
-	# Back slope (+Z)
-	var n_back = Vector3(0, sz.z, sz.y).normalized()
-	st.set_normal(n_back)
-	st.add_vertex(r1); st.add_vertex(b_rl); st.add_vertex(b_rr)
-	st.add_vertex(r1); st.add_vertex(r0); st.add_vertex(b_rl)
+		for ix in range(grid_res + 1):
+			var tx = float(ix) / float(grid_res)
+			var px = -hw + tx * sz.x
+			var norm_x = (tx - 0.5) * 2.0
 
-	# Left slope (-X)
-	var n_left = Vector3(-sz.y, sz.x * 0.5, 0).normalized()
-	st.set_normal(n_left)
-	st.add_vertex(r0); st.add_vertex(b_fl); st.add_vertex(b_rl)
+			var r = sqrt(norm_x * norm_x + norm_z * norm_z)
+			var falloff = clampf(1.0 - r, 0.0, 1.0)
+			falloff = falloff * falloff * (3.0 - 2.0 * falloff)
 
-	# Right slope (+X)
-	var n_right = Vector3(sz.y, sz.x * 0.5, 0).normalized()
-	st.set_normal(n_right)
-	st.add_vertex(r1); st.add_vertex(b_rr); st.add_vertex(b_fr)
+			var oct1 = sin(tx * 8.2 + tz * 4.5) * cos(tz * 7.1 - tx * 3.4)
+			var oct2 = absf(sin(tx * 16.0 - tz * 13.0) * 0.5 + 0.5)
+			var oct3 = sin(tx * 32.0 + tz * 28.0) * 0.25
+			var raw_h = (0.68 + 0.20 * oct1 + 0.16 * oct2 + 0.08 * oct3) * falloff
+			var py = (raw_h - 0.5) * sz.y
+
+			var idx = iz * (grid_res + 1) + ix
+			verts[idx] = Vector3(px, py, pz)
+			uvs[idx] = Vector2(tx * 4.0, tz * 4.0)
+
+	for iz in range(grid_res):
+		for ix in range(grid_res):
+			var i0 = iz * (grid_res + 1) + ix
+			var i1 = i0 + 1
+			var i2 = (iz + 1) * (grid_res + 1) + ix
+			var i3 = i2 + 1
+
+			var v0 = verts[i0]
+			var v1 = verts[i1]
+			var v2 = verts[i2]
+			var v3 = verts[i3]
+
+			var n1 = (v1 - v0).cross(v2 - v0).normalized()
+			st.set_normal(n1)
+			st.set_uv(uvs[i0]); st.add_vertex(v0)
+			st.set_uv(uvs[i1]); st.add_vertex(v1)
+			st.set_uv(uvs[i2]); st.add_vertex(v2)
+
+			var n2 = (v3 - v1).cross(v2 - v1).normalized()
+			st.set_normal(n2)
+			st.set_uv(uvs[i1]); st.add_vertex(v1)
+			st.set_uv(uvs[i3]); st.add_vertex(v3)
+			st.set_uv(uvs[i2]); st.add_vertex(v2)
 
 	return st.commit()
 

@@ -40,22 +40,11 @@ const TREE_GLBS: Array[String] = [
 	"res://assets/models/environment/tree_palm.glb"
 ]
 
-static func _get_facade_material(neon_tint: Color = Color(0.2, 0.6, 1.0)) -> Material:
-	var facade_shader = load("res://games/urban-legends/world/shaders/urban_window_parallax.gdshader")
-	if not facade_shader:
-		facade_shader = load("res://games/urban-legends/world/shaders/building_facade.gdshader")
-	if facade_shader:
-		var sm = ShaderMaterial.new()
-		sm.shader = facade_shader
-		sm.set_shader_parameter("facade_base_color", Color(0.22, 0.23, 0.26))
-		sm.set_shader_parameter("window_lit_probability", 0.48)
-		sm.set_shader_parameter("night_emission_factor", 4.0)
-		sm.set_shader_parameter("room_temp_4500k", neon_tint)
-		return sm
+static func _get_facade_material(_neon_tint: Color = Color(0.9, 0.85, 0.75)) -> Material:
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.22, 0.24, 0.28)
-	mat.metallic = 0.8
-	mat.roughness = 0.2
+	mat.albedo_color = Color(0.74, 0.72, 0.68) # Warm limestone / architectural masonry
+	mat.roughness = 0.82
+	mat.metallic = 0.05
 	return mat
 
 static func build_skyscraper(height: float = 75.0, width: float = 24.0, depth: float = 24.0, neon_tint: Color = Color(0.2, 0.6, 1.0)) -> Node3D:
@@ -72,9 +61,8 @@ static func build_skyscraper(height: float = 75.0, width: float = 24.0, depth: f
 		var sy = height / 2.88
 		var sz = depth / 1.36
 		model.scale = Vector3(sx, sy, sz)
-		# Apply building facade shader to the skyscraper exterior
-		var facade_mat = _get_facade_material(neon_tint)
-		_apply_material_recursive(model, facade_mat)
+		# NOTE: GLB models already contain high-fidelity textured PBR materials (facades, mullions, glass).
+		# We strictly preserve the authentic GLB materials and avoid overriding with checkerboard shaders.
 		root.add_child(model)
 	else:
 		_build_procedural_skyscraper_mesh(root, height, width, depth, neon_tint)
@@ -123,8 +111,7 @@ static func build_commercial_block(height: float = 35.0, width: float = 20.0, de
 	if is_instance_valid(model):
 		model.name = "CommercialMesh"
 		model.scale = Vector3(width / 0.90, height / 1.30, depth / 0.95)
-		var facade_mat = _get_facade_material(Color(0.9, 0.8, 0.4))
-		_apply_material_recursive(model, facade_mat)
+		# Preserve authentic GLB building textures without shader override
 		root.add_child(model)
 	else:
 		var mi = MeshInstance3D.new()
@@ -465,17 +452,583 @@ static func build_stone_bridge(span: float = 24.0, width: float = 9.0) -> Node3D
 
 	return root
 
-static func _apply_material_recursive(node: Node, mat: Material) -> void:
-	if node is MeshInstance3D:
-		var mi = node as MeshInstance3D
-		if mi.mesh != null:
-			mi.material_override = mat
-	for child in node.get_children():
-		_apply_material_recursive(child, mat)
+# ==============================================================================
+# GTA: SAN ANDREAS-INSPIRED OPEN-WORLD ARCHITECTURE, INFRASTRUCTURE & PROPS
+# ==============================================================================
 
-# ==============================================================================
-# PHASE 2 NYC-INSPIRED 5-DISTRICT MODULAR ARCHITECTURE & STREET FURNITURE
-# ==============================================================================
+static func build_san_andreas_house(variant: int = 0) -> Node3D:
+	var root = Node3D.new()
+	root.name = "SanAndreasHouse_%d" % variant
+
+	var w = 13.0
+	var h = 3.8
+	var d = 10.5
+
+	# Stucco Color Variants (Las Colinas / Hillside Suburbs image_6e5c87.jpg standard)
+	var stucco_colors = [
+		Color(0.88, 0.84, 0.76), # Warm cream stucco
+		Color(0.78, 0.82, 0.74), # Pale sage green
+		Color(0.85, 0.76, 0.70), # Terracotta blush
+		Color(0.76, 0.82, 0.86)  # Coastal light blue
+	]
+	var roof_colors = [
+		Color(0.72, 0.28, 0.15), # Burnt terracotta tile
+		Color(0.32, 0.30, 0.28), # Charcoal asphalt shingle
+		Color(0.68, 0.25, 0.16), # Spanish Mission red tile
+		Color(0.48, 0.38, 0.28)  # Weathered cedar shake
+	]
+
+	var stucco_col = stucco_colors[variant % stucco_colors.size()]
+	var roof_col = roof_colors[variant % roof_colors.size()]
+
+	# Main House Walls (ArrayMesh)
+	var wall_mi = MeshInstance3D.new()
+	wall_mi.mesh = _create_box_array_mesh(w, h, d)
+	var wall_mat = StandardMaterial3D.new()
+	wall_mat.albedo_color = stucco_col
+	wall_mat.roughness = 0.85
+	wall_mi.material_override = wall_mat
+	wall_mi.position = Vector3(0, h * 0.5, 0)
+	root.add_child(wall_mi)
+
+	# Gabled / Hip Terracotta Roof (ArrayMesh)
+	var roof_h = 2.4
+	var roof_mi = MeshInstance3D.new()
+	roof_mi.mesh = _create_hip_roof_mesh(w + 1.6, roof_h, d + 1.6)
+	var roof_mat = StandardMaterial3D.new()
+	roof_mat.albedo_color = roof_col
+	roof_mat.roughness = 0.72
+	roof_mi.material_override = roof_mat
+	roof_mi.position = Vector3(0, h + roof_h * 0.5, 0)
+	root.add_child(roof_mi)
+
+	# Front Porch Posts & Awning (Front facing +Z)
+	var porch_w = 4.8
+	var porch_d = 2.0
+	var porch_mi = MeshInstance3D.new()
+	porch_mi.mesh = _create_box_array_mesh(porch_w, 0.2, porch_d)
+	var trim_mat = StandardMaterial3D.new()
+	trim_mat.albedo_color = Color(0.92, 0.90, 0.86) # White painted wood trim
+	trim_mat.roughness = 0.65
+	porch_mi.material_override = trim_mat
+	porch_mi.position = Vector3(-w * 0.20, 2.8, d * 0.5 + porch_d * 0.5)
+	root.add_child(porch_mi)
+
+	# Porch Timber Posts
+	for px in [-porch_w * 0.45, porch_w * 0.45]:
+		var post = MeshInstance3D.new()
+		post.mesh = _create_box_array_mesh(0.18, 2.8, 0.18)
+		post.material_override = trim_mat
+		post.position = Vector3(-w * 0.20 + px, 1.4, d * 0.5 + porch_d - 0.12)
+		root.add_child(post)
+
+	# Attached 1-Car Garage Door (Right side of house)
+	var garage_mi = MeshInstance3D.new()
+	garage_mi.mesh = _create_box_array_mesh(3.4, 2.5, 0.12)
+	var g_mat = StandardMaterial3D.new()
+	g_mat.albedo_color = Color(0.94, 0.93, 0.90) # White embossed steel panels
+	g_mat.roughness = 0.45
+	garage_mi.material_override = g_mat
+	garage_mi.position = Vector3(w * 0.30, 1.25, d * 0.5 + 0.08)
+	root.add_child(garage_mi)
+
+	# Warm Emissive Interior Windows (Front and Side)
+	var win_mat = StandardMaterial3D.new()
+	win_mat.albedo_color = Color(1.0, 0.92, 0.75)
+	win_mat.emission_enabled = true
+	win_mat.emission = Color(1.0, 0.88, 0.65) * 2.8
+
+	var win_front = MeshInstance3D.new()
+	win_front.mesh = _create_box_array_mesh(1.6, 1.2, 0.1)
+	win_front.material_override = win_mat
+	win_front.position = Vector3(-w * 0.20, 1.8, d * 0.5 + 0.06)
+	root.add_child(win_front)
+
+	# Static Physics Collision Proxy
+	var body = StaticBody3D.new()
+	body.collision_layer = UrbanConstants.LAYER_WORLD
+	body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = Vector3(w + 0.4, h + roof_h, d + porch_d)
+	col.shape = box
+	col.position = Vector3(0, (h + roof_h) * 0.5, porch_d * 0.3)
+	body.add_child(col)
+	root.add_child(body)
+
+	return root
+
+static func build_railway_track(length: float = 60.0) -> Node3D:
+	var root = Node3D.new()
+	root.name = "RailwayTrack"
+
+	# Crushed Stone Ballast Bed (Dark grey gravel, raised 0.32m)
+	var ballast_w = 3.8
+	var ballast_h = 0.32
+	var ballast_mi = MeshInstance3D.new()
+	ballast_mi.mesh = _create_box_array_mesh(ballast_w, ballast_h, length)
+	var b_mat = StandardMaterial3D.new()
+	b_mat.albedo_color = Color(0.32, 0.31, 0.29) # Granite ballast gravel
+	b_mat.roughness = 0.95
+	ballast_mi.material_override = b_mat
+	ballast_mi.position = Vector3(0, ballast_h * 0.5, 0)
+	root.add_child(ballast_mi)
+
+	# Wooden Cross-Ties (Creosote timber every 1.2m)
+	var tie_w = 2.6
+	var tie_h = 0.16
+	var tie_d = 0.24
+	var tie_mat = StandardMaterial3D.new()
+	tie_mat.albedo_color = Color(0.24, 0.18, 0.12) # Dark creosote wood
+	tie_mat.roughness = 0.90
+
+	var num_ties = maxi(2, int(length / 1.2))
+	var tie_step = length / float(num_ties)
+	for i in range(num_ties):
+		var tz = -length * 0.5 + tie_step * (float(i) + 0.5)
+		var tie = MeshInstance3D.new()
+		tie.mesh = _create_box_array_mesh(tie_w, tie_h, tie_d)
+		tie.material_override = tie_mat
+		tie.position = Vector3(0, ballast_h + tie_h * 0.5, tz)
+		root.add_child(tie)
+
+	# Dual Steel Rails (Standard Gauge 1.435m)
+	var rail_mat = StandardMaterial3D.new()
+	rail_mat.albedo_color = Color(0.76, 0.77, 0.80) # Polished head / oxidized web
+	rail_mat.metallic = 0.95
+	rail_mat.roughness = 0.22
+
+	for rx in [-0.7175, 0.7175]:
+		var rail = MeshInstance3D.new()
+		rail.mesh = _create_box_array_mesh(0.09, 0.18, length)
+		rail.material_override = rail_mat
+		rail.position = Vector3(rx, ballast_h + tie_h + 0.09, 0)
+		root.add_child(rail)
+
+	# Physical Collision for Ballast Bed
+	var body = StaticBody3D.new()
+	body.collision_layer = UrbanConstants.LAYER_WORLD
+	body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = Vector3(ballast_w, ballast_h + 0.1, length)
+	col.shape = box
+	col.position = Vector3(0, (ballast_h + 0.1) * 0.5, 0)
+	body.add_child(col)
+	root.add_child(body)
+
+	return root
+
+static func build_railroad_crossing() -> Node3D:
+	var root = Node3D.new()
+	root.name = "RailroadCrossing"
+
+	var mast_mat = StandardMaterial3D.new()
+	mast_mat.albedo_color = Color(0.85, 0.85, 0.88)
+	mast_mat.metallic = 0.85
+	mast_mat.roughness = 0.35
+
+	# Mast pole
+	var pole = MeshInstance3D.new()
+	pole.mesh = _create_tapered_mast_mesh(0.14, 0.10, 4.6, 8)
+	pole.material_override = mast_mat
+	root.add_child(pole)
+
+	# Crossbuck "X" Sign (ArrayMesh)
+	var cross_mat = StandardMaterial3D.new()
+	cross_mat.albedo_color = Color(0.95, 0.95, 0.95)
+	for rot in [deg_to_rad(45.0), deg_to_rad(-45.0)]:
+		var blade = MeshInstance3D.new()
+		blade.mesh = _create_box_array_mesh(1.6, 0.22, 0.04)
+		blade.material_override = cross_mat
+		blade.position = Vector3(0, 3.8, 0.1)
+		blade.rotation.z = rot
+		root.add_child(blade)
+
+	# Flashing Twin Red Lenses
+	var red_mat = StandardMaterial3D.new()
+	red_mat.albedo_color = Color(1.0, 0.1, 0.05)
+	red_mat.emission_enabled = true
+	red_mat.emission = Color(1.0, 0.08, 0.05) * 4.5
+
+	for lx in [-0.45, 0.45]:
+		var light_mesh = MeshInstance3D.new()
+		light_mesh.mesh = _create_subway_globe_mesh()
+		light_mesh.scale = Vector3(0.7, 0.7, 0.7)
+		light_mesh.material_override = red_mat
+		light_mesh.position = Vector3(lx, 3.2, 0.15)
+		root.add_child(light_mesh)
+
+		var omni = OmniLight3D.new()
+		omni.light_color = Color(1.0, 0.1, 0.05)
+		omni.light_energy = 2.0
+		omni.omni_range = 10.0
+		omni.position = Vector3(lx, 3.2, 0.3)
+		root.add_child(omni)
+
+	# Horizontal Wig-Wag Barrier Gate Arm (Red and White striped)
+	var arm = MeshInstance3D.new()
+	arm.mesh = _create_box_array_mesh(5.8, 0.20, 0.08)
+	var arm_mat = StandardMaterial3D.new()
+	arm_mat.albedo_color = Color(0.95, 0.18, 0.14) # Safety red
+	arm.material_override = arm_mat
+	arm.position = Vector3(2.9, 1.15, 0.1)
+	root.add_child(arm)
+
+	# Pole collision proxy
+	var body = StaticBody3D.new()
+	body.collision_layer = UrbanConstants.LAYER_PROPS
+	body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var cyl = CylinderShape3D.new()
+	cyl.radius = 0.16
+	cyl.height = 4.6
+	col.shape = cyl
+	col.position = Vector3(0, 2.3, 0)
+	body.add_child(col)
+	root.add_child(body)
+
+	return root
+
+static func build_freight_train() -> Node3D:
+	var root = Node3D.new()
+	root.name = "FreightTrain"
+
+	# 1. Diesel Electric Locomotive
+	var loco = Node3D.new()
+	loco.name = "Locomotive"
+	var loco_body = MeshInstance3D.new()
+	loco_body.mesh = _create_box_array_mesh(3.2, 4.0, 16.0)
+	var loco_mat = StandardMaterial3D.new()
+	loco_mat.albedo_color = Color(0.12, 0.25, 0.55) # Classic Freight Blue
+	loco_mat.metallic = 0.65
+	loco_mat.roughness = 0.35
+	loco_body.material_override = loco_mat
+	loco_body.position = Vector3(0, 2.6, 0)
+	loco.add_child(loco_body)
+
+	# High-Beam Train Headlight
+	var headlight = SpotLight3D.new()
+	headlight.light_color = Color(1.0, 0.98, 0.92)
+	headlight.light_energy = 5.0
+	headlight.spot_range = 80.0
+	headlight.spot_angle = 35.0
+	headlight.position = Vector3(0, 3.8, 8.1)
+	loco.add_child(headlight)
+	root.add_child(loco)
+
+	# 2. 4 Freight Boxcars (Coupled in train consist)
+	var boxcar_colors = [
+		Color(0.58, 0.22, 0.15), # Boxcar rust red
+		Color(0.18, 0.32, 0.52), # Rail blue
+		Color(0.22, 0.42, 0.26), # Forest green
+		Color(0.85, 0.62, 0.18)  # Reefer yellow
+	]
+	var car_len = 13.5
+	var car_gap = 1.2
+	for i in range(boxcar_colors.size()):
+		var car_z = -16.0 * 0.5 - (float(i) + 0.5) * (car_len + car_gap)
+		var car = MeshInstance3D.new()
+		car.mesh = _create_box_array_mesh(3.1, 3.8, car_len)
+		var c_mat = StandardMaterial3D.new()
+		c_mat.albedo_color = boxcar_colors[i]
+		c_mat.metallic = 0.4
+		c_mat.roughness = 0.6
+		car.material_override = c_mat
+		car.position = Vector3(0, 2.5, car_z)
+		root.add_child(car)
+
+	# Physics Collision for whole train
+	var body = StaticBody3D.new()
+	body.collision_layer = UrbanConstants.LAYER_WORLD
+	body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	var total_len = 16.0 + 4.0 * (car_len + car_gap)
+	box.size = Vector3(3.3, 4.2, total_len)
+	col.shape = box
+	col.position = Vector3(0, 2.5, -total_len * 0.38)
+	body.add_child(col)
+	root.add_child(body)
+
+	return root
+
+static func build_utility_pole(height: float = 8.5) -> Node3D:
+	var root = Node3D.new()
+	root.name = "UtilityPole"
+
+	var pole_mat = StandardMaterial3D.new()
+	pole_mat.albedo_color = Color(0.30, 0.24, 0.18) # Weathered creosote wood
+	pole_mat.roughness = 0.92
+
+	# Main Wood Pole
+	var pole = MeshInstance3D.new()
+	pole.mesh = _create_tapered_mast_mesh(0.20, 0.13, height, 10)
+	pole.material_override = pole_mat
+	root.add_child(pole)
+
+	# Horizontal Crossarms (Twin arms near top)
+	for y_offset in [height - 0.6, height - 1.4]:
+		var arm = MeshInstance3D.new()
+		arm.mesh = _create_box_array_mesh(2.4, 0.14, 0.14)
+		arm.material_override = pole_mat
+		arm.position = Vector3(0, y_offset, 0)
+		root.add_child(arm)
+
+		# Ceramic Insulators on Crossarm ends
+		var ins_mat = StandardMaterial3D.new()
+		ins_mat.albedo_color = Color(0.85, 0.90, 0.88)
+		ins_mat.roughness = 0.15
+		for ix in [-1.05, -0.4, 0.4, 1.05]:
+			var ins = MeshInstance3D.new()
+			ins.mesh = _create_box_array_mesh(0.10, 0.22, 0.10)
+			ins.material_override = ins_mat
+			ins.position = Vector3(ix, y_offset + 0.14, 0)
+			root.add_child(ins)
+
+	# Cylindrical Electrical Transformer
+	var trans = MeshInstance3D.new()
+	trans.mesh = _create_tapered_mast_mesh(0.24, 0.24, 0.85, 8)
+	var t_mat = StandardMaterial3D.new()
+	t_mat.albedo_color = Color(0.55, 0.58, 0.60) # Utility grey metal
+	t_mat.metallic = 0.8
+	t_mat.roughness = 0.35
+	trans.material_override = t_mat
+	trans.position = Vector3(0.32, height - 2.2, 0)
+	root.add_child(trans)
+
+	# Collision Cylinder
+	var body = StaticBody3D.new()
+	body.collision_layer = UrbanConstants.LAYER_PROPS
+	body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var cyl = CylinderShape3D.new()
+	cyl.radius = 0.22
+	cyl.height = height
+	col.shape = cyl
+	col.position = Vector3(0, height * 0.5, 0)
+	body.add_child(col)
+	root.add_child(body)
+
+	return root
+
+static func build_overhead_highway_gantry(width: float = 22.0, height: float = 7.5) -> Node3D:
+	var root = Node3D.new()
+	root.name = "HighwayGantry"
+
+	var steel_mat = StandardMaterial3D.new()
+	steel_mat.albedo_color = Color(0.50, 0.52, 0.54) # Galvanized steel
+	steel_mat.metallic = 0.88
+	steel_mat.roughness = 0.32
+
+	# Left and Right Steel Truss Columns
+	for side in [-width * 0.5, width * 0.5]:
+		var col = MeshInstance3D.new()
+		col.mesh = _create_tapered_mast_mesh(0.40, 0.35, height, 8)
+		col.material_override = steel_mat
+		col.position = Vector3(side, 0, 0)
+		root.add_child(col)
+
+	# Horizontal Overhead Truss Beam
+	var beam = MeshInstance3D.new()
+	beam.mesh = _create_truss_beam_mesh(width + 1.6, 1.4, 1.6)
+	beam.material_override = steel_mat
+	beam.position = Vector3(0, height + 0.8, 0)
+	root.add_child(beam)
+
+	# Interstate Green Directional Highway Signs
+	var sign_mat = StandardMaterial3D.new()
+	sign_mat.albedo_color = Color(0.08, 0.42, 0.22) # Interstate Green
+	sign_mat.roughness = 0.40
+
+	var sign_left = MeshInstance3D.new()
+	sign_left.mesh = _create_box_array_mesh(width * 0.42, 2.2, 0.15)
+	sign_left.material_override = sign_mat
+	sign_left.position = Vector3(-width * 0.22, height + 0.8, 0.85)
+	root.add_child(sign_left)
+
+	var sign_right = MeshInstance3D.new()
+	sign_right.mesh = _create_box_array_mesh(width * 0.42, 2.2, 0.15)
+	sign_right.material_override = sign_mat
+	sign_right.position = Vector3(width * 0.22, height + 0.8, 0.85)
+	root.add_child(sign_right)
+
+	# Physical Collision for Columns
+	for side in [-width * 0.5, width * 0.5]:
+		var body = StaticBody3D.new()
+		body.collision_layer = UrbanConstants.LAYER_WORLD
+		body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+		var c_shape = CollisionShape3D.new()
+		var cyl = CylinderShape3D.new()
+		cyl.radius = 0.5
+		cyl.height = height
+		c_shape.shape = cyl
+		c_shape.position = Vector3(side, height * 0.5, 0)
+		body.add_child(c_shape)
+		root.add_child(body)
+
+	return root
+
+static func build_boardwalk_pier(length: float = 80.0, width: float = 12.0) -> Node3D:
+	var root = Node3D.new()
+	root.name = "BoardwalkPier"
+
+	var wood_mat = StandardMaterial3D.new()
+	wood_mat.albedo_color = Color(0.60, 0.52, 0.42) # Weathered seaside timber
+	wood_mat.roughness = 0.88
+
+	# Pier Deck Planks (ArrayMesh)
+	var deck = MeshInstance3D.new()
+	deck.mesh = _create_box_array_mesh(width, 0.45, length)
+	deck.material_override = wood_mat
+	deck.position = Vector3(0, 0.22, 0)
+	root.add_child(deck)
+
+	# Pilings driven into water
+	var num_bents = int(length / 8.0)
+	for i in range(num_bents):
+		var pz = -length * 0.5 + float(i) * 8.0
+		for px in [-width * 0.45, width * 0.45]:
+			var pile = MeshInstance3D.new()
+			pile.mesh = _create_tapered_mast_mesh(0.35, 0.30, 8.0, 8)
+			pile.material_override = wood_mat
+			pile.position = Vector3(px, -8.0, pz)
+			root.add_child(pile)
+
+	# Left and Right Timber Handrails
+	for side in [-width * 0.5 + 0.15, width * 0.5 - 0.15]:
+		var rail = MeshInstance3D.new()
+		rail.mesh = _create_box_array_mesh(0.18, 1.1, length)
+		rail.material_override = wood_mat
+		rail.position = Vector3(side, 0.95, 0)
+		root.add_child(rail)
+
+	# Physical Collision for Boardwalk Deck
+	var body = StaticBody3D.new()
+	body.collision_layer = UrbanConstants.LAYER_WORLD
+	body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = Vector3(width, 0.6, length)
+	col.shape = box
+	col.position = Vector3(0, 0.2, 0)
+	body.add_child(col)
+	root.add_child(body)
+
+	return root
+
+static func build_lifeguard_tower() -> Node3D:
+	var root = Node3D.new()
+	root.name = "LifeguardTower"
+
+	var wood_mat = StandardMaterial3D.new()
+	wood_mat.albedo_color = Color(0.92, 0.88, 0.30) # Classic Canary Beach Yellow
+	wood_mat.roughness = 0.70
+
+	var stilt_mat = StandardMaterial3D.new()
+	stilt_mat.albedo_color = Color(0.72, 0.68, 0.62)
+	stilt_mat.roughness = 0.85
+
+	# 4 Angled Stilt Legs (height = 3.2m)
+	var hw = 1.6
+	for sx in [-hw, hw]:
+		for sz in [-hw, hw]:
+			var stilt = MeshInstance3D.new()
+			stilt.mesh = _create_tapered_mast_mesh(0.16, 0.12, 3.2, 6)
+			stilt.material_override = stilt_mat
+			stilt.position = Vector3(sx, 0, sz)
+			root.add_child(stilt)
+
+	# Observation Hut Body
+	var hut = MeshInstance3D.new()
+	hut.mesh = _create_box_array_mesh(3.4, 2.4, 3.4)
+	hut.material_override = wood_mat
+	hut.position = Vector3(0, 3.2 + 1.2, 0)
+	root.add_child(hut)
+
+	# Hip Roof Cap
+	var roof = MeshInstance3D.new()
+	roof.mesh = _create_hip_roof_mesh(4.2, 1.2, 4.2)
+	var r_mat = StandardMaterial3D.new()
+	r_mat.albedo_color = Color(0.18, 0.45, 0.75) # Ocean Blue Roof
+	roof.material_override = r_mat
+	roof.position = Vector3(0, 3.2 + 2.4 + 0.6, 0)
+	root.add_child(roof)
+
+	# Physical Collision
+	var body = StaticBody3D.new()
+	body.collision_layer = UrbanConstants.LAYER_WORLD
+	body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = Vector3(3.6, 6.8, 3.6)
+	col.shape = box
+	col.position = Vector3(0, 3.4, 0)
+	body.add_child(col)
+	root.add_child(body)
+
+	return root
+
+static func build_chiliad_summit_lookout() -> Node3D:
+	var root = Node3D.new()
+	root.name = "ChiliadSummitLookout"
+
+	var timber_mat = StandardMaterial3D.new()
+	timber_mat.albedo_color = Color(0.42, 0.32, 0.22) # Alpine rustic heavy timber
+	timber_mat.roughness = 0.90
+
+	# Heavy Timber Platform Deck
+	var deck = MeshInstance3D.new()
+	deck.mesh = _create_box_array_mesh(16.0, 0.8, 18.0)
+	deck.material_override = timber_mat
+	deck.position = Vector3(0, 0.4, 0)
+	root.add_child(deck)
+
+	# Perimeter Log Safety Railings
+	for side in [-7.8, 7.8]:
+		var rail = MeshInstance3D.new()
+		rail.mesh = _create_box_array_mesh(0.25, 1.2, 18.0)
+		rail.material_override = timber_mat
+		rail.position = Vector3(side, 1.2, 0)
+		root.add_child(rail)
+
+	# Summit Stunt Kicker Launch Ramp (Aiming forward off the peak)
+	var kicker = build_stunt_ramp(9.0, 14.0, 3.8, 28.0)
+	kicker.position = Vector3(0, 0.8, 4.0)
+	root.add_child(kicker)
+
+	# Summit Flagpole & Beacon
+	var pole = MeshInstance3D.new()
+	pole.mesh = _create_tapered_mast_mesh(0.18, 0.08, 14.0, 8)
+	var p_mat = StandardMaterial3D.new()
+	p_mat.albedo_color = Color(0.9, 0.9, 0.92)
+	p_mat.metallic = 0.95
+	pole.material_override = p_mat
+	pole.position = Vector3(-5.5, 0.8, -6.0)
+	root.add_child(pole)
+
+	var beacon = OmniLight3D.new()
+	beacon.light_color = Color(1.0, 0.85, 0.2)
+	beacon.light_energy = 3.5
+	beacon.omni_range = 40.0
+	beacon.position = Vector3(-5.5, 14.8, -6.0)
+	root.add_child(beacon)
+
+	# Platform collision
+	var body = StaticBody3D.new()
+	body.collision_layer = UrbanConstants.LAYER_WORLD
+	body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = Vector3(16.0, 0.8, 18.0)
+	col.shape = box
+	col.position = Vector3(0, 0.4, 0)
+	body.add_child(col)
+	root.add_child(body)
+
+	return root
+
+
 
 static func build_art_deco_skyscraper(height: float = 120.0, base_w: float = 30.0, depth: float = 30.0, neon_tint: Color = Color(1.0, 0.85, 0.45)) -> Node3D:
 	var root = Node3D.new()

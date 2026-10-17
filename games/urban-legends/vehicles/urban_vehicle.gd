@@ -194,10 +194,20 @@ func _setup_collision_box() -> void:
 		col.position = Vector3(0, 0.65, 0)
 		add_child(col)
 
+var damage_cooldown: float = 0.0
+
 func _physics_process(delta: float) -> void:
-	if not controls_enabled:
-		move_and_slide()
-		return
+	# Decrement collision damage cooldown
+	if damage_cooldown > 0.0:
+		damage_cooldown = maxf(0.0, damage_cooldown - delta)
+
+	# When wrecked, suppress driver inputs and engage full mechanical braking
+	if is_wrecked or not controls_enabled:
+		throttle_input = 0.0
+		steer_input = 0.0
+		nitro_input = false
+		is_nitro_active = false
+		brake_input = 1.0
 
 	_update_suspension_and_grounding(delta)
 	_process_steering(delta)
@@ -303,25 +313,51 @@ func _process_ground_physics(delta: float) -> void:
 		# Slow passive nitro recharge while driving
 		nitro_gauge = minf(1.0, nitro_gauge + (delta * 0.08))
 
-	# Throttle application (Longitudinal friction mu_long = 1.35)
+	# Throttle application & Braking/Reverse State Machine
 	var drive_accel = 0.0
-	if throttle_input > 0.01:
-		if forward_speed < top_speed:
+	if is_wrecked:
+		# Full mechanical braking when wrecked to bring vehicle to a complete halt
+		drive_accel = 0.0
+		local_vel.z = move_toward(local_vel.z, 0.0, maxf(brake_force * 2.0, 50.0) * delta)
+		if absf(local_vel.z) < 0.15:
+			local_vel.z = 0.0
+	elif throttle_input > 0.01:
+		if forward_speed < -1.0:
+			# Braking while rolling backward BEFORE accelerating forward (clamp to 0.0)
+			var max_brake = brake_force * 1.5 * throttle_input
+			if forward_speed + max_brake * delta >= 0.0:
+				drive_accel = -forward_speed / delta
+			else:
+				drive_accel = max_brake
+		elif forward_speed < top_speed:
 			var speed_factor = clampf(1.0 - (forward_speed / top_speed), 0.1, 1.0)
 			drive_accel = (acceleration_rate * launch_mult * speed_factor + effective_nitro) * throttle_input * (mu_longitudinal / 1.35)
 	elif brake_input > 0.01:
-		# Braking or reversing
-		if forward_speed > 0.8:
-			drive_accel = -brake_force * brake_input * (mu_longitudinal / 1.35)
+		if forward_speed > 0.1:
+			# High-Power Disc Brakes opposing forward velocity (deceleration >= 14 m/s²)
+			var max_decel = maxf(brake_force * 1.4, 25.0) * brake_input * (mu_longitudinal / 1.35)
+			# Clamp so braking stops cleanly at 0.0 without overshooting backward into reverse in a single tick
+			if forward_speed - max_decel * delta <= 0.0:
+				drive_accel = -forward_speed / delta
+			else:
+				drive_accel = -max_decel
+		elif forward_speed >= -0.1:
+			# At near-halt (stopped), hold position
+			drive_accel = 0.0
+			local_vel.z = 0.0
 		else:
-			# Reverse gear
+			# Reverse gear once vehicle has come to a halt / rolling backward
 			drive_accel = -acceleration_rate * 0.55 * brake_input
 
-	# Friction and coasting drag
-	var rolling_resistance = 4.5
-	var air_drag = 0.008 * (forward_speed * forward_speed)
-	if throttle_input <= 0.01 and brake_input <= 0.01:
-		drive_accel -= signf(forward_speed) * (rolling_resistance + air_drag)
+	# Friction and coasting drag (rolling resistance + aerodynamic drag)
+	if throttle_input <= 0.01 and brake_input <= 0.01 and not is_wrecked:
+		var rolling_resistance = 4.5
+		var air_drag = 0.008 * (forward_speed * forward_speed)
+		var total_drag = rolling_resistance + air_drag
+		if absf(forward_speed) < total_drag * delta or absf(forward_speed) < 0.08:
+			drive_accel = -forward_speed / delta
+		else:
+			drive_accel -= signf(forward_speed) * total_drag
 
 	# Lateral Grip & Drift Slip Physics (Separate mu_long = 1.35, mu_lat = 1.25)
 	is_drifting = false
@@ -351,27 +387,37 @@ func _process_ground_physics(delta: float) -> void:
 	else:
 		drift_angle_deg = 0.0
 
-	# Apply lateral grip dampening with yaw stabilization
-	var grip = current_mu_lat * 14.5
-	local_vel.x = move_toward(local_vel.x, 0.0, grip * delta * 10.0)
+	# Apply lateral grip dampening with yaw stabilization (kill post-collision skating)
+	var grip = current_mu_lat * 24.0
+	var lat_scrub = grip * delta * 12.0
+	if absf(steer_input) < 0.15 and not is_drifting:
+		# High tire scrubbing when driving straight or post-collision
+		lat_scrub *= 2.0
+	local_vel.x = move_toward(local_vel.x, 0.0, lat_scrub)
+	if is_wrecked:
+		local_vel.x = move_toward(local_vel.x, 0.0, 50.0 * delta)
 
 	# Camera-relative steering:
 	# Left input strictly rotates counter-clockwise around +Y from chase/cockpit view (nose to -X).
 	# Right input rotates clockwise around +Y from chase/cockpit view (nose to +X).
 	# Never inverts in reverse unless invert_steering_in_reverse is toggled.
 	var yaw_rate = 0.0
-	if absf(forward_speed) > 0.1:
+	if absf(forward_speed) > 0.1 and not is_wrecked:
 		var speed_scale = clampf(forward_speed / 12.0, -1.0, 1.0)
 		if not invert_steering_in_reverse and forward_speed < 0.0:
 			speed_scale = absf(speed_scale)
 		var drift_yaw_boost = 1.35 if is_drifting else 1.0
 		yaw_rate = current_steer_angle * speed_scale * 3.2 * drift_yaw_boost
+	elif absf(steer_input) < 0.1:
+		yaw_rate = 0.0
 
 	# Rotate vehicle basis around its local UP axis (negated for clockwise right turn, CCW for left)
 	rotate_object_local(Vector3.UP, -yaw_rate * delta)
 
 	# Forward velocity update
 	local_vel.z -= drive_accel * delta
+	if absf(local_vel.z) < 0.05 and throttle_input <= 0.01 and brake_input <= 0.01:
+		local_vel.z = 0.0
 
 	# Suspension vertical stabilization to road
 	var target_vert_vel = 0.0
@@ -528,13 +574,9 @@ func _update_transmission(_delta: float) -> void:
 var wreck_timer: float = 0.0
 
 func _check_recovery_conditions(delta: float) -> void:
-	# Automatic recovery when wrecked (respawn UI within 1.5s)
+	# When wrecked, emergency mechanical braking brings the vehicle to a complete halt (< 0.5 m/s).
+	# Controls remain locked out and HUD displays [R] Repair & Respawn until player repairs/resets.
 	if is_wrecked:
-		wreck_timer += delta
-		if wreck_timer >= 1.5:
-			repair(100.0)
-			recover_vehicle()
-			wreck_timer = 0.0
 		return
 
 	# Automatic flip recovery when upside down on the ground (up.dot(Vector3.UP) < 0.2)
@@ -561,18 +603,40 @@ func _check_recovery_conditions(delta: float) -> void:
 		recover_vehicle()
 
 func _handle_collision_impacts() -> void:
-	if not is_inside_tree():
+	if not is_inside_tree() or is_wrecked:
 		return
+	if damage_cooldown > 0.0:
+		return
+
 	var slide_count = get_slide_collision_count()
 	for i in range(slide_count):
 		var col = get_slide_collision(i)
 		var collider = col.get_collider()
 		if collider and collider != self:
+			var normal = col.get_normal()
+			var b = global_basis
+			var fwd = -b.z
+			var impact_angle = absf(normal.dot(fwd))
 			var impact_vel = col.get_travel().length() / get_physics_process_delta_time()
-			# Normal impact damage > 6.0 m/s
-			if impact_vel > 6.0:
-				var damage_amount = (impact_vel - 6.0) * 2.2 / armor_mult
+
+			# Collision damage scaling:
+			# Normal curb / traffic side scrapes deal 5% - 15% damage
+			# Only high-speed (> 25 m/s) head-on impacts deal heavy damage (30% - 70%)
+			if impact_vel > 7.5:
+				var damage_amount: float = 0.0
+				if impact_angle > 0.55:
+					# Frontal/rear direct collision
+					if impact_vel > 25.0:
+						damage_amount = clampf((impact_vel - 15.0) * 2.5 / armor_mult, 30.0, 70.0)
+					else:
+						damage_amount = clampf((impact_vel - 7.5) * 1.4 / armor_mult, 6.0, 25.0)
+				else:
+					# Glancing curb / guardrail scrape: low damage
+					damage_amount = clampf((impact_vel - 7.5) * 0.8 / armor_mult, 4.0, 15.0)
+
 				take_damage(damage_amount)
+				damage_cooldown = 0.35 # 350ms cooldown prevents repeated damage during continuous scrape
+				break
 
 func take_damage(amount: float) -> void:
 	if is_wrecked:
@@ -580,8 +644,9 @@ func take_damage(amount: float) -> void:
 	health = maxf(0.0, health - amount)
 	vehicle_damaged.emit(health, amount)
 	if health <= 0.0:
+		health = 0.0
 		is_wrecked = true
-		controls_enabled = false # Disable controls on wreck
+		controls_enabled = false
 		vehicle_wrecked.emit()
 
 func repair(amount: float = 100.0) -> void:

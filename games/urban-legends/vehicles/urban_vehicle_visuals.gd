@@ -113,23 +113,27 @@ static func build_vehicle_visual(vehicle_node: Node3D, vehicle_id: String, paint
 		raw_model.position = Vector3(0.0, 0.05, 0.0)
 		chassis_node.add_child(raw_model)
 
-		# Apply dynamic paint color to vehicle body surfaces
-		_apply_paint_to_nodes(raw_model, paint_mat)
-
-		# Hide low-poly static wheels inside the GLB model to replace with articulated alloy racing wheels
-		_hide_internal_wheels(raw_model)
+		# Apply dynamic clearcoat metallic paint color while preserving colormap textures
+		_apply_paint_to_nodes(raw_model, paint_color)
 	else:
 		# Multi-surface ArrayMesh procedural body fallback (strictly zero BoxMesh)
 		_build_procedural_array_chassis(chassis_node, dims, vehicle_id, paint_mat, glass_mat, dark_trim_mat)
 
-	# 4. Contoured Sports Car Styling Elements (Recessed Quad Taillights, Louvers, Dual Twin Exhausts)
+	# 4. Contoured Sports Car Styling Elements (Recessed Quad Taillights, Louvers, Dual Twin Exhausts welded to bumper)
 	_build_sports_styling_package(chassis_node, dims, vehicle_id, taillight_mat, dark_trim_mat, chrome_mat)
 
-	# 5. Projector LED Headlamps with 65m forward spotlight projection
+	# 5. Projector LED Headlamps with 70m forward spotlight projection
 	_build_projector_headlamps(chassis_node, dims, headlight_mat)
 
-	# 6. Articulated Alloy Racing Wheels on Vehicle Root Node
-	var wheel_nodes: Array[Node3D] = _spawn_wheel_holders(vehicle_node, dims, chrome_mat)
+	# 6. Locate internal GLB wheels or spawn articulated alloy racing wheels tucked in wheel arches
+	var wheel_nodes: Array[Node3D] = []
+	if has_glb:
+		var found_wheels = _find_wheel_nodes(raw_model)
+		if found_wheels.has("fl") and found_wheels.has("fr") and found_wheels.has("rl") and found_wheels.has("rr"):
+			wheel_nodes = [found_wheels["fl"], found_wheels["fr"], found_wheels["rl"], found_wheels["rr"]]
+
+	if wheel_nodes.size() < 4:
+		wheel_nodes = _spawn_wheel_holders(vehicle_node, dims, chrome_mat)
 
 	# 7. Bind references directly to vehicle_node for real-time physics updates
 	if "chassis_node" in vehicle_node:
@@ -146,127 +150,156 @@ static func build_vehicle_visual(vehicle_node: Node3D, vehicle_id: String, paint
 		"taillight_material": taillight_mat
 	}
 
-static func _apply_paint_to_nodes(node: Node, mat: Material) -> void:
+static func _find_wheel_nodes(root: Node) -> Dictionary:
+	var wheels: Dictionary = {}
+	_collect_wheels_recursive(root, wheels)
+	return wheels
+
+static func _collect_wheels_recursive(node: Node, wheels: Dictionary) -> void:
+	var n_low = node.name.to_lower()
+	if "wheel" in n_low or "tire" in n_low:
+		if "front" in n_low:
+			if "left" in n_low:
+				wheels["fl"] = node
+			elif "right" in n_low:
+				wheels["fr"] = node
+		elif "back" in n_low or "rear" in n_low:
+			if "left" in n_low:
+				wheels["rl"] = node
+			elif "right" in n_low:
+				wheels["rr"] = node
+	for child in node.get_children():
+		_collect_wheels_recursive(child, wheels)
+
+static func _apply_paint_to_nodes(node: Node, paint_color: Color) -> void:
 	if node is MeshInstance3D:
 		var mi = node as MeshInstance3D
 		var n_low = mi.name.to_lower()
-		if not ("wheel" in n_low or "glass" in n_low or "window" in n_low or "light" in n_low or "grill" in n_low):
-			mi.material_override = mat
+		if not ("wheel" in n_low or "tire" in n_low):
+			var count = mi.mesh.get_surface_count() if mi.mesh else 0
+			for s in range(count):
+				var orig = mi.get_active_material(s)
+				if orig is StandardMaterial3D:
+					var m = orig.duplicate() as StandardMaterial3D
+					m.albedo_color = paint_color
+					m.metallic = 0.85
+					m.roughness = 0.18
+					m.clearcoat_enabled = true
+					m.clearcoat = 1.0
+					m.clearcoat_roughness = 0.08
+					mi.set_surface_override_material(s, m)
+				elif orig is BaseMaterial3D:
+					var m = orig.duplicate() as BaseMaterial3D
+					m.albedo_color = paint_color
+					mi.set_surface_override_material(s, m)
 	for child in node.get_children():
-		_apply_paint_to_nodes(child, mat)
-
-static func _hide_internal_wheels(node: Node) -> void:
-	if node is MeshInstance3D:
-		var n_low = node.name.to_lower()
-		if "wheel" in n_low:
-			node.visible = false
-	for child in node.get_children():
-		_hide_internal_wheels(child)
+		_apply_paint_to_nodes(child, paint_color)
 
 static func _build_projector_headlamps(chassis_node: Node3D, dims: Vector3, headlight_mat: Material) -> void:
 	var lens_mesh = _create_beveled_lens_mesh(0.24, 0.10, 0.06)
+	var z_pos = -1.42
 
-	for hx in [-dims.x * 0.38, dims.x * 0.38]:
+	for hx in [-dims.x * 0.36, dims.x * 0.36]:
 		var hl = MeshInstance3D.new()
 		hl.mesh = lens_mesh
 		hl.material_override = headlight_mat
-		hl.position = Vector3(hx, dims.y * 0.48, -dims.z * 0.49)
+		hl.position = Vector3(hx, 0.46, z_pos)
 		chassis_node.add_child(hl)
 
 		var spot = SpotLight3D.new()
 		spot.light_color = Color(0.96, 0.98, 1.0)
-		spot.light_energy = 3.5
-		spot.spot_range = 65.0
-		spot.spot_angle = 38.0
+		spot.light_energy = 5.0
+		spot.spot_range = 70.0
+		spot.spot_angle = 40.0
 		spot.shadow_enabled = true
-		spot.position = Vector3(hx, dims.y * 0.48, -dims.z * 0.50)
-		spot.rotation_degrees.x = -6.0
+		spot.position = Vector3(hx, 0.46, z_pos - 0.05)
+		spot.rotation_degrees.x = -5.0
 		chassis_node.add_child(spot)
 
 static func _build_sports_styling_package(chassis_node: Node3D, dims: Vector3, vehicle_id: String, taillight_mat: Material, trim_mat: Material, chrome_mat: Material) -> void:
 	# A. Recessed Rear Fascia Plate
 	var fascia = MeshInstance3D.new()
-	fascia.mesh = _create_quad_mesh(dims.x * 0.88, dims.y * 0.24)
+	fascia.mesh = _create_quad_mesh(dims.x * 0.82, 0.22)
 	fascia.material_override = trim_mat
-	fascia.position = Vector3(0.0, dims.y * 0.50, dims.z * 0.482)
+	fascia.position = Vector3(0.0, 0.52, 1.37)
 	fascia.rotation.y = PI
 	chassis_node.add_child(fascia)
 
 	# B. Recessed Quad Round Taillights (GTA San Andreas / Ferrari style)
-	var disc_mesh = _create_disc_mesh(0.062, 16)
+	var disc_mesh = _create_disc_mesh(0.065, 16)
 	var quad_offsets = [
-		-dims.x * 0.38, # Outer Left
-		-dims.x * 0.24, # Inner Left
-		dims.x * 0.24,  # Inner Right
-		dims.x * 0.38   # Outer Right
+		-dims.x * 0.34, # Outer Left
+		-dims.x * 0.20, # Inner Left
+		dims.x * 0.20,  # Inner Right
+		dims.x * 0.34   # Outer Right
 	]
 
 	for qx in quad_offsets:
 		var tl = MeshInstance3D.new()
 		tl.mesh = disc_mesh
 		tl.material_override = taillight_mat
-		tl.position = Vector3(qx, dims.y * 0.50, dims.z * 0.486)
+		tl.position = Vector3(qx, 0.52, 1.38)
 		chassis_node.add_child(tl)
 
-	# C. Dual Twin Chrome Exhaust Tips (4 tips total: 2 left, 2 right)
-	var exhaust_mesh = _create_tube_mesh(0.052, 0.040, 0.18, 16)
-	var exhaust_x_offsets = [-0.34, -0.22, 0.22, 0.34]
+	# C. Dual Twin Chrome Exhaust Tips (welded directly into the rear bumper cutouts)
+	var exhaust_mesh = _create_tube_mesh(0.052, 0.038, 0.12, 16)
+	var exhaust_x_offsets = [-0.34, -0.20, 0.20, 0.34]
 
 	for ex in exhaust_x_offsets:
 		var ep = MeshInstance3D.new()
 		ep.mesh = exhaust_mesh
 		ep.material_override = chrome_mat
-		ep.position = Vector3(ex, dims.y * 0.20, dims.z * 0.485)
+		ep.position = Vector3(ex, 0.28, 1.38)
 		chassis_node.add_child(ep)
 
 	# D. Slotted Rear Window Louvers (for sports / muscle coupes)
 	if vehicle_id == UrbanConstants.VEHICLE_VORTEX_GT or vehicle_id == UrbanConstants.VEHICLE_THUNDERBOLT_V8 or vehicle_id == UrbanConstants.VEHICLE_SPECTER_R:
 		var louvers = MeshInstance3D.new()
-		louvers.mesh = _create_louvers_mesh(dims.x * 0.72, dims.z * 0.32, 5)
+		louvers.mesh = _create_louvers_mesh(dims.x * 0.65, 0.36, 5)
 		louvers.material_override = trim_mat
-		louvers.position = Vector3(0.0, dims.y * 0.82, dims.z * 0.18)
+		louvers.position = Vector3(0.0, 0.78, 0.42)
 		chassis_node.add_child(louvers)
 
 	# E. Integrated Rear Aerodynamic Wing on Twin Struts (Apex GT / Vortex GT)
 	if vehicle_id == UrbanConstants.VEHICLE_VORTEX_GT or vehicle_id == UrbanConstants.VEHICLE_SPECTER_R:
 		var wing = MeshInstance3D.new()
-		wing.mesh = _create_rear_wing_mesh(dims.x * 0.86, 0.04, 0.30)
+		wing.mesh = _create_rear_wing_mesh(dims.x * 0.82, 0.04, 0.28)
 		wing.material_override = trim_mat
-		wing.position = Vector3(0.0, dims.y * 0.78, dims.z * 0.44)
+		wing.position = Vector3(0.0, 0.82, 1.34)
 		chassis_node.add_child(wing)
 
 	# F. Nitro Flame VFX Emitters at Dual Exhaust Tips
 	var flame_l = MeshInstance3D.new()
 	flame_l.name = "NitroFlame_L"
-	flame_l.mesh = _create_flame_cone_mesh(0.055, 0.50)
+	flame_l.mesh = _create_flame_cone_mesh(0.055, 0.45)
 	var flame_mat = StandardMaterial3D.new()
 	flame_mat.albedo_color = Color(0.2, 0.75, 1.0)
 	flame_mat.emission_enabled = true
 	flame_mat.emission = Color(0.2, 0.85, 1.0) * 5.0
 	flame_l.material_override = flame_mat
-	flame_l.position = Vector3(-0.28, dims.y * 0.20, dims.z * 0.485 + 0.25)
+	flame_l.position = Vector3(-0.27, 0.28, 1.50 + 0.22)
 	flame_l.rotation.x = PI * 0.5
 	flame_l.visible = false
 	chassis_node.add_child(flame_l)
 
 	var flame_r = flame_l.duplicate()
 	flame_r.name = "NitroFlame_R"
-	flame_r.position = Vector3(0.28, dims.y * 0.20, dims.z * 0.485 + 0.25)
+	flame_r.position = Vector3(0.27, 0.28, 1.50 + 0.22)
 	chassis_node.add_child(flame_r)
 
 	# G. Emergency Red/Blue Flashing Lightbar for Police Cruisers
 	if vehicle_id == UrbanConstants.VEHICLE_POLICE_CRUISER or vehicle_id == "traffic_police":
 		var lightbar = MeshInstance3D.new()
 		lightbar.mesh = _create_police_lightbar_mesh(dims.x * 0.65)
-		lightbar.position = Vector3(0.0, dims.y * 0.98, -dims.z * 0.05)
+		lightbar.position = Vector3(0.0, 0.98, -0.05)
 		chassis_node.add_child(lightbar)
 
 static func _spawn_wheel_holders(parent: Node3D, dims: Vector3, rim_mat: Material) -> Array[Node3D]:
 	var wheel_offsets = [
-		Vector3(-dims.x * 0.48, UrbanConstants.TIRE_RADIUS, -dims.z * 0.32),
-		Vector3(dims.x * 0.48, UrbanConstants.TIRE_RADIUS, -dims.z * 0.32),
-		Vector3(-dims.x * 0.48, UrbanConstants.TIRE_RADIUS, dims.z * 0.32),
-		Vector3(dims.x * 0.48, UrbanConstants.TIRE_RADIUS, dims.z * 0.32)
+		Vector3(-dims.x * 0.38, UrbanConstants.TIRE_RADIUS, -dims.z * 0.25),
+		Vector3(dims.x * 0.38, UrbanConstants.TIRE_RADIUS, -dims.z * 0.25),
+		Vector3(-dims.x * 0.38, UrbanConstants.TIRE_RADIUS, dims.z * 0.25),
+		Vector3(dims.x * 0.38, UrbanConstants.TIRE_RADIUS, dims.z * 0.25)
 	]
 	var wheel_names = ["Wheel_FL", "Wheel_FR", "Wheel_RL", "Wheel_RR"]
 	var wheel_nodes: Array[Node3D] = []
@@ -279,14 +312,13 @@ static func _spawn_wheel_holders(parent: Node3D, dims: Vector3, rim_mat: Materia
 		var wheel_glb = ModelCache.get_model(WHEEL_GLB_PATH)
 		if is_instance_valid(wheel_glb):
 			wheel_glb.name = "WheelMesh"
-			wheel_glb.scale = Vector3(1.15, 1.15, 1.15)
+			wheel_glb.scale = Vector3(1.0, 1.0, 1.0)
 			if i % 2 == 1:
 				wheel_glb.rotation.y = PI
 			wh.add_child(wheel_glb)
 		else:
-			# ArrayMesh alloy racing wheel with tire and rim (zero CylinderMesh)
 			var fallback_wheel = MeshInstance3D.new()
-			fallback_wheel.mesh = _create_wheel_mesh(UrbanConstants.TIRE_RADIUS, 0.26, 16)
+			fallback_wheel.mesh = _create_wheel_mesh(UrbanConstants.TIRE_RADIUS, 0.24, 16)
 			fallback_wheel.material_override = rim_mat
 			wh.add_child(fallback_wheel)
 

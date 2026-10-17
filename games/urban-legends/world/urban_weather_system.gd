@@ -75,18 +75,18 @@ func _setup_environment() -> void:
 		env.sky = sky
 
 		env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-		env.ambient_light_color = Color(0.45, 0.48, 0.52)
-		env.ambient_light_sky_contribution = 0.70
-		env.ambient_light_energy = 0.95
+		env.ambient_light_color = Color(0.50, 0.52, 0.55)
+		env.ambient_light_sky_contribution = 0.65
+		env.ambient_light_energy = 1.05
 		env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 
 		env.tonemap_mode = Environment.TONE_MAPPER_ACES
-		env.tonemap_exposure = 1.0
+		env.tonemap_exposure = 1.15
 		env.glow_enabled = false
 		env.fog_enabled = true
 		env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
-		env.fog_density = 0.00035
-		env.fog_light_color = Color(0.70, 0.75, 0.82)
+		env.fog_density = 0.00030
+		env.fog_light_color = Color(0.72, 0.76, 0.82)
 		world_environment.environment = env
 		add_child(world_environment)
 
@@ -159,19 +159,19 @@ func _update_lighting_for_time() -> void:
 				sky_mat.sky_top_color = Color(0.04, 0.06, 0.14)
 				sky_mat.sky_horizon_color = Color(0.10, 0.14, 0.25)
 				sky_mat.ground_horizon_color = Color(0.06, 0.08, 0.15)
-			env.ambient_light_color = Color(0.25, 0.30, 0.42)
-			env.ambient_light_energy = 0.35 # Calibrated night ambient light energy
-			env.tonemap_exposure = 1.15 # Calibrated tonemap exposure preventing black voids
-			env.fog_light_color = Color(0.08, 0.12, 0.22)
+			env.ambient_light_color = Color(0.30, 0.35, 0.48)
+			env.ambient_light_energy = 0.38 # Calibrated night ambient light energy
+			env.tonemap_exposure = 1.20 # Calibrated tonemap exposure preventing black voids
+			env.fog_light_color = Color(0.12, 0.16, 0.28)
 		else:
 			# Clear Day Palette
 			if sky_mat:
 				sky_mat.sky_top_color = Color(0.35, 0.58, 0.90)
 				sky_mat.sky_horizon_color = Color(0.70, 0.82, 0.92)
 				sky_mat.ground_horizon_color = Color(0.38, 0.42, 0.46)
-			env.ambient_light_color = Color(0.48, 0.52, 0.58)
-			env.ambient_light_energy = 0.95
-			env.tonemap_exposure = 1.0
+			env.ambient_light_color = Color(0.52, 0.55, 0.60)
+			env.ambient_light_energy = 1.05
+			env.tonemap_exposure = 1.15
 			env.fog_light_color = Color(0.70, 0.78, 0.88)
 
 func apply_preset(preset_name: String) -> void:

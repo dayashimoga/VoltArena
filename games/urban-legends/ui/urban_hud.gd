@@ -575,6 +575,15 @@ func _update_telemetry(_delta: float) -> void:
 	var hp = player_vehicle.get_health() if player_vehicle.has_method("get_health") else 100.0
 	health_bar.value = hp
 
+	# Wrecked / Respawn HUD banner
+	if controls_guide_label:
+		if ("is_wrecked" in player_vehicle and player_vehicle.is_wrecked) or hp <= 0.0:
+			controls_guide_label.text = "⚠️ VEHICLE WRECKED! Press [R] to Repair & Respawn"
+			controls_guide_label.add_theme_color_override("font_color", Color(1.0, 0.35, 0.25))
+		else:
+			controls_guide_label.text = "[W/S] Throttle/Reverse  •  [A/D] Steer  •  [Space] Drift  •  [Shift] Boost  •  [R] Reset"
+			controls_guide_label.add_theme_color_override("font_color", Color(0.85, 0.92, 1.0, 0.85))
+
 	# Check District Transition
 	var p_pos = player_vehicle.global_position if player_vehicle.is_inside_tree() else player_vehicle.position
 	var cur_dist = UrbanDistrictDefinitions.get_district_at_position(p_pos)

@@ -31,6 +31,9 @@ func run_tests() -> Dictionary:
 	test_upside_down_and_recovery()
 	test_vehicle_upgrades()
 	test_camera_modes_and_interpolation()
+	test_wrecked_state_and_emergency_braking()
+	test_lateral_slip_scrub_damping()
+	test_reversing_and_forward_braking_transitions()
 
 	return {
 		"total": total_assertions,
@@ -270,6 +273,80 @@ func test_camera_modes_and_interpolation() -> void:
 	var cam_pos = cam.global_position if cam.is_inside_tree() else cam.position
 	assert_true(cam_pos.distance_to(vehicle.position) < 30.0, "Camera should track vehicle position smoothly")
 	cam.free()
+	_cleanup_test_vehicle(vehicle)
+
+func test_wrecked_state_and_emergency_braking() -> void:
+	var vehicle = _spawn_test_vehicle()
+	vehicle.force_grounded_for_testing = true
+	vehicle.set_forward_speed(25.0)
+
+	# Deal fatal damage
+	vehicle.take_damage(250.0)
+	assert_true(vehicle.is_wrecked, "Vehicle must be flagged is_wrecked when HP reaches 0")
+	assert_true(vehicle.get_health() <= 0.0, "Vehicle HP must be <= 0")
+	assert_true(not vehicle.controls_enabled, "Controls must be locked out on wreck")
+
+	# Step physics while wrecked: vehicle should decelerate with emergency mechanical brakes and stop
+	for _i in range(120): # 2.0 seconds of physics
+		vehicle._physics_process(1.0 / 60.0)
+
+	var stopped_speed = absf(vehicle.get_forward_speed_ms())
+	assert_true(stopped_speed < 0.5, "Wrecked vehicle must come to a complete stop under emergency mechanical braking (< 0.5 m/s, was: %f)" % stopped_speed)
+
+	# Repair restores health and recovers controls
+	vehicle.repair(100.0)
+	assert_true(not vehicle.is_wrecked, "Repair must clear is_wrecked flag")
+	assert_true(vehicle.controls_enabled, "Repair must re-enable driver controls")
+	assert_true(vehicle.get_health() == 100.0, "HP must be restored to 100")
+	_cleanup_test_vehicle(vehicle)
+
+func test_lateral_slip_scrub_damping() -> void:
+	var vehicle = _spawn_test_vehicle()
+	vehicle.force_grounded_for_testing = true
+	vehicle.set_forward_speed(15.0)
+
+	# Impart high lateral sideways velocity (e.g. from high-speed slide / crash impact)
+	var right_dir = vehicle.transform.basis.x.normalized()
+	vehicle.velocity += right_dir * 18.0
+
+	var initial_lat = absf(vehicle.velocity.dot(right_dir))
+	assert_true(initial_lat > 15.0, "Initial lateral slip velocity should be > 15 m/s")
+
+	# Simulate 1.0 second of physics without steering input (angular & lateral damping engaged)
+	vehicle.steer_input = 0.0
+	for _i in range(60):
+		vehicle._physics_process(1.0 / 60.0)
+
+	var final_lat = absf(vehicle.velocity.dot(right_dir))
+	assert_true(final_lat < 1.0, "Lateral velocity must be scrubbed aggressively by tire grip (< 1.0 m/s in 1.0s, was: %f)" % final_lat)
+	_cleanup_test_vehicle(vehicle)
+
+func test_reversing_and_forward_braking_transitions() -> void:
+	var vehicle = _spawn_test_vehicle()
+	vehicle.force_grounded_for_testing = true
+
+	# Case 1: Moving forward at speed, pressing Brake (S) should brake before engaging reverse
+	vehicle.set_forward_speed(20.0)
+	vehicle.throttle_input = 0.0
+	vehicle.brake_input = 1.0
+
+	for _i in range(8): # 0.13s of high-power disc braking
+		vehicle._physics_process(1.0 / 60.0)
+
+	assert_true(vehicle.forward_speed > 0.0, "Car should still be slowing down forward, not instantly in full reverse")
+	assert_true(vehicle.get_gear() >= 1, "Gear should not be reverse while forward speed remains high")
+
+	# Case 2: Rolling backward, pressing Throttle (W) should brake before accelerating forward
+	vehicle.set_forward_speed(-8.0)
+	vehicle.current_gear = -1
+	vehicle.throttle_input = 1.0
+	vehicle.brake_input = 0.0
+
+	for _i in range(10): # 0.16s
+		vehicle._physics_process(1.0 / 60.0)
+
+	# Forward speed should approach 0 (braking)
+	assert_true(vehicle.forward_speed > -8.0, "Rolling backward with throttle applied should brake back toward 0")
 	_cleanup_test_vehicle(vehicle)
 
 func get_coverage_entries() -> Array:

@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 90.1135604542418,
+  "overall_coverage_pct": 89.5750332005312,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -1330,10 +1330,20 @@
       "untested": []
     },
     "res://games/urban-legends/world/urban_prop_factory.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 72.7272727272727,
       "tested": 24,
-      "total": 24,
-      "untested": []
+      "total": 33,
+      "untested": [
+        "build_san_andreas_house",
+        "build_railway_track",
+        "build_railroad_crossing",
+        "build_freight_train",
+        "build_utility_pole",
+        "build_overhead_highway_gantry",
+        "build_boardwalk_pier",
+        "build_lifeguard_tower",
+        "build_chiliad_summit_lookout"
+      ]
     },
     "res://games/urban-legends/world/urban_road_network.gd": {
       "coverage_pct": 100,
@@ -1673,6 +1683,6 @@
     }
   },
   "tested_functions": 1349,
-  "timestamp": "2026-10-16T14:49:12",
-  "total_functions": 1497
+  "timestamp": "2026-10-17T14:20:27",
+  "total_functions": 1506
 }

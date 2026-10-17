@@ -11,10 +11,10 @@ render_mode blend_mix, depth_draw_opaque, cull_back;
 // - Zebra crosswalk and stop bar support
 // - Dynamic rain puddle wetness (roughness 0.82 -> 0.12 with water specular)
 
-uniform vec4 asphalt_color : source_color = vec4(0.18, 0.19, 0.21, 1.0);
-uniform vec4 asphalt_worn_color : source_color = vec4(0.24, 0.25, 0.26, 1.0);
-uniform vec4 yellow_line_color : source_color = vec4(0.96, 0.72, 0.12, 1.0);
-uniform vec4 white_line_color : source_color = vec4(0.92, 0.93, 0.94, 1.0);
+uniform vec4 asphalt_color : source_color = vec4(0.28, 0.27, 0.25, 1.0);
+uniform vec4 asphalt_worn_color : source_color = vec4(0.34, 0.33, 0.31, 1.0);
+uniform vec4 yellow_line_color : source_color = vec4(0.98, 0.78, 0.12, 1.0);
+uniform vec4 white_line_color : source_color = vec4(0.92, 0.93, 0.95, 1.0);
 
 uniform int road_lanes = 2; // 2 = 2-lane street, 4 = 4-lane avenue
 uniform float road_width_meters = 9.0;

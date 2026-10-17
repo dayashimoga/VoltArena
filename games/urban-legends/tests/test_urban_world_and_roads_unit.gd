@@ -254,6 +254,51 @@ func test_prop_factory_instantiation() -> void:
 	assert_true(skyline != null, "Distant skyline must instantiate")
 	skyline.free()
 
+	# San Andreas Open World Architecture & Props
+	var sa_house = UrbanPropFactory.build_san_andreas_house(0)
+	assert_true(_find_static_body(sa_house) != null, "San Andreas house must have StaticBody3D")
+	sa_house.free()
+
+	var r_track = UrbanPropFactory.build_railway_track(60.0)
+	assert_true(_find_static_body(r_track) != null, "Railway track must have StaticBody3D")
+	r_track.free()
+
+	var r_crossing = UrbanPropFactory.build_railroad_crossing()
+	assert_true(r_crossing != null, "Railroad crossing must instantiate")
+	r_crossing.free()
+
+	var f_train = UrbanPropFactory.build_freight_train()
+	assert_true(_find_static_body(f_train) != null, "Freight train must have StaticBody3D")
+	f_train.free()
+
+	var u_pole = UrbanPropFactory.build_utility_pole(8.5)
+	assert_true(u_pole != null, "Utility pole must instantiate")
+	u_pole.free()
+
+	var gantry = UrbanPropFactory.build_overhead_highway_gantry(22.0)
+	assert_true(_find_static_body(gantry) != null, "Highway gantry must have StaticBody3D")
+	gantry.free()
+
+	var pier = UrbanPropFactory.build_boardwalk_pier(80.0, 12.0)
+	assert_true(_find_static_body(pier) != null, "Boardwalk pier must have StaticBody3D")
+	pier.free()
+
+	var tower_lg = UrbanPropFactory.build_lifeguard_tower()
+	assert_true(_find_static_body(tower_lg) != null, "Lifeguard tower must have StaticBody3D")
+	tower_lg.free()
+
+	var lookout = UrbanPropFactory.build_chiliad_summit_lookout()
+	assert_true(_find_static_body(lookout) != null, "Mount Chiliad summit lookout must have StaticBody3D")
+	lookout.free()
+
+	var comm = UrbanPropFactory.build_commercial_block(35.0, 20.0, 20.0)
+	assert_true(_find_static_body(comm) != null, "Commercial block must have StaticBody3D")
+	comm.free()
+
+	var u_tree = UrbanPropFactory.build_tree(9.0)
+	assert_true(_find_static_body(u_tree) != null, "Tree must have StaticBody3D")
+	u_tree.free()
+
 func _find_static_body(node: Node) -> StaticBody3D:
 	if node is StaticBody3D:
 		return node

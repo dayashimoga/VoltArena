@@ -98,41 +98,49 @@ func _build_perimeter_mountain_backdrop() -> void:
 	mat_granite.albedo_color = Color(0.38, 0.35, 0.32) # Rocky cliff face
 	mat_granite.roughness = 0.95
 
-	# North Mountain Wall (Z = -1150 to -1600)
+	# 1. Mount Chiliad-Inspired Alpine Peak & Massif (450m elevation, zero pyramid cones)
+	var chiliad = MeshInstance3D.new()
+	chiliad.name = "MountChiliadMassif"
+	chiliad.mesh = _create_eroded_heightmap_mountain(750.0, 450.0, 750.0, 18)
+	chiliad.material_override = mat_granite
+	chiliad.position = Vector3(350.0, 0.0, 1150.0)
+	terrain_container.add_child(chiliad)
+
+	# 2. North Mountain Wall (Z = -1150 to -1600)
 	for i in range(8):
 		var mx = -1000.0 + i * 280.0
 		var mz = -1250.0 - (i * 37 % 200)
 		var mh = 220.0 + (i * 53 % 140)
-		var mw = 360.0 + (i * 29 % 100)
+		var mw = 380.0 + (i * 29 % 100)
 
 		var mi = MeshInstance3D.new()
-		mi.mesh = _create_ridge_mountain_mesh(mw, mh, 350.0)
+		mi.mesh = _create_eroded_heightmap_mountain(mw, mh, 420.0, 14)
 		mi.material_override = mat_mountain if i % 2 == 0 else mat_granite
 		mi.position = Vector3(mx, 0.0, mz)
 		terrain_container.add_child(mi)
 
-	# East Mountain Ridge (X = 1150 to 1550)
+	# 3. East Mountain Ridge (X = 1150 to 1550)
 	for i in range(7):
 		var mx = 1250.0 + (i * 41 % 180)
 		var mz = -800.0 + i * 260.0
-		var mh = 190.0 + (i * 47 % 130)
-		var mw = 340.0 + (i * 31 % 90)
+		var mh = 200.0 + (i * 47 % 130)
+		var mw = 360.0 + (i * 31 % 90)
 
 		var mi = MeshInstance3D.new()
-		mi.mesh = _create_ridge_mountain_mesh(320.0, mh, mw)
+		mi.mesh = _create_eroded_heightmap_mountain(400.0, mh, mw, 14)
 		mi.material_override = mat_mountain
 		mi.position = Vector3(mx, 0.0, mz)
 		terrain_container.add_child(mi)
 
-	# West Horizon Hills (X = -1150 to -1550)
+	# 4. West Horizon Hills (X = -1150 to -1550)
 	for i in range(7):
 		var mx = -1250.0 - (i * 43 % 160)
 		var mz = -800.0 + i * 260.0
-		var mh = 180.0 + (i * 39 % 120)
-		var mw = 330.0 + (i * 23 % 90)
+		var mh = 190.0 + (i * 39 % 120)
+		var mw = 350.0 + (i * 23 % 90)
 
 		var mi = MeshInstance3D.new()
-		mi.mesh = _create_ridge_mountain_mesh(320.0, mh, mw)
+		mi.mesh = _create_eroded_heightmap_mountain(400.0, mh, mw, 14)
 		mi.material_override = mat_mountain if i % 2 == 0 else mat_granite
 		mi.position = Vector3(mx, 0.0, mz)
 		terrain_container.add_child(mi)
@@ -167,7 +175,7 @@ func _build_road_meshes() -> void:
 				sm.set_shader_parameter("wetness", 0.0)
 				r_mat = sm
 			else:
-				r_mat.albedo_color = Color(0.19, 0.19, 0.21) # Crowned weathered asphalt
+				r_mat.albedo_color = Color(0.28, 0.27, 0.25) # Crowned weathered asphalt
 				r_mat.roughness = 0.76
 				r_mat.metallic = 0.10
 
@@ -222,7 +230,7 @@ func _build_road_meshes() -> void:
 			white_mat.roughness = 0.55
 
 			var sw_mat = StandardMaterial3D.new()
-			sw_mat.albedo_color = Color(0.68, 0.67, 0.65) # Concrete pavement
+			sw_mat.albedo_color = Color(0.62, 0.60, 0.57) # Light concrete paving slabs
 			sw_mat.roughness = 0.85
 
 			var right_dir = dir.cross(Vector3.UP).normalized()
@@ -311,23 +319,26 @@ func _populate_district_props() -> void:
 					tower.position = p
 					props_container.add_child(tower)
 
-	# 2. District 2: Historic Brownstone & Mixed-Use Neighborhood (Brooklyn / Greenwich Village)
-	var brownstone_x = [220.0, 280.0, 340.0, 400.0, 460.0, 520.0, 580.0]
-	var brownstone_z = [220.0, 290.0, 360.0, 430.0, 500.0, 570.0]
-	for bx in brownstone_x:
-		for bz in brownstone_z:
-			var p = Vector3(bx, 0.0, bz)
-			if not _is_obstructing_road(p, 14.0):
-				var has_bodega = (int(absf(bx * 7.0 + bz)) % 5 == 0)
-				var bs = UrbanPropFactory.build_brownstone_rowhouse(randf_range(16.0, 22.0), 12.0, 16.0, has_bodega)
-				bs.position = p
-				props_container.add_child(bs)
+	# 2. District 2: Los Santos / Las Colinas Hillside Suburbs (image_6e5c87.jpg Target)
+	var colinas_spots = [
+		Vector3(240, 20.0, 260), Vector3(310, 30.0, 340), Vector3(390, 42.0, 430),
+		Vector3(470, 54.0, 520), Vector3(550, 68.0, 620), Vector3(630, 80.0, 710),
+		Vector3(340, 34.0, 250), Vector3(450, 52.0, 360), Vector3(530, 66.0, 460),
+		Vector3(610, 78.0, 540), Vector3(270, 24.0, 500), Vector3(360, 38.0, 680),
+		Vector3(440, 48.0, 760), Vector3(520, 62.0, 820)
+	]
+	for i in range(colinas_spots.size()):
+		var p = colinas_spots[i]
+		if not _is_obstructing_road(p, 12.0):
+			var house = UrbanPropFactory.build_san_andreas_house(i % 4)
+			house.position = p
+			props_container.add_child(house)
 
-				# Historic Acorn streetlights along brownstone sidewalks
-				if int(absf(bx + bz)) % 3 == 0:
-					var acorn = UrbanPropFactory.build_acorn_streetlight(4.8)
-					acorn.position = p + Vector3(7.0, 0.0, 0.0)
-					props_container.add_child(acorn)
+			# Utility poles with overhead transformer (image_6e5c87.jpg)
+			if i % 2 == 0:
+				var pole = UrbanPropFactory.build_utility_pole(8.5)
+				pole.position = p + Vector3(8.5, 0.0, 5.0)
+				props_container.add_child(pole)
 
 	# 3. District 3: Commercial Shopping & Theater Avenue (Broadway / Times Square)
 	var theater_x = [-450.0, -350.0, -250.0, -150.0, -50.0, 50.0, 150.0]
@@ -406,16 +417,51 @@ func _populate_district_props() -> void:
 	bridge.position = Vector3(480, 15.0, 80)
 	props_container.add_child(bridge)
 
-	# 5. District 5: Industrial Waterfront, Docks & Suspension Bridge
-	# Dockside Rail-Mounted Gantry Container Cranes
+	# Multi-Level Freeway Directional Overhead Gantries (Harborfly Corridor)
 	var gantry_spots = [
+		Vector3(-350.0, 18.0, 20.0),
+		Vector3(250.0, 18.0, 20.0),
+		Vector3(-50.0, 1.0, -50.0)
+	]
+	for gp in gantry_spots:
+		var gantry = UrbanPropFactory.build_overhead_highway_gantry(22.0, 7.5)
+		gantry.position = gp
+		props_container.add_child(gantry)
+
+	# 5. District 5: Industrial Waterfront, Docks, Railway Network & Suspension Bridge
+	# Active Railway Network (dual steel tracks along industrial corridor)
+	var rail1 = UrbanPropFactory.build_railway_track(420.0)
+	rail1.position = Vector3(-700.0, 0.0, 480.0)
+	props_container.add_child(rail1)
+
+	var rail2 = UrbanPropFactory.build_railway_track(420.0)
+	rail2.position = Vector3(-700.0, 0.0, 486.0)
+	props_container.add_child(rail2)
+
+	# Railroad Crossings with flashing wig-wag arms
+	var crossing1 = UrbanPropFactory.build_railroad_crossing()
+	crossing1.position = Vector3(-580.0, 0.0, 483.0)
+	props_container.add_child(crossing1)
+
+	var crossing2 = UrbanPropFactory.build_railroad_crossing()
+	crossing2.position = Vector3(-820.0, 0.0, 483.0)
+	crossing2.rotation.y = PI
+	props_container.add_child(crossing2)
+
+	# Freight Train (locomotive + 4 freight boxcars on siding)
+	var train = UrbanPropFactory.build_freight_train()
+	train.position = Vector3(-700.0, 0.0, 486.0)
+	props_container.add_child(train)
+
+	# Dockside Rail-Mounted Gantry Container Cranes
+	var crane_spots = [
 		Vector3(-850.0, 0.0, 320.0),
 		Vector3(-700.0, 0.0, 320.0)
 	]
-	for gp in gantry_spots:
-		var gantry = UrbanPropFactory.build_gantry_crane(38.0, 32.0)
-		gantry.position = gp
-		props_container.add_child(gantry)
+	for cp in crane_spots:
+		var crane = UrbanPropFactory.build_gantry_crane(38.0, 32.0)
+		crane.position = cp
+		props_container.add_child(crane)
 
 	# Shipping Containers
 	var container_spots = [
@@ -426,10 +472,10 @@ func _populate_district_props() -> void:
 	]
 	var colors = [Color(0.8, 0.2, 0.15), Color(0.15, 0.45, 0.8), Color(0.2, 0.65, 0.25), Color(0.85, 0.65, 0.1)]
 	for i in range(container_spots.size()):
-		var p = container_spots[i]
-		if not _is_obstructing_road(p, 7.0):
+		var cp_pos = container_spots[i]
+		if not _is_obstructing_road(cp_pos, 7.0):
 			var c = UrbanPropFactory.build_shipping_container(colors[i % colors.size()])
-			c.position = p
+			c.position = cp_pos
 			props_container.add_child(c)
 
 	# Iconic Multi-Span Steel Suspension Bridge (450m span, 35m water clearance)
@@ -442,11 +488,31 @@ func _populate_district_props() -> void:
 	tunnel.position = Vector3(-600.0, 1.0, -80.0)
 	props_container.add_child(tunnel)
 
+	# 6. Coastal Beach & Boardwalk (Bayview Promenade)
+	var pier = UrbanPropFactory.build_boardwalk_pier(110.0, 14.0)
+	pier.position = Vector3(200.0, 0.4, -980.0)
+	props_container.add_child(pier)
+
+	for lx in [-350.0, 0.0, 350.0, 650.0]:
+		var tower = UrbanPropFactory.build_lifeguard_tower()
+		tower.position = Vector3(lx, 0.0, -920.0)
+		props_container.add_child(tower)
+
+		var palm = UrbanPropFactory.build_palm_tree(11.0)
+		palm.position = Vector3(lx + 15.0, 0.0, -910.0)
+		props_container.add_child(palm)
+
+	# 7. Mount Chiliad Summit Observation Platform & Stunt Kicker (elevation 155m)
+	var chiliad_lookout = UrbanPropFactory.build_chiliad_summit_lookout()
+	chiliad_lookout.position = Vector3(360.0, 155.0, 960.0)
+	chiliad_lookout.rotation.y = deg_to_rad(-165.0)
+	props_container.add_child(chiliad_lookout)
+
 	# Horizon Skyline Continuity: Low-Draw-Call LOD2 Skyline Silhouettes across water
 	var skyline = UrbanPropFactory.build_distant_skyline(1400.0)
 	props_container.add_child(skyline)
 
-	# 6. Continuous Modern Street Lamps along Grand Ave
+	# 8. Continuous Modern Street Lamps along Grand Ave
 	var lamp_z_coords = [-550, -475, -400, -325, -250, -175, -100, -25, 50, 125, 200, 275, 350]
 	for z_val in lamp_z_coords:
 		for x_side in [-1.0, 1.0]:
@@ -557,57 +623,70 @@ static func _create_ground_array_mesh(width: float, height: float, depth: float)
 
 	return st.commit()
 
-static func _create_ridge_mountain_mesh(width: float, height: float, depth: float) -> ArrayMesh:
+static func _create_eroded_heightmap_mountain(width: float, height: float, depth: float, grid_res: int = 14) -> ArrayMesh:
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var hw = width * 0.5
 	var hd = depth * 0.5
 
-	# Peak ridge line
-	var r0 = Vector3(-hw * 0.25, height, 0.0)
-	var r1 = Vector3(hw * 0.25, height * 0.95, 0.0)
+	# Precompute vertex grid with multifractal ridge erosion (zero pyramid cones)
+	var verts: Array[Vector3] = []
+	var uvs: Array[Vector2] = []
+	verts.resize((grid_res + 1) * (grid_res + 1))
+	uvs.resize((grid_res + 1) * (grid_res + 1))
 
-	# Base footprint
-	var b_fl = Vector3(-hw, 0.0, -hd)
-	var b_fr = Vector3(hw, 0.0, -hd)
-	var b_rr = Vector3(hw, 0.0, hd)
-	var b_rl = Vector3(-hw, 0.0, hd)
+	for iz in range(grid_res + 1):
+		var tz = float(iz) / float(grid_res)
+		var pz = -hd + tz * depth
+		var norm_z = (tz - 0.5) * 2.0
 
-	# Front slope (-Z)
-	var n_front = Vector3(0, depth, -height).normalized()
-	st.set_normal(n_front)
-	st.set_uv(Vector2(0.5, 1)); st.add_vertex(r0)
-	st.set_uv(Vector2(1, 0)); st.add_vertex(b_fr)
-	st.set_uv(Vector2(0, 0)); st.add_vertex(b_fl)
+		for ix in range(grid_res + 1):
+			var tx = float(ix) / float(grid_res)
+			var px = -hw + tx * width
+			var norm_x = (tx - 0.5) * 2.0
 
-	st.set_uv(Vector2(0.5, 1)); st.add_vertex(r0)
-	st.set_uv(Vector2(1, 1)); st.add_vertex(r1)
-	st.set_uv(Vector2(1, 0)); st.add_vertex(b_fr)
+			# Radial elliptical falloff to zero at perimeter
+			var r = sqrt(norm_x * norm_x + norm_z * norm_z)
+			var falloff = clampf(1.0 - r, 0.0, 1.0)
+			falloff = falloff * falloff * (3.0 - 2.0 * falloff) # Smoothstep
 
-	# Back slope (+Z)
-	var n_back = Vector3(0, depth, height).normalized()
-	st.set_normal(n_back)
-	st.set_uv(Vector2(0.5, 1)); st.add_vertex(r1)
-	st.set_uv(Vector2(0, 0)); st.add_vertex(b_rl)
-	st.set_uv(Vector2(1, 0)); st.add_vertex(b_rr)
+			# Multifractal ridge synthesis (natural rock stratigraphy & erosion gullies)
+			var oct1 = sin(tx * 7.5 + tz * 4.2) * cos(tz * 6.8 - tx * 3.1)
+			var oct2 = absf(sin(tx * 15.0 - tz * 12.0) * 0.5 + 0.5) # Sharp ridge crests
+			var oct3 = sin(tx * 31.0 + tz * 27.0) * 0.25
+			var raw_h = (0.65 + 0.22 * oct1 + 0.18 * oct2 + 0.08 * oct3) * falloff
+			var py = maxf(0.0, raw_h * height)
 
-	st.set_uv(Vector2(0.5, 1)); st.add_vertex(r1)
-	st.set_uv(Vector2(0, 1)); st.add_vertex(r0)
-	st.set_uv(Vector2(0, 0)); st.add_vertex(b_rl)
+			var idx = iz * (grid_res + 1) + ix
+			verts[idx] = Vector3(px, py, pz)
+			uvs[idx] = Vector2(tx * 4.0, tz * 4.0)
 
-	# Left slope (-X)
-	var n_left = Vector3(-height, width * 0.5, 0).normalized()
-	st.set_normal(n_left)
-	st.set_uv(Vector2(0.5, 1)); st.add_vertex(r0)
-	st.set_uv(Vector2(0, 0)); st.add_vertex(b_fl)
-	st.set_uv(Vector2(1, 0)); st.add_vertex(b_rl)
+	# Generate quads with calculated smooth surface normals
+	for iz in range(grid_res):
+		for ix in range(grid_res):
+			var i0 = iz * (grid_res + 1) + ix
+			var i1 = i0 + 1
+			var i2 = (iz + 1) * (grid_res + 1) + ix
+			var i3 = i2 + 1
 
-	# Right slope (+X)
-	var n_right = Vector3(height, width * 0.5, 0).normalized()
-	st.set_normal(n_right)
-	st.set_uv(Vector2(0.5, 1)); st.add_vertex(r1)
-	st.set_uv(Vector2(1, 0)); st.add_vertex(b_rr)
-	st.set_uv(Vector2(0, 0)); st.add_vertex(b_fr)
+			var v0 = verts[i0]
+			var v1 = verts[i1]
+			var v2 = verts[i2]
+			var v3 = verts[i3]
+
+			# Quad triangle 1
+			var n1 = (v1 - v0).cross(v2 - v0).normalized()
+			st.set_normal(n1)
+			st.set_uv(uvs[i0]); st.add_vertex(v0)
+			st.set_uv(uvs[i1]); st.add_vertex(v1)
+			st.set_uv(uvs[i2]); st.add_vertex(v2)
+
+			# Quad triangle 2
+			var n2 = (v3 - v1).cross(v2 - v1).normalized()
+			st.set_normal(n2)
+			st.set_uv(uvs[i1]); st.add_vertex(v1)
+			st.set_uv(uvs[i3]); st.add_vertex(v3)
+			st.set_uv(uvs[i2]); st.add_vertex(v2)
 
 	return st.commit()
 

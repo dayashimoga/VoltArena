@@ -285,7 +285,8 @@ func _close_map() -> void:
 
 func _on_reset_vehicle() -> void:
 	if player_vehicle:
-		player_vehicle.recover_vehicle()
+		var cam_fwd = -chase_camera.global_transform.basis.z if is_instance_valid(chase_camera) else Vector3.FORWARD
+		player_vehicle.recover_vehicle(road_network, cam_fwd)
 
 func _on_fast_travel(dest: Vector3) -> void:
 	if player_vehicle:

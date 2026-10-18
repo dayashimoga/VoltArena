@@ -2063,3 +2063,507 @@ static func _create_truss_beam_mesh(length: float, width: float, height: float) 
 
 	return st.commit()
 
+# ==============================================================================
+# DISTRICT ARCHITECTURAL LANDMARKS (NYC & BROOKLYN)
+# ==============================================================================
+
+static func build_neoclassical_city_hall() -> Node3D:
+	var root = Node3D.new()
+	root.name = "CityHall_SupremeCourthouse"
+
+	var width: float = 52.0
+	var depth: float = 34.0
+	var height: float = 26.0
+
+	var granite_mat = StandardMaterial3D.new()
+	granite_mat.albedo_color = Color(0.82, 0.80, 0.77) # Imperial limestone granite
+	granite_mat.roughness = 0.72
+
+	var marble_mat = StandardMaterial3D.new()
+	marble_mat.albedo_color = Color(0.92, 0.90, 0.88)
+	marble_mat.roughness = 0.45
+
+	var gold_mat = StandardMaterial3D.new()
+	gold_mat.albedo_color = Color(0.95, 0.78, 0.22)
+	gold_mat.metallic = 0.92
+	gold_mat.roughness = 0.18
+
+	# 1. Main Edifice Body
+	var body_mi = MeshInstance3D.new()
+	body_mi.mesh = _create_box_array_mesh(width, height, depth)
+	body_mi.material_override = granite_mat
+	body_mi.position = Vector3(0, height * 0.5, 0)
+	root.add_child(body_mi)
+
+	# 2. Wide Monumental Granite Entrance Steps
+	var steps_mi = MeshInstance3D.new()
+	steps_mi.mesh = _create_stoop_mesh(28.0, 3.2, 8.0, 10)
+	steps_mi.material_override = granite_mat
+	steps_mi.position = Vector3(0, 1.6, depth * 0.5 + 4.0)
+	root.add_child(steps_mi)
+
+	# 3. Eight Fluted Corinthian Portico Columns
+	var col_x_spacing = 3.6
+	for c in range(8):
+		var col_x = -12.6 + float(c) * col_x_spacing
+		var col_mi = MeshInstance3D.new()
+		col_mi.mesh = _create_column_mesh(0.65, 14.0, 12)
+		col_mi.material_override = marble_mat
+		col_mi.position = Vector3(col_x, 3.2, depth * 0.5 + 1.2)
+		root.add_child(col_mi)
+
+	# 4. Triangular Classical Portico Pediment Roof
+	var ped_mi = MeshInstance3D.new()
+	ped_mi.mesh = _create_pediment_mesh(29.0, 5.5, 4.0)
+	ped_mi.material_override = granite_mat
+	ped_mi.position = Vector3(0, 17.2, depth * 0.5 + 1.2)
+	root.add_child(ped_mi)
+
+	# 5. Central Gilded Rotunda Dome with Flagpole
+	var drum_mi = MeshInstance3D.new()
+	drum_mi.mesh = _create_column_mesh(8.5, 6.0, 16)
+	drum_mi.material_override = granite_mat
+	drum_mi.position = Vector3(0, height, 0)
+	root.add_child(drum_mi)
+
+	var dome_mi = MeshInstance3D.new()
+	dome_mi.mesh = _create_dome_mesh(8.6, 9.0, 10, 18)
+	dome_mi.material_override = gold_mat
+	dome_mi.position = Vector3(0, height + 6.0, 0)
+	root.add_child(dome_mi)
+
+	# Flagpole & Flag
+	var pole_mi = MeshInstance3D.new()
+	pole_mi.mesh = _create_tapered_mast_mesh(0.12, 0.04, 8.0, 6)
+	var pole_mat = StandardMaterial3D.new()
+	pole_mat.albedo_color = Color(0.9, 0.9, 0.9)
+	pole_mat.metallic = 0.9
+	pole_mi.material_override = pole_mat
+	pole_mi.position = Vector3(0, height + 15.0, 0)
+	root.add_child(pole_mi)
+
+	# 6. Landscaped Civic Plaza Fountains
+	for fx in [-18.0, 18.0]:
+		var f_basin = MeshInstance3D.new()
+		f_basin.mesh = _create_column_mesh(4.2, 0.8, 16)
+		f_basin.material_override = marble_mat
+		f_basin.position = Vector3(fx, 0.4, depth * 0.5 + 10.0)
+		root.add_child(f_basin)
+
+		var f_water = MeshInstance3D.new()
+		f_water.mesh = _create_column_mesh(3.8, 0.2, 16)
+		var water_mat = StandardMaterial3D.new()
+		water_mat.albedo_color = Color(0.2, 0.6, 0.85, 0.85)
+		water_mat.roughness = 0.05
+		water_mat.metallic = 0.8
+		f_water.material_override = water_mat
+		f_water.position = Vector3(fx, 0.8, depth * 0.5 + 10.0)
+		root.add_child(f_water)
+
+	# Static Physics Collision Body
+	var body = StaticBody3D.new()
+	body.collision_layer = UrbanConstants.LAYER_WORLD
+	body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = Vector3(width, height, depth)
+	col.shape = box
+	col.position = Vector3(0, height * 0.5, 0)
+	body.add_child(col)
+	root.add_child(body)
+
+	return root
+
+static func build_collegiate_high_school() -> Node3D:
+	var root = Node3D.new()
+	root.name = "CollegiateHighSchoolComplex"
+
+	var width: float = 64.0
+	var depth: float = 30.0
+	var height: float = 16.0
+
+	var brick_mat = StandardMaterial3D.new()
+	brick_mat.albedo_color = Color(0.58, 0.22, 0.16) # Collegiate red brick
+	brick_mat.roughness = 0.85
+
+	var stone_trim = StandardMaterial3D.new()
+	stone_trim.albedo_color = Color(0.85, 0.82, 0.78) # Indiana limestone
+	stone_trim.roughness = 0.70
+
+	# 1. Main 3-Story Red-Brick Edifice
+	var school_mi = MeshInstance3D.new()
+	school_mi.mesh = _create_box_array_mesh(width, height, depth)
+	school_mi.material_override = brick_mat
+	school_mi.position = Vector3(0, height * 0.5, 0)
+	root.add_child(school_mi)
+
+	# 2. Central Clock Tower
+	var tower_w: float = 10.0
+	var tower_h: float = 28.0
+	var tower_mi = MeshInstance3D.new()
+	tower_mi.mesh = _create_box_array_mesh(tower_w, tower_h, tower_w)
+	tower_mi.material_override = stone_trim
+	tower_mi.position = Vector3(0, tower_h * 0.5, depth * 0.5 - 2.0)
+	root.add_child(tower_mi)
+
+	# Illuminated Clock Face
+	for cz in [depth * 0.5 + 3.1]:
+		var clock_mi = MeshInstance3D.new()
+		clock_mi.mesh = _create_disc_mesh(1.8, 16)
+		var clock_mat = StandardMaterial3D.new()
+		clock_mat.albedo_color = Color(0.98, 0.98, 0.90)
+		clock_mat.emission_enabled = true
+		clock_mat.emission = Color(0.98, 0.98, 0.85) * 3.0
+		clock_mi.material_override = clock_mat
+		clock_mi.position = Vector3(0, 22.0, cz)
+		root.add_child(clock_mi)
+
+	# 3. Yellow School Buses parked out front
+	for bx in [-18.0, 18.0]:
+		var bus = ModelCache.get_model("res://assets/models/vehicles/truck_yellow.glb")
+		if is_instance_valid(bus):
+			bus.scale = Vector3(1.35, 1.35, 1.35)
+			bus.position = Vector3(bx, 0.0, depth * 0.5 + 9.0)
+			root.add_child(bus)
+
+	# 4. Adjacent Fenced Basketball Court
+	var court_mi = MeshInstance3D.new()
+	court_mi.mesh = _create_box_array_mesh(26.0, 0.1, 15.0)
+	var court_mat = StandardMaterial3D.new()
+	court_mat.albedo_color = Color(0.25, 0.45, 0.35) # Asphalt green court
+	court_mat.roughness = 0.8
+	court_mi.material_override = court_mat
+	court_mi.position = Vector3(width * 0.5 + 16.0, 0.05, 0)
+	root.add_child(court_mi)
+
+	# Basketball Hoop Pole
+	for hx in [width * 0.5 + 4.0, width * 0.5 + 28.0]:
+		var pole = MeshInstance3D.new()
+		pole.mesh = _create_column_mesh(0.12, 3.5, 8)
+		var p_mat = StandardMaterial3D.new()
+		p_mat.albedo_color = Color(0.2, 0.2, 0.22)
+		pole.material_override = p_mat
+		pole.position = Vector3(hx, 1.75, 0)
+		root.add_child(pole)
+
+	# Collision
+	var body = StaticBody3D.new()
+	body.collision_layer = UrbanConstants.LAYER_WORLD
+	body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = Vector3(width, height, depth)
+	col.shape = box
+	col.position = Vector3(0, height * 0.5, 0)
+	body.add_child(col)
+	root.add_child(body)
+
+	return root
+
+static func build_university_library() -> Node3D:
+	var root = Node3D.new()
+	root.name = "UniversityLibrary_Rotunda"
+
+	var width: float = 44.0
+	var depth: float = 36.0
+	var height: float = 22.0
+
+	var brick_mat = StandardMaterial3D.new()
+	brick_mat.albedo_color = Color(0.62, 0.24, 0.18)
+	brick_mat.roughness = 0.82
+
+	var limestone = StandardMaterial3D.new()
+	limestone.albedo_color = Color(0.88, 0.86, 0.82)
+	limestone.roughness = 0.65
+
+	var copper_dome_mat = StandardMaterial3D.new()
+	copper_dome_mat.albedo_color = Color(0.32, 0.58, 0.45) # Patinated copper green
+	copper_dome_mat.roughness = 0.60
+	copper_dome_mat.metallic = 0.40
+
+	# 1. Main Academic Rotunda Body
+	var body_mi = MeshInstance3D.new()
+	body_mi.mesh = _create_box_array_mesh(width, height, depth)
+	body_mi.material_override = brick_mat
+	body_mi.position = Vector3(0, height * 0.5, 0)
+	root.add_child(body_mi)
+
+	# 2. Portico with White Classical Columns
+	for i in range(6):
+		var cx = -10.0 + float(i) * 4.0
+		var c_mi = MeshInstance3D.new()
+		c_mi.mesh = _create_column_mesh(0.55, 12.0, 10)
+		c_mi.material_override = limestone
+		c_mi.position = Vector3(cx, 1.0, depth * 0.5 + 1.2)
+		root.add_child(c_mi)
+
+	# 3. Pediment
+	var ped_mi = MeshInstance3D.new()
+	ped_mi.mesh = _create_pediment_mesh(24.0, 4.5, 3.5)
+	ped_mi.material_override = limestone
+	ped_mi.position = Vector3(0, 13.5, depth * 0.5 + 1.2)
+	root.add_child(ped_mi)
+
+	# 4. Central Patinated Copper Rotunda Dome
+	var dome_drum = MeshInstance3D.new()
+	dome_drum.mesh = _create_column_mesh(7.5, 4.5, 16)
+	dome_drum.material_override = limestone
+	dome_drum.position = Vector3(0, height, 0)
+	root.add_child(dome_drum)
+
+	var dome = MeshInstance3D.new()
+	dome.mesh = _create_dome_mesh(7.6, 7.0, 8, 16)
+	dome.material_override = copper_dome_mat
+	dome.position = Vector3(0, height + 4.5, 0)
+	root.add_child(dome)
+
+	# Collision
+	var body = StaticBody3D.new()
+	body.collision_layer = UrbanConstants.LAYER_WORLD
+	body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = Vector3(width, height, depth)
+	col.shape = box
+	col.position = Vector3(0, height * 0.5, 0)
+	body.add_child(col)
+	root.add_child(body)
+
+	return root
+
+static func build_academic_hall() -> Node3D:
+	var root = Node3D.new()
+	root.name = "AcademicHall_Dormitory"
+
+	var width: float = 38.0
+	var depth: float = 18.0
+	var height: float = 15.0
+
+	var brick_mat = StandardMaterial3D.new()
+	brick_mat.albedo_color = Color(0.56, 0.22, 0.16)
+	brick_mat.roughness = 0.85
+
+	var roof_mat = StandardMaterial3D.new()
+	roof_mat.albedo_color = Color(0.22, 0.22, 0.24) # Slate shingle
+	roof_mat.roughness = 0.8
+
+	var body_mi = MeshInstance3D.new()
+	body_mi.mesh = _create_box_array_mesh(width, height, depth)
+	body_mi.material_override = brick_mat
+	body_mi.position = Vector3(0, height * 0.5, 0)
+	root.add_child(body_mi)
+
+	var roof_mi = MeshInstance3D.new()
+	roof_mi.mesh = _create_hip_roof_mesh(width + 1.0, 3.5, depth + 1.0)
+	roof_mi.material_override = roof_mat
+	roof_mi.position = Vector3(0, height, 0)
+	root.add_child(roof_mi)
+
+	var body = StaticBody3D.new()
+	body.collision_layer = UrbanConstants.LAYER_WORLD
+	body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = Vector3(width, height, depth)
+	col.shape = box
+	col.position = Vector3(0, height * 0.5, 0)
+	body.add_child(col)
+	root.add_child(body)
+
+	return root
+
+static func build_el_train_viaduct(length: float = 120.0, height: float = 8.0, width: float = 12.0) -> Node3D:
+	var root = Node3D.new()
+	root.name = "ElTrain_ElevatedViaduct"
+
+	var steel_green_mat = StandardMaterial3D.new()
+	steel_green_mat.albedo_color = Color(0.18, 0.32, 0.22) # Riveted municipal dark green
+	steel_green_mat.metallic = 0.88
+	steel_green_mat.roughness = 0.35
+
+	var concrete_mat = StandardMaterial3D.new()
+	concrete_mat.albedo_color = Color(0.65, 0.63, 0.60)
+	concrete_mat.roughness = 0.88
+
+	# Elevated Deck Plate (trackbed)
+	var deck = MeshInstance3D.new()
+	deck.mesh = _create_box_array_mesh(width, 0.8, length)
+	deck.material_override = concrete_mat
+	deck.position = Vector3(0, height, 0)
+	root.add_child(deck)
+
+	# Steel Girder Bents (Support Portals every 24m)
+	var num_bents = int(length / 24.0)
+	for b in range(num_bents + 1):
+		var z_pos = -length * 0.5 + float(b) * 24.0
+		# Left Column
+		var c_left = MeshInstance3D.new()
+		c_left.mesh = _create_box_array_mesh(0.8, height, 0.8)
+		c_left.material_override = steel_green_mat
+		c_left.position = Vector3(-width * 0.45, height * 0.5, z_pos)
+		root.add_child(c_left)
+
+		# Right Column
+		var c_right = MeshInstance3D.new()
+		c_right.mesh = _create_box_array_mesh(0.8, height, 0.8)
+		c_right.material_override = steel_green_mat
+		c_right.position = Vector3(width * 0.45, height * 0.5, z_pos)
+		root.add_child(c_right)
+
+		# Cross Girder Beam
+		var cross_beam = MeshInstance3D.new()
+		cross_beam.mesh = _create_box_array_mesh(width, 1.2, 0.9)
+		cross_beam.material_override = steel_green_mat
+		cross_beam.position = Vector3(0, height - 0.6, z_pos)
+		root.add_child(cross_beam)
+
+	# Dual Railway Tracks
+	var r1 = build_railway_track(length)
+	r1.position = Vector3(-2.8, height + 0.4, 0)
+	root.add_child(r1)
+
+	var r2 = build_railway_track(length)
+	r2.position = Vector3(2.8, height + 0.4, 0)
+	root.add_child(r2)
+
+	# Animated 4-Car Silver Subway Train running on track 1
+	var subway_train = Node3D.new()
+	subway_train.name = "AnimatedSubwayTrain"
+	subway_train.position = Vector3(-2.8, height + 0.6, 0)
+
+	var stainless_mat = StandardMaterial3D.new()
+	stainless_mat.albedo_color = Color(0.92, 0.92, 0.94) # Fluted stainless steel
+	stainless_mat.metallic = 0.95
+	stainless_mat.roughness = 0.15
+
+	var window_mat = StandardMaterial3D.new()
+	window_mat.albedo_color = Color(0.95, 0.95, 0.70)
+	window_mat.emission_enabled = true
+	window_mat.emission = Color(0.95, 0.95, 0.70) * 3.5
+
+	for c in range(4):
+		var car = Node3D.new()
+		var car_mi = MeshInstance3D.new()
+		car_mi.mesh = _create_box_array_mesh(3.0, 3.4, 18.0)
+		car_mi.material_override = stainless_mat
+		car_mi.position = Vector3(0, 1.7, 0)
+		car.add_child(car_mi)
+
+		# Illuminated Window Band
+		for side in [-1.52, 1.52]:
+			var win = MeshInstance3D.new()
+			win.mesh = _create_box_array_mesh(0.04, 0.9, 15.0)
+			win.material_override = window_mat
+			win.position = Vector3(side, 1.9, 0)
+			car.add_child(win)
+
+		car.position = Vector3(0, 0, -32.0 + float(c) * 21.0)
+		subway_train.add_child(car)
+
+	root.add_child(subway_train)
+
+	# Static collision for deck
+	var body = StaticBody3D.new()
+	body.collision_layer = UrbanConstants.LAYER_WORLD
+	body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+	var col = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = Vector3(width, 0.8, length)
+	col.shape = box
+	col.position = Vector3(0, height, 0)
+	body.add_child(col)
+	root.add_child(body)
+
+	return root
+
+static func _create_column_mesh(radius: float, height: float, segments: int = 12) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in range(segments):
+		var a0 = float(i) * TAU / float(segments)
+		var a1 = float(i + 1) * TAU / float(segments)
+		var x0 = cos(a0) * radius; var z0 = sin(a0) * radius
+		var x1 = cos(a1) * radius; var z1 = sin(a1) * radius
+		var n0 = Vector3(cos(a0), 0, sin(a0))
+		var n1 = Vector3(cos(a1), 0, sin(a1))
+
+		st.set_normal(n0); st.add_vertex(Vector3(x0, 0, z0))
+		st.set_normal(n0); st.add_vertex(Vector3(x0, height, z0))
+		st.set_normal(n1); st.add_vertex(Vector3(x1, height, z1))
+
+		st.set_normal(n0); st.add_vertex(Vector3(x0, 0, z0))
+		st.set_normal(n1); st.add_vertex(Vector3(x1, height, z1))
+		st.set_normal(n1); st.add_vertex(Vector3(x1, 0, z1))
+	return st.commit()
+
+static func _create_pediment_mesh(width: float, height: float, depth: float) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hw = width * 0.5
+	var hd = depth * 0.5
+
+	# Front Triangle
+	st.set_normal(Vector3.FORWARD)
+	st.add_vertex(Vector3(-hw, 0, hd)); st.add_vertex(Vector3(0, height, hd)); st.add_vertex(Vector3(hw, 0, hd))
+
+	# Back Triangle
+	st.set_normal(Vector3.BACK)
+	st.add_vertex(Vector3(hw, 0, -hd)); st.add_vertex(Vector3(0, height, -hd)); st.add_vertex(Vector3(-hw, 0, -hd))
+
+	# Left Sloped Roof
+	var nl = Vector3(-height, hw, 0).normalized()
+	st.set_normal(nl)
+	st.add_vertex(Vector3(-hw, 0, -hd)); st.add_vertex(Vector3(0, height, -hd)); st.add_vertex(Vector3(0, height, hd))
+	st.add_vertex(Vector3(-hw, 0, -hd)); st.add_vertex(Vector3(0, height, hd)); st.add_vertex(Vector3(-hw, 0, hd))
+
+	# Right Sloped Roof
+	var nr = Vector3(height, hw, 0).normalized()
+	st.set_normal(nr)
+	st.add_vertex(Vector3(hw, 0, hd)); st.add_vertex(Vector3(0, height, hd)); st.add_vertex(Vector3(0, height, -hd))
+	st.add_vertex(Vector3(hw, 0, hd)); st.add_vertex(Vector3(0, height, -hd)); st.add_vertex(Vector3(hw, 0, -hd))
+
+	return st.commit()
+
+static func _create_dome_mesh(radius: float, height: float, rings: int = 8, sectors: int = 16) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for r in range(rings):
+		var phi0 = float(r) * (PI * 0.5) / float(rings)
+		var phi1 = float(r + 1) * (PI * 0.5) / float(rings)
+
+		var y0 = sin(phi0) * height; var rad0 = cos(phi0) * radius
+		var y1 = sin(phi1) * height; var rad1 = cos(phi1) * radius
+
+		for s in range(sectors):
+			var a0 = float(s) * TAU / float(sectors)
+			var a1 = float(s + 1) * TAU / float(sectors)
+
+			var v00 = Vector3(cos(a0) * rad0, y0, sin(a0) * rad0)
+			var v10 = Vector3(cos(a1) * rad0, y0, sin(a1) * rad0)
+			var v01 = Vector3(cos(a0) * rad1, y1, sin(a0) * rad1)
+			var v11 = Vector3(cos(a1) * rad1, y1, sin(a1) * rad1)
+
+			st.set_normal(v00.normalized()); st.add_vertex(v00)
+			st.set_normal(v01.normalized()); st.add_vertex(v01)
+			st.set_normal(v11.normalized()); st.add_vertex(v11)
+
+			st.set_normal(v00.normalized()); st.add_vertex(v00)
+			st.set_normal(v11.normalized()); st.add_vertex(v11)
+			st.set_normal(v10.normalized()); st.add_vertex(v10)
+
+	return st.commit()
+
+static func _create_disc_mesh(radius: float, segments: int = 16) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in range(segments):
+		var a0 = float(i) * TAU / float(segments)
+		var a1 = float(i + 1) * TAU / float(segments)
+		var p0 = Vector3(cos(a0) * radius, sin(a0) * radius, 0.0)
+		var p1 = Vector3(cos(a1) * radius, sin(a1) * radius, 0.0)
+		st.set_normal(Vector3.FORWARD)
+		st.add_vertex(Vector3.ZERO)
+		st.add_vertex(p0)
+		st.add_vertex(p1)
+	return st.commit()
+

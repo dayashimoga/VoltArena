@@ -50,7 +50,7 @@ func _cleanup_children() -> void:
 		c.queue_free()
 
 func _build_ground_planes() -> void:
-	# Main base terrain plate (2200m x 2200m)
+	# Main base terrain plate (3400m x 3400m for full 3.2km metropolis)
 	var ground = StaticBody3D.new()
 	ground.name = "MainGroundTerrain"
 	ground.collision_layer = UrbanConstants.LAYER_WORLD
@@ -61,14 +61,14 @@ func _build_ground_planes() -> void:
 	g_mat.roughness = 0.9
 
 	var mi = MeshInstance3D.new()
-	mi.mesh = _create_ground_array_mesh(2200.0, 2.0, 2200.0)
+	mi.mesh = _create_ground_array_mesh(3400.0, 2.0, 3400.0)
 	mi.material_override = g_mat
 	mi.position = Vector3(0, -1.0, 0)
 	ground.add_child(mi)
 
 	var col = CollisionShape3D.new()
 	var box = BoxShape3D.new()
-	box.size = Vector3(2200.0, 2.0, 2200.0)
+	box.size = Vector3(3400.0, 2.0, 3400.0)
 	col.shape = box
 	col.position = Vector3(0, -1.0, 0)
 	ground.add_child(col)
@@ -77,14 +77,14 @@ func _build_ground_planes() -> void:
 
 	# South Ocean Water Plane (Bayview Promenade Coast)
 	var ocean_mi = MeshInstance3D.new()
-	ocean_mi.mesh = _create_ground_array_mesh(2500.0, 0.2, 800.0)
+	ocean_mi.mesh = _create_ground_array_mesh(3800.0, 0.2, 1200.0)
 	var ocean_mat = StandardMaterial3D.new()
 	ocean_mat.albedo_color = Color(0.08, 0.32, 0.55, 0.88)
 	ocean_mat.metallic = 0.9
 	ocean_mat.roughness = 0.08
 	ocean_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	ocean_mi.material_override = ocean_mat
-	ocean_mi.position = Vector3(0, 0.1, -1350.0)
+	ocean_mi.position = Vector3(0, 0.1, -1650.0)
 	terrain_container.add_child(ocean_mi)
 
 	_build_perimeter_mountain_backdrop()
@@ -154,9 +154,9 @@ func _build_road_meshes() -> void:
 		var center = (st + en) * 0.5
 		var dir = seg["direction"]
 
-		# Road Surface Mesh (Crowned asphalt deck, ArrayMesh)
+		# Road Surface Mesh (Crowned asphalt deck, ArrayMesh, Y = 0.02m flush with terrain)
 		var road_mi = MeshInstance3D.new()
-		road_mi.mesh = _create_crowned_road_mesh(w, 0.25, dist)
+		road_mi.mesh = _create_crowned_road_mesh(w, 0.04, dist)
 		var r_mat = StandardMaterial3D.new()
 		var s_type = seg["surface"]
 		if s_type == UrbanConstants.SURFACE_GRASS:
@@ -180,30 +180,30 @@ func _build_road_meshes() -> void:
 				r_mat.metallic = 0.10
 
 		road_mi.material_override = r_mat
-		road_mi.position = center
+		road_mi.position = center + Vector3(0.0, 0.02, 0.0)
 
 		if dir.length_squared() > 0.001:
 			var up_vec = Vector3.UP
 			if absf(dir.dot(up_vec)) > 0.9:
 				up_vec = Vector3.RIGHT
-			road_mi.look_at_from_position(center, center + dir, up_vec)
+			road_mi.look_at_from_position(road_mi.position, road_mi.position + dir, up_vec)
 
 		roads_container.add_child(road_mi)
 
-		# Road Physical Collision Box (Invisible physics proxy)
+		# Road Physical Collision Box (Flush with ground, Y = 0.02m)
 		var body = StaticBody3D.new()
 		body.collision_layer = UrbanConstants.LAYER_WORLD
 		body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
-		body.position = center
+		body.position = center + Vector3(0.0, 0.02, 0.0)
 		if dir.length_squared() > 0.001:
 			var up_vec = Vector3.UP
 			if absf(dir.dot(up_vec)) > 0.9:
 				up_vec = Vector3.RIGHT
-			body.look_at_from_position(center, center + dir, up_vec)
+			body.look_at_from_position(body.position, body.position + dir, up_vec)
 
 		var col = CollisionShape3D.new()
 		var col_box = BoxShape3D.new()
-		col_box.size = Vector3(w, 0.25, dist)
+		col_box.size = Vector3(w, 0.04, dist)
 		col.shape = col_box
 		body.add_child(col)
 		roads_container.add_child(body)
@@ -216,7 +216,7 @@ func _build_road_meshes() -> void:
 			y_mat.albedo_color = Color(0.95, 0.80, 0.12)
 			y_mat.roughness = 0.50
 			stripe_mi.material_override = y_mat
-			stripe_mi.position = center + Vector3(0.0, 0.14, 0.0)
+			stripe_mi.position = center + Vector3(0.0, 0.03, 0.0)
 			if dir.length_squared() > 0.001:
 				var up_vec = Vector3.UP
 				if absf(dir.dot(up_vec)) > 0.9:
@@ -241,7 +241,7 @@ func _build_road_meshes() -> void:
 					var edge_mi = MeshInstance3D.new()
 					edge_mi.mesh = _create_strip_mesh(0.18, 0.02, dist)
 					edge_mi.material_override = white_mat
-					edge_mi.position = center + right_dir * (side * (w * 0.5 - 0.22)) + Vector3(0.0, 0.14, 0.0)
+					edge_mi.position = center + right_dir * (side * (w * 0.5 - 0.22)) + Vector3(0.0, 0.03, 0.0)
 					if dir.length_squared() > 0.001:
 						var up_vec = Vector3.UP
 						if absf(dir.dot(up_vec)) > 0.9:
@@ -249,11 +249,11 @@ func _build_road_meshes() -> void:
 						edge_mi.look_at_from_position(edge_mi.position, edge_mi.position + dir, up_vec)
 					roads_container.add_child(edge_mi)
 
-					# 45-degree Chamfered Curb Bevel (0.14m vertical, zero car snagging, ArrayMesh)
+					# 30-degree Chamfered Curb Bevel (0.12m vertical, zero car snagging, ArrayMesh)
 					var curb_bevel_mi = MeshInstance3D.new()
-					curb_bevel_mi.mesh = _create_curb_bevel_mesh(0.20, 0.14, dist)
+					curb_bevel_mi.mesh = _create_curb_bevel_mesh(0.24, 0.12, dist)
 					curb_bevel_mi.material_override = sw_mat
-					curb_bevel_mi.position = center + right_dir * (side * (w * 0.5 + 0.10)) + Vector3(0.0, 0.07, 0.0)
+					curb_bevel_mi.position = center + right_dir * (side * (w * 0.5 + 0.12)) + Vector3(0.0, 0.06, 0.0)
 					if dir.length_squared() > 0.001:
 						var up_vec = Vector3.UP
 						if absf(dir.dot(up_vec)) > 0.9:
@@ -261,11 +261,11 @@ func _build_road_meshes() -> void:
 						curb_bevel_mi.look_at_from_position(curb_bevel_mi.position, curb_bevel_mi.position + dir, up_vec)
 					roads_container.add_child(curb_bevel_mi)
 
-					# Pedestrian Sidewalk (0.14m height, ArrayMesh)
+					# Pedestrian Sidewalk (0.12m height, ArrayMesh)
 					var sw_mi = MeshInstance3D.new()
-					sw_mi.mesh = _create_sidewalk_mesh(sw_w - 0.20, 0.14, dist)
+					sw_mi.mesh = _create_sidewalk_mesh(sw_w - 0.24, 0.12, dist)
 					sw_mi.material_override = sw_mat
-					sw_mi.position = center + right_dir * (side * (w * 0.5 + 0.20 + (sw_w - 0.20) * 0.5)) + Vector3(0.0, 0.07, 0.0)
+					sw_mi.position = center + right_dir * (side * (w * 0.5 + 0.24 + (sw_w - 0.24) * 0.5)) + Vector3(0.0, 0.06, 0.0)
 					if dir.length_squared() > 0.001:
 						var up_vec = Vector3.UP
 						if absf(dir.dot(up_vec)) > 0.9:
@@ -319,7 +319,27 @@ func _populate_district_props() -> void:
 					tower.position = p
 					props_container.add_child(tower)
 
-	# 2. District 2: Los Santos / Las Colinas Hillside Suburbs (image_6e5c87.jpg Target)
+	# Civic Government Center: Neoclassical City Hall & Supreme Courthouse with granite steps, 8 Corinthian columns, gilded dome
+	var city_hall_pos = Vector3(50.0, 0.0, 100.0)
+	if not _is_obstructing_road(city_hall_pos, 28.0):
+		var city_hall = UrbanPropFactory.build_neoclassical_city_hall()
+		city_hall.position = city_hall_pos
+		props_container.add_child(city_hall)
+
+	# 2. District 2: Brooklyn Brownstone Neighborhoods & Hillside Residences
+	# Tree-lined 4-story red-brick and brownstone rowhouses with stoops, fire escapes, bodegas
+	var brownstone_x = [200.0, 350.0]
+	var brownstone_z = [-600.0, -520.0, -450.0, -380.0, -300.0, -220.0, -150.0]
+	for bx in brownstone_x:
+		for bz in brownstone_z:
+			var bp = Vector3(bx + 18.0, 0.0, bz)
+			if not _is_obstructing_road(bp, 14.0):
+				var has_bodega = (int(absf(bx + bz)) % 3 == 0)
+				var rh = UrbanPropFactory.build_brownstone_rowhouse(randf_range(16.0, 22.0), 14.0, 18.0, has_bodega)
+				rh.position = bp
+				props_container.add_child(rh)
+
+	# Outer Suburban single-family detached homes (Colinas / Brooklyn border)
 	var colinas_spots = [
 		Vector3(240, 20.0, 260), Vector3(310, 30.0, 340), Vector3(390, 42.0, 430),
 		Vector3(470, 54.0, 520), Vector3(550, 68.0, 620), Vector3(630, 80.0, 710),
@@ -428,6 +448,28 @@ func _populate_district_props() -> void:
 		gantry.position = gp
 		props_container.add_child(gantry)
 
+	# District 3 Educational Centers: Collegiate High School & University Campus
+	# Public High School Complex with clock tower, parked yellow buses, and basketball court
+	var school_pos = Vector3(-400.0, 0.0, 300.0)
+	if not _is_obstructing_road(school_pos, 32.0):
+		var high_school = UrbanPropFactory.build_collegiate_high_school()
+		high_school.position = school_pos
+		props_container.add_child(high_school)
+
+	# University / College Campus: Domed library rotunda, academic halls, and quad
+	var lib_pos = Vector3(350.0, 0.0, 300.0)
+	if not _is_obstructing_road(lib_pos, 24.0):
+		var lib = UrbanPropFactory.build_university_library()
+		lib.position = lib_pos
+		props_container.add_child(lib)
+
+	for ah_x in [280.0, 420.0]:
+		var ah_p = Vector3(ah_x, 0.0, 300.0)
+		if not _is_obstructing_road(ah_p, 20.0):
+			var hall = UrbanPropFactory.build_academic_hall()
+			hall.position = ah_p
+			props_container.add_child(hall)
+
 	# 5. District 5: Industrial Waterfront, Docks, Railway Network & Suspension Bridge
 	# Active Railway Network (dual steel tracks along industrial corridor)
 	var rail1 = UrbanPropFactory.build_railway_track(420.0)
@@ -478,15 +520,21 @@ func _populate_district_props() -> void:
 			c.position = cp_pos
 			props_container.add_child(c)
 
-	# Iconic Multi-Span Steel Suspension Bridge (450m span, 35m water clearance)
+	# District 4 Infrastructure: Bridges, Underpasses & Elevated Railways
+	# Iconic Two-Tower Suspension Bridge with gothic arches over East River channel
 	var bridge_susp = UrbanPropFactory.build_suspension_bridge(450.0, 35.0, 24.0)
-	bridge_susp.position = Vector3(0.0, 24.0, -1050.0)
+	bridge_susp.position = Vector3(125.0, 14.0, -1050.0)
 	props_container.add_child(bridge_susp)
 
-	# Tiled Vehicular Underpass Tunnel
+	# Sunken Concrete Underpass Roadway dipping underneath cross-streets
 	var tunnel = UrbanPropFactory.build_underpass_tunnel(80.0, 16.0, 6.0)
-	tunnel.position = Vector3(-600.0, 1.0, -80.0)
+	tunnel.position = Vector3(-300.0, 0.0, -100.0)
 	props_container.add_child(tunnel)
+
+	# Elevated Steel El-Train Viaduct with 4-Car Silver Subway Train above commercial avenue
+	var el_viaduct = UrbanPropFactory.build_el_train_viaduct(280.0, 8.0, 12.0)
+	el_viaduct.position = Vector3(-100.0, 0.0, 300.0)
+	props_container.add_child(el_viaduct)
 
 	# 6. Coastal Beach & Boardwalk (Bayview Promenade)
 	var pier = UrbanPropFactory.build_boardwalk_pier(110.0, 14.0)
@@ -563,7 +611,8 @@ func _build_verified_spawns() -> void:
 		var near = road_network.get_nearest_road_point(pos)
 		if near["distance"] <= 35.0:
 			var safe_t = Transform3D()
-			safe_t.origin = near["point"] + Vector3(0, 0.4, 0)
+			safe_t.origin = near["point"] + Vector3(0, 0.65, 0)
+			safe_t.origin.y = maxf(safe_t.origin.y, 0.65)
 			var dir: Vector3 = near["direction"]
 			if dir.length_squared() > 0.001:
 				safe_t = safe_t.looking_at(safe_t.origin + dir, Vector3.UP)
@@ -574,7 +623,8 @@ func _build_verified_spawns() -> void:
 	for i in range(0, waypoints.size(), step_stride):
 		var wp = waypoints[i]
 		if verified_spawn_points.size() < 120:
-			var p = wp.origin + Vector3(0, 0.4, 0)
+			var p = wp.origin + Vector3(0, 0.65, 0)
+			p.y = maxf(p.y, 0.65)
 			var safe_t = Transform3D()
 			safe_t.origin = p
 			var fwd = -wp.basis.z

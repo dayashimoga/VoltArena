@@ -85,7 +85,7 @@ static func build_vehicle_visual(vehicle_node: Node3D, vehicle_id: String, paint
 	taillight_mat.albedo_color = Color(0.88, 0.05, 0.05)
 	taillight_mat.emission_enabled = true
 	taillight_mat.emission = Color(0.95, 0.04, 0.04)
-	taillight_mat.emission_energy_multiplier = 1.5 # 1.5 cruising / 6.0 braking
+	taillight_mat.emission_energy_multiplier = 5.0 # 5.0 cruising / 7.5 braking
 
 	# 3. Instantiate Authentic Production 3D Car Model
 	var glb_path = VEHICLE_GLB_MAP.get(vehicle_id, VEHICLE_GLB_MAP[UrbanConstants.VEHICLE_VORTEX_GT])

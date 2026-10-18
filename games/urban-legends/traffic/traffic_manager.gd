@@ -91,6 +91,10 @@ func _recycle_vehicle_ahead_of_player(tv: TrafficVehicle, p_pos: Vector3) -> voi
 						break
 			if not too_close:
 				var fwd = -rand_wp.basis.z
+				fwd.y = 0.0
+				if fwd.length_squared() < 0.001:
+					fwd = Vector3.FORWARD
+				fwd = fwd.normalized()
 				tv.reset_traffic_state(wp_pos, fwd)
 				break
 

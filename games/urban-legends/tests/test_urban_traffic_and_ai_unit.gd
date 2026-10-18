@@ -7,6 +7,7 @@ extends RefCounted
 const UrbanConstants = preload("res://games/urban-legends/core/urban_constants.gd")
 const UrbanRoadNetwork = preload("res://games/urban-legends/world/urban_road_network.gd")
 const TrafficVehicle = preload("res://games/urban-legends/traffic/traffic_vehicle.gd")
+const TrafficVehicleBuilder = preload("res://games/urban-legends/traffic/traffic_vehicle_builder.gd")
 const TrafficManager = preload("res://games/urban-legends/traffic/traffic_manager.gd")
 const UrbanWeatherSystem = preload("res://games/urban-legends/world/urban_weather_system.gd")
 
@@ -23,6 +24,7 @@ func run_tests() -> Dictionary:
 	test_traffic_vehicle_initialization()
 	test_traffic_vehicle_waypoint_following()
 	test_traffic_vehicle_obstacle_avoidance()
+	test_traffic_vehicle_builder_models()
 	test_traffic_manager_pooling_and_recycling()
 	test_weather_system_time_and_presets()
 	test_weather_system_clock_formatting()
@@ -97,6 +99,28 @@ func test_traffic_vehicle_obstacle_avoidance() -> void:
 	assert_true(tv.position == Vector3(100, 0, 100), "Reset state should update position correctly")
 
 	tv.free()
+
+func test_traffic_vehicle_builder_models() -> void:
+	# Test all 8 authentic vehicle classes
+	for v_class in TrafficVehicleBuilder.ALL_CLASSES:
+		var res: Dictionary = TrafficVehicleBuilder.build_traffic_vehicle_visual(v_class)
+		assert_true(res.has("visual_root") and res["visual_root"] != null, "Vehicle model class '%s' must build visual root" % v_class)
+		assert_true(res.has("wheels") and res["wheels"].size() == 4, "Vehicle model class '%s' must provide 4 wheels" % v_class)
+		res["visual_root"].free()
+
+	# Test realistic PBR materials
+	var tire_mat = TrafficVehicleBuilder.get_tire_material()
+	assert_true(tire_mat != null, "Tire material must be defined")
+	assert_true(tire_mat.albedo_color.r < 0.2 and tire_mat.albedo_color.g < 0.2 and tire_mat.albedo_color.b < 0.2, "Tires must be dark rubber (not bright cyan)")
+
+	var rim_mat = TrafficVehicleBuilder.get_rim_material()
+	assert_true(rim_mat != null and rim_mat.metallic >= 0.7, "Rims must be metallic alloy")
+
+	var hl_mat = TrafficVehicleBuilder.get_headlight_material()
+	assert_true(hl_mat != null and hl_mat.emission_enabled and hl_mat.emission_energy_multiplier >= 3.0, "Headlights must have bright emission")
+
+	var tl_mat = TrafficVehicleBuilder.get_taillight_material()
+	assert_true(tl_mat != null and tl_mat.emission_enabled and tl_mat.emission_energy_multiplier >= 4.5, "Taillights must have bright red emission >= 4.5")
 
 func test_traffic_manager_pooling_and_recycling() -> void:
 	var road_net = UrbanRoadNetwork.new()
@@ -174,5 +198,9 @@ func get_coverage_entries() -> Array:
 		["res://games/urban-legends/world/urban_weather_system.gd", [
 			"_init", "_ready", "_physics_process", "apply_preset", "set_time", "get_formatted_clock",
 			"get_wetness_factor", "is_night"
+		]],
+		["res://games/urban-legends/traffic/traffic_vehicle_builder.gd", [
+			"get_tire_material", "get_rim_material", "get_headlight_material",
+			"get_taillight_material", "build_traffic_vehicle_visual"
 		]]
 	]

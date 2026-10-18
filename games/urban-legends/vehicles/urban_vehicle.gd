@@ -512,10 +512,10 @@ func _update_weight_transfer(delta: float) -> void:
 		chassis_node.rotation.x = body_pitch
 		chassis_node.rotation.z = body_roll
 
-	# Dynamic reactive brake light emission (1.5 cruising / 6.0 braking)
+	# Dynamic reactive brake light emission (5.0 cruising / 7.5 braking)
 	if is_instance_valid(taillight_material):
 		var is_braking = brake_input > 0.1 or handbrake_input
-		taillight_material.emission_energy_multiplier = 6.0 if is_braking else 1.5
+		taillight_material.emission_energy_multiplier = 7.5 if is_braking else 5.0
 
 	# Nitro exhaust flame VFX update
 	if chassis_node:
@@ -589,9 +589,15 @@ func _check_recovery_conditions(delta: float) -> void:
 	else:
 		upside_down_timer = 0.0
 
-	# Auto-recovery if stuck > 3 seconds with throttle applied
+	# Auto-recovery if stuck > 3 seconds with throttle applied, plus automatic unstuck impulse
 	if grounded_wheel_count >= 2 and throttle_input > 0.2 and absf(forward_speed) < 0.25:
 		stuck_timer += delta
+		if stuck_timer > 1.2:
+			# Upward & forward unstuck impulse to clear obstacles
+			velocity.y += 15.0 * delta
+			var unstuck_fwd = -(global_basis if is_inside_tree() else transform.basis).z
+			unstuck_fwd.y = 0.25
+			velocity += unstuck_fwd.normalized() * 6.0 * delta
 		if stuck_timer > 3.0:
 			recover_vehicle()
 			stuck_timer = 0.0
@@ -655,21 +661,37 @@ func repair(amount: float = 100.0) -> void:
 		is_wrecked = false
 		controls_enabled = true
 
-func recover_vehicle() -> void:
-	# Flip car right side up and place at last safe ground centerline (+0.35m Y)
+func recover_vehicle(road_net = null, cam_forward: Vector3 = Vector3.ZERO) -> void:
+	# Flip car right side up and place at nearest road lane or last safe ground centerline (+0.45m Y)
 	velocity = Vector3.ZERO
-	var target_pos = last_safe_ground_pos + Vector3(0, 0.35, 0)
+	forward_speed = 0.0
+
+	var target_pos = last_safe_ground_pos + Vector3(0, 0.45, 0)
+	var safe_yaw = last_safe_ground_basis.get_euler().y
+
+	if road_net and road_net.has_method("get_nearest_road_point"):
+		var my_p = global_position if is_inside_tree() else position
+		var nearest = road_net.get_nearest_road_point(my_p)
+		if nearest.has("point"):
+			target_pos = nearest["point"] + Vector3(0, 0.45, 0)
+			var r_dir: Vector3 = nearest.get("direction", Vector3.FORWARD)
+			r_dir.y = 0.0
+			if cam_forward.length_squared() > 0.01:
+				var c_fwd = cam_forward
+				c_fwd.y = 0.0
+				c_fwd = c_fwd.normalized()
+				safe_yaw = atan2(-c_fwd.x, -c_fwd.z)
+			elif r_dir.length_squared() > 0.001:
+				r_dir = r_dir.normalized()
+				safe_yaw = atan2(-r_dir.x, -r_dir.z)
+
 	if is_inside_tree():
 		global_position = target_pos
-	else:
-		position = target_pos
-
-	# Align yaw to safe road tangent basis, clear roll/pitch
-	var safe_yaw = last_safe_ground_basis.get_euler().y
-	if is_inside_tree():
 		global_rotation = Vector3(0, safe_yaw, 0)
 	else:
+		position = target_pos
 		rotation = Vector3(0, safe_yaw, 0)
+
 	upside_down_timer = 0.0
 	stuck_timer = 0.0
 	is_airborne = false

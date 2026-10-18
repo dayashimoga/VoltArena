@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 89.5294897282969,
-  "coverage_tested_functions": 1351,
-  "coverage_total_functions": 1509,
-  "execution_seconds": 141.596,
+  "coverage_percent": 89.5394736842105,
+  "coverage_tested_functions": 1361,
+  "coverage_total_functions": 1520,
+  "execution_seconds": 175.817,
   "status": "PASS",
   "suites": {
     "6-DoF Flight Simulator E2E Scenarios": {
@@ -462,7 +462,7 @@
     },
     "Urban Legends Traffic & AI Unit": {
       "failed": 0,
-      "passed": 24,
+      "passed": 45,
       "status": "PASS"
     },
     "Urban Legends Vehicle Physics Unit": {
@@ -472,7 +472,7 @@
     },
     "Urban Legends World & Roads Unit": {
       "failed": 0,
-      "passed": 214,
+      "passed": 501,
       "status": "PASS"
     },
     "Wave Director Unit": {
@@ -501,8 +501,8 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-10-17T17:40:28",
+  "timestamp": "2026-10-18T03:31:06",
   "total_failed": 0,
-  "total_passed": 4081,
+  "total_passed": 4389,
   "total_suites": 99
 }

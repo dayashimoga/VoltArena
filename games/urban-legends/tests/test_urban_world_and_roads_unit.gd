@@ -299,6 +299,27 @@ func test_prop_factory_instantiation() -> void:
 	assert_true(_find_static_body(u_tree) != null, "Tree must have StaticBody3D")
 	u_tree.free()
 
+	# NYC / Brooklyn Civic, Educational & Transit Landmark Props
+	var city_hall = UrbanPropFactory.build_neoclassical_city_hall()
+	assert_true(_find_static_body(city_hall) != null, "Neoclassical City Hall must have StaticBody3D")
+	city_hall.free()
+
+	var high_school = UrbanPropFactory.build_collegiate_high_school()
+	assert_true(_find_static_body(high_school) != null, "Collegiate High School must have StaticBody3D")
+	high_school.free()
+
+	var uni_lib = UrbanPropFactory.build_university_library()
+	assert_true(_find_static_body(uni_lib) != null, "University Library must have StaticBody3D")
+	uni_lib.free()
+
+	var acad_hall = UrbanPropFactory.build_academic_hall()
+	assert_true(_find_static_body(acad_hall) != null, "Academic Hall must have StaticBody3D")
+	acad_hall.free()
+
+	var el_viaduct = UrbanPropFactory.build_el_train_viaduct(140.0)
+	assert_true(_find_static_body(el_viaduct) != null, "El-Train Viaduct must have StaticBody3D")
+	el_viaduct.free()
+
 func _find_static_body(node: Node) -> StaticBody3D:
 	if node is StaticBody3D:
 		return node
@@ -363,7 +384,9 @@ func get_coverage_entries() -> Array:
 			"build_theater_marquee_store", "build_subway_kiosk", "build_park_stone_wall",
 			"build_gantry_crane", "build_suspension_bridge", "build_underpass_tunnel",
 			"build_traffic_signal_mast", "build_fire_hydrant", "build_street_furniture_cluster",
-			"build_bus_shelter", "build_acorn_streetlight", "build_distant_skyline"
+			"build_bus_shelter", "build_acorn_streetlight", "build_distant_skyline",
+			"build_neoclassical_city_hall", "build_collegiate_high_school", "build_university_library",
+			"build_academic_hall", "build_el_train_viaduct"
 		]],
 		["res://games/urban-legends/world/urban_world_generator.gd", [
 			"_ready", "generate_world", "_cleanup_children", "_build_ground_planes",

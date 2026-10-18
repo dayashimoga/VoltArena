@@ -97,7 +97,16 @@ class MinimapCanvas extends Control:
 		var p_pos = hud_ref.player_vehicle.global_position if hud_ref.player_vehicle.is_inside_tree() else hud_ref.player_vehicle.position
 		var p_rot = hud_ref.player_vehicle.rotation.y
 
-		# 1. City Block Backdrop Polygons (Simulated dense urban parcels)
+		# 1. City Block Backdrop & Park Greenery Zones
+		var park_zones = [
+			Vector3(380, 0, -220), # Central Metropolitan Park
+			Vector3(350, 0, 300),  # University Campus Quad
+		]
+		for pz in park_zones:
+			var pz_pt = _world_to_minimap(pz, p_pos, p_rot, center)
+			if (pz_pt - center).length() < radar_radius + 45.0:
+				draw_circle(pz_pt, 42.0, Color(0.12, 0.45, 0.22, 0.35))
+
 		var block_grid_offsets = [
 			Vector2(-45, -45), Vector2(10, -45), Vector2(-45, 10), Vector2(10, 10),
 			Vector2(-100, -45), Vector2(65, -45), Vector2(-100, 10), Vector2(65, 10)
@@ -131,7 +140,7 @@ class MinimapCanvas extends Control:
 					# Road surface fill
 					var road_col = Color(0.90, 0.92, 0.95, 0.90)
 					if is_freeway:
-						road_col = Color(0.0, 0.90, 1.0, 0.95) # Neon cyan for elevated viaducts
+						road_col = Color(0.0, 0.90, 1.0, 0.95) # Neon cyan for elevated viaducts & bridge
 					elif lanes >= 4:
 						road_col = Color(0.98, 0.82, 0.22, 0.95) # Warm amber/yellow for Grand Ave arterials
 					elif surface_type == UrbanConstants.SURFACE_GRASS:
@@ -142,7 +151,19 @@ class MinimapCanvas extends Control:
 					var road_w = 4.8 if is_freeway else (3.6 if lanes >= 4 else 2.4)
 					draw_line(clipped[0], clipped[1], road_col, road_w)
 
-		# 3. GPS Navigation Route Line to Nearest Objective / Stunt Ramp
+		# 3. Railway Corridors & Elevated El-Train Viaduct Lines
+		var rail_corridors = [
+			[Vector3(-1400, 0, 480), Vector3(-450, 0, 480)],
+			[Vector3(-550, 8, 300), Vector3(500, 8, 300)]
+		]
+		for rc in rail_corridors:
+			var rp1 = _world_to_minimap(rc[0], p_pos, p_rot, center)
+			var rp2 = _world_to_minimap(rc[1], p_pos, p_rot, center)
+			var r_clipped = _clip_line_to_circle(rp1, rp2, center, radar_radius - 1.5)
+			if r_clipped.size() == 2:
+				draw_line(r_clipped[0], r_clipped[1], Color(0.70, 0.75, 0.82, 0.9), 2.2)
+
+		# 4. GPS Navigation Route Line to Nearest Objective / Stunt Ramp
 		var target_dest = Vector3.ZERO
 		var has_target = false
 		if hud_ref.player_vehicle.is_inside_tree():
@@ -164,7 +185,7 @@ class MinimapCanvas extends Control:
 				var pulse = 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.006)
 				draw_line(clipped_gps[0], clipped_gps[1], Color(1.0, 0.65, 0.1, 0.85 * pulse), 2.2)
 
-		# 4. Draw Stunt Kickers & Objective Blips
+		# 5. Draw Stunt Kickers & Objective Blips
 		if hud_ref.player_vehicle.is_inside_tree():
 			var kickers = hud_ref.player_vehicle.get_tree().get_nodes_in_group("stunt_ramps")
 			for k in kickers:
@@ -172,7 +193,6 @@ class MinimapCanvas extends Control:
 					var k_pos = k.global_position if k.is_inside_tree() else k.position
 					var k_pt = _world_to_minimap(k_pos, p_pos, p_rot, center)
 					if (k_pt - center).length() <= radar_radius - 4.0:
-						# Diamond blip
 						var diamond = PackedVector2Array([
 							k_pt + Vector2(0, -4),
 							k_pt + Vector2(4, 0),
@@ -182,12 +202,28 @@ class MinimapCanvas extends Control:
 						draw_colored_polygon(diamond, Color(1.0, 0.85, 0.15, 0.95))
 						draw_polyline(diamond, Color(0.1, 0.1, 0.1, 1.0), 1.2)
 
-		# 5. North Indicator on Compass Ring
+		# 6. Moving AI Traffic Vehicle Dots
+		if hud_ref.player_vehicle.is_inside_tree():
+			var traffic_nodes = hud_ref.player_vehicle.get_tree().get_nodes_in_group("ai_traffic")
+			for tv in traffic_nodes:
+				if is_instance_valid(tv) and tv != hud_ref.player_vehicle:
+					var tv_pos = tv.global_position if tv.is_inside_tree() else tv.position
+					var tv_pt = _world_to_minimap(tv_pos, p_pos, p_rot, center)
+					if (tv_pt - center).length() <= radar_radius - 2.5:
+						var is_cop = tv.get("is_police") == true
+						var tv_col = Color(1.0, 0.68, 0.12) # Warm amber AI traffic dot
+						if is_cop:
+							var flash_cop = fmod(Time.get_ticks_msec() * 0.006, 2.0) < 1.0
+							tv_col = Color(1.0, 0.12, 0.12) if flash_cop else Color(0.15, 0.45, 1.0)
+						draw_circle(tv_pt, 3.2, tv_col)
+						draw_arc(tv_pt, 3.2, 0, TAU, 16, Color(0.08, 0.08, 0.1, 0.85), 1.0)
+
+		# 7. North Indicator on Compass Ring
 		var north_angle = -p_rot - PI * 0.5
 		var north_pos = center + Vector2(cos(north_angle), sin(north_angle)) * (radar_radius - 8.0)
 		draw_circle(north_pos, 4.5, Color(1.0, 0.25, 0.3, 0.95))
 
-		# 6. Player Vehicle Arrow at Center
+		# 8. Player Vehicle Arrow at Center
 		_draw_player_icon(center, 0.0)
 
 	func _clip_line_to_circle(p1: Vector2, p2: Vector2, center: Vector2, radius: float) -> Array[Vector2]:

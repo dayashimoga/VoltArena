@@ -16,7 +16,7 @@ signal hour_changed(in_game_hour: int)
 signal weather_preset_changed(preset_name: String)
 
 @export var day_length_seconds: float = 600.0 # 10 real minutes = 24 in-game hours
-@export var current_time_hours: float = 17.5 # Starts at dramatic Golden Hour (5:30 PM)
+@export var current_time_hours: float = 15.5 # Starts at bright golden hour / daytime (3:30 PM, sun energy 1.7)
 @export var current_preset: String = UrbanConstants.WEATHER_GOLDEN_SUNSET
 @export var is_time_paused: bool = false
 
@@ -123,9 +123,9 @@ func _update_lighting_for_time() -> void:
 				sun_light.light_color = Color(1.0, 0.72, 0.38).lerp(Color(0.96, 0.48, 0.22), t)
 				sun_light.light_energy = lerpf(1.9, 1.25, t)
 			else:
-				# High Daylight
+				# High Daylight / Bright Golden Hour (Sun Energy 1.7)
 				sun_light.light_color = Color(1.0, 0.98, 0.92)
-				sun_light.light_energy = clampf(sun_elev * 2.2, 0.8, 1.9)
+				sun_light.light_energy = 1.7
 		else:
 			# Nighttime: deactivate direct sun
 			sun_light.visible = false

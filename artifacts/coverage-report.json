@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 89.5394736842105,
+  "overall_coverage_pct": 89.3630991464215,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -1607,10 +1607,21 @@
       "untested": []
     },
     "res://shared/loading/asset_loader.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 75,
       "tested": 3,
-      "total": 3,
-      "untested": []
+      "total": 4,
+      "untested": [
+        "load_game_scene"
+      ]
+    },
+    "res://shared/loading/threaded_scene_loader.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 2,
+      "untested": [
+        "_ready",
+        "load_game_scene"
+      ]
     },
     "res://shared/physics/physics_helpers.gd": {
       "coverage_pct": 100,
@@ -1692,6 +1703,6 @@
     }
   },
   "tested_functions": 1361,
-  "timestamp": "2026-10-18T03:31:06",
-  "total_functions": 1520
+  "timestamp": "2026-10-18T04:33:48",
+  "total_functions": 1523
 }

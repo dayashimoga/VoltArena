@@ -694,7 +694,7 @@ func set_state(new_state: int) -> void:
 	if event_bus:
 		event_bus.game_state_changed.emit(old, new_state)
 
-func start_game(game_id: String) -> void:
+func start_game(game_id: String, preloaded_scene: PackedScene = null) -> void:
 	active_game_id = game_id
 	set_state(STATE_LOADING)
 
@@ -744,19 +744,24 @@ func start_game(game_id: String) -> void:
 			push_error("Unknown game ID: " + game_id)
 			return
 
-	if ResourceLoader.exists(scene_path):
-		var packed = load(scene_path) as PackedScene
-		if packed:
-			switch_to_scene(packed)
-			set_state(STATE_PLAYING)
-			var im = GameConstants.get_autoload(self, "InputManager")
-			if im and im.has_method("set_game_context"):
-				im.set_game_context(game_id)
-			var am = GameConstants.get_autoload(self, "AudioManager")
-			if am and am.has_method("play_music") and not music_track.is_empty():
-				am.play_music(music_track)
-			if event_bus:
-				event_bus.game_loaded.emit(game_id)
+	var packed: PackedScene = preloaded_scene
+	if not packed and not scene_path.is_empty():
+		if ResourceLoader.load_threaded_get_status(scene_path) == ResourceLoader.THREAD_LOAD_LOADED:
+			packed = ResourceLoader.load_threaded_get(scene_path) as PackedScene
+		elif ResourceLoader.exists(scene_path):
+			packed = load(scene_path) as PackedScene
+
+	if packed:
+		switch_to_scene(packed)
+		set_state(STATE_PLAYING)
+		var im = GameConstants.get_autoload(self, "InputManager")
+		if im and im.has_method("set_game_context"):
+			im.set_game_context(game_id)
+		var am = GameConstants.get_autoload(self, "AudioManager")
+		if am and am.has_method("play_music") and not music_track.is_empty():
+			am.play_music(music_track)
+		if event_bus:
+			event_bus.game_loaded.emit(game_id)
 	else:
 		push_error("Scene file missing: " + scene_path)
 

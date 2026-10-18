@@ -136,11 +136,16 @@ func setup_lighting_and_atmosphere() -> void:
 		env.tonemap_exposure = 1.10
 		env.tonemap_white = 1.0
 		env.fog_enabled = true
-		env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
+		env.fog_mode = Environment.FOG_MODE_DEPTH
 		env.fog_light_color = Color(0.72, 0.80, 0.90) # Soft atmospheric blue haze
 		env.fog_density = 0.00003
+		env.fog_depth_begin = 250.0
+		env.fog_depth_end = 18000.0
 		env.fog_aerial_perspective = 0.75
 		env.volumetric_fog_enabled = true
+		env.volumetric_fog_density = 0.0006
+		env.volumetric_fog_length = 8000.0
+		env.volumetric_fog_ambient_inject = 0.85
 		env.volumetric_fog_albedo = Color(0.85, 0.90, 0.98)
 		world_environment.environment = env
 		add_child(world_environment)
@@ -193,6 +198,11 @@ func _apply_atmosphere(biome: Dictionary) -> void:
 		env.tonemap_exposure = 1.10
 		env.fog_light_color = biome.get("fog_color", Color(0.72, 0.80, 0.90))
 		env.fog_density = biome.get("fog_density", 0.00004)
+		env.fog_depth_begin = 250.0
+		env.fog_depth_end = 18000.0
+		env.volumetric_fog_density = 0.0006
+		env.volumetric_fog_length = 8000.0
+		env.volumetric_fog_ambient_inject = 0.85
 
 func _build_mountain_biome() -> void:
 	# Paved Alpine Runway ($2,200\text{m}$)

@@ -119,8 +119,10 @@ func evaluate_and_apply_forces(
 	# Local forward: -Z of this wheel node (takes steering into account)
 	# Local right/lateral: +X of this wheel node
 	var wheel_basis = global_transform.basis if is_inside_tree() else transform.basis
-	var wheel_forward_world = (wheel_basis * Vector3(0, 0, -1)).slide(ground_normal).normalized()
-	var wheel_lateral_world = (wheel_basis * Vector3(1, 0, 0)).slide(ground_normal).normalized()
+	var fwd_proj = (wheel_basis * Vector3(0, 0, -1)).slide(ground_normal)
+	var wheel_forward_world = fwd_proj.normalized() if fwd_proj.length_squared() > 0.0001 else (wheel_basis * Vector3(0, 0, -1))
+	var lat_proj = (wheel_basis * Vector3(1, 0, 0)).slide(ground_normal)
+	var wheel_lateral_world = lat_proj.normalized() if lat_proj.length_squared() > 0.0001 else (wheel_basis * Vector3(1, 0, 0))
 
 	var v_longitudinal = v_contact.dot(wheel_forward_world)
 	var v_lateral = v_contact.dot(wheel_lateral_world)
@@ -155,7 +157,8 @@ func evaluate_and_apply_forces(
 	var f_total_wheel = f_suspension + f_lateral + f_longitudinal
 	var body_pos = body.global_position if body.is_inside_tree() else body.position
 	var force_offset = contact_pt - body_pos
-	body.apply_force(f_total_wheel, force_offset)
+	if not is_nan(f_total_wheel.x) and not is_inf(f_total_wheel.x) and not is_nan(force_offset.x):
+		body.apply_force(f_total_wheel, force_offset)
 
 	return {
 		"in_contact": true,

@@ -665,9 +665,13 @@ func connect_loader_signals() -> void:
 				if bus:
 					bus.show_toast_requested.emit("Failed to load %s assets" % g_id, Color(1.0, 0.3, 0.3))
 				return
-			var bus = GameConstants.get_autoload(self, "EventBus")
-			if success and bus:
-				bus.game_selected.emit(g_id)
+			var gm = GameConstants.get_autoload(self, "GameManager")
+			if gm and is_instance_valid(_scene) and _scene is PackedScene:
+				gm.start_game(g_id, _scene)
+			else:
+				var bus = GameConstants.get_autoload(self, "EventBus")
+				if success and bus:
+					bus.game_selected.emit(g_id)
 		)
 
 func _notification(what: int) -> void:

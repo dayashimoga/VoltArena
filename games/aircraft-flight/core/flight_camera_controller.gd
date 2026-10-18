@@ -38,7 +38,7 @@ func _ready() -> void:
 	camera.name = "ActiveFlightCamera"
 	camera.fov = base_fov
 	camera.near = 0.1
-	camera.far = 28000.0 # 28 km render distance for open skies
+	camera.far = 32000.0 # 32 km render distance for open skies
 	add_child(camera)
 	current_mode = default_view_mode
 

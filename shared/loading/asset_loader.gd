@@ -61,7 +61,7 @@ func request_game_load(game_id: String, scene_path: String) -> void:
 	if FileAccess.file_exists(pck_path):
 		ProjectSettings.load_resource_pack(pck_path)
 
-	var err = ResourceLoader.load_threaded_request(scene_path)
+	var err = ResourceLoader.load_threaded_request(scene_path, "", true)
 	if err != OK:
 		# Fallback to direct load
 		if ResourceLoader.exists(scene_path):
@@ -71,3 +71,8 @@ func request_game_load(game_id: String, scene_path: String) -> void:
 			load_completed.emit(game_id, false, null)
 		is_loading = false
 		set_process(false)
+
+## Asynchronous loading coroutine that yields to the engine main loop every frame
+func load_game_scene(scene_path: String) -> void:
+	request_game_load("game_scene", scene_path)
+

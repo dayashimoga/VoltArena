@@ -30,6 +30,18 @@ var agility_bar: ProgressBar
 var g_bar: ProgressBar
 var mission_desc_label: Label
 
+# Interactive Tactical Mission Preview Components
+var mission_map_canvas: Control
+var briefing_alt_val: Label
+var briefing_time_val: Label
+var briefing_weather_val: Label
+var briefing_diff_val: Label
+
+# Cinematic Camera Rig
+var studio_cam: Camera3D
+var target_cam_pos: Vector3 = Vector3(0.0, 2.6, 9.8)
+var target_cam_look: Vector3 = Vector3(0.0, 0.65, 0.0)
+
 signal launch_requested(aircraft_id: String, mission_id: String, world_id: String, primary_col: Color, accent_col: Color)
 signal exit_requested()
 
@@ -45,6 +57,13 @@ var last_mouse_x: float = 0.0
 func _physics_process(delta: float) -> void:
 	if is_instance_valid(turntable_root) and not is_dragging:
 		turntable_root.rotate_y(delta * 0.35)
+
+	# Smooth cinematic camera pan toward mission framing
+	if is_instance_valid(studio_cam):
+		studio_cam.position = studio_cam.position.lerp(target_cam_pos, delta * 3.0)
+		var current_look = studio_cam.position - studio_cam.transform.basis.z * 5.0
+		var next_look = current_look.lerp(target_cam_look, delta * 3.5)
+		studio_cam.look_at(next_look, Vector3.UP)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -135,10 +154,10 @@ func _build_hangar_ui() -> void:
 	left_vbox.add_child(_create_spec_row("AGILITY / ROLL", 8.0, func(bar): agility_bar = bar))
 	left_vbox.add_child(_create_spec_row("AIRFRAME G-RATING", 12.0, func(bar): g_bar = bar))
 
-	# --- RIGHT PANEL: MISSION & WORLD SELECTOR ---
-	var right_panel = _create_glass_panel(Vector2(320, 500))
+	# --- RIGHT PANEL: INTERACTIVE TACTICAL MISSION PREVIEW & BRIEFING ---
+	var right_panel = _create_glass_panel(Vector2(350, 560))
 	right_panel.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	right_panel.offset_left = -344
+	right_panel.offset_left = -374
 	root_control.add_child(right_panel)
 
 	var right_vbox = VBoxContainer.new()
@@ -146,20 +165,20 @@ func _build_hangar_ui() -> void:
 	right_panel.add_child(right_vbox)
 
 	var m_hdr = Label.new()
-	m_hdr.text = "SELECT MISSION"
+	m_hdr.text = "MISSION SELECTION & BRIEFING"
 	m_hdr.add_theme_font_size_override("font_size", 12)
-	m_hdr.add_theme_color_override("font_color", Color(0.7, 0.75, 0.8))
+	m_hdr.add_theme_color_override("font_color", Color(0.2, 0.95, 0.4))
 	right_vbox.add_child(m_hdr)
 
-	# Mission List Scroll Container (Prevents overflowing viewport)
+	# Mission List Scroll Container (Compact button list)
 	var mission_scroll = ScrollContainer.new()
-	mission_scroll.custom_minimum_size = Vector2(280, 190)
+	mission_scroll.custom_minimum_size = Vector2(310, 110)
 	mission_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	mission_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	right_vbox.add_child(mission_scroll)
 
 	var m_list_vbox = VBoxContainer.new()
-	m_list_vbox.add_theme_constant_override("separation", 4)
+	m_list_vbox.add_theme_constant_override("separation", 3)
 	m_list_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mission_scroll.add_child(m_list_vbox)
 
@@ -168,23 +187,86 @@ func _build_hangar_ui() -> void:
 		var m_id = m.get("id", "")
 		var btn = Button.new()
 		btn.text = m.get("title", "")
-		btn.custom_minimum_size = Vector2(260, 28)
+		btn.custom_minimum_size = Vector2(290, 26)
 		btn.add_theme_font_size_override("font_size", 11)
 		btn.pressed.connect(func(): _update_selected_mission(m_id))
 		m_list_vbox.add_child(btn)
 
+	# Interactive Tactical Route Map Canvas
+	var map_hdr = Label.new()
+	map_hdr.text = "TACTICAL ROUTE & AIRSPACE"
+	map_hdr.add_theme_font_size_override("font_size", 10)
+	map_hdr.add_theme_color_override("font_color", Color(0.65, 0.75, 0.85))
+	right_vbox.add_child(map_hdr)
+
+	mission_map_canvas = Control.new()
+	mission_map_canvas.custom_minimum_size = Vector2(310, 125)
+	mission_map_canvas.draw.connect(func(): _draw_tactical_mission_map(mission_map_canvas))
+	right_vbox.add_child(mission_map_canvas)
+
+	# Mission Briefing Metrics Grid
+	var grid = GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 3)
+	right_vbox.add_child(grid)
+
+	var l_alt = Label.new()
+	l_alt.text = "ALTITUDE:"
+	l_alt.add_theme_font_size_override("font_size", 10)
+	l_alt.add_theme_color_override("font_color", Color(0.6, 0.65, 0.7))
+	grid.add_child(l_alt)
+	briefing_alt_val = Label.new()
+	briefing_alt_val.text = "Open"
+	briefing_alt_val.add_theme_font_size_override("font_size", 10)
+	briefing_alt_val.add_theme_color_override("font_color", Color(0.2, 0.95, 1.0))
+	grid.add_child(briefing_alt_val)
+
+	var l_time = Label.new()
+	l_time.text = "EST. TIME:"
+	l_time.add_theme_font_size_override("font_size", 10)
+	l_time.add_theme_color_override("font_color", Color(0.6, 0.65, 0.7))
+	grid.add_child(l_time)
+	briefing_time_val = Label.new()
+	briefing_time_val.text = "Unlimited"
+	briefing_time_val.add_theme_font_size_override("font_size", 10)
+	briefing_time_val.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	grid.add_child(briefing_time_val)
+
+	var l_wx = Label.new()
+	l_wx.text = "WEATHER:"
+	l_wx.add_theme_font_size_override("font_size", 10)
+	l_wx.add_theme_color_override("font_color", Color(0.6, 0.65, 0.7))
+	grid.add_child(l_wx)
+	briefing_weather_val = Label.new()
+	briefing_weather_val.text = "VMC Clear"
+	briefing_weather_val.add_theme_font_size_override("font_size", 10)
+	briefing_weather_val.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0))
+	grid.add_child(briefing_weather_val)
+
+	var l_diff = Label.new()
+	l_diff.text = "DIFFICULTY:"
+	l_diff.add_theme_font_size_override("font_size", 10)
+	l_diff.add_theme_color_override("font_color", Color(0.6, 0.65, 0.7))
+	grid.add_child(l_diff)
+	briefing_diff_val = Label.new()
+	briefing_diff_val.text = "★☆☆☆☆"
+	briefing_diff_val.add_theme_font_size_override("font_size", 10)
+	briefing_diff_val.add_theme_color_override("font_color", Color(0.2, 1.0, 0.4))
+	grid.add_child(briefing_diff_val)
+
 	mission_desc_label = Label.new()
 	mission_desc_label.text = "Explore the vast 8km open world."
 	mission_desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	mission_desc_label.custom_minimum_size = Vector2(280, 48)
-	mission_desc_label.add_theme_font_size_override("font_size", 10)
+	mission_desc_label.custom_minimum_size = Vector2(310, 36)
+	mission_desc_label.add_theme_font_size_override("font_size", 9)
 	right_vbox.add_child(mission_desc_label)
 
-	# Docked Action Buttons
+	# Action Buttons
 	var btn_fly = Button.new()
 	btn_fly.text = "★ FLY MISSION ★"
-	btn_fly.custom_minimum_size = Vector2(280, 40)
-	btn_fly.add_theme_font_size_override("font_size", 14)
+	btn_fly.custom_minimum_size = Vector2(310, 36)
+	btn_fly.add_theme_font_size_override("font_size", 13)
 	btn_fly.modulate = Color(0.2, 1.0, 0.4)
 	btn_fly.pressed.connect(func():
 		launch_requested.emit(selected_aircraft_id, selected_mission_id, selected_world_id, selected_primary_color, selected_accent_color)
@@ -193,8 +275,8 @@ func _build_hangar_ui() -> void:
 
 	var btn_exit = Button.new()
 	btn_exit.text = "EXIT TO LAUNCHER"
-	btn_exit.custom_minimum_size = Vector2(280, 30)
-	btn_exit.add_theme_font_size_override("font_size", 11)
+	btn_exit.custom_minimum_size = Vector2(310, 26)
+	btn_exit.add_theme_font_size_override("font_size", 10)
 	btn_exit.pressed.connect(func(): exit_requested.emit())
 	right_vbox.add_child(btn_exit)
 
@@ -225,12 +307,12 @@ func _build_turntable_viewport() -> void:
 	preview_viewport.add_child(world_env)
 
 	# Studio Camera: perfectly framed at eye level with slight upward angle
-	var cam = Camera3D.new()
-	cam.position = Vector3(0.0, 2.6, 9.8)
-	cam.current = true
-	cam.fov = 46.0
-	preview_viewport.add_child(cam)
-	cam.look_at(Vector3(0.0, 0.65, 0.0), Vector3.UP)
+	studio_cam = Camera3D.new()
+	studio_cam.position = Vector3(0.0, 2.6, 9.8)
+	studio_cam.current = true
+	studio_cam.fov = 46.0
+	preview_viewport.add_child(studio_cam)
+	studio_cam.look_at(Vector3(0.0, 0.65, 0.0), Vector3.UP)
 
 	# Three-Point Studio Lighting
 	# 1. Warm Directional Key Light
@@ -406,8 +488,133 @@ func _update_selected_aircraft(ac_id: String) -> void:
 func _update_selected_mission(m_id: String) -> void:
 	selected_mission_id = m_id
 	var m = MissionDefs.get_mission(m_id)
-	mission_desc_label.text = m.get("desc", "")
+	if mission_desc_label:
+		mission_desc_label.text = m.get("desc", "")
 	selected_world_id = m.get("world_id", "metropolitan_city")
+
+	# Update Briefing Metrics & Camera Target
+	if briefing_alt_val and briefing_time_val and briefing_weather_val and briefing_diff_val:
+		match m_id:
+			"m1_free_flight":
+				briefing_alt_val.text = "Open (0 - 4,000m MSL)"
+				briefing_time_val.text = "Unlimited"
+				briefing_weather_val.text = "Clear / 090° @ 4 kts"
+				briefing_diff_val.text = "★☆☆☆☆ (Beginner)"
+				target_cam_pos = Vector3(0.0, 2.6, 9.8)
+				target_cam_look = Vector3(0.0, 0.65, 0.0)
+			"m2_takeoff_landing":
+				briefing_alt_val.text = "600m MSL (Flare < 2.5 m/s)"
+				briefing_time_val.text = "180s (ILS Circuit)"
+				briefing_weather_val.text = "Crosswind 090° @ 8 kts"
+				briefing_diff_val.text = "★★☆☆☆ (Moderate)"
+				target_cam_pos = Vector3(2.5, 2.2, 8.5)
+				target_cam_look = Vector3(0.0, 0.65, 0.0)
+			"m3_urban_corridor":
+				briefing_alt_val.text = "< 120m AGL (Downtown Deck)"
+				briefing_time_val.text = "120s (Corridor Run)"
+				briefing_weather_val.text = "Wind Shear / Gusts 16 kts"
+				briefing_diff_val.text = "★★★☆☆ (Advanced)"
+				target_cam_pos = Vector3(-3.0, 1.8, 8.2)
+				target_cam_look = Vector3(0.0, 0.50, 0.0)
+			"m4_checkpoint_race":
+				briefing_alt_val.text = "55m - 220m AGL (8 Rings)"
+				briefing_time_val.text = "90s (Gold < 45s)"
+				briefing_weather_val.text = "Harbor Breeze 12 kts"
+				briefing_diff_val.text = "★★★★☆ (Expert)"
+				target_cam_pos = Vector3(0.0, 3.2, 9.2)
+				target_cam_look = Vector3(0.0, 0.40, 0.0)
+			"m5_deadstick":
+				briefing_alt_val.text = "2,800m MSL (Deadstick Glide)"
+				briefing_time_val.text = "150s (Engine Flameout)"
+				briefing_weather_val.text = "Mountain Sink / Turb"
+				briefing_diff_val.text = "★★★★☆ (Emergency)"
+				target_cam_pos = Vector3(3.2, 3.6, 10.5)
+				target_cam_look = Vector3(0.0, 0.70, 0.0)
+			"m6_mountain_slalom":
+				briefing_alt_val.text = "150m AGL (Ridge Contour)"
+				briefing_time_val.text = "110s (Gold < 55s)"
+				briefing_weather_val.text = "Alpine Shear / 22 kts"
+				briefing_diff_val.text = "★★★★★ (Ace)"
+				target_cam_pos = Vector3(-2.8, 2.4, 8.8)
+				target_cam_look = Vector3(0.0, 0.60, 0.0)
+			_:
+				briefing_alt_val.text = "Standard Flight Envelope"
+				briefing_time_val.text = "120s"
+				briefing_weather_val.text = "VFR Conditions"
+				briefing_diff_val.text = "★★★☆☆ (Advanced)"
+				target_cam_pos = Vector3(0.0, 2.6, 9.8)
+				target_cam_look = Vector3(0.0, 0.65, 0.0)
+
+	if is_instance_valid(mission_map_canvas):
+		mission_map_canvas.queue_redraw()
+
+func _draw_tactical_mission_map(canvas: Control) -> void:
+	var sz = canvas.size
+	if sz.x <= 10.0 or sz.y <= 10.0:
+		return
+	var center = sz * 0.5
+	var bg_col = Color(0.04, 0.08, 0.12, 0.95)
+	var border_col = Color(0.15, 0.85, 0.45, 0.7)
+	var grid_col = Color(0.12, 0.28, 0.35, 0.5)
+	var waypoint_col = Color(0.2, 0.95, 1.0)
+	var line_col = Color(0.2, 0.95, 0.5, 0.85)
+
+	# 1. Background and border
+	canvas.draw_rect(Rect2(Vector2.ZERO, sz), bg_col, true)
+	canvas.draw_rect(Rect2(Vector2.ZERO, sz), border_col, false, 1.5)
+
+	# 2. Concentric radar range rings
+	for r in [22.0, 44.0, 64.0]:
+		canvas.draw_arc(center, r, 0.0, TAU, 32, grid_col, 1.0)
+
+	# Crosshairs
+	canvas.draw_line(Vector2(center.x, 6), Vector2(center.x, sz.y - 6), grid_col, 1.0)
+	canvas.draw_line(Vector2(6, center.y), Vector2(sz.x - 6, center.y), grid_col, 1.0)
+
+	# Compass marks
+	var font = ThemeDB.fallback_font
+	canvas.draw_string(font, Vector2(center.x - 4, 12), "N", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(0.6, 0.8, 0.9))
+	canvas.draw_string(font, Vector2(center.x - 4, sz.y - 3), "S", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(0.6, 0.8, 0.9))
+	canvas.draw_string(font, Vector2(5, center.y + 3), "W", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(0.6, 0.8, 0.9))
+	canvas.draw_string(font, Vector2(sz.x - 12, center.y + 3), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(0.6, 0.8, 0.9))
+
+	# 3. Draw Runway Strip
+	var rwy_rect = Rect2(center.x - 16, center.y + 18, 32, 6)
+	canvas.draw_rect(rwy_rect, Color(0.2, 0.25, 0.3), true)
+	canvas.draw_line(Vector2(rwy_rect.position.x, rwy_rect.position.y + 3), Vector2(rwy_rect.end.x, rwy_rect.position.y + 3), Color.WHITE, 1.0)
+	canvas.draw_string(font, Vector2(rwy_rect.position.x - 20, rwy_rect.position.y + 6), "09L", HORIZONTAL_ALIGNMENT_RIGHT, -1, 8, Color(0.8, 0.9, 1.0))
+
+	# 4. Waypoint Trajectory or Circuit Pattern
+	var m = MissionDefs.get_mission(selected_mission_id)
+	var waypoints: Array = m.get("ring_waypoints", [])
+	if not waypoints.is_empty():
+		var pts: Array[Vector2] = []
+		for wp in waypoints:
+			var px = center.x + (wp.x / 2500.0) * (sz.x * 0.40)
+			var py = center.y + (wp.z / 2500.0) * (sz.y * 0.40)
+			pts.append(Vector2(clampf(px, 12, sz.x - 12), clampf(py, 12, sz.y - 12)))
+
+		for i in range(pts.size() - 1):
+			canvas.draw_line(pts[i], pts[i + 1], line_col, 2.0)
+
+		for i in range(pts.size()):
+			canvas.draw_circle(pts[i], 4.5, Color(0.04, 0.08, 0.12))
+			canvas.draw_arc(pts[i], 4.5, 0.0, TAU, 16, waypoint_col, 1.8)
+			canvas.draw_string(font, pts[i] + Vector2(5, -3), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+	else:
+		var circuit_pts = [
+			Vector2(center.x - 25, center.y + 18),
+			Vector2(center.x + 30, center.y + 18),
+			Vector2(center.x + 45, center.y - 20),
+			Vector2(center.x - 40, center.y - 20),
+			Vector2(center.x - 25, center.y + 18)
+		]
+		for i in range(circuit_pts.size() - 1):
+			canvas.draw_line(circuit_pts[i], circuit_pts[i + 1], Color(0.2, 0.9, 0.5, 0.65), 1.5)
+
+	# Start Aircraft Indicator
+	var start_pos = Vector2(center.x - 14, center.y + 21)
+	canvas.draw_circle(start_pos, 3.5, Color(0.2, 1.0, 0.4))
 
 func _create_spec_row(title: String, max_val: float, bar_callback: Callable) -> VBoxContainer:
 	var vbox = VBoxContainer.new()

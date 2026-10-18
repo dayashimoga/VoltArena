@@ -151,10 +151,20 @@ func _setup_audio_players() -> void:
 	tire_audio = audio_rig.get_node_or_null("TireAudio")
 
 func _physics_process(delta: float) -> void:
+	# Sanitize Transform & Velocities against NaN / Inf explosion
+	if is_nan(linear_velocity.x) or is_nan(global_position.x) or is_inf(linear_velocity.x) or is_inf(global_position.x):
+		push_error("NaN detected in aircraft transform! Resetting state...")
+		linear_velocity = Vector3.ZERO
+		angular_velocity = Vector3.ZERO
+		global_position = Vector3(0.0, 1.2, 0.0)
+		global_transform.basis = Basis.IDENTITY
+
 	_read_inputs(delta)
 
 	# 1. Atmospheric Model (ISA up to 20,000m)
 	altitude_msl = global_position.y if is_inside_tree() else position.y
+	if is_nan(altitude_msl) or is_inf(altitude_msl):
+		altitude_msl = 0.0
 	_update_altitude_agl()
 	var atmo = calculate_isa_atmosphere(altitude_msl)
 	var air_density = atmo["density"]
@@ -322,6 +332,8 @@ static func calculate_isa_density(alt_m: float) -> float:
 ## Computes International Standard Atmosphere (ISA) parameters up to 20,000m.
 ## Returns Dictionary with temperature (K), pressure (Pa), density (kg/m^3), speed_of_sound (m/s).
 static func calculate_isa_atmosphere(alt_m: float) -> Dictionary:
+	if is_nan(alt_m) or is_inf(alt_m):
+		alt_m = 0.0
 	var h = clamp(alt_m, -500.0, 20000.0)
 	var t0 = 288.15
 	var p0 = 101325.0
@@ -335,20 +347,22 @@ static func calculate_isa_atmosphere(alt_m: float) -> Dictionary:
 
 	if h <= 11000.0:
 		# Troposphere
-		temp = t0 - lapse_rate * h
+		temp = maxf(180.0, t0 - lapse_rate * h)
 		var exp_factor = g0 / (r_gas * lapse_rate) # ~5.25588
-		press = p0 * pow(temp / t0, exp_factor)
+		press = p0 * pow(maxf(0.01, temp / t0), exp_factor)
 	else:
 		# Stratosphere lower isothermal layer (11 km to 20 km)
-		var temp_11 = t0 - lapse_rate * 11000.0 # 216.65 K
+		var temp_11 = maxf(180.0, t0 - lapse_rate * 11000.0) # 216.65 K
 		var exp_factor_11 = g0 / (r_gas * lapse_rate)
-		var press_11 = p0 * pow(temp_11 / t0, exp_factor_11) # ~22632 Pa
+		var press_11 = p0 * pow(maxf(0.01, temp_11 / t0), exp_factor_11) # ~22632 Pa
 
 		temp = temp_11
 		press = press_11 * exp(-g0 * (h - 11000.0) / (r_gas * temp_11))
 
-	var density = press / (r_gas * temp)
-	var speed_of_sound = sqrt(gamma * r_gas * temp)
+	press = maxf(10.0, press)
+	temp = maxf(150.0, temp)
+	var density = maxf(0.01, press / (r_gas * temp))
+	var speed_of_sound = sqrt(maxf(100.0, gamma * r_gas * temp))
 
 	return {
 		"temperature": temp,
@@ -396,15 +410,20 @@ func _update_engine_and_propeller(delta: float, air_density: float) -> void:
 	var effective_vel = max(airspeed_tas, 12.0)
 	# Calibrated scale for trainer category (static thrust ~ 3200 N)
 	var thrust_mag = (prop_efficiency_eta * current_power_watts * 0.28) / effective_vel
+	if is_nan(thrust_mag) or is_inf(thrust_mag):
+		thrust_mag = 0.0
 	current_thrust_n = thrust_mag
 
 	var thrust_vector = forward_axis_world * current_thrust_n
-	apply_force(thrust_vector, Vector3.ZERO)
+	if not is_nan(thrust_vector.x) and not is_inf(thrust_vector.x):
+		apply_force(thrust_vector, Vector3.ZERO)
 
 	# 4. Propeller Slipstream Velocity (Momentum Theory)
-	var prop_area = PI * pow(prop_diameter_m * 0.5, 2)
+	var prop_area = max(0.1, PI * pow(prop_diameter_m * 0.5, 2))
 	var wash_term = (airspeed_tas * airspeed_tas) + (2.0 * current_thrust_n / max(0.2, air_density * prop_area))
 	var delta_v_prop = sqrt(max(0.0, wash_term)) - airspeed_tas
+	if is_nan(delta_v_prop) or is_inf(delta_v_prop):
+		delta_v_prop = 0.0
 	delta_v_prop = clamp(delta_v_prop, 0.0, 35.0)
 
 	prop_slipstream_vel = forward_axis_world * delta_v_prop
@@ -487,7 +506,7 @@ func _update_landing_gear(delta: float) -> void:
 func _update_telemetry(delta: float, air_density: float, speed_of_sound: float) -> void:
 	# Indicated Airspeed (IAS) = TAS * sqrt(rho / rho_0)
 	var rho_0 = 1.225
-	airspeed_ias = airspeed_tas * sqrt(air_density / rho_0)
+	airspeed_ias = airspeed_tas * sqrt(maxf(0.001, air_density / rho_0))
 	airspeed_kias = airspeed_ias * 1.94384 # m/s to knots
 
 	# Vertical Speed (feet per minute)
@@ -500,6 +519,15 @@ func _update_telemetry(delta: float, air_density: float, speed_of_sound: float) 
 	var normal_axis = (global_transform.basis if is_inside_tree() else transform.basis).y
 	var a_normal = accel.dot(normal_axis)
 	current_g_force = 1.0 + (a_normal / GRAVITY_CONST)
+
+	# Sanitize all telemetry fields
+	if is_nan(airspeed_tas) or is_inf(airspeed_tas): airspeed_tas = 0.0
+	if is_nan(airspeed_ias) or is_inf(airspeed_ias): airspeed_ias = 0.0
+	if is_nan(airspeed_kias) or is_inf(airspeed_kias): airspeed_kias = 0.0
+	if is_nan(altitude_msl) or is_inf(altitude_msl): altitude_msl = 0.0
+	if is_nan(altitude_agl) or is_inf(altitude_agl): altitude_agl = 0.0
+	if is_nan(vertical_speed_fpm) or is_inf(vertical_speed_fpm): vertical_speed_fpm = 0.0
+	if is_nan(current_g_force) or is_inf(current_g_force): current_g_force = 1.0
 
 	# Stall Warning Horn: Threshold >= 13.5 deg AND weight-on-wheels is false (in-flight)
 	var should_stall = (max_inboard_aoa_deg >= stall_warning_aoa_deg) and (not weight_on_wheels)

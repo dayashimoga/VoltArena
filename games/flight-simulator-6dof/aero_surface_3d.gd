@@ -148,7 +148,8 @@ func evaluate_and_apply_forces(
 	# Lift is perpendicular to local airflow in the pitch plane (plane containing airflow and local Y)
 	# Normal vector to span (local X):
 	var span_axis = Vector3.RIGHT
-	var lift_dir_local = span_axis.cross(local_flow_dir).normalized()
+	var cross_prod = span_axis.cross(local_flow_dir)
+	var lift_dir_local = cross_prod.normalized() if cross_prod.length_squared() > 0.0001 else Vector3.UP
 	# Ensure lift vector points upwards with positive lift
 	if lift_dir_local.y < 0.0 and cl > 0.0:
 		lift_dir_local = -lift_dir_local
@@ -181,8 +182,10 @@ func evaluate_and_apply_forces(
 	# Force applied at surface aerodynamic center relative to body origin
 	var body_pos = body.global_position if body.is_inside_tree() else body.position
 	var force_offset = p_surface - body_pos
-	body.apply_force(f_total_world, force_offset)
-	body.apply_torque(m_pitch_world)
+	if not is_nan(f_total_world.x) and not is_inf(f_total_world.x) and not is_nan(force_offset.x):
+		body.apply_force(f_total_world, force_offset)
+	if not is_nan(m_pitch_world.x) and not is_inf(m_pitch_world.x):
+		body.apply_torque(m_pitch_world)
 
 	# 12. Update Debug Visualization
 	if draw_debug_vectors and _immediate_mesh:

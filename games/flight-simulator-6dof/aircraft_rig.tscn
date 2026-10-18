@@ -198,6 +198,8 @@ wheel_radius = 0.3
 
 [node name="CockpitCamera" type="Camera3D" parent="CameraRig"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.55, -0.4)
+near = 0.15
+far = 25000.0
 fov = 75.0
 
 [node name="ChaseSpringArm" type="SpringArm3D" parent="CameraRig"]
@@ -206,6 +208,8 @@ collision_mask = 9
 spring_length = 11.0
 
 [node name="ChaseCamera" type="Camera3D" parent="CameraRig/ChaseSpringArm"]
+near = 0.15
+far = 25000.0
 current = true
 fov = 70.0
 

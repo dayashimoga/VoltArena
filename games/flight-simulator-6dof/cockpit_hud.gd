@@ -50,11 +50,20 @@ func update_telemetry(data: Dictionary) -> void:
 	flaps_deg = data.get("flaps_deg", 0.0)
 	brakes_on = data.get("brakes_on", false)
 
-	if aircraft:
+	if is_nan(airspeed_kias) or is_inf(airspeed_kias): airspeed_kias = 0.0
+	if is_nan(altitude_feet_msl) or is_inf(altitude_feet_msl): altitude_feet_msl = 0.0
+	if is_nan(vertical_speed_fpm) or is_inf(vertical_speed_fpm): vertical_speed_fpm = 0.0
+	if is_nan(g_force) or is_inf(g_force): g_force = 1.0
+	if is_nan(aoa_deg) or is_inf(aoa_deg): aoa_deg = 0.0
+
+	if aircraft and is_instance_valid(aircraft):
 		var rot = aircraft.global_rotation
-		pitch_rad = rot.x
-		roll_rad = rot.z
-		heading_deg = fposmod(rad_to_deg(-rot.y), 360.0)
+		pitch_rad = rot.x if not is_nan(rot.x) and not is_inf(rot.x) else 0.0
+		roll_rad = rot.z if not is_nan(rot.z) and not is_inf(rot.z) else 0.0
+		var yaw = rot.y if not is_nan(rot.y) and not is_inf(rot.y) else 0.0
+		heading_deg = fposmod(rad_to_deg(-yaw), 360.0)
+	if is_nan(heading_deg) or is_inf(heading_deg):
+		heading_deg = 0.0
 
 	queue_redraw()
 

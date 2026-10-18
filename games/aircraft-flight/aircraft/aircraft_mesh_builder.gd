@@ -408,81 +408,7 @@ static func _build_procedural_f22(root: Node3D, hull_color: Color, accent_color:
 static func build_a320_airliner(hull_color: Color, accent_color: Color) -> Node3D:
 	var root = Node3D.new()
 	root.name = "A320Visuals"
-
-	var model = ModelCache.get_model("res://assets/models/vehicles/aircraft_a320.glb")
-	if is_instance_valid(model):
-		model.name = "AirframeModel"
-		model.scale = Vector3(1.0, 1.0, 1.0)
-		model.rotation.y = PI * 0.5
-		model.position = Vector3(0.0, -2.8, 3.0)
-		root.add_child(model)
-
-		var mat_metal = _create_pbr_material(Color(0.28, 0.30, 0.34), 0.78, 0.30, 0.75)
-		var mat_dark = _create_pbr_material(Color(0.12, 0.13, 0.15), 0.90, 0.10, 0.80)
-
-		# Turbofan Blades
-		var fan_l = Node3D.new()
-		fan_l.name = "FanBladesLeft"
-		fan_l.position = Vector3(-5.4, -0.45, -2.7)
-		root.add_child(fan_l)
-
-		var fan_r = Node3D.new()
-		fan_r.name = "FanBladesRight"
-		fan_r.position = Vector3(5.4, -0.45, -2.7)
-		root.add_child(fan_r)
-
-		# Control Surfaces
-		var aileron_l = Node3D.new()
-		aileron_l.name = "AileronLeft"
-		root.add_child(aileron_l)
-		var aileron_r = Node3D.new()
-		aileron_r.name = "AileronRight"
-		root.add_child(aileron_r)
-
-		var flap_l = Node3D.new()
-		flap_l.name = "FlapLeft"
-		root.add_child(flap_l)
-		var flap_r = Node3D.new()
-		flap_r.name = "FlapRight"
-		root.add_child(flap_r)
-
-		var sp_l = Node3D.new()
-		sp_l.name = "SpoilerLeft"
-		root.add_child(sp_l)
-		var sp_r = Node3D.new()
-		sp_r.name = "SpoilerRight"
-		root.add_child(sp_r)
-
-		var rudder_l = Node3D.new()
-		rudder_l.name = "RudderLeft"
-		root.add_child(rudder_l)
-		var rudder_r = Node3D.new()
-		rudder_r.name = "RudderRight"
-		root.add_child(rudder_r)
-
-		var elev_l = Node3D.new()
-		elev_l.name = "ElevatorLeft"
-		root.add_child(elev_l)
-		var elev_r = Node3D.new()
-		elev_r.name = "ElevatorRight"
-		root.add_child(elev_r)
-
-		# Multi-Wheel Tricycle Gear
-		var gear_node = Node3D.new()
-		gear_node.name = "LandingGear"
-		_add_cyl(gear_node, 0.12, 0.12, 2.2, Vector3(0.0, -0.25, -7.5), mat_metal)
-		_add_wheel(gear_node, 0.38, 0.16, Vector3(-0.24, -1.35, -7.5), mat_dark)
-		_add_wheel(gear_node, 0.38, 0.16, Vector3(0.24, -1.35, -7.5), mat_dark)
-		for side in [-1.0, 1.0]:
-			var mx = side * 3.8
-			_add_cyl(gear_node, 0.18, 0.18, 2.4, Vector3(mx, -0.40, 1.2), mat_metal)
-			_add_wheel(gear_node, 0.52, 0.22, Vector3(mx - 0.30, -1.50, 1.2), mat_dark)
-			_add_wheel(gear_node, 0.52, 0.22, Vector3(mx + 0.30, -1.50, 1.2), mat_dark)
-		root.add_child(gear_node)
-	else:
-		_build_procedural_a320(root, hull_color, accent_color)
-
-	return root
+	return _build_procedural_a320(root, hull_color, accent_color)
 
 static func _build_procedural_a320(root: Node3D, hull_color: Color, accent_color: Color) -> Node3D:
 	var mat_hull = _create_pbr_material(hull_color, 0.20, 0.15, 0.95)
@@ -586,74 +512,7 @@ static func _build_procedural_a320(root: Node3D, hull_color: Color, accent_color
 static func build_extra330_sport(hull_color: Color, accent_color: Color) -> Node3D:
 	var root = Node3D.new()
 	root.name = "Extra330Visuals"
-
-	var model = ModelCache.get_model("res://assets/models/vehicles/aircraft_propeller.glb")
-	if is_instance_valid(model):
-		model.name = "AirframeModel"
-		model.scale = Vector3(8.0, 8.0, 8.0)
-		model.rotation.y = PI
-		model.position = Vector3(0.0, 0.0, 0.0)
-		root.add_child(model)
-
-		var mat_metal = _create_pbr_material(Color(0.20, 0.22, 0.25), 0.85, 0.20, 0.70)
-		var mat_accent = _create_pbr_material(accent_color, 0.22, 0.25, 0.90)
-		var mat_dark = _create_pbr_material(Color(0.10, 0.11, 0.12), 0.90, 0.10, 0.80)
-
-		# Spinning 3-Blade Propeller
-		var prop_root = Node3D.new()
-		prop_root.name = "Propeller"
-		prop_root.position = Vector3(0.0, 0.15, -2.4)
-		root.add_child(prop_root)
-
-		var spinner = _add_cone(prop_root, 0.25, 0.55, Vector3(0.0, 0.0, -0.15), mat_accent)
-		spinner.rotation_degrees.x = 90.0
-
-		for i in range(3):
-			var blade = _add_box(prop_root, Vector3(0.08, 1.05, 0.04), Vector3(0.0, 0.55, 0.0), mat_metal)
-			blade.rotation_degrees.z = i * 120.0
-
-		var blur_mat = _create_prop_blur_material(3)
-		var blur_disk = _add_disc(prop_root, 1.15, Vector3(0.0, 0.0, -0.05), blur_mat)
-		blur_disk.name = "PropBlurDisk"
-		blur_disk.visible = false
-
-		# Control Surfaces
-		var aileron_l = Node3D.new()
-		aileron_l.name = "AileronLeft"
-		root.add_child(aileron_l)
-		var aileron_r = Node3D.new()
-		aileron_r.name = "AileronRight"
-		root.add_child(aileron_r)
-
-		var rudder_l = Node3D.new()
-		rudder_l.name = "RudderLeft"
-		root.add_child(rudder_l)
-		var rudder_r = Node3D.new()
-		rudder_r.name = "RudderRight"
-		root.add_child(rudder_r)
-
-		var elev_l = Node3D.new()
-		elev_l.name = "ElevatorLeft"
-		root.add_child(elev_l)
-		var elev_r = Node3D.new()
-		elev_r.name = "ElevatorRight"
-		root.add_child(elev_r)
-
-		# Taildragger Landing Gear with Wheel Spats
-		var gear_node = Node3D.new()
-		gear_node.name = "LandingGear"
-		for side in [-1.0, 1.0]:
-			var gx = side * 1.05
-			var strut = _add_box(gear_node, Vector3(0.06, 0.8, 0.12), Vector3(gx * 0.75, -0.25, -0.8), mat_metal)
-			strut.rotation_degrees.z = -side * 18.0
-			var spat = _add_box(gear_node, Vector3(0.22, 0.36, 0.72), Vector3(gx, -0.72, -0.8), mat_accent)
-			_add_wheel(spat, 0.18, 0.10, Vector3(0.0, -0.05, 0.0), mat_dark)
-		_add_wheel(gear_node, 0.10, 0.06, Vector3(0.0, -0.20, 2.0), mat_dark)
-		root.add_child(gear_node)
-	else:
-		_build_procedural_extra330(root, hull_color, accent_color)
-
-	return root
+	return _build_procedural_extra330(root, hull_color, accent_color)
 
 static func _build_procedural_extra330(root: Node3D, hull_color: Color, accent_color: Color) -> Node3D:
 	var mat_hull = _create_pbr_material(hull_color, 0.18, 0.20, 0.95)
@@ -663,41 +522,49 @@ static func _build_procedural_extra330(root: Node3D, hull_color: Color, accent_c
 	var mat_canopy = _create_canopy_material(Color(0.12, 0.18, 0.28, 0.50))
 	var mat_white = _create_pbr_material(Color(0.95, 0.95, 0.95), 0.3, 0.1)
 
+	# 1. Welded Composite Fuselage with Aerodynamic Engine Cowling
 	_add_box(root, Vector3(0.85, 0.98, 4.2), Vector3(0.0, 0.30, 0.2), mat_hull)
 	var cowl = _add_cyl(root, 0.48, 0.48, 1.4, Vector3(0.0, 0.30, -2.4), mat_accent)
 	cowl.rotation_degrees.x = 90.0
 
+	# Engine air intakes & tuned exhaust pipes
 	_add_box(root, Vector3(0.25, 0.15, 0.3), Vector3(-0.25, 0.32, -3.1), mat_dark)
 	_add_box(root, Vector3(0.25, 0.15, 0.3), Vector3(0.25, 0.32, -3.1), mat_dark)
 	_add_box(root, Vector3(0.30, 0.18, 0.4), Vector3(0.0, -0.05, -2.2), mat_dark)
-
 	_add_cyl(root, 0.05, 0.05, 0.6, Vector3(-0.35, -0.08, -1.8), mat_metal).rotation_degrees.x = 45.0
 	_add_cyl(root, 0.05, 0.05, 0.6, Vector3(0.35, -0.08, -1.8), mat_metal).rotation_degrees.x = 45.0
 
+	# 2. Bubble Canopy with Cockpit Interior & Pilot
 	var canopy = _add_box(root, Vector3(0.68, 0.58, 2.1), Vector3(0.0, 0.90, -0.3), mat_canopy)
 	canopy.name = "Canopy"
 	_add_box(canopy, Vector3(0.62, 0.52, 0.08), Vector3(0.0, 0.0, 0.2), mat_dark)
 	_add_box(root, Vector3(0.36, 0.55, 0.38), Vector3(0.0, 0.68, 0.0), mat_dark)
 	_add_sphere(root, 0.15, Vector3(0.0, 1.05, 0.0), _create_pbr_material(Color(0.9, 0.15, 0.1), 0.2, 0.2))
 
+	# 3. 3-Blade Curved Scimitar Propeller paired with Motion Blur Disk Shader
 	var prop_root = Node3D.new()
 	prop_root.name = "Propeller"
 	prop_root.position = Vector3(0.0, 0.30, -3.15)
 	root.add_child(prop_root)
 
-	var spinner = _add_cone(prop_root, 0.25, 0.55, Vector3(0.0, 0.0, -0.15), mat_accent)
+	var spinner = _add_cone(prop_root, 0.28, 0.65, Vector3(0.0, 0.0, -0.18), mat_metal)
 	spinner.rotation_degrees.x = 90.0
 
 	for i in range(3):
-		var blade = _add_box(prop_root, Vector3(0.08, 1.05, 0.04), Vector3(0.0, 0.55, 0.0), mat_metal)
-		blade.rotation_degrees.z = i * 120.0
-		_add_box(blade, Vector3(0.09, 0.18, 0.05), Vector3(0.0, 0.45, 0.0), _create_pbr_material(Color(0.95, 0.85, 0.1), 0.4, 0.1))
+		var blade_root = Node3D.new()
+		blade_root.rotation_degrees.z = i * 120.0
+		prop_root.add_child(blade_root)
+
+		var blade = _add_box(blade_root, Vector3(0.08, 1.10, 0.04), Vector3(0.0, 0.58, 0.0), mat_dark)
+		blade.rotation_degrees.y = 15.0
+		_add_box(blade, Vector3(0.09, 0.20, 0.05), Vector3(0.0, 0.46, 0.0), _create_pbr_material(Color(0.96, 0.85, 0.1), 0.3, 0.1))
 
 	var blur_mat = _create_prop_blur_material(3)
-	var blur_disk = _add_disc(prop_root, 1.15, Vector3(0.0, 0.0, -0.05), blur_mat)
+	var blur_disk = _add_disc(prop_root, 1.20, Vector3(0.0, 0.0, -0.05), blur_mat)
 	blur_disk.name = "PropBlurDisk"
 	blur_disk.visible = false
 
+	# 4. Aerobatic Wings, Spade Ailerons & Wingtip Triangle Sight Devices
 	_add_box(root, Vector3(7.2, 0.10, 1.45), Vector3(0.0, 0.25, -0.3), mat_hull)
 
 	var aileron_l = _add_box(root, Vector3(3.0, 0.07, 0.45), Vector3(-2.1, 0.25, 0.55), mat_accent)
@@ -711,27 +578,53 @@ static func _build_procedural_extra330(root: Node3D, hull_color: Color, accent_c
 	_add_box(root, Vector3(0.04, 0.25, 0.35), Vector3(-3.65, 0.25, -0.3), mat_white)
 	_add_box(root, Vector3(0.04, 0.25, 0.35), Vector3(3.65, 0.25, -0.3), mat_white)
 
+	# 5. Vertical Fin & Oversized Aerobatic Rudder
 	var fin = _add_box(root, Vector3(0.09, 1.4, 1.1), Vector3(0.0, 1.05, 2.3), mat_hull)
 	var rudder = _add_box(fin, Vector3(0.11, 1.6, 0.75), Vector3(0.0, -0.1, 0.85), mat_accent)
 	rudder.name = "RudderLeft"
 	var rudder_r = _add_box(fin, Vector3(0.11, 1.6, 0.75), Vector3(0.0, -0.1, 0.85), mat_accent)
 	rudder_r.name = "RudderRight"
 
+	# Horizontal Stabilizers & Elevators
 	var elev_l = _add_box(root, Vector3(1.3, 0.07, 0.70), Vector3(-0.75, 0.38, 2.6), mat_accent)
 	elev_l.name = "ElevatorLeft"
 	var elev_r = _add_box(root, Vector3(1.3, 0.07, 0.70), Vector3(0.75, 0.38, 2.6), mat_accent)
 	elev_r.name = "ElevatorRight"
 
+	# 6. Sculpted Carbon Fiber Main Gear Legs with Flush Teardrop Wheel Pants (ZERO FLOATING BOXES!)
 	var gear_node = Node3D.new()
 	gear_node.name = "LandingGear"
 	root.add_child(gear_node)
 	for side in [-1.0, 1.0]:
 		var gx = side * 1.05
-		var strut = _add_box(gear_node, Vector3(0.06, 0.8, 0.12), Vector3(gx * 0.75, -0.25, -1.1), mat_metal)
-		strut.rotation_degrees.z = -side * 18.0
-		var spat = _add_box(gear_node, Vector3(0.22, 0.36, 0.72), Vector3(gx, -0.72, -1.1), mat_accent)
-		_add_wheel(spat, 0.18, 0.10, Vector3(0.0, -0.05, 0.0), mat_dark)
-	_add_wheel(gear_node, 0.10, 0.06, Vector3(0.0, -0.20, 2.5), mat_dark)
+		# Main carbon gear leg swept down and outward from belly to wheel center
+		var strut = _add_box(gear_node, Vector3(0.06, 0.76, 0.14), Vector3(gx * 0.65, -0.28, -1.05), mat_metal)
+		strut.rotation_degrees.z = -side * 26.0
+		strut.rotation_degrees.x = -6.0
+
+		# Aerodynamic teardrop wheel spat/pant attaching FLUSH to the carbon leg
+		var spat = Node3D.new()
+		spat.position = Vector3(gx, -0.66, -1.05)
+		spat.rotation_degrees.x = -4.0
+		gear_node.add_child(spat)
+
+		# Teardrop sculpted wheel pant
+		var spat_body = _add_sphere(spat, 0.20, Vector3(0.0, 0.0, -0.08), mat_accent)
+		spat_body.scale = Vector3(0.9, 1.25, 2.0)
+		var spat_tail = _add_cone(spat, 0.20, 0.50, Vector3(0.0, 0.0, 0.32), mat_accent)
+		spat_tail.rotation_degrees.x = -90.0
+
+		# Flush collar blending leg seamlessly into pant
+		var spat_collar = _add_box(spat, Vector3(0.12, 0.18, 0.24), Vector3(0.0, 0.14, -0.02), mat_accent)
+		spat_collar.rotation_degrees.z = -side * 14.0
+
+		# Recessed main tire nestled cleanly inside pant
+		_add_wheel(spat, 0.17, 0.09, Vector3(0.0, -0.06, 0.0), mat_dark)
+
+	# Steerable Tailwheel assembly
+	var tailwheel_strut = _add_cyl(gear_node, 0.03, 0.03, 0.35, Vector3(0.0, 0.0, 2.3), mat_metal)
+	tailwheel_strut.rotation_degrees.x = -45.0
+	_add_wheel(gear_node, 0.09, 0.05, Vector3(0.0, -0.22, 2.45), mat_dark)
 
 	return root
 

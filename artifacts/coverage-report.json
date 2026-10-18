@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 89.1290111329404,
+  "overall_coverage_pct": 88.4915474642393,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -32,6 +32,15 @@
       "tested": 4,
       "total": 4,
       "untested": []
+    },
+    "res://games/aero-rush/core/stunt_evaluator.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 2,
+      "untested": [
+        "evaluate_touchdown",
+        "calculate_air_rotation"
+      ]
     },
     "res://games/aero-rush/persistence/aero_save_adapter.gd": {
       "coverage_pct": 100,
@@ -81,6 +90,15 @@
         "validate_before_launch"
       ]
     },
+    "res://games/aero-rush/tracks/track_ribbon_builder.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 2,
+      "untested": [
+        "build_track_ribbon",
+        "compute_bishop_frames"
+      ]
+    },
     "res://games/aero-rush/ui/aero_course_select.gd": {
       "coverage_pct": 100,
       "tested": 1,
@@ -125,6 +143,17 @@
         "setup_target",
         "_physics_process",
         "add_shake"
+      ]
+    },
+    "res://games/aero-rush/vehicles/aero_gravity_body.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 4,
+      "untested": [
+        "calculate_effective_gravity",
+        "calculate_downforce",
+        "sample_4corner_rays",
+        "align_chassis_to_normal"
       ]
     },
     "res://games/aero-rush/vehicles/aero_physics_helpers.gd": {
@@ -1333,6 +1362,16 @@
       "total": 1,
       "untested": []
     },
+    "res://games/urban-legends/world/intersection_builder.gd": {
+      "coverage_pct": 0,
+      "tested": 0,
+      "total": 3,
+      "untested": [
+        "identify_and_clamp_intersections",
+        "compute_curb_intervals",
+        "build_intersection_apron"
+      ]
+    },
     "res://games/urban-legends/world/urban_district_definitions.gd": {
       "coverage_pct": 100,
       "tested": 6,
@@ -1708,6 +1747,6 @@
     }
   },
   "tested_functions": 1361,
-  "timestamp": "2026-10-18T06:05:01",
-  "total_functions": 1527
+  "timestamp": "2026-10-18T07:50:28",
+  "total_functions": 1538
 }

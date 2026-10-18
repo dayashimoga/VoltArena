@@ -7,6 +7,7 @@ extends RefCounted
 ## retractable landing gear, spinning rotors/props, and PBR materials.
 
 const ModelCache = preload("res://shared/graphics/model_cache.gd")
+const AFTERBURNER_SHADER = preload("res://games/aircraft-flight/aircraft/afterburner_plume.gdshader")
 
 static func build_aircraft_visuals(aircraft_id: String, primary_col: Color, accent_col: Color) -> Node3D:
 	match aircraft_id:
@@ -95,14 +96,12 @@ static func build_fa18_hornet(hull_color: Color, accent_color: Color) -> Node3D:
 		_add_missile(root, Vector3(-5.8, 0.32, 0.9), mat_white, mat_dark)
 		_add_missile(root, Vector3(5.8, 0.32, 0.9), mat_white, mat_dark)
 
-		# Afterburner Plumes (translucent shock-diamond cones, initialized invisible)
-		var ab_l = _add_cone(root, 0.42, 1.8, Vector3(-0.62, 0.36, 4.4), mat_glow)
-		ab_l.rotation_degrees.x = -90.0
+		# Volumetric shock-diamond reheat exhaust plumes
+		var ab_l = _add_afterburner_plume(root, 0.44, 0.24, 2.8, Vector3(-0.62, 0.36, 4.4), Color(0.4, 0.7, 1.0, 1.0), Color(1.0, 0.45, 0.1, 0.85))
 		ab_l.name = "AfterburnerPlumeLeft"
 		ab_l.visible = false
 
-		var ab_r = _add_cone(root, 0.42, 1.8, Vector3(0.62, 0.36, 4.4), mat_glow)
-		ab_r.rotation_degrees.x = -90.0
+		var ab_r = _add_afterburner_plume(root, 0.44, 0.24, 2.8, Vector3(0.62, 0.36, 4.4), Color(0.4, 0.7, 1.0, 1.0), Color(1.0, 0.45, 0.1, 0.85))
 		ab_r.name = "AfterburnerPlumeRight"
 		ab_r.visible = false
 
@@ -214,12 +213,11 @@ static func _build_procedural_fa18(root: Node3D, hull_color: Color, accent_color
 	_add_cyl(eng_l, 0.46, 0.42, 0.4, Vector3(0.0, 0.9, 0.0), mat_dark_metal)
 	_add_cyl(eng_r, 0.46, 0.42, 0.4, Vector3(0.0, 0.9, 0.0), mat_dark_metal)
 
-	var ab_l = _add_cone(root, 0.42, 1.8, Vector3(-0.62, 0.36, 5.8), mat_glow)
-	ab_l.rotation_degrees.x = -90.0
+	# Volumetric shock-diamond exhaust plumes
+	var ab_l = _add_afterburner_plume(root, 0.44, 0.24, 2.8, Vector3(-0.62, 0.36, 5.8), Color(0.4, 0.7, 1.0, 1.0), Color(1.0, 0.45, 0.1, 0.85))
 	ab_l.name = "AfterburnerPlumeLeft"
 	ab_l.visible = false
-	var ab_r = _add_cone(root, 0.42, 1.8, Vector3(0.62, 0.36, 5.8), mat_glow)
-	ab_r.rotation_degrees.x = -90.0
+	var ab_r = _add_afterburner_plume(root, 0.44, 0.24, 2.8, Vector3(0.62, 0.36, 5.8), Color(0.4, 0.7, 1.0, 1.0), Color(1.0, 0.45, 0.1, 0.85))
 	ab_r.name = "AfterburnerPlumeRight"
 	ab_r.visible = false
 
@@ -268,11 +266,11 @@ static func build_f22_raptor(hull_color: Color, accent_color: Color) -> Node3D:
 		nozzle_r.position = Vector3(0.78, 0.32, 4.8)
 		root.add_child(nozzle_r)
 
-		var ab_l = _add_box(nozzle_l, Vector3(0.72, 0.32, 1.6), Vector3(0.0, 0.0, 1.2), mat_glow)
+		var ab_l = _add_afterburner_plume(nozzle_l, 0.38, 0.20, 2.6, Vector3(0.0, 0.0, 1.4), Color(0.3, 0.75, 1.0, 1.0), Color(1.0, 0.42, 0.1, 0.85))
 		ab_l.name = "AfterburnerPlumeLeft"
 		ab_l.visible = false
 
-		var ab_r = _add_box(nozzle_r, Vector3(0.72, 0.32, 1.6), Vector3(0.0, 0.0, 1.2), mat_glow)
+		var ab_r = _add_afterburner_plume(nozzle_r, 0.38, 0.20, 2.6, Vector3(0.0, 0.0, 1.4), Color(0.3, 0.75, 1.0, 1.0), Color(1.0, 0.42, 0.1, 0.85))
 		ab_r.name = "AfterburnerPlumeRight"
 		ab_r.visible = false
 
@@ -382,10 +380,10 @@ static func _build_procedural_f22(root: Node3D, hull_color: Color, accent_color:
 	_add_box(nozzle_l, Vector3(0.88, 0.48, 0.15), Vector3(0.0, 0.0, 0.6), mat_metal)
 	_add_box(nozzle_r, Vector3(0.88, 0.48, 0.15), Vector3(0.0, 0.0, 0.6), mat_metal)
 
-	var ab_l = _add_box(nozzle_l, Vector3(0.72, 0.32, 1.6), Vector3(0.0, 0.0, 1.2), mat_glow)
+	var ab_l = _add_afterburner_plume(nozzle_l, 0.38, 0.20, 2.6, Vector3(0.0, 0.0, 1.4), Color(0.3, 0.75, 1.0, 1.0), Color(1.0, 0.42, 0.1, 0.85))
 	ab_l.name = "AfterburnerPlumeLeft"
 	ab_l.visible = false
-	var ab_r = _add_box(nozzle_r, Vector3(0.72, 0.32, 1.6), Vector3(0.0, 0.0, 1.2), mat_glow)
+	var ab_r = _add_afterburner_plume(nozzle_r, 0.38, 0.20, 2.6, Vector3(0.0, 0.0, 1.4), Color(0.3, 0.75, 1.0, 1.0), Color(1.0, 0.42, 0.1, 0.85))
 	ab_r.name = "AfterburnerPlumeRight"
 	ab_r.visible = false
 
@@ -664,31 +662,63 @@ static func _build_procedural_extra330(root: Node3D, hull_color: Color, accent_c
 	blur_disk.name = "PropBlurDisk"
 	blur_disk.visible = false
 
-	# 4. Aerobatic Wings, Spade Ailerons & Wingtip Triangle Sight Devices
-	_add_box(root, Vector3(7.2, 0.10, 1.45), Vector3(0.0, 0.25, -0.3), mat_hull)
+	# 4. Aerobatic Wings: Continuous NACA 0012 Symmetrical Airfoils (Zero Flat Boxes!)
+	var wing_mesh = _create_airfoil_mesh(7.6, 1.45, 0.95, 0.12, 0.10, 0.0)
+	var wing_mi = MeshInstance3D.new()
+	wing_mi.mesh = wing_mesh
+	wing_mi.material_override = mat_hull
+	wing_mi.position = Vector3(0.0, 0.25, -0.3)
+	root.add_child(wing_mi)
 
-	var aileron_l = _add_box(root, Vector3(3.0, 0.07, 0.45), Vector3(-2.1, 0.25, 0.55), mat_accent)
+	# Full-Span Aerobatic Ailerons with Beveled NACA Profile & Aerodynamic Spade Balances
+	var aileron_mesh_l = _create_airfoil_mesh(3.1, 0.46, 0.36, 0.10, 0.02, 0.0, false)
+	var aileron_l = MeshInstance3D.new()
+	aileron_l.mesh = aileron_mesh_l
+	aileron_l.material_override = mat_accent
+	aileron_l.position = Vector3(-3.65, 0.25, 0.42)
 	aileron_l.name = "AileronLeft"
-	var aileron_r = _add_box(root, Vector3(3.0, 0.07, 0.45), Vector3(2.1, 0.25, 0.55), mat_accent)
+	root.add_child(aileron_l)
+
+	var aileron_mesh_r = _create_airfoil_mesh(3.1, 0.46, 0.36, 0.10, 0.02, 0.0, false)
+	var aileron_r = MeshInstance3D.new()
+	aileron_r.mesh = aileron_mesh_r
+	aileron_r.material_override = mat_accent
+	aileron_r.position = Vector3(0.55, 0.25, 0.42)
 	aileron_r.name = "AileronRight"
+	root.add_child(aileron_r)
 
-	_add_box(aileron_l, Vector3(0.25, 0.04, 0.30), Vector3(0.0, -0.20, -0.15), mat_metal)
-	_add_box(aileron_r, Vector3(0.25, 0.04, 0.30), Vector3(0.0, -0.20, -0.15), mat_metal)
+	# Aerodynamic counter-balance spades
+	_add_box(aileron_l, Vector3(0.24, 0.03, 0.28), Vector3(1.5, -0.18, -0.12), mat_metal)
+	_add_box(aileron_r, Vector3(0.24, 0.03, 0.28), Vector3(1.5, -0.18, -0.12), mat_metal)
 
-	_add_box(root, Vector3(0.04, 0.25, 0.35), Vector3(-3.65, 0.25, -0.3), mat_white)
-	_add_box(root, Vector3(0.04, 0.25, 0.35), Vector3(3.65, 0.25, -0.3), mat_white)
+	# Wingtip aerobatic sighting devices (triangles for 45/90 degree attitude checks)
+	_add_box(root, Vector3(0.03, 0.22, 0.32), Vector3(-3.82, 0.25, -0.3), mat_white)
+	_add_box(root, Vector3(0.03, 0.22, 0.32), Vector3(3.82, 0.25, -0.3), mat_white)
 
-	# 5. Vertical Fin & Oversized Aerobatic Rudder
-	var fin = _add_box(root, Vector3(0.09, 1.4, 1.1), Vector3(0.0, 1.05, 2.3), mat_hull)
-	var rudder = _add_box(fin, Vector3(0.11, 1.6, 0.75), Vector3(0.0, -0.1, 0.85), mat_accent)
+	# 5. Vertical Fin & Oversized Aerobatic Rudder (Symmetrical Airfoil)
+	var fin_mesh = _create_vertical_airfoil_mesh(1.55, 1.15, 0.65, 0.10)
+	var fin = MeshInstance3D.new()
+	fin.mesh = fin_mesh
+	fin.material_override = mat_hull
+	fin.position = Vector3(0.0, 0.32, 2.2)
+	root.add_child(fin)
+
+	var rudder = _add_box(fin, Vector3(0.09, 1.55, 0.72), Vector3(0.0, 0.70, 0.95), mat_accent)
 	rudder.name = "RudderLeft"
-	var rudder_r = _add_box(fin, Vector3(0.11, 1.6, 0.75), Vector3(0.0, -0.1, 0.85), mat_accent)
+	var rudder_r = _add_box(fin, Vector3(0.09, 1.55, 0.72), Vector3(0.0, 0.70, 0.95), mat_accent)
 	rudder_r.name = "RudderRight"
 
-	# Horizontal Stabilizers & Elevators
-	var elev_l = _add_box(root, Vector3(1.3, 0.07, 0.70), Vector3(-0.75, 0.38, 2.6), mat_accent)
+	# Horizontal Stabilizers & Elevators (NACA 0010 Airfoils)
+	var htail_mesh = _create_airfoil_mesh(2.8, 0.85, 0.60, 0.10, 0.08, 0.0)
+	var htail = MeshInstance3D.new()
+	htail.mesh = htail_mesh
+	htail.material_override = mat_hull
+	htail.position = Vector3(0.0, 0.38, 2.45)
+	root.add_child(htail)
+
+	var elev_l = _add_box(root, Vector3(1.25, 0.06, 0.50), Vector3(-0.72, 0.38, 2.92), mat_accent)
 	elev_l.name = "ElevatorLeft"
-	var elev_r = _add_box(root, Vector3(1.3, 0.07, 0.70), Vector3(0.75, 0.38, 2.6), mat_accent)
+	var elev_r = _add_box(root, Vector3(1.25, 0.06, 0.50), Vector3(0.72, 0.38, 2.92), mat_accent)
 	elev_r.name = "ElevatorRight"
 
 	# 6. Sculpted Carbon Fiber Main Gear Legs with Flush Teardrop Wheel Pants (ZERO FLOATING BOXES!)
@@ -765,14 +795,14 @@ static func build_uh60_helicopter(hull_color: Color, accent_color: Color) -> Nod
 		hoist.name = "RescueHoist"
 		_add_cyl(hoist, 0.16, 0.16, 0.35, Vector3(0.0, -0.15, -0.5), mat_dark).rotation_degrees.x = 90.0
 
-		# Rotor Motion Blur Disks
-		var main_blur_mat = _create_prop_blur_material(4)
+		# Rotor Motion Blur Disks (Muted matte tips for military Black Hawk - zero yellow halo)
+		var main_blur_mat = _create_prop_blur_material(4, Color(0.12, 0.12, 0.12, 0.0))
 		var main_blur = _add_disc(root, 8.2, Vector3(0.0, 3.2, -0.4), main_blur_mat)
 		main_blur.rotation_degrees.x = 90.0
 		main_blur.name = "MainRotorBlur"
 		main_blur.visible = false
 
-		var tail_blur_mat = _create_prop_blur_material(4)
+		var tail_blur_mat = _create_prop_blur_material(4, Color(0.12, 0.12, 0.12, 0.0))
 		var tail_blur = _add_disc(root, 1.6, Vector3(0.35, 2.65, 9.0), tail_blur_mat)
 		tail_blur.rotation_degrees.y = 90.0
 		tail_blur.name = "TailRotorBlur"
@@ -869,14 +899,14 @@ static func _build_procedural_uh60(root: Node3D, hull_color: Color, accent_color
 	hoist.name = "RescueHoist"
 	_add_cyl(hoist, 0.16, 0.16, 0.35, Vector3(0.0, -0.15, -0.5), mat_dark).rotation_degrees.x = 90.0
 
-	# Rotor Motion Blur Disks
-	var main_blur_mat = _create_prop_blur_material(4)
+	# Rotor Motion Blur Disks (Muted matte tips for military Black Hawk - zero yellow halo)
+	var main_blur_mat = _create_prop_blur_material(4, Color(0.12, 0.12, 0.12, 0.0))
 	var main_blur = _add_disc(root, 8.2, Vector3(0.0, 2.75, -0.4), main_blur_mat)
 	main_blur.rotation_degrees.x = 90.0
 	main_blur.name = "MainRotorBlur"
 	main_blur.visible = false
 
-	var tail_blur_mat = _create_prop_blur_material(4)
+	var tail_blur_mat = _create_prop_blur_material(4, Color(0.12, 0.12, 0.12, 0.0))
 	var tail_blur = _add_disc(root, 1.6, Vector3(0.35, 2.65, 9.0), tail_blur_mat)
 	tail_blur.rotation_degrees.y = 90.0
 	tail_blur.name = "TailRotorBlur"
@@ -1103,4 +1133,150 @@ static func _create_prop_blur_material(blade_count: int, tip_col: Color = Color(
 	mat.set_shader_parameter("tip_color", tip_col)
 	mat.set_shader_parameter("rpm_normalized", 1.0)
 	return mat
+
+static func _create_afterburner_material(core_col: Color = Color(0.4, 0.7, 1.0, 1.0), plume_col: Color = Color(1.0, 0.45, 0.1, 0.85)) -> ShaderMaterial:
+	var mat = ShaderMaterial.new()
+	mat.shader = AFTERBURNER_SHADER
+	mat.set_shader_parameter("core_color", core_col)
+	mat.set_shader_parameter("plume_color", plume_col)
+	mat.set_shader_parameter("throttle", 1.0)
+	mat.set_shader_parameter("diamond_spacing", 0.22)
+	mat.set_shader_parameter("scroll_speed", 22.0)
+	return mat
+
+static func _add_afterburner_plume(parent: Node, radius_base: float, radius_tip: float, length: float, pos: Vector3, core_col: Color = Color(0.4, 0.7, 1.0, 1.0), plume_col: Color = Color(1.0, 0.45, 0.1, 0.85)) -> MeshInstance3D:
+	var mi = MeshInstance3D.new()
+	var mesh = CylinderMesh.new()
+	mesh.top_radius = radius_tip
+	mesh.bottom_radius = radius_base
+	mesh.height = length
+	mesh.cap_top = false
+	mesh.cap_bottom = false
+	mesh.radial_segments = 24
+	mesh.rings = 6
+	mi.mesh = mesh
+	mi.position = pos
+	mi.rotation_degrees.x = -90.0
+	mi.material_override = _create_afterburner_material(core_col, plume_col)
+	parent.add_child(mi)
+	return mi
+
+## Generates a smooth, aerodynamic NACA 4-digit symmetrical airfoil (NACA 0012/0010)
+## with cosine chord spacing from rounded leading edge to razor trailing edge.
+static func _create_airfoil_mesh(span: float, root_chord: float, tip_chord: float, thickness_ratio: float = 0.12, sweep_z: float = 0.0, dihedral_y: float = 0.0, is_symmetric_wings: bool = true) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+
+	var chord_steps := 20
+	var span_half := span * 0.5
+	var span_steps := 6
+
+	var span_min := -span_half if is_symmetric_wings else 0.0
+	var span_max := span_half if is_symmetric_wings else span
+	var total_span_steps := span_steps * 2 if is_symmetric_wings else span_steps
+
+	for i in range(total_span_steps):
+		var frac0 = float(i) / float(total_span_steps)
+		var frac1 = float(i + 1) / float(total_span_steps)
+
+		var z0_norm = absf((frac0 - 0.5) * 2.0) if is_symmetric_wings else frac0
+		var z1_norm = absf((frac1 - 0.5) * 2.0) if is_symmetric_wings else frac1
+
+		var chord0 = lerpf(root_chord, tip_chord, z0_norm)
+		var chord1 = lerpf(root_chord, tip_chord, z1_norm)
+
+		var x_pos0 = lerpf(span_min, span_max, frac0)
+		var x_pos1 = lerpf(span_min, span_max, frac1)
+
+		var y_pos0 = absf(x_pos0) / maxf(0.001, span_half) * dihedral_y
+		var y_pos1 = absf(x_pos1) / maxf(0.001, span_half) * dihedral_y
+
+		var z_sweep0 = absf(x_pos0) / maxf(0.001, span_half) * sweep_z
+		var z_sweep1 = absf(x_pos1) / maxf(0.001, span_half) * sweep_z
+
+		for j in range(chord_steps):
+			var beta0 = float(j) * TAU / float(chord_steps)
+			var beta1 = float(j + 1) * TAU / float(chord_steps)
+
+			var xc0 = (1.0 - cos(beta0)) * 0.5
+			var xc1 = (1.0 - cos(beta1)) * 0.5
+
+			# NACA symmetrical thickness: yt(x) = 5t * (0.2969*sqrt(x) - 0.126*x - 0.3516*x^2 + 0.2843*x^3 - 0.1015*x^4)
+			var yt_calc = func(x: float) -> float:
+				var cx = clampf(x, 0.0, 1.0)
+				return 5.0 * thickness_ratio * (0.2969 * sqrt(cx) - 0.1260 * cx - 0.3516 * cx * cx + 0.2843 * pow(cx, 3.0) - 0.1015 * pow(cx, 4.0))
+
+			var yt0 = yt_calc.call(xc0) * (1.0 if sin(beta0) >= 0.0 else -1.0)
+			var yt1 = yt_calc.call(xc1) * (1.0 if sin(beta1) >= 0.0 else -1.0)
+
+			var p00 = Vector3(x_pos0, y_pos0 + yt0 * chord0, z_sweep0 + (xc0 - 0.30) * chord0)
+			var p10 = Vector3(x_pos1, y_pos1 + yt0 * chord1, z_sweep1 + (xc0 - 0.30) * chord1)
+			var p11 = Vector3(x_pos1, y_pos1 + yt1 * chord1, z_sweep1 + (xc1 - 0.30) * chord1)
+			var p01 = Vector3(x_pos0, y_pos0 + yt1 * chord0, z_sweep0 + (xc1 - 0.30) * chord0)
+
+			var uv00 = Vector2(xc0, frac0)
+			var uv10 = Vector2(xc0, frac1)
+			var uv11 = Vector2(xc1, frac1)
+			var uv01 = Vector2(xc1, frac0)
+
+			st.set_uv(uv00); st.add_vertex(p00)
+			st.set_uv(uv10); st.add_vertex(p10)
+			st.set_uv(uv11); st.add_vertex(p11)
+
+			st.set_uv(uv00); st.add_vertex(p00)
+			st.set_uv(uv11); st.add_vertex(p11)
+			st.set_uv(uv01); st.add_vertex(p01)
+
+	st.generate_normals()
+	return st.commit()
+
+## Generates a vertical stabilizer airfoil mesh along the Y-axis.
+static func _create_vertical_airfoil_mesh(height: float, root_chord: float, tip_chord: float, thickness_ratio: float = 0.10) -> ArrayMesh:
+	var st = SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+
+	var chord_steps := 16
+	var height_steps := 6
+
+	for i in range(height_steps):
+		var frac0 = float(i) / float(height_steps)
+		var frac1 = float(i + 1) / float(height_steps)
+
+		var chord0 = lerpf(root_chord, tip_chord, frac0)
+		var chord1 = lerpf(root_chord, tip_chord, frac1)
+
+		var y_pos0 = frac0 * height
+		var y_pos1 = frac1 * height
+		var z_sweep0 = frac0 * 0.35 * root_chord
+		var z_sweep1 = frac1 * 0.35 * root_chord
+
+		for j in range(chord_steps):
+			var beta0 = float(j) * TAU / float(chord_steps)
+			var beta1 = float(j + 1) * TAU / float(chord_steps)
+
+			var xc0 = (1.0 - cos(beta0)) * 0.5
+			var xc1 = (1.0 - cos(beta1)) * 0.5
+
+			var yt_calc = func(x: float) -> float:
+				var cx = clampf(x, 0.0, 1.0)
+				return 5.0 * thickness_ratio * (0.2969 * sqrt(cx) - 0.1260 * cx - 0.3516 * cx * cx + 0.2843 * pow(cx, 3.0) - 0.1015 * pow(cx, 4.0))
+
+			var xt0 = yt_calc.call(xc0) * (1.0 if sin(beta0) >= 0.0 else -1.0)
+			var xt1 = yt_calc.call(xc1) * (1.0 if sin(beta1) >= 0.0 else -1.0)
+
+			var p00 = Vector3(xt0 * chord0, y_pos0, z_sweep0 + (xc0 - 0.25) * chord0)
+			var p10 = Vector3(xt0 * chord1, y_pos1, z_sweep1 + (xc0 - 0.25) * chord1)
+			var p11 = Vector3(xt1 * chord1, y_pos1, z_sweep1 + (xc1 - 0.25) * chord1)
+			var p01 = Vector3(xt1 * chord0, y_pos0, z_sweep0 + (xc1 - 0.25) * chord0)
+
+			st.set_uv(Vector2(xc0, frac0)); st.add_vertex(p00)
+			st.set_uv(Vector2(xc0, frac1)); st.add_vertex(p10)
+			st.set_uv(Vector2(xc1, frac1)); st.add_vertex(p11)
+
+			st.set_uv(Vector2(xc0, frac0)); st.add_vertex(p00)
+			st.set_uv(Vector2(xc1, frac1)); st.add_vertex(p11)
+			st.set_uv(Vector2(xc1, frac0)); st.add_vertex(p01)
+
+	st.generate_normals()
+	return st.commit()
 

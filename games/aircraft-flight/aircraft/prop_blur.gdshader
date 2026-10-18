@@ -35,10 +35,11 @@ void fragment() {
 	float streak = pow(blade_phase, mix(3.5, 0.8, rpm_normalized));
 	float disc_alpha = mix(streak, 0.75, rpm_normalized * blur_smoothness);
 
-	// Tip marking ring (e.g. high-visibility yellow blade tips)
+	// Subtle blade-tip marking: modulated by blade phase so it does not form a solid glowing yellow ring
 	float tip_mask = smoothstep(1.0 - tip_fraction, 1.0 - tip_fraction + 0.04, dist);
-	vec3 base_rgb = mix(disc_color.rgb, tip_color.rgb, tip_mask);
-	float final_alpha = mix(disc_color.a, tip_color.a, tip_mask) * disc_alpha * radial_mask * rpm_normalized;
+	float tip_sweep = pow(blade_phase, mix(4.0, 1.2, rpm_normalized));
+	vec3 base_rgb = mix(disc_color.rgb, tip_color.rgb, tip_mask * tip_sweep * 0.45);
+	float final_alpha = mix(disc_color.a, tip_color.a * tip_sweep * 0.35, tip_mask) * disc_alpha * radial_mask * rpm_normalized;
 
 	ALBEDO = base_rgb;
 	ALPHA = clamp(final_alpha, 0.0, 0.85);

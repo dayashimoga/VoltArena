@@ -53,19 +53,23 @@ void fragment() {
 		METALLIC = 0.45;
 		SPECULAR = 0.95;
 	} else if (is_trim) {
-		// Matte Carbon Fiber Splitters, Side Skirts & Rear Diffuser
-		ALBEDO = vec3(0.08, 0.08, 0.09);
-		ROUGHNESS = 0.82;
-		METALLIC = 0.12;
-		SPECULAR = 0.30;
+		// Carbon Fiber Splitters, Side Skirts & Rear Diffuser
+		vec2 carbon_uv = fract(UV * 40.0);
+		float carbon_pattern = (carbon_uv.x < 0.5 == carbon_uv.y < 0.5) ? 0.08 : 0.12;
+		ALBEDO = vec3(carbon_pattern);
+		ROUGHNESS = 0.50;
+		METALLIC = 0.25;
+		SPECULAR = 0.40;
 	} else {
-		// Multi-Coat Automotive Metallic Paint
+		// Multi-Coat Automotive Metallic Paint with Clearcoat
 		float lum = (tex.r * 0.299 + tex.g * 0.587 + tex.b * 0.114);
 		float factor = clamp(lum / 0.65, 0.85, 1.18);
 		ALBEDO = paint_color.rgb * factor;
 		METALLIC = metallic_val;
 		ROUGHNESS = roughness_val;
-		SPECULAR = 0.80;
+		SPECULAR = 0.85;
+		CLEARCOAT = 1.0;
+		CLEARCOAT_ROUGHNESS = 0.08;
 		if (is_boosting) {
 			EMISSION = paint_color.rgb * 0.4;
 		}
@@ -77,20 +81,26 @@ const WHEEL_SHADER_CODE = """
 shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_lambert, specular_schlick_ggx;
 
+uniform bool is_braking = false;
+
 void fragment() {
 	float r = length(VERTEX.yz);
 	if (r > 0.18) {
 		// Vulcanized Rubber Tire Tread and Sidewall
-		ALBEDO = vec3(0.10, 0.10, 0.12);
+		float tread = sin(VERTEX.z * 120.0) * 0.012;
+		ALBEDO = vec3(0.09 + tread, 0.09 + tread, 0.10 + tread);
 		ROUGHNESS = 0.92;
 		METALLIC = 0.02;
 		SPECULAR = 0.15;
 	} else {
-		// Diamond-Cut Precision Alloy Rim & Carbon Rotor
+		// Diamond-Cut Precision Alloy Rim & Carbon Rotor with Glowing Heat Under Braking
 		ALBEDO = vec3(0.85, 0.87, 0.90);
 		ROUGHNESS = 0.18;
 		METALLIC = 0.95;
 		SPECULAR = 0.90;
+		if (is_braking && r < 0.15) {
+			EMISSION = vec3(1.0, 0.16, 0.02) * 3.5;
+		}
 	}
 }
 """

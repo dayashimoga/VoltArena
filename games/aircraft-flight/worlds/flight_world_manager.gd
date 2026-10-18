@@ -425,26 +425,82 @@ static func _create_box_mesh(size: Vector3) -> ArrayMesh:
 	return st.commit()
 
 static func _create_alpine_peak_mesh(height: float, base_radius: float) -> ArrayMesh:
+	# Generates a continuous hydraulic-eroded ridged massif with central-difference vertex normals.
+	# Eliminates faceted 16-segment cones and terraced spikes.
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+
+	var grid_res = 28
+	var total_verts = (grid_res + 1) * (grid_res + 1)
+	var verts: Array[Vector3] = []
+	var uvs: Array[Vector2] = []
+	var normals: Array[Vector3] = []
+	verts.resize(total_verts)
+	uvs.resize(total_verts)
+	normals.resize(total_verts)
+
 	var hh = height * 0.5
-	var segments = 16
-	var p_top = Vector3(0, hh, 0)
+	var step_size = (base_radius * 2.0) / float(grid_res)
 
-	for i in range(segments):
-		var a0 = float(i) * TAU / float(segments)
-		var a1 = float(i + 1) * TAU / float(segments)
-		# Multi-octave ridged modulation creates realistic arêtes and cirques
-		var r0 = base_radius * (0.80 + 0.20 * sin(a0 * 3.0) + 0.10 * cos(a0 * 7.0))
-		var r1 = base_radius * (0.80 + 0.20 * sin(a1 * 3.0) + 0.10 * cos(a1 * 7.0))
-		var v0 = Vector3(cos(a0) * r0, -hh, sin(a0) * r0)
-		var v1 = Vector3(cos(a1) * r1, -hh, sin(a1) * r1)
+	# 1. Height generation with ridged multifractal noise and hydraulic erosion envelope
+	for iz in range(grid_res + 1):
+		var tz = float(iz) / float(grid_res)
+		var pz = -base_radius + tz * (base_radius * 2.0)
+		var norm_z = (tz - 0.5) * 2.0
 
-		var n = (v1 - p_top).cross(v0 - p_top).normalized()
-		st.set_normal(n)
-		st.set_uv(Vector2(0.5, 1)); st.add_vertex(p_top)
-		st.set_uv(Vector2(float(i) / float(segments), 0)); st.add_vertex(v1)
-		st.set_uv(Vector2(float(i + 1) / float(segments), 0)); st.add_vertex(v0)
+		for ix in range(grid_res + 1):
+			var tx = float(ix) / float(grid_res)
+			var px = -base_radius + tx * (base_radius * 2.0)
+			var norm_x = (tx - 0.5) * 2.0
+
+			var dist_norm = sqrt(norm_x * norm_x + norm_z * norm_z)
+			var envelope = clampf(1.0 - dist_norm, 0.0, 1.0)
+			# Smoothstep bell envelope
+			envelope = envelope * envelope * (3.0 - 2.0 * envelope)
+
+			# Multi-octave ridged noise for natural geological crests & cirques
+			var n1 = 1.0 - absf(sin(tx * 6.28 + tz * 3.14) * cos(tz * 6.28 - tx * 3.14))
+			var n2 = 1.0 - absf(sin(tx * 14.0 - tz * 11.0) * cos(tz * 12.0 + tx * 8.0)) * 0.5
+			var n3 = sin(tx * 28.0) * cos(tz * 28.0) * 0.2
+			var ridge = pow(n1 * 0.65 + n2 * 0.35, 1.7) * 1.3 + n3
+
+			var py = (ridge * envelope * height) - hh
+			var idx = iz * (grid_res + 1) + ix
+			verts[idx] = Vector3(px, py, pz)
+			uvs[idx] = Vector2(tx, tz)
+
+	# 2. Central-difference smooth normal calculation: N = ( (h_x-1 - h_x+1)/(2dx), 1.0, (h_z-1 - h_z+1)/(2dz) )
+	for iz in range(grid_res + 1):
+		for ix in range(grid_res + 1):
+			var idx = iz * (grid_res + 1) + ix
+			var x_p = iz * (grid_res + 1) + max(0, ix - 1)
+			var x_n = iz * (grid_res + 1) + min(grid_res, ix + 1)
+			var z_p = max(0, iz - 1) * (grid_res + 1) + ix
+			var z_n = min(grid_res, iz + 1) * (grid_res + 1) + ix
+
+			var dx = (verts[x_n].x - verts[x_p].x)
+			var dz = (verts[z_n].z - verts[z_p].z)
+			var dh_dx = (verts[x_p].y - verts[x_n].y) / (dx if absf(dx) > 0.001 else 1.0)
+			var dh_dz = (verts[z_p].y - verts[z_n].y) / (dz if absf(dz) > 0.001 else 1.0)
+
+			var n = Vector3(dh_dx, 1.0, dh_dz).normalized()
+			normals[idx] = n
+
+	# 3. Assemble smooth quads
+	for iz in range(grid_res):
+		for ix in range(grid_res):
+			var i00 = iz * (grid_res + 1) + ix
+			var i10 = iz * (grid_res + 1) + (ix + 1)
+			var i11 = (iz + 1) * (grid_res + 1) + (ix + 1)
+			var i01 = (iz + 1) * (grid_res + 1) + ix
+
+			st.set_normal(normals[i00]); st.set_uv(uvs[i00]); st.add_vertex(verts[i00])
+			st.set_normal(normals[i10]); st.set_uv(uvs[i10]); st.add_vertex(verts[i10])
+			st.set_normal(normals[i11]); st.set_uv(uvs[i11]); st.add_vertex(verts[i11])
+
+			st.set_normal(normals[i00]); st.set_uv(uvs[i00]); st.add_vertex(verts[i00])
+			st.set_normal(normals[i11]); st.set_uv(uvs[i11]); st.add_vertex(verts[i11])
+			st.set_normal(normals[i01]); st.set_uv(uvs[i01]); st.add_vertex(verts[i01])
 
 	return st.commit()
 

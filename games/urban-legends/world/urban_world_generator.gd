@@ -5,6 +5,7 @@ const UrbanConstants = preload("res://games/urban-legends/core/urban_constants.g
 const UrbanDistrictDefinitions = preload("res://games/urban-legends/world/urban_district_definitions.gd")
 const UrbanRoadNetwork = preload("res://games/urban-legends/world/urban_road_network.gd")
 const UrbanPropFactory = preload("res://games/urban-legends/world/urban_prop_factory.gd")
+const IntersectionBuilder = preload("res://games/urban-legends/world/intersection_builder.gd")
 
 ## Massive 2000m x 2000m Open-World Scene Generator for Urban Legends.
 ## Assembles 8 contiguous districts, procedural roads, elevated flyovers,
@@ -146,7 +147,35 @@ func _build_perimeter_mountain_backdrop() -> void:
 		terrain_container.add_child(mi)
 
 func _build_road_meshes() -> void:
-	for seg in road_network.get_road_segments():
+	var segs = road_network.get_road_segments()
+	var junctions = IntersectionBuilder.identify_and_clamp_intersections(segs)
+
+	var sw_mat = StandardMaterial3D.new()
+	sw_mat.albedo_color = Color(0.62, 0.60, 0.57) # Light concrete paving slabs
+	sw_mat.roughness = 0.85
+
+	var default_asphalt = StandardMaterial3D.new()
+	default_asphalt.albedo_color = Color(0.28, 0.27, 0.25)
+	default_asphalt.roughness = 0.76
+	default_asphalt.metallic = 0.10
+
+	var road_shader = load("res://games/urban-legends/world/shaders/road_asphalt.gdshader")
+	var apron_mat: Material = default_asphalt
+	if road_shader:
+		var sm = ShaderMaterial.new()
+		sm.shader = road_shader
+		sm.set_shader_parameter("road_lanes", 4)
+		sm.set_shader_parameter("road_width_meters", 16.0)
+		sm.set_shader_parameter("wetness", 0.0)
+		apron_mat = sm
+
+	# Build welded intersection aprons with 45-degree beveled corner curb returns
+	for junc in junctions:
+		if junc["pos"].y < 10.0:
+			var apron = IntersectionBuilder.build_intersection_apron(junc, apron_mat, sw_mat)
+			roads_container.add_child(apron)
+
+	for seg in segs:
 		var st: Vector3 = seg["start"]
 		var en: Vector3 = seg["end"]
 		var w: float = seg["width"]
@@ -166,7 +195,6 @@ func _build_road_meshes() -> void:
 			r_mat.albedo_color = Color(0.48, 0.38, 0.25) # Mountain gravel
 			r_mat.roughness = 0.9
 		else:
-			var road_shader = load("res://games/urban-legends/world/shaders/road_asphalt.gdshader")
 			if road_shader:
 				var sm = ShaderMaterial.new()
 				sm.shader = road_shader
@@ -175,9 +203,7 @@ func _build_road_meshes() -> void:
 				sm.set_shader_parameter("wetness", 0.0)
 				r_mat = sm
 			else:
-				r_mat.albedo_color = Color(0.28, 0.27, 0.25) # Crowned weathered asphalt
-				r_mat.roughness = 0.76
-				r_mat.metallic = 0.10
+				r_mat = default_asphalt
 
 		road_mi.material_override = r_mat
 		road_mi.position = center + Vector3(0.0, 0.02, 0.0)
@@ -229,13 +255,11 @@ func _build_road_meshes() -> void:
 			white_mat.albedo_color = Color(0.90, 0.92, 0.95)
 			white_mat.roughness = 0.55
 
-			var sw_mat = StandardMaterial3D.new()
-			sw_mat.albedo_color = Color(0.62, 0.60, 0.57) # Light concrete paving slabs
-			sw_mat.roughness = 0.85
-
 			var right_dir = dir.cross(Vector3.UP).normalized()
 			if right_dir.length_squared() > 0.01:
 				var sw_w = 3.0 # 3m sidewalks
+				var curb_intervals = IntersectionBuilder.compute_curb_intervals(st, en, junctions, 0.5)
+
 				for side in [-1.0, 1.0]:
 					# White Edge Striping (ArrayMesh)
 					var edge_mi = MeshInstance3D.new()
@@ -249,49 +273,60 @@ func _build_road_meshes() -> void:
 						edge_mi.look_at_from_position(edge_mi.position, edge_mi.position + dir, up_vec)
 					roads_container.add_child(edge_mi)
 
-					# 35-degree Chamfered Curb Bevel (0.12m vertical over 0.20m run, ArrayMesh + Physical Collision)
-					var curb_bevel_mi = MeshInstance3D.new()
-					curb_bevel_mi.mesh = _create_curb_bevel_mesh(0.20, 0.12, dist)
-					curb_bevel_mi.material_override = sw_mat
-					curb_bevel_mi.position = center + right_dir * (side * (w * 0.5 + 0.10)) + Vector3(0.0, 0.06, 0.0)
-					if dir.length_squared() > 0.001:
-						var up_vec = Vector3.UP
-						if absf(dir.dot(up_vec)) > 0.9:
-							up_vec = Vector3.RIGHT
-						curb_bevel_mi.look_at_from_position(curb_bevel_mi.position, curb_bevel_mi.position + dir, up_vec)
+					# Build curbs and sidewalks ONLY in trimmed spans outside intersection zones!
+					for span in curb_intervals:
+						var t0 = span.x
+						var t1 = span.y
+						var sub_len = dist * (t1 - t0)
+						if sub_len < 2.0:
+							continue
+						var sub_st = st.lerp(en, t0)
+						var sub_en = st.lerp(en, t1)
+						var sub_center = (sub_st + sub_en) * 0.5
 
-					var curb_body = StaticBody3D.new()
-					curb_body.collision_layer = UrbanConstants.LAYER_WORLD
-					curb_body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
-					var curb_col = CollisionShape3D.new()
-					var curb_convex = curb_bevel_mi.mesh.create_convex_shape()
-					curb_col.shape = curb_convex
-					curb_body.add_child(curb_col)
-					curb_bevel_mi.add_child(curb_body)
-					roads_container.add_child(curb_bevel_mi)
+						# 45-degree Chamfered Curb Bevel (0.12m vertical over 0.18m run, ArrayMesh + Physical Collision)
+						var curb_bevel_mi = MeshInstance3D.new()
+						curb_bevel_mi.mesh = _create_curb_bevel_mesh(0.18, 0.12, sub_len)
+						curb_bevel_mi.material_override = sw_mat
+						curb_bevel_mi.position = sub_center + right_dir * (side * (w * 0.5 + 0.09)) + Vector3(0.0, 0.06, 0.0)
+						if dir.length_squared() > 0.001:
+							var up_vec = Vector3.UP
+							if absf(dir.dot(up_vec)) > 0.9:
+								up_vec = Vector3.RIGHT
+							curb_bevel_mi.look_at_from_position(curb_bevel_mi.position, curb_bevel_mi.position + dir, up_vec)
 
-					# Pedestrian Sidewalk (0.12m height, ArrayMesh + Physical Pavement Collision)
-					var sw_mi = MeshInstance3D.new()
-					var sw_deck_w = sw_w - 0.20
-					sw_mi.mesh = _create_sidewalk_mesh(sw_deck_w, 0.12, dist)
-					sw_mi.material_override = sw_mat
-					sw_mi.position = center + right_dir * (side * (w * 0.5 + 0.20 + sw_deck_w * 0.5)) + Vector3(0.0, 0.06, 0.0)
-					if dir.length_squared() > 0.001:
-						var up_vec = Vector3.UP
-						if absf(dir.dot(up_vec)) > 0.9:
-							up_vec = Vector3.RIGHT
-						sw_mi.look_at_from_position(sw_mi.position, sw_mi.position + dir, up_vec)
+						var curb_body = StaticBody3D.new()
+						curb_body.collision_layer = UrbanConstants.LAYER_WORLD
+						curb_body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+						var curb_col = CollisionShape3D.new()
+						var curb_convex = curb_bevel_mi.mesh.create_convex_shape()
+						curb_col.shape = curb_convex
+						curb_body.add_child(curb_col)
+						curb_bevel_mi.add_child(curb_body)
+						roads_container.add_child(curb_bevel_mi)
 
-					var sw_body = StaticBody3D.new()
-					sw_body.collision_layer = UrbanConstants.LAYER_WORLD
-					sw_body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
-					var sw_col = CollisionShape3D.new()
-					var sw_box = BoxShape3D.new()
-					sw_box.size = Vector3(sw_deck_w, 0.12, dist)
-					sw_col.shape = sw_box
-					sw_body.add_child(sw_col)
-					sw_mi.add_child(sw_body)
-					roads_container.add_child(sw_mi)
+						# Pedestrian Sidewalk (0.12m height, ArrayMesh + Physical Pavement Collision)
+						var sw_mi = MeshInstance3D.new()
+						var sw_deck_w = sw_w - 0.18
+						sw_mi.mesh = _create_sidewalk_mesh(sw_deck_w, 0.12, sub_len)
+						sw_mi.material_override = sw_mat
+						sw_mi.position = sub_center + right_dir * (side * (w * 0.5 + 0.18 + sw_deck_w * 0.5)) + Vector3(0.0, 0.06, 0.0)
+						if dir.length_squared() > 0.001:
+							var up_vec = Vector3.UP
+							if absf(dir.dot(up_vec)) > 0.9:
+								up_vec = Vector3.RIGHT
+							sw_mi.look_at_from_position(sw_mi.position, sw_mi.position + dir, up_vec)
+
+						var sw_body = StaticBody3D.new()
+						sw_body.collision_layer = UrbanConstants.LAYER_WORLD
+						sw_body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+						var sw_col = CollisionShape3D.new()
+						var sw_box = BoxShape3D.new()
+						sw_box.size = Vector3(sw_deck_w, 0.12, sub_len)
+						sw_col.shape = sw_box
+						sw_body.add_child(sw_col)
+						sw_mi.add_child(sw_body)
+						roads_container.add_child(sw_mi)
 
 				# Streetlights along ground boulevards (every 30m)
 				if center.y < 8.0 and dist >= 30.0:
@@ -693,13 +728,13 @@ static func _create_ground_array_mesh(width: float, height: float, depth: float)
 
 	return st.commit()
 
-static func _create_eroded_heightmap_mountain(width: float, height: float, depth: float, grid_res: int = 14) -> ArrayMesh:
+static func _create_eroded_heightmap_mountain(width: float, height: float, depth: float, grid_res: int = 24) -> ArrayMesh:
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var hw = width * 0.5
 	var hd = depth * 0.5
 
-	# Precompute vertex grid with multifractal ridge erosion (zero pyramid cones)
+	# Precompute vertex grid with multifractal ridge erosion and smooth rolling slopes (zero pyramid facets)
 	var verts: Array[Vector3] = []
 	var uvs: Array[Vector2] = []
 	verts.resize((grid_res + 1) * (grid_res + 1))
@@ -720,18 +755,18 @@ static func _create_eroded_heightmap_mountain(width: float, height: float, depth
 			var falloff = clampf(1.0 - r, 0.0, 1.0)
 			falloff = falloff * falloff * (3.0 - 2.0 * falloff) # Smoothstep
 
-			# Multifractal ridge synthesis (natural rock stratigraphy & erosion gullies)
-			var oct1 = sin(tx * 7.5 + tz * 4.2) * cos(tz * 6.8 - tx * 3.1)
-			var oct2 = absf(sin(tx * 15.0 - tz * 12.0) * 0.5 + 0.5) # Sharp ridge crests
-			var oct3 = sin(tx * 31.0 + tz * 27.0) * 0.25
-			var raw_h = (0.65 + 0.22 * oct1 + 0.18 * oct2 + 0.08 * oct3) * falloff
+			# Multifractal ridge synthesis with smooth geological slopes (no sharp faceted spikes)
+			var oct1 = sin(tx * 6.2 + tz * 3.8) * cos(tz * 5.4 - tx * 2.6)
+			var oct2 = cos(tx * 11.0 + tz * 9.5) * 0.35 + 0.35
+			var oct3 = sin(tx * 22.0 - tz * 18.0) * 0.15
+			var raw_h = (0.58 + 0.24 * oct1 + 0.16 * oct2 + 0.06 * oct3) * falloff
 			var py = maxf(0.0, raw_h * height)
 
 			var idx = iz * (grid_res + 1) + ix
 			verts[idx] = Vector3(px, py, pz)
 			uvs[idx] = Vector2(tx * 4.0, tz * 4.0)
 
-	# Generate quads with calculated smooth surface normals
+	# Generate quads with continuous smooth surface normals
 	for iz in range(grid_res):
 		for ix in range(grid_res):
 			var i0 = iz * (grid_res + 1) + ix
@@ -744,20 +779,15 @@ static func _create_eroded_heightmap_mountain(width: float, height: float, depth
 			var v2 = verts[i2]
 			var v3 = verts[i3]
 
-			# Quad triangle 1
-			var n1 = (v1 - v0).cross(v2 - v0).normalized()
-			st.set_normal(n1)
 			st.set_uv(uvs[i0]); st.add_vertex(v0)
 			st.set_uv(uvs[i1]); st.add_vertex(v1)
 			st.set_uv(uvs[i2]); st.add_vertex(v2)
 
-			# Quad triangle 2
-			var n2 = (v3 - v1).cross(v2 - v1).normalized()
-			st.set_normal(n2)
 			st.set_uv(uvs[i1]); st.add_vertex(v1)
 			st.set_uv(uvs[i3]); st.add_vertex(v3)
 			st.set_uv(uvs[i2]); st.add_vertex(v2)
 
+	st.generate_normals()
 	return st.commit()
 
 static func _create_crowned_road_mesh(width: float, height: float, length: float) -> ArrayMesh:

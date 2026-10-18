@@ -70,23 +70,26 @@ void fragment() {
 
 	float effective_alt = v_world_pos.y + macro_n;
 
-	// Strata banding on vertical cliff walls
-	float strata = sin(v_world_pos.y * 0.15 + fbm(v_world_pos.xz * 0.02) * 6.0) * 0.5 + 0.5;
-	vec3 rock_strata_color = mix(cliff_color.rgb * 0.85, cliff_color.rgb * 1.15, strata);
+	// Continuous geological rock strata on steep slopes (slopes > 32°)
+	// Modulate with multi-octave noise without stepped horizontal scanlines
+	float strata_macro = fbm(vec2(v_world_pos.y * 0.015, (v_world_pos.x + v_world_pos.z) * 0.008));
+	float strata_detail = noise2D(vec2(v_world_pos.y * 0.05, v_world_pos.x * 0.02)) * 0.3;
+	float strata = smoothstep(0.35, 0.65, strata_macro + strata_detail);
+	vec3 rock_strata_color = mix(cliff_color.rgb * 0.88, cliff_color.rgb * 1.12, strata);
 
 	// Layer 1: Coastal Sand (0m - 14m, slope < 25°)
 	float sand_weight = (1.0 - smoothstep(6.0, 16.0, effective_alt)) * (1.0 - smoothstep(18.0, 26.0, slope_deg));
 
-	// Layer 5: Alpine Snow (> 1200m, slope < 40°)
-	float snow_weight = smoothstep(1150.0, 1280.0, effective_alt) * (1.0 - smoothstep(32.0, 42.0, slope_deg));
+	// Layer 5: Soft Alpine Snow on flat summits (> 1600m, slope < 32°)
+	float snow_weight = smoothstep(1550.0, 1680.0, effective_alt) * (1.0 - smoothstep(24.0, 32.0, slope_deg));
 
-	// Layer 4: Strata Rock Cliff (slope >= 30°)
-	float cliff_weight = smoothstep(28.0, 38.0, slope_deg);
+	// Layer 4: Vertical Rock Strata Cliff (slope > 32°)
+	float cliff_weight = smoothstep(30.0, 42.0, slope_deg);
 
-	// Layer 3: Scree / Talus Gravel (transitions on steep slopes 24° - 32°)
-	float scree_weight = smoothstep(22.0, 30.0, slope_deg) * (1.0 - smoothstep(32.0, 40.0, slope_deg));
+	// Layer 3: Scree / Talus Gravel on intermediate slopes (24° - 32°)
+	float scree_weight = smoothstep(22.0, 28.0, slope_deg) * (1.0 - smoothstep(32.0, 38.0, slope_deg));
 
-	// Layer 2: Lush Forest Grass (default base between 12m and 1150m)
+	// Layer 2: Lush Forest Grass (default base below snowline on gentle terrain)
 	float grass_weight = clamp(1.0 - (sand_weight + snow_weight + cliff_weight + scree_weight * 0.6), 0.0, 1.0);
 
 	// Normalize blending weights
@@ -101,9 +104,10 @@ void fragment() {
 	// Texture color synthesis
 	vec3 c_sand = sand_color.rgb + vec3(micro_n * 0.4);
 	vec3 c_grass = grass_color.rgb + vec3(micro_n * 0.8);
-	vec3 c_scree = scree_color.rgb + vec3(micro_n * 1.2);
-	vec3 c_cliff = rock_strata_color + vec3(micro_n * 1.4);
-	vec3 c_snow = clamp(snow_color.rgb + vec3(micro_n * 0.2), vec3(0.0), vec3(0.85)); // Clamped albedo <= 0.85
+	vec3 c_scree = scree_color.rgb + vec3(micro_n * 1.0);
+	vec3 c_cliff = rock_strata_color + vec3(micro_n * 1.2);
+	// Snow albedo clamped to 0.85 with roughness 0.45 to prevent overexposure blowout
+	vec3 c_snow = clamp(snow_color.rgb + vec3(micro_n * 0.15), vec3(0.0), vec3(0.85));
 
 	vec3 final_albedo = c_sand * sand_weight +
 	                    c_grass * grass_weight +
@@ -112,15 +116,10 @@ void fragment() {
 	                    c_snow * snow_weight;
 
 	ALBEDO = final_albedo;
-	ROUGHNESS = mix(mix(0.85, 0.45, snow_weight), 0.95, cliff_weight * 0.5);
-	METALLIC = mix(0.0, 0.04, cliff_weight);
-	SPECULAR = mix(0.2, 0.35, snow_weight);
+	ROUGHNESS = mix(mix(0.82, 0.45, snow_weight), 0.92, cliff_weight * 0.5);
+	METALLIC = mix(0.0, 0.03, cliff_weight);
+	SPECULAR = mix(0.25, 0.40, snow_weight);
 
-	// Procedural cliff strata normal bump
-	vec3 bump_normal = n;
-	if (cliff_weight > 0.05) {
-		float dn_dy = cos(v_world_pos.y * 0.15) * 0.15;
-		bump_normal = normalize(n + vec3(0.0, dn_dy * cliff_weight, 0.0));
-	}
-	NORMAL = bump_normal;
+	// Clean smooth natural normal (zero terraced scanline banding)
+	NORMAL = n;
 }

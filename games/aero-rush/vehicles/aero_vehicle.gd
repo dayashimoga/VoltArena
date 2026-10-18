@@ -9,6 +9,8 @@ const AeroConstants = preload("res://games/aero-rush/core/aero_constants.gd")
 const AeroVehicleCatalog = preload("res://games/aero-rush/vehicles/aero_vehicle_catalog.gd")
 const AeroVehicleVisuals = preload("res://games/aero-rush/vehicles/aero_vehicle_visuals.gd")
 const AeroPhysicsHelpers = preload("res://games/aero-rush/vehicles/aero_physics_helpers.gd")
+const AeroGravityBody = preload("res://games/aero-rush/vehicles/aero_gravity_body.gd")
+const StuntEvaluator = preload("res://games/aero-rush/core/stunt_evaluator.gd")
 
 signal stunt_action_triggered(stunt_id: int, points: int, label: String)
 signal landing_performed(quality: String, angle_deg: float, bonus: int)
@@ -264,16 +266,14 @@ func _process_player_inputs() -> void:
 	boost_requested = boost
 
 func _update_grounding_and_suspension(delta: float) -> void:
-	var contact_count: int = 0
-	var avg_normal: Vector3 = Vector3.ZERO
+	var ray_sample = AeroGravityBody.sample_4corner_rays(wheel_raycasts)
+	var contact_count: int = ray_sample.get("contact_count", 0)
+	var avg_normal: Vector3 = ray_sample.get("avg_normal", Vector3.UP)
+	var within_proximity: bool = ray_sample.get("within_ground_proximity", false)
 
 	for i in range(wheel_raycasts.size()):
 		var ray = wheel_raycasts[i]
-		if ray.is_inside_tree():
-			ray.force_raycast_update()
 		if ray.is_colliding():
-			contact_count += 1
-			avg_normal += ray.get_collision_normal()
 			var dist = ray.global_position.distance_to(ray.get_collision_point())
 			# Compression travel
 			var comp = clampf(1.0 - dist, 0.0, 0.40)
@@ -284,11 +284,11 @@ func _update_grounding_and_suspension(delta: float) -> void:
 				suspension_offsets[i] = lerpf(suspension_offsets[i], 0.0, delta * 6.0)
 
 	var was_grounded = is_grounded
-	is_grounded = contact_count >= 1 or is_on_floor() or (not is_inside_tree() and is_grounded)
+	is_grounded = contact_count >= 1 or is_on_floor() or (within_proximity and absf(forward_speed) >= 16.0) or (not is_inside_tree() and is_grounded)
 
 	if is_grounded:
 		if contact_count >= 1:
-			ground_normal = (avg_normal / float(contact_count)).normalized()
+			ground_normal = avg_normal
 		elif is_on_floor():
 			ground_normal = get_floor_normal()
 		else:
@@ -303,54 +303,49 @@ func _update_grounding_and_suspension(delta: float) -> void:
 		if was_grounded:
 			# Just launched into air
 			airtime_duration = 0.0
-			air_jump_origin = global_position
+			air_jump_origin = global_position if is_inside_tree() else position
 			total_air_yaw = 0.0
 			total_air_pitch = 0.0
 			total_air_roll = 0.0
-			previous_air_euler = global_rotation
+			previous_air_euler = global_rotation if is_inside_tree() else rotation
 		else:
 			airtime_duration += delta
 			_track_airborne_rotations()
 
 func _handle_touchdown() -> void:
-	var landing_eval = AeroPhysicsHelpers.evaluate_landing(global_basis.y, ground_normal)
+	var cur_up = global_basis.y if is_inside_tree() else transform.basis.y
+	var landing_eval = StuntEvaluator.evaluate_touchdown(cur_up, ground_normal)
 	var quality = landing_eval.get("quality", "clean")
 	var angle_deg = landing_eval.get("angle_deg", 0.0)
 	var bonus = landing_eval.get("score_bonus", 0)
 	var boost_refill = landing_eval.get("boost_refill", 0.0)
 	var is_crash = landing_eval.get("is_crash", false)
 
-	# Crash only when impact angle/velocity genuinely warrants it (>18 m/s speed and extreme angle >75 deg)
-	var is_fatal_crash = is_crash and absf(forward_speed) > 18.0 and angle_deg > 75.0
-
-	if is_fatal_crash:
+	# Crash reset: reset combo multiplier, spawn burst, and recover to checkpoint
+	if is_crash:
 		emit_signal("vehicle_crashed")
 		recover_to_checkpoint()
 		return
-	elif is_crash:
-		# Rough touchdown: absorb impact with chassis compression and sparks rather than insta-death
-		quality = "rough"
-		bonus = 30
 
-	# Add boost refund on clean / perfect landing
+	# Add boost refill on clean / perfect landing
 	if boost_refill > 0.0:
 		boost_gauge = clampf(boost_gauge + boost_refill, 0.0, max_boost_gauge)
 		boost_amount_changed.emit(boost_gauge, max_boost_gauge)
 
 	landing_performed.emit(quality, angle_deg, bonus)
 
+	if quality == "perfect":
+		stunt_action_triggered.emit(AeroConstants.StuntType.PERFECT_LANDING, 500, "PERFECT LANDING")
+
 	# Trigger stunt points if airtime was significant
 	if airtime_duration >= 0.8 and absf(forward_speed) >= AeroConstants.MIN_STUNT_SPEED:
-		var jump_dist = global_position.distance_to(air_jump_origin)
+		var jump_dist = (global_position if is_inside_tree() else position).distance_to(air_jump_origin)
 		if jump_dist >= 45.0:
 			stunt_action_triggered.emit(AeroConstants.StuntType.LONG_JUMP, 600, "MEGA JUMP")
 		elif jump_dist >= 25.0:
 			stunt_action_triggered.emit(AeroConstants.StuntType.LONG_JUMP, 300, "LONG JUMP")
 		else:
 			stunt_action_triggered.emit(AeroConstants.StuntType.AIRTIME, int(airtime_duration * 120), "AIRTIME")
-
-		if quality == "perfect":
-			stunt_action_triggered.emit(AeroConstants.StuntType.PERFECT_LANDING, 500, "PERFECT LANDING")
 
 	# Trigger Sparks and Dust on touchdown
 	landing_compression = clampf(absf(velocity.y) * 0.04, 0.08, 0.35)
@@ -399,14 +394,20 @@ func _process_movement(delta: float) -> void:
 	else:
 		_process_airborne_movement(delta)
 
-	# Apply Effective Gravity (with Loop & Wall Adhesion)
-	var eff_grav = AeroPhysicsHelpers.calculate_effective_gravity(
+	# Apply Effective Dynamic Gravity Vector relative to track normal
+	var eff_grav = AeroGravityBody.calculate_effective_gravity(
 		ground_normal,
 		forward_speed,
 		is_grounded,
 		AeroConstants.DEFAULT_GRAVITY
 	)
 	velocity += eff_grav * delta
+
+	# Continuous downforce when grounded or in proximity and moving >= 16.0 m/s
+	if (is_grounded or ground_normal.dot(Vector3.UP) < 0.70) and absf(forward_speed) >= 16.0:
+		var is_inverted = ground_normal.dot(Vector3.UP) < 0.0
+		var downforce_vec = AeroGravityBody.calculate_downforce(ground_normal, vehicle_mass, forward_speed, is_inverted)
+		velocity += (downforce_vec / vehicle_mass) * delta
 
 	if not velocity.is_finite():
 		velocity = Vector3.ZERO
@@ -425,7 +426,7 @@ func _process_movement(delta: float) -> void:
 
 	# Synchronize forward speed with actual horizontal velocity on ground if wall collision
 	if is_inside_tree() and is_on_wall():
-		var forward_dir = -global_basis.z.normalized()
+		var forward_dir = -(global_basis.z if is_inside_tree() else transform.basis.z).normalized()
 		var forward_proj = velocity.dot(forward_dir)
 		if forward_proj < forward_speed:
 			forward_speed = maxf(0.0, forward_proj)
@@ -492,11 +493,22 @@ func _process_ground_movement(delta: float) -> void:
 			if absf(steer_input) > 0.6 and speed_ratio > 0.75:
 				forward_speed = move_toward(forward_speed, current_top * 0.88, 7.5 * delta)
 
-	# 4. Surface Normal Alignment (Allows driving through loops and banked turns)
-	if is_inside_tree():
-		global_basis = AeroPhysicsHelpers.align_basis_to_normal(global_basis, ground_normal, delta * 14.0)
-	else:
-		transform.basis = AeroPhysicsHelpers.align_basis_to_normal(transform.basis, ground_normal, delta * 14.0)
+	# 4. Surface Normal Alignment (Singularity-Free Slerp)
+	var cur_up: Vector3 = global_transform.basis.y if is_inside_tree() else transform.basis.y
+	var tgt_up: Vector3 = ground_normal.normalized()
+	var dot: float = clampf(cur_up.dot(tgt_up), -1.0, 1.0)
+	if dot < 0.9999:
+		var axis: Vector3 = cur_up.cross(tgt_up)
+		if axis.length_squared() < 0.0001:
+			axis = (global_transform.basis.x if is_inside_tree() else transform.basis.x)
+		var angle: float = acos(dot)
+		var q_rot := Quaternion(axis.normalized(), angle * minf(1.0, 16.0 * delta))
+		if is_inside_tree():
+			global_transform.basis = Basis(q_rot) * global_transform.basis
+			global_transform.basis = global_transform.basis.orthonormalized()
+		else:
+			transform.basis = Basis(q_rot) * transform.basis
+			transform.basis = transform.basis.orthonormalized()
 
 	# 5. Wall Ride Detection
 	var wall_angle = rad_to_deg(acos(clampf(ground_normal.dot(Vector3.UP), -1.0, 1.0)))
@@ -514,61 +526,46 @@ func _process_ground_movement(delta: float) -> void:
 	velocity = forward_dir * forward_speed
 
 func _process_airborne_movement(delta: float) -> void:
-	var is_stunt_mode = handbrake_held or is_boost_active or (is_player and Input.is_key_pressed(KEY_SHIFT))
+	# Airborne 3-Axis Attitude Control:
+	# Pitch (W/S) at +/- 3.2 rad/s
+	# Yaw / Flat Spin (A/D) at +/- 4.0 rad/s
+	# Roll / Barrel Roll (Space + A/D or Shift + A/D) at +/- 4.5 rad/s
+	var is_roll_mode = handbrake_held or (is_player and (Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_SHIFT)))
+	var air_rot_delta = StuntEvaluator.calculate_air_rotation(
+		throttle_input,
+		brake_input,
+		steer_input,
+		is_roll_mode,
+		delta
+	)
 
-	# 1. Stunt Mode vs Normal Flight
-	if is_stunt_mode:
-		# Player deliberate stunt maneuvers:
-		# Controlled flips (Pitch)
-		if throttle_input > 0.0:
-			rotate_object_local(Vector3.RIGHT, air_pitch_speed * throttle_input * delta)
-		elif brake_input > 0.0:
-			rotate_object_local(Vector3.RIGHT, -air_pitch_speed * brake_input * delta)
+	rotate_object_local(Vector3.RIGHT, air_rot_delta.x)
+	rotate_object_local(Vector3.UP, air_rot_delta.y)
+	rotate_object_local(Vector3.FORWARD, air_rot_delta.z)
 
-		# Controlled rolls / flat spins
-		if absf(steer_input) > 0.1:
-			if handbrake_held:
-				# Aerial Barrel Roll
-				rotate_object_local(Vector3.FORWARD, air_roll_speed * steer_input * delta)
-			else:
-				# Aerial Flat Spin
-				rotate_object_local(Vector3.UP, -air_yaw_speed * steer_input * delta)
-	else:
-		# Normal Jump Mode:
-		# Bounded gentle pitch (aiming nose up/down for landing angle)
-		if throttle_input > 0.0:
-			rotate_object_local(Vector3.RIGHT, (air_pitch_speed * 0.45) * throttle_input * delta)
-		elif brake_input > 0.0:
-			rotate_object_local(Vector3.RIGHT, -(air_pitch_speed * 0.45) * brake_input * delta)
-
-		# Bounded gentle yaw / roll banking
-		if absf(steer_input) > 0.1:
-			rotate_object_local(Vector3.UP, -air_yaw_speed * 0.4 * steer_input * delta)
-			rotate_object_local(Vector3.FORWARD, air_roll_speed * 0.25 * steer_input * delta)
-
-		# Natural Horizon & Trajectory Flight Stabilization: Vehicle naturally tends toward wheels-down landing!
+	# Gentle Horizon Stabilization when no attitude input is supplied
+	if absf(throttle_input) < 0.01 and absf(brake_input) < 0.01 and absf(steer_input) < 0.01:
 		var cur_basis = global_basis if is_inside_tree() else transform.basis
-		var horizon_weight = clampf(delta * 5.5, 0.0, 1.0)
+		var horizon_weight = clampf(delta * 4.0, 0.0, 1.0)
 		var stabilized_basis = AeroPhysicsHelpers.calculate_flight_stabilization(cur_basis, velocity, horizon_weight)
 		if is_inside_tree():
 			global_basis = stabilized_basis
 		else:
 			transform.basis = stabilized_basis
 
-	# 2. Multi-Point Landing Alignment Assistance & Prediction
+	# Multi-Point Landing Alignment Assistance & Prediction
 	if is_inside_tree() and get_world_3d() and get_world_3d().direct_space_state:
 		var space_state = get_world_3d().direct_space_state
 		var prediction = AeroPhysicsHelpers.predict_landing(space_state, global_position, velocity, 28.0)
 		if prediction.get("found", false):
 			var hit_norm = prediction.get("normal", Vector3.UP) as Vector3
 			var hit_dist = prediction.get("distance", 28.0) as float
-			# Progressively assist orientation toward landing deck without snapping
-			if hit_dist < 20.0:
-				var assist_factor = clampf((20.0 - hit_dist) / 20.0, 0.0, 1.0) * delta * 7.5
+			if hit_dist < 18.0:
+				var assist_factor = clampf((18.0 - hit_dist) / 18.0, 0.0, 1.0) * delta * 7.5
 				var aligned_basis = AeroPhysicsHelpers.align_basis_to_normal(global_basis, hit_norm, assist_factor)
 				global_basis = aligned_basis
 
-	# 3. Preserve forward momentum with realistic aerodynamic drag
+	# Preserve forward momentum with aerodynamic drag
 	var drag = 0.995
 	velocity.x *= drag
 	velocity.z *= drag

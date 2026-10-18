@@ -44,6 +44,7 @@ const TestCrossPlatformArchitectureScript = preload("res://tests/unit/test_cross
 const TestHumanoidAnimatorScript = preload("res://tests/unit/test_humanoid_animator.gd")
 const TestP0GatesScript = preload("res://tests/unit/test_p0_visual_and_physics_gates.gd")
 const TestMultiGameOverhaulGatesScript = preload("res://tests/unit/test_multi_game_overhaul_gates.gd")
+const TestProductionDefectGatesScript = preload("res://tests/unit/test_production_defect_gates.gd")
 
 # --- New Subsystems & 3 New Games (Unit) ---
 const TestQuestSystemScript = preload("res://tests/unit/test_quest_system.gd")
@@ -191,6 +192,7 @@ func _initialize() -> void:
 		{"name": "Engine Subsystems Unit", "instance": TestEngineSubsystemsScript.new()},
 		{"name": "P0 Visual & Physics Gates Unit", "instance": TestP0GatesScript.new()},
 		{"name": "Multi-Game Overhaul & Screenshot Defect Gates", "instance": TestMultiGameOverhaulGatesScript.new()},
+		{"name": "Production Defect Certification Gates (AeroRush, Apex Flight, Urban Legends)", "instance": TestProductionDefectGatesScript.new()},
 		# Responsive & Soak
 		{"name": "Responsive UI Multi-Resolution", "instance": TestResponsiveUIScript.new()},
 		{"name": "Soak & Stability Lifecycle", "instance": TestSoakScript.new()},

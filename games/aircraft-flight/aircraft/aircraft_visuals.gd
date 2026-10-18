@@ -173,15 +173,21 @@ func _process(delta: float) -> void:
 		landing_gear.scale = Vector3(1.0, gear_pos, 1.0)
 		landing_gear.visible = gear_pos > 0.05
 
-	# 9. Afterburner Plume Scaling & Visibility (Hidden at idle; visible only when throttle >= 0.85 with AB)
+	# 9. Volumetric Afterburner Plume Scaling & Shader Modulation (Visible with reheat at throttle >= 0.85)
 	var ab_active = aircraft_physics.afterburner_active and aircraft_physics.throttle >= 0.85
-	var ab_scale = 1.8 if ab_active else 0.0
+	var ab_scale_z = lerpf(1.0, 2.2, clampf((aircraft_physics.throttle - 0.85) / 0.15, 0.0, 1.0))
 	if afterburner_l:
 		afterburner_l.visible = ab_active
-		afterburner_l.scale = Vector3(ab_scale, ab_scale, ab_scale * 1.5)
+		if ab_active:
+			afterburner_l.scale = Vector3(1.0, 1.0, ab_scale_z)
+			if afterburner_l.material_override is ShaderMaterial:
+				afterburner_l.material_override.set_shader_parameter("throttle", aircraft_physics.throttle)
 	if afterburner_r:
 		afterburner_r.visible = ab_active
-		afterburner_r.scale = Vector3(ab_scale, ab_scale, ab_scale * 1.5)
+		if ab_active:
+			afterburner_r.scale = Vector3(1.0, 1.0, ab_scale_z)
+			if afterburner_r.material_override is ShaderMaterial:
+				afterburner_r.material_override.set_shader_parameter("throttle", aircraft_physics.throttle)
 
 	# 10. Spinning Propeller & Motion Blur Disk (Extra 330)
 	var prop_rpm = (aircraft_physics.engine_rpm_pct / 100.0) * 2800.0
@@ -193,14 +199,23 @@ func _process(delta: float) -> void:
 		if prop_blur_disk.material_override and prop_blur_disk.material_override is ShaderMaterial:
 			prop_blur_disk.material_override.set_shader_parameter("rpm_normalized", clampf(prop_rpm / 2600.0, 0.0, 1.0))
 
-	# 11. Helicopter Rotors & Radial Blur Disks (UH-60)
+	# 11. Helicopter Rotors, Cyclic Tip-Path Plane Tilt & Radial Blur Disks (UH-60)
 	var main_rpm = (aircraft_physics.rotor_rpm_pct / 100.0) * 320.0
 	var tail_rpm = (aircraft_physics.rotor_rpm_pct / 100.0) * 1400.0
 	if main_rotor:
 		_rotor_spin_angle += deg_to_rad(main_rpm * 6.0 * delta)
 		main_rotor.rotation.y = _rotor_spin_angle
+		# Tip-path plane tilt matching cyclic pitch and roll
+		var cyclic_pitch = -aircraft_physics.elevator_deflection * deg_to_rad(6.5)
+		var cyclic_roll = -aircraft_physics.aileron_left_deflection * deg_to_rad(5.5)
+		main_rotor.rotation.x = cyclic_pitch
+		main_rotor.rotation.z = cyclic_roll
 	if main_rotor_blur:
 		main_rotor_blur.visible = main_rpm > 100.0
+		var cyclic_pitch = -aircraft_physics.elevator_deflection * deg_to_rad(6.5)
+		var cyclic_roll = -aircraft_physics.aileron_left_deflection * deg_to_rad(5.5)
+		main_rotor_blur.rotation.x = deg_to_rad(90.0) + cyclic_pitch
+		main_rotor_blur.rotation.z = cyclic_roll
 		if main_rotor_blur.material_override and main_rotor_blur.material_override is ShaderMaterial:
 			main_rotor_blur.material_override.set_shader_parameter("rpm_normalized", clampf(main_rpm / 300.0, 0.0, 1.0))
 

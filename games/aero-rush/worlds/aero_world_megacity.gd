@@ -61,39 +61,75 @@ const SKYSCRAPER_PBR_SHADER = """
 shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
 
-uniform vec4 glass_color : source_color = vec4(0.10, 0.18, 0.28, 1.0);
-uniform vec4 mullion_color : source_color = vec4(0.72, 0.75, 0.80, 1.0);
-uniform vec4 window_lit_cyan : source_color = vec4(0.25, 0.82, 1.0, 1.0);
-uniform vec4 window_lit_amber : source_color = vec4(1.0, 0.80, 0.45, 1.0);
+uniform vec4 glass_color : source_color = vec4(0.06, 0.09, 0.14, 1.0);
+uniform vec4 mullion_color : source_color = vec4(0.68, 0.72, 0.78, 1.0);
+uniform vec4 slab_color : source_color = vec4(0.18, 0.20, 0.24, 1.0);
+uniform vec4 window_lit_cyan : source_color = vec4(0.20, 0.85, 1.0, 1.0);
+uniform vec4 window_lit_amber : source_color = vec4(1.0, 0.78, 0.40, 1.0);
+
+varying vec3 v_world_pos;
+varying vec3 v_world_normal;
+
+void vertex() {
+	v_world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	v_world_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+}
 
 void fragment() {
-	vec3 world_pos = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
-	// Architectural window grid: 3.6m wide x 3.8m tall modules
-	vec2 win_uv = fract(vec2(world_pos.x * 0.707 + world_pos.z * 0.707, world_pos.y) / vec2(3.6, 3.8));
-	bool is_mullion = (win_uv.x < 0.14 || win_uv.y < 0.16);
+	vec3 n = normalize(v_world_normal);
+	bool is_roof = (n.y > 0.65);
 
-	// Pseudo-random seed per window module
-	vec2 win_id = floor(vec2(world_pos.x * 0.707 + world_pos.z * 0.707, world_pos.y) / vec2(3.6, 3.8));
-	float h = fract(sin(dot(win_id, vec2(12.9898, 78.233))) * 43758.5453);
-
-	if (is_mullion) {
-		// Aluminum Mullions & Structural Framing
-		ALBEDO = mullion_color.rgb;
-		METALLIC = 0.88;
-		ROUGHNESS = 0.24;
-		SPECULAR = 0.65;
+	if (is_roof) {
+		// Rooftop mechanical terrace & maintenance gravel
+		vec2 roof_uv = fract(v_world_pos.xz / 6.0);
+		bool is_border = (roof_uv.x < 0.08 || roof_uv.y < 0.08);
+		ALBEDO = is_border ? vec3(0.25, 0.28, 0.32) : vec3(0.14, 0.15, 0.18);
+		METALLIC = 0.70;
+		ROUGHNESS = 0.55;
+		SPECULAR = 0.40;
 	} else {
-		// Reflective PBR Glass (metallic 0.8, roughness 0.15)
-		ALBEDO = glass_color.rgb;
-		METALLIC = 0.80;
-		ROUGHNESS = 0.15;
-		SPECULAR = 0.85;
+		// Facade-aligned architectural coordinate projection (no diagonal distortion)
+		vec2 facade_uv;
+		if (abs(n.x) > abs(n.z)) {
+			facade_uv = vec2(v_world_pos.z, v_world_pos.y);
+		} else {
+			facade_uv = vec2(v_world_pos.x, v_world_pos.y);
+		}
 
-		// Illuminated Interior Window Night Maps
-		if (h > 0.48) {
-			vec3 lit_col = (h > 0.78) ? window_lit_amber.rgb : window_lit_cyan.rgb;
-			float pulse = 0.95 + 0.10 * sin(TIME * 1.5 + h * 20.0);
-			EMISSION = lit_col * (1.6 * pulse);
+		// Modules: 3.2m width per window pane, 3.8m height per story
+		vec2 win_uv = fract(facade_uv / vec2(3.2, 3.8));
+		vec2 win_id = floor(facade_uv / vec2(3.2, 3.8));
+
+		bool is_floor_slab = (win_uv.y < 0.12);
+		bool is_vert_mullion = (win_uv.x < 0.10);
+
+		float h = fract(sin(dot(win_id, vec2(12.9898, 78.233))) * 43758.5453);
+
+		if (is_floor_slab) {
+			// Reinforced concrete/aluminum horizontal spandrel slab
+			ALBEDO = slab_color.rgb;
+			METALLIC = 0.60;
+			ROUGHNESS = 0.45;
+			SPECULAR = 0.50;
+		} else if (is_vert_mullion) {
+			// Extruded aluminum vertical mullion
+			ALBEDO = mullion_color.rgb;
+			METALLIC = 0.92;
+			ROUGHNESS = 0.18;
+			SPECULAR = 0.75;
+		} else {
+			// Deep reflective architectural curtain-wall glass
+			ALBEDO = glass_color.rgb;
+			METALLIC = 0.85;
+			ROUGHNESS = 0.08;
+			SPECULAR = 0.92;
+
+			// Subtle, crisp interior window lighting
+			if (h > 0.64) {
+				vec3 lit_col = (h > 0.86) ? window_lit_amber.rgb : window_lit_cyan.rgb;
+				float pulse = 0.92 + 0.08 * sin(TIME * 1.2 + h * 30.0);
+				EMISSION = lit_col * (1.8 * pulse);
+			}
 		}
 	}
 }
@@ -191,13 +227,122 @@ func build_environment() -> void:
 	# 9. Dynamic Airspace: Metropolitan Blimp and City Patrol Drones
 	_build_airspace_crafts()
 
+	# 10. Multi-Tier Highway Overpasses with Flowing Neon Traffic Trails
+	_build_highway_overpasses()
+
 func spawn_building(model_path: String, pos: Vector3, rot_y: float = 0.0, scale_mult: Vector3 = Vector3.ONE) -> Node3D:
 	var bld = super.spawn_building(model_path, pos, rot_y, scale_mult)
+	if not bld:
+		bld = Node3D.new()
+		bld.name = "BuildingProcedural"
+		bld.position = pos
+		bld.rotation_degrees.y = rot_y
+		bld.scale = scale_mult
+		add_child(bld)
 	if bld:
 		# Replace flat-colored box surfaces with reflective PBR glass & illuminated night map shader
 		if model_path.contains("building") or model_path.contains("skyscraper"):
 			_apply_pbr_materials_recursive(bld, _get_skyscraper_material())
+			_add_skyscraper_rooftop_details(bld, scale_mult.y)
 	return bld
+
+func _add_skyscraper_rooftop_details(bld: Node3D, height_scale: float) -> void:
+	# Rooftop communication antenna with pulsing red aviation beacon
+	var antenna = MeshInstance3D.new()
+	var cyl = CylinderMesh.new()
+	cyl.top_radius = 0.08
+	cyl.bottom_radius = 0.25
+	cyl.height = 12.0
+	antenna.mesh = cyl
+	var a_mat = StandardMaterial3D.new()
+	a_mat.albedo_color = Color(0.70, 0.72, 0.75)
+	a_mat.metallic = 0.95
+	a_mat.roughness = 0.20
+	antenna.material_override = a_mat
+	antenna.name = "AntennaSpire"
+	antenna.position = Vector3(0.0, height_scale * 3.5 + 6.0, 0.0)
+	bld.add_child(antenna)
+
+	var beacon = MeshInstance3D.new()
+	beacon.name = "AviationBeacon"
+	var sphere = SphereMesh.new()
+	sphere.radius = 0.5
+	sphere.height = 1.0
+	beacon.mesh = sphere
+	var b_mat = StandardMaterial3D.new()
+	b_mat.albedo_color = Color(1.0, 0.08, 0.08)
+	b_mat.emission_enabled = true
+	b_mat.emission = Color(1.0, 0.08, 0.08)
+	b_mat.emission_energy_multiplier = 4.5
+	beacon.material_override = b_mat
+	beacon.position = Vector3(0.0, height_scale * 3.5 + 12.0, 0.0)
+	bld.add_child(beacon)
+
+	# Holographic race sign on facade
+	if randf() < 0.45:
+		var sign_mesh = MeshInstance3D.new()
+		var s_box = BoxMesh.new()
+		s_box.size = Vector3(16.0, 5.0, 0.5)
+		sign_mesh.mesh = s_box
+		var s_mat = StandardMaterial3D.new()
+		var sign_colors = [Color(0.05, 0.85, 1.0), Color(1.0, 0.22, 0.70), Color(1.0, 0.85, 0.1)]
+		var chosen_sign_col = sign_colors[randi() % sign_colors.size()]
+		s_mat.albedo_color = chosen_sign_col
+		s_mat.emission_enabled = true
+		s_mat.emission = chosen_sign_col
+		s_mat.emission_energy_multiplier = 3.2
+		sign_mesh.material_override = s_mat
+		sign_mesh.position = Vector3(0.0, height_scale * 2.0, 4.0)
+		bld.add_child(sign_mesh)
+
+func _build_highway_overpasses() -> void:
+	var highway_root = Node3D.new()
+	highway_root.name = "UrbanBasinHighways"
+	add_child(highway_root)
+
+	var h_mat = StandardMaterial3D.new()
+	h_mat.albedo_color = Color(0.12, 0.13, 0.16)
+	h_mat.metallic = 0.3
+	h_mat.roughness = 0.7
+
+	var trail_mat_white = StandardMaterial3D.new()
+	trail_mat_white.albedo_color = Color(0.95, 0.98, 1.0)
+	trail_mat_white.emission_enabled = true
+	trail_mat_white.emission = Color(0.95, 0.98, 1.0)
+	trail_mat_white.emission_energy_multiplier = 3.0
+
+	var trail_mat_red = StandardMaterial3D.new()
+	trail_mat_red.albedo_color = Color(1.0, 0.05, 0.05)
+	trail_mat_red.emission_enabled = true
+	trail_mat_red.emission = Color(1.0, 0.05, 0.05)
+	trail_mat_red.emission_energy_multiplier = 3.0
+
+	var overpass_x_lanes = [-180.0, 320.0]
+	for hx in overpass_x_lanes:
+		var road = MeshInstance3D.new()
+		var r_box = BoxMesh.new()
+		r_box.size = Vector3(22.0, 2.0, 1600.0)
+		road.mesh = r_box
+		road.material_override = h_mat
+		road.position = Vector3(hx, -2.5, -200.0)
+		highway_root.add_child(road)
+
+		# Traffic light flow streaks
+		var headlight_streak = MeshInstance3D.new()
+		var h_streak_box = BoxMesh.new()
+		h_streak_box.size = Vector3(1.2, 0.2, 1600.0)
+		headlight_streak.mesh = h_streak_box
+		headlight_streak.material_override = trail_mat_white
+		headlight_streak.position = Vector3(hx - 5.0, -1.4, -200.0)
+		highway_root.add_child(headlight_streak)
+
+		var taillight_streak = MeshInstance3D.new()
+		var t_streak_box = BoxMesh.new()
+		t_streak_box.size = Vector3(1.2, 0.2, 1600.0)
+		taillight_streak.mesh = t_streak_box
+		taillight_streak.material_override = trail_mat_red
+		taillight_streak.position = Vector3(hx + 5.0, -1.4, -200.0)
+		highway_root.add_child(taillight_streak)
 
 func _apply_pbr_materials_recursive(node: Node, mat: Material) -> void:
 	if node is MeshInstance3D:

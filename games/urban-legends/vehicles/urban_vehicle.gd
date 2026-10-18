@@ -646,6 +646,14 @@ func _handle_collision_impacts() -> void:
 					lamp_root.rotate_object_local(Vector3.FORWARD, deg_to_rad(40.0))
 					lamp_root.position += Vector3.UP * 0.15
 
+			# Vertical road seam & curb bevel slide response (NEVER register catastrophic damage on ground/pavement seams)
+			var vert_impulse = absf(normal.y * impact_vel)
+			var is_ground_or_curb = normal.y > 0.35 or (col.get_position().y <= global_position.y + 0.38 and normal.y > 0.15)
+			if is_ground_or_curb or vert_impulse < 6.0 and normal.y > 0.20:
+				# Apply upward slide friction impulse to glide smoothly over pavement seams without halting
+				velocity.y = maxf(velocity.y, 1.4)
+				continue
+
 			# Collision damage scaling:
 			# Normal curb / traffic side scrapes deal 5% - 15% damage
 			# Only high-speed (> 25 m/s) head-on impacts deal heavy damage (30% - 70%)

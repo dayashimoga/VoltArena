@@ -36,17 +36,17 @@ void fragment() {
 	vec3 dark_grooved_asphalt = asphalt_color.rgb + vec3(micro_groove + micro_noise);
 
 	if (is_border_left) {
-		// Glowing Intense Cyan Left Energy Ribbon
-		float pulse = 0.5 + 0.5 * sin(TIME * 4.0 - UV.y * 14.0);
+		// Glowing Intense Cyan Left Energy Ribbon (HDR 4.5)
+		float pulse = 0.85 + 0.15 * sin(TIME * 4.0 - UV.y * 14.0);
 		ALBEDO = neon_left_color.rgb;
-		EMISSION = neon_left_color.rgb * (2.8 + pulse * 0.8);
+		EMISSION = neon_left_color.rgb * (4.5 * pulse);
 		ROUGHNESS = 0.05;
 		METALLIC = 0.85;
 	} else if (is_border_right) {
-		// Glowing Intense Magenta Right Energy Ribbon
-		float pulse = 0.5 + 0.5 * cos(TIME * 4.0 - UV.y * 14.0);
+		// Glowing Intense Magenta Right Energy Ribbon (HDR 4.5)
+		float pulse = 0.85 + 0.15 * cos(TIME * 4.0 - UV.y * 14.0);
 		ALBEDO = neon_right_color.rgb;
-		EMISSION = neon_right_color.rgb * (2.8 + pulse * 0.8);
+		EMISSION = neon_right_color.rgb * (4.5 * pulse);
 		ROUGHNESS = 0.05;
 		METALLIC = 0.85;
 	} else if (is_barrier_face) {
@@ -55,11 +55,11 @@ void fragment() {
 		ROUGHNESS = 0.55;
 		METALLIC = 0.65;
 	} else if (is_curb) {
-		// High-contrast Orange / White Alternating Stunt Curb
+		// High-contrast Yellow / Black Chevron Striping Stunt Curb
 		float stripe = mod(UV.y * 6.0, 2.0);
-		vec3 c_col = (stripe < 1.0) ? curb_color.rgb : vec3(0.96, 0.96, 0.98);
+		vec3 c_col = (stripe < 1.0) ? vec3(1.0, 0.85, 0.05) : vec3(0.08, 0.08, 0.10);
 		ALBEDO = c_col;
-		EMISSION = (stripe < 1.0) ? curb_color.rgb * 1.2 : vec3(0.20);
+		EMISSION = (stripe < 1.0) ? vec3(1.0, 0.85, 0.05) * 1.5 : vec3(0.0);
 		ROUGHNESS = 0.28;
 		METALLIC = 0.20;
 	} else if (is_center_line) {
@@ -953,7 +953,7 @@ static func _generate_support_pylons(dense_points: Array[Dictionary], parent: No
 	if dense_points.size() < 6:
 		return
 
-	var pylon_spacing = 52.0
+	var pylon_spacing = 45.0
 	var dist_accum = 0.0
 
 	var concrete_mat = StandardMaterial3D.new()

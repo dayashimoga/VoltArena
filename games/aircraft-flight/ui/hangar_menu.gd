@@ -156,12 +156,20 @@ func _build_hangar_ui() -> void:
 
 	# --- RIGHT PANEL: INTERACTIVE TACTICAL MISSION PREVIEW & BRIEFING ---
 	var right_panel = _create_glass_panel(Vector2(350, 560))
-	right_panel.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	right_panel.offset_left = -374
+	right_panel.anchor_top = 0.06
+	right_panel.anchor_bottom = 0.96
+	right_panel.anchor_left = 1.0
+	right_panel.anchor_right = 1.0
+	right_panel.offset_left = -380
+	right_panel.offset_right = -20
+	right_panel.offset_top = 0
+	right_panel.offset_bottom = 0
 	root_control.add_child(right_panel)
 
 	var right_vbox = VBoxContainer.new()
+	right_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	right_vbox.add_theme_constant_override("separation", 6)
+	right_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right_panel.add_child(right_vbox)
 
 	var m_hdr = Label.new()
@@ -170,12 +178,25 @@ func _build_hangar_ui() -> void:
 	m_hdr.add_theme_color_override("font_color", Color(0.2, 0.95, 0.4))
 	right_vbox.add_child(m_hdr)
 
+	# Dedicated ScrollContainer wrapping middle content so buttons are NEVER pushed off-screen
+	var content_scroll = ScrollContainer.new()
+	content_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	content_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	right_vbox.add_child(content_scroll)
+
+	var content_vbox = VBoxContainer.new()
+	content_vbox.add_theme_constant_override("separation", 6)
+	content_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content_scroll.add_child(content_vbox)
+
 	# Mission List Scroll Container (Compact button list)
 	var mission_scroll = ScrollContainer.new()
-	mission_scroll.custom_minimum_size = Vector2(310, 110)
+	mission_scroll.custom_minimum_size = Vector2(310, 105)
 	mission_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	mission_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	right_vbox.add_child(mission_scroll)
+	content_vbox.add_child(mission_scroll)
 
 	var m_list_vbox = VBoxContainer.new()
 	m_list_vbox.add_theme_constant_override("separation", 3)
@@ -197,19 +218,19 @@ func _build_hangar_ui() -> void:
 	map_hdr.text = "TACTICAL ROUTE & AIRSPACE"
 	map_hdr.add_theme_font_size_override("font_size", 10)
 	map_hdr.add_theme_color_override("font_color", Color(0.65, 0.75, 0.85))
-	right_vbox.add_child(map_hdr)
+	content_vbox.add_child(map_hdr)
 
 	mission_map_canvas = Control.new()
-	mission_map_canvas.custom_minimum_size = Vector2(310, 125)
+	mission_map_canvas.custom_minimum_size = Vector2(310, 115)
 	mission_map_canvas.draw.connect(func(): _draw_tactical_mission_map(mission_map_canvas))
-	right_vbox.add_child(mission_map_canvas)
+	content_vbox.add_child(mission_map_canvas)
 
 	# Mission Briefing Metrics Grid
 	var grid = GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 10)
 	grid.add_theme_constant_override("v_separation", 3)
-	right_vbox.add_child(grid)
+	content_vbox.add_child(grid)
 
 	var l_alt = Label.new()
 	l_alt.text = "ALTITUDE:"
@@ -260,9 +281,14 @@ func _build_hangar_ui() -> void:
 	mission_desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	mission_desc_label.custom_minimum_size = Vector2(310, 36)
 	mission_desc_label.add_theme_font_size_override("font_size", 9)
-	right_vbox.add_child(mission_desc_label)
+	content_vbox.add_child(mission_desc_label)
 
-	# Action Buttons
+	# Pinned Action Buttons (Permanent Viewport Anchored Bottom)
+	var btn_vbox = VBoxContainer.new()
+	btn_vbox.size_flags_vertical = Control.SIZE_SHRINK_END
+	btn_vbox.add_theme_constant_override("separation", 4)
+	right_vbox.add_child(btn_vbox)
+
 	var btn_fly = Button.new()
 	btn_fly.text = "★ FLY MISSION ★"
 	btn_fly.custom_minimum_size = Vector2(310, 36)
@@ -271,14 +297,14 @@ func _build_hangar_ui() -> void:
 	btn_fly.pressed.connect(func():
 		launch_requested.emit(selected_aircraft_id, selected_mission_id, selected_world_id, selected_primary_color, selected_accent_color)
 	)
-	right_vbox.add_child(btn_fly)
+	btn_vbox.add_child(btn_fly)
 
 	var btn_exit = Button.new()
 	btn_exit.text = "EXIT TO LAUNCHER"
 	btn_exit.custom_minimum_size = Vector2(310, 26)
 	btn_exit.add_theme_font_size_override("font_size", 10)
 	btn_exit.pressed.connect(func(): exit_requested.emit())
-	right_vbox.add_child(btn_exit)
+	btn_vbox.add_child(btn_exit)
 
 func _build_turntable_viewport() -> void:
 	var vp_container = SubViewportContainer.new()

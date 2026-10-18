@@ -4,9 +4,11 @@ extends "res://games/aero-rush/worlds/aero_world_base.gd"
 ## Neo-Cascade Metropolis: Authoritative Stunt-Racing Megacity Environment.
 ## Replaces prototype geometry with high-speed arcade racing spectacle:
 ## - Radiant golden-hour / cyberpunk dusk sky and warm directional sunlight
+## - Volumetric fog with atmospheric haze scattering between downtown towers
+## - Reflective PBR glass skyscrapers with aluminum mullions and illuminated interior night maps
+## - Animated metropolitan blimp and city patrol drones in the airspace
 ## - Elevated stunt highway suspended above an illuminated urban basin
-## - Covered racing grandstands, floodlight towers, and high-visibility digital billboards
-## - Authored skyscraper complexes and commercial plazas at realistic proportions
+## - Covered racing grandstands with animated crowd camera flashes, floodlights, and billboards
 ## - Overhead transit sky-bridges spanning above the circuit
 ## - 360-degree layered perimeter skyline guaranteeing depth and scale cues from every angle.
 
@@ -55,6 +57,89 @@ void fragment() {
 }
 """
 
+const SKYSCRAPER_PBR_SHADER = """
+shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
+
+uniform vec4 glass_color : source_color = vec4(0.10, 0.18, 0.28, 1.0);
+uniform vec4 mullion_color : source_color = vec4(0.72, 0.75, 0.80, 1.0);
+uniform vec4 window_lit_cyan : source_color = vec4(0.25, 0.82, 1.0, 1.0);
+uniform vec4 window_lit_amber : source_color = vec4(1.0, 0.80, 0.45, 1.0);
+
+void fragment() {
+	vec3 world_pos = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	// Architectural window grid: 3.6m wide x 3.8m tall modules
+	vec2 win_uv = fract(vec2(world_pos.x * 0.707 + world_pos.z * 0.707, world_pos.y) / vec2(3.6, 3.8));
+	bool is_mullion = (win_uv.x < 0.14 || win_uv.y < 0.16);
+
+	// Pseudo-random seed per window module
+	vec2 win_id = floor(vec2(world_pos.x * 0.707 + world_pos.z * 0.707, world_pos.y) / vec2(3.6, 3.8));
+	float h = fract(sin(dot(win_id, vec2(12.9898, 78.233))) * 43758.5453);
+
+	if (is_mullion) {
+		// Aluminum Mullions & Structural Framing
+		ALBEDO = mullion_color.rgb;
+		METALLIC = 0.88;
+		ROUGHNESS = 0.24;
+		SPECULAR = 0.65;
+	} else {
+		// Reflective PBR Glass (metallic 0.8, roughness 0.15)
+		ALBEDO = glass_color.rgb;
+		METALLIC = 0.80;
+		ROUGHNESS = 0.15;
+		SPECULAR = 0.85;
+
+		// Illuminated Interior Window Night Maps
+		if (h > 0.48) {
+			vec3 lit_col = (h > 0.78) ? window_lit_amber.rgb : window_lit_cyan.rgb;
+			float pulse = 0.95 + 0.10 * sin(TIME * 1.5 + h * 20.0);
+			EMISSION = lit_col * (1.6 * pulse);
+		}
+	}
+}
+"""
+
+var skyscraper_pbr_material: ShaderMaterial = null
+var blimp_node: Node3D = null
+var blimp_angle: float = 0.0
+var drone_nodes: Array[Node3D] = []
+var crowd_lights: Array[MeshInstance3D] = []
+var crowd_timer: float = 0.0
+
+func _get_skyscraper_material() -> ShaderMaterial:
+	if not skyscraper_pbr_material:
+		skyscraper_pbr_material = ShaderMaterial.new()
+		var s = Shader.new()
+		s.code = SKYSCRAPER_PBR_SHADER
+		skyscraper_pbr_material.shader = s
+	return skyscraper_pbr_material
+
+func _process(delta: float) -> void:
+	# 1. Metropolitan Blimp Flight Trajectory
+	if blimp_node and is_instance_valid(blimp_node):
+		blimp_angle += 0.04 * delta
+		var radius = 240.0
+		blimp_node.position.x = cos(blimp_angle) * radius
+		blimp_node.position.z = -180.0 + sin(blimp_angle) * radius
+		blimp_node.rotation.y = -blimp_angle + PI * 0.5
+
+	# 2. Hovering Airspace Drones
+	for i in range(drone_nodes.size()):
+		var d = drone_nodes[i]
+		if is_instance_valid(d):
+			d.position.y += sin(Time.get_ticks_msec() * 0.002 + i) * 0.02
+			d.rotate_y(0.2 * delta)
+
+	# 3. Crowd Flashlights & Camera Flashes
+	crowd_timer += delta
+	if crowd_timer > 0.08:
+		crowd_timer = 0.0
+		for cl in crowd_lights:
+			if is_instance_valid(cl) and cl.material_override:
+				var cm = cl.material_override as StandardMaterial3D
+				if cm:
+					cm.emission_energy_multiplier = 4.5 if randf() < 0.18 else 0.0
+
 func build_environment() -> void:
 	# 1. Atmospheric Golden Dusk / Cyberpunk Twilight Lighting
 	setup_lighting(
@@ -63,9 +148,20 @@ func build_environment() -> void:
 		Vector3(-28.0, 48.0, 0.0),               # Cinematic 3D Shadow Cast Angle
 		Color(0.06, 0.12, 0.32),                 # Sky Top (Sapphire Twilight)
 		Color(0.96, 0.54, 0.28),                 # Sky Horizon (Radiant Amber Sunset)
-		Color(0.46, 0.38, 0.45),                 # Volumetric Atmospheric Haze
-		0.0012                                   # Fog Density (Clear Visibility + Distance Depth)
+		Color(0.85, 0.70, 0.65),                 # Volumetric Atmospheric Haze
+		0.0018                                   # Fog Density
 	)
+
+	# Enhanced Volumetric Fog between downtown skyscraper canyons
+	if world_env and world_env.environment:
+		var env = world_env.environment
+		env.volumetric_fog_enabled = true
+		env.volumetric_fog_density = 0.0022
+		env.volumetric_fog_albedo = Color(0.92, 0.74, 0.65)
+		env.volumetric_fog_emission = Color(0.18, 0.12, 0.25)
+		env.volumetric_fog_emission_energy = 0.5
+		env.volumetric_fog_anisotropy = 0.45
+		env.volumetric_fog_gi_inject = 1.0
 
 	# 2. Elevated Urban Basin Ground Bed with Multi-Tier Street Grid Shader
 	var ground_mat = ShaderMaterial.new()
@@ -91,6 +187,24 @@ func build_environment() -> void:
 
 	# 8. 360-Degree Continuous Layered Perimeter Skyline
 	_build_perimeter_skyline()
+
+	# 9. Dynamic Airspace: Metropolitan Blimp and City Patrol Drones
+	_build_airspace_crafts()
+
+func spawn_building(model_path: String, pos: Vector3, rot_y: float = 0.0, scale_mult: Vector3 = Vector3.ONE) -> Node3D:
+	var bld = super.spawn_building(model_path, pos, rot_y, scale_mult)
+	if bld:
+		# Replace flat-colored box surfaces with reflective PBR glass & illuminated night map shader
+		if model_path.contains("building") or model_path.contains("skyscraper"):
+			_apply_pbr_materials_recursive(bld, _get_skyscraper_material())
+	return bld
+
+func _apply_pbr_materials_recursive(node: Node, mat: Material) -> void:
+	if node is MeshInstance3D:
+		var mi = node as MeshInstance3D
+		mi.material_override = mat
+	for child in node.get_children():
+		_apply_pbr_materials_recursive(child, mat)
 
 func _build_urban_waterway() -> void:
 	var water_mesh = MeshInstance3D.new()
@@ -125,6 +239,23 @@ func _build_stadium_starting_sector() -> void:
 	]
 	for g in gs_positions:
 		spawn_building(grandstand_path, g["pos"], g["rot"], Vector3(2.2, 2.2, 2.2))
+		# Animated crowd camera flashes
+		for f in range(6):
+			var flash = MeshInstance3D.new()
+			var fm = SphereMesh.new()
+			fm.radius = 0.20
+			fm.height = 0.40
+			flash.mesh = fm
+			var f_mat = StandardMaterial3D.new()
+			f_mat.albedo_color = Color(1.0, 1.0, 1.0)
+			f_mat.emission_enabled = true
+			f_mat.emission = Color(1.0, 1.0, 1.0)
+			f_mat.emission_energy_multiplier = 0.0
+			flash.material_override = f_mat
+			var f_offset = Vector3(randf_range(-5.0, 5.0), randf_range(2.0, 5.5), randf_range(-3.5, 3.5))
+			flash.position = g["pos"] + f_offset
+			add_child(flash)
+			crowd_lights.append(flash)
 
 	# High Stadium Floodlight Towers
 	var fl_positions = [
@@ -138,7 +269,7 @@ func _build_stadium_starting_sector() -> void:
 	for fl_pos in fl_positions:
 		spawn_building(floodlight_path, fl_pos, 0.0, Vector3(2.4, 2.4, 2.4))
 
-	# High-Speed Racing Billboards on the start and approach corners (outside track shoulders)
+	# High-Speed Racing Billboards on the start and approach corners
 	var bb_positions = [
 		{"pos": Vector3(-26.0, 3.5, 110.0), "rot": 35.0},
 		{"pos": Vector3(26.0, 3.5, 110.0), "rot": -35.0},
@@ -170,9 +301,9 @@ func _build_flanking_skyscrapers() -> void:
 		"res://assets/models/environment/building_comm_f.glb"
 	]
 
-	# Realistic boulevard towers flanking track (proportional scale: 7.5x to 11.5x uniform scale)
+	# Realistic boulevard towers flanking track (proportional scale: 8.0x to 12.0x uniform scale)
 	var tower_coords = [
-		# West side city blocks (setback >= 65m ensures zero track penetration)
+		# West side city blocks
 		Vector3(-68.0, -6.5, -70.0), Vector3(-78.0, -6.5, -15.0),
 		Vector3(-68.0, -6.5, 45.0), Vector3(-85.0, -6.5, 110.0),
 		Vector3(-95.0, -6.5, -150.0), Vector3(-110.0, -6.5, -230.0),
@@ -180,7 +311,7 @@ func _build_flanking_skyscrapers() -> void:
 		Vector3(-68.0, -6.5, -190.0), Vector3(-85.0, -6.5, -270.0),
 		Vector3(-105.0, -6.5, -360.0), Vector3(-75.0, -6.5, -410.0),
 		Vector3(-135.0, -6.5, -90.0), Vector3(-140.0, -6.5, -200.0),
-		# East side city blocks (setback >= 240m for Z < 0 ensures zero track envelope penetration)
+		# East side city blocks
 		Vector3(245.0, -6.5, -70.0), Vector3(115.0, -6.5, -15.0),
 		Vector3(95.0, -6.5, 45.0), Vector3(115.0, -6.5, 110.0),
 		Vector3(255.0, -6.5, -150.0), Vector3(265.0, -6.5, -230.0),
@@ -194,10 +325,9 @@ func _build_flanking_skyscrapers() -> void:
 		var pos = tower_coords[i]
 		var model = skyscraper_models[i % skyscraper_models.size()]
 		var uniform_scale = randf_range(8.0, 12.0)
-		# Proportional scaling produces authentic 60m - 90m skyscraper heights with clean clearance
 		spawn_building(model, pos, float((i * 90) % 360), Vector3(uniform_scale, uniform_scale, uniform_scale))
 
-	# Secondary Commercial Plazas and Mid-Tier Complexes (Proportional 3.2x - 4.8x scale)
+	# Secondary Commercial Plazas and Mid-Tier Complexes
 	var comm_coords = [
 		Vector3(-90.0, -6.5, -60.0), Vector3(230.0, -6.5, -60.0),
 		Vector3(-105.0, -6.5, 80.0), Vector3(105.0, -6.5, 80.0),
@@ -214,7 +344,6 @@ func _build_flanking_skyscrapers() -> void:
 		spawn_building(c_model, c_pos, float((j * 90) % 360), Vector3(c_scale, c_scale, c_scale))
 
 func _build_overhead_skybridges() -> void:
-	# Skybridges crossing at high altitude (Y = 72m, W = 240m) between skyscraper rooftops well clear of track envelopes
 	var bridge_z_coords = [-10.0, 110.0, -500.0]
 	for z in bridge_z_coords:
 		var bridge = MeshInstance3D.new()
@@ -231,7 +360,6 @@ func _build_overhead_skybridges() -> void:
 		bridge.position = Vector3(0.0, 72.0, z)
 		add_child(bridge)
 
-		# Neon Transit Window Stripe across Skybridge
 		var win = MeshInstance3D.new()
 		var w_mesh = BoxMesh.new()
 		w_mesh.size = Vector3(240.0, 1.4, 8.2)
@@ -249,12 +377,10 @@ func _build_street_amenities() -> void:
 	var palm_path = "res://assets/models/environment/tree_palm.glb"
 	var oak_path = "res://assets/models/environment/tree_oak.glb"
 
-	# Street Lightposts along urban basin roads
 	for z_coord in range(-120, 140, 35):
 		for x_side in [-38.0, 38.0]:
 			spawn_building(lightpost_path, Vector3(x_side, -6.5, float(z_coord)), 90.0 if x_side < 0 else -90.0, Vector3(2.0, 2.0, 2.0))
 
-	# Landscaped Plaza Palms & Trees around commercial plazas
 	var tree_plazas = [
 		Vector3(-42.0, -6.5, -45.0), Vector3(42.0, -6.5, -45.0),
 		Vector3(-42.0, -6.5, 30.0), Vector3(42.0, -6.5, 30.0),
@@ -265,8 +391,6 @@ func _build_street_amenities() -> void:
 		spawn_tree(oak_path, t_pos + Vector3(6.0, 0, 6.0), Vector2(1.0, 1.4))
 
 func _build_perimeter_skyline() -> void:
-	# 360-degree monumental skyline silhouette instanced from real skyscraper models
-	# Positioned with generous radius (520m) centered on circuit core (Z = -200m) to guarantee zero track penetration
 	var skyscraper_models = [
 		"res://assets/models/environment/building_skyscraper_a.glb",
 		"res://assets/models/environment/building_skyscraper_b.glb",
@@ -286,3 +410,103 @@ func _build_perimeter_skyline() -> void:
 		var scale_val = randf_range(35.0, 58.0)
 
 		spawn_building(model, Vector3(x, -6.5, z), float((i * 47) % 360), Vector3(scale_val, scale_val, scale_val))
+
+func _build_airspace_crafts() -> void:
+	var airspace_node = Node3D.new()
+	airspace_node.name = "AirspaceCrafts"
+
+	# 1. Metropolitan Advertising Blimp
+	blimp_node = Node3D.new()
+	blimp_node.name = "MetroDirigible"
+	blimp_node.position = Vector3(120.0, 85.0, -180.0)
+
+	var hull_mesh = MeshInstance3D.new()
+	var sphere = SphereMesh.new()
+	sphere.radius = 8.0
+	sphere.height = 36.0
+	hull_mesh.mesh = sphere
+	hull_mesh.scale = Vector3(1.0, 1.0, 2.4)
+	var blimp_mat = StandardMaterial3D.new()
+	blimp_mat.albedo_color = Color(0.14, 0.16, 0.22)
+	blimp_mat.metallic = 0.85
+	blimp_mat.roughness = 0.22
+	hull_mesh.material_override = blimp_mat
+	blimp_node.add_child(hull_mesh)
+
+	# Illuminated Digital Billboard Screen on Blimp
+	var blimp_screen = MeshInstance3D.new()
+	var s_mesh = BoxMesh.new()
+	s_mesh.size = Vector3(16.5, 4.5, 32.0)
+	blimp_screen.mesh = s_mesh
+	var screen_mat = StandardMaterial3D.new()
+	screen_mat.albedo_color = Color(0.05, 0.85, 1.0)
+	screen_mat.emission_enabled = true
+	screen_mat.emission = Color(0.05, 0.85, 1.0)
+	screen_mat.emission_energy_multiplier = 2.4
+	blimp_screen.material_override = screen_mat
+	blimp_node.add_child(blimp_screen)
+
+	# Gondola with searchlight
+	var gondola = MeshInstance3D.new()
+	var g_box = BoxMesh.new()
+	g_box.size = Vector3(3.5, 2.5, 12.0)
+	gondola.mesh = g_box
+	var g_mat = StandardMaterial3D.new()
+	g_mat.albedo_color = Color(0.85, 0.88, 0.92)
+	g_mat.metallic = 0.9
+	gondola.material_override = g_mat
+	gondola.position = Vector3(0, -7.5, 0)
+	blimp_node.add_child(gondola)
+
+	var blimp_light = SpotLight3D.new()
+	blimp_light.light_color = Color(0.9, 0.95, 1.0)
+	blimp_light.light_energy = 4.0
+	blimp_light.spot_range = 140.0
+	blimp_light.spot_angle = 35.0
+	blimp_light.rotation_degrees = Vector3(-75.0, 0.0, 0.0)
+	gondola.add_child(blimp_light)
+
+	airspace_node.add_child(blimp_node)
+
+	# 2. Autonomous City Patrol Drones
+	var drone_coords = [
+		Vector3(-80.0, 48.0, -90.0),
+		Vector3(80.0, 56.0, 40.0),
+		Vector3(-110.0, 62.0, -280.0),
+		Vector3(140.0, 52.0, -200.0)
+	]
+	for d_i in range(drone_coords.size()):
+		var drone = Node3D.new()
+		drone.name = "AirDrone_%d" % (d_i + 1)
+		drone.position = drone_coords[d_i]
+
+		var d_body = MeshInstance3D.new()
+		var d_box = BoxMesh.new()
+		d_box.size = Vector3(3.2, 0.8, 4.0)
+		d_body.mesh = d_box
+		var d_mat = StandardMaterial3D.new()
+		d_mat.albedo_color = Color(0.12, 0.14, 0.18)
+		d_mat.metallic = 0.8
+		d_mat.roughness = 0.3
+		d_body.material_override = d_mat
+		drone.add_child(d_body)
+
+		# Flashing Nav Strobe
+		var strobe = MeshInstance3D.new()
+		var s_sph = SphereMesh.new()
+		s_sph.radius = 0.3
+		s_sph.height = 0.6
+		strobe.mesh = s_sph
+		var s_mat = StandardMaterial3D.new()
+		s_mat.albedo_color = Color(1.0, 0.1, 0.1) if d_i % 2 == 0 else Color(0.1, 1.0, 0.2)
+		s_mat.emission_enabled = true
+		s_mat.emission = s_mat.albedo_color
+		s_mat.emission_energy_multiplier = 4.0
+		strobe.material_override = s_mat
+		strobe.position = Vector3(0, 0.6, 0)
+		drone.add_child(strobe)
+
+		airspace_node.add_child(drone)
+		drone_nodes.append(drone)
+
+	add_child(airspace_node)

@@ -636,19 +636,84 @@ func toggle_audio() -> void:
 	AudioServer.set_bus_mute(master_bus, not is_muted)
 
 func on_play_game_pressed(meta: Dictionary) -> void:
-	current_target_game = meta["id"]
-	loading_overlay.visible = true
-	loading_status_label.text = "Preparing %s..." % meta["title"]
-	loading_bar.value = 0.0
+	launch_game(meta)
 
-	var loader = GameConstants.get_autoload(self, "AssetLoader")
-	if loader:
-		loader.request_game_load(meta["id"], meta["scene"])
-	else:
-		# Direct fallback
+func launch_game(meta: Dictionary) -> void:
+	current_target_game = meta.get("id", "")
+	var scene_path: String = meta.get("scene", "")
+	var title: String = meta.get("title", meta.get("id", "Game"))
+
+	loading_overlay.visible = true
+	loading_status_label.text = "Loading %s..." % title
+	loading_bar.value = 0.0
+	loading_bytes_label.text = "0 KB / 976 KB"
+
+	if is_inside_tree():
+		await get_tree().process_frame
+
+	var err := ResourceLoader.load_threaded_request(scene_path, "PackedScene", true)
+	if err != OK:
+		if ResourceLoader.exists(scene_path):
+			var res = load(scene_path) as PackedScene
+			_finish_launch(meta["id"], res)
+			return
+		push_error("Threaded request failed for: " + scene_path)
+		loading_overlay.visible = false
 		var bus = GameConstants.get_autoload(self, "EventBus")
 		if bus:
-			bus.game_selected.emit(meta["id"])
+			bus.show_toast_requested.emit("Failed to load %s assets" % meta["id"], Color(1.0, 0.3, 0.3))
+		return
+
+	var progress: Array = []
+	var start_time: int = Time.get_ticks_msec()
+	const TIMEOUT_MS: int = 15000
+
+	while is_inside_tree():
+		await get_tree().process_frame # Crucial: pumps OS message loop, prevents (Not Responding)
+
+		if Time.get_ticks_msec() - start_time > TIMEOUT_MS:
+			push_warning("Threaded load timed out for: %s, falling back to direct load" % scene_path)
+			if ResourceLoader.exists(scene_path):
+				var res = load(scene_path) as PackedScene
+				_finish_launch(meta["id"], res)
+			else:
+				loading_overlay.visible = false
+			break
+
+		progress.clear()
+		var status := ResourceLoader.load_threaded_get_status(scene_path, progress)
+		match status:
+			ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+				var pct: float = (progress[0] if progress.size() > 0 else 0.0) * 100.0
+				loading_bar.value = pct
+				loading_status_label.text = "Loading: %d%%" % int(pct)
+				var cur_kb = int(pct * 9.76)
+				loading_bytes_label.text = "%d KB / 976 KB" % cur_kb
+			ResourceLoader.THREAD_LOAD_LOADED:
+				loading_bar.value = 100.0
+				loading_status_label.text = "Loading: 100%"
+				loading_bytes_label.text = "976 KB / 976 KB"
+				await get_tree().process_frame
+				var new_scene: PackedScene = ResourceLoader.load_threaded_get(scene_path) as PackedScene
+				_finish_launch(meta["id"], new_scene)
+				break
+			ResourceLoader.THREAD_LOAD_FAILED, ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+				push_error("Loading failed for: %s (status: %d)" % [scene_path, status])
+				loading_overlay.visible = false
+				var bus = GameConstants.get_autoload(self, "EventBus")
+				if bus:
+					bus.show_toast_requested.emit("Failed to load %s assets" % meta["id"], Color(1.0, 0.3, 0.3))
+				break
+
+func _finish_launch(g_id: String, packed_scene: PackedScene) -> void:
+	loading_overlay.visible = false
+	var gm = GameConstants.get_autoload(self, "GameManager")
+	if gm and is_instance_valid(packed_scene):
+		gm.start_game(g_id, packed_scene)
+	else:
+		var bus = GameConstants.get_autoload(self, "EventBus")
+		if bus:
+			bus.game_selected.emit(g_id)
 
 func connect_loader_signals() -> void:
 	var loader = GameConstants.get_autoload(self, "AssetLoader")
@@ -659,19 +724,7 @@ func connect_loader_signals() -> void:
 			loading_bytes_label.text = "%d KB / %d KB" % [cur_b / 1024, tot_b / 1024]
 		)
 		loader.load_completed.connect(func(g_id, success, _scene):
-			loading_overlay.visible = false
-			if not success:
-				var bus = GameConstants.get_autoload(self, "EventBus")
-				if bus:
-					bus.show_toast_requested.emit("Failed to load %s assets" % g_id, Color(1.0, 0.3, 0.3))
-				return
-			var gm = GameConstants.get_autoload(self, "GameManager")
-			if gm and is_instance_valid(_scene) and _scene is PackedScene:
-				gm.start_game(g_id, _scene)
-			else:
-				var bus = GameConstants.get_autoload(self, "EventBus")
-				if success and bus:
-					bus.game_selected.emit(g_id)
+			_finish_launch(g_id, _scene if success and _scene is PackedScene else null)
 		)
 
 func _notification(what: int) -> void:

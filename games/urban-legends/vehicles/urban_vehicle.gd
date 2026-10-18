@@ -177,7 +177,8 @@ func _setup_suspension_raycasts() -> void:
 		var ray = RayCast3D.new()
 		ray.name = "SuspensionRay_%d" % i
 		ray.position = offsets[i]
-		ray.target_position = Vector3(0, -(rest_suspension_length + max_suspension_travel), 0)
+		# Extend search downward by +0.45m past rest length so tires track curb drops without losing ground contact
+		ray.target_position = Vector3(0, -(rest_suspension_length + max_suspension_travel + 0.45), 0)
 		ray.collision_mask = UrbanConstants.LAYER_WORLD
 		ray.enabled = true
 		add_child(ray)
@@ -589,8 +590,18 @@ func _check_recovery_conditions(delta: float) -> void:
 	else:
 		upside_down_timer = 0.0
 
-	# Auto-recovery if stuck > 3 seconds with throttle applied, plus automatic unstuck impulse
-	if grounded_wheel_count >= 2 and throttle_input > 0.2 and absf(forward_speed) < 0.25:
+	# High-Torque Unstuck & Curb Escape Impulse:
+	# Detect when wheels are wedged against static geometry (curb, pole, barrier)
+	var throttle_or_rev = throttle_input if throttle_input > 0.01 else -brake_input
+	if absf(forward_speed) < 0.2 and absf(throttle_or_rev) > 0.8:
+		stuck_timer += delta
+		if stuck_timer > 1.2:
+			# Apply lateral and vertical unseating impulse to clear curb/wedges
+			var steer_val = steer_input
+			var escape_dir: Vector3 = (global_basis if is_inside_tree() else transform.basis).x * (signf(steer_val) if absf(steer_val) > 0.1 else 1.0)
+			velocity += (Vector3.UP * 2.5 + escape_dir * 3.0) * 2.5
+			stuck_timer = 0.0
+	elif grounded_wheel_count >= 2 and throttle_input > 0.2 and absf(forward_speed) < 0.25:
 		stuck_timer += delta
 		if stuck_timer > 1.2:
 			# Upward & forward unstuck impulse to clear obstacles
@@ -624,6 +635,16 @@ func _handle_collision_impacts() -> void:
 			var fwd = -b.z
 			var impact_angle = absf(normal.dot(fwd))
 			var impact_vel = col.get_travel().length() / get_physics_process_delta_time()
+
+			# Breakaway street furniture (street lamps, signposts) conversion on impact
+			if collider.has_meta("breakaway_root") and impact_vel > 2.5:
+				var lamp_root = collider.get_meta("breakaway_root") as Node3D
+				var lamp_col = collider.get_meta("col_shape") as CollisionShape3D
+				if lamp_col:
+					lamp_col.disabled = true
+				if is_instance_valid(lamp_root):
+					lamp_root.rotate_object_local(Vector3.FORWARD, deg_to_rad(40.0))
+					lamp_root.position += Vector3.UP * 0.15
 
 			# Collision damage scaling:
 			# Normal curb / traffic side scrapes deal 5% - 15% damage

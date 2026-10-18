@@ -1,5 +1,5 @@
 {
-  "overall_coverage_pct": 89.3630991464215,
+  "overall_coverage_pct": 89.1290111329404,
   "per_file": {
     "res://games/aero-rush/aero_rush_main.gd": {
       "coverage_pct": 87.5,
@@ -200,9 +200,11 @@
     "res://games/aero-rush/worlds/aero_world_megacity.gd": {
       "coverage_pct": 0,
       "tested": 0,
-      "total": 1,
+      "total": 3,
       "untested": [
-        "build_environment"
+        "_process",
+        "build_environment",
+        "spawn_building"
       ]
     },
     "res://games/aero-rush/worlds/aero_world_sky.gd": {
@@ -721,11 +723,12 @@
       ]
     },
     "res://games/flight-simulator-6dof/world/runway_builder.gd": {
-      "coverage_pct": 50,
+      "coverage_pct": 33.3333333333333,
       "tested": 1,
-      "total": 2,
+      "total": 3,
       "untested": [
-        "_ready"
+        "_ready",
+        "_process"
       ]
     },
     "res://games/flight-simulator-6dof/world/terrain_builder.gd": {
@@ -1427,10 +1430,12 @@
       "untested": []
     },
     "res://launcher/launcher.gd": {
-      "coverage_pct": 100,
+      "coverage_pct": 94.1176470588235,
       "tested": 16,
-      "total": 16,
-      "untested": []
+      "total": 17,
+      "untested": [
+        "launch_game"
+      ]
     },
     "res://launcher/launcher_art.gd": {
       "coverage_pct": 100,
@@ -1703,6 +1708,6 @@
     }
   },
   "tested_functions": 1361,
-  "timestamp": "2026-10-18T04:33:48",
-  "total_functions": 1523
+  "timestamp": "2026-10-18T06:05:01",
+  "total_functions": 1527
 }

@@ -15,11 +15,11 @@ const TRACK_SHADER_CODE = """
 shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_lambert, specular_schlick_ggx;
 
-uniform vec4 asphalt_color : source_color = vec4(0.24, 0.26, 0.30, 1.0);
+uniform vec4 asphalt_color : source_color = vec4(0.08, 0.09, 0.11, 1.0);
 uniform vec4 curb_color : source_color = vec4(1.0, 0.44, 0.08, 1.0);
 uniform vec4 neon_left_color : source_color = vec4(0.05, 0.95, 1.0, 1.0);
 uniform vec4 neon_right_color : source_color = vec4(1.0, 0.22, 0.70, 1.0);
-uniform float roughness_val = 0.42;
+uniform float roughness_val = 0.38;
 
 void fragment() {
 	float u = UV.x;
@@ -30,54 +30,61 @@ void fragment() {
 	bool is_center_line = (abs(u - 0.5) < 0.016);
 	bool is_tire_track = ((u >= 0.27 && u <= 0.37) || (u >= 0.63 && u <= 0.73));
 
+	// Longitudinal micro-grooved track texture & rubber aggregate
+	float micro_groove = sin(u * 280.0) * 0.018;
+	float micro_noise = fract(sin(dot(floor(UV * vec2(100.0, 360.0)), vec2(12.9898, 78.233))) * 43758.5453) * 0.025;
+	vec3 dark_grooved_asphalt = asphalt_color.rgb + vec3(micro_groove + micro_noise);
+
 	if (is_border_left) {
-		// Glowing Cyan Left Guide Rail
+		// Glowing Intense Cyan Left Energy Ribbon
+		float pulse = 0.5 + 0.5 * sin(TIME * 4.0 - UV.y * 14.0);
 		ALBEDO = neon_left_color.rgb;
-		EMISSION = neon_left_color.rgb * 1.8;
-		ROUGHNESS = 0.08;
-		METALLIC = 0.75;
+		EMISSION = neon_left_color.rgb * (2.8 + pulse * 0.8);
+		ROUGHNESS = 0.05;
+		METALLIC = 0.85;
 	} else if (is_border_right) {
-		// Glowing Magenta Right Guide Rail
+		// Glowing Intense Magenta Right Energy Ribbon
+		float pulse = 0.5 + 0.5 * cos(TIME * 4.0 - UV.y * 14.0);
 		ALBEDO = neon_right_color.rgb;
-		EMISSION = neon_right_color.rgb * 1.8;
-		ROUGHNESS = 0.08;
-		METALLIC = 0.75;
+		EMISSION = neon_right_color.rgb * (2.8 + pulse * 0.8);
+		ROUGHNESS = 0.05;
+		METALLIC = 0.85;
 	} else if (is_barrier_face) {
 		// Reinforced Carbon Barrier Wall
-		ALBEDO = vec3(0.18, 0.20, 0.24);
-		ROUGHNESS = 0.65;
-		METALLIC = 0.45;
+		ALBEDO = vec3(0.12, 0.14, 0.17);
+		ROUGHNESS = 0.55;
+		METALLIC = 0.65;
 	} else if (is_curb) {
 		// High-contrast Orange / White Alternating Stunt Curb
 		float stripe = mod(UV.y * 6.0, 2.0);
 		vec3 c_col = (stripe < 1.0) ? curb_color.rgb : vec3(0.96, 0.96, 0.98);
 		ALBEDO = c_col;
-		EMISSION = (stripe < 1.0) ? curb_color.rgb * 0.9 : vec3(0.20);
-		ROUGHNESS = 0.32;
-		METALLIC = 0.15;
+		EMISSION = (stripe < 1.0) ? curb_color.rgb * 1.2 : vec3(0.20);
+		ROUGHNESS = 0.28;
+		METALLIC = 0.20;
 	} else if (is_center_line) {
 		// High-Speed Dashed Centerline
 		float dash = mod(UV.y * 5.0, 2.0);
 		if (dash < 1.0) {
 			ALBEDO = vec3(1.0, 0.92, 0.15);
-			EMISSION = vec3(1.0, 0.92, 0.15) * 1.2;
+			EMISSION = vec3(1.0, 0.92, 0.15) * 1.4;
 		} else {
-			ALBEDO = asphalt_color.rgb;
+			ALBEDO = dark_grooved_asphalt;
 		}
-		ROUGHNESS = 0.42;
+		ROUGHNESS = 0.38;
 		METALLIC = 0.05;
 	} else if (is_tire_track) {
 		// High-Speed Rubberized Tire Wear Groove
-		ALBEDO = vec3(0.16, 0.18, 0.21);
-		ROUGHNESS = 0.38;
-		METALLIC = 0.15;
-		SPECULAR = 0.45;
+		ALBEDO = vec3(0.06, 0.07, 0.08);
+		ROUGHNESS = 0.32;
+		METALLIC = 0.22;
+		SPECULAR = 0.55;
 	} else {
-		// Premium High-Grip Asphalt Track Surface
-		ALBEDO = asphalt_color.rgb;
+		// Dark Grooved Asphalt Surface
+		ALBEDO = dark_grooved_asphalt;
 		ROUGHNESS = roughness_val;
-		METALLIC = 0.08;
-		SPECULAR = 0.40;
+		METALLIC = 0.12;
+		SPECULAR = 0.48;
 	}
 }
 """
@@ -101,20 +108,21 @@ render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_lambert;
 uniform vec4 chevron_color : source_color = vec4(0.05, 0.95, 1.0, 1.0);
 
 void fragment() {
-	// Emissive directional launch chevrons (>>>)
-	float v = mod(UV.y * 4.0 - TIME * 3.5, 1.0);
+	// Emissive directional launch chevrons with dynamic motion-blur streaks
+	float v = mod(UV.y * 5.0 - TIME * 6.5, 1.0);
 	float u_dist = abs(UV.x - 0.5) * 2.0;
-	bool is_chevron = (v > 0.35 && v < 0.65 && u_dist < 0.85);
+	bool is_chevron = (v > 0.25 && v < 0.75 && u_dist < 0.88);
+	float blur_streak = sin(UV.x * 40.0) * sin(UV.y * 60.0 - TIME * 18.0) * 0.15;
 
 	if (is_chevron) {
 		ALBEDO = chevron_color.rgb;
-		EMISSION = chevron_color.rgb * 1.8;
-		ROUGHNESS = 0.10;
-		METALLIC = 0.80;
+		EMISSION = chevron_color.rgb * (2.4 + blur_streak);
+		ROUGHNESS = 0.08;
+		METALLIC = 0.85;
 	} else {
-		ALBEDO = vec3(0.14, 0.16, 0.20);
-		ROUGHNESS = 0.55;
-		METALLIC = 0.35;
+		ALBEDO = vec3(0.12, 0.14, 0.18) + vec3(blur_streak * 0.5);
+		ROUGHNESS = 0.50;
+		METALLIC = 0.40;
 	}
 }
 """
@@ -651,7 +659,7 @@ static func _build_landing_apron(first_pt: Dictionary, apron_w: float, mat: Mate
 
 	return apron
 
-## Speed Boost Pad emitting high-energy light pulse
+## Speed Boost Pad emitting high-energy light pulse and holographic speed boost gate
 static func _build_speed_boost_pad(pt: Dictionary, mat: Material) -> Node3D:
 	var pad = Node3D.new()
 	pad.name = "SpeedBoostPad"
@@ -691,6 +699,54 @@ static func _build_speed_boost_pad(pt: Dictionary, mat: Material) -> Node3D:
 			body.apply_boost_pad_impulse(22.0)
 	)
 	pad.add_child(area)
+
+	# Holographic Speed Boost Gate overhead archway
+	var track_w: float = float(pt.get("width", 16.0))
+	var gate_arch = Node3D.new()
+	gate_arch.name = "HoloBoostGate"
+	gate_arch.transform.basis = Basis(right, norm, -fwd)
+
+	var frame_mat = StandardMaterial3D.new()
+	frame_mat.albedo_color = Color(0.12, 0.14, 0.18)
+	frame_mat.metallic = 0.90
+	frame_mat.roughness = 0.25
+
+	var holo_mat = StandardMaterial3D.new()
+	holo_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	holo_mat.albedo_color = Color(0.1, 0.85, 1.0, 0.40)
+	holo_mat.emission_enabled = true
+	holo_mat.emission = Color(0.1, 0.85, 1.0)
+	holo_mat.emission_energy_multiplier = 3.2
+
+	# Left and Right Arch Pylons
+	for side in [-1.0, 1.0]:
+		var pylon = MeshInstance3D.new()
+		var p_box = BoxMesh.new()
+		p_box.size = Vector3(0.55, 6.2, 0.85)
+		pylon.mesh = p_box
+		pylon.material_override = frame_mat
+		pylon.position = Vector3(side * (track_w * 0.5 - 0.3), 3.1, 0.0)
+		gate_arch.add_child(pylon)
+
+	# Crossbeam
+	var beam = MeshInstance3D.new()
+	var b_box = BoxMesh.new()
+	b_box.size = Vector3(track_w, 0.65, 0.85)
+	beam.mesh = b_box
+	beam.material_override = frame_mat
+	beam.position = Vector3(0.0, 6.1, 0.0)
+	gate_arch.add_child(beam)
+
+	# Holographic Energy Field Curtain
+	var holo_field = MeshInstance3D.new()
+	var h_plane = QuadMesh.new()
+	h_plane.size = Vector2(track_w - 0.8, 4.8)
+	holo_field.mesh = h_plane
+	holo_field.material_override = holo_mat
+	holo_field.position = Vector3(0.0, 3.4, 0.0)
+	gate_arch.add_child(holo_field)
+
+	pad.add_child(gate_arch)
 
 	return pad
 

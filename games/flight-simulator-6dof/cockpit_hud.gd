@@ -38,6 +38,9 @@ var _font: Font
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_font = ThemeDB.fallback_font
+	ghost_director_active = true
+	ghost_target_pitch_deg = 4.5
+	ghost_target_roll_deg = 0.0
 
 func update_telemetry(data: Dictionary) -> void:
 	airspeed_kias = data.get("airspeed_kias", 0.0)
@@ -98,6 +101,9 @@ func _draw() -> void:
 
 	# 9. Annunciator Flags (STALL, GEAR, FLAPS, BRAKES)
 	_draw_annunciators(screen_size)
+
+	# 10. Flight Management System (FMS) / Navigation Computer MFD
+	_draw_fms_navigation_computer(screen_size)
 
 func _draw_boresight(center: Vector2, color: Color) -> void:
 	var wing_len = 24.0
@@ -374,3 +380,51 @@ func show_crash_banner(reason: String) -> void:
 	is_crashed = true
 	crash_reason = reason
 	queue_redraw()
+
+func _draw_fms_navigation_computer(screen_size: Vector2) -> void:
+	var mfd_w = 260.0
+	var mfd_h = 135.0
+	var pos = Vector2(24.0, screen_size.y - mfd_h - 24.0)
+
+	# 1. Glass bezel & dark tactical background
+	draw_rect(Rect2(pos, Vector2(mfd_w, mfd_h)), Color(0.04, 0.08, 0.12, 0.88), true)
+	draw_rect(Rect2(pos, Vector2(mfd_w, mfd_h)), HUD_GREEN * 0.7, false, 1.5)
+
+	# 2. Header: Active Flight Plan
+	draw_rect(Rect2(pos, Vector2(mfd_w, 20.0)), Color(0.06, 0.14, 0.20, 0.95), true)
+	draw_string(_font, pos + Vector2(8, 14), "FMS NAV: KSAN 09L > ALPHA > KLAX", HORIZONTAL_ALIGNMENT_LEFT, int(mfd_w - 16), 10, Color(0.2, 0.95, 1.0))
+
+	# 3. Radar Nav Map with Range Rings
+	var map_center = pos + Vector2(55.0, 75.0)
+	draw_arc(map_center, 18.0, 0.0, TAU, 24, Color(0.15, 0.4, 0.5, 0.5), 1.0)
+	draw_arc(map_center, 36.0, 0.0, TAU, 32, Color(0.15, 0.4, 0.5, 0.5), 1.0)
+	# Waypoints & Route Trajectory
+	var wpt_dep = map_center + Vector2(-15, 20)
+	var wpt_a = map_center + Vector2(5, -5)
+	var wpt_b = map_center + Vector2(25, -28)
+	draw_line(wpt_dep, wpt_a, Color(0.2, 0.9, 0.4, 0.75), 1.5)
+	draw_line(wpt_a, wpt_b, Color(0.2, 0.9, 0.4, 0.75), 1.5)
+	draw_circle(wpt_a, 2.5, Color(0.15, 0.9, 1.0))
+	draw_circle(wpt_b, 2.5, Color(1.0, 0.85, 0.2))
+	# Aircraft position symbol
+	draw_circle(map_center, 3.0, HUD_GREEN)
+
+	# 4. Telemetry Readouts
+	var tx = pos.x + 115.0
+	var ty = pos.y + 36.0
+	draw_string(_font, Vector2(tx, ty), "ACTIVE WPT: ALPHA", HORIZONTAL_ALIGNMENT_LEFT, 135, 10, Color(0.9, 0.95, 1.0))
+	draw_string(_font, Vector2(tx, ty + 18), "DIST: 14.8 NM", HORIZONTAL_ALIGNMENT_LEFT, 135, 10, Color(0.2, 0.95, 1.0))
+
+	# ETE calculation
+	var ground_speed_kts = maxf(airspeed_kias, 10.0)
+	var ete_sec = int((14.8 / ground_speed_kts) * 3600.0)
+	var ete_min = ete_sec / 60
+	var ete_rem_sec = ete_sec % 60
+	draw_string(_font, Vector2(tx, ty + 36), "ETE: %02d:%02d" % [ete_min, ete_rem_sec], HORIZONTAL_ALIGNMENT_LEFT, 135, 10, Color(1.0, 0.85, 0.2))
+
+	# 5. Crosswind Vector Indicator
+	var xwind_comp = 8.0 * sin(deg_to_rad(heading_deg - 90.0))
+	var xwind_dir = "L" if xwind_comp < 0.0 else "R"
+	var xwind_str = "XWIND: %02d KTS [%s]" % [int(absf(xwind_comp)), xwind_dir]
+	draw_string(_font, Vector2(tx, ty + 54), xwind_str, HORIZONTAL_ALIGNMENT_LEFT, 135, 10, Color(0.9, 0.7, 0.3))
+	draw_string(_font, Vector2(tx, ty + 72), "ILS RWY: 27R (3.0°)", HORIZONTAL_ALIGNMENT_LEFT, 135, 9, Color(0.2, 0.85, 0.5))

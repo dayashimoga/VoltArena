@@ -249,28 +249,48 @@ func _build_road_meshes() -> void:
 						edge_mi.look_at_from_position(edge_mi.position, edge_mi.position + dir, up_vec)
 					roads_container.add_child(edge_mi)
 
-					# 30-degree Chamfered Curb Bevel (0.12m vertical, zero car snagging, ArrayMesh)
+					# 35-degree Chamfered Curb Bevel (0.12m vertical over 0.20m run, ArrayMesh + Physical Collision)
 					var curb_bevel_mi = MeshInstance3D.new()
-					curb_bevel_mi.mesh = _create_curb_bevel_mesh(0.24, 0.12, dist)
+					curb_bevel_mi.mesh = _create_curb_bevel_mesh(0.20, 0.12, dist)
 					curb_bevel_mi.material_override = sw_mat
-					curb_bevel_mi.position = center + right_dir * (side * (w * 0.5 + 0.12)) + Vector3(0.0, 0.06, 0.0)
+					curb_bevel_mi.position = center + right_dir * (side * (w * 0.5 + 0.10)) + Vector3(0.0, 0.06, 0.0)
 					if dir.length_squared() > 0.001:
 						var up_vec = Vector3.UP
 						if absf(dir.dot(up_vec)) > 0.9:
 							up_vec = Vector3.RIGHT
 						curb_bevel_mi.look_at_from_position(curb_bevel_mi.position, curb_bevel_mi.position + dir, up_vec)
+
+					var curb_body = StaticBody3D.new()
+					curb_body.collision_layer = UrbanConstants.LAYER_WORLD
+					curb_body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+					var curb_col = CollisionShape3D.new()
+					var curb_convex = curb_bevel_mi.mesh.create_convex_shape()
+					curb_col.shape = curb_convex
+					curb_body.add_child(curb_col)
+					curb_bevel_mi.add_child(curb_body)
 					roads_container.add_child(curb_bevel_mi)
 
-					# Pedestrian Sidewalk (0.12m height, ArrayMesh)
+					# Pedestrian Sidewalk (0.12m height, ArrayMesh + Physical Pavement Collision)
 					var sw_mi = MeshInstance3D.new()
-					sw_mi.mesh = _create_sidewalk_mesh(sw_w - 0.24, 0.12, dist)
+					var sw_deck_w = sw_w - 0.20
+					sw_mi.mesh = _create_sidewalk_mesh(sw_deck_w, 0.12, dist)
 					sw_mi.material_override = sw_mat
-					sw_mi.position = center + right_dir * (side * (w * 0.5 + 0.24 + (sw_w - 0.24) * 0.5)) + Vector3(0.0, 0.06, 0.0)
+					sw_mi.position = center + right_dir * (side * (w * 0.5 + 0.20 + sw_deck_w * 0.5)) + Vector3(0.0, 0.06, 0.0)
 					if dir.length_squared() > 0.001:
 						var up_vec = Vector3.UP
 						if absf(dir.dot(up_vec)) > 0.9:
 							up_vec = Vector3.RIGHT
 						sw_mi.look_at_from_position(sw_mi.position, sw_mi.position + dir, up_vec)
+
+					var sw_body = StaticBody3D.new()
+					sw_body.collision_layer = UrbanConstants.LAYER_WORLD
+					sw_body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
+					var sw_col = CollisionShape3D.new()
+					var sw_box = BoxShape3D.new()
+					sw_box.size = Vector3(sw_deck_w, 0.12, dist)
+					sw_col.shape = sw_box
+					sw_body.add_child(sw_col)
+					sw_mi.add_child(sw_body)
 					roads_container.add_child(sw_mi)
 
 				# Streetlights along ground boulevards (every 30m)
@@ -824,16 +844,28 @@ static func _create_curb_bevel_mesh(width: float, height: float, length: float) 
 	var hl = length * 0.5
 	var hh = height * 0.5
 
-	# 45-degree chamfered bevel face
+	# 35-degree chamfered bevel face (0.12m rise over 0.20m run)
 	var v0 = Vector3(-hw, -hh, -hl)
 	var v1 = Vector3(hw, hh, -hl)
 	var v2 = Vector3(hw, hh, hl)
 	var v3 = Vector3(-hw, -hh, hl)
+	var v_back_bot = Vector3(hw, -hh, -hl)
+	var v_back_top = Vector3(hw, -hh, hl)
 
-	var bevel_n = Vector3(height, width, 0.0).normalized()
+	var bevel_n = Vector3(-height, width, 0.0).normalized()
 	st.set_normal(bevel_n)
 	st.add_vertex(v0); st.add_vertex(v1); st.add_vertex(v2)
 	st.add_vertex(v0); st.add_vertex(v2); st.add_vertex(v3)
+
+	# Bottom plane
+	st.set_normal(Vector3.DOWN)
+	st.add_vertex(v0); st.add_vertex(v3); st.add_vertex(v_back_top)
+	st.add_vertex(v0); st.add_vertex(v_back_top); st.add_vertex(v_back_bot)
+
+	# Vertical back plane
+	st.set_normal(Vector3.RIGHT)
+	st.add_vertex(v_back_bot); st.add_vertex(v_back_top); st.add_vertex(v2)
+	st.add_vertex(v_back_bot); st.add_vertex(v2); st.add_vertex(v1)
 
 	return st.commit()
 

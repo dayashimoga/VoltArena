@@ -340,8 +340,9 @@ static func build_street_lamp(height: float = 6.8) -> Node3D:
 	light.position = Vector3(0, height - 0.2, -1.1)
 	root.add_child(light)
 
-	# Lightweight pole collision proxy
+	# Lightweight pole collision proxy with breakaway capability
 	var body = StaticBody3D.new()
+	body.name = "StreetLampBody"
 	body.collision_layer = UrbanConstants.LAYER_PROPS
 	body.collision_mask = UrbanConstants.LAYER_PLAYER | UrbanConstants.LAYER_ENEMIES
 	var col = CollisionShape3D.new()
@@ -351,6 +352,9 @@ static func build_street_lamp(height: float = 6.8) -> Node3D:
 	col.shape = cyl
 	col.position = Vector3(0, height * 0.5, 0)
 	body.add_child(col)
+	body.set_meta("breakaway_root", root)
+	body.set_meta("col_shape", col)
+	root.set_meta("is_breakaway", true)
 	root.add_child(body)
 
 	return root

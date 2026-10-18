@@ -1,8 +1,8 @@
 {
-  "coverage_percent": 89.3630991464215,
+  "coverage_percent": 89.1290111329404,
   "coverage_tested_functions": 1361,
-  "coverage_total_functions": 1523,
-  "execution_seconds": 186.326,
+  "coverage_total_functions": 1527,
+  "execution_seconds": 494.653,
   "status": "PASS",
   "suites": {
     "6-DoF Flight Simulator E2E Scenarios": {
@@ -501,7 +501,7 @@
       "status": "PASS"
     }
   },
-  "timestamp": "2026-10-18T04:33:48",
+  "timestamp": "2026-10-18T06:05:01",
   "total_failed": 0,
   "total_passed": 4389,
   "total_suites": 99
